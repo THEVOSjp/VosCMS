@@ -9,7 +9,9 @@
 1. [Database (데이터베이스)](#1-database-데이터베이스)
 2. [Auth (인증)](#2-auth-인증)
 3. [Validation (유효성 검사)](#3-validation-유효성-검사)
-4. [헬퍼 함수](#4-헬퍼-함수)
+4. [Notification (알림 시스템)](#4-notification-알림-시스템)
+5. [Skin (스킨 시스템)](#5-skin-스킨-시스템)
+6. [헬퍼 함수](#6-헬퍼-함수)
 
 ---
 
@@ -933,7 +935,201 @@ try {
 
 ---
 
-## 4. 헬퍼 함수
+## 4. Notification (알림 시스템)
+
+알림 라이브러리는 웹푸시 알림과 사용자 메시지 인박스를 지원합니다.
+
+### 4.1 데이터베이스 테이블
+
+```sql
+-- 사용자 알림 인박스
+CREATE TABLE rzx_user_notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NULL,                -- NULL이면 게스트/익명 사용자
+    message_id INT NULL,             -- rzx_push_messages 참조
+    title VARCHAR(255) NOT NULL,
+    body TEXT NOT NULL,
+    url VARCHAR(500),
+    icon VARCHAR(500),
+    type ENUM('push', 'system', 'reservation', 'promotion') DEFAULT 'push',
+    is_read TINYINT(1) DEFAULT 0,
+    read_at DATETIME NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 4.2 알림 조회
+
+```php
+// 사용자의 알림 목록 조회
+$notifications = db()->table('rzx_user_notifications')
+    ->where('user_id', auth()->id())
+    ->orderBy('created_at', 'DESC')
+    ->limit(20)
+    ->get();
+
+// 읽지 않은 알림 수
+$unreadCount = db()->table('rzx_user_notifications')
+    ->where('user_id', auth()->id())
+    ->where('is_read', 0)
+    ->count();
+```
+
+### 4.3 알림 상태 변경
+
+```php
+// 읽음 처리
+db()->table('rzx_user_notifications')
+    ->where('id', $notificationId)
+    ->where('user_id', auth()->id())
+    ->update([
+        'is_read' => 1,
+        'read_at' => date('Y-m-d H:i:s'),
+    ]);
+
+// 모두 읽음 처리
+db()->table('rzx_user_notifications')
+    ->where('user_id', auth()->id())
+    ->where('is_read', 0)
+    ->update([
+        'is_read' => 1,
+        'read_at' => date('Y-m-d H:i:s'),
+    ]);
+
+// 알림 삭제
+db()->table('rzx_user_notifications')
+    ->where('id', $notificationId)
+    ->where('user_id', auth()->id())
+    ->delete();
+```
+
+### 4.4 알림 생성 (관리자)
+
+```php
+// 특정 사용자에게 알림 저장
+db()->table('rzx_user_notifications')->insert([
+    'user_id' => $userId,
+    'title' => '예약 확정 안내',
+    'body' => '예약이 확정되었습니다.',
+    'type' => 'reservation',
+    'url' => '/mypage/reservations/' . $reservationId,
+    'created_at' => date('Y-m-d H:i:s'),
+]);
+
+// 모든 사용자에게 알림 저장 (프로모션 등)
+$users = db()->table('rzx_users')->pluck('id');
+foreach ($users as $userId) {
+    db()->table('rzx_user_notifications')->insert([
+        'user_id' => $userId,
+        'title' => '새해 프로모션',
+        'body' => '새해 맞이 20% 할인 이벤트!',
+        'type' => 'promotion',
+        'url' => '/promotions/new-year',
+        'created_at' => date('Y-m-d H:i:s'),
+    ]);
+}
+```
+
+### 4.5 알림 타입
+
+| 타입 | 설명 |
+|------|------|
+| `push` | 웹푸시 알림 |
+| `system` | 시스템 알림 |
+| `reservation` | 예약 관련 알림 |
+| `promotion` | 프로모션/이벤트 알림 |
+
+---
+
+## 5. Skin (스킨 시스템)
+
+스킨 시스템은 회원 페이지의 디자인을 쉽게 변경할 수 있도록 지원합니다.
+
+> 상세 문서: [MEMBER_SKIN.md](MEMBER_SKIN.md)
+
+### 5.1 파일 구조
+
+```
+rzxlib/Core/Skin/
+└── MemberSkinLoader.php    # 회원 스킨 로더
+
+skins/member/
+├── default/                # 기본 스킨
+│   ├── config.php         # 스킨 설정
+│   ├── login.php          # 로그인 템플릿
+│   ├── register.php       # 회원가입 템플릿
+│   ├── mypage.php         # 마이페이지 템플릿
+│   └── components/        # 재사용 컴포넌트
+└── modern/                 # 추가 스킨
+```
+
+### 5.2 기본 사용법
+
+```php
+use RezlyX\Core\Skin\MemberSkinLoader;
+
+// 스킨 로더 초기화
+$skinLoader = new MemberSkinLoader('/path/to/skins/member', 'default');
+
+// 컬러셋 변경
+$skinLoader->setColorset('dark');
+
+// 페이지 렌더링
+echo $skinLoader->render('login', [
+    'errors' => [],
+    'csrfToken' => $token,
+]);
+```
+
+### 5.3 사용 가능한 스킨 조회
+
+```php
+$skins = $skinLoader->getAvailableSkins();
+// [
+//     'default' => [
+//         'name' => 'Default',
+//         'version' => '1.0.0',
+//         'colorsets' => ['default', 'dark', 'blue'],
+//     ],
+// ]
+```
+
+### 5.4 컬러셋 시스템
+
+각 스킨은 여러 컬러셋을 지원합니다:
+
+```php
+// config.php
+'colorsets' => [
+    'default' => [
+        'primary' => '#3B82F6',
+        'secondary' => '#6B7280',
+        'background' => '#FFFFFF',
+        'text' => '#1F2937',
+    ],
+    'dark' => [
+        'primary' => '#60A5FA',
+        'background' => '#1F2937',
+        'text' => '#F9FAFB',
+    ],
+],
+```
+
+템플릿에서 CSS 변수로 사용:
+
+```html
+<style>
+:root {
+    --skin-primary: <?= $colorset['primary'] ?>;
+    --skin-text: <?= $colorset['text'] ?>;
+}
+</style>
+<button style="background: var(--skin-primary)">버튼</button>
+```
+
+---
+
+## 6. 헬퍼 함수
 
 편리한 사용을 위한 전역 헬퍼 함수들:
 
@@ -999,6 +1195,14 @@ dump($var)              // 변수 덤프 (계속 실행)
 
 ## 버전 정보
 
-- **문서 버전**: 1.0.0
-- **최종 수정일**: 2026-02-28
+- **문서 버전**: 1.2.0
+- **최종 수정일**: 2026-03-03
 - **적용 대상**: RezlyX Core Libraries
+
+### 변경 이력
+
+| 버전 | 날짜 | 변경 내용 |
+|------|------|-----------|
+| 1.2.0 | 2026-03-03 | Skin 시스템 섹션 추가 (MemberSkinLoader) |
+| 1.1.0 | 2026-03-02 | Notification 시스템 섹션 추가 |
+| 1.0.0 | 2026-02-28 | 최초 작성 |
