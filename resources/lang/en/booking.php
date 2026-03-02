@@ -1,0 +1,169 @@
+<?php
+
+/**
+ * Booking translations - English
+ */
+
+return [
+    // Page titles
+    'title' => 'Book Now',
+    'service_list' => 'Service List',
+    'select_service' => 'Select Service',
+    'select_date' => 'Select Date',
+    'select_time' => 'Select Time',
+    'enter_info' => 'Enter Information',
+    'confirm_booking' => 'Confirm Booking',
+    'confirm_info' => 'Please confirm your booking information',
+    'complete_booking' => 'Complete Booking',
+    'select_service_datetime' => 'Please select your service and preferred date/time',
+    'select_datetime' => 'Please select a date and time',
+    'no_services' => 'No services currently available.',
+    'contact_admin' => 'Please contact the administrator.',
+    'notes' => 'Special Requests',
+    'notes_placeholder' => 'Enter any special requests',
+    'customer' => 'Customer',
+    'phone' => 'Phone',
+    'date' => 'Date',
+    'time' => 'Time',
+    'total_price' => 'Total Amount',
+    'cancel_policy' => 'Cancellations are allowed up to 24 hours before the reservation time. A cancellation fee may apply for later cancellations.',
+    'success' => 'Your booking has been completed! A confirmation message will be sent.',
+
+    // Steps
+    'step' => [
+        'service' => 'Select Service',
+        'datetime' => 'Date/Time',
+        'info' => 'Information',
+        'confirm' => 'Confirm',
+    ],
+
+    // Service
+    'service' => [
+        'title' => 'Service',
+        'name' => 'Service Name',
+        'description' => 'Description',
+        'duration' => 'Duration',
+        'price' => 'Price',
+        'category' => 'Category',
+        'select' => 'Select',
+        'view_detail' => 'View Details',
+        'no_services' => 'No services available.',
+    ],
+
+    // Date/Time
+    'date' => [
+        'title' => 'Booking Date',
+        'select_date' => 'Please select a date',
+        'available' => 'Available',
+        'unavailable' => 'Unavailable',
+        'fully_booked' => 'Fully Booked',
+        'past_date' => 'Past Date',
+    ],
+
+    'time' => [
+        'title' => 'Booking Time',
+        'select_time' => 'Please select a time',
+        'available_slots' => 'Available Time Slots',
+        'no_slots' => 'No available time slots.',
+        'remaining' => ':count spots remaining',
+    ],
+
+    // Booking form
+    'form' => [
+        'customer_name' => 'Name',
+        'customer_email' => 'Email',
+        'customer_phone' => 'Phone',
+        'guests' => 'Number of Guests',
+        'notes' => 'Special Requests',
+        'notes_placeholder' => 'Enter any special requests',
+    ],
+
+    // Confirmation
+    'confirm' => [
+        'title' => 'Confirm Booking',
+        'summary' => 'Booking Summary',
+        'service_info' => 'Service Information',
+        'booking_info' => 'Booking Information',
+        'customer_info' => 'Customer Information',
+        'total_price' => 'Total',
+        'agree_terms' => 'I agree to the booking terms',
+        'submit' => 'Complete Booking',
+    ],
+
+    // Complete
+    'complete' => [
+        'title' => 'Booking Complete',
+        'success' => 'Your booking has been completed!',
+        'booking_code' => 'Booking Code',
+        'check_email' => 'A confirmation email has been sent to your email address.',
+        'view_detail' => 'View Booking Details',
+        'book_another' => 'Make Another Booking',
+    ],
+
+    // Lookup
+    'lookup' => [
+        'title' => 'Find Booking',
+        'description' => 'Enter your booking information to find your reservation.',
+        'booking_code' => 'Booking Code',
+        'booking_code_placeholder' => 'RZ250301XXXXXX',
+        'email' => 'Email',
+        'email_placeholder' => 'Email used for booking',
+        'phone' => 'Phone Number',
+        'phone_placeholder' => 'Phone number used for booking',
+        'search' => 'Search',
+        'search_method' => 'Search Method',
+        'by_code' => 'Search by Booking Code',
+        'by_email' => 'Search by Email',
+        'by_phone' => 'Search by Phone',
+        'not_found' => 'Booking not found. Please check your information.',
+        'input_required' => 'Please enter a booking code and email or phone number.',
+        'result_title' => 'Search Results',
+        'multiple_results' => ':count bookings found.',
+        'hint' => 'For accurate results, enter a booking code along with your email or phone number.',
+        'help_text' => 'Can\'t find your booking?',
+        'contact_support' => 'Contact Support',
+    ],
+
+    // Detail
+    'detail' => [
+        'title' => 'Booking Details',
+        'status' => 'Status',
+        'booking_date' => 'Date & Time',
+        'service' => 'Service',
+        'guests' => 'Guests',
+        'total_price' => 'Total Price',
+        'payment_status' => 'Payment Status',
+        'notes' => 'Special Requests',
+        'created_at' => 'Booked On',
+    ],
+
+    // Cancel
+    'cancel' => [
+        'title' => 'Cancel Booking',
+        'confirm' => 'Are you sure you want to cancel this booking?',
+        'reason' => 'Cancellation Reason',
+        'reason_placeholder' => 'Please enter the reason for cancellation',
+        'submit' => 'Cancel Booking',
+        'success' => 'Your booking has been cancelled.',
+        'cannot_cancel' => 'This booking cannot be cancelled.',
+    ],
+
+    // Status messages
+    'status' => [
+        'pending' => 'Your booking has been received. Please wait for confirmation.',
+        'confirmed' => 'Your booking has been confirmed.',
+        'cancelled' => 'Your booking has been cancelled.',
+        'completed' => 'Service completed.',
+        'no_show' => 'Marked as no-show.',
+    ],
+
+    // Error messages
+    'error' => [
+        'service_not_found' => 'Service not found.',
+        'slot_unavailable' => 'The selected time slot is not available.',
+        'past_date' => 'Cannot book for past dates.',
+        'max_capacity' => 'Maximum capacity exceeded.',
+        'booking_failed' => 'An error occurred while processing your booking.',
+        'required_fields' => 'Please enter your name and contact information.',
+    ],
+];

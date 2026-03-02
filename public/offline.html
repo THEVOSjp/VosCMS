@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#3b82f6">
+    <title>오프라인 - RezlyX</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 24px;
+            padding: 48px;
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        }
+        .icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 32px;
+            background: #f1f5f9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon svg {
+            width: 60px;
+            height: 60px;
+            color: #94a3b8;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+        p {
+            font-size: 16px;
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+        .retry-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #3b82f6;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .retry-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        .retry-btn:active {
+            transform: translateY(0);
+        }
+        .retry-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+        .tips {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e2e8f0;
+            text-align: left;
+        }
+        .tips h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 12px;
+        }
+        .tips ul {
+            list-style: none;
+            font-size: 14px;
+            color: #64748b;
+        }
+        .tips li {
+            padding: 6px 0;
+            padding-left: 24px;
+            position: relative;
+        }
+        .tips li::before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a5 5 0 01-.707-7.07L6.343 6.657a9 9 0 0010.607-.95l-1.414 1.414"/>
+            </svg>
+        </div>
+
+        <h1>인터넷 연결 없음</h1>
+        <p>현재 오프라인 상태입니다.<br>인터넷 연결을 확인하고 다시 시도해 주세요.</p>
+
+        <button class="retry-btn" onclick="location.reload()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            다시 시도
+        </button>
+
+        <div class="tips">
+            <h3>확인해 보세요</h3>
+            <ul>
+                <li>Wi-Fi 또는 모바일 데이터가 켜져 있는지 확인</li>
+                <li>비행기 모드가 꺼져 있는지 확인</li>
+                <li>라우터나 모뎀을 재시작</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Auto retry when connection is restored
+        window.addEventListener('online', () => {
+            location.reload();
+        });
+    </script>
+</body>
+</html>

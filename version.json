@@ -1,0 +1,12 @@
+{
+    "version": "0.0.1",
+    "name": "RezlyX",
+    "release_date": "2026-03-02",
+    "commit": null,
+    "channel": "dev",
+    "github": {
+        "owner": "THEVOSjp",
+        "repo": "RezlyX",
+        "branch": "main"
+    }
+}

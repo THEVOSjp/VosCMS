@@ -1,0 +1,24 @@
+{
+  "name": "rezlyx",
+  "version": "1.0.0",
+  "description": "RezlyX - Modern Reservation System",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "watch": "vite build --watch",
+    "css:build": "tailwindcss -i ./resources/css/app.css -o ./public/assets/css/app.css --minify",
+    "css:watch": "tailwindcss -i ./resources/css/app.css -o ./public/assets/css/app.css --watch"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "vite": "^5.0.10"
+  },
+  "dependencies": {
+    "alpinejs": "^3.13.3",
+    "htmx.org": "^1.9.10"
+  }
+}

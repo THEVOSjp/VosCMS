@@ -1,0 +1,232 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============================================================================
+   RezlyX Customer Styles
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   Base Styles
+   ----------------------------------------------------------------------------- */
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+
+  /* Focus styles for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   Components
+   ----------------------------------------------------------------------------- */
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+  }
+
+  .btn-secondary {
+    @apply btn bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500;
+  }
+
+  .btn-outline {
+    @apply btn border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-500;
+  }
+
+  .btn-danger {
+    @apply btn bg-danger-600 text-white hover:bg-danger-500 focus:ring-danger-500;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-lg;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white rounded-xl shadow-soft p-6;
+  }
+
+  .card-hover {
+    @apply card transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg;
+  }
+
+  /* Form Elements */
+  .form-input {
+    @apply w-full px-4 py-2.5 rounded-lg border border-gray-300;
+    @apply focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+    @apply placeholder:text-gray-400;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+
+  .form-error {
+    @apply text-sm text-danger-600 mt-1;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply badge bg-primary-100 text-primary-800;
+  }
+
+  .badge-success {
+    @apply badge bg-success-50 text-success-600;
+  }
+
+  .badge-warning {
+    @apply badge bg-warning-50 text-warning-600;
+  }
+
+  .badge-danger {
+    @apply badge bg-danger-50 text-danger-600;
+  }
+
+  /* Status indicators */
+  .status-dot {
+    @apply w-2 h-2 rounded-full inline-block;
+  }
+
+  .status-active {
+    @apply status-dot bg-success-500;
+  }
+
+  .status-pending {
+    @apply status-dot bg-warning-500;
+  }
+
+  .status-inactive {
+    @apply status-dot bg-gray-400;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    @apply animate-spin h-5 w-5 text-primary-600;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   Utilities
+   ----------------------------------------------------------------------------- */
+@layer utilities {
+  /* Text balance */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Animation delays */
+  .animation-delay-150 {
+    animation-delay: 150ms;
+  }
+
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   Calendar Styles
+   ----------------------------------------------------------------------------- */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background-color: theme('colors.gray.200');
+}
+
+.calendar-day {
+  @apply bg-white p-2 min-h-[80px] text-sm;
+}
+
+.calendar-day.today {
+  @apply bg-primary-50;
+}
+
+.calendar-day.selected {
+  @apply bg-primary-100 ring-2 ring-primary-500;
+}
+
+.calendar-day.disabled {
+  @apply bg-gray-50 text-gray-400 cursor-not-allowed;
+}
+
+/* -----------------------------------------------------------------------------
+   Time Slot Styles
+   ----------------------------------------------------------------------------- */
+.time-slot {
+  @apply px-4 py-2 border rounded-lg text-center cursor-pointer transition-all;
+  @apply hover:border-primary-500 hover:bg-primary-50;
+}
+
+.time-slot.selected {
+  @apply bg-primary-600 text-white border-primary-600;
+}
+
+.time-slot.unavailable {
+  @apply bg-gray-100 text-gray-400 cursor-not-allowed;
+  @apply hover:border-gray-200 hover:bg-gray-100;
+}
+
+/* -----------------------------------------------------------------------------
+   Booking Wizard
+   ----------------------------------------------------------------------------- */
+.wizard-step {
+  @apply flex items-center;
+}
+
+.wizard-step-number {
+  @apply w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium;
+}
+
+.wizard-step.active .wizard-step-number {
+  @apply bg-primary-600 text-white;
+}
+
+.wizard-step.completed .wizard-step-number {
+  @apply bg-primary-600 text-white;
+}
+
+.wizard-step:not(.active):not(.completed) .wizard-step-number {
+  @apply bg-gray-200 text-gray-600;
+}
+
+.wizard-connector {
+  @apply h-0.5 flex-1 mx-2 bg-gray-200;
+}
+
+.wizard-step.completed + .wizard-connector,
+.wizard-step.active + .wizard-connector {
+  @apply bg-primary-600;
+}
