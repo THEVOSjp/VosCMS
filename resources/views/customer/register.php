@@ -5,7 +5,9 @@
 
 // Auth 클래스 로드
 require_once BASE_PATH . '/rzxlib/Core/Auth/Auth.php';
+require_once BASE_PATH . '/rzxlib/Core/Skin/MemberSkinLoader.php';
 use RzxLib\Core\Auth\Auth;
+use RzxLib\Core\Skin\MemberSkinLoader;
 
 // 로고 설정
 $siteName = $siteSettings['site_name'] ?? ($config['app_name'] ?? 'RezlyX');
@@ -27,6 +29,146 @@ if (Auth::check()) {
 }
 
 $pageTitle = $siteName . ' - ' . __('auth.register.title');
+
+// ============================================================================
+// 스킨 시스템 적용
+// ============================================================================
+$memberSkin = $siteSettings['member_skin'] ?? 'default';
+$skinBasePath = BASE_PATH . '/skins/member';
+$useSkin = false;
+
+// 스킨이 존재하는지 확인
+if (is_dir($skinBasePath . '/' . $memberSkin)) {
+    $skinLoader = new MemberSkinLoader($skinBasePath, $memberSkin);
+
+    // 해당 스킨에 register.php 템플릿이 있는지 확인
+    if ($skinLoader->pageExists('register')) {
+        $useSkin = true;
+    }
+}
+
+// 스킨을 사용하는 경우: 회원가입 처리 후 스킨 렌더링
+if ($useSkin) {
+    $errors = [];
+    $oldInput = [
+        'name' => $_POST['name'] ?? '',
+        'email' => $_POST['email'] ?? '',
+        'phone' => $_POST['phone'] ?? '',
+        'phone_country' => $_POST['phone_country'] ?? '+82',
+        'phone_number' => $_POST['phone_number'] ?? '',
+    ];
+    $success = false;
+
+    // Handle registration form submission
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $name = trim($_POST['name'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $phone = trim($_POST['phone'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $passwordConfirm = $_POST['password_confirm'] ?? '';
+        $agreeTerms = isset($_POST['agree_terms']);
+
+        $oldInput = ['name' => $name, 'email' => $email, 'phone' => $phone];
+
+        if (empty($name)) {
+            $errors[] = __('validation.required', ['attribute' => __('auth.register.name')]);
+        } elseif (empty($email)) {
+            $errors[] = __('validation.required', ['attribute' => __('auth.register.email')]);
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = __('validation.email', ['attribute' => __('auth.register.email')]);
+        } elseif (empty($password)) {
+            $errors[] = __('validation.required', ['attribute' => __('auth.register.password')]);
+        } elseif (strlen($password) < 8) {
+            $errors[] = __('validation.min.string', ['attribute' => __('auth.register.password'), 'min' => 8]);
+        } elseif ($password !== $passwordConfirm) {
+            $errors[] = __('validation.confirmed', ['attribute' => __('auth.register.password')]);
+        } elseif (!$agreeTerms) {
+            $errors[] = __('validation.accepted', ['attribute' => __('common.terms')]);
+        } else {
+            $result = Auth::register([
+                'name' => $name,
+                'email' => $email,
+                'phone' => $phone ?: null,
+                'password' => $password,
+            ]);
+
+            if ($result['success']) {
+                $success = true;
+            } else {
+                $errors[] = $result['error'] ?? __('auth.register.error');
+            }
+        }
+    }
+
+    // 약관 정보 로드 (다국어 지원)
+    $terms = [];
+    $currentLocale = current_locale();
+    for ($i = 1; $i <= 5; $i++) {
+        $consent = $siteSettings["member_term_{$i}_consent"] ?? 'disabled';
+
+        // 비활성화된 약관은 건너뛰기
+        if ($consent === 'disabled') {
+            continue;
+        }
+
+        // db_trans()를 사용하여 번역 조회, 없으면 기본 설정값 사용
+        $defaultTitle = $siteSettings["member_term_{$i}_title"] ?? '';
+        $defaultContent = $siteSettings["member_term_{$i}_content"] ?? '';
+
+        $title = db_trans("term.{$i}.title", $currentLocale, $defaultTitle);
+        $content = db_trans("term.{$i}.content", $currentLocale, $defaultContent);
+
+        // 번역이 fallback(기본 언어)을 사용하는지 확인
+        $isFallback = is_translation_fallback("term.{$i}.content", $currentLocale);
+
+        if (!empty($title)) {
+            $terms[] = [
+                'id' => $i,
+                'title' => $title,
+                'content' => $content,
+                'required' => $consent === 'required',
+                'isFallback' => $isFallback,
+            ];
+        }
+    }
+
+    // 스킨 렌더링
+    $skinHtml = $skinLoader->render('register', [
+        'errors' => $errors,
+        'oldInput' => $oldInput,
+        'success' => $success,
+        'csrfToken' => $_SESSION['csrf_token'] ?? '',
+        'loginUrl' => $baseUrl . '/login',
+        'terms' => $terms,
+        'siteName' => $siteName,
+        'baseUrl' => $baseUrl,
+    ]);
+
+    // 스킨은 body 내용만 포함하므로 전체 HTML 래퍼 필요
+    ?>
+<!DOCTYPE html>
+<html lang="<?= $config['locale'] ?? 'ko' ?>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= htmlspecialchars($pageTitle) ?></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <style>
+        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
+    </style>
+</head>
+<body>
+<?= $skinHtml ?>
+</body>
+</html>
+    <?php
+    exit;
+}
+// ============================================================================
+// 스킨이 없는 경우: 기존 뷰 사용 (아래 코드 계속)
+// ============================================================================
 
 $error = '';
 $success = '';

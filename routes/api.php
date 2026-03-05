@@ -169,6 +169,36 @@ $router->group(['prefix' => '/api/admin', 'middleware' => ['auth:api', 'admin']]
 });
 
 // ============================================================================
+// 업데이트 API (관리자 전용)
+// ============================================================================
+
+$router->group(['prefix' => '/api/admin/updates', 'middleware' => ['auth:api', 'admin']], function (Router $router) {
+    // 업데이트 확인
+    $router->get('/check', 'Api\\UpdateApiController@check')
+        ->name('api.admin.updates.check');
+
+    // 업데이트 실행
+    $router->post('/perform', 'Api\\UpdateApiController@perform')
+        ->name('api.admin.updates.perform');
+
+    // 롤백
+    $router->post('/rollback', 'Api\\UpdateApiController@rollback')
+        ->name('api.admin.updates.rollback');
+
+    // 백업 목록
+    $router->get('/backups', 'Api\\UpdateApiController@backups')
+        ->name('api.admin.updates.backups');
+
+    // 시스템 요구사항
+    $router->get('/requirements', 'Api\\UpdateApiController@requirements')
+        ->name('api.admin.updates.requirements');
+
+    // 현재 버전 정보
+    $router->get('/version', 'Api\\UpdateApiController@version')
+        ->name('api.admin.updates.version');
+});
+
+// ============================================================================
 // Webhook
 // ============================================================================
 

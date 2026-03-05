@@ -138,6 +138,7 @@ const PhoneInput = (function() {
         const selectedFlag = component.querySelector('.phone-selected-flag');
         const selectedCountry = component.querySelector('.phone-selected-country');
         const selectedCode = component.querySelector('.phone-selected-code');
+        const searchInput = component.querySelector('.phone-country-search');
 
         if (!countryInput || !numberInput || !dropdownBtn || !dropdown) {
             console.warn('[PhoneInput] 필수 요소를 찾을 수 없습니다:', idPrefix);
@@ -148,8 +149,33 @@ const PhoneInput = (function() {
         dropdownBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             dropdown.classList.toggle('hidden');
+            // 드롭다운 열릴 때 검색창 포커스
+            if (!dropdown.classList.contains('hidden') && searchInput) {
+                setTimeout(function() {
+                    searchInput.focus();
+                }, 100);
+            }
             console.log('[PhoneInput] 국가코드 드롭다운 토글');
         });
+
+        // 검색 기능
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                options.forEach(function(option) {
+                    const name = (option.dataset.name || '').toLowerCase();
+                    const code = (option.dataset.code || '').toLowerCase();
+                    const key = (option.dataset.key || '').toLowerCase();
+                    const matches = name.includes(query) || code.includes(query) || key.includes(query);
+                    option.style.display = matches ? '' : 'none';
+                });
+            });
+
+            // 검색창 클릭 시 드롭다운 닫히지 않게
+            searchInput.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
 
         // 국가 선택
         options.forEach(function(option) {
@@ -164,6 +190,14 @@ const PhoneInput = (function() {
                 countryInput.value = code;
 
                 dropdown.classList.add('hidden');
+
+                // 검색 초기화
+                if (searchInput) {
+                    searchInput.value = '';
+                    options.forEach(function(opt) {
+                        opt.style.display = '';
+                    });
+                }
 
                 // 전화번호 포맷 재적용
                 numberInput.value = formatPhoneNumber(numberInput.value, code);

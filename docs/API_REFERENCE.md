@@ -342,6 +342,88 @@ PUT /api/user/password
 }
 ```
 
+### 내 메시지 목록
+
+```
+GET /api/user/messages
+```
+
+**Parameters**
+| 파라미터 | 타입 | 설명 |
+|---------|------|------|
+| page | int | 페이지 번호 |
+| per_page | int | 페이지당 개수 (기본: 20) |
+| unread_only | bool | 읽지 않은 메시지만 |
+
+**Response**
+```json
+{
+  "success": true,
+  "data": {
+    "messages": [
+      {
+        "id": 1,
+        "title": "예약 확정 안내",
+        "body": "예약이 확정되었습니다.",
+        "type": "reservation",
+        "url": "/mypage/reservations/123",
+        "is_read": false,
+        "created_at": "2026-03-02T10:00:00Z"
+      }
+    ],
+    "unread_count": 3,
+    "total": 15,
+    "page": 1,
+    "per_page": 20
+  }
+}
+```
+
+### 메시지 읽음 처리
+
+```
+POST /api/user/messages/{id}/read
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "메시지를 읽음으로 표시했습니다."
+}
+```
+
+### 모든 메시지 읽음 처리
+
+```
+POST /api/user/messages/read-all
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "모든 메시지를 읽음으로 표시했습니다.",
+  "data": {
+    "updated_count": 5
+  }
+}
+```
+
+### 메시지 삭제
+
+```
+DELETE /api/user/messages/{id}
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "메시지가 삭제되었습니다."
+}
+```
+
 ---
 
 ## 관리자 API

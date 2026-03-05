@@ -10,42 +10,67 @@ return [
     'privacy' => 'Privacy Policy',
     'confirm' => 'Confirm',
 
-    // Country names
+    // Search
+    'search' => 'Search',
+
+    // Country names (worldwide)
     'countries' => [
-        // Asia
-        'kr' => 'Korea',
-        'jp' => 'Japan',
-        'cn' => 'China',
-        'tw' => 'Taiwan',
-        'hk' => 'Hong Kong',
-        'sg' => 'Singapore',
-        'th' => 'Thailand',
-        'vn' => 'Vietnam',
-        'my' => 'Malaysia',
-        'id' => 'Indonesia',
-        'ph' => 'Philippines',
-        'in' => 'India',
+        // Asia-Pacific
+        'kr' => 'Korea', 'jp' => 'Japan', 'cn' => 'China', 'tw' => 'Taiwan', 'hk' => 'Hong Kong',
+        'mo' => 'Macau', 'sg' => 'Singapore', 'th' => 'Thailand', 'vn' => 'Vietnam', 'my' => 'Malaysia',
+        'id' => 'Indonesia', 'ph' => 'Philippines', 'in' => 'India', 'pk' => 'Pakistan', 'af' => 'Afghanistan',
+        'lk' => 'Sri Lanka', 'mm' => 'Myanmar', 'ir' => 'Iran', 'bd' => 'Bangladesh', 'la' => 'Laos',
+        'kh' => 'Cambodia', 'np' => 'Nepal', 'mn' => 'Mongolia', 'kp' => 'North Korea', 'bt' => 'Bhutan',
+        'mv' => 'Maldives', 'bn' => 'Brunei', 'tl' => 'Timor-Leste',
         // North America
-        'us' => 'USA',
-        'ca' => 'Canada',
+        'us' => 'USA', 'ca' => 'Canada',
+        // Latin America
+        'mx' => 'Mexico', 'br' => 'Brazil', 'ar' => 'Argentina', 'cl' => 'Chile', 'co' => 'Colombia',
+        'pe' => 'Peru', 've' => 'Venezuela', 'ec' => 'Ecuador', 'bo' => 'Bolivia', 'py' => 'Paraguay',
+        'uy' => 'Uruguay', 'cr' => 'Costa Rica', 'pa' => 'Panama', 'sv' => 'El Salvador', 'gt' => 'Guatemala',
+        'hn' => 'Honduras', 'ni' => 'Nicaragua', 'cu' => 'Cuba', 'do' => 'Dominican Rep.', 'jm' => 'Jamaica',
+        'tt' => 'Trinidad & Tobago',
         // Europe
-        'gb' => 'UK',
-        'de' => 'Germany',
-        'fr' => 'France',
-        'it' => 'Italy',
-        'es' => 'Spain',
-        'nl' => 'Netherlands',
-        'ch' => 'Switzerland',
-        'ru' => 'Russia',
+        'gb' => 'UK', 'de' => 'Germany', 'fr' => 'France', 'it' => 'Italy', 'es' => 'Spain',
+        'pt' => 'Portugal', 'nl' => 'Netherlands', 'be' => 'Belgium', 'ch' => 'Switzerland', 'at' => 'Austria',
+        'se' => 'Sweden', 'no' => 'Norway', 'dk' => 'Denmark', 'fi' => 'Finland', 'is' => 'Iceland',
+        'ie' => 'Ireland', 'pl' => 'Poland', 'cz' => 'Czechia', 'sk' => 'Slovakia', 'hu' => 'Hungary',
+        'ro' => 'Romania', 'bg' => 'Bulgaria', 'gr' => 'Greece', 'tr' => 'Turkey', 'ua' => 'Ukraine',
+        'ru' => 'Russia', 'by' => 'Belarus', 'lt' => 'Lithuania', 'lv' => 'Latvia', 'ee' => 'Estonia',
+        'hr' => 'Croatia', 'si' => 'Slovenia', 'rs' => 'Serbia', 'me' => 'Montenegro', 'ba' => 'Bosnia',
+        'mk' => 'N. Macedonia', 'al' => 'Albania', 'xk' => 'Kosovo', 'lu' => 'Luxembourg', 'mc' => 'Monaco',
+        'sm' => 'San Marino', 'ad' => 'Andorra', 'gi' => 'Gibraltar', 'mt' => 'Malta', 'cy' => 'Cyprus',
         // Oceania
-        'au' => 'Australia',
-        'nz' => 'New Zealand',
+        'au' => 'Australia', 'nz' => 'New Zealand', 'fj' => 'Fiji', 'pg' => 'Papua New Guinea', 'ws' => 'Samoa',
+        'to' => 'Tonga', 'vu' => 'Vanuatu', 'nr' => 'Nauru', 'ki' => 'Kiribati', 'sb' => 'Solomon Is.',
+        'fm' => 'Micronesia', 'pw' => 'Palau', 'mh' => 'Marshall Is.',
         // Middle East
-        'ae' => 'UAE',
-        'sa' => 'Saudi Arabia',
-        // South America
-        'br' => 'Brazil',
-        'mx' => 'Mexico',
+        'ae' => 'UAE', 'sa' => 'Saudi Arabia', 'kw' => 'Kuwait', 'bh' => 'Bahrain', 'qa' => 'Qatar',
+        'om' => 'Oman', 'jo' => 'Jordan', 'lb' => 'Lebanon', 'sy' => 'Syria', 'iq' => 'Iraq',
+        'il' => 'Israel', 'ps' => 'Palestine', 'ye' => 'Yemen',
+        // Africa
+        'eg' => 'Egypt', 'ma' => 'Morocco', 'dz' => 'Algeria', 'tn' => 'Tunisia', 'ly' => 'Libya',
+        'ng' => 'Nigeria', 'za' => 'South Africa', 'ke' => 'Kenya', 'tz' => 'Tanzania', 'ug' => 'Uganda',
+        'et' => 'Ethiopia', 'gh' => 'Ghana', 'ci' => 'Ivory Coast', 'sn' => 'Senegal', 'cm' => 'Cameroon',
+        'cd' => 'DR Congo', 'cg' => 'Congo', 'zw' => 'Zimbabwe', 'zm' => 'Zambia', 'mz' => 'Mozambique',
+        'ao' => 'Angola', 'sd' => 'Sudan', 'ss' => 'South Sudan', 'so' => 'Somalia', 'dj' => 'Djibouti',
+        'er' => 'Eritrea', 'rw' => 'Rwanda', 'bi' => 'Burundi', 'mw' => 'Malawi', 'ls' => 'Lesotho',
+        'bw' => 'Botswana', 'sz' => 'Eswatini', 'na' => 'Namibia', 'mg' => 'Madagascar', 'mu' => 'Mauritius',
+        're' => 'Reunion', 'sc' => 'Seychelles', 'km' => 'Comoros', 'cv' => 'Cape Verde', 'gm' => 'Gambia',
+        'gn' => 'Guinea', 'gw' => 'Guinea-Bissau', 'lr' => 'Liberia', 'sl' => 'Sierra Leone', 'ml' => 'Mali',
+        'ne' => 'Niger', 'bf' => 'Burkina Faso', 'tg' => 'Togo', 'bj' => 'Benin', 'mr' => 'Mauritania',
+        'td' => 'Chad', 'cf' => 'Central African Rep.', 'gq' => 'Eq. Guinea', 'ga' => 'Gabon', 'st' => 'Sao Tome',
+        // Caribbean
+        'bs' => 'Bahamas', 'bb' => 'Barbados', 'ai' => 'Anguilla', 'ag' => 'Antigua', 'vg' => 'BVI',
+        'vi' => 'USVI', 'bm' => 'Bermuda', 'gd' => 'Grenada', 'tc' => 'Turks & Caicos', 'ms' => 'Montserrat',
+        'mp' => 'N. Mariana Is.', 'gu' => 'Guam', 'as' => 'Am. Samoa', 'sx' => 'Sint Maarten', 'lc' => 'St. Lucia',
+        'dm' => 'Dominica', 'vc' => 'St. Vincent', 'pr' => 'Puerto Rico', 'kn' => 'St. Kitts',
+        // Others
+        'ge' => 'Georgia', 'az' => 'Azerbaijan', 'am' => 'Armenia', 'kz' => 'Kazakhstan', 'uz' => 'Uzbekistan',
+        'tj' => 'Tajikistan', 'kg' => 'Kyrgyzstan', 'tm' => 'Turkmenistan', 'cw' => 'Curacao', 'gp' => 'Guadeloupe',
+        'mq' => 'Martinique', 'gf' => 'Fr. Guiana', 'nc' => 'New Caledonia', 'pf' => 'Fr. Polynesia',
+        'wf' => 'Wallis & Futuna', 'pm' => 'St. Pierre', 'mf' => 'St. Martin', 'bl' => 'St. Barthelemy', 'aw' => 'Aruba',
+        'fk' => 'Falkland Is.', 'nf' => 'Norfolk Is.', 'ck' => 'Cook Is.', 'nu' => 'Niue', 'tv' => 'Tuvalu', 'tk' => 'Tokelau',
     ],
 
     // Site

@@ -127,4 +127,75 @@ class SettingsController extends Controller
     {
         return $this->view('admin.settings.system.logs');
     }
+
+    /**
+     * 시스템 정보 - 업데이트 관리
+     */
+    public function systemUpdates(Request $request): Response
+    {
+        return $this->view('admin.settings.system.updates');
+    }
+
+    /**
+     * 시스템 정보 - 업데이트 AJAX 처리
+     */
+    public function systemUpdatesAjax(Request $request): Response
+    {
+        header('Content-Type: application/json');
+
+        $action = $request->input('action', '');
+
+        try {
+            $pdo = \RzxLib\Core\Database\Connection::getInstance()->getPdo();
+            $updater = new \RzxLib\Core\Updater\Updater($pdo, BASE_PATH);
+
+            switch ($action) {
+                case 'check':
+                    $result = $updater->checkForUpdates();
+                    echo json_encode(['success' => true, 'data' => $result]);
+                    break;
+
+                case 'perform':
+                    $version = $request->input('version');
+                    $result = $updater->performUpdate($version);
+                    echo json_encode(['success' => $result['success'], 'data' => $result]);
+                    break;
+
+                case 'rollback':
+                    $backupPath = $request->input('backup_path');
+                    $result = $updater->rollback($backupPath);
+                    echo json_encode(['success' => $result['success'], 'data' => $result]);
+                    break;
+
+                case 'backups':
+                    $backups = $updater->getBackups();
+                    echo json_encode(['success' => true, 'data' => $backups]);
+                    break;
+
+                case 'requirements':
+                    $requirements = $updater->checkRequirements();
+                    $allMet = !in_array(false, $requirements, true);
+                    echo json_encode([
+                        'success' => true,
+                        'data' => ['requirements' => $requirements, 'all_met' => $allMet]
+                    ]);
+                    break;
+
+                case 'version':
+                    $versionInfo = $updater->getCurrentVersion();
+                    unset($versionInfo['github']);
+                    echo json_encode(['success' => true, 'data' => $versionInfo]);
+                    break;
+
+                default:
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'error' => 'Invalid action']);
+            }
+        } catch (\Throwable $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+
+        exit;
+    }
 }

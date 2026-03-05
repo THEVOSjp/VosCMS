@@ -103,6 +103,25 @@ return [
     'login_with_google' => 'Sign in with Google',
     'login_with_kakao' => 'Sign in with Kakao',
     'login_with_naver' => 'Sign in with Naver',
+    'login_with_apple' => 'Sign in with Apple',
+    'login_with_facebook' => 'Sign in with Facebook',
+    'or_continue_with' => 'or',
+
+    // Terms Agreement
+    'terms' => [
+        'title' => 'Terms Agreement',
+        'subtitle' => 'Please agree to the terms to use the service',
+        'agree_all' => 'I agree to all terms',
+        'required' => 'Required',
+        'optional' => 'Optional',
+        'required_mark' => 'Required',
+        'required_note' => '* indicates required items',
+        'required_alert' => 'Please agree to all required terms.',
+        'notice' => 'You may not be able to use the service if you do not agree to the terms.',
+        'view_content' => 'View content',
+        'hide_content' => 'Hide content',
+        'translation_pending' => 'Translation in progress',
+    ],
 
     // My Page
     'mypage' => [

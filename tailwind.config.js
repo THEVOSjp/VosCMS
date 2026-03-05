@@ -3,7 +3,7 @@ module.exports = {
   content: [
     './resources/views/**/*.php',
     './skins/**/*.php',
-    './public/**/*.html',
+    './*.html',
   ],
   darkMode: 'class',
   theme: {

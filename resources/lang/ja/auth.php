@@ -105,6 +105,25 @@ return [
     'login_with_google' => 'Googleでログイン',
     'login_with_kakao' => 'カカオでログイン',
     'login_with_naver' => 'NAVERでログイン',
+    'login_with_apple' => 'Appleでログイン',
+    'login_with_facebook' => 'Facebookでログイン',
+    'or_continue_with' => 'または',
+
+    // 利用規約同意
+    'terms' => [
+        'title' => '利用規約同意',
+        'subtitle' => 'サービスをご利用いただくには、利用規約に同意してください',
+        'agree_all' => 'すべての利用規約に同意します',
+        'required' => '必須',
+        'optional' => '任意',
+        'required_mark' => '必須',
+        'required_note' => '* は必須項目です',
+        'required_alert' => '必須の利用規約に同意してください。',
+        'notice' => '利用規約に同意されない場合、サービスをご利用いただけない場合があります。',
+        'view_content' => '内容を見る',
+        'hide_content' => '内容を閉じる',
+        'translation_pending' => '翻訳準備中',
+    ],
 
     // マイページ
     'mypage' => [

@@ -5,7 +5,25 @@
  */
 
 // Base URL calculation
-$baseUrl = $config['app_url'] ?? '';
+// 1. 환경변수에서 읽기 시도
+// 2. config에서 읽기 시도 (app_url 또는 url 키)
+// 3. 자동 계산 (현재 스크립트 경로 기반)
+if (!empty($_ENV['APP_URL'])) {
+    $baseUrl = rtrim($_ENV['APP_URL'], '/');
+} elseif (!empty($config['app_url'])) {
+    $baseUrl = rtrim($config['app_url'], '/');
+} elseif (!empty($config['url'])) {
+    $baseUrl = rtrim($config['url'], '/');
+} else {
+    // 자동 계산: SCRIPT_NAME에서 /resources 이전 경로 추출
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+    if (preg_match('#^(.*?)/(resources|admin|index\.php)#', $scriptName, $matches)) {
+        $baseUrl = $matches[1];
+    } else {
+        // 폴백: 빈 문자열 (루트에서 실행)
+        $baseUrl = '';
+    }
+}
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
 // Database connection
@@ -133,10 +151,6 @@ $defaultMemberSettings = [
 
     // 디자인 설정
     'member_skin' => 'default',
-    'member_colorset' => 'default',
-    'member_mobile_layout' => 'responsive',
-    'member_mobile_skin' => 'responsive',
-    'member_form_style' => 'default',
     'member_social_login_enabled' => '0',
     'member_social_google' => '0',
     'member_social_line' => '0',

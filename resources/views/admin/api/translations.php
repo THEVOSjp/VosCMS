@@ -57,7 +57,7 @@ try {
                 `id` INT AUTO_INCREMENT NOT NULL,
                 `lang_key` VARCHAR(255) NOT NULL COMMENT '번역 키',
                 `locale` VARCHAR(10) NOT NULL COMMENT '언어 코드 (ko, en, ja 등)',
-                `content` TEXT NOT NULL COMMENT '번역된 내용',
+                `content` MEDIUMTEXT NOT NULL COMMENT '번역된 내용',
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (`id`),
@@ -65,6 +65,14 @@ try {
                 KEY `idx_lang_key` (`lang_key`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='다국어 번역 데이터'
         ");
+    } else {
+        // 기존 테이블이 있으면 content 컬럼을 MEDIUMTEXT로 변경
+        $colCheck = $pdo->query("SHOW COLUMNS FROM rzx_translations WHERE Field = 'content'");
+        $colInfo = $colCheck->fetch(PDO::FETCH_ASSOC);
+        $currentType = strtoupper($colInfo['Type'] ?? '');
+        if (strpos($currentType, 'MEDIUMTEXT') === false) {
+            $pdo->exec("ALTER TABLE rzx_translations MODIFY COLUMN `content` MEDIUMTEXT NOT NULL COMMENT '번역된 내용'");
+        }
     }
 } catch (PDOException $e) {
     // 테이블 생성 실패해도 계속 진행 (이미 존재할 수 있음)

@@ -103,6 +103,25 @@ return [
     'login_with_google' => 'Google로 로그인',
     'login_with_kakao' => '카카오로 로그인',
     'login_with_naver' => '네이버로 로그인',
+    'login_with_apple' => 'Apple로 로그인',
+    'login_with_facebook' => 'Facebook으로 로그인',
+    'or_continue_with' => '또는',
+
+    // 약관 동의
+    'terms' => [
+        'title' => '약관 동의',
+        'subtitle' => '서비스 이용을 위해 약관에 동의해 주세요',
+        'agree_all' => '전체 약관에 모두 동의합니다',
+        'required' => '필수',
+        'optional' => '선택',
+        'required_mark' => '필수',
+        'required_note' => '* 표시는 필수 동의 항목입니다',
+        'required_alert' => '필수 약관에 모두 동의해 주세요.',
+        'notice' => '위 약관에 동의하지 않으시면 서비스 이용이 제한될 수 있습니다.',
+        'view_content' => '내용 보기',
+        'hide_content' => '내용 접기',
+        'translation_pending' => '번역 준비 중',
+    ],
 
     // 마이페이지
     'mypage' => [
@@ -114,6 +133,7 @@ return [
             'reservations' => '예약 내역',
             'profile' => '프로필 수정',
             'password' => '비밀번호 변경',
+            'messages' => '메시지',
             'logout' => '로그아웃',
         ],
         'stats' => [
@@ -127,6 +147,18 @@ return [
         'view_all' => '전체 보기',
         'quick_actions' => '빠른 메뉴',
         'make_reservation' => '새 예약하기',
+        'messages' => [
+            'title' => '메시지',
+            'total' => '총 :count개의 메시지',
+            'unread' => ':count개 읽지 않음',
+            'empty' => '받은 메시지가 없습니다.',
+            'not_available' => '메시지 기능을 사용할 수 없습니다.',
+            'mark_read' => '읽음으로 표시',
+            'mark_all_read' => '모두 읽음 표시',
+            'delete' => '삭제',
+            'delete_confirm' => '이 메시지를 삭제하시겠습니까?',
+            'view_detail' => '자세히 보기',
+        ],
     ],
 
     // 프로필

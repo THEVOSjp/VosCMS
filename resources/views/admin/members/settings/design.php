@@ -44,12 +44,14 @@ function getAvailableMemberSkins(): array
                     $skinData['colorsets'] = array_keys($config['colorsets'] ?? ['default' => []]);
                 }
 
-                // 미리보기 이미지 확인
+                // 미리보기 이미지 확인 (baseUrl 포함)
+                global $baseUrl;
+                $skinBaseUrl = $baseUrl ?? '';
                 if (file_exists($skinsPath . '/' . $dir . '/preview.png')) {
-                    $skinData['preview'] = '/skins/member/' . $dir . '/preview.png';
+                    $skinData['preview'] = $skinBaseUrl . '/skins/member/' . $dir . '/preview.png';
                 }
                 if (file_exists($skinsPath . '/' . $dir . '/thumbnail.png')) {
-                    $skinData['thumbnail'] = '/skins/member/' . $dir . '/thumbnail.png';
+                    $skinData['thumbnail'] = $skinBaseUrl . '/skins/member/' . $dir . '/thumbnail.png';
                 }
 
                 $availableSkins[$dir] = $skinData;
@@ -139,26 +141,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute(['member_skin', $skin]);
             $memberSettings['member_skin'] = $skin;
 
-            // 컬러셋
-            $colorset = $_POST['member_colorset'] ?? 'default';
-            $stmt->execute(['member_colorset', $colorset]);
-            $memberSettings['member_colorset'] = $colorset;
-
-            // 모바일 레이아웃
-            $mobileLayout = $_POST['member_mobile_layout'] ?? 'responsive';
-            $stmt->execute(['member_mobile_layout', $mobileLayout]);
-            $memberSettings['member_mobile_layout'] = $mobileLayout;
-
-            // 모바일 스킨
-            $mobileSkin = $_POST['member_mobile_skin'] ?? 'responsive';
-            $stmt->execute(['member_mobile_skin', $mobileSkin]);
-            $memberSettings['member_mobile_skin'] = $mobileSkin;
-
-            // 폼 스타일
-            $formStyle = $_POST['member_form_style'] ?? 'default';
-            $stmt->execute(['member_form_style', $formStyle]);
-            $memberSettings['member_form_style'] = $formStyle;
-
             // 소셜 로그인 기능
             $socialLoginEnabled = isset($_POST['member_social_login_enabled']) ? '1' : '0';
             $stmt->execute(['member_social_login_enabled', $socialLoginEnabled]);
@@ -219,6 +201,45 @@ ob_start();
             <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4"><?= __('admin.members.settings.design.skin_desc') ?></p>
 
             <?php $currentSkin = $memberSettings['member_skin'] ?? 'default'; ?>
+
+            <!-- 스킨 관리 버튼 그룹 -->
+            <div class="flex items-center justify-end mb-4">
+                <div class="relative" id="addSkinContainer">
+                    <button type="button" id="addSkinBtn"
+                            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition shadow-sm">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        <?= __('admin.members.settings.design.add_skin') ?? '신규 스킨 추가' ?>
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div id="addSkinDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-700 py-1 z-50">
+                        <a href="#" onclick="showDirectRegisterModal(); return false;"
+                           class="flex items-center px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors">
+                            <svg class="w-5 h-5 mr-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                            </svg>
+                            <div>
+                                <div class="font-medium"><?= __('admin.members.settings.design.direct_register') ?? '직접 등록' ?></div>
+                                <div class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('admin.members.settings.design.direct_register_desc') ?? '스킨 파일을 직접 업로드합니다' ?></div>
+                            </div>
+                        </a>
+                        <a href="#" onclick="goToMarketplace(); return false;"
+                           class="flex items-center px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors">
+                            <svg class="w-5 h-5 mr-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <div>
+                                <div class="font-medium"><?= __('admin.members.settings.design.marketplace') ?? '마켓플레이스로부터 구입' ?></div>
+                                <div class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('admin.members.settings.design.marketplace_desc') ?? '다양한 스킨을 찾아보세요' ?></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <?php foreach ($availableMemberSkins as $skinKey => $skinData): ?>
                 <label class="cursor-pointer group relative">
@@ -289,107 +310,6 @@ ob_start();
                     </div>
                 </label>
                 <?php endforeach; ?>
-            </div>
-        </div>
-
-        <!-- 컬러셋 -->
-        <div class="py-4 border-b dark:border-zinc-700">
-            <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-1"><?= __('admin.members.settings.design.colorset') ?></label>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3"><?= __('admin.members.settings.design.colorset_desc') ?></p>
-            <div class="flex flex-wrap gap-4">
-                <?php $currentColorset = $memberSettings['member_colorset'] ?? 'default'; ?>
-                <label class="flex items-center cursor-pointer">
-                    <input type="radio" name="member_colorset" value="default" <?= $currentColorset === 'default' ? 'checked' : '' ?> class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.design.colorset_default') ?></span>
-                </label>
-                <label class="flex items-center cursor-pointer">
-                    <input type="radio" name="member_colorset" value="blue" <?= $currentColorset === 'blue' ? 'checked' : '' ?> class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.design.colorset_blue') ?></span>
-                </label>
-                <label class="flex items-center cursor-pointer">
-                    <input type="radio" name="member_colorset" value="green" <?= $currentColorset === 'green' ? 'checked' : '' ?> class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.design.colorset_green') ?></span>
-                </label>
-                <label class="flex items-center cursor-pointer">
-                    <input type="radio" name="member_colorset" value="purple" <?= $currentColorset === 'purple' ? 'checked' : '' ?> class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.design.colorset_purple') ?></span>
-                </label>
-            </div>
-        </div>
-
-        <!-- 모바일 레이아웃 -->
-        <div class="py-4 border-b dark:border-zinc-700">
-            <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-1"><?= __('admin.members.settings.design.mobile_layout') ?></label>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3"><?= __('admin.members.settings.design.mobile_layout_desc') ?></p>
-            <select name="member_mobile_layout" class="w-full md:w-1/2 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <?php $currentMobileLayout = $memberSettings['member_mobile_layout'] ?? 'responsive'; ?>
-                <option value="responsive" <?= $currentMobileLayout === 'responsive' ? 'selected' : '' ?>><?= __('admin.members.settings.design.mobile_responsive') ?></option>
-                <option value="basic" <?= $currentMobileLayout === 'basic' ? 'selected' : '' ?>><?= __('admin.members.settings.design.layout_basic') ?></option>
-                <option value="minimal" <?= $currentMobileLayout === 'minimal' ? 'selected' : '' ?>><?= __('admin.members.settings.design.style_minimal') ?></option>
-            </select>
-        </div>
-
-        <!-- 모바일 스킨 -->
-        <div class="py-4 border-b dark:border-zinc-700">
-            <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-1"><?= __('admin.members.settings.design.mobile_skin') ?></label>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3"><?= __('admin.members.settings.design.mobile_skin_desc') ?></p>
-            <select name="member_mobile_skin" class="w-full md:w-1/2 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <?php $currentMobileSkin = $memberSettings['member_mobile_skin'] ?? 'responsive'; ?>
-                <option value="responsive" <?= $currentMobileSkin === 'responsive' ? 'selected' : '' ?>><?= __('admin.members.settings.design.mobile_skin_responsive') ?></option>
-                <?php foreach ($availableSkins as $skin): ?>
-                    <option value="<?= htmlspecialchars($skin) ?>" <?= $currentMobileSkin === $skin ? 'selected' : '' ?>><?= htmlspecialchars(ucfirst($skin)) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
-        <!-- 폼 스타일 -->
-        <div class="py-4 border-b dark:border-zinc-700">
-            <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-1"><?= __('admin.members.settings.design.form_style') ?></label>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3"><?= __('admin.members.settings.design.form_style_desc') ?></p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <?php $currentStyle = $memberSettings['member_form_style'] ?? 'default'; ?>
-                <label class="relative cursor-pointer">
-                    <input type="radio" name="member_form_style" value="default" <?php echo $currentStyle === 'default' ? 'checked' : ''; ?> class="sr-only peer">
-                    <div class="p-4 border-2 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 dark:border-zinc-600">
-                        <div class="text-center mb-2">
-                            <div class="w-full h-20 bg-zinc-100 dark:bg-zinc-700 rounded flex items-center justify-center">
-                                <div class="w-3/4 space-y-1">
-                                    <div class="h-2 bg-zinc-300 dark:bg-zinc-600 rounded"></div>
-                                    <div class="h-4 bg-zinc-200 dark:bg-zinc-500 rounded"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <span class="block text-sm font-medium text-center text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.design.style_default') ?></span>
-                    </div>
-                </label>
-                <label class="relative cursor-pointer">
-                    <input type="radio" name="member_form_style" value="card" <?php echo $currentStyle === 'card' ? 'checked' : ''; ?> class="sr-only peer">
-                    <div class="p-4 border-2 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 dark:border-zinc-600">
-                        <div class="text-center mb-2">
-                            <div class="w-full h-20 bg-zinc-100 dark:bg-zinc-700 rounded flex items-center justify-center">
-                                <div class="w-2/3 p-2 bg-white dark:bg-zinc-800 rounded shadow space-y-1">
-                                    <div class="h-2 bg-zinc-300 dark:bg-zinc-600 rounded"></div>
-                                    <div class="h-3 bg-zinc-200 dark:bg-zinc-500 rounded"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <span class="block text-sm font-medium text-center text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.design.style_card') ?></span>
-                    </div>
-                </label>
-                <label class="relative cursor-pointer">
-                    <input type="radio" name="member_form_style" value="minimal" <?php echo $currentStyle === 'minimal' ? 'checked' : ''; ?> class="sr-only peer">
-                    <div class="p-4 border-2 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 dark:border-zinc-600">
-                        <div class="text-center mb-2">
-                            <div class="w-full h-20 bg-zinc-100 dark:bg-zinc-700 rounded flex items-center justify-center">
-                                <div class="w-3/4 space-y-2">
-                                    <div class="h-1 bg-zinc-400 dark:bg-zinc-500 rounded"></div>
-                                    <div class="h-3 border-b border-zinc-300 dark:border-zinc-500"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <span class="block text-sm font-medium text-center text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.design.style_minimal') ?></span>
-                    </div>
-                </label>
             </div>
         </div>
 
@@ -528,6 +448,48 @@ function toggleSocialLoginOptions() {
     } else {
         options.classList.add('hidden');
     }
+}
+
+// 신규 스킨 추가 드롭다운 토글
+(function() {
+    var addSkinBtn = document.getElementById('addSkinBtn');
+    var addSkinDropdown = document.getElementById('addSkinDropdown');
+    var addSkinContainer = document.getElementById('addSkinContainer');
+
+    if (addSkinBtn && addSkinDropdown) {
+        addSkinBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            addSkinDropdown.classList.toggle('hidden');
+            console.log('Add skin dropdown toggled');
+        });
+
+        // 외부 클릭 시 드롭다운 닫기
+        document.addEventListener('click', function(e) {
+            if (addSkinContainer && !addSkinContainer.contains(e.target)) {
+                addSkinDropdown.classList.add('hidden');
+            }
+        });
+    }
+})();
+
+// 직접 등록 모달 표시
+function showDirectRegisterModal() {
+    // 드롭다운 닫기
+    document.getElementById('addSkinDropdown').classList.add('hidden');
+
+    // TODO: 직접 등록 모달 구현
+    alert('직접 등록 기능은 준비 중입니다.\n스킨 ZIP 파일 업로드 기능이 추가될 예정입니다.');
+    console.log('Direct register modal requested');
+}
+
+// 마켓플레이스 이동
+function goToMarketplace() {
+    // 드롭다운 닫기
+    document.getElementById('addSkinDropdown').classList.add('hidden');
+
+    // TODO: 마켓플레이스 URL 설정
+    alert('마켓플레이스 기능은 준비 중입니다.\n다양한 스킨을 구매할 수 있는 마켓플레이스가 추가될 예정입니다.');
+    console.log('Marketplace navigation requested');
 }
 </script>
 

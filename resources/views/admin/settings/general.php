@@ -380,6 +380,9 @@ ob_start();
     }
 </script>
 
+<!-- 다국어 모달 컴포넌트 -->
+<?php include __DIR__ . '/../components/multilang-modal.php'; ?>
+
 <?php
 $pageContent = ob_get_clean();
 

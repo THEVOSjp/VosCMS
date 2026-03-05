@@ -19,7 +19,10 @@ return [
         'categories' => '카테고리 관리',
         'time_slots' => '시간대 관리',
         'members' => '회원 관리',
-        'points' => '적립금 관리',
+        'members_list' => '회원 목록',
+        'members_settings' => '회원 설정',
+        'members_groups' => '회원 그룹',
+        'points' => '적립금',
         'users' => '사용자 관리',
         'settings' => '설정',
         'site_management' => '사이트 관리',
@@ -338,6 +341,13 @@ return [
             'title' => 'PWA 설정',
             'description' => '프로그레시브 웹 앱(PWA) 설정을 관리합니다.',
 
+            // PWA 서브 탭
+            'tabs' => [
+                'general' => '기본 설정',
+                'webpush' => '웹푸시 설정',
+                'subscribers' => '구독자 관리',
+            ],
+
             // 프론트엔드 PWA
             'front' => [
                 'title' => '프론트엔드 PWA',
@@ -363,6 +373,104 @@ return [
                 'theme_color_label' => '테마 색상',
                 'bg_color_label' => '배경 색상',
                 'icon_label' => '앱 아이콘',
+            ],
+
+            // 웹푸시 설정
+            'webpush' => [
+                'title' => '웹푸시 알림',
+                'description' => '웹푸시 알림 기능을 설정합니다.',
+                'success' => '웹푸시 설정이 저장되었습니다.',
+                'status_enabled' => '웹푸시 알림이 활성화되어 있습니다.',
+                'status_disabled' => '웹푸시 알림이 비활성화되어 있습니다.',
+
+                'vapid' => [
+                    'title' => 'VAPID 키 설정',
+                    'description' => '웹푸시 인증에 필요한 VAPID 키를 관리합니다.',
+                    'public_key' => '공개 키 (Public Key)',
+                    'public_key_hint' => '이 키는 클라이언트 측에서 사용됩니다.',
+                    'private_key' => '비밀 키 (Private Key)',
+                    'private_key_warning' => '이 키는 절대 공개하지 마세요!',
+                    'subject' => 'Subject (연락처)',
+                    'subject_hint' => 'mailto: 또는 https:// 형식 (예: mailto:admin@example.com)',
+                    'generate' => 'VAPID 키 생성',
+                    'generate_confirm' => '새 VAPID 키를 생성하시겠습니까? 기존 키가 덮어씌워지며, 기존 구독자들은 재구독이 필요합니다.',
+                    'vapid_generated' => 'VAPID 키가 생성되었습니다.',
+                    'vapid_error' => 'VAPID 키 생성에 실패했습니다.',
+                    'openssl_required' => 'VAPID 키 생성에는 OpenSSL PHP 확장이 필요합니다.',
+                ],
+
+                'defaults' => [
+                    'title' => '알림 기본값',
+                    'title_label' => '기본 제목',
+                    'icon_label' => '기본 아이콘 경로',
+                    'badge_label' => '기본 배지 아이콘',
+                    'badge_hint' => '작은 아이콘 (모바일 상태바에 표시됨)',
+                    'vibrate' => '진동 사용',
+                    'require_interaction' => '사용자 상호작용 필요',
+                ],
+
+                'test' => [
+                    'title' => '테스트 알림',
+                    'description' => '현재 브라우저로 테스트 알림을 보내봅니다.',
+                    'send_button' => '테스트 알림 보내기',
+                    'body' => '이것은 테스트 알림입니다.',
+                    'not_supported' => '이 브라우저는 알림을 지원하지 않습니다.',
+                    'permission_denied' => '알림 권한이 거부되었습니다. 브라우저 설정에서 허용해주세요.',
+                    'test_sent' => '테스트 알림이 전송되었습니다.',
+                ],
+            ],
+
+            // 구독자 관리
+            'subscribers' => [
+                'tables_missing' => '데이터베이스 테이블이 없습니다',
+                'tables_missing_desc' => '푸시 알림 기능을 사용하려면 필요한 테이블을 생성해야 합니다.',
+                'create_tables' => '테이블 생성',
+                'tables_created' => '테이블이 생성되었습니다.',
+
+                'stats' => [
+                    'total' => '전체 구독자',
+                    'messages_sent' => '발송 메세지',
+                    'webpush_status' => '웹푸시 상태',
+                ],
+
+                'send' => [
+                    'title' => '알림 발송',
+                    'title_label' => '제목',
+                    'title_placeholder' => '알림 제목을 입력하세요',
+                    'body_label' => '내용',
+                    'body_placeholder' => '알림 내용을 입력하세요',
+                    'url_label' => '클릭 시 이동 URL (선택)',
+                    'target_label' => '발송 대상',
+                    'target_all' => '전체',
+                    'target_customers' => '고객만',
+                    'target_admins' => '관리자만',
+                    'save_to_inbox' => '인박스에 저장',
+                    'save_to_inbox_hint' => '사용자 메시지함에도 저장됩니다',
+                    'submit' => '발송하기',
+                ],
+
+                'list' => [
+                    'title' => '구독자 목록',
+                    'endpoint' => '엔드포인트',
+                    'user_agent' => '사용자 에이전트',
+                    'created' => '구독일',
+                    'status' => '상태',
+                    'empty' => '아직 구독자가 없습니다.',
+                ],
+
+                'messages' => [
+                    'title' => '최근 발송 내역',
+                    'title_col' => '제목',
+                    'sent_count' => '발송 수',
+                    'status' => '상태',
+                    'created' => '생성일',
+                ],
+
+                'error_empty_fields' => '제목과 내용을 입력해주세요.',
+                'notification_queued' => '알림이 발송 대기열에 추가되었습니다.',
+                'saved_to_inbox' => '(사용자 인박스에도 저장됨)',
+                'deleted' => '구독자가 삭제되었습니다.',
+                'delete_confirm' => '이 구독자를 삭제하시겠습니까?',
             ],
 
             // 공통
@@ -510,34 +618,33 @@ return [
                 'channel' => '채널',
                 'check_update' => '업데이트 확인',
                 'checking' => '확인 중...',
+                'check_failed' => '업데이트 확인에 실패했습니다.',
                 'up_to_date' => '최신 버전을 사용 중입니다.',
                 'new_version_available' => '새 버전이 있습니다!',
                 'view_details' => '상세 보기',
                 'release_notes' => '릴리스 노트',
                 'no_notes' => '릴리스 노트가 없습니다.',
                 'no_releases' => '릴리스를 찾을 수 없습니다.',
-                'github_settings' => 'GitHub 설정',
-                'github_description' => 'GitHub 저장소 정보를 입력하여 자동 업데이트를 활성화합니다.',
-                'github_owner' => '저장소 소유자',
-                'github_owner_hint' => 'GitHub 사용자명 또는 조직명',
-                'github_repo' => '저장소 이름',
-                'github_repo_hint' => '저장소 이름 (예: rezlyx)',
-                'github_branch' => '브랜치',
-                'github_token' => 'GitHub 토큰',
-                'github_token_hint' => '비공개 저장소의 경우 Personal Access Token 필요',
-                'github_not_configured' => 'GitHub 저장소가 설정되지 않았습니다.',
-                'optional' => '선택사항',
-                'settings_saved' => 'GitHub 설정이 저장되었습니다.',
-                'settings_error' => '설정 저장 중 오류가 발생했습니다.',
                 'requirements' => '시스템 요구사항',
                 'writable_root' => '루트 디렉토리 쓰기 권한',
+                'writable_storage' => 'Storage 디렉토리 쓰기 권한',
                 'not_available' => '불가',
                 'requirements_warning' => '일부 요구사항이 충족되지 않아 자동 업데이트가 제한될 수 있습니다.',
                 'notes_title' => '업데이트 안내',
                 'note_backup' => '업데이트 전 자동으로 백업이 생성됩니다.',
                 'note_maintenance' => '업데이트 중에는 사이트가 유지보수 모드로 전환됩니다.',
                 'note_rollback' => '업데이트 실패 시 자동으로 이전 버전으로 복원됩니다.',
-                'note_private' => '비공개 저장소는 GitHub Personal Access Token이 필요합니다.',
+                // 백업 관련
+                'backups' => '백업 목록',
+                'no_backups' => '저장된 백업이 없습니다.',
+                'restore' => '복원',
+                'confirm_restore' => '이 백업으로 복원하시겠습니까? 현재 파일들이 덮어씌워집니다.',
+                'restore_failed' => '복원에 실패했습니다.',
+                // 업데이트 실행
+                'update_now' => '지금 업데이트',
+                'confirm_update' => '업데이트를 진행하시겠습니까? 업데이트 전 자동으로 백업이 생성됩니다.',
+                'update_failed' => '업데이트에 실패했습니다.',
+                'reload_page' => '잠시 후 페이지가 새로고침됩니다.',
             ],
         ],
 
@@ -631,5 +738,299 @@ return [
         'no_data' => '데이터가 없습니다.',
         'loading' => '로딩 중...',
         'processing' => '처리 중...',
+    ],
+
+    // 공통 텍스트
+    'common' => [
+        'yes' => '예',
+        'no' => '아니오',
+        'recommended' => '권장',
+        'enabled' => '활성화됨',
+        'disabled' => '비활성화됨',
+        'active' => '활성',
+        'inactive' => '비활성',
+        'actions' => '작업',
+        'showing' => '표시 중',
+        'of' => '/',
+        'prev' => '이전',
+        'next' => '다음',
+    ],
+
+    // 회원 관리
+    'members' => [
+        'title' => '회원 관리',
+        'list' => '회원 목록',
+        'create' => '회원 추가',
+        'edit' => '회원 수정',
+        'detail' => '회원 상세',
+
+        // 회원 설정
+        'settings' => [
+            'title' => '회원 설정',
+
+            // 탭 메뉴
+            'tabs' => [
+                'general' => '기본 설정',
+                'features' => '기능 설정',
+                'terms' => '약관 설정',
+                'register' => '회원가입',
+                'login' => '로그인',
+                'design' => '디자인',
+            ],
+
+            // 기본 설정
+            'general' => [
+                'title' => '기본 설정',
+                'description' => '회원 시스템의 기본 동작을 설정합니다.',
+
+                // 회원가입 허가
+                'registration_mode' => '회원 가입 허가',
+                'registration_mode_desc' => '회원 가입을 받을지 선택합니다. URL 키를 사용할 경우, 일치하는 문자열이 포함된 URL로 접속해야 가입할 수 있게 됩니다.',
+                'registration_url_key' => 'URL 키가 일치하는 경우에만 허가',
+                'url_key_label' => 'URL 키',
+                'url_key_placeholder' => '예: secretkey123',
+                'url_key_hint' => '회원가입 URL에 ?key=값 형식으로 접속해야 가입이 가능합니다. (예: /register?key=secretkey123)',
+
+                // 이메일 인증
+                'email_verification' => '메일 인증 사용',
+                'email_verification_desc' => '입력된 메일 주소로 인증 메일을 보내 회원 가입을 확인합니다. 가입자가 인증 메일의 링크를 클릭해야 정상적으로 로그인이 가능해집니다.',
+
+                // 인증 메일 유효기간
+                'email_validity' => '인증 메일 유효기간',
+                'email_validity_desc' => '가입 인증 메일, 아이디/비번 찾기 등의 유효기간을 제한할 수 있습니다.',
+                'days' => '일',
+
+                // 회원 프로필사진 보이기
+                'show_profile_photo' => '회원 프로필사진 보이기',
+                'show_profile_photo_desc' => '관리자 회원목록 페이지에서 프로필 이미지를 볼 수 있는 옵션입니다. 회원목록에서 프로필 사진을 보기 원치 않을 경우에는 아니요를 선택하세요.',
+
+                // 비번 변경시 다른 기기 로그아웃
+                'logout_on_password_change' => '비번 변경시 다른 기기 로그아웃',
+                'logout_on_password_change_desc' => '비밀번호를 변경하면 현재 기기(브라우저)를 제외한 모든 로그인이 풀리도록 합니다.',
+
+                // ID/PW 찾기 방법
+                'password_recovery_method' => 'ID/PW 찾기 방법',
+                'password_recovery_method_desc' => 'ID/PW 찾기 기능 사용시, 새 비밀번호로 변경하는 방법을 선택합니다.',
+                'recovery_link' => '비밀번호 변경 화면 링크 전달',
+                'recovery_random' => '랜덤 비밀번호 전달',
+
+                // 회원정보 동기화
+                'sync_title' => '회원정보 동기화',
+                'sync_description' => '회원정보와 게시물/댓글 정보를 동기화 합니다.',
+                'sync_warning' => '데이터가 많은 경우 시간이 오래 소요될 수 있습니다. 이용자가 많은 경우 반드시 서비스를 중단하고 진행하세요.',
+                'sync_button' => '동기화 실행',
+                'sync_confirm' => '회원정보 동기화를 진행하시겠습니까? 데이터가 많은 경우 시간이 오래 소요될 수 있습니다.',
+                'sync_complete' => '회원정보 동기화가 완료되었습니다.',
+                'sync_error' => '동기화 중 오류가 발생했습니다',
+
+                // 기존 설정 (하위 호환)
+                'auto_login' => '가입 후 자동 로그인',
+                'auto_login_desc' => '회원가입 완료 후 자동으로 로그인합니다.',
+                'default_group' => '기본 회원 그룹',
+                'default_group_desc' => '신규 가입 회원에게 자동으로 부여되는 그룹',
+                'groups' => [
+                    'member' => '일반 회원',
+                    'vip' => 'VIP 회원',
+                    'pending' => '승인 대기',
+                ],
+            ],
+
+            // 기능 설정
+            'features' => [
+                'title' => '기능 설정',
+                'description' => '회원에게 제공할 기능을 설정합니다.',
+                'view_scrap' => '스크랩 보기',
+                'view_scrap_desc' => '회원이 스크랩한 콘텐츠를 확인할 수 있습니다.',
+                'view_bookmark' => '저장함 보기',
+                'view_bookmark_desc' => '회원이 저장한 콘텐츠를 확인할 수 있습니다.',
+                'view_posts' => '작성 글 보기',
+                'view_posts_desc' => '회원이 작성한 게시글을 확인할 수 있습니다.',
+                'view_comments' => '작성 댓글 보기',
+                'view_comments_desc' => '회원이 작성한 댓글을 확인할 수 있습니다.',
+                'auto_login_manage' => '자동 로그인 관리',
+                'auto_login_manage_desc' => '회원이 자동 로그인 기기를 관리할 수 있습니다.',
+            ],
+
+            // 약관 설정
+            'terms' => [
+                'title' => '약관 설정',
+                'description' => '회원가입 시 동의받을 약관을 설정합니다. 최대 5개의 약관을 등록할 수 있습니다.',
+                'term_section' => '회원 가입 약관',
+                'term_title' => '약관 제목',
+                'term_title_placeholder' => '예: 이용약관, 개인정보처리방침',
+                'term_content' => '약관 내용',
+                'consent_required' => '동의 필수 여부',
+                'consent_required_option' => '필수',
+                'consent_optional_option' => '선택',
+                'consent_disabled_option' => '사용 안 함',
+            ],
+
+            // 회원가입 설정
+            'register' => [
+                'title' => '회원가입 설정',
+                'description' => '회원가입 폼과 프로세스를 설정합니다.',
+                'form_fields' => '회원가입 입력 항목',
+                'form_fields_desc' => '회원가입 시 입력받을 항목을 선택합니다.',
+                'required_note' => '* 표시된 항목은 필수 항목입니다.',
+                'fields' => [
+                    'name' => '이름',
+                    'email' => '이메일',
+                    'password' => '비밀번호',
+                    'phone' => '전화번호',
+                    'birth_date' => '생년월일',
+                    'gender' => '성별',
+                    'company' => '회사/소속',
+                    'blog' => '블로그',
+                    'profile_photo' => '프로필 사진',
+                ],
+                'use_captcha' => 'CAPTCHA 사용',
+                'use_captcha_desc' => '봇 가입을 방지하기 위해 CAPTCHA를 표시합니다.',
+                'email_provider' => '이메일 제공자 관리',
+                'email_provider_desc' => '특정 도메인에 소속된 이메일 주소로만 가입할 수 있도록 하거나, 특정 도메인을 금지할 수 있습니다. (예: naver.com, gmail.com)',
+                'email_provider_none' => '제한 없음',
+                'email_provider_allow' => '허가',
+                'email_provider_block' => '제한',
+                'email_provider_placeholder' => '예: naver.com, gmail.com',
+                'email_provider_hint' => '여러 항목은 하나씩 추가하세요. 아무 것도 입력하지 않으면 이메일 주소를 제한하지 않습니다.',
+                'email_provider_invalid' => '올바른 도메인 형식이 아닙니다.',
+                'email_provider_duplicate' => '이미 등록된 도메인입니다.',
+                'welcome_email' => '환영 이메일 발송',
+                'welcome_email_desc' => '가입 완료 후 환영 이메일을 발송합니다.',
+                'redirect_url' => '회원가입 후 이동할 페이지',
+                'redirect_url_desc' => '회원가입 완료 후 이동할 페이지의 URL을 입력합니다.',
+                'redirect_url_placeholder' => '예: /welcome 또는 https://example.com/welcome',
+                'redirect_url_hint' => '비워두면 기본 페이지(마이페이지 또는 홈)로 이동합니다.',
+            ],
+
+            // 로그인 설정
+            'login' => [
+                'title' => '로그인 설정',
+                'description' => '로그인 방식과 보안 옵션을 설정합니다.',
+                'method' => '로그인 방식',
+                'method_desc' => '회원이 로그인할 때 사용할 ID 유형을 선택합니다.',
+                'method_email' => '이메일',
+                'method_phone' => '전화번호',
+                'method_both' => '이메일 또는 전화번호',
+                'remember_me' => '로그인 상태 유지 옵션',
+                'remember_me_desc' => '로그인 상태 유지 체크박스를 표시합니다.',
+                'attempts' => '로그인 시도 제한',
+                'attempts_desc' => '계정 잠금 전 허용되는 실패 횟수',
+                'unlimited' => '무제한',
+                'times' => '회',
+                'lockout' => '계정 잠금 시간',
+                'lockout_desc' => '로그인 실패 후 계정이 잠기는 시간',
+                'minutes' => '분',
+                'hour' => '시간',
+                'hours' => '시간',
+                'seconds' => '초',
+                'brute_force' => '계정 무한 대입 방지 사용',
+                'brute_force_desc' => '짧은 시간 동안 하나의 아이피(IP)에서 시도할 수 있는 로그인 횟수에 제한을 둡니다.',
+                'single_device' => '다른 기기 로그아웃',
+                'single_device_desc' => '한 번에 하나의 기기에서만 로그인할 수 있도록 합니다.',
+                'login_redirect_url' => '로그인 후 이동할 주소(URL)',
+                'login_redirect_url_desc' => '로그인 후 이동할 URL을 정할 수 있습니다. 입력하지 않으면 로그인 전의 페이지로 돌아갑니다.',
+                'logout_redirect_url' => '로그아웃 후 이동할 주소(URL)',
+                'logout_redirect_url_desc' => '로그아웃 후 이동할 URL을 정할 수 있습니다. 입력하지 않으면 로그아웃 전의 페이지로 돌아갑니다.',
+                'redirect_url_placeholder' => '예: /mypage 또는 https://example.com',
+            ],
+
+            // 디자인 설정
+            'design' => [
+                'title' => '디자인 설정',
+                'description' => '회원 관련 페이지의 디자인을 설정합니다.',
+                'mypage_layout' => '마이페이지 레이아웃',
+                'layout_width' => '전체너비',
+                'layout_left_width' => '좌측너비',
+                'layout_content_width' => '컨텐츠너비',
+                'layout_right_width' => '우측너비',
+                'layout_style' => '레이아웃 스타일',
+                'layout' => '레이아웃',
+                'layout_desc' => '회원 페이지에 적용할 레이아웃을 선택합니다.',
+                'layout_none' => '미사용',
+                'layout_basic' => '기본 레이아웃',
+                'layout_sidebar_type' => '사이드바 레이아웃',
+                'no_layouts_found' => 'layouts 폴더에 레이아웃이 없습니다. 레이아웃 폴더를 추가해주세요.',
+                'skin' => '스킨',
+                'skin_desc' => '회원 페이지에 적용할 스킨을 선택합니다.',
+                'skin_default' => '회원 기본 스킨 (default)',
+                'skin_modern' => '모던 스킨',
+                'skin_classic' => '클래식 스킨',
+                'colorset' => '컬러셋',
+                'colorset_desc' => '스킨에 적용할 색상 테마를 선택합니다.',
+                'colorset_default' => '기본',
+                'colorset_blue' => '블루',
+                'colorset_green' => '그린',
+                'colorset_purple' => '퍼플',
+                'mobile_layout' => '모바일 레이아웃',
+                'mobile_layout_desc' => '모바일에서 사용할 레이아웃을 선택합니다.',
+                'mobile_responsive' => 'PC와 동일한 반응형 레이아웃 사용',
+                'mobile_skin' => '모바일 스킨',
+                'mobile_skin_desc' => '모바일에서 사용할 스킨을 선택합니다.',
+                'mobile_skin_responsive' => 'PC와 동일한 반응형 스킨 사용',
+                'mobile_skin_mobile' => '모바일 전용 스킨',
+                'form_style' => '폼 스타일',
+                'form_style_desc' => '로그인/회원가입 폼의 스타일을 선택합니다.',
+                'style_default' => '기본',
+                'style_card' => '카드형',
+                'style_minimal' => '미니멀',
+                'login_background' => '로그인 페이지 배경',
+                'login_background_desc' => '로그인 페이지의 배경 스타일',
+                'bg_none' => '없음 (기본)',
+                'bg_gradient' => '그라데이션',
+                'bg_image' => '이미지',
+                'bg_pattern' => '패턴',
+                'register_layout' => '회원가입 페이지 레이아웃',
+                'register_layout_desc' => '회원가입 폼의 레이아웃 형태',
+                'layout_single' => '단일 페이지',
+                'layout_steps' => '단계별',
+                'layout_split' => '좌우 분할',
+                'social_login' => '소셜 로그인 기능',
+                'social_login_desc' => '로그인/회원가입 페이지에 소셜 로그인 버튼을 표시합니다.',
+                'social_google' => 'Google 로그인',
+                'social_line' => 'LINE 로그인',
+                'social_kakao' => '카카오톡 로그인',
+                'profile_style' => '마이페이지 스타일',
+                'profile_style_desc' => '회원 마이페이지의 레이아웃 스타일',
+                'profile_card' => '카드형',
+                'profile_sidebar' => '사이드바형',
+                'profile_tabs' => '탭형',
+
+                // 스킨 추가
+                'add_skin' => '신규 스킨 추가',
+                'direct_register' => '직접 등록',
+                'direct_register_desc' => '스킨 파일을 직접 업로드합니다',
+                'marketplace' => '마켓플레이스로부터 구입',
+                'marketplace_desc' => '다양한 스킨을 찾아보세요',
+            ],
+        ],
+
+        // 회원 그룹
+        'groups' => [
+            'title' => '회원 그룹',
+            'list' => '그룹 목록',
+            'create' => '그룹 추가',
+            'edit' => '그룹 수정',
+            'fields' => [
+                'name' => '그룹명',
+                'description' => '설명',
+                'discount_rate' => '할인율 (%)',
+                'point_rate' => '적립률 (%)',
+                'is_default' => '기본 그룹',
+            ],
+        ],
+
+        // 적립금
+        'points' => [
+            'title' => '적립금 관리',
+            'history' => '적립금 내역',
+            'add' => '적립금 지급',
+            'deduct' => '적립금 차감',
+            'fields' => [
+                'member' => '회원',
+                'amount' => '금액',
+                'reason' => '사유',
+                'balance' => '잔액',
+            ],
+        ],
     ],
 ];

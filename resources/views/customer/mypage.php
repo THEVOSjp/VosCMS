@@ -81,6 +81,27 @@ include BASE_PATH . '/resources/views/partials/header.php';
                             </svg>
                             <?php echo __('auth.mypage.menu.password'); ?>
                         </a>
+                        <a href="<?php echo $baseUrl; ?>/mypage/messages" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700 relative">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            <?php echo __('auth.mypage.menu.messages'); ?>
+                            <?php
+                            // 읽지 않은 메시지 수 표시
+                            $unreadCount = 0;
+                            try {
+                                global $pdo;
+                                $unreadStmt = $pdo->prepare("SELECT COUNT(*) FROM rzx_user_notifications WHERE user_id = ? AND is_read = 0");
+                                $unreadStmt->execute([$user['id']]);
+                                $unreadCount = $unreadStmt->fetchColumn();
+                            } catch (Exception $e) {
+                                // 테이블이 없으면 무시
+                            }
+                            if ($unreadCount > 0):
+                            ?>
+                            <span class="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full"><?php echo $unreadCount > 99 ? '99+' : $unreadCount; ?></span>
+                            <?php endif; ?>
+                        </a>
                         <form action="<?php echo $baseUrl; ?>/logout" method="POST" class="mt-4 pt-4 border-t dark:border-zinc-700">
                             <button type="submit" class="flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30">
                                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

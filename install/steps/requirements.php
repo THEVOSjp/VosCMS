@@ -61,7 +61,7 @@ $directories = [
     BASE_PATH . '/storage/logs' => is_writable(BASE_PATH . '/storage/logs'),
     BASE_PATH . '/storage/uploads' => is_writable(BASE_PATH . '/storage/uploads'),
     BASE_PATH . '/storage/sessions' => is_writable(BASE_PATH . '/storage/sessions'),
-    BASE_PATH . '/public/assets' => is_writable(BASE_PATH . '/public/assets'),
+    BASE_PATH . '/assets' => is_writable(BASE_PATH . '/assets'),
 ];
 
 $allPassed = true;

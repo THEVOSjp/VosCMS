@@ -146,6 +146,12 @@ $router->group(['prefix' => '/mypage', 'middleware' => 'auth'], function (Router
     $router->post('/password', 'MyPageController@updatePassword')
         ->middleware('csrf')
         ->name('mypage.password.update');
+
+    // 메시지
+    $router->get('/messages', 'MyPageController@messages')->name('mypage.messages');
+    $router->post('/messages', 'MyPageController@messagesAction')
+        ->middleware('csrf')
+        ->name('mypage.messages.action');
 });
 
 // ============================================================================
@@ -226,6 +232,98 @@ $router->group(['prefix' => '/admin', 'middleware' => ['auth', 'admin']], functi
     // 사용자 관리
     $router->resource('users', 'Admin\\UserController');
 
+    // 회원 관리
+    $router->get('/members', 'Admin\\MemberController@index')
+        ->name('admin.members.index');
+    $router->get('/members/create', 'Admin\\MemberController@create')
+        ->name('admin.members.create');
+    $router->post('/members', 'Admin\\MemberController@store')
+        ->middleware('csrf')
+        ->name('admin.members.store');
+    $router->get('/members/{id}', 'Admin\\MemberController@show')
+        ->where('id', '\d+')
+        ->name('admin.members.show');
+    $router->get('/members/{id}/edit', 'Admin\\MemberController@edit')
+        ->where('id', '\d+')
+        ->name('admin.members.edit');
+    $router->put('/members/{id}', 'Admin\\MemberController@update')
+        ->where('id', '\d+')
+        ->middleware('csrf')
+        ->name('admin.members.update');
+    $router->delete('/members/{id}', 'Admin\\MemberController@destroy')
+        ->where('id', '\d+')
+        ->middleware('csrf')
+        ->name('admin.members.destroy');
+
+    // 회원 설정 (서브페이지)
+    $router->get('/members/settings', function () {
+        header('Location: ' . url('/admin/members/settings/general'));
+        exit;
+    })->name('admin.members.settings.index');
+
+    $router->get('/members/settings/general', 'Admin\\MemberSettingsController@general')
+        ->name('admin.members.settings.general');
+    $router->post('/members/settings/general', 'Admin\\MemberSettingsController@updateGeneral')
+        ->middleware('csrf')
+        ->name('admin.members.settings.general.update');
+
+    $router->get('/members/settings/features', 'Admin\\MemberSettingsController@features')
+        ->name('admin.members.settings.features');
+    $router->post('/members/settings/features', 'Admin\\MemberSettingsController@updateFeatures')
+        ->middleware('csrf')
+        ->name('admin.members.settings.features.update');
+
+    $router->get('/members/settings/terms', 'Admin\\MemberSettingsController@terms')
+        ->name('admin.members.settings.terms');
+    $router->post('/members/settings/terms', 'Admin\\MemberSettingsController@updateTerms')
+        ->middleware('csrf')
+        ->name('admin.members.settings.terms.update');
+
+    $router->get('/members/settings/register', 'Admin\\MemberSettingsController@register')
+        ->name('admin.members.settings.register');
+    $router->post('/members/settings/register', 'Admin\\MemberSettingsController@updateRegister')
+        ->middleware('csrf')
+        ->name('admin.members.settings.register.update');
+
+    $router->get('/members/settings/login', 'Admin\\MemberSettingsController@login')
+        ->name('admin.members.settings.login');
+    $router->post('/members/settings/login', 'Admin\\MemberSettingsController@updateLogin')
+        ->middleware('csrf')
+        ->name('admin.members.settings.login.update');
+
+    $router->get('/members/settings/design', 'Admin\\MemberSettingsController@design')
+        ->name('admin.members.settings.design');
+    $router->post('/members/settings/design', 'Admin\\MemberSettingsController@updateDesign')
+        ->middleware('csrf')
+        ->name('admin.members.settings.design.update');
+
+    // 회원 그룹
+    $router->get('/members/groups', 'Admin\\MemberGroupController@index')
+        ->name('admin.members.groups.index');
+    $router->post('/members/groups', 'Admin\\MemberGroupController@store')
+        ->middleware('csrf')
+        ->name('admin.members.groups.store');
+    $router->put('/members/groups/{id}', 'Admin\\MemberGroupController@update')
+        ->where('id', '\d+')
+        ->middleware('csrf')
+        ->name('admin.members.groups.update');
+    $router->delete('/members/groups/{id}', 'Admin\\MemberGroupController@destroy')
+        ->where('id', '\d+')
+        ->middleware('csrf')
+        ->name('admin.members.groups.destroy');
+
+    // 적립금 관리
+    $router->get('/points', 'Admin\\PointController@index')
+        ->name('admin.points.index');
+    $router->get('/points/history', 'Admin\\PointController@history')
+        ->name('admin.points.history');
+    $router->post('/points/add', 'Admin\\PointController@add')
+        ->middleware('csrf')
+        ->name('admin.points.add');
+    $router->post('/points/deduct', 'Admin\\PointController@deduct')
+        ->middleware('csrf')
+        ->name('admin.points.deduct');
+
     // 설정 (서브페이지)
     $router->get('/settings', function () {
         // 기본 설정 페이지로 리다이렉트
@@ -274,4 +372,8 @@ $router->group(['prefix' => '/admin', 'middleware' => ['auth', 'admin']], functi
     $router->post('/settings/system/logs', 'Admin\\SettingsController@systemLogsAction')
         ->middleware('csrf')
         ->name('admin.settings.system.logs.action');
+    $router->get('/settings/system/updates', 'Admin\\SettingsController@systemUpdates')
+        ->name('admin.settings.system.updates');
+    $router->post('/settings/system/updates/ajax', 'Admin\\SettingsController@systemUpdatesAjax')
+        ->name('admin.settings.system.updates.ajax');
 });

@@ -5,7 +5,9 @@
 
 // 인증 헬퍼 로드
 require_once BASE_PATH . '/rzxlib/Core/Auth/Auth.php';
+require_once BASE_PATH . '/rzxlib/Core/Skin/MemberSkinLoader.php';
 use RzxLib\Core\Auth\Auth;
+use RzxLib\Core\Skin\MemberSkinLoader;
 
 // 로고 설정
 $siteName = $siteSettings['site_name'] ?? ($config['app_name'] ?? 'RezlyX');
@@ -27,6 +29,103 @@ if (Auth::check()) {
     header('Location: ' . $baseUrl . '/');
     exit;
 }
+
+// ============================================================================
+// 스킨 시스템 적용
+// ============================================================================
+$memberSkin = $siteSettings['member_skin'] ?? 'default';
+$skinBasePath = BASE_PATH . '/skins/member';
+$useSkin = false;
+
+// 스킨이 존재하는지 확인
+if (is_dir($skinBasePath . '/' . $memberSkin)) {
+    $skinLoader = new MemberSkinLoader($skinBasePath, $memberSkin);
+
+    // 해당 스킨에 login.php 템플릿이 있는지 확인
+    if ($skinLoader->pageExists('login')) {
+        $useSkin = true;
+    }
+}
+
+// 스킨을 사용하는 경우: 로그인 처리 후 스킨 렌더링
+if ($useSkin) {
+    $errors = [];
+    $oldInput = [];
+
+    // Handle login form submission
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $remember = isset($_POST['remember']);
+
+        $oldInput['email'] = $email;
+
+        if (empty($email) || empty($password)) {
+            $errors[] = __('auth.login.required');
+        } else {
+            $result = Auth::attempt($email, $password, $remember);
+
+            if ($result['success']) {
+                $redirect = $_GET['redirect'] ?? $baseUrl . '/';
+                header('Location: ' . $redirect);
+                exit;
+            } else {
+                $errors[] = __('auth.login.' . ($result['error'] ?? 'failed'));
+            }
+        }
+    }
+
+    // 스킨에 필요한 소셜 로그인 정보 로드
+    $socialProviders = [];
+    if (($siteSettings['member_social_login_enabled'] ?? '0') === '1') {
+        if (($siteSettings['member_social_google'] ?? '0') === '1') {
+            $socialProviders[] = 'google';
+        }
+        if (($siteSettings['member_social_line'] ?? '0') === '1') {
+            $socialProviders[] = 'line';
+        }
+        if (($siteSettings['member_social_kakao'] ?? '0') === '1') {
+            $socialProviders[] = 'kakao';
+        }
+    }
+
+    // 스킨 렌더링
+    $skinHtml = $skinLoader->render('login', [
+        'errors' => $errors,
+        'oldInput' => $oldInput,
+        'csrfToken' => $_SESSION['csrf_token'] ?? '',
+        'registerUrl' => $baseUrl . '/register',
+        'passwordResetUrl' => $baseUrl . '/forgot-password',
+        'socialProviders' => $socialProviders,
+        'siteName' => $siteName,
+        'baseUrl' => $baseUrl,
+    ]);
+
+    // 스킨은 body 내용만 포함하므로 전체 HTML 래퍼 필요
+    ?>
+<!DOCTYPE html>
+<html lang="<?= $config['locale'] ?? 'ko' ?>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= htmlspecialchars($pageTitle) ?></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <style>
+        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
+    </style>
+</head>
+<body>
+<?= $skinHtml ?>
+</body>
+</html>
+    <?php
+    exit;
+}
+// ============================================================================
+// 스킨이 없는 경우: 기존 뷰 사용 (아래 코드 계속)
+// ============================================================================
 
 // Handle login form submission
 $error = '';

@@ -1,123 +1,50 @@
 <?php
 /**
  * RezlyX Admin Settings - Update Management
- * GitHub-based auto-update system
+ * 보안 강화된 서버 사이드 업데이트 시스템
  */
 
-// Initialize database and settings
 require_once __DIR__ . '/../_init.php';
 
 $pageTitle = __('admin.settings.system.tabs.updates') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentSettingsPage = 'system';
 $currentSystemTab = 'updates';
 
-// Load version information
+// 버전 정보 로드
 $versionFile = BASE_PATH . '/version.json';
 $versionInfo = file_exists($versionFile) ? json_decode(file_get_contents($versionFile), true) : [
     'version' => '1.0.0',
-    'commit' => null,
     'channel' => 'stable',
-    'github' => ['owner' => '', 'repo' => '', 'branch' => 'main']
 ];
 
 $currentVersion = $versionInfo['version'] ?? '1.0.0';
-$githubOwner = $versionInfo['github']['owner'] ?? '';
-$githubRepo = $versionInfo['github']['repo'] ?? '';
-$githubBranch = $versionInfo['github']['branch'] ?? 'main';
+$releaseDate = $versionInfo['release_date'] ?? '';
+$channel = $versionInfo['channel'] ?? 'stable';
 
-// Messages
-$message = '';
-$messageType = '';
-
-// Handle POST actions
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    $action = $_POST['action'];
-
-    switch ($action) {
-        case 'save_github_settings':
-            $newOwner = trim($_POST['github_owner'] ?? '');
-            $newRepo = trim($_POST['github_repo'] ?? '');
-            $newBranch = trim($_POST['github_branch'] ?? 'main');
-            $newToken = trim($_POST['github_token'] ?? '');
-
-            // Update version.json
-            $versionInfo['github']['owner'] = $newOwner;
-            $versionInfo['github']['repo'] = $newRepo;
-            $versionInfo['github']['branch'] = $newBranch;
-
-            if (file_put_contents($versionFile, json_encode($versionInfo, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))) {
-                // Save token to database if provided
-                if (!empty($newToken)) {
-                    try {
-                        $stmt = $pdo->prepare("INSERT INTO rzx_settings (`key`, `value`) VALUES ('github_token', ?) ON DUPLICATE KEY UPDATE `value` = ?");
-                        $stmt->execute([$newToken, $newToken]);
-                    } catch (PDOException $e) {
-                        // Ignore
-                    }
-                }
-
-                $githubOwner = $newOwner;
-                $githubRepo = $newRepo;
-                $githubBranch = $newBranch;
-
-                $message = __('admin.settings.system.updates.settings_saved');
-                $messageType = 'success';
-            } else {
-                $message = __('admin.settings.system.updates.settings_error');
-                $messageType = 'error';
-            }
-            break;
-
-        case 'check_update':
-            // Check for updates via GitHub API
-            if (empty($githubOwner) || empty($githubRepo)) {
-                $message = __('admin.settings.system.updates.github_not_configured');
-                $messageType = 'error';
-            } else {
-                // This will be handled via JavaScript/AJAX for better UX
-                $message = __('admin.settings.system.updates.checking');
-                $messageType = 'info';
-            }
-            break;
-    }
-}
-
-// Get GitHub token from database
-$githubToken = '';
-try {
-    $stmt = $pdo->prepare("SELECT `value` FROM rzx_settings WHERE `key` = 'github_token'");
-    $stmt->execute();
-    $githubToken = $stmt->fetchColumn() ?: '';
-} catch (PDOException $e) {
-    // Ignore
-}
-
-// Check if GitHub is configured
-$isGithubConfigured = !empty($githubOwner) && !empty($githubRepo);
-
-// Check system requirements for updates
+// 시스템 요구사항 확인
 $requirements = [
     'curl' => extension_loaded('curl'),
     'json' => extension_loaded('json'),
     'zip' => extension_loaded('zip'),
-    'allow_url_fopen' => ini_get('allow_url_fopen'),
+    'openssl' => extension_loaded('openssl'),
+    'allow_url_fopen' => (bool) ini_get('allow_url_fopen'),
     'writable_root' => is_writable(BASE_PATH),
+    'writable_storage' => is_writable(BASE_PATH . '/storage'),
 ];
 $allRequirementsMet = !in_array(false, $requirements, true);
 
-// Start content buffering
+// CSRF 토큰 생성
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrfToken = $_SESSION['csrf_token'];
+
 ob_start();
 ?>
 
 <?php include __DIR__ . '/_tabs.php'; ?>
 
-<?php if ($message): ?>
-<div class="mb-6 p-4 rounded-lg <?= $messageType === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : ($messageType === 'error' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400') ?>">
-    <?= htmlspecialchars($message) ?>
-</div>
-<?php endif; ?>
-
-<!-- Current Version Info -->
+<!-- 현재 버전 정보 -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
     <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
         <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,94 +64,51 @@ ob_start();
                 <p class="text-lg font-bold text-zinc-900 dark:text-white">RezlyX v<?= htmlspecialchars($currentVersion) ?></p>
                 <p class="text-sm text-zinc-500 dark:text-zinc-400">
                     <?= __('admin.settings.system.updates.channel') ?>:
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                        <?= htmlspecialchars(ucfirst($versionInfo['channel'] ?? 'stable')) ?>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium <?= $channel === 'dev' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' ?>">
+                        <?= htmlspecialchars(ucfirst($channel)) ?>
                     </span>
+                    <?php if ($releaseDate): ?>
+                    <span class="ml-2 text-zinc-400">|</span>
+                    <span class="ml-2"><?= htmlspecialchars($releaseDate) ?></span>
+                    <?php endif; ?>
                 </p>
             </div>
         </div>
 
-        <?php if ($isGithubConfigured): ?>
         <button type="button" id="checkUpdateBtn" onclick="checkForUpdates()"
-                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition flex items-center">
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
             </svg>
             <?= __('admin.settings.system.updates.check_update') ?>
         </button>
-        <?php endif; ?>
     </div>
 
-    <!-- Update Status Area -->
+    <!-- 업데이트 상태 영역 -->
     <div id="updateStatus" class="hidden mt-4"></div>
 </div>
 
-<!-- GitHub Settings -->
+<!-- 백업 목록 -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
     <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-zinc-700 dark:text-zinc-300" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
         </svg>
-        <?= __('admin.settings.system.updates.github_settings') ?>
+        <?= __('admin.settings.system.updates.backups') ?>
     </h2>
-    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6"><?= __('admin.settings.system.updates.github_description') ?></p>
 
-    <form method="POST" class="space-y-4">
-        <input type="hidden" name="action" value="save_github_settings">
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                    <?= __('admin.settings.system.updates.github_owner') ?>
-                </label>
-                <input type="text" name="github_owner" value="<?= htmlspecialchars($githubOwner) ?>"
-                       placeholder="username or organization"
-                       class="w-full px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.system.updates.github_owner_hint') ?></p>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                    <?= __('admin.settings.system.updates.github_repo') ?>
-                </label>
-                <input type="text" name="github_repo" value="<?= htmlspecialchars($githubRepo) ?>"
-                       placeholder="repository-name"
-                       class="w-full px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.system.updates.github_repo_hint') ?></p>
-            </div>
+    <div id="backupList" class="space-y-2">
+        <div class="text-center py-4 text-zinc-500 dark:text-zinc-400">
+            <svg class="w-8 h-8 mx-auto mb-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <?= __('admin.messages.loading') ?>
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                    <?= __('admin.settings.system.updates.github_branch') ?>
-                </label>
-                <input type="text" name="github_branch" value="<?= htmlspecialchars($githubBranch) ?>"
-                       placeholder="main"
-                       class="w-full px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                    <?= __('admin.settings.system.updates.github_token') ?>
-                    <span class="text-xs text-zinc-400">(<?= __('admin.settings.system.updates.optional') ?>)</span>
-                </label>
-                <input type="password" name="github_token" value=""
-                       placeholder="<?= $githubToken ? '********' : 'ghp_xxxxxxxxxxxx' ?>"
-                       class="w-full px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.system.updates.github_token_hint') ?></p>
-            </div>
-        </div>
-
-        <div class="flex justify-end">
-            <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
-                <?= __('admin.buttons.save') ?>
-            </button>
-        </div>
-    </form>
+    </div>
 </div>
 
-<!-- System Requirements -->
+<!-- 시스템 요구사항 -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
     <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
         <svg class="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -239,13 +123,15 @@ ob_start();
             'curl' => 'cURL Extension',
             'json' => 'JSON Extension',
             'zip' => 'ZipArchive Extension',
+            'openssl' => 'OpenSSL Extension',
             'allow_url_fopen' => 'allow_url_fopen',
             'writable_root' => __('admin.settings.system.updates.writable_root'),
+            'writable_storage' => __('admin.settings.system.updates.writable_storage'),
         ];
         foreach ($requirements as $key => $met):
         ?>
         <div class="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <span class="text-sm text-zinc-700 dark:text-zinc-300"><?= $reqLabels[$key] ?></span>
+            <span class="text-sm text-zinc-700 dark:text-zinc-300"><?= $reqLabels[$key] ?? $key ?></span>
             <?php if ($met): ?>
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -277,7 +163,7 @@ ob_start();
     <?php endif; ?>
 </div>
 
-<!-- Update Notes -->
+<!-- 업데이트 안내 -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
     <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
         <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -288,56 +174,95 @@ ob_start();
 
     <div class="prose prose-sm dark:prose-invert max-w-none">
         <ul class="space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
-            <li><?= __('admin.settings.system.updates.note_backup') ?></li>
-            <li><?= __('admin.settings.system.updates.note_maintenance') ?></li>
-            <li><?= __('admin.settings.system.updates.note_rollback') ?></li>
-            <li><?= __('admin.settings.system.updates.note_private') ?></li>
+            <li class="flex items-start">
+                <svg class="w-4 h-4 mr-2 mt-0.5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <?= __('admin.settings.system.updates.note_backup') ?>
+            </li>
+            <li class="flex items-start">
+                <svg class="w-4 h-4 mr-2 mt-0.5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <?= __('admin.settings.system.updates.note_maintenance') ?>
+            </li>
+            <li class="flex items-start">
+                <svg class="w-4 h-4 mr-2 mt-0.5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <?= __('admin.settings.system.updates.note_rollback') ?>
+            </li>
         </ul>
+    </div>
+</div>
+
+<!-- 업데이트 확인 모달 -->
+<div id="updateModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-xl max-w-lg w-full mx-4 overflow-hidden">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4" id="modalTitle">
+                <?= __('admin.settings.system.updates.new_version_available') ?>
+            </h3>
+            <div id="modalContent"></div>
+        </div>
+        <div class="px-6 py-4 bg-zinc-50 dark:bg-zinc-900 flex justify-end space-x-3">
+            <button type="button" onclick="closeModal()"
+                    class="px-4 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition">
+                <?= __('admin.buttons.cancel') ?>
+            </button>
+            <button type="button" id="modalConfirmBtn" onclick="performUpdate()"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                <?= __('admin.settings.system.updates.update_now') ?>
+            </button>
+        </div>
     </div>
 </div>
 
 <script>
 console.log('Update management page loaded');
 
-const githubOwner = '<?= htmlspecialchars($githubOwner) ?>';
-const githubRepo = '<?= htmlspecialchars($githubRepo) ?>';
+const csrfToken = '<?= htmlspecialchars($csrfToken) ?>';
 const currentVersion = '<?= htmlspecialchars($currentVersion) ?>';
+// 현재 페이지 URL에서 /ajax를 추가하여 AJAX URL 구성
+const currentPath = window.location.pathname;
+const ajaxUrl = currentPath + '/ajax';
+let latestVersion = null;
 
+console.log('AJAX URL:', ajaxUrl);
+
+// 페이지 로드 시 백업 목록 불러오기
+document.addEventListener('DOMContentLoaded', function() {
+    loadBackups();
+});
+
+// 업데이트 확인
 async function checkForUpdates() {
     const btn = document.getElementById('checkUpdateBtn');
     const statusDiv = document.getElementById('updateStatus');
 
-    if (!githubOwner || !githubRepo) {
-        statusDiv.innerHTML = '<div class="p-4 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded-lg"><?= __('admin.settings.system.updates.github_not_configured') ?></div>';
-        statusDiv.classList.remove('hidden');
-        return;
-    }
-
-    // Show loading
     btn.disabled = true;
     btn.innerHTML = '<svg class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><?= __('admin.settings.system.updates.checking') ?>';
 
     try {
-        // Fetch latest release from GitHub API
-        const response = await fetch(`https://api.github.com/repos/${githubOwner}/${githubRepo}/releases/latest`, {
+        const response = await fetch(ajaxUrl, {
+            method: 'POST',
             headers: {
-                'Accept': 'application/vnd.github.v3+json',
-                'User-Agent': 'RezlyX-Updater'
-            }
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: '_token=' + encodeURIComponent(csrfToken) + '&action=check'
         });
 
-        if (!response.ok) {
-            if (response.status === 404) {
-                throw new Error('<?= __('admin.settings.system.updates.no_releases') ?>');
-            }
-            throw new Error('GitHub API error: ' + response.status);
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || '<?= __('admin.settings.system.updates.check_failed') ?>');
         }
 
-        const release = await response.json();
-        const latestVersion = release.tag_name.replace(/^v/, '');
+        const result = data.data;
 
-        // Compare versions
-        if (compareVersions(latestVersion, currentVersion) > 0) {
+        if (result.has_update) {
+            latestVersion = result.latest_version;
             statusDiv.innerHTML = `
                 <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <div class="flex items-center justify-between mb-3">
@@ -345,18 +270,19 @@ async function checkForUpdates() {
                             <p class="text-sm font-medium text-blue-800 dark:text-blue-400">
                                 <?= __('admin.settings.system.updates.new_version_available') ?>
                             </p>
-                            <p class="text-lg font-bold text-blue-900 dark:text-blue-300">v${latestVersion}</p>
+                            <p class="text-lg font-bold text-blue-900 dark:text-blue-300">v${result.latest_version}</p>
                         </div>
-                        <button onclick="showUpdateDetails('${release.html_url}')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
-                            <?= __('admin.settings.system.updates.view_details') ?>
+                        <button onclick="showUpdateModal('${result.latest_version}', \`${escapeHtml(result.release_notes || '')}\`)"
+                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
+                            <?= __('admin.settings.system.updates.update_now') ?>
                         </button>
                     </div>
+                    ${result.release_notes ? `
                     <div class="text-sm text-blue-700 dark:text-blue-400">
                         <p class="font-medium mb-1"><?= __('admin.settings.system.updates.release_notes') ?>:</p>
-                        <div class="bg-white/50 dark:bg-zinc-800/50 p-3 rounded max-h-32 overflow-y-auto">
-                            ${release.body ? marked ? marked.parse(release.body) : release.body.replace(/\n/g, '<br>') : '<?= __('admin.settings.system.updates.no_notes') ?>'}
-                        </div>
+                        <div class="bg-white/50 dark:bg-zinc-800/50 p-3 rounded max-h-32 overflow-y-auto whitespace-pre-wrap">${escapeHtml(result.release_notes)}</div>
                     </div>
+                    ` : ''}
                 </div>
             `;
         } else {
@@ -380,21 +306,176 @@ async function checkForUpdates() {
     }
 }
 
-function compareVersions(v1, v2) {
-    const parts1 = v1.split('.').map(Number);
-    const parts2 = v2.split('.').map(Number);
+// 업데이트 모달 표시
+function showUpdateModal(version, notes) {
+    const modal = document.getElementById('updateModal');
+    const content = document.getElementById('modalContent');
 
-    for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
-        const p1 = parts1[i] || 0;
-        const p2 = parts2[i] || 0;
-        if (p1 > p2) return 1;
-        if (p1 < p2) return -1;
-    }
-    return 0;
+    content.innerHTML = `
+        <p class="text-zinc-600 dark:text-zinc-400 mb-4">
+            v${currentVersion} → <span class="font-bold text-blue-600">v${version}</span>
+        </p>
+        ${notes ? `
+        <div class="bg-zinc-50 dark:bg-zinc-900 p-3 rounded-lg max-h-48 overflow-y-auto">
+            <p class="text-xs text-zinc-500 mb-2"><?= __('admin.settings.system.updates.release_notes') ?></p>
+            <div class="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap">${notes}</div>
+        </div>
+        ` : ''}
+        <div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+            <p class="text-sm text-yellow-800 dark:text-yellow-400">
+                <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                <?= __('admin.settings.system.updates.confirm_update') ?>
+            </p>
+        </div>
+    `;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
 }
 
-function showUpdateDetails(url) {
-    window.open(url, '_blank');
+// 모달 닫기
+function closeModal() {
+    const modal = document.getElementById('updateModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+// 업데이트 실행
+async function performUpdate() {
+    const confirmBtn = document.getElementById('modalConfirmBtn');
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<svg class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><?= __('admin.messages.processing') ?>';
+
+    try {
+        const response = await fetch(ajaxUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: '_token=' + encodeURIComponent(csrfToken) + '&action=perform&version=' + encodeURIComponent(latestVersion)
+        });
+
+        const data = await response.json();
+
+        closeModal();
+
+        if (data.success) {
+            const statusDiv = document.getElementById('updateStatus');
+            statusDiv.innerHTML = `
+                <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <p class="text-sm font-medium text-green-800 dark:text-green-400">${data.data.message}</p>
+                    </div>
+                    <p class="mt-2 text-sm text-green-700 dark:text-green-300"><?= __('admin.settings.system.updates.reload_page') ?></p>
+                </div>
+            `;
+            // 3초 후 페이지 새로고침
+            setTimeout(() => location.reload(), 3000);
+        } else {
+            throw new Error(data.error || data.data?.error || '<?= __('admin.settings.system.updates.update_failed') ?>');
+        }
+
+    } catch (error) {
+        closeModal();
+        const statusDiv = document.getElementById('updateStatus');
+        statusDiv.innerHTML = `<div class="p-4 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 rounded-lg">${error.message}</div>`;
+    }
+}
+
+// 백업 목록 불러오기
+async function loadBackups() {
+    const listDiv = document.getElementById('backupList');
+
+    try {
+        const response = await fetch(ajaxUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: '_token=' + encodeURIComponent(csrfToken) + '&action=backups'
+        });
+
+        const data = await response.json();
+
+        if (!data.success || !data.data || data.data.length === 0) {
+            listDiv.innerHTML = `
+                <div class="text-center py-6 text-zinc-500 dark:text-zinc-400">
+                    <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                    </svg>
+                    <p><?= __('admin.settings.system.updates.no_backups') ?></p>
+                </div>
+            `;
+            return;
+        }
+
+        listDiv.innerHTML = data.data.map(backup => `
+            <div class="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
+                <div>
+                    <p class="text-sm font-medium text-zinc-900 dark:text-white">v${backup.version}</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400">${backup.created_at} · ${formatFileSize(backup.size)}</p>
+                </div>
+                <button onclick="restoreBackup('${backup.path}')"
+                        class="px-3 py-1 text-xs text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition">
+                    <?= __('admin.settings.system.updates.restore') ?>
+                </button>
+            </div>
+        `).join('');
+
+    } catch (error) {
+        listDiv.innerHTML = `<div class="p-4 text-center text-red-600">${error.message}</div>`;
+    }
+}
+
+// 백업 복원
+async function restoreBackup(backupPath) {
+    if (!confirm('<?= __('admin.settings.system.updates.confirm_restore') ?>')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(ajaxUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: '_token=' + encodeURIComponent(csrfToken) + '&action=rollback&backup_path=' + encodeURIComponent(backupPath)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert(data.data.message);
+            location.reload();
+        } else {
+            throw new Error(data.error || '<?= __('admin.settings.system.updates.restore_failed') ?>');
+        }
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+// 유틸리티 함수
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 </script>
 

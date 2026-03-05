@@ -5,7 +5,7 @@ export default defineConfig({
   root: 'resources',
   base: '/assets/',
   build: {
-    outDir: '../public/assets',
+    outDir: '../assets',
     emptyOutDir: true,
     manifest: true,
     rollupOptions: {

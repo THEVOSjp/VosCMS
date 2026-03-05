@@ -164,6 +164,15 @@
                 arrow.classList.toggle('rotate-180');
             }
         }
+
+        function toggleMembersMenu() {
+            const subMenu = document.getElementById('membersSubMenu');
+            const arrow = document.getElementById('membersMenuArrow');
+            if (subMenu && arrow) {
+                subMenu.classList.toggle('hidden');
+                arrow.classList.toggle('rotate-180');
+            }
+        }
     </script>
 
     <!-- PWA Admin Service Worker Registration -->

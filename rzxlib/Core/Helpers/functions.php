@@ -471,26 +471,128 @@ if (!function_exists('db_trans')) {
         try {
             // PDO 연결
             if ($pdo === null) {
+                $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
+                $dbname = $_ENV['DB_DATABASE'] ?? 'rezlyx_dev';
+                $charset = $_ENV['DB_CHARSET'] ?? 'utf8mb4';
+                $username = $_ENV['DB_USERNAME'] ?? 'root';
+                $password = $_ENV['DB_PASSWORD'] ?? '';
+
                 $pdo = new PDO(
-                    'mysql:host=' . ($_ENV['DB_HOST'] ?? 'localhost') . ';dbname=' . ($_ENV['DB_DATABASE'] ?? 'rezlyx'),
-                    $_ENV['DB_USERNAME'] ?? 'root',
-                    $_ENV['DB_PASSWORD'] ?? '',
-                    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+                    "mysql:host={$host};dbname={$dbname};charset={$charset}",
+                    $username,
+                    $password,
+                    [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$charset}"
+                    ]
                 );
             }
 
-            // 번역 조회
-            $stmt = $pdo->prepare("SELECT content FROM rzx_translations WHERE lang_key = ? AND locale = ?");
+            // 번역 조회 (source_locale도 함께 조회)
+            $stmt = $pdo->prepare("SELECT content, source_locale FROM rzx_translations WHERE lang_key = ? AND locale = ?");
             $stmt->execute([$langKey, $locale]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
             $content = $result ? $result['content'] : '';
+            $sourceLocale = $result ? $result['source_locale'] : null;
+
+            // 현재 로케일에 번역이 없는 경우, source_locale(원본 언어)로 fallback
+            if (empty($content) && $sourceLocale) {
+                $stmt->execute([$langKey, $sourceLocale]);
+                $fallbackResult = $stmt->fetch(PDO::FETCH_ASSOC);
+                $content = $fallbackResult ? $fallbackResult['content'] : '';
+            } elseif (empty($content)) {
+                // source_locale이 없는 경우 (레거시 데이터), 원본 찾기
+                $sourceStmt = $pdo->prepare("SELECT source_locale FROM rzx_translations WHERE lang_key = ? AND source_locale IS NOT NULL LIMIT 1");
+                $sourceStmt->execute([$langKey]);
+                $sourceResult = $sourceStmt->fetch(PDO::FETCH_ASSOC);
+                if ($sourceResult && $sourceResult['source_locale'] !== $locale) {
+                    $stmt->execute([$langKey, $sourceResult['source_locale']]);
+                    $fallbackResult = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $content = $fallbackResult ? $fallbackResult['content'] : '';
+                }
+            }
+
             $cache[$cacheKey] = $content;
 
             return $content ?: $default;
         } catch (\PDOException $e) {
             // DB 오류 시 기본값 반환
+            error_log("db_trans error: " . $e->getMessage());
             return $default;
+        }
+    }
+}
+
+if (!function_exists('is_translation_fallback')) {
+    /**
+     * 해당 번역이 fallback(원본 언어) 사용 중인지 확인
+     * source_locale 컬럼을 사용하여 원본 언어 판별
+     *
+     * @param string $langKey 번역 키
+     * @param string|null $locale 로케일 (null이면 현재 로케일)
+     * @return bool 현재 로케일의 번역이 없어서 fallback을 사용하면 true
+     */
+    function is_translation_fallback(string $langKey, ?string $locale = null): bool
+    {
+        static $pdo = null;
+        static $cache = [];
+        static $sourceLocaleCache = [];
+
+        $locale = $locale ?? current_locale();
+        $cacheKey = 'fallback:' . $langKey . ':' . $locale;
+
+        if (isset($cache[$cacheKey])) {
+            return $cache[$cacheKey];
+        }
+
+        try {
+            if ($pdo === null) {
+                $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
+                $dbname = $_ENV['DB_DATABASE'] ?? 'rezlyx_dev';
+                $charset = $_ENV['DB_CHARSET'] ?? 'utf8mb4';
+                $username = $_ENV['DB_USERNAME'] ?? 'root';
+                $password = $_ENV['DB_PASSWORD'] ?? '';
+
+                $pdo = new PDO(
+                    "mysql:host={$host};dbname={$dbname};charset={$charset}",
+                    $username,
+                    $password,
+                    [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$charset}"
+                    ]
+                );
+            }
+
+            // source_locale(원본 언어) 찾기
+            if (!isset($sourceLocaleCache[$langKey])) {
+                $stmt = $pdo->prepare("SELECT source_locale FROM rzx_translations WHERE lang_key = ? AND source_locale IS NOT NULL LIMIT 1");
+                $stmt->execute([$langKey]);
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                $sourceLocaleCache[$langKey] = $result ? $result['source_locale'] : null;
+            }
+
+            $sourceLocale = $sourceLocaleCache[$langKey];
+
+            // 현재 로케일이 원본 언어면 fallback 아님
+            if ($locale === $sourceLocale) {
+                $cache[$cacheKey] = false;
+                return false;
+            }
+
+            // 현재 로케일의 번역이 있는지 확인
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM rzx_translations WHERE lang_key = ? AND locale = ? AND content != ''");
+            $stmt->execute([$langKey, $locale]);
+            $hasTranslation = (int)$stmt->fetchColumn() > 0;
+
+            $isFallback = !$hasTranslation;
+            $cache[$cacheKey] = $isFallback;
+
+            return $isFallback;
+        } catch (\PDOException $e) {
+            error_log("is_translation_fallback error: " . $e->getMessage());
+            return false;
         }
     }
 }
@@ -571,11 +673,20 @@ if (!function_exists('get_setting')) {
         try {
             // PDO 연결
             if ($pdo === null) {
+                $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
+                $dbname = $_ENV['DB_DATABASE'] ?? 'rezlyx_dev';
+                $charset = $_ENV['DB_CHARSET'] ?? 'utf8mb4';
+                $username = $_ENV['DB_USERNAME'] ?? 'root';
+                $password = $_ENV['DB_PASSWORD'] ?? '';
+
                 $pdo = new PDO(
-                    'mysql:host=' . ($_ENV['DB_HOST'] ?? 'localhost') . ';dbname=' . ($_ENV['DB_DATABASE'] ?? 'rezlyx'),
-                    $_ENV['DB_USERNAME'] ?? 'root',
-                    $_ENV['DB_PASSWORD'] ?? '',
-                    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+                    "mysql:host={$host};dbname={$dbname};charset={$charset}",
+                    $username,
+                    $password,
+                    [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$charset}"
+                    ]
                 );
             }
 
@@ -590,6 +701,7 @@ if (!function_exists('get_setting')) {
             return $value ?: $default;
         } catch (\PDOException $e) {
             // DB 오류 시 기본값 반환
+            error_log("get_setting error: " . $e->getMessage());
             return $default;
         }
     }
