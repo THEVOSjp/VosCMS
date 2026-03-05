@@ -135,6 +135,139 @@ include 'components/social_login.php';
 
 ---
 
+### 1.4 이미지 크롭 컴포넌트
+
+| 항목 | 내용 |
+|------|------|
+| **컴포넌트명** | `image_cropper` |
+| **파일** | `skins/default/components/image_cropper.php` |
+| **의존성** | Cropper.js 1.6.x (CDN) |
+
+#### 기능
+- Cropper.js 기반 이미지 편집
+- 확대/축소, 회전 (좌/우 90°)
+- 드래그로 위치 조정
+- 커스텀 가로세로 비율 설정
+- 크롭 후 Base64 출력
+- 드래그 앤 드롭 지원
+- 다크모드/라이트모드 지원
+- 다국어 지원 (ko/en/ja)
+
+#### 사용법
+
+```php
+<?php
+$cropperConfig = [
+    'id' => 'profile_photo_cropper',    // 고유 ID (필수)
+    'inputName' => 'cropped_image',     // 폼 필드명
+    'aspectRatio' => 1,                 // 가로세로 비율 (1 = 정사각형)
+    'outputWidth' => 400,               // 출력 너비
+    'outputHeight' => 400,              // 출력 높이
+    'outputFormat' => 'image/jpeg',     // 출력 포맷
+    'outputQuality' => 0.9,             // JPEG 품질 (0-1)
+    'cropBoxResizable' => true,         // 크롭 박스 크기 조절
+    'translations' => [                 // 번역 (선택)
+        'title' => '이미지 편집',
+        'zoom_in' => '확대',
+        // ... 기타 번역
+    ]
+];
+include BASE_PATH . '/skins/default/components/image_cropper.php';
+?>
+```
+
+#### JavaScript API
+
+```javascript
+// 모달 열기 + 파일 선택 다이얼로그
+ImageCropper.trigger('profile_photo_cropper');
+
+// 모달만 열기
+ImageCropper.open('profile_photo_cropper');
+
+// 모달 닫기
+ImageCropper.close('profile_photo_cropper');
+
+// 확대/축소
+ImageCropper.zoom('profile_photo_cropper', 0.1);   // 확대
+ImageCropper.zoom('profile_photo_cropper', -0.1);  // 축소
+
+// 회전
+ImageCropper.rotate('profile_photo_cropper', 90);  // 시계방향
+ImageCropper.rotate('profile_photo_cropper', -90); // 반시계방향
+
+// 초기화
+ImageCropper.reset('profile_photo_cropper');
+
+// 크롭 적용 (자동으로 hidden 필드에 저장)
+ImageCropper.apply('profile_photo_cropper');
+
+// 콜백 설정
+ImageCropper.setOnApply('profile_photo_cropper', function(dataUrl, canvas, id) {
+    console.log('크롭 완료:', dataUrl);
+});
+```
+
+#### 커스텀 이벤트
+
+```javascript
+// 크롭 완료 시 발생하는 이벤트
+document.addEventListener('imageCropped', function(e) {
+    console.log('크롭 ID:', e.detail.id);
+    console.log('Base64 데이터:', e.detail.dataUrl);
+    console.log('캔버스:', e.detail.canvas);
+});
+```
+
+#### 폼 데이터
+
+| 필드명 | 예시 값 | 설명 |
+|--------|---------|------|
+| `cropped_image` (설정 가능) | `data:image/jpeg;base64,...` | 크롭된 이미지 Base64 |
+
+---
+
+### 1.5 동적 회원가입 필드 컴포넌트
+
+| 항목 | 내용 |
+|------|------|
+| **컴포넌트명** | `register_fields` |
+| **파일** | `skins/default/components/register_fields.php` |
+
+#### 기능
+- 관리자 설정에 따른 동적 필드 렌더링
+- 확장 가능한 필드 정의 구조
+- 프로필 사진 필드는 자동으로 이미지 크롭 컴포넌트 연동
+
+#### 지원 필드
+
+| 필드명 | 타입 | 필수 | 설명 |
+|--------|------|------|------|
+| `name` | text | O | 이름 |
+| `email` | email | O | 이메일 |
+| `password` | password | O | 비밀번호 (확인 포함) |
+| `phone` | phone | X | 전화번호 (국가코드 포함) |
+| `birth_date` | date | X | 생년월일 |
+| `gender` | radio | X | 성별 (남/여/기타) |
+| `company` | text | X | 회사/소속 |
+| `blog` | url | X | 블로그/웹사이트 |
+| `profile_photo` | file | X | 프로필 사진 (크롭 지원) |
+
+#### 사용법
+
+```php
+<?php
+// 활성화할 필드 목록
+$registerFields = ['name', 'email', 'password', 'phone', 'profile_photo'];
+$translations = $skinLoader->getTranslations();
+$oldInput = $_POST ?? [];
+
+include BASE_PATH . '/skins/default/components/register_fields.php';
+?>
+```
+
+---
+
 ## 2. 번역 함수
 
 ### 2.1 `__()`
@@ -839,9 +972,49 @@ $data = Encryption::decryptFields($array, ['phone', 'email']);
 
 ---
 
+### 10.5 ImageHelper
+
+| 항목 | 내용 |
+|------|------|
+| **클래스** | `RzxLib\Core\Helpers\ImageHelper` |
+| **파일** | `rzxlib/Core/Helpers/ImageHelper.php` |
+| **설명** | 이미지 처리 및 저장 유틸리티 |
+
+```php
+use RzxLib\Core\Helpers\ImageHelper;
+
+$imageHelper = new ImageHelper();  // 기본 경로: uploads/profiles
+$imageHelper = new ImageHelper('/custom/upload/path');  // 커스텀 경로
+
+// Base64 이미지 저장
+$result = $imageHelper->saveBase64Image($base64Data, 'filename', 'subdir');
+// 결과: ['success' => true, 'path' => '...', 'relative_path' => '...', 'filename' => '...']
+
+// 프로필 이미지 저장 (회원가입용)
+$result = $imageHelper->saveProfileImage($base64Data, $userId);
+
+// 이미지 삭제
+$imageHelper->deleteImage('/path/to/image.jpg');
+
+// 이미지 리사이즈
+$imageHelper->resizeImage($sourcePath, 200, 200, $destPath);
+```
+
+**주요 메서드**:
+- `saveBase64Image($base64Data, $filename, $subDir)` - Base64 이미지 저장
+- `saveProfileImage($base64Data, $userId)` - 프로필 이미지 저장
+- `deleteImage($path)` - 이미지 삭제
+- `resizeImage($source, $width, $height, $dest)` - 이미지 리사이즈
+- `setUploadPath($path)` - 업로드 경로 설정
+- `setMaxFileSize($bytes)` - 최대 파일 크기 설정
+
+**지원 포맷**: JPEG, PNG, GIF, WebP
+
+---
+
 ## 버전 정보
 
-- **문서 버전**: 1.0.0
+- **문서 버전**: 1.1.0
 - **최종 수정일**: 2026-03-05
 - **적용 대상**: RezlyX v1.x
 

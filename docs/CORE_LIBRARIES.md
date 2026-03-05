@@ -1191,18 +1191,67 @@ dd($var)                // 변수 덤프 후 종료
 dump($var)              // 변수 덤프 (계속 실행)
 ```
 
+### 이미지 처리 (ImageHelper)
+
+`RzxLib\Core\Helpers\ImageHelper` 클래스는 이미지 업로드 및 처리를 위한 유틸리티입니다.
+
+#### 기본 사용법
+
+```php
+use RzxLib\Core\Helpers\ImageHelper;
+
+$imageHelper = new ImageHelper();
+
+// Base64 이미지 저장
+$result = $imageHelper->saveBase64Image($base64Data, 'filename', 'subdir');
+
+// 프로필 이미지 저장 (회원가입/프로필 수정)
+$result = $imageHelper->saveProfileImage($base64Data, $userId);
+
+// 이미지 삭제
+$deleted = $imageHelper->deleteImage('/uploads/profiles/image.jpg');
+
+// 이미지 리사이즈
+$resized = $imageHelper->resizeImage($sourcePath, 400, 400, $destPath);
+```
+
+#### 주요 메서드
+
+| 메서드 | 설명 | 반환값 |
+|--------|------|--------|
+| `saveBase64Image($data, $filename, $subDir)` | Base64 이미지 저장 | `array` (success, path, relative_path 등) |
+| `saveProfileImage($data, $userId)` | 프로필 이미지 저장 | `array` (success, path, relative_path 등) |
+| `deleteImage($path)` | 이미지 파일 삭제 | `bool` |
+| `resizeImage($source, $w, $h, $dest)` | 이미지 리사이즈 | `bool` |
+| `setUploadPath($path)` | 업로드 경로 설정 | `self` |
+| `setMaxFileSize($bytes)` | 최대 파일 크기 설정 | `self` |
+
+#### 지원 이미지 형식
+
+- JPEG (`image/jpeg`)
+- PNG (`image/png`)
+- GIF (`image/gif`)
+- WebP (`image/webp`)
+
+#### 기본 설정
+
+- **기본 업로드 경로**: `BASE_PATH/uploads/profiles`
+- **최대 파일 크기**: 5MB
+- **프로필 이미지 저장 위치**: `uploads/profiles/profiles/`
+
 ---
 
 ## 버전 정보
 
-- **문서 버전**: 1.2.0
-- **최종 수정일**: 2026-03-03
+- **문서 버전**: 1.3.0
+- **최종 수정일**: 2026-03-05
 - **적용 대상**: RezlyX Core Libraries
 
 ### 변경 이력
 
 | 버전 | 날짜 | 변경 내용 |
 |------|------|-----------|
+| 1.3.0 | 2026-03-05 | ImageHelper 클래스 문서 추가 |
 | 1.2.0 | 2026-03-03 | Skin 시스템 섹션 추가 (MemberSkinLoader) |
 | 1.1.0 | 2026-03-02 | Notification 시스템 섹션 추가 |
 | 1.0.0 | 2026-02-28 | 최초 작성 |

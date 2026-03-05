@@ -11,6 +11,7 @@
 3. [헤더/푸터 컴포넌트](#3-헤더푸터-컴포넌트)
 4. [페이지 컴포넌트](#4-페이지-컴포넌트)
 5. [관리자 탭 컴포넌트](#5-관리자-탭-컴포넌트)
+6. [이미지 크롭 컴포넌트](#6-이미지-크롭-컴포넌트)
 
 ---
 
@@ -408,9 +409,167 @@ BASE_PATH/storage/logs/*.log
 
 ---
 
+## 6. 이미지 크롭 컴포넌트
+
+프로필 사진 등 이미지 업로드 시 크롭/편집 기능을 제공하는 모달 컴포넌트입니다.
+
+### 6.1 기능
+
+- **Cropper.js 기반**: 검증된 라이브러리 활용
+- **확대/축소**: 슬라이더 또는 버튼으로 줌 조절
+- **회전**: 90° 단위 좌/우 회전
+- **드래그 이동**: 이미지 위치 조정
+- **비율 고정**: 설정된 가로세로 비율 유지
+- **Base64 출력**: 폼 전송에 최적화
+- **드래그 앤 드롭**: 이미지 파일 드롭 지원
+- **다크모드 지원**: 라이트/다크 테마 자동 적용
+- **다국어 지원**: ko/en/ja 번역 내장
+
+### 6.2 파일 구조
+
+```
+skins/default/components/
+├── image_cropper.php         # 크롭 모달 컴포넌트
+└── register_fields.php       # 회원가입 필드 (profile_photo와 연동)
+```
+
+### 6.3 기본 사용법
+
+```php
+<?php
+$cropperConfig = [
+    'id' => 'my_cropper',           // 고유 ID
+    'inputName' => 'cropped_image', // hidden 필드명
+    'aspectRatio' => 1,             // 가로세로 비율 (1 = 정사각형)
+    'outputWidth' => 400,           // 출력 너비 (px)
+    'outputHeight' => 400,          // 출력 높이 (px)
+    'outputFormat' => 'image/jpeg', // MIME 타입
+    'outputQuality' => 0.9,         // 품질 (0-1)
+    'translations' => [...]         // 선택: 커스텀 번역
+];
+include BASE_PATH . '/skins/default/components/image_cropper.php';
+?>
+
+<!-- 트리거 버튼 -->
+<button type="button" onclick="ImageCropper.trigger('my_cropper')">
+    이미지 선택
+</button>
+```
+
+### 6.4 설정 옵션
+
+| 옵션 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| `id` | string | `'image_cropper'` | 컴포넌트 고유 ID |
+| `inputName` | string | `'cropped_image'` | 폼 필드 이름 |
+| `aspectRatio` | float | `1` | 가로세로 비율 (16/9, 4/3 등) |
+| `outputWidth` | int | `400` | 출력 이미지 너비 |
+| `outputHeight` | int | `400` | 출력 이미지 높이 |
+| `outputFormat` | string | `'image/jpeg'` | 출력 포맷 |
+| `outputQuality` | float | `0.9` | JPEG 품질 (0.0-1.0) |
+| `cropBoxResizable` | bool | `true` | 크롭 박스 크기 조절 |
+| `translations` | array | `[]` | 커스텀 번역 |
+
+### 6.5 JavaScript API
+
+```javascript
+// 모달 열기 + 파일 선택
+ImageCropper.trigger('my_cropper');
+
+// 모달만 열기
+ImageCropper.open('my_cropper');
+
+// 모달 닫기
+ImageCropper.close('my_cropper');
+
+// 확대/축소 (양수: 확대, 음수: 축소)
+ImageCropper.zoom('my_cropper', 0.1);
+
+// 회전 (90, -90)
+ImageCropper.rotate('my_cropper', 90);
+
+// 초기화
+ImageCropper.reset('my_cropper');
+
+// 크롭 적용
+ImageCropper.apply('my_cropper');
+
+// 콜백 설정
+ImageCropper.setOnApply('my_cropper', (dataUrl, canvas, id) => {
+    console.log('크롭 완료:', dataUrl.substring(0, 50));
+});
+```
+
+### 6.6 이벤트
+
+```javascript
+// 크롭 완료 이벤트 리스닝
+document.addEventListener('imageCropped', function(e) {
+    const { id, dataUrl, canvas } = e.detail;
+
+    // 미리보기 업데이트
+    document.getElementById('preview').src = dataUrl;
+});
+```
+
+### 6.7 서버 측 처리
+
+```php
+use RzxLib\Core\Helpers\ImageHelper;
+
+// Base64 이미지 저장
+$imageHelper = new ImageHelper();
+$base64Data = $_POST['cropped_image'];
+
+$result = $imageHelper->saveBase64Image($base64Data, 'profile_' . $userId);
+
+if ($result['success']) {
+    $filePath = $result['relative_path'];  // /uploads/profiles/profile_123.jpg
+    // DB에 경로 저장
+}
+```
+
+### 6.8 회원가입 연동
+
+`register_fields.php`에서 `profile_photo` 필드 선택 시 자동으로 이미지 크롭이 연동됩니다:
+
+```php
+// 관리자 설정에서 profile_photo 활성화 시
+$registerFields = ['name', 'email', 'password', 'phone', 'profile_photo'];
+include 'skins/default/components/register_fields.php';
+
+// 자동으로:
+// 1. 이미지 크롭 컴포넌트 포함
+// 2. 미리보기 썸네일 표시
+// 3. 삭제 버튼 제공
+// 4. cropped_profile_photo 필드에 Base64 저장
+```
+
+### 6.9 번역 키
+
+| 키 | 한국어 | English | 日本語 |
+|----|--------|---------|--------|
+| `edit_image` | 이미지 편집 | Edit Image | 画像を編集 |
+| `select_image` | 이미지 선택 | Select Image | 画像を選択 |
+| `drag_drop_image` | 또는 이미지를 여기에 드래그하세요 | Or drag and drop an image here | または画像をここにドラッグ＆ドロップ |
+| `zoom_in` | 확대 | Zoom In | 拡大 |
+| `zoom_out` | 축소 | Zoom Out | 縮小 |
+| `rotate_left` | 왼쪽 회전 | Rotate Left | 左回転 |
+| `rotate_right` | 오른쪽 회전 | Rotate Right | 右回転 |
+| `reset` | 초기화 | Reset | リセット |
+| `cancel` | 취소 | Cancel | キャンセル |
+| `apply` | 적용 | Apply | 適用 |
+
+### 6.10 적용된 페이지
+
+- **회원가입** (`/register`) - 프로필 사진 등록
+- **프로필 수정** (`/mypage/edit`) - 프로필 사진 변경 (예정)
+
+---
+
 ## 버전 정보
 
-- **문서 버전**: 1.3.0
+- **문서 버전**: 1.4.0
 - **최종 수정일**: 2026-03-05
 - **적용 대상**: RezlyX UI Components
 
@@ -418,6 +577,7 @@ BASE_PATH/storage/logs/*.log
 
 | 버전 | 날짜 | 변경 내용 |
 |------|------|-----------|
+| 1.4.0 | 2026-03-05 | 이미지 크롭 컴포넌트 추가 (Cropper.js 기반) |
 | 1.3.0 | 2026-03-05 | 전화번호 컴포넌트 180개+ 국가 지원, 네이티브 국가명 시스템, 검색 기능 추가 |
 | 1.2.0 | 2026-03-02 | 관리자 탭 컴포넌트, 시스템 설정 UI 추가 |
 | 1.1.0 | 2026-03-01 | 서비스 페이지 컴포넌트 추가 |

@@ -49,6 +49,19 @@ if (is_dir($skinBasePath . '/' . $memberSkin)) {
 
 // 스킨을 사용하는 경우: 회원가입 처리 후 스킨 렌더링
 if ($useSkin) {
+    // 회원가입 필드 설정 로드 (관리자 설정에서)
+    $registerFieldsSetting = $siteSettings['member_register_fields'] ?? 'name,email,password,phone';
+    $registerFields = array_filter(array_map('trim', explode(',', $registerFieldsSetting)));
+
+    // 필수 필드가 반드시 포함되도록 보장
+    $requiredFields = ['name', 'email', 'password'];
+    foreach ($requiredFields as $required) {
+        if (!in_array($required, $registerFields)) {
+            array_unshift($registerFields, $required);
+        }
+    }
+    $registerFields = array_unique($registerFields);
+
     $errors = [];
     $oldInput = [
         'name' => $_POST['name'] ?? '',
@@ -56,6 +69,10 @@ if ($useSkin) {
         'phone' => $_POST['phone'] ?? '',
         'phone_country' => $_POST['phone_country'] ?? '+82',
         'phone_number' => $_POST['phone_number'] ?? '',
+        'birth_date' => $_POST['birth_date'] ?? '',
+        'gender' => $_POST['gender'] ?? '',
+        'company' => $_POST['company'] ?? '',
+        'blog' => $_POST['blog'] ?? '',
     ];
     $success = false;
 
@@ -142,6 +159,7 @@ if ($useSkin) {
         'terms' => $terms,
         'siteName' => $siteName,
         'baseUrl' => $baseUrl,
+        'registerFields' => $registerFields, // 동적 필드 목록
     ]);
 
     // 스킨은 body 내용만 포함하므로 전체 HTML 래퍼 필요

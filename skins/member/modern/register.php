@@ -133,90 +133,18 @@ $colors = $colorset ?? $config['colorsets']['default'];
                 <?php endif; ?>
 
                 <!-- Register Form -->
-                <form method="POST" class="space-y-5" onsubmit="return validateTermsAgreement()">
+                <form method="POST" class="space-y-5" enctype="multipart/form-data" onsubmit="return validateTermsAgreement()">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken ?? '') ?>">
 
-                    <!-- 이름 -->
-                    <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
-                            <?= $translations['name'] ?? '이름' ?> <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" name="name" id="name"
-                               value="<?= htmlspecialchars($oldInput['name'] ?? '') ?>"
-                               class="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                               placeholder="<?= $translations['name_placeholder'] ?? '홍길동' ?>"
-                               required>
-                    </div>
-
-                    <!-- 이메일 -->
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
-                            <?= $translations['email'] ?? '이메일' ?> <span class="text-red-500">*</span>
-                        </label>
-                        <input type="email" name="email" id="email"
-                               value="<?= htmlspecialchars($oldInput['email'] ?? '') ?>"
-                               class="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                               placeholder="<?= $translations['email_placeholder'] ?? 'example@email.com' ?>"
-                               required>
-                    </div>
-
-                    <!-- 전화번호 (국제전화번호 컴포넌트) -->
                     <?php
-                    $phoneInputConfig = [
-                        'name' => 'phone',
-                        'id' => 'phone',
-                        'label' => $translations['phone'] ?? __('auth.register.phone'),
-                        'value' => $oldInput['phone'] ?? '',
-                        'country_code' => $oldInput['phone_country'] ?? '+82',
-                        'phone_number' => $oldInput['phone_number'] ?? '',
-                        'required' => false,
-                        'hint' => $translations['phone_hint'] ?? '',
-                        'placeholder' => $translations['phone_placeholder'] ?? '010-1234-5678',
-                        'show_label' => true,
-                    ];
-                    $phoneComponentPath = defined('BASE_PATH')
-                        ? BASE_PATH . '/resources/views/components/phone-input.php'
-                        : dirname(__DIR__, 3) . '/resources/views/components/phone-input.php';
-                    if (file_exists($phoneComponentPath)) {
-                        include $phoneComponentPath;
-                    }
+                    /**
+                     * 동적 회원가입 필드 렌더링
+                     * $registerFields: 관리자 설정에서 활성화된 필드 목록
+                     * 기본값: ['name', 'email', 'password', 'phone']
+                     */
+                    $registerFields = $registerFields ?? ['name', 'email', 'password', 'phone'];
+                    include dirname(__DIR__, 2) . '/default/components/register_fields.php';
                     ?>
-
-                    <!-- 비밀번호 -->
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
-                            <?= $translations['password'] ?? '비밀번호' ?> <span class="text-red-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <input type="password" name="password" id="password"
-                                   class="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition pr-12"
-                                   placeholder="<?= $translations['password_placeholder'] ?? '8자 이상 입력하세요' ?>"
-                                   minlength="8"
-                                   required>
-                            <button type="button" id="togglePassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200">
-                                <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                </svg>
-                                <svg id="eyeOffIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
-                                </svg>
-                            </button>
-                        </div>
-                        <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1"><?= $translations['password_hint'] ?? '영문, 숫자를 포함하여 8자 이상' ?></p>
-                    </div>
-
-                    <!-- 비밀번호 확인 -->
-                    <div>
-                        <label for="password_confirm" class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
-                            <?= $translations['password_confirm'] ?? '비밀번호 확인' ?> <span class="text-red-500">*</span>
-                        </label>
-                        <input type="password" name="password_confirm" id="password_confirm"
-                               class="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                               placeholder="<?= $translations['password_confirm_placeholder'] ?? '비밀번호를 다시 입력하세요' ?>"
-                               minlength="8"
-                               required>
-                    </div>
 
                     <!-- 약관 동의 (Modern 스킨 전용 컴포넌트) -->
                     <?php
@@ -265,36 +193,9 @@ $colors = $colorset ?? $config['colorsets']['default'];
         </div>
     </main>
 
-    <!-- 비밀번호 표시/숨기기 토글 -->
-    <script>
-        var togglePassword = document.getElementById('togglePassword');
-        var passwordInput = document.getElementById('password');
-        var eyeIcon = document.getElementById('eyeIcon');
-        var eyeOffIcon = document.getElementById('eyeOffIcon');
-
-        if (togglePassword && passwordInput) {
-            togglePassword.addEventListener('click', function() {
-                var type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-                eyeIcon.classList.toggle('hidden');
-                eyeOffIcon.classList.toggle('hidden');
-            });
-        }
-
-        // 비밀번호 확인 유효성 검사
-        var passwordConfirm = document.getElementById('password_confirm');
-        if (passwordConfirm && passwordInput) {
-            passwordConfirm.addEventListener('input', function() {
-                if (this.value !== passwordInput.value) {
-                    this.setCustomValidity('<?= $translations['password_mismatch'] ?? '비밀번호가 일치하지 않습니다.' ?>');
-                } else {
-                    this.setCustomValidity('');
-                }
-            });
-        }
-    </script>
-
-    <!-- 전화번호 입력 컴포넌트 JS -->
+    <!-- 전화번호 입력 컴포넌트 JS (동적 필드에서 phone이 있을 경우에만 필요) -->
+    <?php if (in_array('phone', $registerFields ?? [])): ?>
     <script src="<?= htmlspecialchars($baseUrl ?? '') ?>/assets/js/phone-input.js"></script>
+    <?php endif; ?>
 </body>
 </html>

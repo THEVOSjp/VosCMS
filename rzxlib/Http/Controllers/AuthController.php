@@ -11,6 +11,7 @@ use RzxLib\Core\Auth\Auth;
 use RzxLib\Core\Validation\Validator;
 use RzxLib\Core\Validation\ValidationException;
 use RzxLib\Core\Skin\MemberSkinLoader;
+use RzxLib\Core\Helpers\ImageHelper;
 
 /**
  * AuthController - 인증 (로그인, 회원가입, 비밀번호 찾기)
@@ -235,14 +236,47 @@ class AuthController extends Controller
         }
 
         if (empty($errors)) {
-            $result = Auth::register([
+            // 회원 데이터 준비
+            $userData = [
                 'name' => $formData['name'],
                 'email' => $formData['email'],
                 'phone' => $formData['phone'] ?: null,
                 'password' => $password,
-            ]);
+            ];
+
+            // 추가 필드 처리 (동적 필드)
+            $optionalFields = ['birth_date', 'gender', 'company', 'blog'];
+            foreach ($optionalFields as $field) {
+                $value = trim($request->input($field, ''));
+                if (!empty($value)) {
+                    $userData[$field] = $value;
+                }
+            }
+
+            $result = Auth::register($userData);
 
             if ($result['success']) {
+                $userId = $result['user_id'] ?? $result['id'] ?? null;
+
+                // 프로필 사진 처리 (크롭된 Base64 이미지)
+                $croppedPhoto = $request->input('cropped_profile_photo', '');
+                if (!empty($croppedPhoto) && str_starts_with($croppedPhoto, 'data:image/') && $userId) {
+                    try {
+                        $imageHelper = new ImageHelper();
+                        $imageResult = $imageHelper->saveProfileImage($croppedPhoto, $userId);
+
+                        if ($imageResult['success']) {
+                            // 프로필 이미지 경로 저장
+                            Auth::updateProfile($userId, [
+                                'profile_photo' => $imageResult['relative_path'],
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        // 이미지 저장 실패 시 로그만 남기고 계속 진행
+                        error_log('[AuthController] Profile image save failed: ' . $e->getMessage());
+                    }
+                }
+
                 // 회원가입 성공 - 로그인 페이지로 리다이렉트
                 return $this->redirect('/auth/login')
                     ->withSuccess(__('auth.register.success'));
