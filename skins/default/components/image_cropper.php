@@ -27,9 +27,9 @@ $outputHeight = $cropperConfig['outputHeight'] ?? 400;
 $outputFormat = $cropperConfig['outputFormat'] ?? 'image/jpeg';
 $outputQuality = $cropperConfig['outputQuality'] ?? 0.9;
 $cropBoxResizable = $cropperConfig['cropBoxResizable'] ?? true;
-$translations = $cropperConfig['translations'] ?? [];
+$_cropperTranslations = $cropperConfig['translations'] ?? [];
 
-// 번역 기본값
+// 번역 기본값 (원래 $translations 변수를 덮어쓰지 않도록 별도 변수 사용)
 $t = array_merge([
     'title' => '이미지 편집',
     'select_image' => '이미지 선택',
@@ -43,7 +43,7 @@ $t = array_merge([
     'apply' => '적용',
     'file_too_large' => '파일 크기가 너무 큽니다. 최대 5MB까지 업로드 가능합니다.',
     'invalid_file_type' => '지원하지 않는 파일 형식입니다. JPG, PNG, GIF, WebP만 가능합니다.',
-], $translations);
+], $_cropperTranslations);
 ?>
 
 <!-- Cropper.js CSS -->

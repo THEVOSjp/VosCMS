@@ -19,6 +19,55 @@
 
 // 컬러셋 CSS 변수
 $colors = $colorset ?? $config['colorsets']['default'];
+
+// ============================================================================
+// 로케일 직접 감지 및 번역 재설정 (약관 처리 후 번역 문제 해결)
+// ============================================================================
+$_skinLocale = 'ko';
+if (!empty($_SESSION['locale']) && in_array($_SESSION['locale'], ['ko', 'en', 'ja'])) {
+    $_skinLocale = $_SESSION['locale'];
+} elseif (!empty($_COOKIE['locale']) && in_array($_COOKIE['locale'], ['ko', 'en', 'ja'])) {
+    $_skinLocale = $_COOKIE['locale'];
+} elseif (function_exists('current_locale')) {
+    $_skinLocale = current_locale();
+}
+
+// 로케일별 번역 데이터
+$_skinTranslations = [
+    'ko' => [
+        'register_title' => '회원가입',
+        'register_subtitle' => '새 계정을 만드세요',
+        'register_button' => '회원가입',
+        'register_success' => '회원가입이 완료되었습니다!',
+        'go_to_login' => '로그인하기',
+        'has_account' => '이미 계정이 있으신가요?',
+        'login_link' => '로그인',
+        'back_to_home' => '홈으로 돌아가기',
+    ],
+    'en' => [
+        'register_title' => 'Sign Up',
+        'register_subtitle' => 'Create a new account',
+        'register_button' => 'Sign Up',
+        'register_success' => 'Registration completed!',
+        'go_to_login' => 'Go to Login',
+        'has_account' => 'Already have an account?',
+        'login_link' => 'Login',
+        'back_to_home' => 'Back to Home',
+    ],
+    'ja' => [
+        'register_title' => '新規登録',
+        'register_subtitle' => '新しいアカウントを作成',
+        'register_button' => '登録',
+        'register_success' => '会員登録が完了しました！',
+        'go_to_login' => 'ログインへ',
+        'has_account' => 'すでにアカウントをお持ちですか？',
+        'login_link' => 'ログイン',
+        'back_to_home' => 'ホームに戻る',
+    ],
+];
+
+// 현재 로케일의 번역으로 $translations 병합 (기존 값 덮어쓰기)
+$translations = array_merge($translations ?? [], $_skinTranslations[$_skinLocale] ?? $_skinTranslations['ko']);
 ?>
 <!DOCTYPE html>
 <html lang="ko">
@@ -76,6 +125,7 @@ $colors = $colorset ?? $config['colorsets']['default'];
             }
         })();
     </script>
+
 </head>
 <body class="bg-gray-50 dark:bg-zinc-900 min-h-screen transition-colors duration-200">
     <!-- Header (재사용 컴포넌트) -->
