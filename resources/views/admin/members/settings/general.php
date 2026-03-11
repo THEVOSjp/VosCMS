@@ -75,8 +75,13 @@ ob_start();
 ?>
 
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors mb-6">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"><?= __('admin.members.settings.general.title') ?></h2>
-    <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6"><?= __('admin.members.settings.general.description') ?></p>
+    <?php
+    $headerIcon = 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z';
+    $headerTitle = __('admin.members.settings.general.title');
+    $headerDescription = __('admin.members.settings.general.description');
+    $headerIconColor = ''; $headerActions = '';
+    include __DIR__ . '/../../components/settings-header.php';
+    ?>
 
     <form method="POST" class="space-y-6">
         <input type="hidden" name="action" value="update_general">
@@ -201,7 +206,13 @@ ob_start();
 
 <!-- 회원정보 동기화 -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"><?= __('admin.members.settings.general.sync_title') ?></h2>
+    <?php
+    $headerIcon = 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15';
+    $headerTitle = __('admin.members.settings.general.sync_title');
+    $headerDescription = ''; $headerActions = '';
+    $headerIconColor = 'text-amber-600';
+    include __DIR__ . '/../../components/settings-header.php';
+    ?>
     <form method="POST" onsubmit="return confirmSync()">
         <input type="hidden" name="action" value="sync_member_data">
         <div class="flex items-center justify-between">

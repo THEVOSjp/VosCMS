@@ -108,8 +108,13 @@ ob_start();
 ?>
 
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"><?= __('admin.settings.seo.title') ?></h2>
-    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6"><?= __('admin.settings.seo.description') ?></p>
+    <?php
+    $headerIcon = 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z';
+    $headerTitle = __('admin.settings.seo.title');
+    $headerDescription = __('admin.settings.seo.description');
+    $headerIconColor = ''; $headerActions = '';
+    include __DIR__ . '/../components/settings-header.php';
+    ?>
 
     <form method="POST" enctype="multipart/form-data" class="space-y-6">
         <input type="hidden" name="action" value="update_seo_settings">

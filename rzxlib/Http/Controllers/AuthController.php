@@ -100,6 +100,52 @@ class AuthController extends Controller
     }
 
     /**
+     * 현재 로케일을 포함한 URL 생성
+     */
+    protected function urlWithLocale(string $path): string
+    {
+        $locale = $this->getCurrentLocale();
+        $params = [];
+
+        // 기본 로케일(ko)이 아닌 경우에만 lang 파라미터 추가
+        if ($locale !== 'ko') {
+            $params['lang'] = $locale;
+        }
+
+        return url($path, $params);
+    }
+
+    /**
+     * 현재 로케일 가져오기
+     */
+    protected function getCurrentLocale(): string
+    {
+        $validLocales = ['ko', 'en', 'ja'];
+
+        // 1. GET 파라미터
+        if (!empty($_GET['lang']) && in_array($_GET['lang'], $validLocales)) {
+            return $_GET['lang'];
+        }
+        // 2. 세션
+        if (!empty($_SESSION['locale']) && in_array($_SESSION['locale'], $validLocales)) {
+            return $_SESSION['locale'];
+        }
+        // 3. 쿠키
+        if (!empty($_COOKIE['locale']) && in_array($_COOKIE['locale'], $validLocales)) {
+            return $_COOKIE['locale'];
+        }
+        // 4. Translator 함수
+        if (function_exists('current_locale')) {
+            $locale = current_locale();
+            if (in_array($locale, $validLocales)) {
+                return $locale;
+            }
+        }
+
+        return 'ko';
+    }
+
+    /**
      * 활성화된 소셜 로그인 제공자 목록
      */
     protected function getEnabledSocialProviders(): array
@@ -135,8 +181,8 @@ class AuthController extends Controller
             'errors' => [],
             'oldInput' => [],
             'csrfToken' => csrf_token(),
-            'registerUrl' => url('/auth/register'),
-            'passwordResetUrl' => url('/auth/forgot-password'),
+            'registerUrl' => $this->urlWithLocale('/auth/register'),
+            'passwordResetUrl' => $this->urlWithLocale('/auth/forgot-password'),
         ]);
     }
 
@@ -173,8 +219,8 @@ class AuthController extends Controller
             'errors' => $errors,
             'oldInput' => ['email' => $email],
             'csrfToken' => csrf_token(),
-            'registerUrl' => url('/auth/register'),
-            'passwordResetUrl' => url('/auth/forgot-password'),
+            'registerUrl' => $this->urlWithLocale('/auth/register'),
+            'passwordResetUrl' => $this->urlWithLocale('/auth/forgot-password'),
         ]);
     }
 
@@ -193,7 +239,7 @@ class AuthController extends Controller
             'oldInput' => [],
             'csrfToken' => csrf_token(),
             'terms' => $this->getTerms(),
-            'loginUrl' => url('/auth/login'),
+            'loginUrl' => $this->urlWithLocale('/auth/login'),
         ]);
     }
 
@@ -290,7 +336,7 @@ class AuthController extends Controller
             'oldInput' => $formData,
             'csrfToken' => csrf_token(),
             'terms' => $this->getTerms(),
-            'loginUrl' => url('/auth/login'),
+            'loginUrl' => $this->urlWithLocale('/auth/login'),
         ]);
     }
 
@@ -308,7 +354,7 @@ class AuthController extends Controller
             'errors' => [],
             'email' => '',
             'csrfToken' => csrf_token(),
-            'loginUrl' => url('/auth/login'),
+            'loginUrl' => $this->urlWithLocale('/auth/login'),
         ]);
     }
 
@@ -338,7 +384,7 @@ class AuthController extends Controller
                     'errors' => [],
                     'email' => $email,
                     'csrfToken' => csrf_token(),
-                    'loginUrl' => url('/auth/login'),
+                    'loginUrl' => $this->urlWithLocale('/auth/login'),
                 ]);
             } else {
                 $errors[] = $result['error'] ?? __('auth.password_reset.error');
@@ -350,7 +396,7 @@ class AuthController extends Controller
             'errors' => $errors,
             'email' => $email,
             'csrfToken' => csrf_token(),
-            'loginUrl' => url('/auth/login'),
+            'loginUrl' => $this->urlWithLocale('/auth/login'),
         ]);
     }
 
@@ -376,7 +422,7 @@ class AuthController extends Controller
             'errors' => [],
             'token' => $token,
             'csrfToken' => csrf_token(),
-            'loginUrl' => url('/auth/login'),
+            'loginUrl' => $this->urlWithLocale('/auth/login'),
         ]);
     }
 
@@ -410,7 +456,7 @@ class AuthController extends Controller
                     'step' => 'complete',
                     'errors' => [],
                     'csrfToken' => csrf_token(),
-                    'loginUrl' => url('/auth/login'),
+                    'loginUrl' => $this->urlWithLocale('/auth/login'),
                 ]);
             } else {
                 $errors[] = $result['error'] ?? __('auth.password_reset.error');
@@ -422,7 +468,7 @@ class AuthController extends Controller
             'errors' => $errors,
             'token' => $token,
             'csrfToken' => csrf_token(),
-            'loginUrl' => url('/auth/login'),
+            'loginUrl' => $this->urlWithLocale('/auth/login'),
         ]);
     }
 

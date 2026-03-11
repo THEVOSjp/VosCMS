@@ -76,12 +76,13 @@ ob_start();
 
 <!-- Application Info -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <?= __('admin.settings.system.app.title') ?>
-    </h2>
+    <?php
+    $headerIcon = 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+    $headerTitle = __('admin.settings.system.app.title');
+    $headerDescription = ''; $headerActions = '';
+    $headerIconColor = 'text-blue-600';
+    include __DIR__ . '/../../components/settings-header.php';
+    ?>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
@@ -120,12 +121,13 @@ ob_start();
 
 <!-- Server Information -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
-        </svg>
-        <?= __('admin.settings.system.server.title') ?>
-    </h2>
+    <?php
+    $headerIcon = 'M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01';
+    $headerTitle = __('admin.settings.system.server.title');
+    $headerDescription = ''; $headerActions = '';
+    $headerIconColor = 'text-orange-600';
+    include __DIR__ . '/../../components/settings-header.php';
+    ?>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
@@ -153,12 +155,13 @@ ob_start();
 
 <!-- PHP Information -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-        </svg>
-        <?= __('admin.settings.system.php.title') ?>
-    </h2>
+    <?php
+    $headerIcon = 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4';
+    $headerTitle = __('admin.settings.system.php.title');
+    $headerDescription = ''; $headerActions = '';
+    $headerIconColor = 'text-purple-600';
+    include __DIR__ . '/../../components/settings-header.php';
+    ?>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
@@ -220,12 +223,13 @@ ob_start();
 
 <!-- Database Information -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
-        </svg>
-        <?= __('admin.settings.system.db.title') ?>
-    </h2>
+    <?php
+    $headerIcon = 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4';
+    $headerTitle = __('admin.settings.system.db.title');
+    $headerDescription = ''; $headerActions = '';
+    $headerIconColor = 'text-green-600';
+    include __DIR__ . '/../../components/settings-header.php';
+    ?>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">

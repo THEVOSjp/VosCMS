@@ -36,12 +36,20 @@ function getAvailableMemberSkins(): array
                 // config.php 로드
                 $configPath = $skinsPath . '/' . $dir . '/config.php';
                 if (file_exists($configPath)) {
-                    $config = require $configPath;
-                    $skinData['display_name'] = $config['name'] ?? ucfirst($dir);
-                    $skinData['version'] = $config['version'] ?? '1.0.0';
-                    $skinData['author'] = $config['author'] ?? 'Unknown';
-                    $skinData['description'] = $config['description'] ?? '';
-                    $skinData['colorsets'] = array_keys($config['colorsets'] ?? ['default' => []]);
+                    $skinConfig = require $configPath;
+                    $skinData['display_name'] = $skinConfig['name'] ?? ucfirst($dir);
+                    $skinData['version'] = $skinConfig['version'] ?? '1.0.0';
+                    $skinData['author'] = $skinConfig['author'] ?? 'Unknown';
+                    // 다국어 description 지원
+                    $desc = $skinConfig['description'] ?? '';
+                    if (is_array($desc)) {
+                        global $currentLocale;
+                        $locale = $currentLocale ?: ($GLOBALS['config']['locale'] ?? 'ko');
+                        $skinData['description'] = $desc[$locale] ?? $desc['en'] ?? $desc['ko'] ?? reset($desc) ?: '';
+                    } else {
+                        $skinData['description'] = $desc;
+                    }
+                    $skinData['colorsets'] = array_keys($skinConfig['colorsets'] ?? ['default' => []]);
                 }
 
                 // 미리보기 이미지 확인 (baseUrl 포함)
@@ -189,8 +197,13 @@ ob_start();
 ?>
 
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors mb-6">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"><?= __('admin.members.settings.design.title') ?></h2>
-    <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6"><?= __('admin.members.settings.design.description') ?></p>
+    <?php
+    $headerIcon = 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01';
+    $headerTitle = __('admin.members.settings.design.title');
+    $headerDescription = __('admin.members.settings.design.description');
+    $headerIconColor = ''; $headerActions = '';
+    include __DIR__ . '/../../components/settings-header.php';
+    ?>
 
     <form method="POST" class="space-y-6">
         <input type="hidden" name="action" value="update_design">

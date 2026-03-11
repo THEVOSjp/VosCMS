@@ -40,6 +40,7 @@ $useSkin = false;
 // 스킨이 존재하는지 확인
 if (is_dir($skinBasePath . '/' . $memberSkin)) {
     $skinLoader = new MemberSkinLoader($skinBasePath, $memberSkin);
+    $skinLoader->setSiteSettings($siteSettings);
 
     // 해당 스킨에 login.php 템플릿이 있는지 확인
     if ($skinLoader->pageExists('login')) {
@@ -75,29 +76,13 @@ if ($useSkin) {
         }
     }
 
-    // 스킨에 필요한 소셜 로그인 정보 로드
-    $socialProviders = [];
-    if (($siteSettings['member_social_login_enabled'] ?? '0') === '1') {
-        if (($siteSettings['member_social_google'] ?? '0') === '1') {
-            $socialProviders[] = 'google';
-        }
-        if (($siteSettings['member_social_line'] ?? '0') === '1') {
-            $socialProviders[] = 'line';
-        }
-        if (($siteSettings['member_social_kakao'] ?? '0') === '1') {
-            $socialProviders[] = 'kakao';
-        }
-    }
-
-    // 스킨 렌더링
+    // 스킨 렌더링 (로고, 언어, 소셜 로그인은 모듈이 자동 처리)
     $skinHtml = $skinLoader->render('login', [
         'errors' => $errors,
         'oldInput' => $oldInput,
         'csrfToken' => $_SESSION['csrf_token'] ?? '',
         'registerUrl' => $baseUrl . '/register',
         'passwordResetUrl' => $baseUrl . '/forgot-password',
-        'socialProviders' => $socialProviders,
-        'siteName' => $siteName,
         'baseUrl' => $baseUrl,
     ]);
 

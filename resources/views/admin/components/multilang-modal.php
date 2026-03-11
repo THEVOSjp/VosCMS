@@ -2,32 +2,48 @@
 /**
  * 다국어 입력 모달 컴포넌트
  *
- * 사용법:
- * <?php include __DIR__ . '/components/multilang-modal.php'; ?>
+ * DB에서 활성화된 모든 언어를 동적으로 표시합니다.
  *
  * JavaScript API:
  * - openMultilangModal(langKey, inputId, type) : 모달 열기
- *   - langKey: 번역 키 (예: 'site.name', 'term.1.content')
- *   - inputId: 연결된 input/textarea ID
- *   - type: 'text' (단일 라인) 또는 'editor' (멀티라인)
  * - closeMultilangModal() : 모달 닫기
- *
- * 예시:
- * openMultilangModal('site.name', 'site_name', 'text')
- * openMultilangModal('term.1.content', 'term_1_content', 'editor')
  */
 
-// API URL 설정 (이미 정의되지 않은 경우)
+// API URL 설정
 $multilangApiUrl = $adminUrl ?? '';
+
+// DB에서 활성화된 언어 목록 가져오기
+$_mlLocales = [];
+$_mlLangNames = [];
+
+// LanguageModule 사용 가능 시
+$_mlModulePath = dirname(__DIR__, 4) . '/rzxlib/Core/Modules/LanguageModule.php';
+if (file_exists($_mlModulePath)) {
+    require_once $_mlModulePath;
+    $_mlSettings = $siteSettings ?? $config ?? [];
+    $_mlData = \RzxLib\Core\Modules\LanguageModule::getData($_mlSettings, $config['locale'] ?? 'ko');
+    $_mlLocales = $_mlData['supportedCodes'] ?? ['ko', 'en', 'ja'];
+    $_mlAllLangs = $_mlData['allLanguages'] ?? [];
+    foreach ($_mlLocales as $_mlCode) {
+        $_mlLangNames[$_mlCode] = $_mlAllLangs[$_mlCode]['native'] ?? $_mlCode;
+    }
+} else {
+    // 폴백: 기본 3개 언어
+    $_mlLocales = ['ko', 'en', 'ja'];
+    $_mlLangNames = ['ko' => '한국어', 'en' => 'English', 'ja' => '日本語'];
+}
+
+$_mlDefaultLocale = $_mlLocales[0] ?? 'ko';
+$_mlCurrentLocale = $config['locale'] ?? 'ko';
+$_mlLocalesJson = json_encode($_mlLocales);
+$_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
 ?>
 
 <!-- 다국어 입력 모달 -->
 <div id="multilangModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center">
-        <!-- 배경 오버레이 -->
         <div class="fixed inset-0 transition-opacity bg-zinc-900/75" onclick="closeMultilangModal()"></div>
 
-        <!-- 모달 컨텐츠 -->
         <div id="multilangModalContent" class="relative z-50 w-full max-w-lg p-6 bg-white dark:bg-zinc-800 rounded-xl shadow-xl transform transition-all">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.settings.multilang.modal_title') ?></h3>
@@ -40,52 +56,34 @@ $multilangApiUrl = $adminUrl ?? '';
 
             <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4"><?= __('admin.settings.multilang.modal_description') ?></p>
 
-            <!-- 탭 네비게이션 -->
-            <div class="flex border-b border-zinc-200 dark:border-zinc-700 mb-4">
-                <button type="button" onclick="switchMultilangTab('ko')" id="multilang-tab-ko"
-                        class="px-4 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600 dark:text-blue-400">
-                    <?= __('admin.settings.multilang.tab_ko') ?>
+            <!-- 탭 네비게이션 (동적 생성) -->
+            <div id="multilangTabNav" class="flex flex-wrap border-b border-zinc-200 dark:border-zinc-700 mb-4 gap-0 overflow-x-auto">
+<?php foreach ($_mlLocales as $i => $_mlCode): ?>
+                <button type="button" onclick="switchMultilangTab('<?= $_mlCode ?>')" id="multilang-tab-<?= $_mlCode ?>"
+                        class="px-3 py-2 text-xs font-medium whitespace-nowrap border-b-2 <?= $i === 0 ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200' ?>">
+                    <?= htmlspecialchars($_mlLangNames[$_mlCode]) ?>
                 </button>
-                <button type="button" onclick="switchMultilangTab('en')" id="multilang-tab-en"
-                        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">
-                    <?= __('admin.settings.multilang.tab_en') ?>
-                </button>
-                <button type="button" onclick="switchMultilangTab('ja')" id="multilang-tab-ja"
-                        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">
-                    <?= __('admin.settings.multilang.tab_ja') ?>
-                </button>
+<?php endforeach; ?>
             </div>
 
-            <!-- Text 모드 (단일 라인) -->
+            <!-- Text 모드 -->
             <div id="multilang-text-mode">
-                <div id="multilang-text-tabContent-ko" class="multilang-tab-content">
-                    <input type="text" id="multilang-text-input-ko"
+<?php foreach ($_mlLocales as $i => $_mlCode): ?>
+                <div id="multilang-text-tabContent-<?= $_mlCode ?>" class="multilang-tab-content <?= $i > 0 ? 'hidden' : '' ?>">
+                    <input type="text" id="multilang-text-input-<?= $_mlCode ?>"
                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="<?= __('admin.settings.multilang.placeholder') ?>">
+                           placeholder="<?= htmlspecialchars($_mlLangNames[$_mlCode]) ?>">
                 </div>
-                <div id="multilang-text-tabContent-en" class="multilang-tab-content hidden">
-                    <input type="text" id="multilang-text-input-en"
-                           class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="<?= __('admin.settings.multilang.placeholder') ?>">
-                </div>
-                <div id="multilang-text-tabContent-ja" class="multilang-tab-content hidden">
-                    <input type="text" id="multilang-text-input-ja"
-                           class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="<?= __('admin.settings.multilang.placeholder') ?>">
-                </div>
+<?php endforeach; ?>
             </div>
 
-            <!-- Editor 모드 (Summernote WYSIWYG) -->
+            <!-- Editor 모드 -->
             <div id="multilang-editor-mode" class="hidden">
-                <div id="multilang-editor-tabContent-ko" class="multilang-tab-content">
-                    <textarea id="multilang-editor-input-ko" class="multilang-summernote"></textarea>
+<?php foreach ($_mlLocales as $i => $_mlCode): ?>
+                <div id="multilang-editor-tabContent-<?= $_mlCode ?>" class="multilang-tab-content <?= $i > 0 ? 'hidden' : '' ?>">
+                    <textarea id="multilang-editor-input-<?= $_mlCode ?>" class="multilang-summernote"></textarea>
                 </div>
-                <div id="multilang-editor-tabContent-en" class="multilang-tab-content hidden">
-                    <textarea id="multilang-editor-input-en" class="multilang-summernote"></textarea>
-                </div>
-                <div id="multilang-editor-tabContent-ja" class="multilang-tab-content hidden">
-                    <textarea id="multilang-editor-input-ja" class="multilang-summernote"></textarea>
-                </div>
+<?php endforeach; ?>
             </div>
 
             <!-- 버튼 -->
@@ -111,13 +109,11 @@ $multilangApiUrl = $adminUrl ?? '';
 <!-- Summernote for Multilang Modal -->
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
 <style>
-    /* Multilang Modal Summernote Styles */
     #multilang-editor-mode .note-editor { border-radius: 0.5rem; overflow: hidden; }
     #multilang-editor-mode .note-editor .note-toolbar { background: #f4f4f5; border-color: #d4d4d8; }
     #multilang-editor-mode .note-editor .note-editing-area { background: #fff; }
     #multilang-editor-mode .note-editor .note-editable { min-height: 200px; }
     #multilang-editor-mode .note-editor .note-statusbar { background: #f4f4f5; border-color: #d4d4d8; }
-    /* Dark Mode */
     .dark #multilang-editor-mode .note-editor { border-color: #52525b; }
     .dark #multilang-editor-mode .note-editor .note-toolbar { background: #3f3f46; border-color: #52525b; }
     .dark #multilang-editor-mode .note-editor .note-toolbar .note-btn { color: #a1a1aa; background: transparent; border-color: #52525b; }
@@ -133,16 +129,15 @@ $multilangApiUrl = $adminUrl ?? '';
 
 <script>
 (function() {
-    // ===========================
-    // 다국어 모달 컴포넌트
-    // ===========================
-    const MULTILANG_API_URL = '<?php echo $multilangApiUrl; ?>/api/translations';
-    const MULTILANG_LOCALES = ['ko', 'en', 'ja'];
-    const MULTILANG_CURRENT_LOCALE = '<?php echo $config['locale'] ?? 'ko'; ?>';
+    const MULTILANG_API_URL = '<?= $multilangApiUrl ?>/api/translations';
+    const MULTILANG_LOCALES = <?= $_mlLocalesJson ?>;
+    const MULTILANG_LANG_NAMES = <?= $_mlLangNamesJson ?>;
+    const MULTILANG_DEFAULT_LOCALE = '<?= $_mlDefaultLocale ?>';
+    const MULTILANG_CURRENT_LOCALE = '<?= $_mlCurrentLocale ?>';
 
     let multilangCurrentKey = '';
     let multilangCurrentInputId = '';
-    let multilangCurrentType = 'text'; // 'text' or 'editor'
+    let multilangCurrentType = 'text';
     let multilangEditorsInitialized = false;
 
     // Summernote 에디터 초기화
@@ -157,9 +152,8 @@ $multilangApiUrl = $adminUrl ?? '';
             const $textarea = $(`#multilang-editor-input-${locale}`);
             if ($textarea.length && !$textarea.hasClass('summernote-initialized')) {
                 $textarea.summernote({
-                    lang: 'ko-KR',
                     height: 250,
-                    placeholder: '내용을 입력하세요...',
+                    placeholder: MULTILANG_LANG_NAMES[locale] || locale,
                     toolbar: [
                         ['style', ['style']],
                         ['font', ['bold', 'italic', 'underline', 'strikethrough', 'clear']],
@@ -178,10 +172,9 @@ $multilangApiUrl = $adminUrl ?? '';
         });
 
         multilangEditorsInitialized = true;
-        console.log('[Multilang] All Summernote editors initialized');
+        console.log('[Multilang] All Summernote editors initialized (' + MULTILANG_LOCALES.length + ' locales)');
     }
 
-    // Summernote 값 가져오기
     function getEditorValue(locale) {
         if (typeof $ !== 'undefined' && typeof $.fn.summernote !== 'undefined') {
             const $textarea = $(`#multilang-editor-input-${locale}`);
@@ -192,7 +185,6 @@ $multilangApiUrl = $adminUrl ?? '';
         return document.getElementById(`multilang-editor-input-${locale}`)?.value || '';
     }
 
-    // Summernote 값 설정하기
     function setEditorValue(locale, value) {
         if (typeof $ !== 'undefined' && typeof $.fn.summernote !== 'undefined') {
             const $textarea = $(`#multilang-editor-input-${locale}`);
@@ -215,14 +207,11 @@ $multilangApiUrl = $adminUrl ?? '';
         const textMode = document.getElementById('multilang-text-mode');
         const editorMode = document.getElementById('multilang-editor-mode');
 
-        // 모드에 따라 UI 전환
         if (type === 'editor') {
             textMode.classList.add('hidden');
             editorMode.classList.remove('hidden');
             modalContent.classList.remove('max-w-lg');
             modalContent.classList.add('max-w-3xl');
-
-            // Summernote 초기화 (필요 시)
             if (!multilangEditorsInitialized) {
                 initMultilangEditors();
             }
@@ -233,11 +222,10 @@ $multilangApiUrl = $adminUrl ?? '';
             modalContent.classList.add('max-w-lg');
         }
 
-        // 입력 필드 초기화
+        // 현재 입력 필드 값 가져오기
         let currentValue = '';
         const sourceEl = document.getElementById(inputId);
         if (sourceEl) {
-            // Summernote 에디터인 경우
             if (typeof $ !== 'undefined' && $(sourceEl).hasClass('summernote-initialized')) {
                 currentValue = $(sourceEl).summernote('code');
             } else {
@@ -245,13 +233,14 @@ $multilangApiUrl = $adminUrl ?? '';
             }
         }
 
+        // 입력 필드 초기화 (기본 로케일에만 현재 값)
         MULTILANG_LOCALES.forEach(locale => {
             if (type === 'editor') {
-                setEditorValue(locale, locale === 'ko' ? currentValue : '');
+                setEditorValue(locale, locale === MULTILANG_DEFAULT_LOCALE ? currentValue : '');
             } else {
                 const inputEl = document.getElementById(`multilang-text-input-${locale}`);
                 if (inputEl) {
-                    inputEl.value = locale === 'ko' ? currentValue : '';
+                    inputEl.value = locale === MULTILANG_DEFAULT_LOCALE ? currentValue : '';
                 }
             }
         });
@@ -280,10 +269,9 @@ $multilangApiUrl = $adminUrl ?? '';
             console.error('[Multilang] Error loading translations:', error);
         }
 
-        // 모달 표시
         document.getElementById('multilangModal').classList.remove('hidden');
-        switchMultilangTab('ko');
-        console.log('[Multilang] Modal opened for:', langKey, 'type:', type);
+        switchMultilangTab(MULTILANG_DEFAULT_LOCALE);
+        console.log('[Multilang] Modal opened for:', langKey, 'type:', type, 'locales:', MULTILANG_LOCALES.length);
     };
 
     // 모달 닫기
@@ -304,22 +292,18 @@ $multilangApiUrl = $adminUrl ?? '';
             const textContent = document.getElementById(`multilang-text-tabContent-${tab}`);
             const editorContent = document.getElementById(`multilang-editor-tabContent-${tab}`);
 
+            if (!tabBtn) return;
+
             if (tab === locale) {
                 tabBtn.classList.add('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
                 tabBtn.classList.remove('border-transparent', 'text-zinc-500', 'dark:text-zinc-400');
-                if (type === 'text') {
-                    textContent.classList.remove('hidden');
-                } else {
-                    editorContent.classList.remove('hidden');
-                }
+                if (type === 'text' && textContent) textContent.classList.remove('hidden');
+                if (type === 'editor' && editorContent) editorContent.classList.remove('hidden');
             } else {
                 tabBtn.classList.remove('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
                 tabBtn.classList.add('border-transparent', 'text-zinc-500', 'dark:text-zinc-400');
-                if (type === 'text') {
-                    textContent.classList.add('hidden');
-                } else {
-                    editorContent.classList.add('hidden');
-                }
+                if (type === 'text' && textContent) textContent.classList.add('hidden');
+                if (type === 'editor' && editorContent) editorContent.classList.add('hidden');
             }
         });
     };
@@ -353,11 +337,9 @@ $multilangApiUrl = $adminUrl ?? '';
             const result = await response.json();
 
             if (result.success) {
-                // 기본 입력 필드 업데이트 (현재 로케일 값으로)
-                const newValue = translations[MULTILANG_CURRENT_LOCALE] || translations.ko || '';
+                const newValue = translations[MULTILANG_CURRENT_LOCALE] || translations[MULTILANG_DEFAULT_LOCALE] || '';
                 const targetEl = document.getElementById(multilangCurrentInputId);
                 if (targetEl) {
-                    // Summernote 에디터인 경우
                     if (typeof $ !== 'undefined' && $(targetEl).hasClass('summernote-initialized')) {
                         $(targetEl).summernote('code', newValue);
                     } else {
@@ -376,19 +358,14 @@ $multilangApiUrl = $adminUrl ?? '';
         }
     };
 
-    // 토스트 알림 표시
+    // 토스트 알림
     window.showMultilangToast = function(message, type = 'success') {
         const toast = document.getElementById('multilang-toast');
         const toastContent = toast.querySelector('div');
-
         toastContent.textContent = message;
         toastContent.className = `px-4 py-3 rounded-lg shadow-lg text-white text-sm flex items-center ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
-
         toast.classList.remove('hidden');
-
-        setTimeout(() => {
-            toast.classList.add('hidden');
-        }, 3000);
+        setTimeout(() => { toast.classList.add('hidden'); }, 3000);
     };
 
     // ESC 키로 모달 닫기
@@ -398,6 +375,6 @@ $multilangApiUrl = $adminUrl ?? '';
         }
     });
 
-    console.log('[Multilang] Component initialized (text/editor mode with Summernote supported)');
+    console.log('[Multilang] Component initialized with', MULTILANG_LOCALES.length, 'languages:', MULTILANG_LOCALES.join(', '));
 })();
 </script>

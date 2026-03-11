@@ -203,16 +203,14 @@ include __DIR__ . '/_tabs.php';
 
     <!-- Web Push Enable/Disable -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
-        <div class="flex items-center justify-between mb-4">
-            <div>
-                <h2 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.settings.pwa.webpush.title') ?></h2>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.pwa.webpush.description') ?></p>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" name="webpush_enabled" class="sr-only peer" <?= $webpushEnabled ? 'checked' : ''; ?>>
-                <div class="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-zinc-600 peer-checked:bg-blue-600"></div>
-            </label>
-        </div>
+        <?php
+        $headerIcon = 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9';
+        $headerTitle = __('admin.settings.pwa.webpush.title');
+        $headerDescription = __('admin.settings.pwa.webpush.description');
+        $headerIconColor = 'text-green-600';
+        $headerActions = '<label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" name="webpush_enabled" class="sr-only peer" ' . ($webpushEnabled ? 'checked' : '') . '><div class="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-zinc-600 peer-checked:bg-blue-600"></div></label>';
+        include __DIR__ . '/../../components/settings-header.php';
+        ?>
 
         <!-- Status Info -->
         <div class="p-4 rounded-lg <?= $webpushEnabled ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : 'bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700'; ?>">

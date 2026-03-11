@@ -211,6 +211,34 @@ switch ($method) {
                     'error' => 'Failed to save translations'
                 ]);
             }
+        } elseif ($action === 'rename') {
+            // 번역 키 이름 변경 (임시 키 → 실제 키 마이그레이션)
+            $oldKey = $input['old_key'] ?? '';
+            $newKey = $input['new_key'] ?? '';
+
+            if (empty($oldKey) || empty($newKey)) {
+                echo json_encode(['success' => false, 'error' => 'old_key and new_key are required']);
+                exit;
+            }
+
+            try {
+                $stmt = $pdo->prepare("UPDATE rzx_translations SET lang_key = ?, updated_at = CURRENT_TIMESTAMP WHERE lang_key = ?");
+                $stmt->execute([$newKey, $oldKey]);
+                $affected = $stmt->rowCount();
+                echo json_encode(['success' => true, 'renamed' => $affected]);
+            } catch (PDOException $e) {
+                // 중복 키 충돌 시 기존 데이터 업데이트
+                try {
+                    $oldTranslations = getTranslations($pdo, $oldKey);
+                    if (!empty($oldTranslations)) {
+                        saveTranslations($pdo, $newKey, $oldTranslations);
+                        $pdo->prepare("DELETE FROM rzx_translations WHERE lang_key = ?")->execute([$oldKey]);
+                    }
+                    echo json_encode(['success' => true, 'renamed' => count($oldTranslations)]);
+                } catch (Exception $e2) {
+                    echo json_encode(['success' => false, 'error' => 'Rename failed']);
+                }
+            }
         } else {
             echo json_encode(['success' => false, 'error' => 'Invalid action']);
         }

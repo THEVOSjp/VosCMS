@@ -9,7 +9,21 @@ return [
     'name' => 'Modern',
     'version' => '1.0.0',
     'author' => 'RezlyX',
-    'description' => '모던 회원 스킨 - 헤더, 다크모드, 언어선택 기능 포함',
+    'description' => [
+        'ko' => '모던 회원 스킨 - 헤더, 다크모드, 언어선택 기능 포함',
+        'en' => 'Modern member skin - Includes header, dark mode, language selector',
+        'ja' => 'モダン会員スキン - ヘッダー、ダークモード、言語選択機能付き',
+        'zh_CN' => '现代会员皮肤 - 包含标题栏、暗黑模式、语言选择功能',
+        'zh_TW' => '現代會員面板 - 含標題列、暗黑模式、語言選擇功能',
+        'de' => 'Modernes Mitglieder-Skin - Mit Header, Dunkelmodus, Sprachauswahl',
+        'es' => 'Skin de miembro moderno - Incluye encabezado, modo oscuro, selector de idioma',
+        'fr' => 'Skin membre moderne - Avec en-tête, mode sombre, sélecteur de langue',
+        'id' => 'Skin anggota modern - Termasuk header, mode gelap, pemilih bahasa',
+        'mn' => 'Орчин үеийн гишүүний загвар - Толгой, харанхуй горим, хэл сонгох',
+        'ru' => 'Современный скин участника - С шапкой, тёмной темой, выбором языка',
+        'tr' => 'Modern üye teması - Başlık, karanlık mod, dil seçici dahil',
+        'vi' => 'Giao diện thành viên hiện đại - Bao gồm header, chế độ tối, chọn ngôn ngữ',
+    ],
 
     // 스킨 미리보기 이미지
     'preview' => 'preview.png',

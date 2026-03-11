@@ -194,16 +194,14 @@ include __DIR__ . '/_tabs.php';
 
     <!-- Frontend PWA Settings -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
-        <div class="flex items-center justify-between mb-4">
-            <div>
-                <h2 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.settings.pwa.front.title') ?></h2>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.pwa.front.description') ?></p>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" name="pwa_front_enabled" class="sr-only peer" <?= $pwaFrontEnabled ? 'checked' : ''; ?>>
-                <div class="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-zinc-600 peer-checked:bg-blue-600"></div>
-            </label>
-        </div>
+        <?php
+        $headerIcon = 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z';
+        $headerTitle = __('admin.settings.pwa.front.title');
+        $headerDescription = __('admin.settings.pwa.front.description');
+        $headerIconColor = 'text-blue-600';
+        $headerActions = '<label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" name="pwa_front_enabled" class="sr-only peer" ' . ($pwaFrontEnabled ? 'checked' : '') . '><div class="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-zinc-600 peer-checked:bg-blue-600"></div></label>';
+        include __DIR__ . '/../../components/settings-header.php';
+        ?>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
@@ -301,16 +299,14 @@ include __DIR__ . '/_tabs.php';
 
     <!-- Admin PWA Settings -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
-        <div class="flex items-center justify-between mb-4">
-            <div>
-                <h2 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.settings.pwa.admin.title') ?></h2>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.pwa.admin.description') ?></p>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" name="pwa_admin_enabled" class="sr-only peer" <?= $pwaAdminEnabled ? 'checked' : ''; ?>>
-                <div class="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-zinc-600 peer-checked:bg-blue-600"></div>
-            </label>
-        </div>
+        <?php
+        $headerIcon = 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z';
+        $headerTitle = __('admin.settings.pwa.admin.title');
+        $headerDescription = __('admin.settings.pwa.admin.description');
+        $headerIconColor = 'text-purple-600';
+        $headerActions = '<label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" name="pwa_admin_enabled" class="sr-only peer" ' . ($pwaAdminEnabled ? 'checked' : '') . '><div class="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-zinc-600 peer-checked:bg-blue-600"></div></label>';
+        include __DIR__ . '/../../components/settings-header.php';
+        ?>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>

@@ -6,6 +6,7 @@
 
 return [
     // 基本メッセージ
+    'accepted' => ':attributeに同意する必要があります。',
     'required' => ':attributeは必須です。',
     'email' => '有効なメールアドレスを入力してください。',
     'min' => ':attributeは:min文字以上で入力してください。',

@@ -104,13 +104,13 @@ ob_start();
 
 <!-- Mode Management -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
-        </svg>
-        <?= __('admin.settings.system.mode.title') ?>
-    </h2>
-    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6"><?= __('admin.settings.system.mode.description') ?></p>
+    <?php
+    $headerIcon = 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4';
+    $headerTitle = __('admin.settings.system.mode.title');
+    $headerDescription = __('admin.settings.system.mode.description');
+    $headerActions = ''; $headerIconColor = 'text-purple-600';
+    include __DIR__ . '/../../components/settings-header.php';
+    ?>
 
     <div class="space-y-4">
         <!-- Debug Mode -->

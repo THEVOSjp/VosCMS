@@ -80,11 +80,15 @@ $colors = $colorset ?? $config['colorsets']['default'];
 <body class="bg-gray-50 dark:bg-zinc-900 min-h-screen transition-colors duration-200">
     <!-- Header (재사용 컴포넌트) -->
     <?php
-    $headerPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'header.php';
+    // 우선 modern 스킨 자체 헤더 사용, 없으면 member/default, 최종 폴백은 기본 스킨 헤더
+    $headerPath = __DIR__ . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'header.php';
+    if (!file_exists($headerPath)) {
+        $headerPath = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'header.php';
+    }
     if (file_exists($headerPath)) {
         include $headerPath;
     } else {
-        echo '<!-- Header not found: ' . htmlspecialchars($headerPath) . ' -->';
+        echo '<!-- Header not found -->';
     }
     ?>
 

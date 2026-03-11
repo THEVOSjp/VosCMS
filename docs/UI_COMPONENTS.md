@@ -12,6 +12,7 @@
 4. [페이지 컴포넌트](#4-페이지-컴포넌트)
 5. [관리자 탭 컴포넌트](#5-관리자-탭-컴포넌트)
 6. [이미지 크롭 컴포넌트](#6-이미지-크롭-컴포넌트)
+7. [마이페이지 사이드바 컴포넌트](#7-마이페이지-사이드바-컴포넌트)
 
 ---
 
@@ -22,7 +23,9 @@
 ```
 resources/views/
 ├── components/           # 재사용 가능한 UI 컴포넌트
-│   └── phone-input.php   # 전화번호 입력 컴포넌트
+│   ├── phone-input.php   # 전화번호 입력 컴포넌트
+│   ├── language-selector.php  # 공용 언어 선택기
+│   └── mypage-sidebar.php     # 마이페이지 공통 사이드바
 ├── partials/             # 레이아웃 부분 템플릿
 │   ├── header.php        # 공통 헤더
 │   └── footer.php        # 공통 푸터
@@ -563,20 +566,166 @@ include 'skins/default/components/register_fields.php';
 ### 6.10 적용된 페이지
 
 - **회원가입** (`/register`) - 프로필 사진 등록
-- **프로필 수정** (`/mypage/edit`) - 프로필 사진 변경 (예정)
+- **프로필 수정** (`/mypage/profile?edit=1`) - 프로필 사진 변경
+
+---
+
+## 7. 마이페이지 사이드바 컴포넌트
+
+마이페이지 전체에서 공유하는 좌측 네비게이션 사이드바입니다.
+
+### 7.1 파일 구조
+
+```
+resources/views/components/
+└── mypage-sidebar.php          # 공통 컴포넌트 (데이터 + 기본 디자인)
+
+skins/member/{스킨명}/components/
+└── mypage-sidebar.php          # 스킨별 디자인 오버라이드 (선택)
+```
+
+### 7.2 사용법
+
+```php
+<?php
+$sidebarActive = 'profile';  // 현재 활성 메뉴 키
+include BASE_PATH . '/resources/views/components/mypage-sidebar.php';
+?>
+```
+
+### 7.3 필수 변수
+
+| 변수 | 타입 | 설명 |
+|------|------|------|
+| `$baseUrl` | string | 사이트 기본 URL |
+| `$user` | array | 로그인 사용자 정보 |
+| `$profileImgUrl` | string | 프로필 이미지 URL (빈 값이면 이니셜 표시) |
+| `$sidebarActive` | string | 활성 메뉴 키 (기본: `'dashboard'`) |
+
+### 7.4 메뉴 키 목록
+
+| 키 | URL | 번역 키 |
+|----|-----|---------|
+| `dashboard` | `/mypage` | `auth.mypage.menu.dashboard` |
+| `reservations` | `/mypage/reservations` | `auth.mypage.menu.reservations` |
+| `profile` | `/mypage/profile` | `auth.mypage.menu.profile` |
+| `messages` | `/mypage/messages` | `auth.mypage.menu.messages` |
+| `settings` | `/mypage/settings` | `auth.mypage.menu.settings` |
+| `password` | `/mypage/password` | `auth.mypage.menu.password` |
+| `withdraw` | `/mypage/withdraw` | `auth.mypage.menu.withdraw` |
+| `logout` | `/logout` | `auth.mypage.menu.logout` |
+
+### 7.5 스킨 오버라이드
+
+공통 컴포넌트가 자동으로 스킨 오버라이드를 감지합니다:
+
+1. DB `rzx_settings.member_skin` 값 확인
+2. `skins/member/{스킨}/components/mypage-sidebar.php` 존재 여부 확인
+3. 존재하면 해당 파일의 디자인 사용, 없으면 기본 디자인
+
+오버라이드 파일에서 사용 가능한 변수:
+
+| 변수 | 설명 |
+|------|------|
+| `$menuItems` | 메인 메뉴 배열 `[{key, url, label, icon}, ...]` |
+| `$bottomItems` | 하단 메뉴 배열 `[{key, url, label, icon, style}, ...]` |
+| `$sidebarActive` | 현재 활성 메뉴 키 |
+| `$baseUrl` | 사이트 기본 URL |
+| `$user` | 사용자 정보 |
+| `$profileImgUrl` | 프로필 이미지 URL |
+
+### 7.6 적용 페이지
+
+- **대시보드** (`/mypage`) - `$sidebarActive = 'dashboard'`
+- **예약 목록** (`/mypage/reservations`) - `$sidebarActive = 'reservations'`
+- **프로필** (`/mypage/profile`) - `$sidebarActive = 'profile'`
+- **메시지** (`/mypage/messages`) - `$sidebarActive = 'messages'`
+- **설정** (`/mypage/settings`) - `$sidebarActive = 'settings'`
+- **비밀번호** (`/mypage/password`) - `$sidebarActive = 'password'`
+- **회원 탈퇴** (`/mypage/withdraw`) - `$sidebarActive = 'withdraw'`
+
+---
+
+## 7. 메뉴 관리 시스템 (Rhymix 호환)
+
+### 7.1 개요
+
+Rhymix 메뉴 시스템과 동일한 4단 캐스케이딩 패널 UI를 제공합니다.
+
+**파일 구조**:
+```
+resources/views/admin/site/
+├── menus.php          # 메인 뷰 (4단 패널 UI, ~40KB)
+├── menus-js.php       # 핵심 JavaScript (~18KB)
+├── menus-dnd.php      # 드래그&드롭 전용 JS (~5KB)
+└── menus-api.php      # REST API (~13KB)
+```
+
+### 7.2 4단 패널 구조
+
+| 패널 | 용도 | 주요 기능 |
+|------|------|-----------|
+| 패널1 (트리) | 사이트맵/메뉴 트리 | 드래그&드롭, 접기/펼치기, 검색 |
+| 패널2 (컨텍스트) | 선택 항목 액션 | 추가, 편집, 복사, 잘라내기, 붙여넣기, 삭제 |
+| 패널3 (메뉴타입) | 메뉴 타입 선택/편집 | 사이트맵 편집, 레이아웃 일괄 적용 |
+| 패널4 (상세폼) | 메뉴 상세 설정 | URL, 타겟, 아이콘, 접근 권한, 설명 등 |
+
+### 7.3 드래그&드롭
+
+- HTML5 네이티브 Drag & Drop API
+- 3구간 드롭 판정: 위(25%) → 형제 위, 내부(50%) → 자식으로, 아래(25%) → 형제 아래
+- 자기 자식으로 드롭 방지 (`isDesc` 검사)
+- 드롭 후 `reorder_menu_items` API로 서버 동기화
+
+### 7.4 클립보드 (복사/잘라내기/붙여넣기)
+
+```javascript
+// JS 메모리 기반 클립보드
+clipboard = { id: Number, sitemapId: Number, mode: 'copy'|'cut' }
+
+copyMenuItem()    // 복사 → clipboard.mode = 'copy'
+cutMenuItem()     // 잘라내기 → clipboard.mode = 'cut'
+pasteSitemap()    // 사이트맵 루트에 붙여넣기
+pasteAsChild()    // 선택된 메뉴의 자식으로 붙여넣기
+```
+
+### 7.5 API 액션
+
+| 액션 | 메서드 | 설명 |
+|------|--------|------|
+| `add_sitemap` | POST | 사이트맵 추가 |
+| `rename_sitemap` | POST | 사이트맵 이름 변경 |
+| `delete_sitemap` | POST | 사이트맵 삭제 (하위 메뉴 포함) |
+| `add_menu_item` | POST | 메뉴 항목 추가 |
+| `update_menu_item` | POST | 메뉴 항목 수정 |
+| `delete_menu_item` | POST | 메뉴 항목 삭제 (재귀) |
+| `toggle_home` | POST | 홈 메뉴 지정/해제 |
+| `move_menu_item` | POST | 메뉴 이동 (DnD) |
+| `copy_menu_item` | POST | 메뉴 복사 (서브트리 재귀) |
+| `reorder_menu_items` | POST | 형제 순서 일괄 변경 |
+
+### 7.6 Rhymix 호환 필드
+
+| 필드 | DB 컬럼 | 설명 |
+|------|---------|------|
+| 새 창 열기 | `open_window` | 링크를 새 창에서 열기 (0/1) |
+| 확장 기본값 | `expand` | 하위 메뉴 기본 펼침 (0/1) |
+| 접근 권한 | `group_srls` | 접근 허용 그룹 (쉼표 구분) |
+| 바로가기 | `is_shortcut` | 바로가기 메뉴 여부 (0/1) |
 
 ---
 
 ## 버전 정보
 
-- **문서 버전**: 1.4.0
-- **최종 수정일**: 2026-03-05
+- **문서 버전**: 1.5.0
+- **최종 수정일**: 2026-03-10
 - **적용 대상**: RezlyX UI Components
 
 ### 변경 이력
 
 | 버전 | 날짜 | 변경 내용 |
 |------|------|-----------|
+| 1.5.0 | 2026-03-10 | 메뉴 관리 시스템 (Rhymix 호환) 추가 |
 | 1.4.0 | 2026-03-05 | 이미지 크롭 컴포넌트 추가 (Cropper.js 기반) |
 | 1.3.0 | 2026-03-05 | 전화번호 컴포넌트 180개+ 국가 지원, 네이티브 국가명 시스템, 검색 기능 추가 |
 | 1.2.0 | 2026-03-02 | 관리자 탭 컴포넌트, 시스템 설정 UI 추가 |

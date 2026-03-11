@@ -69,7 +69,15 @@ $colors = $colorset ?? $config['colorsets']['default'];
 
 <div class="min-h-screen bg-gray-50 dark:bg-zinc-900 transition-colors duration-200">
     <!-- Header (재사용 컴포넌트) -->
-    <?php include dirname(__DIR__, 2) . '/default/components/header.php'; ?>
+    <?php
+    $headerPath = __DIR__ . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'header.php';
+    if (!file_exists($headerPath)) {
+        $headerPath = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'header.php';
+    }
+    if (file_exists($headerPath)) {
+        include $headerPath;
+    }
+    ?>
 
     <!-- Main Content -->
     <main class="py-8 px-4 sm:px-6 lg:px-8">

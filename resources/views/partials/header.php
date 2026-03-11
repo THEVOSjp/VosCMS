@@ -45,17 +45,13 @@ if (!isset($siteSettings)) {
 }
 
 // 로고 설정값
-$siteName = $logoSettings['site_name'] ?? ($config['app_name'] ?? 'RezlyX');
+$siteName = function_exists('get_site_name') ? get_site_name() : ($logoSettings['site_name'] ?? ($config['app_name'] ?? 'RezlyX'));
 $logoType = $logoSettings['logo_type'] ?? 'text';
 $logoImage = $logoSettings['logo_image'] ?? '';
 $currentLocale = function_exists('current_locale') ? current_locale() : ($config['locale'] ?? 'ko');
-$localeLabels = ['ko' => 'KO', 'en' => 'EN', 'ja' => 'JA'];
-$currentLocaleLabel = $localeLabels[$currentLocale] ?? 'KO';
-$languages = [
-    'ko' => '한국어',
-    'en' => 'English',
-    'ja' => '日本語',
-];
+
+// $siteSettings 보장 (공용 언어 선택기용)
+if (!isset($siteSettings)) $siteSettings = [];
 
 // 로그인 상태 확인
 if (!isset($isLoggedIn)) {
@@ -102,37 +98,49 @@ if (!isset($isLoggedIn)) {
                         <span><?php echo htmlspecialchars($siteName); ?></span>
                     <?php endif; ?>
                 </a>
-                <nav class="hidden md:flex items-center space-x-8">
-                    <a href="<?php echo $baseUrl; ?>/services" class="text-gray-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium"><?= __('common.nav.services') ?></a>
-                    <a href="<?php echo $baseUrl; ?>/booking" class="text-gray-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium"><?= __('common.nav.booking') ?></a>
-                    <a href="<?php echo $baseUrl; ?>/booking/lookup" class="text-gray-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium"><?= __('common.nav.my_reservations') ?></a>
-                </nav>
-                <div class="flex items-center space-x-3">
-                    <!-- 언어 선택 -->
-                    <div class="relative">
-                        <button id="langBtn" class="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-gray-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-                            </svg>
-                            <span id="currentLang"><?php echo $currentLocaleLabel; ?></span>
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                        <div id="langDropdown" class="hidden absolute right-0 mt-2 w-32 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border dark:border-zinc-700 py-1 z-50">
-                            <?php foreach ($languages as $code => $name): ?>
-                                <a href="?lang=<?php echo $code; ?>"
-                                   class="block px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700 <?php echo $currentLocale === $code ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : ''; ?>">
-                                    <?php echo $name; ?>
-                                    <?php if ($currentLocale === $code): ?>
-                                        <svg class="inline-block w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                        </svg>
-                                    <?php endif; ?>
+                <?php
+                // DB 메뉴 로드
+                include_once BASE_PATH . '/resources/views/components/menu-loader.php';
+                $mainMenu = $siteMenus['Main Menu'] ?? [];
+                $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+                ?>
+                <nav class="hidden md:flex items-center space-x-1">
+                    <?php foreach ($mainMenu as $__mi):
+                        $__href = rzxMenuUrl($__mi, $baseUrl);
+                        $__active = rzxIsActive($__mi, $currentPath, $baseUrl);
+                        $__hasKids = !empty($__mi['children']);
+                        $__cls = $__active
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : 'text-gray-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400';
+                    ?>
+                    <?php if ($__hasKids): ?>
+                    <div class="relative group">
+                        <a href="<?= htmlspecialchars($__href) ?>" class="px-3 py-2 font-medium inline-flex items-center gap-1 <?= $__cls ?>">
+                            <?= htmlspecialchars($__mi['title']) ?>
+                            <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </a>
+                        <div class="absolute left-0 top-full pt-1 hidden group-hover:block z-50">
+                            <div class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg py-1 min-w-[180px]">
+                                <?php foreach ($__mi['children'] as $__ch):
+                                    $__chHref = rzxMenuUrl($__ch, $baseUrl);
+                                ?>
+                                <a href="<?= htmlspecialchars($__chHref) ?>" class="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700">
+                                    <?= htmlspecialchars($__ch['title']) ?>
                                 </a>
-                            <?php endforeach; ?>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
                     </div>
+                    <?php else: ?>
+                    <a href="<?= htmlspecialchars($__href) ?>" class="px-3 py-2 font-medium <?= $__cls ?>">
+                        <?= htmlspecialchars($__mi['title']) ?>
+                    </a>
+                    <?php endif; ?>
+                    <?php endforeach; ?>
+                </nav>
+                <div class="flex items-center space-x-3">
+                    <!-- 공용 언어 선택기 -->
+                    <?php include BASE_PATH . '/resources/views/components/language-selector.php'; ?>
                     <!-- 다크모드 토글 -->
                     <button id="darkModeBtn" class="p-2 text-gray-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700">
                         <svg id="sunIcon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">

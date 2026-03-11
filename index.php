@@ -7,6 +7,7 @@
  */
 
 define('REZLYX_START', microtime(true));
+date_default_timezone_set('Asia/Seoul'); // 기본값, DB 설정 로드 후 재설정
 
 /*
 |--------------------------------------------------------------------------
@@ -123,6 +124,11 @@ try {
     if (!empty($siteSettings['site_name'])) {
         $config['app_name'] = $siteSettings['site_name'];
     }
+
+    // timezone 설정
+    if (!empty($siteSettings['site_timezone'])) {
+        date_default_timezone_set($siteSettings['site_timezone']);
+    }
 } catch (PDOException $e) {
     // Use default from .env if database is not available
     if ($config['debug']) {
@@ -157,11 +163,41 @@ if (empty($path) || $path === 'index.php') {
     $adminRoute = substr($path, strlen($config['admin_path']));
     $adminRoute = trim($adminRoute, '/') ?: 'dashboard';
 
-    $adminView = BASE_PATH . '/resources/views/admin/' . $adminRoute . '.php';
-    if (file_exists($adminView)) {
-        include $adminView;
+    // 서비스 설정 서브페이지 처리 (services/settings/*)
+    if (preg_match('#^services/settings(?:/(\w+))?$#', $adminRoute, $m)) {
+        $settingsTab = $m[1] ?? 'general';
+        if (!in_array($settingsTab, ['general', 'categories', 'holidays'])) {
+            $settingsTab = 'general';
+        }
+        include BASE_PATH . '/resources/views/admin/services/settings.php';
+    // 스태프 관리
+    } elseif ($adminRoute === 'staff') {
+        include BASE_PATH . '/resources/views/admin/staff/index.php';
+    // 스태프 설정 서브페이지 처리 (staff/settings)
+    } elseif ($adminRoute === 'staff/settings') {
+        include BASE_PATH . '/resources/views/admin/staff/settings.php';
+    } elseif ($adminRoute === 'staff/attendance') {
+        include BASE_PATH . '/resources/views/admin/staff/attendance.php';
+    } elseif ($adminRoute === 'staff/attendance/history') {
+        include BASE_PATH . '/resources/views/admin/staff/attendance-history.php';
+    } elseif ($adminRoute === 'staff/attendance/dashboard') {
+        include BASE_PATH . '/resources/views/admin/staff/attendance-dashboard.php';
+    } elseif ($adminRoute === 'staff/attendance/kiosk') {
+        include BASE_PATH . '/resources/views/admin/staff/attendance-kiosk.php';
+    } elseif ($adminRoute === 'staff/attendance/report') {
+        include BASE_PATH . '/resources/views/admin/staff/attendance-report.php';
+    } elseif (preg_match('#^staff/attendance/report/personal(?:/(\d+))?$#', $adminRoute, $m)) {
+        $reportStaffId = $m[1] ?? null;
+        include BASE_PATH . '/resources/views/admin/staff/attendance-report-personal.php';
+    } elseif ($adminRoute === 'staff/attendance/report/stats') {
+        include BASE_PATH . '/resources/views/admin/staff/attendance-report-stats.php';
     } else {
-        include BASE_PATH . '/resources/views/admin/dashboard.php';
+        $adminView = BASE_PATH . '/resources/views/admin/' . $adminRoute . '.php';
+        if (file_exists($adminView)) {
+            include $adminView;
+        } else {
+            include BASE_PATH . '/resources/views/admin/dashboard.php';
+        }
     }
 } else {
     // 하위 경로 처리 (예: booking/lookup)

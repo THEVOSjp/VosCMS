@@ -33,6 +33,70 @@ class SettingsController extends Controller
     }
 
     /**
+     * 사이트 기본 설정 페이지
+     */
+    public function site(Request $request): Response
+    {
+        return $this->view('admin.settings.site');
+    }
+
+    /**
+     * 사이트 기본 설정 저장
+     */
+    public function updateSite(Request $request): Response
+    {
+        return $this->view('admin.settings.site');
+    }
+
+    /**
+     * 메일 설정 페이지
+     */
+    public function mail(Request $request): Response
+    {
+        return $this->view('admin.settings.mail');
+    }
+
+    /**
+     * 메일 설정 저장
+     */
+    public function updateMail(Request $request): Response
+    {
+        return $this->view('admin.settings.mail');
+    }
+
+    /**
+     * 언어 설정 페이지
+     */
+    public function language(Request $request): Response
+    {
+        return $this->view('admin.settings.language');
+    }
+
+    /**
+     * 언어 설정 저장
+     */
+    public function updateLanguage(Request $request): Response
+    {
+        return $this->view('admin.settings.language');
+    }
+
+    /**
+     * 번역 관리 페이지
+     */
+    public function translations(Request $request): Response
+    {
+        return $this->view('admin.settings.translations');
+    }
+
+    /**
+     * 번역 저장
+     */
+    public function updateTranslations(Request $request): Response
+    {
+        return $this->view('admin.settings.translations');
+    }
+
+    /**
      * SEO 설정 페이지
      */
     public function seo(Request $request): Response

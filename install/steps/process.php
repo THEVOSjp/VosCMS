@@ -252,6 +252,9 @@ ENV;
         $stmt->execute([$key, $value]);
     }
 
+    // Seed default services & categories (beauty salon)
+    seedDefaultServices($pdo, $prefix);
+
     // Create installation lock file
     file_put_contents(INSTALL_PATH . '/installed.lock', date('Y-m-d H:i:s'));
 }
@@ -265,4 +268,29 @@ function generateUUID(): string
     $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
     $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
     return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+}
+
+/**
+ * Seed default beauty salon services & categories with 13 language translations.
+ * Executes database/seed_services.php which reads .env for DB connection.
+ */
+function seedDefaultServices(PDO $pdo, string $prefix): void
+{
+    $seedFile = BASE_PATH . '/database/seed_services.php';
+    if (!file_exists($seedFile)) return;
+
+    try {
+        // .env가 이미 생성된 상태이므로 seed 스크립트 직접 실행
+        $phpBin = PHP_BINARY ?: 'php';
+        $output = [];
+        $exitCode = 0;
+        exec("{$phpBin} " . escapeshellarg($seedFile) . " 2>&1", $output, $exitCode);
+
+        if ($exitCode !== 0) {
+            error_log('[RezlyX Install] Service seed error (exit=' . $exitCode . '): ' . implode("\n", $output));
+        }
+    } catch (\Exception $e) {
+        // 시드 실패는 설치를 중단하지 않음
+        error_log('[RezlyX Install] Service seed error: ' . $e->getMessage());
+    }
 }

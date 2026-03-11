@@ -78,8 +78,13 @@ ob_start();
 ?>
 
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors mb-6">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"><?= __('admin.members.settings.login.title') ?></h2>
-    <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6"><?= __('admin.members.settings.login.description') ?></p>
+    <?php
+    $headerIcon = 'M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1';
+    $headerTitle = __('admin.members.settings.login.title');
+    $headerDescription = __('admin.members.settings.login.description');
+    $headerIconColor = ''; $headerActions = '';
+    include __DIR__ . '/../../components/settings-header.php';
+    ?>
 
     <form method="POST" class="space-y-6">
         <input type="hidden" name="action" value="update_login">

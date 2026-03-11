@@ -141,6 +141,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = '삭제 실패: ' . $e->getMessage();
             $messageType = 'error';
         }
+    } elseif ($action === 'update_mail_settings') {
+        // 메일 설정 저장
+        $mailFromName = trim($_POST['mail_from_name'] ?? '');
+        $mailFromAddress = trim($_POST['mail_from_address'] ?? '');
+        $mailReplyTo = trim($_POST['mail_reply_to'] ?? '');
+        $mailMethod = $_POST['mail_method'] ?? 'mail';
+        $mailApplyAll = isset($_POST['mail_apply_all']) ? '1' : '0';
+
+        // SMTP 설정
+        $smtpHost = trim($_POST['smtp_host'] ?? '');
+        $smtpPort = trim($_POST['smtp_port'] ?? '587');
+        $smtpEncryption = $_POST['smtp_encryption'] ?? 'tls';
+        $smtpUsername = trim($_POST['smtp_username'] ?? '');
+        $smtpPassword = $_POST['smtp_password'] ?? '';
+
+        try {
+            $stmt = $pdo->prepare("INSERT INTO rzx_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+            $stmt->execute(['mail_from_name', $mailFromName]);
+            $stmt->execute(['mail_from_address', $mailFromAddress]);
+            $stmt->execute(['mail_reply_to', $mailReplyTo]);
+            $stmt->execute(['mail_method', $mailMethod]);
+            $stmt->execute(['mail_apply_all', $mailApplyAll]);
+
+            // SMTP 설정 저장
+            $stmt->execute(['smtp_host', $smtpHost]);
+            $stmt->execute(['smtp_port', $smtpPort]);
+            $stmt->execute(['smtp_encryption', $smtpEncryption]);
+            $stmt->execute(['smtp_username', $smtpUsername]);
+
+            // 비밀번호는 입력된 경우에만 업데이트
+            if (!empty($smtpPassword)) {
+                $stmt->execute(['smtp_password', $smtpPassword]);
+            }
+
+            $message = '메일 설정이 저장되었습니다.';
+            $messageType = 'success';
+
+            // 설정 다시 로드
+            $settings['mail_from_name'] = $mailFromName;
+            $settings['mail_from_address'] = $mailFromAddress;
+            $settings['mail_reply_to'] = $mailReplyTo;
+            $settings['mail_method'] = $mailMethod;
+            $settings['mail_apply_all'] = $mailApplyAll;
+            $settings['smtp_host'] = $smtpHost;
+            $settings['smtp_port'] = $smtpPort;
+            $settings['smtp_encryption'] = $smtpEncryption;
+            $settings['smtp_username'] = $smtpUsername;
+        } catch (PDOException $e) {
+            $message = '저장 실패: ' . $e->getMessage();
+            $messageType = 'error';
+        }
     } elseif ($action === 'update_seo_settings') {
         // SEO 설정 저장
         $seoDescription = trim($_POST['seo_description'] ?? '');
@@ -696,6 +747,159 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                         </div>
                     </form>
                 </div>
+
+                <!-- Mail Settings -->
+                <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
+                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2">메일 설정</h2>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6">가입환영 메일, 인증메일, 알림 등 발송에 사용되는 메일 설정입니다.</p>
+
+                    <form method="POST" class="space-y-6">
+                        <input type="hidden" name="action" value="update_mail_settings">
+
+                        <!-- 기본 발신자 정보 -->
+                        <div class="border-b dark:border-zinc-700 pb-6">
+                            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4">발신자 정보</h3>
+
+                            <!-- 기본 발신자 이름 -->
+                            <div class="mb-4">
+                                <label for="mail_from_name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">기본 발신자 이름</label>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2">가입환영 메일, 인증메일, 알림 등을 발송할 때 사용할 이름입니다. 사이트 이름 사용을 권장합니다.</p>
+                                <input type="text" name="mail_from_name" id="mail_from_name"
+                                       value="<?php echo htmlspecialchars($settings['mail_from_name'] ?? ($settings['site_name'] ?? 'RezlyX')); ?>"
+                                       class="w-full max-w-md px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="사이트 이름">
+                            </div>
+
+                            <!-- 기본 발신자 이메일 -->
+                            <div class="mb-4">
+                                <label for="mail_from_address" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">기본 발신자 이메일</label>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2">가입환영 메일, 인증메일, 알림 등을 발송할 때 사용할 메일 주소입니다.</p>
+                                <div class="flex items-center gap-4 flex-wrap">
+                                    <input type="email" name="mail_from_address" id="mail_from_address"
+                                           value="<?php echo htmlspecialchars($settings['mail_from_address'] ?? ''); ?>"
+                                           class="w-full max-w-md px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                           placeholder="noreply@example.com">
+                                    <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 cursor-pointer">
+                                        <input type="checkbox" name="mail_apply_all" value="1"
+                                               <?php echo ($settings['mail_apply_all'] ?? '0') === '1' ? 'checked' : ''; ?>
+                                               class="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500">
+                                        <span>일괄 적용</span>
+                                    </label>
+                                </div>
+                                <p class="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                                    <svg class="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                    </svg>
+                                    SMTP 또는 외부 API 사용시 일괄 적용 옵션을 선택하지 않으면 스팸으로 취급될 가능성이 높아지니 주의하십시오.
+                                </p>
+                            </div>
+
+                            <!-- Reply-To 주소 -->
+                            <div class="mb-4">
+                                <label for="mail_reply_to" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Reply-To 주소</label>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2">받는이가 "답장"을 클릭했을 때 발신자 주소가 아닌 다른 주소로 답장을 받을 수 있습니다. 발송 방법에 따라 이 기능을 지원하지 않을 수도 있습니다.</p>
+                                <input type="email" name="mail_reply_to" id="mail_reply_to"
+                                       value="<?php echo htmlspecialchars($settings['mail_reply_to'] ?? ''); ?>"
+                                       class="w-full max-w-md px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="support@example.com">
+                            </div>
+                        </div>
+
+                        <!-- 발송 방법 -->
+                        <div class="border-b dark:border-zinc-700 pb-6">
+                            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4">발송 방법</h3>
+
+                            <div class="mb-4">
+                                <label for="mail_method" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">메일 발송 방법</label>
+                                <select name="mail_method" id="mail_method"
+                                        class="w-full max-w-md px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        onchange="toggleSmtpSettings(this.value)">
+                                    <option value="mail" <?php echo ($settings['mail_method'] ?? 'mail') === 'mail' ? 'selected' : ''; ?>>PHP mail() 함수</option>
+                                    <option value="smtp" <?php echo ($settings['mail_method'] ?? '') === 'smtp' ? 'selected' : ''; ?>>SMTP</option>
+                                </select>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-2" id="mail_method_hint">
+                                    PHP에 내장된 mail() 함수를 사용합니다. 발송 성공률이 매우 낮습니다.<br>
+                                    이 옵션은 추후 지원되지 않을 수 있으니, 가능하면 다른 방식을 선택하시기 바랍니다.
+                                </p>
+                            </div>
+
+                            <!-- SMTP 설정 (SMTP 선택 시 표시) -->
+                            <div id="smtp_settings" class="mt-6 p-4 bg-zinc-50 dark:bg-zinc-700/50 rounded-lg <?php echo ($settings['mail_method'] ?? 'mail') !== 'smtp' ? 'hidden' : ''; ?>">
+                                <h4 class="text-sm font-semibold text-zinc-900 dark:text-white mb-4">SMTP 서버 설정</h4>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- SMTP 호스트 -->
+                                    <div>
+                                        <label for="smtp_host" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">SMTP 호스트</label>
+                                        <input type="text" name="smtp_host" id="smtp_host"
+                                               value="<?php echo htmlspecialchars($settings['smtp_host'] ?? ''); ?>"
+                                               class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                               placeholder="smtp.gmail.com">
+                                    </div>
+
+                                    <!-- SMTP 포트 -->
+                                    <div>
+                                        <label for="smtp_port" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">SMTP 포트</label>
+                                        <input type="text" name="smtp_port" id="smtp_port"
+                                               value="<?php echo htmlspecialchars($settings['smtp_port'] ?? '587'); ?>"
+                                               class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                               placeholder="587">
+                                    </div>
+
+                                    <!-- 암호화 방식 -->
+                                    <div>
+                                        <label for="smtp_encryption" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">암호화 방식</label>
+                                        <select name="smtp_encryption" id="smtp_encryption"
+                                                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="tls" <?php echo ($settings['smtp_encryption'] ?? 'tls') === 'tls' ? 'selected' : ''; ?>>TLS</option>
+                                            <option value="ssl" <?php echo ($settings['smtp_encryption'] ?? '') === 'ssl' ? 'selected' : ''; ?>>SSL</option>
+                                            <option value="" <?php echo ($settings['smtp_encryption'] ?? '') === '' ? 'selected' : ''; ?>>없음</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- SMTP 사용자명 -->
+                                    <div>
+                                        <label for="smtp_username" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">SMTP 사용자명</label>
+                                        <input type="text" name="smtp_username" id="smtp_username"
+                                               value="<?php echo htmlspecialchars($settings['smtp_username'] ?? ''); ?>"
+                                               class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                               placeholder="your-email@gmail.com">
+                                    </div>
+
+                                    <!-- SMTP 비밀번호 -->
+                                    <div class="md:col-span-2">
+                                        <label for="smtp_password" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">SMTP 비밀번호</label>
+                                        <input type="password" name="smtp_password" id="smtp_password"
+                                               class="w-full max-w-md px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                               placeholder="<?php echo !empty($settings['smtp_password']) ? '••••••••' : '앱 비밀번호 또는 SMTP 비밀번호'; ?>">
+                                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">비밀번호를 변경하려면 입력하세요. 빈칸으로 두면 기존 값이 유지됩니다.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-4">
+                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                                저장
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <script>
+                function toggleSmtpSettings(method) {
+                    const smtpSettings = document.getElementById('smtp_settings');
+                    const hint = document.getElementById('mail_method_hint');
+
+                    if (method === 'smtp') {
+                        smtpSettings.classList.remove('hidden');
+                        hint.innerHTML = 'SMTP 서버를 통해 메일을 발송합니다. 발송 성공률이 높고 안정적입니다.';
+                    } else {
+                        smtpSettings.classList.add('hidden');
+                        hint.innerHTML = 'PHP에 내장된 mail() 함수를 사용합니다. 발송 성공률이 매우 낮습니다.<br>이 옵션은 추후 지원되지 않을 수 있으니, 가능하면 다른 방식을 선택하시기 바랍니다.';
+                    }
+                }
+                </script>
 
                 <!-- SEO Settings -->
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">

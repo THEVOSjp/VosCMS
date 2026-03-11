@@ -41,13 +41,18 @@ try {
     $dbError = $e->getMessage();
 }
 
-// Load member settings from database
+// Load all settings from database (topbar 언어 선택기 등에 필요)
+$settings = [];
 $memberSettings = [];
 if ($dbConnected) {
     try {
-        $stmt = $pdo->query("SELECT `key`, `value` FROM {$prefix}settings WHERE `key` LIKE 'member_%'");
+        $stmt = $pdo->query("SELECT `key`, `value` FROM {$prefix}settings");
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $memberSettings[$row['key']] = $row['value'];
+            $settings[$row['key']] = $row['value'];
+            // member_ 접두사 설정은 별도 배열에도 저장
+            if (str_starts_with($row['key'], 'member_')) {
+                $memberSettings[$row['key']] = $row['value'];
+            }
         }
     } catch (PDOException $e) {
         // Settings table might not exist yet

@@ -22,9 +22,14 @@ class Translator
     protected static string $fallbackLocale = 'ko';
 
     /**
-     * 지원 로케일 목록
+     * 지원 로케일 목록 (DB에서 로드됨)
      */
     protected static array $supportedLocales = ['ko', 'en', 'ja'];
+
+    /**
+     * 전체 언어 정보 (코드 => ['name' => ..., 'native' => ...])
+     */
+    protected static array $allLanguages = [];
 
     /**
      * 로드된 번역 데이터
@@ -42,6 +47,11 @@ class Translator
     protected static bool $initialized = false;
 
     /**
+     * 언어 자동 감지 여부
+     */
+    protected static bool $autoDetect = true;
+
+    /**
      * 초기화
      */
     public static function init(string $langPath, ?string $locale = null): void
@@ -52,6 +62,9 @@ class Translator
         }
 
         self::$langPath = rtrim($langPath, '/\\');
+
+        // DB에서 언어 설정 로드
+        self::loadLanguageSettings();
 
         if ($locale && in_array($locale, self::$supportedLocales)) {
             self::$locale = $locale;
@@ -68,6 +81,86 @@ class Translator
         }
 
         self::$initialized = true;
+    }
+
+    /**
+     * DB에서 언어 설정 로드
+     */
+    protected static function loadLanguageSettings(): void
+    {
+        try {
+            $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
+            $dbname = $_ENV['DB_DATABASE'] ?? 'rezlyx_dev';
+            $charset = $_ENV['DB_CHARSET'] ?? 'utf8mb4';
+            $username = $_ENV['DB_USERNAME'] ?? 'root';
+            $password = $_ENV['DB_PASSWORD'] ?? '';
+
+            $pdo = new \PDO(
+                "mysql:host={$host};dbname={$dbname};charset={$charset}",
+                $username,
+                $password,
+                [
+                    \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                    \PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$charset}"
+                ]
+            );
+
+            // 설정 조회
+            $stmt = $pdo->prepare("SELECT `key`, `value` FROM rzx_settings WHERE `key` IN (?, ?, ?, ?)");
+            $stmt->execute(['supported_languages', 'custom_languages', 'default_language', 'language_auto_detect']);
+            $settings = [];
+            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                $settings[$row['key']] = $row['value'];
+            }
+
+            // 지원 언어 설정
+            if (!empty($settings['supported_languages'])) {
+                $supported = json_decode($settings['supported_languages'], true);
+                if (is_array($supported) && !empty($supported)) {
+                    self::$supportedLocales = $supported;
+                }
+            }
+
+            // 기본 언어 설정
+            if (!empty($settings['default_language'])) {
+                self::$fallbackLocale = $settings['default_language'];
+            }
+
+            // 자동 감지 설정
+            self::$autoDetect = ($settings['language_auto_detect'] ?? '1') === '1';
+
+            // 기본 제공 언어
+            $defaultLanguages = [
+                'ko' => ['name' => '한국어', 'native' => '한국어'],
+                'en' => ['name' => 'English', 'native' => 'English'],
+                'ja' => ['name' => '日本語', 'native' => '日本語'],
+                'zh_CN' => ['name' => '중국어(간체)', 'native' => '中文(中国)'],
+                'zh_TW' => ['name' => '중국어(번체)', 'native' => '中文(臺灣)'],
+                'de' => ['name' => '독일어', 'native' => 'Deutsch'],
+                'es' => ['name' => '스페인어', 'native' => 'Español'],
+                'fr' => ['name' => '프랑스어', 'native' => 'Français'],
+                'mn' => ['name' => '몽골어', 'native' => 'Монгол'],
+                'ru' => ['name' => '러시아어', 'native' => 'Русский'],
+                'tr' => ['name' => '터키어', 'native' => 'Türkçe'],
+                'vi' => ['name' => '베트남어', 'native' => 'Tiếng Việt'],
+                'id' => ['name' => '인도네시아어', 'native' => 'Bahasa Indonesia'],
+            ];
+
+            // 커스텀 언어 병합
+            $customLanguages = [];
+            if (!empty($settings['custom_languages'])) {
+                $custom = json_decode($settings['custom_languages'], true);
+                if (is_array($custom)) {
+                    $customLanguages = $custom;
+                }
+            }
+
+            self::$allLanguages = array_merge($defaultLanguages, $customLanguages);
+
+        } catch (\PDOException $e) {
+            // DB 오류 시 기본값 유지
+            error_log("Translator::loadLanguageSettings error: " . $e->getMessage());
+        }
     }
 
     /**
@@ -113,15 +206,24 @@ class Translator
             return $_COOKIE['locale'];
         }
 
-        // 3. 브라우저 Accept-Language 헤더에서 감지 (처음 접속 시)
-        if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+        // 3. 자동 감지가 활성화된 경우에만 브라우저 언어 감지
+        if (self::$autoDetect && isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
             // Accept-Language 파싱 (예: "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6")
             $acceptLangs = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
             foreach ($acceptLangs as $lang) {
                 // 품질 값 제거하고 언어 코드만 추출
-                $langCode = strtolower(substr(trim(explode(';', $lang)[0]), 0, 2));
-                if (in_array($langCode, self::$supportedLocales)) {
-                    return $langCode;
+                $langPart = trim(explode(';', $lang)[0]);
+
+                // 먼저 전체 코드로 확인 (예: zh-CN -> zh_CN)
+                $fullCode = str_replace('-', '_', $langPart);
+                if (in_array($fullCode, self::$supportedLocales)) {
+                    return $fullCode;
+                }
+
+                // 2자리 코드로 확인
+                $shortCode = strtolower(substr($langPart, 0, 2));
+                if (in_array($shortCode, self::$supportedLocales)) {
+                    return $shortCode;
                 }
             }
         }
@@ -297,6 +399,12 @@ class Translator
      */
     public static function getLocaleName(string $locale): string
     {
+        // DB에서 로드된 언어 정보 사용
+        if (isset(self::$allLanguages[$locale])) {
+            return self::$allLanguages[$locale]['native'] ?? $locale;
+        }
+
+        // 기본 언어 이름
         return match ($locale) {
             'ko' => '한국어',
             'en' => 'English',
@@ -306,7 +414,7 @@ class Translator
     }
 
     /**
-     * 모든 로케일 정보 가져오기
+     * 모든 로케일 정보 가져오기 (지원 언어만)
      */
     public static function getAllLocales(): array
     {
@@ -317,6 +425,103 @@ class Translator
                 'active' => $locale === self::$locale,
             ];
         }, self::$supportedLocales);
+    }
+
+    /**
+     * 전체 언어 정보 가져오기 (모든 언어)
+     */
+    public static function getAllLanguages(): array
+    {
+        return self::$allLanguages;
+    }
+
+    /**
+     * 언어 자동 감지 여부
+     */
+    public static function isAutoDetect(): bool
+    {
+        return self::$autoDetect;
+    }
+
+    /**
+     * 폴백 로케일 가져오기
+     */
+    public static function getFallbackLocale(): string
+    {
+        return self::$fallbackLocale;
+    }
+
+    /**
+     * 번역 파일 경로 가져오기
+     */
+    public static function getLangPath(): string
+    {
+        return self::$langPath;
+    }
+
+    /**
+     * 특정 언어의 번역 파일 존재 여부 확인
+     */
+    public static function hasLanguageFiles(string $locale): bool
+    {
+        $localePath = self::$langPath . DIRECTORY_SEPARATOR . $locale;
+        return is_dir($localePath) && count(glob($localePath . '/*.php')) > 0;
+    }
+
+    /**
+     * 언어별 번역 파일 목록 가져오기
+     */
+    public static function getLanguageFiles(string $locale): array
+    {
+        $localePath = self::$langPath . DIRECTORY_SEPARATOR . $locale;
+        if (!is_dir($localePath)) {
+            return [];
+        }
+
+        $files = [];
+        foreach (glob($localePath . '/*.php') as $file) {
+            $group = pathinfo($file, PATHINFO_FILENAME);
+            $files[$group] = [
+                'path' => $file,
+                'size' => filesize($file),
+                'modified' => filemtime($file),
+            ];
+        }
+
+        return $files;
+    }
+
+    /**
+     * 번역 파일 그룹 목록 가져오기 (모든 언어 기준)
+     */
+    public static function getTranslationGroups(): array
+    {
+        $groups = [];
+
+        foreach (self::$supportedLocales as $locale) {
+            $localePath = self::$langPath . DIRECTORY_SEPARATOR . $locale;
+            if (is_dir($localePath)) {
+                foreach (glob($localePath . '/*.php') as $file) {
+                    $group = pathinfo($file, PATHINFO_FILENAME);
+                    if (!in_array($group, $groups)) {
+                        $groups[] = $group;
+                    }
+                }
+            }
+        }
+
+        sort($groups);
+        return $groups;
+    }
+
+    /**
+     * 설정 다시 로드 (캐시 무효화)
+     */
+    public static function reload(): void
+    {
+        self::$initialized = false;
+        self::$translations = [];
+        self::init(self::$langPath);
     }
 }
 

@@ -141,6 +141,12 @@ $router->group(['prefix' => '/mypage', 'middleware' => 'auth'], function (Router
         ->middleware('csrf')
         ->name('mypage.profile.update');
 
+    // 개인정보 설정
+    $router->get('/settings', 'MyPageController@settings')->name('mypage.settings');
+    $router->post('/settings', 'MyPageController@updateSettings')
+        ->middleware('csrf')
+        ->name('mypage.settings.update');
+
     // 비밀번호 변경
     $router->get('/password', 'MyPageController@password')->name('mypage.password');
     $router->post('/password', 'MyPageController@updatePassword')
@@ -201,6 +207,48 @@ $router->group(['prefix' => '/admin', 'middleware' => ['auth', 'admin']], functi
         ->where('id', '\d+')
         ->middleware('csrf')
         ->name('admin.reservations.noshow');
+
+    // 서비스 설정 (서브페이지) - resource 라우트보다 먼저 등록
+    $router->get('/services/settings', function () {
+        header('Location: ' . url('/admin/services/settings/general'));
+        exit;
+    })->name('admin.services.settings.index');
+
+    $router->get('/services/settings/general', function () {
+        global $config, $siteSettings;
+        $settingsTab = 'general';
+        include BASE_PATH . '/resources/views/admin/services/settings.php';
+    })->name('admin.services.settings.general');
+
+    $router->post('/services/settings/general', function () {
+        global $config, $siteSettings;
+        $settingsTab = 'general';
+        include BASE_PATH . '/resources/views/admin/services/settings.php';
+    })->middleware('csrf')->name('admin.services.settings.general.update');
+
+    $router->get('/services/settings/categories', function () {
+        global $config, $siteSettings;
+        $settingsTab = 'categories';
+        include BASE_PATH . '/resources/views/admin/services/settings.php';
+    })->name('admin.services.settings.categories');
+
+    $router->post('/services/settings/categories', function () {
+        global $config, $siteSettings;
+        $settingsTab = 'categories';
+        include BASE_PATH . '/resources/views/admin/services/settings.php';
+    })->middleware('csrf')->name('admin.services.settings.categories.update');
+
+    $router->get('/services/settings/holidays', function () {
+        global $config, $siteSettings;
+        $settingsTab = 'holidays';
+        include BASE_PATH . '/resources/views/admin/services/settings.php';
+    })->name('admin.services.settings.holidays');
+
+    $router->post('/services/settings/holidays', function () {
+        global $config, $siteSettings;
+        $settingsTab = 'holidays';
+        include BASE_PATH . '/resources/views/admin/services/settings.php';
+    })->middleware('csrf')->name('admin.services.settings.holidays.update');
 
     // 서비스 관리
     $router->resource('services', 'Admin\\ServiceController');
@@ -324,6 +372,32 @@ $router->group(['prefix' => '/admin', 'middleware' => ['auth', 'admin']], functi
         ->middleware('csrf')
         ->name('admin.points.deduct');
 
+    // 사이트 관리 - 메뉴 관리
+    $router->get('/site/menus', function () {
+        global $config, $siteSettings;
+        $pageHeaderTitle = __('admin.site.menus.title');
+        include BASE_PATH . '/resources/views/admin/site/menus.php';
+    })->name('admin.site.menus');
+
+    $router->post('/site/menus/api', function () {
+        global $config, $siteSettings;
+        include BASE_PATH . '/resources/views/admin/site/menus-api.php';
+    })->middleware('csrf')->name('admin.site.menus.api');
+
+    // 사이트 관리 - 디자인
+    $router->get('/site/design', function () {
+        global $config, $siteSettings;
+        $pageHeaderTitle = __('admin.site.design.title');
+        include BASE_PATH . '/resources/views/admin/site/design.php';
+    })->name('admin.site.design');
+
+    // 사이트 관리 - 페이지
+    $router->get('/site/pages', function () {
+        global $config, $siteSettings;
+        $pageHeaderTitle = __('admin.site.pages.title');
+        include BASE_PATH . '/resources/views/admin/site/pages.php';
+    })->name('admin.site.pages');
+
     // 설정 (서브페이지)
     $router->get('/settings', function () {
         // 기본 설정 페이지로 리다이렉트
@@ -336,6 +410,30 @@ $router->group(['prefix' => '/admin', 'middleware' => ['auth', 'admin']], functi
     $router->post('/settings/general', 'Admin\\SettingsController@updateGeneral')
         ->middleware('csrf')
         ->name('admin.settings.general.update');
+
+    $router->get('/settings/site', 'Admin\\SettingsController@site')
+        ->name('admin.settings.site');
+    $router->post('/settings/site', 'Admin\\SettingsController@updateSite')
+        ->middleware('csrf')
+        ->name('admin.settings.site.update');
+
+    $router->get('/settings/mail', 'Admin\\SettingsController@mail')
+        ->name('admin.settings.mail');
+    $router->post('/settings/mail', 'Admin\\SettingsController@updateMail')
+        ->middleware('csrf')
+        ->name('admin.settings.mail.update');
+
+    $router->get('/settings/language', 'Admin\\SettingsController@language')
+        ->name('admin.settings.language');
+    $router->post('/settings/language', 'Admin\\SettingsController@updateLanguage')
+        ->middleware('csrf')
+        ->name('admin.settings.language.update');
+
+    $router->get('/settings/translations', 'Admin\\SettingsController@translations')
+        ->name('admin.settings.translations');
+    $router->post('/settings/translations', 'Admin\\SettingsController@updateTranslations')
+        ->middleware('csrf')
+        ->name('admin.settings.translations.update');
 
     $router->get('/settings/seo', 'Admin\\SettingsController@seo')
         ->name('admin.settings.seo');

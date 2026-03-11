@@ -130,11 +130,14 @@ $translations = array_merge($translations ?? [], $_skinTranslations[$_skinLocale
 <body class="bg-gray-50 dark:bg-zinc-900 min-h-screen transition-colors duration-200">
     <!-- Header (재사용 컴포넌트) -->
     <?php
-    $headerPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'header.php';
+    $headerPath = __DIR__ . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'header.php';
+    if (!file_exists($headerPath)) {
+        $headerPath = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'header.php';
+    }
     if (file_exists($headerPath)) {
         include $headerPath;
     } else {
-        echo '<!-- Header not found: ' . htmlspecialchars($headerPath) . ' -->';
+        echo '<!-- Header not found -->';
     }
     ?>
 

@@ -118,8 +118,13 @@ ob_start();
     <input type="hidden" name="action" value="update_terms">
 
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors mb-6">
-        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"><?= __('admin.members.settings.terms.title') ?></h2>
-        <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6"><?= __('admin.members.settings.terms.description') ?></p>
+        <?php
+        $headerIcon = 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z';
+        $headerTitle = __('admin.members.settings.terms.title');
+        $headerDescription = __('admin.members.settings.terms.description');
+        $headerIconColor = ''; $headerActions = '';
+        include __DIR__ . '/../../components/settings-header.php';
+        ?>
 
         <?php for ($i = 1; $i <= 5; $i++): ?>
         <!-- 회원 가입 약관 <?= $i ?> -->

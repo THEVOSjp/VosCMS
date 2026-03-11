@@ -19,6 +19,15 @@ if (!function_exists('isActiveMenu')) {
     }
 }
 
+// 서비스 관리 서브페이지 여부
+$isServicesPage = strpos($currentPath, '/services') !== false && strpos($currentPath, '/staff') === false;
+$isServicesSettingsPage = strpos($currentPath, '/services/settings') !== false;
+
+// 스태프 관리 여부
+$isStaffPage = strpos($currentPath, '/staff') !== false;
+$isStaffSettingsPage = strpos($currentPath, '/staff/settings') !== false;
+$isStaffAttendancePage = strpos($currentPath, '/staff/attendance') !== false;
+
 // 사이트 관리 서브페이지 여부
 $isSitePage = strpos($currentPath, '/site/') !== false;
 
@@ -36,7 +45,7 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
         </a>
     </div>
     <nav class="mt-6">
-        <a href="<?php echo $adminUrl; ?>" class="flex items-center px-6 py-3 <?php echo !isActiveMenu('/settings', $currentPath) && !isActiveMenu('/reservations', $currentPath) && !isActiveMenu('/services', $currentPath) && !isActiveMenu('/members', $currentPath) && !isActiveMenu('/points', $currentPath) && !$isSitePage ? 'text-white bg-blue-600' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>">
+        <a href="<?php echo $adminUrl; ?>" class="flex items-center px-6 py-3 <?php echo !isActiveMenu('/settings', $currentPath) && !isActiveMenu('/reservations', $currentPath) && !isActiveMenu('/services', $currentPath) && !isActiveMenu('/staff', $currentPath) && !isActiveMenu('/members', $currentPath) && !isActiveMenu('/points', $currentPath) && !$isSitePage ? 'text-white bg-blue-600' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>">
             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
             </svg>
@@ -48,12 +57,70 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
             </svg>
             <?= __('admin.nav.reservations') ?>
         </a>
-        <a href="<?php echo $adminUrl; ?>/services" class="flex items-center px-6 py-3 <?php echo isActiveMenu('/services', $currentPath) ? 'text-white bg-blue-600' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-            </svg>
-            <?= __('admin.nav.services') ?>
-        </a>
+        <!-- 서비스 관리 메뉴 -->
+        <div class="services-management-menu">
+            <button onclick="toggleServicesMenu()" class="flex items-center justify-between w-full px-6 py-3 <?php echo $isServicesPage ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                    <?= __('admin.nav.services') ?>
+                </div>
+                <svg id="servicesMenuArrow" class="w-4 h-4 transition-transform <?php echo $isServicesPage ? 'rotate-180' : ''; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div id="servicesSubMenu" class="<?php echo $isServicesPage ? '' : 'hidden'; ?> bg-zinc-900">
+                <a href="<?php echo $adminUrl; ?>/services" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isServicesPage && !$isServicesSettingsPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <?= __('admin.services.list') ?>
+                </a>
+                <a href="<?php echo $adminUrl; ?>/services/settings" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isServicesSettingsPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <?= __('admin.nav.services_settings') ?>
+                </a>
+            </div>
+        </div>
+        <!-- 스태프(디자이너) 관리 메뉴 -->
+        <div class="staff-management-menu">
+            <button onclick="toggleStaffMenu()" class="flex items-center justify-between w-full px-6 py-3 <?php echo $isStaffPage ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <?= __('admin.nav.staff') ?>
+                </div>
+                <svg id="staffMenuArrow" class="w-4 h-4 transition-transform <?php echo $isStaffPage ? 'rotate-180' : ''; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div id="staffSubMenu" class="<?php echo $isStaffPage ? '' : 'hidden'; ?> bg-zinc-900">
+                <a href="<?php echo $adminUrl; ?>/staff" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isStaffPage && !$isStaffSettingsPage && !$isStaffAttendancePage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <?= __('admin.staff.list') ?>
+                </a>
+                <a href="<?php echo $adminUrl; ?>/staff/attendance" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isStaffAttendancePage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <?= __('admin.nav.staff_attendance') ?>
+                </a>
+                <a href="<?php echo $adminUrl; ?>/staff/settings" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isStaffSettingsPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <?= __('admin.nav.staff_settings') ?>
+                </a>
+            </div>
+        </div>
         <!-- 회원 관리 메뉴 -->
         <div class="members-management-menu">
             <button onclick="toggleMembersMenu()" class="flex items-center justify-between w-full px-6 py-3 <?php echo $isMembersPage ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>">
@@ -186,6 +253,17 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
 
 <!-- 사이드바 메뉴 토글 스크립트 -->
 <script>
+    // 서비스 관리 메뉴 토글
+    function toggleServicesMenu() {
+        const subMenu = document.getElementById('servicesSubMenu');
+        const arrow = document.getElementById('servicesMenuArrow');
+        if (subMenu && arrow) {
+            subMenu.classList.toggle('hidden');
+            arrow.classList.toggle('rotate-180');
+            console.log('Services menu toggled');
+        }
+    }
+
     // 사이트 관리 메뉴 토글
     function toggleSiteMenu() {
         const subMenu = document.getElementById('siteSubMenu');
@@ -194,6 +272,17 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
             subMenu.classList.toggle('hidden');
             arrow.classList.toggle('rotate-180');
             console.log('Site menu toggled');
+        }
+    }
+
+    // 스태프 관리 메뉴 토글
+    function toggleStaffMenu() {
+        const subMenu = document.getElementById('staffSubMenu');
+        const arrow = document.getElementById('staffMenuArrow');
+        if (subMenu && arrow) {
+            subMenu.classList.toggle('hidden');
+            arrow.classList.toggle('rotate-180');
+            console.log('Staff menu toggled');
         }
     }
 

@@ -9,7 +9,21 @@ return [
     'name' => 'Default',
     'version' => '1.0.0',
     'author' => 'RezlyX',
-    'description' => '기본 회원 스킨 - 깔끔하고 심플한 디자인',
+    'description' => [
+        'ko' => '기본 회원 스킨 - 깔끔하고 심플한 디자인',
+        'en' => 'Default member skin - Clean and simple design',
+        'ja' => '基本会員スキン - シンプルで洗練されたデザイン',
+        'zh_CN' => '默认会员皮肤 - 简洁大方的设计',
+        'zh_TW' => '預設會員面板 - 簡潔大方的設計',
+        'de' => 'Standard-Mitglieder-Skin - Sauberes und einfaches Design',
+        'es' => 'Skin de miembro predeterminado - Diseño limpio y simple',
+        'fr' => 'Skin membre par défaut - Design épuré et simple',
+        'id' => 'Skin anggota default - Desain bersih dan sederhana',
+        'mn' => 'Үндсэн гишүүний загвар - Цэвэр бөгөөд энгийн дизайн',
+        'ru' => 'Стандартный скин участника - Чистый и простой дизайн',
+        'tr' => 'Varsayılan üye teması - Temiz ve sade tasarım',
+        'vi' => 'Giao diện thành viên mặc định - Thiết kế sạch sẽ và đơn giản',
+    ],
 
     // 스킨 미리보기 이미지
     'preview' => 'preview.png',

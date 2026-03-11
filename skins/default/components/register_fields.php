@@ -29,6 +29,98 @@ $translations = $translations ?? [];
 $oldInput = $oldInput ?? [];
 $baseUrl = $baseUrl ?? '';
 
+// 현재 로케일 감지
+$_currentLocale = 'ko';
+if (function_exists('current_locale')) {
+    $_currentLocale = current_locale();
+} elseif (!empty($_COOKIE['locale'])) {
+    $_currentLocale = $_COOKIE['locale'];
+} elseif (!empty($_GET['lang'])) {
+    $_currentLocale = $_GET['lang'];
+}
+if (!in_array($_currentLocale, ['ko', 'en', 'ja'])) {
+    $_currentLocale = 'ko';
+}
+
+// 로케일별 기본 번역 (translations가 비어있을 때 사용)
+$_defaultTranslations = [
+    'ko' => [
+        'name' => '이름', 'name_placeholder' => '홍길동',
+        'email' => '이메일', 'email_placeholder' => 'example@email.com',
+        'password' => '비밀번호', 'password_placeholder' => '8자 이상 입력하세요',
+        'password_hint' => '영문, 숫자를 포함하여 8자 이상',
+        'password_confirm' => '비밀번호 확인', 'password_confirm_placeholder' => '비밀번호를 다시 입력하세요',
+        'phone' => '전화번호', 'phone_placeholder' => '010-1234-5678',
+        'birth_date' => '생년월일',
+        'gender' => '성별', 'gender_male' => '남성', 'gender_female' => '여성', 'gender_other' => '기타',
+        'company' => '회사/소속', 'company_placeholder' => '회사명을 입력하세요',
+        'blog' => '블로그/웹사이트', 'blog_placeholder' => 'https://example.com',
+        'profile_photo' => '프로필 사진', 'profile_photo_hint' => '최대 5MB, JPG/PNG/GIF/WebP',
+        'select_photo' => '사진 선택', 'change_photo' => '사진 변경',
+        'password_mismatch' => '비밀번호가 일치하지 않습니다.',
+        // 이미지 크로퍼
+        'edit_image' => '이미지 편집', 'select_image' => '이미지 선택',
+        'drag_drop_image' => '또는 이미지를 여기에 드래그하세요',
+        'zoom_in' => '확대', 'zoom_out' => '축소',
+        'rotate_left' => '왼쪽 회전', 'rotate_right' => '오른쪽 회전',
+        'reset' => '초기화', 'cancel' => '취소', 'apply' => '적용',
+        'file_too_large' => '파일 크기가 너무 큽니다. 최대 5MB까지 업로드 가능합니다.',
+        'invalid_file_type' => '지원하지 않는 파일 형식입니다. JPG, PNG, GIF, WebP만 가능합니다.',
+    ],
+    'en' => [
+        'name' => 'Name', 'name_placeholder' => 'John Doe',
+        'email' => 'Email', 'email_placeholder' => 'example@email.com',
+        'password' => 'Password', 'password_placeholder' => 'At least 8 characters',
+        'password_hint' => 'At least 8 characters with letters and numbers',
+        'password_confirm' => 'Confirm Password', 'password_confirm_placeholder' => 'Re-enter your password',
+        'phone' => 'Phone', 'phone_placeholder' => '010-1234-5678',
+        'birth_date' => 'Date of Birth',
+        'gender' => 'Gender', 'gender_male' => 'Male', 'gender_female' => 'Female', 'gender_other' => 'Other',
+        'company' => 'Company', 'company_placeholder' => 'Enter company name',
+        'blog' => 'Blog/Website', 'blog_placeholder' => 'https://example.com',
+        'profile_photo' => 'Profile Photo', 'profile_photo_hint' => 'Max 5MB, JPG/PNG/GIF/WebP',
+        'select_photo' => 'Select Photo', 'change_photo' => 'Change Photo',
+        'password_mismatch' => 'Passwords do not match.',
+        // Image Cropper
+        'edit_image' => 'Edit Image', 'select_image' => 'Select Image',
+        'drag_drop_image' => 'Or drag and drop an image here',
+        'zoom_in' => 'Zoom In', 'zoom_out' => 'Zoom Out',
+        'rotate_left' => 'Rotate Left', 'rotate_right' => 'Rotate Right',
+        'reset' => 'Reset', 'cancel' => 'Cancel', 'apply' => 'Apply',
+        'file_too_large' => 'File is too large. Maximum 5MB allowed.',
+        'invalid_file_type' => 'Unsupported file type. JPG, PNG, GIF, WebP only.',
+    ],
+    'ja' => [
+        'name' => '名前', 'name_placeholder' => '山田太郎',
+        'email' => 'メール', 'email_placeholder' => 'example@email.com',
+        'password' => 'パスワード', 'password_placeholder' => '8文字以上',
+        'password_hint' => '英数字を含む8文字以上',
+        'password_confirm' => 'パスワード確認', 'password_confirm_placeholder' => 'パスワードを再入力',
+        'phone' => '電話番号', 'phone_placeholder' => '090-1234-5678',
+        'birth_date' => '生年月日',
+        'gender' => '性別', 'gender_male' => '男性', 'gender_female' => '女性', 'gender_other' => 'その他',
+        'company' => '会社/所属', 'company_placeholder' => '会社名を入力',
+        'blog' => 'ブログ/ウェブサイト', 'blog_placeholder' => 'https://example.com',
+        'profile_photo' => 'プロフィール写真', 'profile_photo_hint' => '最大5MB、JPG/PNG/GIF/WebP',
+        'select_photo' => '写真を選択', 'change_photo' => '写真を変更',
+        'password_mismatch' => 'パスワードが一致しません。',
+        // 画像クロッパー
+        'edit_image' => '画像を編集', 'select_image' => '画像を選択',
+        'drag_drop_image' => 'または画像をここにドラッグ＆ドロップ',
+        'zoom_in' => '拡大', 'zoom_out' => '縮小',
+        'rotate_left' => '左回転', 'rotate_right' => '右回転',
+        'reset' => 'リセット', 'cancel' => 'キャンセル', 'apply' => '適用',
+        'file_too_large' => 'ファイルサイズが大きすぎます。最大5MBまでアップロード可能です。',
+        'invalid_file_type' => 'サポートされていないファイル形式です。JPG、PNG、GIF、WebPのみ対応しています。',
+    ],
+];
+
+// 번역 헬퍼 함수 (전역 접근 가능하도록)
+$_t = function($key) use ($translations, $_defaultTranslations, $_currentLocale) {
+    return $translations[$key] ?? $_defaultTranslations[$_currentLocale][$key] ?? $_defaultTranslations['ko'][$key] ?? $key;
+};
+$GLOBALS['_t'] = $_t;
+
 // 필수 필드 (항상 포함)
 $requiredFields = ['name', 'email', 'password'];
 
@@ -36,71 +128,71 @@ $requiredFields = ['name', 'email', 'password'];
 $fieldDefinitions = [
     'name' => [
         'type' => 'text',
-        'label' => $translations['name'] ?? '이름',
-        'placeholder' => $translations['name_placeholder'] ?? '홍길동',
+        'label' => $_t('name'),
+        'placeholder' => $_t('name_placeholder'),
         'required' => true,
         'autocomplete' => 'name',
     ],
     'email' => [
         'type' => 'email',
-        'label' => $translations['email'] ?? '이메일',
-        'placeholder' => $translations['email_placeholder'] ?? 'example@email.com',
+        'label' => $_t('email'),
+        'placeholder' => $_t('email_placeholder'),
         'required' => true,
         'autocomplete' => 'email',
     ],
     'password' => [
         'type' => 'password',
-        'label' => $translations['password'] ?? '비밀번호',
-        'placeholder' => $translations['password_placeholder'] ?? '8자 이상 입력하세요',
+        'label' => $_t('password'),
+        'placeholder' => $_t('password_placeholder'),
         'required' => true,
-        'hint' => $translations['password_hint'] ?? '영문, 숫자를 포함하여 8자 이상',
+        'hint' => $_t('password_hint'),
         'has_confirm' => true,
-        'confirm_label' => $translations['password_confirm'] ?? '비밀번호 확인',
-        'confirm_placeholder' => $translations['password_confirm_placeholder'] ?? '비밀번호를 다시 입력하세요',
+        'confirm_label' => $_t('password_confirm'),
+        'confirm_placeholder' => $_t('password_confirm_placeholder'),
     ],
     'phone' => [
         'type' => 'phone',
-        'label' => $translations['phone'] ?? '전화번호',
-        'placeholder' => $translations['phone_placeholder'] ?? '010-1234-5678',
+        'label' => $_t('phone'),
+        'placeholder' => $_t('phone_placeholder'),
         'required' => false,
         'hint' => $translations['phone_hint'] ?? '',
     ],
     'birth_date' => [
         'type' => 'date',
-        'label' => $translations['birth_date'] ?? '생년월일',
+        'label' => $_t('birth_date'),
         'placeholder' => '',
         'required' => false,
     ],
     'gender' => [
         'type' => 'radio',
-        'label' => $translations['gender'] ?? '성별',
+        'label' => $_t('gender'),
         'required' => false,
         'options' => [
-            'male' => $translations['gender_male'] ?? '남성',
-            'female' => $translations['gender_female'] ?? '여성',
-            'other' => $translations['gender_other'] ?? '기타',
+            'male' => $_t('gender_male'),
+            'female' => $_t('gender_female'),
+            'other' => $_t('gender_other'),
         ],
     ],
     'company' => [
         'type' => 'text',
-        'label' => $translations['company'] ?? '회사/소속',
-        'placeholder' => $translations['company_placeholder'] ?? '회사명을 입력하세요',
+        'label' => $_t('company'),
+        'placeholder' => $_t('company_placeholder'),
         'required' => false,
         'autocomplete' => 'organization',
     ],
     'blog' => [
         'type' => 'url',
-        'label' => $translations['blog'] ?? '블로그/웹사이트',
-        'placeholder' => $translations['blog_placeholder'] ?? 'https://example.com',
+        'label' => $_t('blog'),
+        'placeholder' => $_t('blog_placeholder'),
         'required' => false,
         'autocomplete' => 'url',
     ],
     'profile_photo' => [
         'type' => 'file',
-        'label' => $translations['profile_photo'] ?? '프로필 사진',
+        'label' => $_t('profile_photo'),
         'required' => false,
         'accept' => 'image/*',
-        'hint' => $translations['profile_photo_hint'] ?? '최대 2MB, JPG/PNG/GIF',
+        'hint' => $_t('profile_photo_hint'),
     ],
 ];
 
@@ -111,6 +203,11 @@ $inputClass = 'appearance-none relative block w-full px-3 py-3 border border-gra
  * 필드 렌더링 함수
  */
 function renderRegisterField($fieldName, $fieldDef, $oldInput, $inputClass, $baseUrl) {
+    // 전역 번역 함수 가져오기 (null 체크 강화)
+    $_t = (isset($GLOBALS['_t']) && is_callable($GLOBALS['_t']))
+        ? $GLOBALS['_t']
+        : function($key) { return $key; };
+
     $value = $oldInput[$fieldName] ?? '';
     $required = $fieldDef['required'] ?? false;
     $requiredMark = $required ? '<span class="text-red-500">*</span>' : '';
@@ -244,7 +341,7 @@ function renderRegisterField($fieldName, $fieldDef, $oldInput, $inputClass, $bas
                 echo '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">';
                 echo '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>';
                 echo '</svg>';
-                echo '<span id="' . $fieldName . '_btn_text">' . ($translations['select_photo'] ?? '사진 선택') . '</span>';
+                echo '<span id="' . $fieldName . '_btn_text">' . $_t('select_photo') . '</span>';
                 echo '</button>';
 
                 // 삭제 버튼 (이미지 선택 후 표시)
@@ -337,18 +434,18 @@ $cropperConfig = [
     'outputQuality' => 0.9,
     'cropBoxResizable' => true,
     'translations' => [
-        'title' => $translations['edit_image'] ?? '이미지 편집',
-        'select_image' => $translations['select_image'] ?? '이미지 선택',
-        'drag_drop' => $translations['drag_drop_image'] ?? '또는 이미지를 여기에 드래그하세요',
-        'zoom_in' => $translations['zoom_in'] ?? '확대',
-        'zoom_out' => $translations['zoom_out'] ?? '축소',
-        'rotate_left' => $translations['rotate_left'] ?? '왼쪽 회전',
-        'rotate_right' => $translations['rotate_right'] ?? '오른쪽 회전',
-        'reset' => $translations['reset'] ?? '초기화',
-        'cancel' => $translations['cancel'] ?? '취소',
-        'apply' => $translations['apply'] ?? '적용',
-        'file_too_large' => $translations['file_too_large'] ?? '파일 크기가 너무 큽니다. 최대 5MB까지 업로드 가능합니다.',
-        'invalid_file_type' => $translations['invalid_file_type'] ?? '지원하지 않는 파일 형식입니다. JPG, PNG, GIF, WebP만 가능합니다.',
+        'title' => $_t('edit_image'),
+        'select_image' => $_t('select_image'),
+        'drag_drop' => $_t('drag_drop_image'),
+        'zoom_in' => $_t('zoom_in'),
+        'zoom_out' => $_t('zoom_out'),
+        'rotate_left' => $_t('rotate_left'),
+        'rotate_right' => $_t('rotate_right'),
+        'reset' => $_t('reset'),
+        'cancel' => $_t('cancel'),
+        'apply' => $_t('apply'),
+        'file_too_large' => $_t('file_too_large'),
+        'invalid_file_type' => $_t('invalid_file_type'),
     ]
 ];
 include __DIR__ . '/image_cropper.php';
@@ -468,8 +565,8 @@ document.addEventListener('DOMContentLoaded', function() {
         cropperId: '<?= $GLOBALS['cropper_id'] ?? 'profile_photo_cropper' ?>',
         fieldName: 'profile_photo',
         translations: {
-            select_photo: '<?= $translations['select_photo'] ?? '사진 선택' ?>',
-            change_photo: '<?= $translations['change_photo'] ?? '사진 변경' ?>'
+            select_photo: '<?= $_t('select_photo') ?>',
+            change_photo: '<?= $_t('change_photo') ?>'
         }
     });
 });
@@ -504,7 +601,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (passwordConfirm && passwordInput) {
         passwordConfirm.addEventListener('input', function() {
             if (this.value !== passwordInput.value) {
-                this.setCustomValidity('<?= $translations['password_mismatch'] ?? '비밀번호가 일치하지 않습니다.' ?>');
+                this.setCustomValidity('<?= $_t('password_mismatch') ?>');
             } else {
                 this.setCustomValidity('');
             }

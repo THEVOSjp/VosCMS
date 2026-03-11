@@ -6,6 +6,7 @@
 
 return [
     // 기본 메시지
+    'accepted' => ':attribute에 동의해야 합니다.',
     'required' => ':attribute 필드는 필수입니다.',
     'email' => '올바른 이메일 주소를 입력해주세요.',
     'min' => ':attribute은(는) 최소 :min자 이상이어야 합니다.',

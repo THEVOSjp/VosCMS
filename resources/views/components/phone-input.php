@@ -21,18 +21,18 @@
  * ?>
  */
 
-// 기본 설정
-$config = $phoneInputConfig ?? [];
-$name = $config['name'] ?? 'phone';
-$idPrefix = $config['id'] ?? $name;
-$label = $config['label'] ?? __('auth.register.phone');
-$value = $config['value'] ?? '';
-$countryCode = $config['country_code'] ?? '+82';
-$phoneNumber = $config['phone_number'] ?? '';
-$required = $config['required'] ?? false;
-$hint = $config['hint'] ?? '';
-$placeholder = $config['placeholder'] ?? '010-1234-5678';
-$showLabel = $config['show_label'] ?? true;
+// 기본 설정 ($_phoneConf로 명명하여 외부 $config 변수 충돌 방지)
+$_phoneConf = $phoneInputConfig ?? [];
+$name = $_phoneConf['name'] ?? 'phone';
+$idPrefix = $_phoneConf['id'] ?? $name;
+$label = $_phoneConf['label'] ?? __('auth.register.phone');
+$value = $_phoneConf['value'] ?? '';
+$countryCode = $_phoneConf['country_code'] ?? '+82';
+$phoneNumber = $_phoneConf['phone_number'] ?? '';
+$required = $_phoneConf['required'] ?? false;
+$hint = $_phoneConf['hint'] ?? '';
+$placeholder = $_phoneConf['placeholder'] ?? '010-1234-5678';
+$showLabel = $_phoneConf['show_label'] ?? true;
 
 // 언어별 우선 국가
 $localePriority = [

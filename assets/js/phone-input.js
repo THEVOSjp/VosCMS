@@ -213,7 +213,10 @@ const PhoneInput = (function() {
             updatePhoneValue(component);
         });
 
-        // 초기 값 설정
+        // 초기 값 포맷팅 및 설정
+        if (numberInput.value) {
+            numberInput.value = formatPhoneNumber(numberInput.value, countryInput.value);
+        }
         updatePhoneValue(component);
 
         console.log('[PhoneInput] 컴포넌트 초기화 완료:', idPrefix);

@@ -545,6 +545,38 @@ if ($provider->emailExists('hong@example.com', excludeId: $userId)) {
 
 ### 2.5 비밀번호 재설정
 
+#### Auth 클래스를 통한 비밀번호 재설정
+
+```php
+use RzxLib\Core\Auth\Auth;
+
+// 1. 비밀번호 재설정 이메일 발송 (토큰 자동 생성)
+$result = Auth::sendPasswordResetEmail('hong@example.com');
+// 반환값: ['success' => bool, 'error' => string|null, 'debug_link' => string|null]
+
+// 개발 환경(APP_DEBUG=true, APP_ENV=local)에서는 이메일 발송 대신 debug_link 반환
+if ($result['debug_link']) {
+    // 테스트용 링크 직접 표시 가능
+}
+
+// 2. 토큰 검증 (reset-password 페이지에서)
+$token = $_GET['token'] ?? '';
+$user = Auth::verifyPasswordResetToken($token);
+
+if ($user) {
+    // 유효한 토큰 - 비밀번호 변경 폼 표시
+}
+
+// 3. 새 비밀번호로 변경
+$result = Auth::resetPassword($token, $_POST['new_password']);
+
+if ($result['success']) {
+    // 비밀번호 변경 완료
+}
+```
+
+#### 기존 방식 (Provider 직접 사용)
+
 ```php
 $provider = auth()->guard()->getProvider();
 
@@ -574,7 +606,48 @@ if ($isValid) {
 }
 ```
 
-### 2.6 JWT 인증 (API)
+### 2.6 메일 발송 설정
+
+비밀번호 재설정 이메일은 관리자 설정에서 구성된 메일 설정을 자동으로 적용합니다.
+
+#### 관리자 메일 설정 (Admin > 일반 설정)
+
+| 설정 | DB 키 | 설명 |
+|------|-------|------|
+| 발신자 이름 | `mail_from_name` | 수신자에게 표시되는 이름 |
+| 발신자 이메일 | `mail_from_email` | From 주소 |
+| Reply-To 주소 | `mail_reply_to` | 답장 시 사용되는 주소 |
+| 발송 방법 | `mail_driver` | `mail` (PHP mail) 또는 `smtp` |
+| SMTP 호스트 | `smtp_host` | SMTP 서버 주소 |
+| SMTP 포트 | `smtp_port` | 포트 번호 (기본: 587) |
+| SMTP 암호화 | `smtp_encryption` | `tls`, `ssl`, `none` |
+| SMTP 사용자명 | `smtp_username` | 인증 사용자명 |
+| SMTP 비밀번호 | `smtp_password` | 인증 비밀번호 |
+
+#### 발송 방법
+
+1. **PHP mail()** (기본): 서버의 sendmail 설정에 의존
+2. **SMTP**: 외부 메일 서버 사용 (Gmail, AWS SES 등)
+
+```php
+// Auth 클래스에서 메일 설정 자동 적용
+// - rzx_settings 테이블에서 메일 설정 조회
+// - mail_driver에 따라 PHP mail() 또는 SMTP 사용
+$result = Auth::sendPasswordResetEmail($email);
+```
+
+#### 개발 환경 (DEV MODE)
+
+`.env` 설정:
+```env
+APP_DEBUG=true
+APP_ENV=local
+```
+
+이 환경에서는 실제 이메일을 발송하지 않고 콘솔에 로그를 남기며,
+`debug_link`를 반환하여 화면에 테스트 링크를 표시할 수 있습니다.
+
+### 2.7 JWT 인증 (API)
 
 API 인증을 위한 JWT 토큰 사용:
 

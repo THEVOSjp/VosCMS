@@ -191,7 +191,7 @@ class MyPageController extends Controller
     }
 
     /**
-     * 프로필 수정
+     * 프로필 수정 (Auth::updateProfile 사용 - 암호화 지원)
      */
     public function updateProfile(Request $request): Response
     {
@@ -202,38 +202,31 @@ class MyPageController extends Controller
         }
 
         try {
-            $rules = [
-                'name' => 'required|string|max:100',
-                'phone' => 'string|max:20',
-            ];
-
-            $validator = new Validator($request->all(), $rules, [
-                'name.required' => '이름을 입력해주세요.',
-            ]);
-
-            if ($validator->fails()) {
-                throw new ValidationException($validator);
+            $name = trim($request->get('name', ''));
+            if (empty($name)) {
+                return $this->back()->withErrors(['name' => '이름을 입력해주세요.'])->withInput();
             }
 
-            $validated = $validator->validated();
+            $updateData = [
+                'name' => $name,
+                'phone' => trim($request->get('phone', '')) ?: null,
+                'birth_date' => trim($request->get('birth_date', '')) ?: null,
+                'gender' => in_array($request->get('gender', ''), ['male', 'female', 'other']) ? $request->get('gender') : null,
+                'company' => trim($request->get('company', '')) ?: null,
+                'blog' => trim($request->get('blog', '')) ?: null,
+            ];
 
-            // 사용자 정보 업데이트
-            $db = \RzxLib\Core\Database\DB::connection();
-            $db->table('rzx_users')
-                ->where('id', $user['id'])
-                ->update([
-                    'name' => $validated['name'],
-                    'phone' => $validated['phone'] ?? null,
-                    'updated_at' => date('Y-m-d H:i:s'),
-                ]);
+            $result = Auth::updateProfile($user['id'], $updateData);
 
-            return $this->redirect('/mypage/profile')
-                ->withSuccess('프로필이 수정되었습니다.');
+            if ($result['success']) {
+                return $this->redirect('/mypage/profile')->withSuccess('프로필이 수정되었습니다.');
+            }
 
-        } catch (ValidationException $e) {
-            return $this->back()
-                ->withErrors($e->errors())
-                ->withInput();
+            return $this->back()->withErrors(['general' => '프로필 수정에 실패했습니다.'])->withInput();
+
+        } catch (\Exception $e) {
+            error_log('MyPageController::updateProfile error: ' . $e->getMessage());
+            return $this->back()->withErrors(['general' => '오류가 발생했습니다.'])->withInput();
         }
     }
 

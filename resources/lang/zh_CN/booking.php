@@ -1,0 +1,169 @@
+<?php
+
+/**
+ * Booking translations - Simplified Chinese (简体中文)
+ */
+
+return [
+    // Page titles
+    'title' => '立即预约',
+    'service_list' => '服务列表',
+    'select_service' => '选择服务',
+    'select_date' => '选择日期',
+    'select_time' => '选择时间',
+    'enter_info' => '填写信息',
+    'confirm_booking' => '确认预约',
+    'confirm_info' => '请确认您的预约信息',
+    'complete_booking' => '完成预约',
+    'select_service_datetime' => '请选择服务和首选日期/时间',
+    'select_datetime' => '请选择日期和时间',
+    'no_services' => '目前没有可用服务。',
+    'contact_admin' => '请联系管理员。',
+    'notes' => '特殊要求',
+    'notes_placeholder' => '输入任何特殊要求',
+    'customer' => '客户',
+    'phone' => '电话',
+    'date' => '日期',
+    'time' => '时间',
+    'total_price' => '总金额',
+    'cancel_policy' => '预约时间前24小时内可取消。逾期取消可能收取取消费。',
+    'success' => '您的预约已完成！确认信息将发送给您。',
+
+    // Steps
+    'step' => [
+        'service' => '选择服务',
+        'datetime' => '日期/时间',
+        'info' => '信息',
+        'confirm' => '确认',
+    ],
+
+    // Service
+    'service' => [
+        'title' => '服务',
+        'name' => '服务名称',
+        'description' => '描述',
+        'duration' => '时长',
+        'price' => '价格',
+        'category' => '分类',
+        'select' => '选择',
+        'view_detail' => '查看详情',
+        'no_services' => '没有可用服务。',
+    ],
+
+    // Date/Time
+    'date' => [
+        'title' => '预约日期',
+        'select_date' => '请选择日期',
+        'available' => '可用',
+        'unavailable' => '不可用',
+        'fully_booked' => '已满',
+        'past_date' => '过去日期',
+    ],
+
+    'time' => [
+        'title' => '预约时间',
+        'select_time' => '请选择时间',
+        'available_slots' => '可用时段',
+        'no_slots' => '没有可用时段。',
+        'remaining' => '剩余 :count 个名额',
+    ],
+
+    // Booking form
+    'form' => [
+        'customer_name' => '姓名',
+        'customer_email' => '邮箱',
+        'customer_phone' => '电话',
+        'guests' => '人数',
+        'notes' => '特殊要求',
+        'notes_placeholder' => '输入任何特殊要求',
+    ],
+
+    // Confirmation
+    'confirm' => [
+        'title' => '确认预约',
+        'summary' => '预约摘要',
+        'service_info' => '服务信息',
+        'booking_info' => '预约信息',
+        'customer_info' => '客户信息',
+        'total_price' => '总计',
+        'agree_terms' => '我同意预约条款',
+        'submit' => '完成预约',
+    ],
+
+    // Complete
+    'complete' => [
+        'title' => '预约完成',
+        'success' => '您的预约已完成！',
+        'booking_code' => '预约编号',
+        'check_email' => '确认邮件已发送到您的邮箱。',
+        'view_detail' => '查看预约详情',
+        'book_another' => '再次预约',
+    ],
+
+    // Lookup
+    'lookup' => [
+        'title' => '查询预约',
+        'description' => '输入您的预约信息以查找预约。',
+        'booking_code' => '预约编号',
+        'booking_code_placeholder' => 'RZ250301XXXXXX',
+        'email' => '邮箱',
+        'email_placeholder' => '预约时使用的邮箱',
+        'phone' => '电话号码',
+        'phone_placeholder' => '预约时使用的电话',
+        'search' => '搜索',
+        'search_method' => '搜索方式',
+        'by_code' => '按预约编号搜索',
+        'by_email' => '按邮箱搜索',
+        'by_phone' => '按电话搜索',
+        'not_found' => '未找到预约。请检查您的信息。',
+        'input_required' => '请输入预约编号和邮箱或电话号码。',
+        'result_title' => '搜索结果',
+        'multiple_results' => '找到 :count 个预约。',
+        'hint' => '为获得准确结果，请输入预约编号以及邮箱或电话号码。',
+        'help_text' => '找不到您的预约？',
+        'contact_support' => '联系客服',
+    ],
+
+    // Detail
+    'detail' => [
+        'title' => '预约详情',
+        'status' => '状态',
+        'booking_date' => '日期和时间',
+        'service' => '服务',
+        'guests' => '人数',
+        'total_price' => '总价',
+        'payment_status' => '支付状态',
+        'notes' => '特殊要求',
+        'created_at' => '预约时间',
+    ],
+
+    // Cancel
+    'cancel' => [
+        'title' => '取消预约',
+        'confirm' => '确定要取消此预约吗？',
+        'reason' => '取消原因',
+        'reason_placeholder' => '请输入取消原因',
+        'submit' => '取消预约',
+        'success' => '您的预约已取消。',
+        'cannot_cancel' => '此预约无法取消。',
+    ],
+
+    // Status messages
+    'status' => [
+        'pending' => '已收到您的预约。请等待确认。',
+        'confirmed' => '您的预约已确认。',
+        'cancelled' => '您的预约已取消。',
+        'completed' => '服务已完成。',
+        'no_show' => '标记为未到。',
+    ],
+
+    // Error messages
+    'error' => [
+        'service_not_found' => '未找到服务。',
+        'slot_unavailable' => '所选时段不可用。',
+        'past_date' => '无法预约过去的日期。',
+        'max_capacity' => '超出最大容量。',
+        'booking_failed' => '处理预约时发生错误。',
+        'required_fields' => '请输入姓名和联系方式。',
+    ],
+];

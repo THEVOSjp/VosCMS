@@ -67,6 +67,12 @@ try {
 
 $pageTitle = ($config['app_name'] ?? 'RezlyX') . ' - ' . htmlspecialchars($service['name']);
 
+// 통화·가격 표시 설정 (서비스 설정 > 기본설정)
+$serviceCurrency = $siteSettings['service_currency'] ?? 'KRW';
+$priceDisplay = $siteSettings['service_price_display'] ?? 'show';
+$_currencySymbols = ['KRW' => '₩', 'USD' => '$', 'JPY' => '¥', 'EUR' => '€', 'CNY' => '¥'];
+$currencySymbol = $_currencySymbols[$serviceCurrency] ?? $serviceCurrency;
+
 // 헤더 포함
 include BASE_PATH . '/resources/views/partials/header.php';
 ?>
@@ -123,10 +129,15 @@ include BASE_PATH . '/resources/views/partials/header.php';
                     <div>
                         <span class="text-sm text-gray-500 dark:text-zinc-400"><?= __('booking.service.price') ?></span>
                         <div class="flex items-baseline gap-1">
+                            <?php if ($priceDisplay === 'show'): ?>
                             <span class="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                                <?= number_format($service['price']) ?>
+                                <?= $currencySymbol ?><?= number_format($service['price']) ?>
                             </span>
-                            <span class="text-gray-500 dark:text-zinc-400"><?= __('common.currency') ?></span>
+                            <?php elseif ($priceDisplay === 'contact'): ?>
+                            <span class="text-lg font-medium text-gray-500 dark:text-zinc-400"><?= __('admin.services.settings.general.price_contact') ?></span>
+                            <?php else: ?>
+                            <span class="text-gray-400">-</span>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="h-12 w-px bg-gray-200 dark:bg-zinc-700"></div>
@@ -200,7 +211,11 @@ include BASE_PATH . '/resources/views/partials/header.php';
                         <h3 class="font-semibold text-gray-900 dark:text-white mb-1"><?= htmlspecialchars($related['name']) ?></h3>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-500 dark:text-zinc-400"><?= $related['duration'] ?? 60 ?><?= __('common.minutes') ?></span>
-                            <span class="font-bold text-blue-600 dark:text-blue-400"><?= number_format($related['price']) ?><?= __('common.currency') ?></span>
+                            <?php if ($priceDisplay === 'show'): ?>
+                            <span class="font-bold text-blue-600 dark:text-blue-400"><?= $currencySymbol ?><?= number_format($related['price']) ?></span>
+                            <?php elseif ($priceDisplay === 'contact'): ?>
+                            <span class="text-sm text-gray-500 dark:text-zinc-400"><?= __('admin.services.settings.general.price_contact') ?></span>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </a>

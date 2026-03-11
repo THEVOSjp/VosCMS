@@ -70,6 +70,7 @@ foreach ($terms as $term) {
 ?>
 
 <!-- Terms Agreement Section (Modern Style) -->
+<input type="hidden" name="agree_terms" id="agreeTermsHidden" value="0">
 <div class="terms-agreement-section mt-6">
     <!-- 섹션 헤더 -->
     <div class="flex items-center justify-between mb-4">
@@ -101,23 +102,20 @@ foreach ($terms as $term) {
     <!-- 전체 동의 체크박스 (2개 이상일 때만) -->
     <?php if (count($terms) > 1): ?>
     <div class="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-100 dark:border-blue-800/50">
-        <label class="flex items-center cursor-pointer group">
-            <div class="relative">
-                <input type="checkbox" id="agreeAllTerms" name="agree_all"
-                       class="sr-only peer"
-                       onchange="toggleAllTermsModern(this.checked)">
-                <div class="w-6 h-6 border-2 border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700
-                            peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all duration-200
-                            peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2">
-                    <svg class="w-4 h-4 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center cursor-pointer group" onclick="toggleAgreeAllClick()">
+            <div class="relative flex-shrink-0">
+                <div id="agreeAllBox"
+                     class="flex items-center justify-center w-6 h-6 border-2 border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 transition-all duration-200">
+                    <svg id="agreeAllCheck" class="w-4 h-4 text-white opacity-0 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
                     </svg>
                 </div>
+                <input type="checkbox" id="agreeAllTerms" name="agree_all" class="hidden">
             </div>
-            <span class="ml-3 text-base font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            <span class="ml-3 text-base font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors select-none">
                 <?= __('auth.terms.agree_all') ?>
             </span>
-        </label>
+        </div>
     </div>
     <?php endif; ?>
 
@@ -212,35 +210,74 @@ foreach ($terms as $term) {
 </div>
 
 <script>
-// Modern 스킨용 전체 동의 토글
-function toggleAllTermsModern(checked) {
+// "전체 동의" 클릭 핸들러
+function toggleAgreeAllClick() {
+    var checkbox = document.getElementById('agreeAllTerms');
+    var newState = !checkbox.checked;
+    checkbox.checked = newState;
+    updateAgreeAllVisual(newState);
+
+    // 개별 약관 체크박스도 모두 체크/해제
     var checkboxes = document.querySelectorAll('.term-checkbox-modern');
-    checkboxes.forEach(function(checkbox) {
-        checkbox.checked = checked;
-        // 시각적 업데이트를 위한 이벤트 트리거
-        checkbox.dispatchEvent(new Event('change'));
+    checkboxes.forEach(function(cb) {
+        cb.checked = newState;
+        updateTermCheckboxVisual(cb);
     });
-    console.log('Modern: All terms toggled:', checked);
+    console.log('[Terms] Agree all toggled:', newState);
 }
 
-// Modern 스킨용 개별 체크박스 상태 확인
+// "전체 동의" 체크박스 시각적 업데이트
+function updateAgreeAllVisual(checked) {
+    var box = document.getElementById('agreeAllBox');
+    var check = document.getElementById('agreeAllCheck');
+    if (!box || !check) return;
+
+    if (checked) {
+        box.classList.remove('border-gray-300', 'dark:border-zinc-600', 'bg-white', 'dark:bg-zinc-700');
+        box.classList.add('bg-blue-600', 'border-blue-600');
+        check.style.opacity = '1';
+    } else {
+        box.classList.add('border-gray-300', 'dark:border-zinc-600', 'bg-white', 'dark:bg-zinc-700');
+        box.classList.remove('bg-blue-600', 'border-blue-600');
+        check.style.opacity = '0';
+    }
+}
+
+// 개별 약관 체크박스 시각적 업데이트
+function updateTermCheckboxVisual(checkbox) {
+    var label = checkbox.nextElementSibling;
+    if (!label) return;
+    var svg = label.querySelector('svg');
+
+    if (checkbox.checked) {
+        label.classList.remove('border-gray-300', 'dark:border-zinc-600', 'bg-white', 'dark:bg-zinc-700');
+        label.classList.add('bg-blue-600', 'border-blue-600');
+        if (svg) svg.style.opacity = '1';
+    } else {
+        label.classList.add('border-gray-300', 'dark:border-zinc-600', 'bg-white', 'dark:bg-zinc-700');
+        label.classList.remove('bg-blue-600', 'border-blue-600');
+        if (svg) svg.style.opacity = '0';
+    }
+}
+
+// 개별 체크박스 변경 시 "전체 동의" 상태 동기화
 function checkAllTermsStatusModern() {
     var checkboxes = document.querySelectorAll('.term-checkbox-modern');
     var allChecked = true;
-    checkboxes.forEach(function(checkbox) {
-        if (!checkbox.checked) {
-            allChecked = false;
-        }
+    checkboxes.forEach(function(cb) {
+        if (!cb.checked) allChecked = false;
+        updateTermCheckboxVisual(cb);
     });
 
-    var agreeAllCheckbox = document.getElementById('agreeAllTerms');
-    if (agreeAllCheckbox) {
-        agreeAllCheckbox.checked = allChecked;
+    var agreeAll = document.getElementById('agreeAllTerms');
+    if (agreeAll) {
+        agreeAll.checked = allChecked;
+        updateAgreeAllVisual(allChecked);
     }
-    console.log('Modern: Terms status checked, all agreed:', allChecked);
+    console.log('[Terms] Individual changed, all agreed:', allChecked);
 }
 
-// Modern 스킨용 약관 내용 토글
+// 약관 내용 펼치기/접기
 function toggleTermContentModern(termId) {
     var content = document.getElementById('termContent_' + termId);
     var icon = document.getElementById('termIcon_' + termId);
@@ -253,11 +290,11 @@ function toggleTermContentModern(termId) {
             content.classList.add('hidden');
             icon.classList.remove('rotate-180');
         }
-        console.log('Modern: Term content toggled:', termId);
+        console.log('[Terms] Content toggled:', termId);
     }
 }
 
-// Modern 스킨용 폼 제출 전 필수 약관 확인
+// 폼 제출 전 필수 약관 확인
 function validateTermsAgreement() {
     var requiredTerms = document.querySelectorAll('.term-checkbox-modern[data-required="true"]');
     var allRequiredChecked = true;
@@ -270,9 +307,7 @@ function validateTermsAgreement() {
             if (container) {
                 container.classList.add('border-red-500', 'dark:border-red-500', 'bg-red-50/50', 'dark:bg-red-900/10');
             }
-            if (!firstUnchecked) {
-                firstUnchecked = checkbox;
-            }
+            if (!firstUnchecked) firstUnchecked = checkbox;
         } else {
             if (container) {
                 container.classList.remove('border-red-500', 'dark:border-red-500', 'bg-red-50/50', 'dark:bg-red-900/10');
@@ -280,8 +315,11 @@ function validateTermsAgreement() {
         }
     });
 
+    var hiddenField = document.getElementById('agreeTermsHidden');
+
     if (!allRequiredChecked) {
-        console.log('Modern: Required terms not agreed');
+        console.log('[Terms] Required terms not agreed');
+        if (hiddenField) hiddenField.value = '0';
         if (firstUnchecked) {
             firstUnchecked.closest('.group').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
@@ -289,6 +327,9 @@ function validateTermsAgreement() {
         return false;
     }
 
+    // 서버 측 검증용 agree_terms 값 설정
+    if (hiddenField) hiddenField.value = '1';
+    console.log('[Terms] Validation passed, agree_terms=1');
     return true;
 }
 </script>
@@ -381,8 +422,13 @@ function validateTermsAgreement() {
     background-color: #52525b;
 }
 
-/* 체크박스 체크 아이콘 표시 */
+/* 체크박스 체크 아이콘 표시 (JS로 제어하지만 CSS 폴백) */
 .peer:checked ~ label svg {
     opacity: 1;
+}
+.peer:checked ~ label {
+    --tw-bg-opacity: 1;
+    background-color: rgb(37 99 235 / var(--tw-bg-opacity));
+    border-color: rgb(37 99 235 / var(--tw-bg-opacity));
 }
 </style>

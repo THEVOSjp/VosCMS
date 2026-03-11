@@ -55,8 +55,13 @@ ob_start();
 ?>
 
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"><?= __('admin.members.settings.features.title') ?></h2>
-    <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6"><?= __('admin.members.settings.features.description') ?></p>
+    <?php
+    $headerIcon = 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z';
+    $headerTitle = __('admin.members.settings.features.title');
+    $headerDescription = __('admin.members.settings.features.description');
+    $headerIconColor = ''; $headerActions = '';
+    include __DIR__ . '/../../components/settings-header.php';
+    ?>
 
     <form method="POST" class="space-y-6">
         <input type="hidden" name="action" value="update_features">

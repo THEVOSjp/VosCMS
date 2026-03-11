@@ -2,12 +2,17 @@
 /**
  * RezlyX Forgot Password Page
  */
+
+// 스킨 시스템 로드
+require_once BASE_PATH . '/rzxlib/Core/Skin/MemberSkinLoader.php';
+use RzxLib\Core\Skin\MemberSkinLoader;
+
 // 로고 설정
 $siteName = $siteSettings['site_name'] ?? ($config['app_name'] ?? 'RezlyX');
 $logoType = $siteSettings['logo_type'] ?? 'text';
 $logoImage = $siteSettings['logo_image'] ?? '';
 
-$pageTitle = $siteName . ' - 비밀번호 찾기';
+$pageTitle = $siteName . ' - ' . __('auth.forgot_password.title');
 
 // baseUrl 경로만 추출
 if (!empty($config['app_url'])) {
@@ -16,6 +21,84 @@ if (!empty($config['app_url'])) {
 } else {
     $baseUrl = '';
 }
+
+// ============================================================================
+// 스킨 시스템 적용
+// ============================================================================
+$memberSkin = $siteSettings['member_skin'] ?? 'default';
+$skinBasePath = BASE_PATH . '/skins/member';
+$useSkin = false;
+
+// 스킨이 존재하는지 확인
+if (is_dir($skinBasePath . '/' . $memberSkin)) {
+    $skinLoader = new MemberSkinLoader($skinBasePath, $memberSkin);
+    $skinLoader->setSiteSettings($siteSettings);
+
+    // 해당 스킨에 password_reset.php 템플릿이 있는지 확인
+    if ($skinLoader->pageExists('password_reset')) {
+        $useSkin = true;
+    }
+}
+
+// Auth 클래스 로드
+require_once BASE_PATH . '/rzxlib/Core/Auth/Auth.php';
+use RzxLib\Core\Auth\Auth;
+
+// 스킨을 사용하는 경우
+if ($useSkin) {
+    $errors = [];
+    $success = '';
+    $step = 'email'; // email, sent
+
+    // Handle form submission
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $email = trim($_POST['email'] ?? '');
+
+        if (empty($email)) {
+            $errors[] = __('auth.forgot_password.email_required');
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = __('auth.forgot_password.email_invalid');
+        } else {
+            // Auth 클래스를 통해 비밀번호 재설정 이메일 발송
+            $result = Auth::sendPasswordResetEmail($email, $config['locale'] ?? 'ko');
+
+            if ($result['success']) {
+                $step = 'sent';
+                $success = __('auth.forgot_password.sent');
+
+                // 개발 환경: debug_link가 있으면 저장
+                $debugLink = $result['debug_link'] ?? null;
+
+                // 디버그: debug_link가 없으면 이메일이 미등록 상태
+                if (empty($debugLink) && ($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
+                    $errors[] = '[DEV] 해당 이메일로 등록된 회원이 없습니다.';
+                }
+            } else {
+                $errors[] = $result['error'] ?? __('auth.forgot_password.error');
+            }
+        }
+    }
+
+    // 스킨 렌더링 (로고, 언어는 모듈이 자동 처리)
+    $skinHtml = $skinLoader->render('password_reset', [
+        'errors' => $errors,
+        'success' => $success,
+        'step' => $step,
+        'email' => $email ?? '',
+        'debugLink' => $debugLink ?? null,
+        'csrfToken' => $_SESSION['csrf_token'] ?? '',
+        'loginUrl' => $baseUrl . '/login',
+        'baseUrl' => $baseUrl,
+    ]);
+
+    // 스킨의 password_reset.php는 전체 HTML을 포함하므로 직접 출력
+    echo $skinHtml;
+    exit;
+}
+
+// ============================================================================
+// 스킨이 없는 경우: 기존 뷰 사용 (아래 코드 계속)
+// ============================================================================
 
 $error = '';
 $success = '';
@@ -28,42 +111,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = '올바른 이메일 형식이 아닙니다.';
     } else {
-        try {
-            $pdo = new PDO(
-                'mysql:host=' . ($_ENV['DB_HOST'] ?? 'localhost') . ';dbname=' . ($_ENV['DB_DATABASE'] ?? 'rezlyx'),
-                $_ENV['DB_USERNAME'] ?? 'root',
-                $_ENV['DB_PASSWORD'] ?? '',
-                [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-            );
+        // Auth 클래스를 통해 비밀번호 재설정 이메일 발송
+        $result = Auth::sendPasswordResetEmail($email, $config['locale'] ?? 'ko');
 
-            $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
-            $stmt = $pdo->prepare("SELECT id, email, name FROM {$prefix}users WHERE email = ? AND status = 'active' LIMIT 1");
-            $stmt->execute([$email]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($user) {
-                // Generate reset token
-                $token = bin2hex(random_bytes(32));
-                $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
-
-                // Save token to database
-                $stmt = $pdo->prepare("INSERT INTO {$prefix}password_resets (email, token, expires_at) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE token = ?, expires_at = ?");
-                $stmt->execute([$email, $token, $expiresAt, $token, $expiresAt]);
-
-                // TODO: Send email with reset link
-                // $resetLink = $baseUrl . '/reset-password?token=' . $token;
-
-                $success = '비밀번호 재설정 링크가 이메일로 발송되었습니다. 이메일을 확인해주세요.';
-            } else {
-                // Don't reveal if email exists or not for security
-                $success = '해당 이메일이 등록되어 있다면, 비밀번호 재설정 링크가 발송됩니다.';
-            }
-        } catch (PDOException $e) {
-            if ($config['debug'] ?? false) {
-                $error = '처리 중 오류: ' . $e->getMessage();
-            } else {
-                $error = '처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-            }
+        if ($result['success']) {
+            $success = '비밀번호 재설정 링크가 이메일로 발송되었습니다. 이메일을 확인해주세요.';
+        } else {
+            $error = '처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
         }
     }
 }

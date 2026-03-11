@@ -2,6 +2,9 @@
     RewriteEngine On
     RewriteBase /rezlyx/
 
+    # Force admin/ routes through index.php (admin/ directory exists but should be routed)
+    RewriteRule ^admin(/.*)?$ index.php [L,QSA]
+
     # If the request is not for a file or directory, rewrite to index.php
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d

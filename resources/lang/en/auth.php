@@ -131,8 +131,10 @@ return [
         'menu' => [
             'dashboard' => 'Dashboard',
             'reservations' => 'Reservations',
-            'profile' => 'Edit Profile',
+            'profile' => 'Profile',
+            'settings' => 'Settings',
             'password' => 'Change Password',
+            'withdraw' => 'Delete Account',
             'logout' => 'Logout',
         ],
         'stats' => [
@@ -150,15 +152,38 @@ return [
 
     // Profile
     'profile' => [
-        'title' => 'Edit Profile',
-        'description' => 'Update your personal information.',
+        'title' => 'Profile',
+        'description' => 'My profile information.',
+        'edit_title' => 'Edit Profile',
+        'edit_description' => 'Edit your personal information.',
+        'edit_button' => 'Edit',
         'name' => 'Name',
         'email' => 'Email',
         'email_hint' => 'Email cannot be changed.',
         'phone' => 'Phone',
+        'not_set' => 'Not set',
         'submit' => 'Save',
         'success' => 'Profile updated successfully.',
         'error' => 'An error occurred while updating profile.',
+    ],
+
+    // Settings
+    'settings' => [
+        'title' => 'Privacy Settings',
+        'description' => 'Choose which information to show to other users.',
+        'info' => 'Disabled items will not be visible to other users. Name is always visible.',
+        'success' => 'Settings saved successfully.',
+        'error' => 'An error occurred while saving settings.',
+        'no_fields' => 'No configurable fields available.',
+        'fields' => [
+            'email' => 'Email', 'email_desc' => 'Show your email address to other users.',
+            'profile_photo' => 'Profile Photo', 'profile_photo_desc' => 'Show your profile photo to other users.',
+            'phone' => 'Phone Number', 'phone_desc' => 'Show your phone number to other users.',
+            'birth_date' => 'Date of Birth', 'birth_date_desc' => 'Show your date of birth to other users.',
+            'gender' => 'Gender', 'gender_desc' => 'Show your gender to other users.',
+            'company' => 'Company', 'company_desc' => 'Show your company to other users.',
+            'blog' => 'Blog', 'blog_desc' => 'Show your blog URL to other users.',
+        ],
     ],
 
     // Change Password
@@ -175,5 +200,42 @@ return [
         'success' => 'Password changed successfully.',
         'error' => 'An error occurred while changing password.',
         'wrong_password' => 'Current password is incorrect.',
+    ],
+
+    // Delete Account
+    'withdraw' => [
+        'title' => 'Delete Account',
+        'description' => 'Your personal information will be anonymized immediately upon account deletion. This action cannot be undone.',
+        'warning_title' => 'Please read carefully before proceeding',
+        'warnings' => [
+            'account' => 'All personal information including name, email, phone number, date of birth, and profile photo will be immediately anonymized. You will no longer be identifiable.',
+            'reservation' => 'If you have any active or upcoming reservations, please cancel them before deleting your account. Reservations cannot be modified or cancelled after account deletion.',
+            'payment' => 'Payment and transaction records will be retained in anonymized form for the legally required retention period (5 years under Korean tax law, 7 years under Japanese tax law).',
+            'recovery' => 'Deleted accounts cannot be recovered. You may re-register with the same email, but all previous data including reservations, points, and messages will not be restored.',
+            'social' => 'If you registered via social login (Google, Kakao, LINE, etc.), the connection to that social service will also be removed.',
+            'message' => 'All received messages and notification history will be permanently deleted.',
+        ],
+        'retention_notice' => '※ Transaction records required by applicable laws will be retained in a non-identifiable form for the legally mandated period, then permanently deleted.',
+        'reason' => 'Reason for leaving',
+        'reason_placeholder' => 'Please select a reason',
+        'reasons' => [
+            'not_using' => 'No longer using the service',
+            'other_service' => 'Switching to another service',
+            'dissatisfied' => 'Dissatisfied with the service',
+            'privacy' => 'Privacy concerns',
+            'too_many_emails' => 'Too many emails/notifications',
+            'other' => 'Other',
+        ],
+        'reason_other' => 'Other reason',
+        'reason_other_placeholder' => 'Please enter your reason',
+        'password' => 'Confirm password',
+        'password_placeholder' => 'Enter current password',
+        'password_hint' => 'Please enter your current password to verify your identity.',
+        'confirm_text' => 'I have read and understood all the above information, and I agree to the anonymization of my personal data and account deletion.',
+        'submit' => 'Delete Account',
+        'success' => 'Your account has been deleted. Thank you for using our service.',
+        'wrong_password' => 'Incorrect password.',
+        'error' => 'An error occurred while processing account deletion.',
+        'confirm_required' => 'Please check the agreement to proceed.',
     ],
 ];

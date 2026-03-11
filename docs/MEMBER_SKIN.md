@@ -127,27 +127,53 @@ return [
 ### 기본 사용법
 
 ```php
-use RezlyX\Core\Skin\MemberSkinLoader;
+use RzxLib\Core\Skin\MemberSkinLoader;
 
 // 로더 초기화
 $skinLoader = new MemberSkinLoader(
-    skinBasePath: '/path/to/skins/member',
-    skin: 'default'
+    skinBasePath: BASE_PATH . '/skins/member',
+    skin: 'modern'
 );
 
-// 페이지 렌더링
+// DB 설정 주입 (모듈 데이터 자동 수집에 필요)
+$skinLoader->setSiteSettings($siteSettings);
+
+// 페이지 렌더링 (언어, 로고, 소셜 로그인 데이터는 모듈이 자동 주입)
 echo $skinLoader->render('login', [
     'errors' => $errors ?? [],
     'oldInput' => $_POST,
     'csrfToken' => $csrfToken,
-    'registerUrl' => '/register',
-    'passwordResetUrl' => '/password-reset',
+    'registerUrl' => $baseUrl . '/register',
+    'passwordResetUrl' => $baseUrl . '/forgot-password',
+    'baseUrl' => $baseUrl,
 ]);
 ```
+
+### 모듈 기반 자동 데이터 주입
+
+`setSiteSettings()` 호출 후 `render()`/`renderComponent()` 시 다음 데이터가 자동 주입됩니다:
+
+| 변수 | 모듈 | 설명 |
+|------|------|------|
+| `$languages` | LanguageModule | 활성 언어 목록 `['ko'=>'한국어', ...]` |
+| `$allLanguages` | LanguageModule | 전체 언어 정보 (name+native) |
+| `$supportedCodes` | LanguageModule | 활성 언어 코드 배열 |
+| `$currentLocale` | LanguageModule | 현재 로케일 |
+| `$defaultLocale` | LanguageModule | 기본 로케일 |
+| `$currentLangInfo` | LanguageModule | 현재 언어 정보 |
+| `$siteName` | LogoModule | 사이트 이름 |
+| `$logoType` | LogoModule | 로고 타입 (text/image) |
+| `$logoImage` | LogoModule | 로고 이미지 경로 |
+| `$socialProviders` | SocialLoginModule | 활성 소셜 로그인 제공자 |
+| `$socialEnabled` | SocialLoginModule | 소셜 로그인 활성화 여부 |
+| `$siteSettings` | MemberSkinLoader | DB 설정 원본 (공용 컴포넌트용) |
 
 ### 주요 메서드
 
 ```php
+// DB 설정 주입 (필수)
+$skinLoader->setSiteSettings($siteSettings);
+
 // 스킨 변경
 $skinLoader->setSkin('modern');
 
@@ -155,37 +181,20 @@ $skinLoader->setSkin('modern');
 $skinLoader->setColorset('dark');
 
 // 번역 데이터 설정
-$skinLoader->setTranslations([
-    'login_title' => '로그인',
-    'email' => '이메일',
-    'password' => '비밀번호',
-]);
+$skinLoader->setTranslations([...]);
 
 // 사용 가능한 스킨 목록
 $skins = $skinLoader->getAvailableSkins();
-// [
-//     'default' => ['name' => 'Default', 'version' => '1.0.0', ...],
-//     'modern' => ['name' => 'Modern', 'version' => '1.0.0', ...],
-// ]
 
-// 스킨 존재 여부
-if ($skinLoader->skinExists('modern')) { ... }
-
-// 페이지 존재 여부
-if ($skinLoader->pageExists('login')) { ... }
+// 스킨/페이지 존재 여부
+$skinLoader->skinExists('modern');
+$skinLoader->pageExists('login');
 
 // 컴포넌트 렌더링
-echo $skinLoader->renderComponent('social_login', [
-    'socialProviders' => ['google', 'kakao', 'line'],
-]);
+echo $skinLoader->renderComponent('social_login', [...]);
 
 // CSS 변수 생성
 $cssVariables = $skinLoader->getCssVariables();
-// :root {
-//     --skin-primary: #3B82F6;
-//     --skin-secondary: #6B7280;
-//     ...
-// }
 ```
 
 ---
@@ -201,6 +210,13 @@ $cssVariables = $skinLoader->getCssVariables();
 | `$config` | 스킨 설정 배열 |
 | `$colorset` | 현재 컬러셋 |
 | `$translations` | 번역 데이터 |
+| `$siteSettings` | DB 설정 (공용 컴포넌트용) |
+| `$languages` | 활성 언어 목록 (모듈 자동 주입) |
+| `$currentLocale` | 현재 로케일 (모듈 자동 주입) |
+| `$siteName` | 사이트 이름 (모듈 자동 주입) |
+| `$logoImage` | 로고 이미지 (모듈 자동 주입) |
+| `$socialProviders` | 소셜 로그인 제공자 (모듈 자동 주입) |
+| `$baseUrl` | 기본 URL |
 
 ### 페이지별 추가 변수
 
@@ -357,7 +373,8 @@ skins/member/my-skin/
 ├── preview.png (권장: 800x600)
 ├── thumbnail.png (권장: 400x300)
 └── components/
-    └── social_login.php
+    ├── social_login.php
+    └── mypage-sidebar.php  # (선택) 마이페이지 사이드바 디자인 오버라이드
 ```
 
 ### 2단계: config.php 작성
@@ -412,12 +429,14 @@ return [
 
 ## 버전 정보
 
-- **문서 버전**: 1.0.0
-- **최종 수정일**: 2026-03-03
+- **문서 버전**: 1.2.0
+- **최종 수정일**: 2026-03-11
 - **적용 대상**: RezlyX Member Skin System
 
 ### 변경 이력
 
 | 버전 | 날짜 | 변경 내용 |
 |------|------|-----------|
+| 1.2.0 | 2026-03-11 | 마이페이지 공통 사이드바 컴포넌트 + 스킨 오버라이드 지원 |
+| 1.1.0 | 2026-03-09 | 모듈 기반 아키텍처, 공용 언어 선택기, 자동 데이터 주입 |
 | 1.0.0 | 2026-03-03 | 최초 작성 |

@@ -94,13 +94,13 @@ ob_start();
 
 <!-- Cache Management -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
-        </svg>
-        <?= __('admin.settings.system.cache.title') ?>
-    </h2>
-    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6"><?= __('admin.settings.system.cache.description') ?></p>
+    <?php
+    $headerIcon = 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4';
+    $headerTitle = __('admin.settings.system.cache.title');
+    $headerDescription = __('admin.settings.system.cache.description');
+    $headerActions = ''; $headerIconColor = 'text-blue-600';
+    include __DIR__ . '/../../components/settings-header.php';
+    ?>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <!-- View Cache -->

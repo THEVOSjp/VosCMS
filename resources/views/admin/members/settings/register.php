@@ -74,8 +74,13 @@ ob_start();
 ?>
 
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors mb-6">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"><?= __('admin.members.settings.register.title') ?></h2>
-    <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6"><?= __('admin.members.settings.register.description') ?></p>
+    <?php
+    $headerIcon = 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z';
+    $headerTitle = __('admin.members.settings.register.title');
+    $headerDescription = __('admin.members.settings.register.description');
+    $headerIconColor = ''; $headerActions = '';
+    include __DIR__ . '/../../components/settings-header.php';
+    ?>
 
     <form method="POST" class="space-y-6">
         <input type="hidden" name="action" value="update_register">

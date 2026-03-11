@@ -6,6 +6,7 @@
 
 return [
     // Basic messages
+    'accepted' => 'The :attribute must be accepted.',
     'required' => 'The :attribute field is required.',
     'email' => 'Please enter a valid email address.',
     'min' => 'The :attribute must be at least :min characters.',

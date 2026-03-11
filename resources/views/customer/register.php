@@ -40,6 +40,7 @@ $useSkin = false;
 // 스킨이 존재하는지 확인
 if (is_dir($skinBasePath . '/' . $memberSkin)) {
     $skinLoader = new MemberSkinLoader($skinBasePath, $memberSkin);
+    $skinLoader->setSiteSettings($siteSettings);
 
     // 해당 스킨에 register.php 템플릿이 있는지 확인
     if ($skinLoader->pageExists('register')) {
@@ -149,7 +150,7 @@ if ($useSkin) {
         }
     }
 
-    // 스킨 렌더링
+    // 스킨 렌더링 (로고, 언어, 소셜 로그인은 모듈이 자동 처리)
     $skinHtml = $skinLoader->render('register', [
         'errors' => $errors,
         'oldInput' => $oldInput,
@@ -157,9 +158,8 @@ if ($useSkin) {
         'csrfToken' => $_SESSION['csrf_token'] ?? '',
         'loginUrl' => $baseUrl . '/login',
         'terms' => $terms,
-        'siteName' => $siteName,
         'baseUrl' => $baseUrl,
-        'registerFields' => $registerFields, // 동적 필드 목록
+        'registerFields' => $registerFields,
     ]);
 
     // 스킨은 body 내용만 포함하므로 전체 HTML 래퍼 필요

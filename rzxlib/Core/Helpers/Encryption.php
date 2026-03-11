@@ -122,10 +122,16 @@ class Encryption
             }
 
             $ivLength = openssl_cipher_iv_length(self::CIPHER);
+
+            // 페이로드가 IV보다 짧으면 유효하지 않은 데이터
+            if (strlen($payload) <= $ivLength) {
+                return $value;
+            }
+
             $iv = substr($payload, 0, $ivLength);
             $encrypted = substr($payload, $ivLength);
 
-            $decrypted = openssl_decrypt(
+            $decrypted = @openssl_decrypt(
                 $encrypted,
                 self::CIPHER,
                 $key,

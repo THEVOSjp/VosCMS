@@ -6,6 +6,10 @@
 
 namespace RzxLib\Core\Skin;
 
+use RzxLib\Core\Modules\LanguageModule;
+use RzxLib\Core\Modules\LogoModule;
+use RzxLib\Core\Modules\SocialLoginModule;
+
 class MemberSkinLoader
 {
     /** @var string 스킨 기본 경로 */
@@ -26,6 +30,12 @@ class MemberSkinLoader
     /** @var string 현재 언어 */
     private string $currentLocale = 'ko';
 
+    /** @var array DB 사이트 설정 (모듈에서 사용) */
+    private array $siteSettings = [];
+
+    /** @var array 모듈에서 수집한 데이터 캐시 */
+    private ?array $moduleData = null;
+
     /**
      * 생성자
      *
@@ -41,21 +51,79 @@ class MemberSkinLoader
     }
 
     /**
+     * 사이트 설정 주입 (모듈 데이터 자동 수집에 사용)
+     *
+     * @param array $siteSettings DB의 rzx_settings 데이터
+     * @return self
+     */
+    public function setSiteSettings(array $siteSettings): self
+    {
+        $this->siteSettings = $siteSettings;
+        $this->moduleData = null; // 캐시 무효화
+        return $this;
+    }
+
+    /**
+     * 모듈 데이터 수집 (언어, 로고, 소셜 로그인)
+     * siteSettings가 설정된 경우에만 동작
+     *
+     * @return array
+     */
+    private function collectModuleData(): array
+    {
+        if ($this->moduleData !== null) {
+            return $this->moduleData;
+        }
+
+        $this->moduleData = [];
+
+        if (empty($this->siteSettings)) {
+            return $this->moduleData;
+        }
+
+        // 모듈 파일 로드
+        $modulePath = dirname(__DIR__) . '/Modules';
+        if (file_exists($modulePath . '/LanguageModule.php')) {
+            require_once $modulePath . '/LanguageModule.php';
+            $langData = LanguageModule::getData($this->siteSettings, $this->currentLocale);
+            $this->moduleData['languages'] = $langData['languages'];
+            $this->moduleData['allLanguages'] = $langData['allLanguages'];
+            $this->moduleData['supportedCodes'] = $langData['supportedCodes'];
+            $this->moduleData['currentLocale'] = $langData['currentLocale'];
+            $this->moduleData['defaultLocale'] = $langData['defaultLocale'];
+            $this->moduleData['currentLangInfo'] = $langData['currentLangInfo'];
+        }
+
+        if (file_exists($modulePath . '/LogoModule.php')) {
+            require_once $modulePath . '/LogoModule.php';
+            $logoData = LogoModule::getData($this->siteSettings, 'RezlyX');
+            $this->moduleData['siteName'] = $logoData['siteName'];
+            $this->moduleData['logoType'] = $logoData['logoType'];
+            $this->moduleData['logoImage'] = $logoData['logoImage'];
+        }
+
+        if (file_exists($modulePath . '/SocialLoginModule.php')) {
+            require_once $modulePath . '/SocialLoginModule.php';
+            $socialData = SocialLoginModule::getData($this->siteSettings);
+            $this->moduleData['socialProviders'] = $socialData['socialProviders'];
+            $this->moduleData['socialEnabled'] = $socialData['socialEnabled'];
+        }
+
+        return $this->moduleData;
+    }
+
+    /**
      * 현재 언어 감지 (GET > 쿠키 > 기본값)
      */
     private function detectLocale(): void
     {
-        $validLocales = ['ko', 'en', 'ja'];
-
-        if (!empty($_GET['lang']) && in_array($_GET['lang'], $validLocales)) {
+        // Translator 클래스가 DB 기반으로 유효 언어를 관리하므로, 여기서는 값만 읽음
+        if (!empty($_GET['lang'])) {
             $this->currentLocale = $_GET['lang'];
-        } elseif (!empty($_COOKIE['locale']) && in_array($_COOKIE['locale'], $validLocales)) {
+        } elseif (!empty($_COOKIE['locale'])) {
             $this->currentLocale = $_COOKIE['locale'];
         } elseif (function_exists('current_locale')) {
-            $locale = current_locale();
-            if (in_array($locale, $validLocales)) {
-                $this->currentLocale = $locale;
-            }
+            $this->currentLocale = \current_locale();
         }
     }
 
@@ -67,10 +135,27 @@ class MemberSkinLoader
      */
     public function setLocale(string $locale): self
     {
-        if (in_array($locale, ['ko', 'en', 'ja'])) {
-            $this->currentLocale = $locale;
-        }
+        $this->currentLocale = $locale;
         return $this;
+    }
+
+    /**
+     * 로케일 새로고침 (렌더링 직전에 호출, Translator 초기화 후 정확한 로케일 감지)
+     */
+    private function refreshLocale(): void
+    {
+        // 1. 세션에서 직접 확인 (가장 우선순위 높음)
+        if (isset($_SESSION['locale'])) {
+            $this->currentLocale = $_SESSION['locale'];
+        }
+        // 2. 쿠키에서 확인
+        elseif (!empty($_COOKIE['locale'])) {
+            $this->currentLocale = $_COOKIE['locale'];
+        }
+        // 3. Translator에서 확인 (폴백)
+        elseif (function_exists('current_locale')) {
+            $this->currentLocale = \current_locale();
+        }
     }
 
     /**
@@ -221,6 +306,12 @@ class MemberSkinLoader
             throw new \RuntimeException("Template not found: {$page}");
         }
 
+        // 렌더링 직전에 로케일 다시 확인 (Translator가 이제 초기화되었을 수 있으므로)
+        $this->refreshLocale();
+
+        // 모듈 데이터를 기본값으로, render() 호출 시 전달된 $data가 우선
+        $data = $this->mergeModuleData($data);
+
         // 템플릿에 전달할 변수들 설정
         $data['config'] = $this->config;
         $data['colorset'] = $this->colorset;
@@ -248,6 +339,12 @@ class MemberSkinLoader
             return '';
         }
 
+        // 렌더링 직전에 로케일 다시 확인
+        $this->refreshLocale();
+
+        // 모듈 데이터를 기본값으로, 전달된 $data가 우선
+        $data = $this->mergeModuleData($data);
+
         $data['config'] = $this->config;
         $data['colorset'] = $this->colorset;
         $data['translations'] = array_merge($this->getDefaultTranslations(), $this->translations);
@@ -267,6 +364,42 @@ class MemberSkinLoader
     public function skinExists(string $skin): bool
     {
         return is_dir($this->skinBasePath . '/' . $skin);
+    }
+
+    /**
+     * 모듈 데이터를 기본값으로 병합 (명시적으로 전달된 $data가 우선)
+     *
+     * @param array $data 명시적으로 전달된 데이터
+     * @return array 모듈 기본값 + 명시적 데이터 병합 결과
+     */
+    private function mergeModuleData(array $data): array
+    {
+        $moduleData = $this->collectModuleData();
+
+        // 모듈 데이터를 기본값으로 설정 (명시적 $data가 우선)
+        foreach ($moduleData as $key => $value) {
+            if (!isset($data[$key])) {
+                $data[$key] = $value;
+            }
+        }
+
+        // siteSettings를 스킨 템플릿에 전달 (공용 컴포넌트에서 사용)
+        if (!isset($data['siteSettings'])) {
+            $data['siteSettings'] = $this->siteSettings;
+        }
+
+        // 모듈이 없어도 최소한의 기본값 보장
+        if (!isset($data['baseUrl'])) {
+            $data['baseUrl'] = '';
+        }
+        if (!isset($data['siteName'])) {
+            $data['siteName'] = 'RezlyX';
+        }
+        if (!isset($data['currentLocale'])) {
+            $data['currentLocale'] = $this->currentLocale;
+        }
+
+        return $data;
     }
 
     /**

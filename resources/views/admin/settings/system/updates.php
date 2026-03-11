@@ -46,12 +46,13 @@ ob_start();
 
 <!-- 현재 버전 정보 -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <?= __('admin.settings.system.updates.current_version') ?>
-    </h2>
+    <?php
+    $headerIcon = 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+    $headerTitle = __('admin.settings.system.updates.current_version');
+    $headerDescription = ''; $headerActions = '';
+    $headerIconColor = 'text-blue-600';
+    include __DIR__ . '/../../components/settings-header.php';
+    ?>
 
     <div class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
         <div class="flex items-center">
@@ -90,11 +91,13 @@ ob_start();
 
 <!-- 백업 목록 -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
-        </svg>
-        <?= __('admin.settings.system.updates.backups') ?>
+    <?php
+    $headerIcon = 'M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4';
+    $headerTitle = __('admin.settings.system.updates.backups');
+    $headerDescription = ''; $headerActions = '';
+    $headerIconColor = 'text-green-600';
+    include __DIR__ . '/../../components/settings-header.php';
+    ?>
     </h2>
 
     <div id="backupList" class="space-y-2">
@@ -110,12 +113,13 @@ ob_start();
 
 <!-- 시스템 요구사항 -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-        </svg>
-        <?= __('admin.settings.system.updates.requirements') ?>
-    </h2>
+    <?php
+    $headerIcon = 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z';
+    $headerTitle = __('admin.settings.system.updates.requirements');
+    $headerDescription = ''; $headerActions = '';
+    $headerIconColor = 'text-orange-600';
+    include __DIR__ . '/../../components/settings-header.php';
+    ?>
 
     <div class="space-y-3">
         <?php
@@ -165,12 +169,13 @@ ob_start();
 
 <!-- 업데이트 안내 -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
-    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <?= __('admin.settings.system.updates.notes_title') ?>
-    </h2>
+    <?php
+    $headerIcon = 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+    $headerTitle = __('admin.settings.system.updates.notes_title');
+    $headerDescription = ''; $headerActions = '';
+    $headerIconColor = 'text-purple-600';
+    include __DIR__ . '/../../components/settings-header.php';
+    ?>
 
     <div class="prose prose-sm dark:prose-invert max-w-none">
         <ul class="space-y-2 text-sm text-zinc-600 dark:text-zinc-400">

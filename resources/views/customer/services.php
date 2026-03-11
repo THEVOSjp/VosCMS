@@ -52,6 +52,12 @@ try {
     }
 }
 
+// 통화·가격 표시 설정 (서비스 설정 > 기본설정)
+$serviceCurrency = $siteSettings['service_currency'] ?? 'KRW';
+$priceDisplay = $siteSettings['service_price_display'] ?? 'show';
+$_currencySymbols = ['KRW' => '₩', 'USD' => '$', 'JPY' => '¥', 'EUR' => '€', 'CNY' => '¥'];
+$currencySymbol = $_currencySymbols[$serviceCurrency] ?? $serviceCurrency;
+
 // 헤더 포함
 include BASE_PATH . '/resources/views/partials/header.php';
 ?>
@@ -136,10 +142,13 @@ include BASE_PATH . '/resources/views/partials/header.php';
                             </div>
                         </div>
                         <div class="text-right">
+                            <?php if ($priceDisplay === 'show'): ?>
                             <span class="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                <?= number_format($service['price']) ?>
+                                <?= $currencySymbol ?><?= number_format($service['price']) ?>
                             </span>
-                            <span class="text-sm text-gray-500 dark:text-zinc-400"><?= __('common.currency') ?></span>
+                            <?php elseif ($priceDisplay === 'contact'): ?>
+                            <span class="text-sm font-medium text-gray-500 dark:text-zinc-400"><?= __('admin.services.settings.general.price_contact') ?></span>
+                            <?php endif; ?>
                         </div>
                     </div>
 

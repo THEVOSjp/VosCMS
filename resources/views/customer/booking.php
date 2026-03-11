@@ -33,6 +33,12 @@ try {
     }
 }
 
+// 통화·가격 표시 설정 (서비스 설정 > 기본설정)
+$serviceCurrency = $siteSettings['service_currency'] ?? 'KRW';
+$priceDisplay = $siteSettings['service_price_display'] ?? 'show';
+$_currencySymbols = ['KRW' => '₩', 'USD' => '$', 'JPY' => '¥', 'EUR' => '€', 'CNY' => '¥'];
+$currencySymbol = $_currencySymbols[$serviceCurrency] ?? $serviceCurrency;
+
 // 헤더 포함
 include BASE_PATH . '/resources/views/partials/header.php';
 ?>
@@ -103,7 +109,11 @@ include BASE_PATH . '/resources/views/partials/header.php';
                                 <p class="text-sm text-gray-500 dark:text-zinc-400 mt-1"><?php echo htmlspecialchars($service['description'] ?? ''); ?></p>
                             </div>
                             <div class="text-right">
-                                <span class="text-lg font-bold text-blue-600 dark:text-blue-400"><?php echo number_format($service['price']); ?><?= __('common.currency') ?></span>
+                                <?php if ($priceDisplay === 'show'): ?>
+                                <span class="text-lg font-bold text-blue-600 dark:text-blue-400"><?= $currencySymbol ?><?php echo number_format($service['price']); ?></span>
+                                <?php elseif ($priceDisplay === 'contact'): ?>
+                                <span class="text-sm text-gray-500 dark:text-zinc-400"><?= __('admin.services.settings.general.price_contact') ?></span>
+                                <?php endif; ?>
                                 <p class="text-xs text-gray-400"><?php echo $service['duration'] ?? 60; ?><?= __('common.minutes') ?></p>
                             </div>
                         </div>
@@ -402,7 +412,13 @@ include BASE_PATH . '/resources/views/partials/header.php';
             document.getElementById('confirmTime').textContent = bookingData.time;
             document.getElementById('confirmName').textContent = bookingData.customerName;
             document.getElementById('confirmPhone').textContent = bookingData.customerPhone;
-            document.getElementById('confirmPrice').textContent = bookingData.servicePrice.toLocaleString() + '<?= __('common.currency') ?>';
+            <?php if ($priceDisplay === 'show'): ?>
+            document.getElementById('confirmPrice').textContent = '<?= $currencySymbol ?>' + bookingData.servicePrice.toLocaleString();
+            <?php elseif ($priceDisplay === 'contact'): ?>
+            document.getElementById('confirmPrice').textContent = '<?= __('admin.services.settings.general.price_contact') ?>';
+            <?php else: ?>
+            document.getElementById('confirmPrice').textContent = '-';
+            <?php endif; ?>
         }
 
         function submitBooking() {

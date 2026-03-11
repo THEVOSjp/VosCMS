@@ -1,41 +1,200 @@
 <?php
 /**
  * RezlyX Admin - 메뉴 관리 페이지
+ * 4단 캐스케이딩 패널: 트리 | 컨텍스트 | 메뉴타입 | 상세폼
  */
-$pageTitle = '메뉴 관리 - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('admin.site.menus.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$baseUrl = '';
+if (!empty($config['app_url'])) {
+    $parsedUrl = parse_url($config['app_url']);
+    $baseUrl = rtrim($parsedUrl['path'] ?? '', '/');
+}
+$adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
-// Database connection
+// DB 연결
 try {
     $pdo = new PDO(
-        'mysql:host=' . ($_ENV['DB_HOST'] ?? 'localhost') . ';dbname=' . ($_ENV['DB_DATABASE'] ?? 'rezlyx'),
+        'mysql:host=' . ($_ENV['DB_HOST'] ?? 'localhost') . ';dbname=' . ($_ENV['DB_DATABASE'] ?? 'rezlyx') . ';charset=utf8mb4',
         $_ENV['DB_USERNAME'] ?? 'root',
         $_ENV['DB_PASSWORD'] ?? '',
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 } catch (PDOException $e) {
-    die('데이터베이스 연결 실패: ' . $e->getMessage());
+    die('데이터베이스 연결 실패');
 }
 
-$message = '';
-$messageType = '';
+// 사이트맵 목록
+$sitemaps = $pdo->query("SELECT * FROM rzx_sitemaps ORDER BY sort_order ASC")->fetchAll(PDO::FETCH_ASSOC);
 
-// Base URLs for navigation
-$baseUrl = $config['app_url'] ?? '';
-$adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
+// 메뉴 항목 (사이트맵별)
+$menuItems = [];
+$stmt = $pdo->query("SELECT * FROM rzx_menu_items ORDER BY sort_order ASC");
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $menuItems[$row['sitemap_id']][] = $row;
+}
+
+// 메뉴 항목을 트리 구조로 변환
+function buildMenuTree($items, $parentId = null) {
+    $tree = [];
+    foreach ($items as $item) {
+        if ($item['parent_id'] == $parentId) {
+            $children = buildMenuTree($items, $item['id']);
+            $item['children'] = $children;
+            $tree[] = $item;
+        }
+    }
+    return $tree;
+}
+
+$sitemapTrees = [];
+foreach ($sitemaps as $sitemap) {
+    $items = $menuItems[$sitemap['id']] ?? [];
+    $sitemapTrees[$sitemap['id']] = buildMenuTree($items);
+}
+
+$message = $_GET['msg'] ?? '';
+$messageType = $_GET['type'] ?? '';
+
+// 다국어 표시 룰: 선택언어 → 영어 → 기본언어 → DB 원본
+$currentLocale = $config['locale'] ?? 'ko';
+$defaultLocale = $config['default_language'] ?? 'ko';
+$menuLocaleChain = array_unique(array_filter([$currentLocale, 'en', $defaultLocale]));
+
+$placeholders = implode(',', array_fill(0, count($menuLocaleChain), '?'));
+$trStmt = $pdo->prepare("SELECT lang_key, locale, content FROM rzx_translations WHERE locale IN ({$placeholders}) AND lang_key LIKE 'menu_item.%'");
+$trStmt->execute(array_values($menuLocaleChain));
+
+$menuAllTranslations = []; // [lang_key][locale] = content
+while ($tr = $trStmt->fetch(PDO::FETCH_ASSOC)) {
+    $menuAllTranslations[$tr['lang_key']][$tr['locale']] = $tr['content'];
+}
+
+/**
+ * 메뉴 항목의 번역된 제목 가져오기
+ * 폴백: 선택언어 → 영어 → 기본언어 → DB 원본
+ */
+function getMenuTranslatedTitle($itemId, $field, $default) {
+    global $menuAllTranslations, $menuLocaleChain;
+    $key = "menu_item.{$itemId}.{$field}";
+    if (isset($menuAllTranslations[$key])) {
+        foreach ($menuLocaleChain as $loc) {
+            if (!empty($menuAllTranslations[$key][$loc])) {
+                return $menuAllTranslations[$key][$loc];
+            }
+        }
+    }
+    return $default;
+}
+
+// 메뉴 항목 렌더링 함수
+function renderMenuItem($item, $sitemapId, $depth = 0) {
+    global $menuAllTranslations, $menuLocaleChain;
+    $isHome = $item['is_home'] ? 1 : 0;
+    $homeIcon = $item['is_home'] ? ' <span class="text-amber-500" title="Home">&#9751;</span>' : '';
+    $translatedTitle = getMenuTranslatedTitle($item['id'], 'title', $item['title']);
+    ?>
+    <div class="tree-item flex items-center px-3 py-1.5 rounded text-sm text-zinc-700 dark:text-zinc-300"
+         draggable="true"
+         onclick="event.stopPropagation(); selectMenuItem(<?= $item['id'] ?>, '<?= htmlspecialchars($translatedTitle, ENT_QUOTES) ?>', <?= $sitemapId ?>, <?= $isHome ?>)"
+         data-type="menuItem" data-id="<?= $item['id'] ?>"
+         data-sitemap-id="<?= $sitemapId ?>"
+         data-parent-id="<?= $item['parent_id'] ?? '' ?>"
+         data-sort="<?= $item['sort_order'] ?? 0 ?>"
+         data-title="<?= htmlspecialchars($translatedTitle, ENT_QUOTES) ?>"
+         data-title-original="<?= htmlspecialchars($item['title'], ENT_QUOTES) ?>"
+         data-url="<?= htmlspecialchars($item['url'] ?? '', ENT_QUOTES) ?>"
+         data-target="<?= htmlspecialchars($item['target'] ?? '_self', ENT_QUOTES) ?>"
+         data-icon="<?= htmlspecialchars($item['icon'] ?? '', ENT_QUOTES) ?>"
+         data-css-class="<?= htmlspecialchars($item['css_class'] ?? '', ENT_QUOTES) ?>"
+         data-description="<?= htmlspecialchars($item['description'] ?? '', ENT_QUOTES) ?>"
+         data-open-window="<?= $item['open_window'] ?? 0 ?>"
+         data-expand="<?= $item['expand'] ?? 0 ?>"
+         data-group-srls="<?= htmlspecialchars($item['group_srls'] ?? '', ENT_QUOTES) ?>">
+        <svg class="drag-handle w-3.5 h-3.5 text-zinc-400" fill="currentColor" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
+        <?php if (!empty($item['children'])): ?>
+        <button type="button" class="tree-toggle mr-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" onclick="toggleTreeChildren(this, event)">
+            <svg class="w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <?php else: ?>
+        <span class="text-zinc-400 dark:text-zinc-500 mr-1">├</span>
+        <?php endif; ?>
+        <span class="truncate"><?= htmlspecialchars($translatedTitle) ?><?= $homeIcon ?></span>
+        <?php if (!empty($item['icon'])): ?>
+        <span class="ml-1 text-zinc-400 text-xs"><?= htmlspecialchars($item['icon']) ?></span>
+        <?php endif; ?>
+    </div>
+    <?php if (!empty($item['children'])): ?>
+    <div class="tree-children">
+        <?php foreach ($item['children'] as $child): ?>
+        <?php renderMenuItem($child, $sitemapId, $depth + 1); ?>
+        <?php endforeach; ?>
+    </div>
+    <?php endif;
+}
+
+// 바로가기 메뉴 선택 트리 렌더링
+function renderShortcutMenuItem($item, $depth = 1) {
+    global $menuAllTranslations, $menuLocaleChain;
+    $translatedTitle = getMenuTranslatedTitle($item['id'], 'title', $item['title']);
+    $pl = ($depth * 12) + 8;
+    ?>
+    <div class="shortcut-menu-item flex items-center px-2 py-1 text-xs cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+         style="padding-left: <?= $pl ?>px"
+         onclick="selectShortcutMenu(<?= $item['id'] ?>, '<?= htmlspecialchars($translatedTitle, ENT_QUOTES) ?>', '<?= htmlspecialchars($item['url'] ?? '', ENT_QUOTES) ?>')">
+        <span class="text-zinc-400 mr-1">└</span>
+        <?= htmlspecialchars($translatedTitle) ?>
+    </div>
+    <?php if (!empty($item['children'])): ?>
+        <?php foreach ($item['children'] as $child): ?>
+            <?php renderShortcutMenuItem($child, $depth + 1); ?>
+        <?php endforeach; ?>
+    <?php endif;
+}
 ?>
 <!DOCTYPE html>
-<html lang="<?php echo $config['locale'] ?? 'ko'; ?>">
+<html lang="<?= $config['locale'] ?? 'ko' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($pageTitle); ?></title>
+    <title><?= htmlspecialchars($pageTitle) ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { darkMode: 'class' }
-    </script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <style>
         body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .tree-item { cursor: pointer; user-select: none; }
+        .tree-item:hover { background-color: rgba(59,130,246,0.08); }
+        .tree-item.selected { background-color: rgba(59,130,246,0.15); }
+        .tree-item.selected .sitemap-title { font-weight: 700; }
+        .tree-children { padding-left: 1.25rem; border-left: 1px solid #e4e4e7; margin-left: 0.75rem; }
+        .dark .tree-children { border-left-color: #3f3f46; }
+        .dark .tree-item:hover { background-color: rgba(59,130,246,0.15); }
+        /* 드래그&드롭 */
+        .tree-item[draggable="true"] { cursor: grab; }
+        .tree-item[draggable="true"]:active { cursor: grabbing; }
+        .tree-item.dragging { opacity: 0.4; }
+        .tree-item.drag-over-top { box-shadow: 0 -2px 0 0 #3b82f6 inset; }
+        .tree-item.drag-over-bottom { box-shadow: 0 2px 0 0 #3b82f6 inset; }
+        .tree-item.drag-over-inside { background-color: rgba(59,130,246,0.18); outline: 2px dashed #3b82f6; outline-offset: -2px; }
+        .drag-handle { cursor: grab; opacity: 0.35; flex-shrink: 0; margin-right: 4px; }
+        .tree-item:hover .drag-handle { opacity: 0.7; }
+        .drag-handle:active { cursor: grabbing; }
+        .tree-item.cut-item { opacity: 0.45; border-left: 2px dashed #f59e0b; }
+        .tree-toggle svg { transition: transform 0.15s; }
+        .tree-toggle.collapsed svg { transform: rotate(-90deg); }
+        .panel-card { min-width: 240px; max-width: 280px; }
+        .ctx-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0.5rem 0.875rem; font-size: 0.875rem; color: #374151; transition: background-color 0.15s; border-bottom: 1px solid #f4f4f5; }
+        .ctx-btn:last-child { border-bottom: none; }
+        .ctx-btn:hover { background-color: #f4f4f5; }
+        .ctx-btn.active { background-color: #374151; color: #fff; }
+        .ctx-btn.danger { color: #dc2626; }
+        .ctx-btn.danger:hover { background-color: #fef2f2; }
+        .dark .ctx-btn { color: #d4d4d8; border-bottom-color: #3f3f46; }
+        .dark .ctx-btn:hover { background-color: #3f3f46; }
+        .dark .ctx-btn.active { background-color: #3b82f6; color: #fff; }
+        .dark .ctx-btn.danger { color: #f87171; }
+        .dark .ctx-btn.danger:hover { background-color: rgba(239,68,68,0.1); }
+        .chevron { width: 16px; height: 16px; flex-shrink: 0; }
     </style>
     <script>
         if (localStorage.getItem('darkMode') === 'true' ||
@@ -46,97 +205,382 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 </head>
 <body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
     <div class="flex">
-        <!-- Sidebar -->
         <?php include __DIR__ . '/../partials/admin-sidebar.php'; ?>
 
-        <!-- Main Content -->
         <main class="flex-1 ml-64">
-            <!-- Top Bar -->
-            <header class="bg-white dark:bg-zinc-800 shadow-sm h-16 flex items-center justify-between px-6 transition-colors">
-                <h1 class="text-xl font-semibold text-zinc-900 dark:text-white"><?= __('admin.site.menus.title') ?></h1>
-                <div class="flex items-center space-x-4">
-                    <button id="darkModeBtn" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition" title="<?= __('admin.dark_mode') ?>">
-                        <svg id="sunIcon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                        </svg>
-                        <svg id="moonIcon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                        </svg>
-                    </button>
-                    <span class="text-sm text-zinc-500 dark:text-zinc-400"><?php echo date('Y-m-d H:i'); ?></span>
-                </div>
-            </header>
+            <?php
+            $pageHeaderTitle = __('admin.site.menus.title');
+            include __DIR__ . '/../partials/admin-topbar.php';
+            ?>
 
-            <!-- Page Content -->
             <div class="p-6">
                 <?php if ($message): ?>
-                <div class="mb-6 p-4 rounded-lg <?php echo $messageType === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'; ?>">
-                    <?php echo htmlspecialchars($message); ?>
+                <div class="mb-4 p-4 rounded-lg <?= $messageType === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800' ?>">
+                    <?= htmlspecialchars($message) ?>
                 </div>
                 <?php endif; ?>
 
-                <!-- Header -->
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.site.menus.description') ?></p>
-                    </div>
-                    <button class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                        </svg>
-                        <?= __('admin.site.menus.add') ?>
-                    </button>
-                </div>
+                <!-- 4단 캐스케이딩 패널 -->
+                <div class="flex items-start" style="gap:5px;">
 
-                <!-- Menu List -->
-                <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
-                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.site.menus.list') ?></h2>
+                    <!-- ▶ 패널1: 사이트맵 트리 -->
+                    <div class="flex-shrink-0 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden" style="min-width:300px; max-width:340px;">
+                        <div class="px-4 py-3 border-b border-zinc-200 dark:border-zinc-700">
+                            <h2 class="text-sm font-bold text-zinc-900 dark:text-white"><?= __('admin.site.menus.site_menu_edit') ?></h2>
+                        </div>
+                        <!-- 검색 -->
+                        <div class="p-3 border-b border-zinc-200 dark:border-zinc-700">
+                            <div class="flex gap-1.5">
+                                <input type="text" id="menuSearch" placeholder="<?= __('admin.site.menus.search_placeholder') ?>"
+                                       class="flex-1 px-2.5 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <button onclick="searchMenu()" class="px-3 py-1.5 text-xs bg-zinc-800 dark:bg-zinc-600 text-white rounded hover:bg-zinc-700 dark:hover:bg-zinc-500 transition font-medium">
+                                    <?= __('admin.site.menus.search') ?>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- 트리 -->
+                        <div class="p-3 space-y-2 min-h-[400px] max-h-[550px] overflow-y-auto" id="sitemapTree">
+                            <?php foreach ($sitemaps as $sitemap): ?>
+                            <div class="sitemap-group" data-sitemap-id="<?= $sitemap['id'] ?>">
+                                <div class="tree-item flex items-center px-3 py-2 rounded text-sm font-medium text-zinc-900 dark:text-white"
+                                     onclick="selectSitemap(<?= $sitemap['id'] ?>, '<?= htmlspecialchars($sitemap['title'], ENT_QUOTES) ?>')"
+                                     data-type="sitemap" data-id="<?= $sitemap['id'] ?>">
+                                    <svg class="w-4 h-4 mr-2 text-zinc-500 dark:text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                    </svg>
+                                    <span class="sitemap-title"><?= htmlspecialchars($sitemap['title']) ?></span>
+                                </div>
+                                <?php if (!empty($sitemapTrees[$sitemap['id']])): ?>
+                                <div class="tree-children mt-1">
+                                    <?php foreach ($sitemapTrees[$sitemap['id']] as $item): ?>
+                                    <?php renderMenuItem($item, $sitemap['id']); ?>
+                                    <?php endforeach; ?>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                            <?php if ($sitemap !== end($sitemaps)): ?>
+                            <hr class="border-zinc-200 dark:border-zinc-700">
+                            <?php endif; ?>
+                            <?php endforeach; ?>
 
-                    <div class="text-center py-12 text-zinc-500 dark:text-zinc-400">
-                        <svg class="w-16 h-16 mx-auto mb-4 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
-                        <p class="text-lg font-medium mb-2"><?= __('admin.site.menus.coming_soon') ?></p>
-                        <p class="text-sm"><?= __('admin.site.menus.coming_soon_desc') ?></p>
+                            <?php if (empty($sitemaps)): ?>
+                            <div class="text-center py-8 text-zinc-400 dark:text-zinc-500">
+                                <p class="text-sm"><?= __('admin.site.menus.no_sitemaps') ?></p>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        <!-- 사이트맵 추가 -->
+                        <div class="p-3 border-t border-zinc-200 dark:border-zinc-700">
+                            <button onclick="addSitemap()" class="flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <?= __('admin.site.menus.add_sitemap') ?>
+                            </button>
+                        </div>
                     </div>
-                </div>
+
+                    <!-- ▶ 패널2: 컨텍스트 액션 -->
+                    <div id="panel2" class="panel-card flex-shrink-0 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden hidden">
+                        <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-zinc-700">
+                            <h3 id="panel2Title" class="text-sm font-bold text-zinc-900 dark:text-white truncate"></h3>
+                            <button onclick="closePanel(2)" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 ml-2 flex-shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <!-- 사이트맵 컨텍스트 -->
+                        <div id="sitemapCtx" class="hidden">
+                            <button onclick="editSitemapItems()" class="ctx-btn" data-ctx="edit_sitemap">
+                                <span><?= __('admin.site.menus.edit_sitemap') ?></span>
+                                <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            <button onclick="openAddMenu()" class="ctx-btn" data-ctx="add_menu">
+                                <span><?= __('admin.site.menus.add_menu') ?></span>
+                                <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            <button onclick="applyDesignBulk()" class="ctx-btn">
+                                <span><?= __('admin.site.menus.design_bulk') ?></span>
+                                <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            <button id="pasteSitemapBtn" onclick="pasteSitemap()" class="ctx-btn" style="opacity:0.4; pointer-events:none;">
+                                <span><?= __('admin.site.menus.paste') ?></span>
+                            </button>
+                            <button onclick="deleteSitemap()" class="ctx-btn danger">
+                                <span><?= __('admin.site.menus.delete') ?></span>
+                            </button>
+                            <button onclick="renameSitemap()" class="ctx-btn">
+                                <span><?= __('admin.site.menus.rename') ?></span>
+                            </button>
+                        </div>
+                        <!-- 메뉴 항목 컨텍스트 -->
+                        <div id="menuItemCtx" class="hidden">
+                            <button onclick="editMenuItem()" class="ctx-btn">
+                                <span><?= __('admin.site.menus.edit_item') ?></span>
+                                <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            <button onclick="openAddSubMenu()" class="ctx-btn" data-ctx="add_sub">
+                                <span><?= __('admin.site.menus.add_sub_menu') ?></span>
+                                <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            <button onclick="toggleHomeMenu()" class="ctx-btn">
+                                <span id="homeToggleText"><?= __('admin.site.menus.set_home') ?></span>
+                            </button>
+                            <button onclick="cutMenuItem()" class="ctx-btn">
+                                <span><?= __('admin.site.menus.cut') ?></span>
+                            </button>
+                            <button onclick="copyMenuItem()" class="ctx-btn">
+                                <span><?= __('admin.site.menus.copy') ?></span>
+                            </button>
+                            <button onclick="pasteAsChild()" class="ctx-btn">
+                                <span><?= __('admin.site.menus.paste') ?></span>
+                            </button>
+                            <button onclick="deleteMenuItem()" class="ctx-btn danger">
+                                <span><?= __('admin.site.menus.delete') ?></span>
+                            </button>
+                            <button onclick="renameMenuItem()" class="ctx-btn">
+                                <span><?= __('admin.site.menus.rename') ?></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ▶ 패널3: 메뉴 타입 선택 -->
+                    <div id="panel3" class="panel-card flex-shrink-0 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden hidden">
+                        <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-zinc-700">
+                            <h3 id="panel3Title" class="text-sm font-bold text-zinc-900 dark:text-white"><?= __('admin.site.menus.add_menu') ?></h3>
+                            <button onclick="closePanel(3)" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 ml-2 flex-shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <!-- 사이트맵 편집 패널 (동적 표시) -->
+                        <div id="sitemapEditPanel" class="hidden p-4 space-y-3">
+                            <div>
+                                <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.site.menus.sitemap_name') ?></label>
+                                <input type="text" id="editSitemapTitle"
+                                       class="w-full px-2.5 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="button" onclick="saveSitemapEdit()" class="px-4 py-1.5 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 transition font-medium">
+                                    <?= __('admin.site.menus.confirm') ?>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- 일괄 디자인 설정 패널 -->
+                        <div id="designBulkPanel" class="hidden p-4 space-y-3">
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('admin.site.menus.design_bulk_desc') ?></p>
+                            <div>
+                                <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.site.menus.layout') ?></label>
+                                <select id="bulkLayoutSelect" class="w-full px-2.5 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white">
+                                    <option value="">— <?= __('admin.site.menus.select_layout') ?> —</option>
+                                    <option value="default"><?= __('admin.site.menus.default_layout') ?></option>
+                                </select>
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="button" onclick="alert('<?= __('admin.site.menus.design_coming_soon') ?>')" class="px-4 py-1.5 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 transition font-medium">
+                                    <?= __('admin.site.menus.apply') ?>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- 메뉴 타입 목록 -->
+                        <div id="menuTypeList">
+                            <button onclick="selectMenuType('page')" class="ctx-btn" data-mtype="page">
+                                <span><?= __('admin.site.menus.type_page') ?></span>
+                                <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            <button onclick="selectMenuType('widget')" class="ctx-btn" data-mtype="widget">
+                                <span><?= __('admin.site.menus.type_widget') ?></span>
+                                <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            <button onclick="selectMenuType('external')" class="ctx-btn" data-mtype="external">
+                                <span><?= __('admin.site.menus.type_external') ?></span>
+                                <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            <button onclick="selectMenuType('board')" class="ctx-btn" data-mtype="board">
+                                <span><?= __('admin.site.menus.type_board') ?></span>
+                                <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            <button onclick="selectMenuType('member')" class="ctx-btn" data-mtype="member">
+                                <span><?= __('admin.site.menus.type_member') ?></span>
+                                <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            <button onclick="selectMenuType('shortcut')" class="ctx-btn" data-mtype="shortcut">
+                                <span><?= __('admin.site.menus.type_shortcut') ?></span>
+                                <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                        </div>
+                        <div class="p-3 border-t border-zinc-200 dark:border-zinc-700">
+                            <button onclick="installMenuType()" class="flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <?= __('admin.site.menus.install_menu_type') ?>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ▶ 패널4: 상세 폼 -->
+                    <div id="panel4" class="panel-card flex-shrink-0 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden hidden" style="min-width:280px; max-width:320px;">
+                        <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-zinc-700">
+                            <h3 id="panel4Title" class="text-sm font-bold text-zinc-900 dark:text-white"></h3>
+                            <button onclick="closePanel(4)" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 ml-2 flex-shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <div class="p-4">
+                            <p id="panel4Desc" class="text-xs text-blue-600 dark:text-blue-400 mb-4"></p>
+                            <form id="menuForm" class="space-y-3">
+                                <input type="hidden" id="formAction" value="">
+                                <input type="hidden" id="formId" value="">
+                                <input type="hidden" id="formSitemapId" value="">
+                                <input type="hidden" id="formParentId" value="">
+                                <input type="hidden" id="formMenuType" value="">
+                                <!-- 메뉴 이름 -->
+                                <div>
+                                    <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.site.menus.field_name') ?></label>
+                                    <div class="flex">
+                                        <input type="text" id="formTitle" required
+                                               class="flex-1 px-2.5 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded-l bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <button type="button" onclick="openMenuMultilang('title')" class="px-2 border border-l-0 border-zinc-300 dark:border-zinc-600 rounded-r bg-zinc-50 dark:bg-zinc-600 text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-500" title="<?= __('admin.site.menus.multilang') ?>">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- 메뉴 아이콘 -->
+                                <div>
+                                    <label class="flex items-center text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                                        <?= __('admin.site.menus.field_icon') ?>
+                                        <button type="button" onclick="toggleHelp('icon')" class="ml-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                                        </button>
+                                    </label>
+                                    <div id="help-icon" class="field-help hidden mb-1.5 p-2.5 bg-sky-50 dark:bg-sky-900/30 border border-sky-200 dark:border-sky-800 rounded text-xs text-sky-700 dark:text-sky-300 relative">
+                                        <?= __('admin.site.menus.help_icon') ?>
+                                        <button type="button" onclick="closeHelp('icon')" class="absolute top-1.5 right-1.5 text-sky-400 hover:text-sky-600">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                    <input type="text" id="formIcon" placeholder="fa-home"
+                                           class="w-full px-2.5 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+                                <!-- 메뉴 클래스 -->
+                                <div>
+                                    <label class="flex items-center text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                                        <?= __('admin.site.menus.field_class') ?>
+                                        <button type="button" onclick="toggleHelp('class')" class="ml-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                                        </button>
+                                    </label>
+                                    <div id="help-class" class="field-help hidden mb-1.5 p-2.5 bg-sky-50 dark:bg-sky-900/30 border border-sky-200 dark:border-sky-800 rounded text-xs text-sky-700 dark:text-sky-300 relative">
+                                        <?= __('admin.site.menus.help_class') ?>
+                                        <button type="button" onclick="closeHelp('class')" class="absolute top-1.5 right-1.5 text-sky-400 hover:text-sky-600">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                    <input type="text" id="formCssClass"
+                                           class="w-full px-2.5 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+                                <!-- 메뉴 설명 -->
+                                <div>
+                                    <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.site.menus.field_desc') ?></label>
+                                    <div class="flex">
+                                        <textarea id="formDesc" rows="3"
+                                                  class="flex-1 px-2.5 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded-l bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"></textarea>
+                                        <button type="button" onclick="openMenuMultilang('description')" class="px-2 border border-l-0 border-zinc-300 dark:border-zinc-600 rounded-r bg-zinc-50 dark:bg-zinc-600 text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-500 self-start" title="<?= __('admin.site.menus.multilang') ?>">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- 메뉴 ID (일반 메뉴용) -->
+                                <div id="formMenuIdWrap">
+                                    <label class="flex items-center text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                                        <?= __('admin.site.menus.field_menu_id') ?>
+                                        <button type="button" onclick="toggleHelp('url')" class="ml-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                                        </button>
+                                    </label>
+                                    <div id="help-url" class="field-help hidden mb-1.5 p-2.5 bg-sky-50 dark:bg-sky-900/30 border border-sky-200 dark:border-sky-800 rounded text-xs text-sky-700 dark:text-sky-300 relative">
+                                        <?= __('admin.site.menus.help_menu_id') ?>
+                                        <button type="button" onclick="closeHelp('url')" class="absolute top-1.5 right-1.5 text-sky-400 hover:text-sky-600">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                    <input type="text" id="formUrl" placeholder="<?= __('admin.site.menus.menu_id_placeholder') ?>"
+                                           class="w-full px-2.5 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+                                <!-- 바로가기 링크 (shortcut 전용) -->
+                                <div id="formShortcutWrap" class="hidden">
+                                    <!-- 탭 -->
+                                    <div class="flex border-b border-zinc-300 dark:border-zinc-600 mb-2">
+                                        <button type="button" id="tabUrlLink" onclick="switchShortcutTab('url')"
+                                                class="px-3 py-1.5 text-xs font-medium border-b-2 transition">
+                                            <?= __('admin.site.menus.tab_url_link') ?>
+                                        </button>
+                                        <button type="button" id="tabMenuLink" onclick="switchShortcutTab('menu')"
+                                                class="px-3 py-1.5 text-xs font-medium border-b-2 transition">
+                                            <?= __('admin.site.menus.tab_menu_link') ?>
+                                        </button>
+                                    </div>
+                                    <!-- URL 링크 탭 -->
+                                    <div id="shortcutUrlPanel">
+                                        <input type="text" id="formShortcutUrl" placeholder="http://"
+                                               class="w-full px-2.5 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    </div>
+                                    <!-- 메뉴 링크 탭 -->
+                                    <div id="shortcutMenuPanel" class="hidden">
+                                        <div class="px-2.5 py-1.5 mb-2 text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-700 rounded border border-zinc-200 dark:border-zinc-600" id="shortcutSelectedMenu">
+                                            <?= __('admin.site.menus.select_menu_hint') ?>
+                                        </div>
+                                        <div class="max-h-[250px] overflow-y-auto border border-zinc-200 dark:border-zinc-600 rounded">
+                                            <?php foreach ($sitemaps as $sm): ?>
+                                            <div class="px-2 pt-2 pb-1">
+                                                <div class="flex items-center text-xs font-bold text-zinc-600 dark:text-zinc-300">
+                                                    <svg class="w-3.5 h-3.5 mr-1 text-zinc-400" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+                                                    <?= htmlspecialchars($sm['title']) ?>
+                                                </div>
+                                            </div>
+                                            <?php if (!empty($sitemapTrees[$sm['id']])): ?>
+                                                <?php foreach ($sitemapTrees[$sm['id']] as $mi): ?>
+                                                    <?php renderShortcutMenuItem($mi, 1); ?>
+                                                <?php endforeach; ?>
+                                            <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- 링크 열기 -->
+                                <div id="formTargetWrap">
+                                    <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.site.menus.link_target') ?></label>
+                                    <select id="formTarget"
+                                            class="w-full px-2.5 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="_self"><?= __('admin.site.menus.target_self') ?></option>
+                                        <option value="_blank"><?= __('admin.site.menus.target_blank') ?></option>
+                                    </select>
+                                </div>
+                                <!-- 하위 메뉴 확장 -->
+                                <div id="formExpandWrap">
+                                    <label class="flex items-center text-xs text-zinc-700 dark:text-zinc-300 cursor-pointer">
+                                        <input type="checkbox" id="formExpand" class="mr-2 rounded border-zinc-300 dark:border-zinc-600">
+                                        <?= __('admin.site.menus.expand_default') ?>
+                                    </label>
+                                </div>
+                                <!-- 확인 버튼 -->
+                                <div class="flex justify-end pt-2">
+                                    <button type="button" onclick="saveForm()" class="px-4 py-1.5 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 transition font-medium">
+                                        <?= __('admin.site.menus.confirm') ?>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div><!-- /flex -->
             </div>
         </main>
     </div>
 
-    <script>
-        // Dark mode toggle
-        const darkModeBtn = document.getElementById('darkModeBtn');
-        darkModeBtn.addEventListener('click', () => {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('darkMode', isDark);
-        });
+<!-- Toast -->
+<div id="menuToast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-zinc-800 text-white text-sm rounded-lg shadow-lg z-50 transition-opacity"></div>
 
-        // 사이트 관리 메뉴 토글
-        function toggleSiteMenu() {
-            const subMenu = document.getElementById('siteSubMenu');
-            const arrow = document.getElementById('siteMenuArrow');
-            if (subMenu.classList.contains('hidden')) {
-                subMenu.classList.remove('hidden');
-                arrow.style.transform = 'rotate(180deg)';
-                localStorage.setItem('siteMenuOpen', 'true');
-            } else {
-                subMenu.classList.add('hidden');
-                arrow.style.transform = 'rotate(0deg)';
-                localStorage.setItem('siteMenuOpen', 'false');
-            }
-        }
+<!-- jQuery + Summernote (다국어 모달 의존성) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
 
-        // 페이지 로드 시 메뉴 상태 복원
-        document.addEventListener('DOMContentLoaded', () => {
-            // 사이트 관리 메뉴 기본 열림
-            const subMenu = document.getElementById('siteSubMenu');
-            const arrow = document.getElementById('siteMenuArrow');
-            if (subMenu && arrow) {
-                subMenu.classList.remove('hidden');
-                arrow.style.transform = 'rotate(180deg)';
-            }
-        });
-    </script>
+<?php include __DIR__ . '/../components/multilang-modal.php'; ?>
+<?php include __DIR__ . '/menus-js.php'; ?>
 </body>
 </html>
