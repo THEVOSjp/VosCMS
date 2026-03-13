@@ -27,4 +27,7 @@ return [
     'duration' => 'Durasi',
     'minutes' => 'menit',
     'back_to_list' => 'Daftar Staf',
+    'schedule_calendar' => 'Kalender Pemesanan',
+    'no_available_slots' => 'Tidak ada waktu yang tersedia',
+    'selected_date_slots' => ':date Waktu Tersedia',
 ];

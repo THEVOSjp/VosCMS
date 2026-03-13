@@ -27,4 +27,7 @@ return [
     'duration' => 'Süre',
     'minutes' => 'dk',
     'back_to_list' => 'Personel Listesi',
+    'schedule_calendar' => 'Randevu Takvimi',
+    'no_available_slots' => 'Uygun zaman dilimi yok',
+    'selected_date_slots' => ':date Uygun Saatler',
 ];

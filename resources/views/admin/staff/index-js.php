@@ -135,6 +135,25 @@ include_once __DIR__ . '/../components/multilang-button.php';
                         </div>
                     </div>
 
+                    <!-- 배너 이미지 -->
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.staff.fields.banner') ?? '배너 이미지' ?></label>
+                        <div id="bannerPreview" class="w-full h-24 rounded-lg bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center overflow-hidden mb-2">
+                            <span class="text-xs text-zinc-400"><?= __('admin.staff.fields.no_banner') ?? 'No banner' ?></span>
+                        </div>
+                        <div class="flex gap-2">
+                            <label class="px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-300 hover:bg-blue-50 dark:border-blue-700 dark:hover:bg-blue-900/20 rounded-lg cursor-pointer transition inline-flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <?= __('admin.staff.fields.upload_banner') ?? '배너 업로드' ?>
+                                <input type="file" name="banner" id="bannerInput" accept="image/*" class="hidden" onchange="previewBanner(this)">
+                            </label>
+                            <button type="button" id="removeBannerBtn" onclick="removeBanner()" class="hidden px-3 py-1.5 text-xs font-medium text-red-600 border border-red-300 hover:bg-red-50 dark:border-red-700 dark:hover:bg-red-900/20 rounded-lg transition">
+                                <?= __('admin.staff.fields.remove') ?? '삭제' ?>
+                            </button>
+                        </div>
+                        <input type="hidden" name="remove_banner" id="formRemoveBanner" value="0">
+                    </div>
+
                     <!-- 이름 + 다국어 -->
                     <div>
                         <div class="flex items-center gap-2 mb-1">
@@ -453,6 +472,19 @@ include_once __DIR__ . '/../components/multilang-button.php';
         }
         document.getElementById('avatarInput').value = '';
 
+        // 배너 미리보기
+        var bannerPreview = document.getElementById('bannerPreview');
+        var removeBannerBtn = document.getElementById('removeBannerBtn');
+        if (isEdit && data.banner) {
+            bannerPreview.innerHTML = '<img src="' + data.banner + '" class="w-full h-full object-cover">';
+            removeBannerBtn.classList.remove('hidden');
+        } else {
+            bannerPreview.innerHTML = '<span class="text-xs text-zinc-400"><?= __('admin.staff.fields.no_banner') ?? 'No banner' ?></span>';
+            removeBannerBtn.classList.add('hidden');
+        }
+        document.getElementById('bannerInput').value = '';
+        document.getElementById('formRemoveBanner').value = '0';
+
         // 회원 연동 표시
         if (isEdit && data.user_id) {
             document.getElementById('linkedMemberName').textContent = data.name + ' (' + (data.email || data.user_id) + ')';
@@ -644,6 +676,30 @@ include_once __DIR__ . '/../components/multilang-button.php';
         document.getElementById('formRemoveAvatar').value = '1';
         croppedBlob = null;
         console.log('[StaffManage] Avatar removed');
+    };
+
+    // === 배너 이미지 ===
+    window.previewBanner = function(input) {
+        if (input.files && input.files[0]) {
+            var file = input.files[0];
+            if (!file.type.startsWith('image/')) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('bannerPreview').innerHTML = '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
+                document.getElementById('removeBannerBtn').classList.remove('hidden');
+                document.getElementById('formRemoveBanner').value = '0';
+            };
+            reader.readAsDataURL(file);
+            console.log('[StaffManage] Banner selected:', file.name);
+        }
+    };
+
+    window.removeBanner = function() {
+        document.getElementById('bannerPreview').innerHTML = '<span class="text-xs text-zinc-400"><?= __('admin.staff.fields.no_banner') ?? 'No banner' ?></span>';
+        document.getElementById('bannerInput').value = '';
+        document.getElementById('removeBannerBtn').classList.add('hidden');
+        document.getElementById('formRemoveBanner').value = '1';
+        console.log('[StaffManage] Banner removed');
     };
 
     // 폼 제출

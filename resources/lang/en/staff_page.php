@@ -27,4 +27,7 @@ return [
     'duration' => 'Duration',
     'minutes' => 'min',
     'back_to_list' => 'Staff List',
+    'schedule_calendar' => 'Booking Calendar',
+    'no_available_slots' => 'No available time slots',
+    'selected_date_slots' => ':date Available Times',
 ];

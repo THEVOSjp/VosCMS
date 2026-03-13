@@ -3,7 +3,7 @@
  * RezlyX - Modern Reservation System
  *
  * @package RezlyX
- * @version 1.1.0
+ * @version 1.2.0
  */
 
 define('REZLYX_START', microtime(true));
@@ -260,12 +260,19 @@ if (empty($path) || $path === 'index.php') {
 } else {
     // 하위 경로 처리 (예: booking/lookup)
     $pathParts = explode('/', $path);
-    $customerView = BASE_PATH . '/resources/views/customer/' . $path . '.php';
 
-    if (file_exists($customerView)) {
-        include $customerView;
+    // 동적 라우트: staff/{id}
+    if (preg_match('#^staff/(\d+)$#', $path, $m)) {
+        $routeParams = ['id' => $m[1]];
+        include BASE_PATH . '/resources/views/customer/staff-detail.php';
     } else {
-        http_response_code(404);
-        include BASE_PATH . '/resources/views/customer/404.php';
+        $customerView = BASE_PATH . '/resources/views/customer/' . $path . '.php';
+
+        if (file_exists($customerView)) {
+            include $customerView;
+        } else {
+            http_response_code(404);
+            include BASE_PATH . '/resources/views/customer/404.php';
+        }
     }
 }

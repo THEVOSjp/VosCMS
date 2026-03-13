@@ -27,4 +27,7 @@ return [
     'duration' => 'Thời gian',
     'minutes' => 'phút',
     'back_to_list' => 'Danh sách nhân viên',
+    'schedule_calendar' => 'Lịch đặt hẹn',
+    'no_available_slots' => 'Không có thời gian trống',
+    'selected_date_slots' => ':date Thời gian có sẵn',
 ];

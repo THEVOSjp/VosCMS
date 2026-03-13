@@ -83,8 +83,14 @@ try {
 
             $designationFee = max(0, (float)($_POST['designation_fee'] ?? 0));
 
-            $sql = "INSERT INTO {$prefix}staff (user_id, name, name_i18n, email, phone, avatar, bio, bio_i18n, designation_fee, position_id, is_active, sort_order)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)";
+            // 배너 업로드
+            $banner = null;
+            if (isset($_FILES['banner']) && $_FILES['banner']['error'] === UPLOAD_ERR_OK) {
+                $banner = uploadStaffAvatar($_FILES['banner'], $uploadPath, $baseUrl, $uploadDir);
+            }
+
+            $sql = "INSERT INTO {$prefix}staff (user_id, name, name_i18n, email, phone, avatar, banner, bio, bio_i18n, designation_fee, position_id, is_active, sort_order)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
                 $userId,
@@ -93,6 +99,7 @@ try {
                 trim($_POST['email'] ?? '') ?: null,
                 trim($_POST['phone'] ?? '') ?: null,
                 $avatar,
+                $banner,
                 trim($_POST['bio'] ?? '') ?: null,
                 $bioI18n ? json_encode(json_decode($bioI18n, true), JSON_UNESCAPED_UNICODE) : null,
                 $designationFee,
@@ -166,6 +173,19 @@ try {
             // 사진 삭제
             if (isset($_POST['remove_avatar']) && $_POST['remove_avatar'] === '1') {
                 $fields[] = 'avatar = NULL';
+            }
+
+            // 배너 업로드
+            if (isset($_FILES['banner']) && $_FILES['banner']['error'] === UPLOAD_ERR_OK) {
+                $bannerUrl = uploadStaffAvatar($_FILES['banner'], $uploadPath, $baseUrl, $uploadDir);
+                if ($bannerUrl) {
+                    $fields[] = 'banner = ?';
+                    $params[] = $bannerUrl;
+                }
+            }
+            // 배너 삭제
+            if (isset($_POST['remove_banner']) && $_POST['remove_banner'] === '1') {
+                $fields[] = 'banner = NULL';
             }
 
             $params[] = $id;

@@ -295,6 +295,8 @@ CREATE TABLE IF NOT EXISTS `rzx_staff` (
     `email` VARCHAR(255) NULL,
     `phone` VARCHAR(30) NULL,
     `avatar` VARCHAR(255) NULL,
+    `banner` VARCHAR(255) NULL COMMENT '배너/커버 이미지',
+    `gallery` JSON NULL COMMENT '소개 사진 갤러리 [{url, caption}]',
     `bio` TEXT NULL,
     `bio_i18n` JSON NULL,
     `designation_fee` DECIMAL(12,2) DEFAULT 0,

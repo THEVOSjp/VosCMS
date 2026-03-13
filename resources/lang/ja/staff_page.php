@@ -27,4 +27,7 @@ return [
     'duration' => '所要時間',
     'minutes' => '分',
     'back_to_list' => 'スタッフ一覧',
+    'schedule_calendar' => '予約カレンダー',
+    'no_available_slots' => '予約可能な時間がありません',
+    'selected_date_slots' => ':date 予約可能時間',
 ];

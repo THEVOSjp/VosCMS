@@ -27,4 +27,7 @@ return [
     'duration' => 'Dauer',
     'minutes' => 'Min.',
     'back_to_list' => 'Teamliste',
+    'schedule_calendar' => 'Buchungskalender',
+    'no_available_slots' => 'Keine verfügbaren Zeitfenster',
+    'selected_date_slots' => ':date Verfügbare Zeiten',
 ];

@@ -27,4 +27,7 @@ return [
     'duration' => 'Продолжительность',
     'minutes' => 'мин',
     'back_to_list' => 'Список сотрудников',
+    'schedule_calendar' => 'Календарь записи',
+    'no_available_slots' => 'Нет доступного времени',
+    'selected_date_slots' => ':date Доступное время',
 ];

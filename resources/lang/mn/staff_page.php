@@ -27,4 +27,7 @@ return [
     'duration' => 'Хугацаа',
     'minutes' => 'мин',
     'back_to_list' => 'Ажилтны жагсаалт',
+    'schedule_calendar' => 'Захиалгын хуанли',
+    'no_available_slots' => 'Боломжтой цаг байхгүй байна',
+    'selected_date_slots' => ':date Боломжтой цагууд',
 ];

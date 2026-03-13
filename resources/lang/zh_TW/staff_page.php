@@ -27,4 +27,7 @@ return [
     'duration' => '所需時間',
     'minutes' => '分鐘',
     'back_to_list' => '員工列表',
+    'schedule_calendar' => '預約日曆',
+    'no_available_slots' => '沒有可預約的時間',
+    'selected_date_slots' => ':date 可預約時間',
 ];

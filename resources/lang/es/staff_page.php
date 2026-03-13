@@ -27,4 +27,7 @@ return [
     'duration' => 'Duración',
     'minutes' => 'min',
     'back_to_list' => 'Lista del equipo',
+    'schedule_calendar' => 'Calendario de reservas',
+    'no_available_slots' => 'No hay horarios disponibles',
+    'selected_date_slots' => ':date Horarios disponibles',
 ];

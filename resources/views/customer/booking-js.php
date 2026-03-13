@@ -418,8 +418,10 @@
         const params = new URLSearchParams(window.location.search);
         const preStaff = params.get('staff');
         const preService = params.get('service');
+        const preDate = params.get('date');
+        const preTime = params.get('time');
 
-        if (!preStaff && !preService) return;
+        if (!preStaff && !preService && !preDate) return;
         console.log('[Booking] URL preselection - staff:', preStaff, 'service:', preService);
 
         // 1) 서비스 사전 선택
@@ -468,6 +470,32 @@
         } else if (preStaff && STAFF_ENABLED) {
             // 서비스 미선택, 스태프만 → 서비스 선택 스텝 (기본)
             showStep(0);
+        }
+
+        // 4) 날짜/시간 사전 선택 (date/time URL 파라미터)
+        if (preDate) {
+            setTimeout(function() {
+                const di = document.getElementById('bookingDate');
+                if (di) {
+                    di.value = preDate;
+                    selected.date = preDate;
+                    console.log('[Booking] Pre-selected date:', preDate);
+                    fetchAvailableSlots();
+
+                    if (preTime) {
+                        // 슬롯 로드 후 시간 자동 선택
+                        setTimeout(function() {
+                            const slots = document.querySelectorAll('.time-slot');
+                            slots.forEach(function(btn) {
+                                if (btn.textContent === preTime) {
+                                    btn.click();
+                                    console.log('[Booking] Pre-selected time:', preTime);
+                                }
+                            });
+                        }, 1000);
+                    }
+                }
+            }, 300);
         }
     }
 

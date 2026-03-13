@@ -28,4 +28,7 @@ return [
     'duration' => '소요시간',
     'minutes' => '분',
     'back_to_list' => '스태프 목록',
+    'schedule_calendar' => '예약 캘린더',
+    'no_available_slots' => '예약 가능한 시간이 없습니다',
+    'selected_date_slots' => ':date 예약 가능 시간',
 ];

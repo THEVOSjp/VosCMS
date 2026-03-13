@@ -27,4 +27,7 @@ return [
     'duration' => 'Durée',
     'minutes' => 'min',
     'back_to_list' => 'Liste du personnel',
+    'schedule_calendar' => 'Calendrier de réservation',
+    'no_available_slots' => 'Aucun créneau disponible',
+    'selected_date_slots' => ':date Créneaux disponibles',
 ];
