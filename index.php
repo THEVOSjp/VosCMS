@@ -163,6 +163,30 @@ if (empty($path) || $path === 'index.php') {
     $adminRoute = substr($path, strlen($config['admin_path']));
     $adminRoute = trim($adminRoute, '/') ?: 'dashboard';
 
+    // AdminAuth 초기화
+    require_once BASE_PATH . '/rzxlib/Core/Auth/AdminAuth.php';
+    \RzxLib\Core\Auth\AdminAuth::init($pdo);
+
+    // 로그인 페이지는 인증 불필요
+    if ($adminRoute === 'login') {
+        include BASE_PATH . '/resources/views/admin/login.php';
+        exit;
+    }
+
+    // 관리자 로그인 확인
+    if (!\RzxLib\Core\Auth\AdminAuth::check()) {
+        header('Location: ' . $basePath . '/' . $config['admin_path'] . '/login');
+        exit;
+    }
+
+    // 권한 확인
+    $requiredPerm = \RzxLib\Core\Auth\AdminAuth::getRequiredPermission($adminRoute);
+    if ($requiredPerm && !\RzxLib\Core\Auth\AdminAuth::can($requiredPerm)) {
+        http_response_code(403);
+        include BASE_PATH . '/resources/views/admin/403.php';
+        exit;
+    }
+
     // 파일 기반 위젯 DB 동기화 (1시간에 1회)
     $syncFlag = BASE_PATH . '/storage/.widget_sync';
     if (!file_exists($syncFlag) || filemtime($syncFlag) < time() - 3600) {
@@ -188,6 +212,9 @@ if (empty($path) || $path === 'index.php') {
     // 스태프 스케줄 관리
     } elseif ($adminRoute === 'staff/schedule') {
         include BASE_PATH . '/resources/views/admin/staff/schedule.php';
+    // 관리자 권한 관리
+    } elseif ($adminRoute === 'staff/admins') {
+        include BASE_PATH . '/resources/views/admin/staff/admins.php';
     // 스태프 설정 서브페이지 처리 (staff/settings)
     } elseif ($adminRoute === 'staff/settings') {
         include BASE_PATH . '/resources/views/admin/staff/settings.php';

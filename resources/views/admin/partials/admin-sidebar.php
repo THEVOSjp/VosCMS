@@ -28,6 +28,7 @@ $isStaffPage = strpos($currentPath, '/staff') !== false;
 $isStaffSettingsPage = strpos($currentPath, '/staff/settings') !== false;
 $isStaffSchedulePage = strpos($currentPath, '/staff/schedule') !== false;
 $isStaffAttendancePage = strpos($currentPath, '/staff/attendance') !== false;
+$isStaffAdminsPage = strpos($currentPath, '/staff/admins') !== false;
 
 // 사이트 관리 서브페이지 여부
 $isSitePage = strpos($currentPath, '/site/') !== false;
@@ -77,13 +78,16 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
             </svg>
             <span class="sidebar-text"><?= __('admin.nav.dashboard') ?></span>
         </a>
+        <?php if (\RzxLib\Core\Auth\AdminAuth::can('reservations')): ?>
         <a href="<?php echo $adminUrl; ?>/reservations" class="flex items-center px-6 py-3 <?php echo isActiveMenu('/reservations', $currentPath) ? 'text-white bg-blue-600' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="<?= __('admin.nav.reservations') ?>">
             <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
             <span class="sidebar-text"><?= __('admin.nav.reservations') ?></span>
         </a>
+        <?php endif; ?>
         <!-- 서비스 관리 메뉴 -->
+        <?php if (\RzxLib\Core\Auth\AdminAuth::can('services')): ?>
         <div class="services-management-menu has-submenu" data-submenu="servicesSubMenu">
             <button onclick="toggleServicesMenu()" class="flex items-center justify-between w-full px-6 py-3 <?php echo $isServicesPage ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="<?= __('admin.nav.services') ?>">
                 <div class="flex items-center">
@@ -112,7 +116,9 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
                 </a>
             </div>
         </div>
+        <?php endif; ?>
         <!-- 스태프(디자이너) 관리 메뉴 -->
+        <?php if (\RzxLib\Core\Auth\AdminAuth::can('staff')): ?>
         <div class="staff-management-menu has-submenu" data-submenu="staffSubMenu">
             <button onclick="toggleStaffMenu()" class="flex items-center justify-between w-full px-6 py-3 <?php echo $isStaffPage ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="<?= __('admin.nav.staff') ?>">
                 <div class="flex items-center">
@@ -144,6 +150,14 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
                     </svg>
                     <?= __('admin.nav.staff_attendance') ?>
                 </a>
+                <?php if (\RzxLib\Core\Auth\AdminAuth::isMaster()): ?>
+                <a href="<?php echo $adminUrl; ?>/staff/admins" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isStaffAdminsPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                    관리자 권한
+                </a>
+                <?php endif; ?>
                 <a href="<?php echo $adminUrl; ?>/staff/settings" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isStaffSettingsPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -153,7 +167,9 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
                 </a>
             </div>
         </div>
+        <?php endif; ?>
         <!-- 회원 관리 메뉴 -->
+        <?php if (\RzxLib\Core\Auth\AdminAuth::can('members')): ?>
         <div class="members-management-menu has-submenu" data-submenu="membersSubMenu">
             <button onclick="toggleMembersMenu()" class="flex items-center justify-between w-full px-6 py-3 <?php echo $isMembersPage ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="<?= __('admin.nav.members') ?>">
                 <div class="flex items-center">
@@ -194,7 +210,9 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
                 </a>
             </div>
         </div>
+        <?php endif; ?>
         <!-- 사이트 관리 메뉴 -->
+        <?php if (\RzxLib\Core\Auth\AdminAuth::can('site')): ?>
         <div class="site-management-menu has-submenu" data-submenu="siteSubMenu">
             <button onclick="toggleSiteMenu()" class="flex items-center justify-between w-full px-6 py-3 <?php echo $isSitePage ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="<?= __('admin.nav.site_management') ?>">
                 <div class="flex items-center">
@@ -234,7 +252,9 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
                 </a>
             </div>
         </div>
+        <?php endif; ?>
         <!-- 설정 메뉴 -->
+        <?php if (\RzxLib\Core\Auth\AdminAuth::can('settings')): ?>
         <div class="settings-menu has-submenu" data-submenu="settingsSubMenu">
             <button onclick="toggleSettingsMenu()" class="flex items-center justify-between w-full px-6 py-3 <?php echo $isSettingsPage ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="<?= __('admin.nav.settings') ?>">
                 <div class="flex items-center">
@@ -276,6 +296,7 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
                 </a>
             </div>
         </div>
+        <?php endif; ?>
     </nav>
     <div class="absolute bottom-0 w-full p-4 border-t border-zinc-800/50">
         <?php

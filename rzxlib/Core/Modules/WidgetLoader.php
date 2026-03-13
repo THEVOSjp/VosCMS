@@ -135,8 +135,8 @@ class WidgetLoader
     {
         $fileWidgets = $this->scan();
 
-        // DB에서 기존 위젯 목록 조회
-        $stmt = $this->pdo->query("SELECT id, slug, version, type FROM rzx_widgets");
+        // DB에서 기존 위젯 목록 조회 (config_schema 포함하여 내용 변경 감지)
+        $stmt = $this->pdo->query("SELECT id, slug, version, type, config_schema FROM rzx_widgets");
         $dbWidgets = [];
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
             $dbWidgets[$row['slug']] = $row;
@@ -153,8 +153,11 @@ class WidgetLoader
             $configSchema = json_encode($def['config_schema'] ?? new \stdClass(), JSON_UNESCAPED_UNICODE);
 
             if (isset($dbWidgets[$slug])) {
-                // 이미 존재 → 버전이 다르면 업데이트
-                if ($dbWidgets[$slug]['version'] !== $version) {
+                // 이미 존재 → 버전 또는 config_schema가 다르면 업데이트
+                $dbSchema = $dbWidgets[$slug]['config_schema'] ?? '{}';
+                $needsUpdate = ($dbWidgets[$slug]['version'] !== $version)
+                    || ($dbSchema !== $configSchema);
+                if ($needsUpdate) {
                     $update = $this->pdo->prepare("
                         UPDATE rzx_widgets SET name=?, description=?, category=?, icon=?, version=?, author=?, config_schema=?, updated_at=NOW()
                         WHERE slug=?

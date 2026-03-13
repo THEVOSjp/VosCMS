@@ -10,16 +10,21 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `rzx_admins` (
     `id` CHAR(36) NOT NULL,
+    `user_id` CHAR(36) NULL,
+    `staff_id` INT NULL,
     `email` VARCHAR(255) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
     `name` VARCHAR(100) NOT NULL,
     `role` ENUM('master', 'manager', 'staff') DEFAULT 'manager',
+    `permissions` JSON NULL,
     `status` ENUM('active', 'inactive') DEFAULT 'active',
     `last_login_at` TIMESTAMP NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_email` (`email`)
+    UNIQUE KEY `uk_email` (`email`),
+    UNIQUE KEY `uk_user_id` (`user_id`),
+    UNIQUE KEY `uk_staff_id` (`staff_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
@@ -254,6 +259,45 @@ CREATE TABLE IF NOT EXISTS `rzx_holidays` (
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_date` (`date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
+-- Staff Positions Table
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `rzx_staff_positions` (
+    `id` INT UNSIGNED AUTO_INCREMENT NOT NULL,
+    `name` VARCHAR(100) NOT NULL,
+    `name_i18n` JSON NULL,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `sort_order` INT DEFAULT 0,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
+-- Staff Table
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `rzx_staff` (
+    `id` INT UNSIGNED AUTO_INCREMENT NOT NULL,
+    `user_id` CHAR(36) NULL,
+    `card_number` VARCHAR(50) NULL,
+    `name` VARCHAR(100) NOT NULL,
+    `name_i18n` JSON NULL,
+    `email` VARCHAR(255) NULL,
+    `phone` VARCHAR(30) NULL,
+    `avatar` VARCHAR(255) NULL,
+    `bio` TEXT NULL,
+    `bio_i18n` JSON NULL,
+    `designation_fee` DECIMAL(12,2) DEFAULT 0,
+    `position_id` INT UNSIGNED NULL,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `sort_order` INT DEFAULT 0,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `idx_card_number` (`card_number`),
+    KEY `idx_user_id` (`user_id`),
+    CONSTRAINT `fk_staff_position` FOREIGN KEY (`position_id`) REFERENCES `rzx_staff_positions`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------

@@ -349,14 +349,20 @@ $iconMap = [
     var supportedLangs = <?= json_encode(array_values($supportedLangs)) ?>;
     var langNames = <?= json_encode($langNames) ?>;
     var currentLocale = '<?= $currentLocale ?>';
-    var placedWidgetsData = <?= json_encode(array_map(function($pw) {
+    var placedWidgetsData = <?= json_encode(array_map(function($pw) use ($fileWidgets) {
+        $slug = $pw['widget_slug'];
+        // 파일 기반 위젯은 widget.json의 config_schema 우선 사용
+        $schema = $pw['config_schema'] ?? '{}';
+        if (isset($fileWidgets[$slug]) && !empty($fileWidgets[$slug]['config_schema'])) {
+            $schema = json_encode($fileWidgets[$slug]['config_schema'], JSON_UNESCAPED_UNICODE);
+        }
         return [
             'widget_id' => $pw['widget_id'],
-            'slug' => $pw['widget_slug'],
+            'slug' => $slug,
             'name' => $pw['widget_name'],
             'icon' => $pw['icon'],
             'config' => $pw['config'] ?? '{}',
-            'config_schema' => $pw['config_schema'] ?? '{}',
+            'config_schema' => $schema,
         ];
     }, $placedWidgets)) ?>;
     </script>

@@ -71,9 +71,10 @@ var WBEdit = (function() {
     function renderEditFields(fields) {
         var html = '';
         var i18nFields = fields.filter(function(f) { return f.i18n; });
-        var commonFields = fields.filter(function(f) { return !f.i18n && f.type !== 'buttons' && f.type !== 'hero_images'; });
+        var commonFields = fields.filter(function(f) { return !f.i18n && f.type !== 'buttons' && f.type !== 'hero_images' && f.type !== 'feature_items'; });
         var buttonsField = fields.find(function(f) { return f.type === 'buttons'; });
         var heroImagesField = fields.find(function(f) { return f.type === 'hero_images'; });
+        var featureItemsField = fields.find(function(f) { return f.type === 'feature_items'; });
 
         if (i18nFields.length > 0) {
             html += '<div class="space-y-3">';
@@ -91,6 +92,7 @@ var WBEdit = (function() {
         // items-js에서 제공하는 렌더러 호출
         if (heroImagesField && WBEdit.renderHeroImagesSection) html += WBEdit.renderHeroImagesSection();
         if (buttonsField && WBEdit.renderButtonsSection) html += WBEdit.renderButtonsSection();
+        if (featureItemsField && WBEdit.renderFeatureItemsSection) html += WBEdit.renderFeatureItemsSection();
 
         editPanelFields.innerHTML = html;
         bindImageUploads();
@@ -101,6 +103,7 @@ var WBEdit = (function() {
         bindI18nToggles();
         if (heroImagesField && WBEdit.bindHeroImagesEvents) WBEdit.bindHeroImagesEvents();
         if (buttonsField && WBEdit.bindButtonsEvents) WBEdit.bindButtonsEvents();
+        if (featureItemsField && WBEdit.bindFeatureItemsEvents) WBEdit.bindFeatureItemsEvents();
     }
 
     // ===== i18n 필드 =====
@@ -448,6 +451,7 @@ var WBEdit = (function() {
         });
         if (WBEdit.saveButtonsToTemp) WBEdit.saveButtonsToTemp();
         if (WBEdit.saveHeroImagesToTemp) WBEdit.saveHeroImagesToTemp();
+        if (WBEdit.saveFeatureItemsToTemp) WBEdit.saveFeatureItemsToTemp();
         // richtext values are now in regular textareas, picked up by .edit-field above
     }
 
@@ -482,10 +486,14 @@ var WBEdit = (function() {
         renderButtonsSection: null,
         bindButtonsEvents: null,
         saveButtonsToTemp: null,
-        bindVideoUploads: null
+        bindVideoUploads: null,
+        renderFeatureItemsSection: null,
+        bindFeatureItemsEvents: null,
+        saveFeatureItemsToTemp: null
     };
 })();
 </script>
 <?php include __DIR__ . '/pages-widget-builder-edit-items-js.php'; ?>
+<?php include __DIR__ . '/pages-widget-builder-edit-features-js.php'; ?>
 <?php include __DIR__ . '/pages-widget-builder-inline-js.php'; ?>
 <?php include __DIR__ . '/pages-widget-builder-grid-js.php'; ?>

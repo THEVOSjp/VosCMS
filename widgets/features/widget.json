@@ -1,6 +1,6 @@
 {
     "slug": "features",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "author": "RezlyX",
     "category": "content",
     "icon": "grid",
@@ -24,7 +24,14 @@
     "config_schema": {
         "fields": [
             {"key": "title", "type": "text", "label": "Section Title", "i18n": true},
-            {"key": "subtitle", "type": "textarea", "label": "Section Subtitle", "i18n": true}
+            {"key": "subtitle", "type": "textarea", "label": "Section Subtitle", "i18n": true},
+            {"key": "columns", "type": "select", "label": "Columns", "options": [
+                {"value": "2", "label": "2 Columns"},
+                {"value": "3", "label": "3 Columns"},
+                {"value": "4", "label": "4 Columns"}
+            ], "default": "3"},
+            {"key": "bg_color", "type": "color", "label": "Background Color", "default": "#ffffff"},
+            {"key": "feature_items", "type": "feature_items", "label": "Feature Cards"}
         ]
     }
 }

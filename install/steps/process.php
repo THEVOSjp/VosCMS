@@ -198,43 +198,40 @@ ENV;
 
     $prefix = $dbData['db_prefix'];
 
-    // Create admins table
-    $pdo->exec("
-        CREATE TABLE IF NOT EXISTS `{$prefix}admins` (
-            `id` CHAR(36) NOT NULL,
-            `email` VARCHAR(255) NOT NULL,
-            `password` VARCHAR(255) NOT NULL,
-            `name` VARCHAR(100) NOT NULL,
-            `role` ENUM('master', 'manager', 'staff') DEFAULT 'manager',
-            `status` ENUM('active', 'inactive') DEFAULT 'active',
-            `last_login_at` TIMESTAMP NULL,
-            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (`id`),
-            UNIQUE KEY `uk_email` (`email`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    ");
+    // Run base migration SQL
+    $migrationFile = BASE_PATH . '/database/migrations/001_create_base_tables.sql';
+    if (file_exists($migrationFile)) {
+        $sql = file_get_contents($migrationFile);
+        // 접두사 치환 (rzx_ → 사용자 지정)
+        if ($prefix !== 'rzx_') {
+            $sql = str_replace('rzx_', $prefix, $sql);
+        }
+        $pdo->exec($sql);
+    }
 
-    // Create settings table
-    $pdo->exec("
-        CREATE TABLE IF NOT EXISTS `{$prefix}settings` (
-            `key` VARCHAR(100) NOT NULL,
-            `value` TEXT,
-            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (`key`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    ");
-
-    // Insert admin user
-    $adminId = generateUUID();
+    // === 3중 연동 슈퍼바이저 생성 ===
     $hashedPassword = password_hash($adminData['admin_password'], PASSWORD_DEFAULT);
 
-    $stmt = $pdo->prepare("
-        INSERT INTO `{$prefix}admins` (`id`, `email`, `password`, `name`, `role`, `status`)
-        VALUES (?, ?, ?, ?, 'master', 'active')
-    ");
-    $stmt->execute([$adminId, $adminData['admin_email'], $hashedPassword, $adminData['admin_name']]);
+    // 1) rzx_users (회원 등록)
+    $userId = generateUUID();
+    $pdo->prepare("
+        INSERT INTO `{$prefix}users` (`id`, `email`, `password`, `name`, `status`, `email_verified_at`)
+        VALUES (?, ?, ?, ?, 'active', NOW())
+    ")->execute([$userId, $adminData['admin_email'], $hashedPassword, $adminData['admin_name']]);
+
+    // 2) rzx_staff (스태프 등록)
+    $pdo->prepare("
+        INSERT INTO `{$prefix}staff` (`user_id`, `name`, `email`, `is_active`, `sort_order`)
+        VALUES (?, ?, ?, 1, 0)
+    ")->execute([$userId, $adminData['admin_name'], $adminData['admin_email']]);
+    $staffId = (int)$pdo->lastInsertId();
+
+    // 3) rzx_admins (관리자 등록 - 3중 연동)
+    $adminId = generateUUID();
+    $pdo->prepare("
+        INSERT INTO `{$prefix}admins` (`id`, `user_id`, `staff_id`, `email`, `password`, `name`, `role`, `status`)
+        VALUES (?, ?, ?, ?, ?, ?, 'master', 'active')
+    ")->execute([$adminId, $userId, $staffId, $adminData['admin_email'], $hashedPassword, $adminData['admin_name']]);
 
     // Insert default settings
     $settings = [
@@ -247,7 +244,7 @@ ENV;
         'version' => '1.0.0',
     ];
 
-    $stmt = $pdo->prepare("INSERT INTO `{$prefix}settings` (`key`, `value`) VALUES (?, ?)");
+    $stmt = $pdo->prepare("REPLACE INTO `{$prefix}settings` (`key`, `value`) VALUES (?, ?)");
     foreach ($settings as $key => $value) {
         $stmt->execute([$key, $value]);
     }
