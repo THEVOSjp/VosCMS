@@ -1,0 +1,113 @@
+<?php
+/**
+ * Korean (한국어) - Installation Wizard Translations
+ */
+return [
+    // Common
+    'lang_name' => '한국어',
+    'install_title' => 'RezlyX 설치',
+    'install_wizard' => '설치 마법사',
+    'next' => '다음',
+    'prev' => '이전',
+    'required' => '필수',
+    'recommended' => '권장',
+    'installed' => '설치됨',
+    'not_installed' => '미설치',
+
+    // Steps
+    'step_welcome' => '시작',
+    'step_requirements' => '환경 확인',
+    'step_database' => '데이터베이스',
+    'step_admin' => '관리자 설정',
+    'step_complete' => '완료',
+
+    // Welcome
+    'welcome_title' => 'RezlyX 설치를 시작합니다',
+    'welcome_desc' => '현대적인 예약 관리 시스템을 설치합니다.',
+    'welcome_check_title' => '시스템 요구사항 확인',
+    'welcome_check_desc' => 'PHP 8.0+, MySQL 5.7+, 필수 확장 모듈 확인',
+    'welcome_db_title' => '데이터베이스 설정',
+    'welcome_db_desc' => 'MySQL 데이터베이스 연결 정보 입력',
+    'welcome_admin_title' => '관리자 계정 생성',
+    'welcome_admin_desc' => '시스템 관리자 계정 정보 설정',
+    'welcome_prereq' => '설치 전 준비사항',
+    'welcome_prereq_db' => '데이터베이스 이름, 사용자명, 비밀번호',
+    'welcome_prereq_admin' => '관리자 이메일 주소 및 비밀번호',
+    'welcome_prereq_perm' => '쓰기 권한: storage/, assets/',
+    'start_install' => '설치 시작',
+
+    // Requirements
+    'req_title' => '시스템 요구사항 확인',
+    'req_php_ext' => 'PHP 확장 모듈',
+    'req_col_item' => '항목',
+    'req_col_required' => '요구사항',
+    'req_col_current' => '현재 상태',
+    'req_col_result' => '결과',
+    'req_pass' => '통과',
+    'req_warn' => '경고',
+    'req_fail' => '실패',
+    'req_dir_title' => '디렉토리 권한',
+    'req_col_dir' => '디렉토리',
+    'req_col_write' => '쓰기 권한',
+    'req_writable' => '쓰기 가능',
+    'req_not_writable' => '권한 필요',
+    'req_not_met' => '일부 요구사항이 충족되지 않았습니다. 문제를 해결한 후 다시 시도해주세요.',
+    'req_recheck' => '다시 확인',
+    'req_php_version' => 'PHP 버전',
+    'req_pdo' => 'PDO 확장',
+    'req_pdo_mysql' => 'PDO MySQL',
+    'req_mbstring' => 'Mbstring 확장',
+    'req_json' => 'JSON 확장',
+    'req_openssl' => 'OpenSSL 확장',
+    'req_curl' => 'cURL 확장',
+    'req_gd' => 'GD 확장',
+
+    // Database
+    'db_title' => '데이터베이스 설정',
+    'db_host' => '데이터베이스 호스트',
+    'db_port' => '포트',
+    'db_name' => '데이터베이스 이름',
+    'db_user' => '사용자명',
+    'db_pass' => '비밀번호',
+    'db_prefix' => '테이블 접두사',
+    'db_auto_create' => '데이터베이스가 없으면 자동으로 생성됩니다.',
+    'db_prefix_hint' => '여러 RezlyX를 설치할 경우 접두사를 다르게 설정하세요.',
+    'db_test_next' => '연결 테스트 및 다음',
+
+    // Admin
+    'admin_title' => '관리자 계정 설정',
+    'admin_site_settings' => '사이트 설정',
+    'admin_site_name' => '사이트 이름',
+    'admin_site_url' => '사이트 URL',
+    'admin_path' => '관리자 경로',
+    'admin_path_hint' => '보안을 위해 기본값(admin)을 변경하는 것을 권장합니다.',
+    'admin_path_pattern' => '영문, 숫자, 하이픈, 언더스코어만 사용 가능',
+    'admin_account' => '관리자 계정',
+    'admin_email' => '이메일',
+    'admin_name' => '관리자 이름',
+    'admin_password' => '비밀번호',
+    'admin_password_confirm' => '비밀번호 확인',
+    'admin_password_hint' => '최소 8자 이상',
+    'admin_start_install' => '설치 시작',
+
+    // Complete
+    'complete_title' => '설치가 완료되었습니다!',
+    'complete_desc' => 'RezlyX가 성공적으로 설치되었습니다.',
+    'complete_info' => '설치 정보',
+    'complete_site_url' => '사이트 URL:',
+    'complete_admin_url' => '관리자 페이지:',
+    'complete_security' => '보안 권장사항',
+    'complete_security_1' => '/install 폴더를 삭제하거나 접근을 차단하세요.',
+    'complete_security_2' => '.env 파일의 권한을 제한하세요.',
+    'complete_security_3' => '정기적으로 백업을 수행하세요.',
+    'complete_visit' => '사이트 방문',
+    'complete_admin' => '관리자 페이지로',
+
+    // Process errors
+    'err_required' => '필수 항목을 모두 입력해주세요.',
+    'err_db_connect' => '데이터베이스 연결 실패: ',
+    'err_email' => '유효한 이메일 주소를 입력해주세요.',
+    'err_password_min' => '비밀번호는 8자 이상이어야 합니다.',
+    'err_password_match' => '비밀번호가 일치하지 않습니다.',
+    'err_install' => '설치 중 오류 발생: ',
+];

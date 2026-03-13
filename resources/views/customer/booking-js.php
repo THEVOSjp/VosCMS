@@ -413,9 +413,68 @@
         });
     };
 
+    // === URL 파라미터 기반 사전 선택 ===
+    function handleUrlPreselection() {
+        const params = new URLSearchParams(window.location.search);
+        const preStaff = params.get('staff');
+        const preService = params.get('service');
+
+        if (!preStaff && !preService) return;
+        console.log('[Booking] URL preselection - staff:', preStaff, 'service:', preService);
+
+        // 1) 서비스 사전 선택
+        if (preService) {
+            const cb = document.querySelector('.service-card input[name="service[]"][value="' + preService + '"]');
+            if (cb) {
+                cb.checked = true;
+                updateServiceSelection();
+                console.log('[Booking] Pre-selected service:', preService);
+            }
+        }
+
+        // 2) 스태프 사전 선택
+        if (preStaff && STAFF_ENABLED) {
+            const radio = document.querySelector('.staff-card input[name="staff"][value="' + preStaff + '"]');
+            if (radio) {
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change'));
+                console.log('[Booking] Pre-selected staff:', preStaff);
+            }
+        }
+
+        // 3) 자동 스텝 이동
+        if (selected.services.length > 0) {
+            if (STAFF_ENABLED && selected.staffId) {
+                // 서비스 + 스태프 모두 선택됨 → 날짜/시간 스텝으로
+                filterStaffByService();
+                // 필터 후 스태프 다시 선택 (필터가 리셋하므로)
+                const radio = document.querySelector('.staff-card input[name="staff"][value="' + preStaff + '"]');
+                if (radio && radio.closest('.staff-card').style.display !== 'none') {
+                    radio.checked = true;
+                    radio.dispatchEvent(new Event('change'));
+                    showStep(stepOrder.indexOf('stepDatetime'));
+                } else {
+                    // 스태프가 해당 서비스 미담당이면 스태프 선택 스텝으로
+                    showStep(stepOrder.indexOf('stepStaff'));
+                }
+            } else if (STAFF_ENABLED) {
+                // 서비스만 선택됨 → 스태프 선택 스텝으로
+                filterStaffByService();
+                showStep(stepOrder.indexOf('stepStaff'));
+            } else {
+                // 스태프 비활성 → 날짜/시간 스텝으로
+                showStep(stepOrder.indexOf('stepDatetime'));
+            }
+        } else if (preStaff && STAFF_ENABLED) {
+            // 서비스 미선택, 스태프만 → 서비스 선택 스텝 (기본)
+            showStep(0);
+        }
+    }
+
     // === 초기화 ===
     renderProgressBar();
     showStep(0);
+    handleUrlPreselection();
     console.log('[Booking] Initialized. Staff enabled:', STAFF_ENABLED, 'Total steps:', TOTAL_STEPS);
 
 })();

@@ -1,6 +1,6 @@
 <?php
 /**
- * RezlyX Staff Page - 스태프 소개
+ * RezlyX Staff Page - 스태프 소개 (HIRO GINZA 스타일)
  */
 
 require_once BASE_PATH . '/rzxlib/Core/Auth/Auth.php';
@@ -9,7 +9,6 @@ use RzxLib\Core\Auth\Auth;
 $pageTitle = ($config['app_name'] ?? 'RezlyX') . ' - ' . __('staff_page.title');
 $baseUrl = $config['app_url'] ?? '';
 
-// 로그인 상태 확인
 $isLoggedIn = Auth::check();
 $currentUser = $isLoggedIn ? Auth::user() : null;
 
@@ -67,7 +66,7 @@ try {
     }
 }
 
-// 다국어 포지션명 해석
+// 다국어 헬퍼
 $currentLocale = $config['locale'] ?? 'ko';
 function getLocalizedName($name, $nameI18n, $locale) {
     if (!empty($nameI18n)) {
@@ -79,28 +78,39 @@ function getLocalizedName($name, $nameI18n, $locale) {
     return $name;
 }
 
-// 헤더 포함
+// 후리가나/영문명 가져오기 (일본어 외 로케일에서는 영문, 일본어면 후리가나)
+function getSubName($nameI18n, $locale) {
+    if (empty($nameI18n)) return '';
+    $i18n = is_string($nameI18n) ? json_decode($nameI18n, true) : $nameI18n;
+    if (!is_array($i18n)) return '';
+    if ($locale === 'ja' && !empty($i18n['ko'])) return $i18n['ko'];
+    if (!empty($i18n['en'])) return $i18n['en'];
+    if (!empty($i18n['ja'])) return $i18n['ja'];
+    return '';
+}
+
 include BASE_PATH . '/resources/views/partials/header.php';
 ?>
 
-    <!-- Main Content -->
-    <main class="max-w-6xl mx-auto px-4 py-8">
+    <main class="max-w-7xl mx-auto px-4 py-8">
         <!-- Page Title -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2"><?= __('staff_page.title') ?></h1>
-            <p class="text-gray-600 dark:text-zinc-400"><?= __('staff_page.description') ?></p>
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                <?= __('staff_page.subtitle') ?>
+                <span class="text-lg font-normal text-gray-500 dark:text-zinc-400 ml-3"><?= __('staff_page.title') ?></span>
+            </h1>
         </div>
 
         <!-- Position Filter -->
         <?php if (!empty($positions)): ?>
-        <div class="flex flex-wrap justify-center gap-2 mb-8">
+        <div class="flex flex-wrap gap-2 mb-8 border-b border-gray-200 dark:border-zinc-700 pb-4">
             <a href="<?= $baseUrl ?>/staff"
-               class="px-4 py-2 rounded-full text-sm font-medium transition <?= $selectedPosition === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-600' ?>">
+               class="px-4 py-2 text-sm font-medium transition <?= $selectedPosition === 'all' ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white' ?>">
                 <?= __('staff_page.all_staff') ?>
             </a>
             <?php foreach ($positions as $pos): ?>
             <a href="<?= $baseUrl ?>/staff?position=<?= $pos['id'] ?>"
-               class="px-4 py-2 rounded-full text-sm font-medium transition <?= $selectedPosition == $pos['id'] ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-600' ?>">
+               class="px-4 py-2 text-sm font-medium transition <?= $selectedPosition == $pos['id'] ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white' ?>">
                 <?= htmlspecialchars(getLocalizedName($pos['name'], $pos['name_i18n'], $currentLocale)) ?>
             </a>
             <?php endforeach; ?>
@@ -116,7 +126,7 @@ include BASE_PATH . '/resources/views/partials/header.php';
             <p class="text-xl text-gray-500 dark:text-zinc-400"><?= __('staff_page.no_staff') ?></p>
         </div>
         <?php else: ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             <?php foreach ($staffList as $staff):
                 $positionLabel = getLocalizedName(
                     $staff['position_name'] ?? '',
@@ -124,66 +134,75 @@ include BASE_PATH . '/resources/views/partials/header.php';
                     $currentLocale
                 );
                 $staffName = getLocalizedName($staff['name'], $staff['name_i18n'], $currentLocale);
+                $subName = getSubName($staff['name_i18n'], $currentLocale);
                 $bio = getLocalizedName($staff['bio'] ?? '', $staff['bio_i18n'] ?? null, $currentLocale);
                 $services = $staffServices[$staff['id']] ?? [];
                 $avatarUrl = $staff['avatar'] ?? '';
+                $designationFee = (float)($staff['designation_fee'] ?? 0);
             ?>
-            <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow group">
-                <!-- Avatar -->
-                <div class="aspect-[4/3] overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                    <?php if (!empty($avatarUrl)): ?>
-                    <img src="<?= htmlspecialchars($avatarUrl) ?>"
-                         alt="<?= htmlspecialchars($staffName) ?>"
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                    <?php else: ?>
-                    <span class="text-6xl font-bold text-white/60"><?= mb_substr($staffName, 0, 1) ?></span>
+            <div class="text-center group">
+                <!-- Avatar (세로형) -->
+                <a href="<?= $baseUrl ?>/staff/<?= $staff['id'] ?>" class="block mb-3">
+                    <div class="aspect-[3/4] overflow-hidden bg-gray-100 dark:bg-zinc-800 rounded-lg">
+                        <?php if (!empty($avatarUrl)): ?>
+                        <img src="<?= htmlspecialchars($avatarUrl) ?>"
+                             alt="<?= htmlspecialchars($staffName) ?>"
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        <?php else: ?>
+                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300 dark:from-zinc-700 dark:to-zinc-800">
+                            <span class="text-5xl font-bold text-gray-400 dark:text-zinc-500"><?= mb_substr($staffName, 0, 1) ?></span>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </a>
+
+                <!-- Name -->
+                <h3 class="text-base font-bold text-gray-900 dark:text-white leading-tight">
+                    <a href="<?= $baseUrl ?>/staff/<?= $staff['id'] ?>" class="hover:text-blue-600 dark:hover:text-blue-400">
+                        <?= htmlspecialchars($staffName) ?>
+                    </a>
+                </h3>
+
+                <!-- Designation Fee -->
+                <?php if ($designationFee > 0): ?>
+                <p class="text-red-600 dark:text-red-400 text-sm font-semibold mt-0.5">
+                    <?= __('staff_page.designation_fee') ?> &yen;<?= number_format($designationFee) ?>
+                </p>
+                <?php endif; ?>
+
+                <!-- Sub Name (영문/후리가나) -->
+                <?php if (!empty($subName)): ?>
+                <p class="text-gray-500 dark:text-zinc-400 text-xs mt-0.5"><?= htmlspecialchars($subName) ?></p>
+                <?php endif; ?>
+
+                <!-- Position + Services -->
+                <div class="text-xs text-gray-500 dark:text-zinc-400 mt-1 space-y-0.5">
+                    <?php if (!empty($positionLabel)): ?>
+                    <p><?= htmlspecialchars($positionLabel) ?></p>
+                    <?php endif; ?>
+                    <?php if (!empty($services)): ?>
+                    <p class="text-gray-400 dark:text-zinc-500">
+                        <?= htmlspecialchars(implode(' / ', array_slice($services, 0, 3))) ?>
+                        <?php if (count($services) > 3): ?>...<?php endif; ?>
+                    </p>
                     <?php endif; ?>
                 </div>
 
-                <!-- Info -->
-                <div class="p-6">
-                    <!-- Position Badge -->
-                    <?php if (!empty($positionLabel)): ?>
-                    <span class="inline-block px-3 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full mb-3">
-                        <?= htmlspecialchars($positionLabel) ?>
-                    </span>
-                    <?php endif; ?>
-
-                    <!-- Name -->
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                        <?= htmlspecialchars($staffName) ?>
-                    </h3>
-
-                    <!-- Bio -->
-                    <?php if (!empty($bio)): ?>
-                    <p class="text-gray-600 dark:text-zinc-400 text-sm mb-4 line-clamp-3">
-                        <?= nl2br(htmlspecialchars($bio)) ?>
-                    </p>
-                    <?php endif; ?>
-
-                    <!-- Services -->
-                    <?php if (!empty($services)): ?>
-                    <div class="mb-4">
-                        <p class="text-xs text-gray-400 dark:text-zinc-500 mb-2"><?= __('staff_page.services') ?></p>
-                        <div class="flex flex-wrap gap-1.5">
-                            <?php foreach (array_slice($services, 0, 4) as $svc): ?>
-                            <span class="px-2 py-0.5 text-xs bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 rounded-md">
-                                <?= htmlspecialchars($svc) ?>
-                            </span>
-                            <?php endforeach; ?>
-                            <?php if (count($services) > 4): ?>
-                            <span class="px-2 py-0.5 text-xs text-gray-400 dark:text-zinc-500">
-                                +<?= count($services) - 4 ?>
-                            </span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-
-                    <!-- Booking Button -->
-                    <a href="<?= $baseUrl ?>/booking<?= !empty($staff['id']) ? '?staff=' . $staff['id'] : '' ?>"
-                       class="block w-full px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition text-center">
+                <!-- Buttons -->
+                <div class="flex justify-center gap-2 mt-3">
+                    <a href="<?= $baseUrl ?>/booking?staff=<?= $staff['id'] ?>"
+                       class="inline-flex items-center px-3 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-medium rounded hover:bg-gray-700 dark:hover:bg-gray-200 transition">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
                         <?= __('staff_page.book_with') ?>
+                    </a>
+                    <a href="<?= $baseUrl ?>/staff/<?= $staff['id'] ?>"
+                       class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-zinc-300 text-xs font-medium rounded hover:bg-gray-50 dark:hover:bg-zinc-700 transition">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <?= __('staff_page.schedule') ?>
                     </a>
                 </div>
             </div>

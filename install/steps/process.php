@@ -5,6 +5,12 @@
 
 $action = $_POST['action'] ?? '';
 
+// Preserve language parameter in redirects
+$langParam = '';
+if (isset($_COOKIE['install_lang'])) {
+    $langParam = '&lang=' . urlencode($_COOKIE['install_lang']);
+}
+
 switch ($action) {
     case 'database':
         processDatabaseStep();
@@ -15,7 +21,7 @@ switch ($action) {
         break;
 
     default:
-        header('Location: ?step=welcome');
+        header('Location: ?step=welcome' . $langParam);
         exit;
 }
 
@@ -37,8 +43,8 @@ function processDatabaseStep(): void
 
     // Validate required fields
     if (empty($data['db_host']) || empty($data['db_name']) || empty($data['db_user'])) {
-        $_SESSION['install_error'] = '필수 항목을 모두 입력해주세요.';
-        header('Location: ?step=database');
+        $_SESSION['install_error'] = t('err_required');
+        header('Location: ?step=database' . $langParam);
         exit;
     }
 
@@ -53,12 +59,12 @@ function processDatabaseStep(): void
         $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$data['db_name']}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 
         $_SESSION['install_db_success'] = true;
-        header('Location: ?step=admin');
+        header('Location: ?step=admin' . $langParam);
         exit;
 
     } catch (PDOException $e) {
-        $_SESSION['install_error'] = '데이터베이스 연결 실패: ' . $e->getMessage();
-        header('Location: ?step=database');
+        $_SESSION['install_error'] = t('err_db_connect') . $e->getMessage();
+        header('Location: ?step=database' . $langParam);
         exit;
     }
 }
@@ -83,28 +89,28 @@ function processAdminStep(): void
     // Validate required fields
     if (empty($data['site_name']) || empty($data['site_url']) ||
         empty($data['admin_email']) || empty($data['admin_name']) || empty($data['admin_password'])) {
-        $_SESSION['install_error'] = '필수 항목을 모두 입력해주세요.';
-        header('Location: ?step=admin');
+        $_SESSION['install_error'] = t('err_required');
+        header('Location: ?step=admin' . $langParam);
         exit;
     }
 
     // Validate email
     if (!filter_var($data['admin_email'], FILTER_VALIDATE_EMAIL)) {
-        $_SESSION['install_error'] = '유효한 이메일 주소를 입력해주세요.';
-        header('Location: ?step=admin');
+        $_SESSION['install_error'] = t('err_email');
+        header('Location: ?step=admin' . $langParam);
         exit;
     }
 
     // Validate password
     if (strlen($data['admin_password']) < 8) {
-        $_SESSION['install_error'] = '비밀번호는 8자 이상이어야 합니다.';
-        header('Location: ?step=admin');
+        $_SESSION['install_error'] = t('err_password_min');
+        header('Location: ?step=admin' . $langParam);
         exit;
     }
 
     if ($data['admin_password'] !== $data['admin_password_confirm']) {
-        $_SESSION['install_error'] = '비밀번호가 일치하지 않습니다.';
-        header('Location: ?step=admin');
+        $_SESSION['install_error'] = t('err_password_match');
+        header('Location: ?step=admin' . $langParam);
         exit;
     }
 
@@ -115,12 +121,12 @@ function processAdminStep(): void
         $_SESSION['admin_path'] = $data['admin_path'];
         $_SESSION['site_url'] = $data['site_url'];
 
-        header('Location: ?step=complete');
+        header('Location: ?step=complete' . $langParam);
         exit;
 
     } catch (Exception $e) {
-        $_SESSION['install_error'] = '설치 중 오류 발생: ' . $e->getMessage();
-        header('Location: ?step=admin');
+        $_SESSION['install_error'] = t('err_install') . $e->getMessage();
+        header('Location: ?step=admin' . $langParam);
         exit;
     }
 }
@@ -198,9 +204,20 @@ ENV;
 
     $prefix = $dbData['db_prefix'];
 
-    // Run base migration SQL
-    $migrationFile = BASE_PATH . '/database/migrations/001_create_base_tables.sql';
-    if (file_exists($migrationFile)) {
+    // Drop existing tables for clean re-installation
+    $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
+    $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+    foreach ($tables as $table) {
+        if (str_starts_with($table, $prefix)) {
+            $pdo->exec("DROP TABLE IF EXISTS `{$table}`");
+        }
+    }
+    $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
+
+    // Run migration SQL files in order
+    $migrationFiles = glob(BASE_PATH . '/database/migrations/*.sql');
+    sort($migrationFiles);
+    foreach ($migrationFiles as $migrationFile) {
         $sql = file_get_contents($migrationFile);
         // 접두사 치환 (rzx_ → 사용자 지정)
         if ($prefix !== 'rzx_') {
