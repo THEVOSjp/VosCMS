@@ -1,0 +1,32 @@
+{
+    "slug": "cta",
+    "version": "1.0.0",
+    "author": "RezlyX",
+    "category": "marketing",
+    "icon": "megaphone",
+    "thumbnail": "thumbnail.png",
+    "name": {
+        "ko": "행동 유도", "en": "Call to Action", "ja": "CTA",
+        "zh_CN": "行动号召", "zh_TW": "行動號召", "de": "Handlungsaufforderung",
+        "es": "Llamada a la Acción", "fr": "Appel à l'Action",
+        "id": "Ajakan Bertindak", "mn": "Үйлдэл уриалга", "ru": "Призыв к действию",
+        "tr": "Harekete Geçirici", "vi": "Kêu gọi Hành động"
+    },
+    "description": {
+        "ko": "CTA 배너 (버튼 포함)", "en": "CTA banner with button",
+        "ja": "CTAバナー（ボタン付き）",
+        "zh_CN": "CTA横幅（含按钮）", "zh_TW": "CTA橫幅（含按鈕）",
+        "de": "CTA-Banner mit Button", "es": "Banner CTA con botón",
+        "fr": "Bannière CTA avec bouton", "id": "Banner CTA dengan tombol",
+        "mn": "CTA баннер (товчтой)", "ru": "CTA-баннер с кнопкой",
+        "tr": "CTA banner (butonlu)", "vi": "Banner CTA với nút bấm"
+    },
+    "config_schema": {
+        "fields": [
+            {"key": "title", "type": "text", "label": "Title", "i18n": true},
+            {"key": "subtitle", "type": "textarea", "label": "Subtitle", "i18n": true},
+            {"key": "btn_text", "type": "text", "label": "Button Text", "i18n": true},
+            {"key": "btn_url", "type": "text", "label": "Button URL", "default": "/booking"}
+        ]
+    }
+}

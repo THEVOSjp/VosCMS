@@ -1170,8 +1170,10 @@ return [
             'uninstall' => 'Deinstallieren',
             'preview' => 'Vorschau',
             'no_widgets' => 'Keine Widgets gefunden.',
-            'categories' => ['all' => 'Alle', 'layout' => 'Layout', 'content' => 'Inhalt', 'general' => 'Allgemein'],
-            'types' => ['builtin' => 'Integriert', 'custom' => 'Benutzerdefiniert', 'marketplace' => 'Marktplatz'],
+            'categories' => ['all' => 'Alle', 'layout' => 'Layout', 'content' => 'Inhalt', 'marketing' => 'Marketing', 'general' => 'Allgemein'],
+            'types' => ['builtin' => 'Integriert', 'custom' => 'Benutzerdefiniert', 'marketplace' => 'Marktplatz', 'file_based' => 'Dateibasiert'],
+            'file_based' => 'Dateibasiert',
+            'file_widget_no_delete' => 'Dateibasierte Widgets können nicht gelöscht werden. Entfernen Sie den Widget-Ordner direkt.',
             'form' => [
                 'name' => 'Widget-Name', 'name_placeholder' => 'z.B. Banner-Slider',
                 'slug' => 'Slug', 'slug_placeholder' => 'z.B. banner-slider',
@@ -1220,6 +1222,12 @@ return [
             'loading' => 'Vorschau wird geladen...',
             'i18n_fields' => 'Mehrsprachiger Text',
             'multilang' => 'Mehrsprachige Eingabe',
+            'cat' => [
+                'layout' => 'Layout',
+                'content' => 'Inhalt',
+                'marketing' => 'Marketing',
+                'general' => 'Allgemein',
+            ],
             'w' => [
                 'hero' => 'Hero-Banner', 'hero_desc' => 'Hauptbanner mit Titel, Untertitel, CTA',
                 'features' => 'Feature-Karten', 'features_desc' => 'Feature-Highlight-Kartenraster',

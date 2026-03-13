@@ -163,6 +163,18 @@ if (empty($path) || $path === 'index.php') {
     $adminRoute = substr($path, strlen($config['admin_path']));
     $adminRoute = trim($adminRoute, '/') ?: 'dashboard';
 
+    // 파일 기반 위젯 DB 동기화 (1시간에 1회)
+    $syncFlag = BASE_PATH . '/storage/.widget_sync';
+    if (!file_exists($syncFlag) || filemtime($syncFlag) < time() - 3600) {
+        try {
+            $widgetLoader = new \RzxLib\Core\Modules\WidgetLoader($pdo, BASE_PATH . '/widgets');
+            $widgetLoader->syncToDatabase();
+            @file_put_contents($syncFlag, date('c'));
+        } catch (\Throwable $e) {
+            error_log("Widget sync error: " . $e->getMessage());
+        }
+    }
+
     // 서비스 설정 서브페이지 처리 (services/settings/*)
     if (preg_match('#^services/settings(?:/(\w+))?$#', $adminRoute, $m)) {
         $settingsTab = $m[1] ?? 'general';

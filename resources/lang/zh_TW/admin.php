@@ -1170,8 +1170,10 @@ return [
             'uninstall' => '移除',
             'preview' => '預覽',
             'no_widgets' => '尚無小工具。',
-            'categories' => ['all' => '全部', 'layout' => '版面', 'content' => '內容', 'general' => '一般'],
-            'types' => ['builtin' => '內建', 'custom' => '自訂', 'marketplace' => '市集'],
+            'categories' => ['all' => '全部', 'layout' => '版面', 'content' => '內容', 'marketing' => '行銷', 'general' => '一般'],
+            'types' => ['builtin' => '內建', 'custom' => '自訂', 'marketplace' => '市集', 'file_based' => '檔案型'],
+            'file_based' => '檔案型',
+            'file_widget_no_delete' => '檔案型小工具無法刪除。請直接刪除小工具資料夾。',
             'form' => [
                 'name' => '小工具名稱', 'name_placeholder' => '例：輪播橫幅',
                 'slug' => '識別碼', 'slug_placeholder' => '例：banner-slider',
@@ -1220,6 +1222,12 @@ return [
             'loading' => '預覽載入中...',
             'i18n_fields' => '多語言文字',
             'multilang' => '多語言輸入',
+            'cat' => [
+                'layout' => '版面',
+                'content' => '內容',
+                'marketing' => '行銷',
+                'general' => '一般',
+            ],
             'w' => [
                 'hero' => '主橫幅', 'hero_desc' => '主橫幅（標題、副標題、CTA）',
                 'features' => '功能卡片', 'features_desc' => '功能特色卡片網格',

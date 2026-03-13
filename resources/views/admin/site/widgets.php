@@ -33,14 +33,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'delete_widget') {
         $id = (int)($_POST['widget_id'] ?? 0);
         // 내장 위젯은 삭제 불가
-        $stmt = $pdo->prepare("SELECT type FROM rzx_widgets WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT type, slug FROM rzx_widgets WHERE id = ?");
         $stmt->execute([$id]);
         $w = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($w && $w['type'] !== 'builtin') {
+        // 파일 기반 위젯도 삭제 불가
+        $wLoader = new \RzxLib\Core\Modules\WidgetLoader($pdo, BASE_PATH . '/widgets');
+        $isFileWidget = $w && $wLoader->hasRender($w['slug']);
+        if ($w && $w['type'] !== 'builtin' && !$isFileWidget) {
             $pdo->prepare("DELETE FROM rzx_page_widgets WHERE widget_id = ?")->execute([$id]);
             $pdo->prepare("DELETE FROM rzx_widgets WHERE id = ?")->execute([$id]);
             $message = __('admin.site.widgets.deleted');
             $messageType = 'success';
+        } elseif ($isFileWidget) {
+            $message = __('admin.site.widgets.file_widget_no_delete');
+            $messageType = 'error';
         }
 
     } elseif ($action === 'save_widget') {
@@ -89,6 +95,11 @@ $widgets = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
+
+// WidgetLoader 초기화 - 파일 기반 위젯 정보
+$widgetLoader = new \RzxLib\Core\Modules\WidgetLoader($pdo, BASE_PATH . '/widgets');
+$fileWidgets = $widgetLoader->scan(); // slug => widget.json data
+$currentLocale = current_locale();
 
 // 위젯 아이콘 매핑
 $iconMap = [
@@ -175,9 +186,48 @@ function getWidgetIcon($icon, $iconMap) {
                 </div>
                 <?php else: ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <?php foreach ($widgets as $w): ?>
-                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-zinc-200 dark:border-zinc-700">
+                    <?php foreach ($widgets as $w):
+                        $slug = $w['slug'];
+                        $isFileBased = isset($fileWidgets[$slug]);
+                        $fileData = $isFileBased ? $fileWidgets[$slug] : null;
+                        $thumbUrl = $isFileBased ? $widgetLoader->getThumbnailUrl($slug, $baseUrl) : null;
+
+                        // 파일 기반 위젯: widget.json i18n 우선
+                        if ($isFileBased) {
+                            $wName = \RzxLib\Core\Modules\WidgetLoader::localizedValue($fileData['name'] ?? $w['name'], $currentLocale);
+                            $wDesc = \RzxLib\Core\Modules\WidgetLoader::localizedValue($fileData['description'] ?? '', $currentLocale);
+                        } else {
+                            $wKey = 'admin.site.widget_builder.w.' . $slug;
+                            $translated = __($wKey);
+                            $wName = $translated !== $wKey ? $translated : $w['name'];
+                            $descKey = $wKey . '_desc';
+                            $descTranslated = __($descKey);
+                            $wDesc = $descTranslated !== $descKey ? $descTranslated : ($w['description'] ?? '');
+                        }
+                        $wVersion = $isFileBased ? ($fileData['version'] ?? '') : '';
+                    ?>
+                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                        <?php if ($thumbUrl): ?>
+                        <!-- 썸네일 프리뷰 -->
+                        <div class="relative h-36 bg-zinc-100 dark:bg-zinc-700 overflow-hidden">
+                            <img src="<?= htmlspecialchars($thumbUrl) ?>" alt="" class="w-full h-full object-cover">
+                            <!-- 배지 오버레이 -->
+                            <div class="absolute top-2 right-2 flex flex-col items-end gap-1">
+                                <span class="text-xs font-medium px-2 py-0.5 rounded backdrop-blur-sm <?= $w['type'] === 'builtin' ? 'bg-emerald-100/90 dark:bg-emerald-900/70 text-emerald-700 dark:text-emerald-300' : ($w['type'] === 'custom' ? 'bg-purple-100/90 dark:bg-purple-900/70 text-purple-700 dark:text-purple-300' : 'bg-amber-100/90 dark:bg-amber-900/70 text-amber-700 dark:text-amber-300') ?>">
+                                    <?= __('admin.site.widgets.types.' . $w['type']) ?>
+                                </span>
+                                <?php if ($isFileBased): ?>
+                                <span class="text-xs font-medium px-2 py-0.5 rounded backdrop-blur-sm bg-blue-100/90 dark:bg-blue-900/70 text-blue-700 dark:text-blue-300" title="widgets/<?= htmlspecialchars($slug) ?>/">
+                                    <svg class="w-3 h-3 inline -mt-0.5 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                                    <?= __('admin.site.widgets.file_based') ?>
+                                </span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                         <div class="p-5">
+                            <?php if (!$thumbUrl): ?>
+                            <!-- 썸네일 없는 경우: 기존 아이콘 + 배지 레이아웃 -->
                             <div class="flex items-start justify-between mb-3">
                                 <div class="flex items-center">
                                     <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
@@ -186,29 +236,30 @@ function getWidgetIcon($icon, $iconMap) {
                                         </svg>
                                     </div>
                                     <div>
-                                        <h3 class="font-semibold text-zinc-900 dark:text-white text-sm">
-                                            <?php
-                                            $wKey = 'admin.site.widget_builder.w.' . $w['slug'];
-                                            $translated = __($wKey);
-                                            echo $translated !== $wKey ? htmlspecialchars($translated) : htmlspecialchars($w['name']);
-                                            ?>
-                                        </h3>
-                                        <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars($w['slug']) ?></p>
+                                        <h3 class="font-semibold text-zinc-900 dark:text-white text-sm"><?= htmlspecialchars($wName) ?></h3>
+                                        <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars($slug) ?><?= $wVersion ? ' <span class="text-zinc-400">v' . htmlspecialchars($wVersion) . '</span>' : '' ?></p>
                                     </div>
                                 </div>
-                                <!-- Type Badge -->
-                                <span class="text-xs font-medium px-2 py-0.5 rounded <?= $w['type'] === 'builtin' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : ($w['type'] === 'custom' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300') ?>">
-                                    <?= __('admin.site.widgets.types.' . $w['type']) ?>
-                                </span>
+                                <div class="flex flex-col items-end gap-1">
+                                    <span class="text-xs font-medium px-2 py-0.5 rounded <?= $w['type'] === 'builtin' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : ($w['type'] === 'custom' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300') ?>">
+                                        <?= __('admin.site.widgets.types.' . $w['type']) ?>
+                                    </span>
+                                    <?php if ($isFileBased): ?>
+                                    <span class="text-xs font-medium px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                                        <?= __('admin.site.widgets.file_based') ?>
+                                    </span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
+                            <?php else: ?>
+                            <!-- 썸네일 있는 경우: 이름/슬러그만 -->
+                            <div class="mb-2">
+                                <h3 class="font-semibold text-zinc-900 dark:text-white text-sm"><?= htmlspecialchars($wName) ?></h3>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars($slug) ?><?= $wVersion ? ' <span class="text-zinc-400">v' . htmlspecialchars($wVersion) . '</span>' : '' ?></p>
+                            </div>
+                            <?php endif; ?>
 
-                            <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-4 line-clamp-2">
-                                <?php
-                                $descKey = 'admin.site.widget_builder.w.' . $w['slug'] . '_desc';
-                                $descTranslated = __($descKey);
-                                echo $descTranslated !== $descKey ? htmlspecialchars($descTranslated) : htmlspecialchars($w['description'] ?? '');
-                                ?>
-                            </p>
+                            <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-4 line-clamp-2"><?= htmlspecialchars($wDesc) ?></p>
 
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2">
@@ -227,14 +278,14 @@ function getWidgetIcon($icon, $iconMap) {
                                         </button>
                                     </form>
 
-                                    <?php if ($w['type'] === 'custom'): ?>
-                                    <!-- Edit -->
+                                    <?php if ($w['type'] === 'custom' && !$isFileBased): ?>
+                                    <!-- Edit (커스텀 + DB 전용만) -->
                                     <a href="<?= $adminUrl ?>/site/widgets/create?id=<?= $w['id'] ?>" class="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="<?= __('admin.site.widgets.edit') ?>">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                     </a>
-                                    <!-- Delete -->
+                                    <!-- Delete (커스텀 + DB 전용만) -->
                                     <form method="POST" class="inline" onsubmit="return confirm('<?= __('admin.site.widgets.delete_confirm') ?>')">
                                         <input type="hidden" name="action" value="delete_widget">
                                         <input type="hidden" name="widget_id" value="<?= $w['id'] ?>">

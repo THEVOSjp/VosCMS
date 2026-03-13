@@ -1110,8 +1110,10 @@ return [
             'installed' => 'Terpasang', 'not_installed' => 'Belum Terpasang',
             'install' => 'Pasang', 'uninstall' => 'Copot', 'preview' => 'Pratinjau',
             'no_widgets' => 'Tidak ada widget.',
-            'categories' => ['all' => 'Semua', 'layout' => 'Tata Letak', 'content' => 'Konten', 'general' => 'Umum'],
-            'types' => ['builtin' => 'Bawaan', 'custom' => 'Kustom', 'marketplace' => 'Marketplace'],
+            'categories' => ['all' => 'Semua', 'layout' => 'Tata Letak', 'content' => 'Konten', 'marketing' => 'Pemasaran', 'general' => 'Umum'],
+            'types' => ['builtin' => 'Bawaan', 'custom' => 'Kustom', 'marketplace' => 'Marketplace', 'file_based' => 'Berbasis file'],
+            'file_based' => 'Berbasis file',
+            'file_widget_no_delete' => 'Widget berbasis file tidak dapat dihapus. Hapus folder widget secara langsung.',
             'form' => [
                 'name' => 'Nama Widget', 'name_placeholder' => 'mis. Slider Banner',
                 'slug' => 'Slug', 'slug_placeholder' => 'mis. banner-slider',
@@ -1150,6 +1152,12 @@ return [
             'loading' => 'Memuat pratinjau...',
             'i18n_fields' => 'Teks Multibahasa',
             'multilang' => 'Input Multibahasa',
+            'cat' => [
+                'layout' => 'Tata Letak',
+                'content' => 'Konten',
+                'marketing' => 'Pemasaran',
+                'general' => 'Umum',
+            ],
             'w' => [
                 'hero' => 'Banner Utama', 'hero_desc' => 'Banner utama dengan judul, subjudul, CTA',
                 'features' => 'Kartu Fitur', 'features_desc' => 'Grid kartu fitur unggulan',

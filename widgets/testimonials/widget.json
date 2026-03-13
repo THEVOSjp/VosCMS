@@ -1,0 +1,31 @@
+{
+    "slug": "testimonials",
+    "version": "1.0.0",
+    "author": "RezlyX",
+    "category": "marketing",
+    "icon": "chat",
+    "thumbnail": "thumbnail.png",
+    "name": {
+        "ko": "고객 후기", "en": "Testimonials", "ja": "お客様の声",
+        "zh_CN": "客户评价", "zh_TW": "客戶評價", "de": "Kundenbewertungen",
+        "es": "Testimonios", "fr": "Témoignages",
+        "id": "Testimoni", "mn": "Үйлчлүүлэгчдийн сэтгэгдэл", "ru": "Отзывы",
+        "tr": "Müşteri Yorumları", "vi": "Đánh giá"
+    },
+    "description": {
+        "ko": "고객 리뷰/후기 카드", "en": "Customer review cards",
+        "ja": "顧客レビューカード",
+        "zh_CN": "客户评价卡片", "zh_TW": "客戶評價卡片",
+        "de": "Kundenbewertungskarten", "es": "Tarjetas de reseñas de clientes",
+        "fr": "Cartes d'avis clients", "id": "Kartu ulasan pelanggan",
+        "mn": "Хэрэглэгчийн сэтгэгдлийн карт", "ru": "Карточки отзывов клиентов",
+        "tr": "Müşteri yorum kartları", "vi": "Thẻ đánh giá khách hàng"
+    },
+    "config_schema": {
+        "fields": [
+            {"key": "title", "type": "text", "label": "Section Title", "i18n": true},
+            {"key": "subtitle", "type": "textarea", "label": "Section Subtitle", "i18n": true},
+            {"key": "items", "type": "items", "label": "Reviews"}
+        ]
+    }
+}

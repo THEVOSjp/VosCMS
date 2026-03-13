@@ -1264,13 +1264,17 @@ return [
                 'all' => 'All',
                 'layout' => 'Layout',
                 'content' => 'Content',
+                'marketing' => 'Marketing',
                 'general' => 'General',
             ],
             'types' => [
                 'builtin' => 'Built-in',
                 'custom' => 'Custom',
                 'marketplace' => 'Marketplace',
+                'file_based' => 'File-based',
             ],
+            'file_based' => 'File-based',
+            'file_widget_no_delete' => 'File-based widgets cannot be deleted. Remove the widget folder directly.',
             'form' => [
                 'name' => 'Widget Name',
                 'name_placeholder' => 'e.g. Banner Slider',
@@ -1338,6 +1342,12 @@ return [
             'loading' => 'Loading preview...',
             'i18n_fields' => 'Multilingual Text',
             'multilang' => 'Multilingual Input',
+            'cat' => [
+                'layout' => 'Layout',
+                'content' => 'Content',
+                'marketing' => 'Marketing',
+                'general' => 'General',
+            ],
             'w' => [
                 'hero' => 'Hero Banner',
                 'hero_desc' => 'Main banner with title, subtitle, CTA',

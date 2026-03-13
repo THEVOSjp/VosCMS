@@ -1170,8 +1170,10 @@ return [
             'uninstall' => 'Desinstalar',
             'preview' => 'Vista previa',
             'no_widgets' => 'No hay widgets.',
-            'categories' => ['all' => 'Todos', 'layout' => 'Diseño', 'content' => 'Contenido', 'general' => 'General'],
-            'types' => ['builtin' => 'Integrado', 'custom' => 'Personalizado', 'marketplace' => 'Marketplace'],
+            'categories' => ['all' => 'Todos', 'layout' => 'Diseño', 'content' => 'Contenido', 'marketing' => 'Marketing', 'general' => 'General'],
+            'types' => ['builtin' => 'Integrado', 'custom' => 'Personalizado', 'marketplace' => 'Marketplace', 'file_based' => 'Basado en archivos'],
+            'file_based' => 'Basado en archivos',
+            'file_widget_no_delete' => 'Los widgets basados en archivos no se pueden eliminar. Elimine la carpeta del widget directamente.',
             'form' => [
                 'name' => 'Nombre del widget', 'name_placeholder' => 'ej. Slider de banner',
                 'slug' => 'Slug', 'slug_placeholder' => 'ej. banner-slider',
@@ -1220,6 +1222,12 @@ return [
             'loading' => 'Cargando vista previa...',
             'i18n_fields' => 'Texto multilingüe',
             'multilang' => 'Entrada multilingüe',
+            'cat' => [
+                'layout' => 'Diseño',
+                'content' => 'Contenido',
+                'marketing' => 'Marketing',
+                'general' => 'General',
+            ],
             'w' => [
                 'hero' => 'Banner principal', 'hero_desc' => 'Banner principal con título, subtítulo, CTA',
                 'features' => 'Tarjetas de características', 'features_desc' => 'Cuadrícula de tarjetas destacadas',

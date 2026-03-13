@@ -26,6 +26,10 @@ include __DIR__ . '/pages-widget-builder-ajax.php';
 
 // ======= 데이터 로드 =======
 $availableWidgets = $pdo->query("SELECT * FROM rzx_widgets WHERE is_active = 1 ORDER BY type, name")->fetchAll(PDO::FETCH_ASSOC);
+
+// 파일 기반 위젯 로더 (widget.json 다국어 데이터 활용)
+$widgetLoader = new \RzxLib\Core\Modules\WidgetLoader($pdo, BASE_PATH . '/widgets');
+$fileWidgets = $widgetLoader->scan();  // slug => widget.json 데이터
 $placedWidgets = $pdo->query("
     SELECT pw.*, w.slug as widget_slug, w.name as widget_name, w.icon, w.type as widget_type, w.config_schema
     FROM rzx_page_widgets pw
@@ -80,7 +84,14 @@ $iconMap = [
         .widget-chosen .widget-toolbar { opacity: 1 !important; }
         .widget-block:hover .widget-toolbar { opacity: 1; }
         .widget-palette-item { cursor: pointer; }
-        .widget-palette-item:hover { transform: translateX(2px); }
+        .widget-palette-item:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .category-item { cursor: pointer; transition: all 0.15s; }
+        .category-item:hover, .category-item.active { background: rgb(239 246 255); }
+        .dark .category-item:hover, .dark .category-item.active { background: rgb(30 58 138 / 0.2); }
+        .category-item.active { border-right: 3px solid rgb(59 130 246); }
+        .widget-flyout { transition: opacity 0.15s, transform 0.15s; }
+        .widget-flyout.hidden { opacity: 0; transform: translateX(-8px); pointer-events: none; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         #editSidePanel { transition: width 0.2s ease; }
         /* Summernote 다크모드 */
         .note-editor { border-radius: 0.5rem; overflow: hidden; }
@@ -114,39 +125,85 @@ $iconMap = [
             ?>
 
             <div class="flex flex-1 overflow-hidden">
-                <!-- 왼쪽: 위젯 팔레트 -->
-                <aside id="widgetPalettePanel" class="w-56 bg-white dark:bg-zinc-800 border-r border-zinc-200 dark:border-zinc-700 flex flex-col overflow-hidden flex-shrink-0">
+                <!-- 왼쪽: 위젯 팔레트 (카테고리 + 플라이아웃) -->
+                <?php
+                // 카테고리별 그룹핑
+                $widgetCategories = [];
+                foreach ($availableWidgets as $aw) {
+                    $cat = $aw['category'] ?? 'general';
+                    $widgetCategories[$cat][] = $aw;
+                }
+                $categoryMeta = [
+                    'layout' => ['icon' => 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z', 'color' => 'blue'],
+                    'content' => ['icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'color' => 'emerald'],
+                    'marketing' => ['icon' => 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z', 'color' => 'amber'],
+                    'general' => ['icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', 'color' => 'purple'],
+                ];
+                ?>
+                <aside id="widgetPalettePanel" class="relative w-48 bg-white dark:bg-zinc-800 border-r border-zinc-200 dark:border-zinc-700 flex flex-col overflow-visible flex-shrink-0 z-30">
                     <div class="px-4 py-3 border-b border-zinc-200 dark:border-zinc-700">
                         <h3 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('admin.site.widget_builder.available_widgets') ?></h3>
                     </div>
-                    <div id="widgetPalette" class="flex-1 overflow-y-auto p-2 space-y-1">
-                        <?php foreach ($availableWidgets as $aw): ?>
-                        <div class="widget-palette-item flex items-center p-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-transparent hover:border-blue-200 dark:hover:border-blue-800 transition-all"
-                             data-widget-id="<?= $aw['id'] ?>"
-                             data-widget-slug="<?= htmlspecialchars($aw['slug']) ?>"
-                             data-widget-name="<?= htmlspecialchars($aw['name']) ?>"
-                             data-widget-icon="<?= htmlspecialchars($aw['icon']) ?>"
-                             data-config-schema="<?= htmlspecialchars($aw['config_schema'] ?? '{}') ?>"
-                             data-default-config="<?= htmlspecialchars($aw['default_config'] ?? '{}') ?>">
-                            <div class="w-7 h-7 bg-blue-100 dark:bg-blue-900/30 rounded flex items-center justify-center mr-2.5 flex-shrink-0">
-                                <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $iconMap[$aw['icon']] ?? $iconMap['cube'] ?>"/>
+                    <div id="widgetPalette" class="flex-1 overflow-y-auto py-2">
+                        <?php foreach ($widgetCategories as $catKey => $catWidgets):
+                            $meta = $categoryMeta[$catKey] ?? $categoryMeta['general'];
+                            $catLabel = __('admin.site.widget_builder.cat.' . $catKey);
+                            if ($catLabel === 'admin.site.widget_builder.cat.' . $catKey) $catLabel = ucfirst($catKey);
+                        ?>
+                        <div class="category-item group flex items-center px-4 py-2.5" data-category="<?= $catKey ?>">
+                            <div class="w-7 h-7 bg-<?= $meta['color'] ?>-100 dark:bg-<?= $meta['color'] ?>-900/30 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                                <svg class="w-3.5 h-3.5 text-<?= $meta['color'] ?>-600 dark:text-<?= $meta['color'] ?>-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $meta['icon'] ?>"/>
                                 </svg>
                             </div>
-                            <div class="min-w-0 flex-1">
-                                <p class="text-xs font-medium text-zinc-800 dark:text-zinc-200 truncate">
-                                    <?php
-                                    $wKey = 'admin.site.widget_builder.w.' . $aw['slug'];
-                                    $tr = __($wKey);
-                                    echo $tr !== $wKey ? htmlspecialchars($tr) : htmlspecialchars($aw['name']);
-                                    ?>
-                                </p>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-semibold text-zinc-700 dark:text-zinc-200"><?= htmlspecialchars($catLabel) ?></p>
+                                <p class="text-[10px] text-zinc-400 dark:text-zinc-500"><?= count($catWidgets) ?> widgets</p>
                             </div>
-                            <svg class="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-600 ml-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <svg class="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 flex-shrink-0 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                         </div>
                         <?php endforeach; ?>
                     </div>
+
+                    <!-- 플라이아웃 패널 -->
+                    <div id="widgetFlyout" class="widget-flyout hidden absolute left-full top-0 bottom-0 w-72 bg-white dark:bg-zinc-800 border-l border-zinc-200 dark:border-zinc-700 shadow-xl flex flex-col z-40" style="min-height:100%;">
+                        <div class="px-4 py-3 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
+                            <h3 id="flyoutTitle" class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"></h3>
+                            <button id="flyoutClose" class="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-400">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <div id="flyoutContent" class="flex-1 overflow-y-auto p-3 grid grid-cols-2 gap-2 auto-rows-min content-start">
+                        </div>
+                    </div>
                 </aside>
+
+                <!-- 위젯 데이터 (JS용, hidden) -->
+                <div id="widgetDataStore" class="hidden">
+                    <?php foreach ($availableWidgets as $aw):
+                        $slug = $aw['slug'];
+                        $fileDef = $fileWidgets[$slug] ?? null;
+                        $localName = $fileDef ? \RzxLib\Core\Modules\WidgetLoader::localizedValue($fileDef['name'] ?? $slug, $currentLocale) : $aw['name'];
+                        $localDesc = $fileDef ? \RzxLib\Core\Modules\WidgetLoader::localizedValue($fileDef['description'] ?? '', $currentLocale) : ($aw['description'] ?? '');
+                        // config_schema: widget.json 우선 → DB 폴백
+                        $configSchema = $aw['config_schema'] ?? '{}';
+                        if ($fileDef && !empty($fileDef['config_schema'])) {
+                            $configSchema = json_encode($fileDef['config_schema'], JSON_UNESCAPED_UNICODE);
+                        }
+                    ?>
+                    <div class="widget-palette-item"
+                         data-widget-id="<?= $aw['id'] ?>"
+                         data-widget-slug="<?= htmlspecialchars($slug) ?>"
+                         data-widget-name="<?= htmlspecialchars($localName) ?>"
+                         data-widget-icon="<?= htmlspecialchars($fileDef['icon'] ?? $aw['icon']) ?>"
+                         data-widget-category="<?= htmlspecialchars($fileDef['category'] ?? $aw['category'] ?? 'general') ?>"
+                         data-widget-description="<?= htmlspecialchars($localDesc) ?>"
+                         data-config-schema="<?= htmlspecialchars($configSchema) ?>"
+                         data-default-config="<?= htmlspecialchars($aw['default_config'] ?? '{}') ?>"
+                         data-widget-thumbnail="<?= $fileDef ? htmlspecialchars($widgetLoader->getThumbnailUrl($slug, $baseUrl) ?? '') : '' ?>">
+                    </div>
+                    <?php endforeach; ?>
+                </div>
 
                 <!-- 가운데: WYSIWYG 캔버스 -->
                 <div class="flex-1 overflow-y-auto bg-zinc-200/50 dark:bg-zinc-950">
@@ -234,6 +291,41 @@ $iconMap = [
     <!-- 데이터 -->
     <script>
     var widgetIconMap = <?= json_encode($iconMap) ?>;
+    // 위젯 이름/설명/카테고리 번역
+    var widgetTranslations = <?php
+        $wt = [];
+        foreach ($availableWidgets as $aw) {
+            $slug = $aw['slug'];
+            $fileDef = $fileWidgets[$slug] ?? null;
+            if ($fileDef) {
+                // widget.json 다국어 데이터 우선
+                $wt[$slug] = [
+                    'name' => \RzxLib\Core\Modules\WidgetLoader::localizedValue($fileDef['name'] ?? $slug, $currentLocale),
+                    'desc' => \RzxLib\Core\Modules\WidgetLoader::localizedValue($fileDef['description'] ?? '', $currentLocale)
+                ];
+            } else {
+                // DB 위젯 (커스텀) → 기존 번역 파일 사용
+                $wKey = 'admin.site.widget_builder.w.' . $slug;
+                $dKey = 'admin.site.widget_builder.w.' . $slug . '_desc';
+                $tr = __($wKey);
+                $desc = __($dKey);
+                $wt[$slug] = [
+                    'name' => ($tr !== $wKey) ? $tr : $aw['name'],
+                    'desc' => ($desc !== $dKey) ? $desc : ($aw['description'] ?? '')
+                ];
+            }
+        }
+        echo json_encode($wt, JSON_UNESCAPED_UNICODE);
+    ?>;
+    var categoryTranslations = <?php
+        $ct = [];
+        foreach (array_keys($widgetCategories) as $ck) {
+            $cKey = 'admin.site.widget_builder.cat.' . $ck;
+            $ctr = __($cKey);
+            $ct[$ck] = ($ctr !== $cKey) ? $ctr : ucfirst($ck);
+        }
+        echo json_encode($ct, JSON_UNESCAPED_UNICODE);
+    ?>;
     var translations = {
         empty: '<?= __('admin.site.widget_builder.empty') ?>',
         remove_confirm: '<?= __('admin.site.widget_builder.remove_confirm') ?>',

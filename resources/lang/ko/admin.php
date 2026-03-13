@@ -1389,13 +1389,17 @@ return [
                 'all' => '전체',
                 'layout' => '레이아웃',
                 'content' => '콘텐츠',
+                'marketing' => '마케팅',
                 'general' => '일반',
             ],
             'types' => [
                 'builtin' => '내장',
                 'custom' => '커스텀',
                 'marketplace' => '마켓플레이스',
+                'file_based' => '파일 기반',
             ],
+            'file_based' => '파일 기반',
+            'file_widget_no_delete' => '파일 기반 위젯은 삭제할 수 없습니다. 위젯 폴더를 직접 제거하세요.',
             // 커스텀 위젯 생성
             'form' => [
                 'name' => '위젯 이름',
@@ -1467,6 +1471,13 @@ return [
             'i18n_fields' => '다국어 텍스트',
             'multilang' => '다국어 입력',
             'inline_editing' => '인라인 편집 중',
+            // 카테고리
+            'cat' => [
+                'layout' => '레이아웃',
+                'content' => '콘텐츠',
+                'marketing' => '마케팅',
+                'general' => '일반',
+            ],
             // 내장 위젯 이름/설명
             'w' => [
                 'hero' => '히어로 배너',

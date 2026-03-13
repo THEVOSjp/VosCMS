@@ -34,8 +34,152 @@ var WB = (function() {
         onSort: function() { console.log('[WYSIWYG] Layout reordered'); }
     });
 
-    // ===== 팔레트 클릭 → 위젯 추가 =====
-    document.querySelectorAll('.widget-palette-item').forEach(function(item) {
+    // ===== 카테고리 플라이아웃 시스템 =====
+    var flyout = document.getElementById('widgetFlyout');
+    var flyoutTitle = document.getElementById('flyoutTitle');
+    var flyoutContent = document.getElementById('flyoutContent');
+    var flyoutClose = document.getElementById('flyoutClose');
+    var activeCategoryEl = null;
+    var flyoutHideTimer = null;
+    var widgetIconMap = window.widgetIconMap || {};
+
+    // 카테고리별 색상 매핑
+    var catColors = {
+        layout: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-700', hoverBg: 'hover:border-blue-300 dark:hover:border-blue-600' },
+        content: { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-700', hoverBg: 'hover:border-emerald-300 dark:hover:border-emerald-600' },
+        marketing: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400', border: 'border-amber-200 dark:border-amber-700', hoverBg: 'hover:border-amber-300 dark:hover:border-amber-600' },
+        general: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-600 dark:text-purple-400', border: 'border-purple-200 dark:border-purple-700', hoverBg: 'hover:border-purple-300 dark:hover:border-purple-600' }
+    };
+
+    // 위젯 데이터 수집 (hidden store에서)
+    var allWidgetData = {};
+    document.querySelectorAll('#widgetDataStore .widget-palette-item').forEach(function(el) {
+        var d = el.dataset;
+        var cat = d.widgetCategory || 'general';
+        if (!allWidgetData[cat]) allWidgetData[cat] = [];
+        allWidgetData[cat].push({
+            id: d.widgetId, slug: d.widgetSlug, name: d.widgetName,
+            icon: d.widgetIcon, description: d.widgetDescription || '',
+            configSchema: d.configSchema || '{}', defaultConfig: d.defaultConfig || '{}',
+            thumbnail: d.widgetThumbnail || ''
+        });
+    });
+
+    function showFlyout(category) {
+        if (flyoutHideTimer) { clearTimeout(flyoutHideTimer); flyoutHideTimer = null; }
+        var widgets = allWidgetData[category] || [];
+        var colors = catColors[category] || catColors.general;
+
+        // 카테고리 라벨
+        flyoutTitle.textContent = (window.categoryTranslations && categoryTranslations[category]) || category;
+
+        // 위젯 카드 생성
+        flyoutContent.innerHTML = '';
+        widgets.forEach(function(w) {
+            var wt = (window.widgetTranslations && widgetTranslations[w.slug]) || {};
+            var displayName = wt.name || w.name;
+            var desc = wt.desc || w.description;
+            var iconPath = widgetIconMap[w.icon] || widgetIconMap['cube'] || '';
+
+            var card = document.createElement('div');
+            card.className = 'widget-palette-item group/card flex flex-col items-center p-3 rounded-xl border ' + colors.border + ' ' + colors.hoverBg + ' bg-white dark:bg-zinc-800/50 cursor-pointer transition-all';
+            card.dataset.widgetId = w.id;
+            card.dataset.widgetSlug = w.slug;
+            card.dataset.widgetName = w.name;
+            card.dataset.widgetIcon = w.icon;
+            card.dataset.configSchema = w.configSchema;
+            card.dataset.defaultConfig = w.defaultConfig;
+
+            // 썸네일 또는 아이콘
+            var visualHtml = w.thumbnail
+                ? '<div class="w-full aspect-video rounded-lg overflow-hidden mb-2 bg-zinc-100 dark:bg-zinc-700">' +
+                      '<img src="' + escapeHtml(w.thumbnail) + '" alt="" class="w-full h-full object-cover">' +
+                  '</div>'
+                : '<div class="w-10 h-10 ' + colors.bg + ' rounded-lg flex items-center justify-center mb-2">' +
+                      '<svg class="w-5 h-5 ' + colors.text + '" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                          '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="' + escapeHtml(iconPath) + '"/>' +
+                      '</svg>' +
+                  '</div>';
+
+            card.innerHTML = visualHtml +
+                '<p class="text-xs font-semibold text-zinc-700 dark:text-zinc-200 text-center leading-tight">' + escapeHtml(displayName) + '</p>' +
+                '<p class="text-[10px] text-zinc-400 dark:text-zinc-500 text-center mt-1 line-clamp-2 leading-tight">' + escapeHtml(desc) + '</p>' +
+                '<div class="mt-2 opacity-0 group-hover/card:opacity-100 transition-opacity">' +
+                    '<span class="inline-flex items-center gap-1 text-[10px] font-medium ' + colors.text + '">' +
+                        '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>' +
+                        'Add' +
+                    '</span>' +
+                '</div>';
+
+            // 클릭 → 위젯 추가
+            card.addEventListener('click', function() {
+                console.log('[WYSIWYG] Adding widget from flyout:', w.slug);
+                removeEmptyPlaceholder();
+                var block = createWidgetBlock(w.id, w.slug, w.name, w.icon, w.defaultConfig, w.configSchema);
+                canvas.appendChild(block);
+                loadPreview(block);
+                updateWidgetCount();
+                block.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                // 추가 피드백
+                card.classList.add('ring-2', 'ring-blue-400', 'scale-95');
+                setTimeout(function() { card.classList.remove('ring-2', 'ring-blue-400', 'scale-95'); }, 300);
+            });
+
+            flyoutContent.appendChild(card);
+        });
+
+        flyout.classList.remove('hidden');
+
+        // active 표시
+        document.querySelectorAll('.category-item').forEach(function(el) { el.classList.remove('active'); });
+        var activeEl = document.querySelector('.category-item[data-category="' + category + '"]');
+        if (activeEl) { activeEl.classList.add('active'); activeCategoryEl = activeEl; }
+    }
+
+    function hideFlyout() {
+        flyoutHideTimer = setTimeout(function() {
+            flyout.classList.add('hidden');
+            if (activeCategoryEl) { activeCategoryEl.classList.remove('active'); activeCategoryEl = null; }
+        }, 200);
+    }
+
+    // 카테고리 호버 이벤트
+    document.querySelectorAll('.category-item').forEach(function(catEl) {
+        catEl.addEventListener('mouseenter', function() {
+            showFlyout(this.dataset.category);
+        });
+        catEl.addEventListener('mouseleave', function() {
+            hideFlyout();
+        });
+        // 클릭도 지원 (모바일)
+        catEl.addEventListener('click', function() {
+            var cat = this.dataset.category;
+            if (flyout.classList.contains('hidden') || (activeCategoryEl && activeCategoryEl.dataset.category !== cat)) {
+                showFlyout(cat);
+            } else {
+                flyout.classList.add('hidden');
+                this.classList.remove('active');
+                activeCategoryEl = null;
+            }
+        });
+    });
+
+    // 플라이아웃 호버 유지
+    flyout.addEventListener('mouseenter', function() {
+        if (flyoutHideTimer) { clearTimeout(flyoutHideTimer); flyoutHideTimer = null; }
+    });
+    flyout.addEventListener('mouseleave', function() {
+        hideFlyout();
+    });
+
+    // 닫기 버튼
+    flyoutClose.addEventListener('click', function() {
+        flyout.classList.add('hidden');
+        if (activeCategoryEl) { activeCategoryEl.classList.remove('active'); activeCategoryEl = null; }
+    });
+
+    // ===== 팔레트 클릭 → 위젯 추가 (hidden store 데이터에서) =====
+    document.querySelectorAll('#widgetDataStore .widget-palette-item').forEach(function(item) {
         item.addEventListener('click', function() {
             var d = this.dataset;
             console.log('[WYSIWYG] Adding widget:', d.widgetSlug);
@@ -50,8 +194,8 @@ var WB = (function() {
 
     // ===== 위젯 블록 생성 =====
     function createWidgetBlock(widgetId, slug, name, icon, configStr, schemaStr) {
-        var nameEl = document.querySelector('.widget-palette-item[data-widget-slug="' + slug + '"] .min-w-0 p');
-        var displayName = nameEl ? nameEl.textContent.trim() : name;
+        var wt = (window.widgetTranslations && widgetTranslations[slug]) || {};
+        var displayName = wt.name || name;
         var block = document.createElement('div');
         block.className = 'widget-block relative group';
         block.dataset.widgetId = widgetId;

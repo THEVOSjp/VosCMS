@@ -1188,8 +1188,10 @@ return [
             'uninstall' => 'Désinstaller',
             'preview' => 'Aperçu',
             'no_widgets' => 'Aucun widget trouvé.',
-            'categories' => ['all' => 'Tous', 'layout' => 'Mise en page', 'content' => 'Contenu', 'general' => 'Général'],
-            'types' => ['builtin' => 'Intégré', 'custom' => 'Personnalisé', 'marketplace' => 'Marketplace'],
+            'categories' => ['all' => 'Tous', 'layout' => 'Mise en page', 'content' => 'Contenu', 'marketing' => 'Marketing', 'general' => 'Général'],
+            'types' => ['builtin' => 'Intégré', 'custom' => 'Personnalisé', 'marketplace' => 'Marketplace', 'file_based' => 'Basé sur fichier'],
+            'file_based' => 'Basé sur fichier',
+            'file_widget_no_delete' => 'Les widgets basés sur fichier ne peuvent pas être supprimés. Supprimez directement le dossier du widget.',
             'form' => [
                 'name' => 'Nom du widget', 'name_placeholder' => 'ex. Slider de bannière',
                 'slug' => 'Slug', 'slug_placeholder' => 'ex. banner-slider',
@@ -1238,6 +1240,12 @@ return [
             'loading' => 'Chargement de l\'aperçu...',
             'i18n_fields' => 'Texte multilingue',
             'multilang' => 'Saisie multilingue',
+            'cat' => [
+                'layout' => 'Mise en page',
+                'content' => 'Contenu',
+                'marketing' => 'Marketing',
+                'general' => 'Général',
+            ],
             'w' => [
                 'hero' => 'Bannière principale', 'hero_desc' => 'Bannière avec titre, sous-titre, CTA',
                 'features' => 'Cartes de fonctionnalités', 'features_desc' => 'Grille de cartes de fonctionnalités',

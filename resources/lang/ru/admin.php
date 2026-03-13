@@ -1106,8 +1106,10 @@ return [
             'installed' => 'Установлен', 'not_installed' => 'Не установлен',
             'install' => 'Установить', 'uninstall' => 'Удалить', 'preview' => 'Предпросмотр',
             'no_widgets' => 'Виджеты не найдены.',
-            'categories' => ['all' => 'Все', 'layout' => 'Макет', 'content' => 'Контент', 'general' => 'Общее'],
-            'types' => ['builtin' => 'Встроенный', 'custom' => 'Пользовательский', 'marketplace' => 'Маркетплейс'],
+            'categories' => ['all' => 'Все', 'layout' => 'Макет', 'content' => 'Контент', 'marketing' => 'Маркетинг', 'general' => 'Общее'],
+            'types' => ['builtin' => 'Встроенный', 'custom' => 'Пользовательский', 'marketplace' => 'Маркетплейс', 'file_based' => 'Файловый'],
+            'file_based' => 'Файловый',
+            'file_widget_no_delete' => 'Файловые виджеты нельзя удалить. Удалите папку виджета напрямую.',
             'form' => [
                 'name' => 'Название виджета', 'name_placeholder' => 'напр. Слайдер баннеров',
                 'slug' => 'Slug', 'slug_placeholder' => 'напр. banner-slider',
@@ -1146,6 +1148,12 @@ return [
             'loading' => 'Загрузка предпросмотра...',
             'i18n_fields' => 'Многоязычный текст',
             'multilang' => 'Многоязычный ввод',
+            'cat' => [
+                'layout' => 'Макет',
+                'content' => 'Контент',
+                'marketing' => 'Маркетинг',
+                'general' => 'Общее',
+            ],
             'w' => [
                 'hero' => 'Главный баннер', 'hero_desc' => 'Главный баннер с заголовком, подзаголовком, CTA',
                 'features' => 'Карточки функций', 'features_desc' => 'Сетка карточек функций',

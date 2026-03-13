@@ -1157,8 +1157,10 @@ return [
             'installed' => 'Đã cài', 'not_installed' => 'Chưa cài',
             'install' => 'Cài đặt', 'uninstall' => 'Gỡ bỏ', 'preview' => 'Xem trước',
             'no_widgets' => 'Không có widget nào.',
-            'categories' => ['all' => 'Tất cả', 'layout' => 'Bố cục', 'content' => 'Nội dung', 'general' => 'Chung'],
-            'types' => ['builtin' => 'Tích hợp', 'custom' => 'Tùy chỉnh', 'marketplace' => 'Chợ'],
+            'categories' => ['all' => 'Tất cả', 'layout' => 'Bố cục', 'content' => 'Nội dung', 'marketing' => 'Tiếp thị', 'general' => 'Chung'],
+            'types' => ['builtin' => 'Tích hợp', 'custom' => 'Tùy chỉnh', 'marketplace' => 'Chợ', 'file_based' => 'Dựa trên tệp'],
+            'file_based' => 'Dựa trên tệp',
+            'file_widget_no_delete' => 'Widget dựa trên tệp không thể xóa. Hãy xóa trực tiếp thư mục widget.',
             'form' => [
                 'name' => 'Tên widget', 'name_placeholder' => 'vd. Slider Banner',
                 'slug' => 'Slug', 'slug_placeholder' => 'vd. banner-slider',
@@ -1197,6 +1199,12 @@ return [
             'loading' => 'Đang tải bản xem trước...',
             'i18n_fields' => 'Văn bản đa ngôn ngữ',
             'multilang' => 'Nhập đa ngôn ngữ',
+            'cat' => [
+                'layout' => 'Bố cục',
+                'content' => 'Nội dung',
+                'marketing' => 'Tiếp thị',
+                'general' => 'Chung',
+            ],
             'w' => [
                 'hero' => 'Banner chính', 'hero_desc' => 'Banner chính với tiêu đề, phụ đề, CTA',
                 'features' => 'Thẻ tính năng', 'features_desc' => 'Lưới thẻ tính năng nổi bật',

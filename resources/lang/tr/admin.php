@@ -773,8 +773,10 @@ return [
             'installed' => 'Yüklü', 'not_installed' => 'Yüklü Değil',
             'install' => 'Yükle', 'uninstall' => 'Kaldır', 'preview' => 'Önizleme',
             'no_widgets' => 'Widget bulunamadı.',
-            'categories' => ['all' => 'Tümü', 'layout' => 'Düzen', 'content' => 'İçerik', 'general' => 'Genel'],
-            'types' => ['builtin' => 'Yerleşik', 'custom' => 'Özel', 'marketplace' => 'Mağaza'],
+            'categories' => ['all' => 'Tümü', 'layout' => 'Düzen', 'content' => 'İçerik', 'marketing' => 'Pazarlama', 'general' => 'Genel'],
+            'types' => ['builtin' => 'Yerleşik', 'custom' => 'Özel', 'marketplace' => 'Mağaza', 'file_based' => 'Dosya tabanlı'],
+            'file_based' => 'Dosya tabanlı',
+            'file_widget_no_delete' => 'Dosya tabanlı widget\'lar silinemez. Widget klasörünü doğrudan kaldırın.',
             'form' => [
                 'name' => 'Widget Adı', 'name_placeholder' => 'ör. Banner Slider',
                 'slug' => 'Slug', 'slug_placeholder' => 'ör. banner-slider',
@@ -813,6 +815,12 @@ return [
             'loading' => 'Önizleme yükleniyor...',
             'i18n_fields' => 'Çok Dilli Metin',
             'multilang' => 'Çok Dilli Giriş',
+            'cat' => [
+                'layout' => 'Düzen',
+                'content' => 'İçerik',
+                'marketing' => 'Pazarlama',
+                'general' => 'Genel',
+            ],
             'w' => [
                 'hero' => 'Ana Banner', 'hero_desc' => 'Başlık, alt başlık, CTA içeren ana banner',
                 'features' => 'Özellik Kartları', 'features_desc' => 'Özellik kartları ızgarası',

@@ -26,6 +26,7 @@ class WidgetRenderer
     private $locale;
     private $baseUrl;
     private $widgets = null;
+    private ?WidgetLoader $loader = null;
 
     public function __construct(\PDO $pdo, string $pageSlug = 'home', string $locale = 'ko', string $baseUrl = '')
     {
@@ -33,7 +34,17 @@ class WidgetRenderer
         $this->pageSlug = $pageSlug;
         $this->locale = $locale;
         $this->baseUrl = $baseUrl;
+
+        // 파일 기반 위젯 로더 자동 초기화
+        $widgetsDir = defined('BASE_PATH') ? BASE_PATH . '/widgets' : dirname(__DIR__, 3) . '/widgets';
+        if (is_dir($widgetsDir)) {
+            $this->loader = new WidgetLoader($pdo, $widgetsDir);
+        }
     }
+
+    public function getBaseUrl(): string { return $this->baseUrl; }
+    public function getLocale(): string { return $this->locale; }
+    public function getLoader(): ?WidgetLoader { return $this->loader; }
 
     /**
      * 페이지에 배치된 위젯 목록 로드
@@ -88,13 +99,19 @@ class WidgetRenderer
         $config = $this->mergeConfig($widget);
         $slug = $widget['widget_slug'];
 
-        // 내장 위젯 렌더링
+        // 1순위: 파일 기반 위젯 (widgets/{slug}/render.php)
+        if ($this->loader && $this->loader->hasRender($slug)) {
+            $result = $this->loader->render($slug, $config, $widget, $this);
+            if ($result !== '') return $result;
+        }
+
+        // 2순위: 내장 위젯 렌더링 (WidgetRenderer 메서드)
         $method = 'render' . str_replace('-', '', ucwords($slug, '-'));
         if (method_exists($this, $method)) {
             return $this->$method($config, $widget);
         }
 
-        // 커스텀 위젯: template 기반 렌더링
+        // 3순위: 커스텀 위젯 (DB template 기반)
         return $this->renderCustom($config, $widget);
     }
 
@@ -269,7 +286,7 @@ class WidgetRenderer
     /**
      * 히어로 이미지 9방향 위치 → CSS style
      */
-    private function heroImagePosition(string $pos): string
+    public function heroImagePosition(string $pos): string
     {
         $map = [
             'top-left'      => 'top:5%;left:5%;',
@@ -289,7 +306,7 @@ class WidgetRenderer
      * element_positions 기반 인라인 스타일 반환
      * config['element_positions']['title'] = 'top-center' → style="position:absolute;top:8%;left:50%;..."
      */
-    private function elementPositionStyle(array $config, string $fieldKey): string
+    public function elementPositionStyle(array $config, string $fieldKey): string
     {
         $positions = $config['element_positions'] ?? [];
         if (empty($positions[$fieldKey])) return '';
@@ -312,7 +329,7 @@ class WidgetRenderer
     /**
      * 버튼 배열 내 다국어 텍스트
      */
-    private function tBtn(array $btn, string $key, string $fallback = ''): string
+    public function tBtn(array $btn, string $key, string $fallback = ''): string
     {
         if (isset($btn[$key])) {
             if (is_array($btn[$key])) {
@@ -326,7 +343,7 @@ class WidgetRenderer
     /**
      * YouTube URL에서 영상 ID 추출
      */
-    private function extractYouTubeId(string $url): ?string
+    public function extractYouTubeId(string $url): ?string
     {
         if (preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/', $url, $m)) {
             return $m[1];
@@ -337,7 +354,7 @@ class WidgetRenderer
     /**
      * Vimeo URL에서 영상 ID 추출
      */
-    private function extractVimeoId(string $url): ?string
+    public function extractVimeoId(string $url): ?string
     {
         if (preg_match('/vimeo\.com\/(\d+)/', $url, $m)) {
             return $m[1];
@@ -572,7 +589,7 @@ HTML;
      * 위젯 CSS를 특정 스코프로 제한
      * body, html, *, :root 등 전역 셀렉터를 스코프 ID로 교체
      */
-    private function scopeWidgetCss(string $css, string $scope): string
+    public function scopeWidgetCss(string $css, string $scope): string
     {
         // body, html 셀렉터를 스코프로 교체 (멀티라인 대응: s 플래그)
         $css = preg_replace('/\bbody\b(?=[^{}]*\{)/s', $scope, $css);

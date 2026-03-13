@@ -1170,8 +1170,10 @@ return [
             'uninstall' => '卸载',
             'preview' => '预览',
             'no_widgets' => '暂无小部件。',
-            'categories' => ['all' => '全部', 'layout' => '布局', 'content' => '内容', 'general' => '通用'],
-            'types' => ['builtin' => '内置', 'custom' => '自定义', 'marketplace' => '市场'],
+            'categories' => ['all' => '全部', 'layout' => '布局', 'content' => '内容', 'marketing' => '营销', 'general' => '通用'],
+            'types' => ['builtin' => '内置', 'custom' => '自定义', 'marketplace' => '市场', 'file_based' => '文件型'],
+            'file_based' => '文件型',
+            'file_widget_no_delete' => '文件型小部件无法删除。请直接删除小部件文件夹。',
             'form' => [
                 'name' => '小部件名称', 'name_placeholder' => '例：轮播横幅',
                 'slug' => '标识符', 'slug_placeholder' => '例：banner-slider',
@@ -1220,6 +1222,12 @@ return [
             'loading' => '预览加载中...',
             'i18n_fields' => '多语言文本',
             'multilang' => '多语言输入',
+            'cat' => [
+                'layout' => '布局',
+                'content' => '内容',
+                'marketing' => '营销',
+                'general' => '通用',
+            ],
             'w' => [
                 'hero' => '主横幅', 'hero_desc' => '主横幅（标题、副标题、CTA）',
                 'features' => '功能卡片', 'features_desc' => '功能特色卡片网格',

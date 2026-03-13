@@ -523,3 +523,112 @@ CSS 위치 적용:
 ### richtext 저장 시 JS 에러
 - **원인**: `saveRichtextToTemp()` 호출이 남아있으나 함수 제거됨
 - **해결**: richtext textarea는 `.edit-field` 셀렉터로 자동 수집되므로 별도 함수 불필요
+
+---
+
+## 파일 기반 위젯 시스템
+
+### 디렉토리 구조
+
+```
+widgets/
+├── hero/
+│   ├── widget.json       # 위젯 메타데이터 + config_schema
+│   ├── render.php        # 렌더링 템플릿
+│   ├── thumbnail.png     # 미리보기 이미지 (320x180 권장)
+│   └── assets/           # CSS, JS 등 정적 자산
+├── features/
+│   ├── widget.json
+│   ├── render.php
+│   └── thumbnail.png
+└── ...
+```
+
+### widget.json 구조
+
+```json
+{
+  "slug": "hero",
+  "name": { "ko": "히어로", "en": "Hero", "ja": "ヒーロー" },
+  "description": { "ko": "메인 배너 위젯", "en": "Main banner widget" },
+  "version": "1.0.0",
+  "category": "content",
+  "icon": "photo",
+  "thumbnail": "thumbnail.png",
+  "config_schema": {
+    "fields": [ ... ]
+  }
+}
+```
+
+- `name`, `description`: i18n 객체 (로케일 키 → 텍스트)
+- `version`: DB 동기화 시 변경 감지에 사용
+- `category`: 위젯 팔레트에서 그룹핑 기준
+- `config_schema`: 편집 패널 필드 정의 (기존 DB 스키마와 동일 형식)
+
+### WidgetLoader 클래스
+
+`rzxlib/Core/Modules/WidgetLoader.php`의 주요 메서드:
+
+| 메서드 | 설명 |
+|--------|------|
+| `scan()` | `widgets/` 디렉토리를 순회하여 widget.json 파싱 |
+| `syncToDatabase()` | 파일 ↔ DB 양방향 동기화 (아래 섹션 참조) |
+| `render($slug, $config, $pageWidget)` | 3-tier 렌더링으로 HTML 반환 |
+| `localizedValue($value, $locale)` | i18n 객체에서 현재 로케일 값 추출 (폴백: ko → en) |
+| `getThumbnailUrl($slug)` | 위젯 썸네일 URL 반환 |
+
+### 3-Tier 렌더링 우선순위
+
+```
+1. 파일 기반: widgets/{slug}/render.php 존재 시 최우선 사용
+2. WidgetRenderer 메서드: renderHero(), renderFeatures() 등 내장 메서드
+3. DB 커스텀 template: rzx_widgets.template 컬럼의 {{변수}} 치환
+```
+
+### render.php 사용 가능 변수
+
+| 변수 | 타입 | 설명 |
+|------|------|------|
+| `$config` | array | 위젯 설정 (config_schema 기반 값) |
+| `$widget` | array | 위젯 메타데이터 (slug, name 등) |
+| `$renderer` | WidgetRenderer | 렌더러 인스턴스 (`t()`, `scopeWidgetCss()` 등 사용) |
+| `$pdo` | PDO | DB 연결 |
+| `$baseUrl` | string | 사이트 기본 URL |
+| `$locale` | string | 현재 로케일 코드 |
+| `$loader` | WidgetLoader | 로더 인스턴스 |
+
+---
+
+## 썸네일 시스템
+
+- 각 위젯 폴더 루트에 `thumbnail.png` 배치 (권장 크기: **320x180px**)
+- `widget.json`의 `"thumbnail"` 필드로 파일명 지정 (기본값: `thumbnail.png`)
+- **위젯 관리 페이지** (`/theadmin/site/widgets`): 카드 상단에 `h-36` 크기로 썸네일 프리뷰 표시
+- **위젯 빌더 팔레트** (플라이아웃): `aspect-video` 비율로 썸네일 프리뷰 표시
+- 썸네일이 없는 위젯은 아이콘 + 배경색 폴백으로 표시
+
+---
+
+## 양방향 DB 동기화
+
+### syncToDatabase() 동작
+
+`WidgetLoader::syncToDatabase()`가 파일 시스템과 DB를 자동 동기화:
+
+| 상황 | 동작 |
+|------|------|
+| 새 위젯 폴더 발견 | `rzx_widgets`에 INSERT (type=`builtin`) |
+| widget.json 버전 변경 | 해당 레코드 UPDATE (name, config_schema 등 갱신) |
+| 위젯 폴더 삭제됨 | type=`builtin`인 레코드만 DELETE |
+
+### 캐시
+
+- 동기화 결과를 `storage/.widget_sync` 파일에 캐시
+- **1시간** 유효 — 만료 시 다음 요청에서 자동 재동기화
+- 관리자 위젯 페이지 접근 시 강제 동기화 가능
+
+### 주의사항
+
+- type=`custom` 위젯(관리자가 DB에서 직접 생성)은 **자동 삭제되지 않음**
+- 파일 기반 위젯의 slug와 커스텀 위젯의 slug가 충돌하면 파일 기반이 우선

@@ -1184,13 +1184,17 @@ return [
                 'all' => 'すべて',
                 'layout' => 'レイアウト',
                 'content' => 'コンテンツ',
+                'marketing' => 'マーケティング',
                 'general' => '一般',
             ],
             'types' => [
                 'builtin' => '内蔵',
                 'custom' => 'カスタム',
                 'marketplace' => 'マーケットプレイス',
+                'file_based' => 'ファイルベース',
             ],
+            'file_based' => 'ファイルベース',
+            'file_widget_no_delete' => 'ファイルベースのウィジェットは削除できません。ウィジェットフォルダを直接削除してください。',
             'form' => [
                 'name' => 'ウィジェット名',
                 'name_placeholder' => '例: バナースライダー',
@@ -1258,6 +1262,12 @@ return [
             'loading' => 'プレビュー読み込み中...',
             'i18n_fields' => '多言語テキスト',
             'multilang' => '多言語入力',
+            'cat' => [
+                'layout' => 'レイアウト',
+                'content' => 'コンテンツ',
+                'marketing' => 'マーケティング',
+                'general' => '一般',
+            ],
             'w' => [
                 'hero' => 'ヒーローバナー',
                 'hero_desc' => 'メインバナー（タイトル、サブタイトル、CTA）',

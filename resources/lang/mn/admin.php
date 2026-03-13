@@ -773,8 +773,10 @@ return [
             'installed' => 'Суулгасан', 'not_installed' => 'Суулгаагүй',
             'install' => 'Суулгах', 'uninstall' => 'Устгах', 'preview' => 'Урьдчилан харах',
             'no_widgets' => 'Виджет олдсонгүй.',
-            'categories' => ['all' => 'Бүгд', 'layout' => 'Байршил', 'content' => 'Агуулга', 'general' => 'Ерөнхий'],
-            'types' => ['builtin' => 'Суурилуулсан', 'custom' => 'Тохируулсан', 'marketplace' => 'Маркетплейс'],
+            'categories' => ['all' => 'Бүгд', 'layout' => 'Байршил', 'content' => 'Агуулга', 'marketing' => 'Маркетинг', 'general' => 'Ерөнхий'],
+            'types' => ['builtin' => 'Суурилуулсан', 'custom' => 'Тохируулсан', 'marketplace' => 'Маркетплейс', 'file_based' => 'Файлд суурилсан'],
+            'file_based' => 'Файлд суурилсан',
+            'file_widget_no_delete' => 'Файлд суурилсан виджетийг устгах боломжгүй. Виджетийн хавтсыг шууд устгана уу.',
             'form' => [
                 'name' => 'Виджет нэр', 'name_placeholder' => 'жнь: Баннер слайдер',
                 'slug' => 'Slug', 'slug_placeholder' => 'жнь: banner-slider',
@@ -813,6 +815,12 @@ return [
             'loading' => 'Урьдчилсан харагдац ачаалж байна...',
             'i18n_fields' => 'Олон хэлний текст',
             'multilang' => 'Олон хэлний оруулга',
+            'cat' => [
+                'layout' => 'Загвар',
+                'content' => 'Агуулга',
+                'marketing' => 'Маркетинг',
+                'general' => 'Ерөнхий',
+            ],
             'w' => [
                 'hero' => 'Гол баннер', 'hero_desc' => 'Гол баннер (гарчиг, дэд гарчиг, CTA)',
                 'features' => 'Онцлог карт', 'features_desc' => 'Онцлог карт сүлжээ',

@@ -1,0 +1,33 @@
+{
+    "slug": "services",
+    "version": "1.0.0",
+    "author": "RezlyX",
+    "category": "content",
+    "icon": "briefcase",
+    "thumbnail": "thumbnail.png",
+    "name": {
+        "ko": "서비스 목록", "en": "Service List", "ja": "サービス一覧",
+        "zh_CN": "服务列表", "zh_TW": "服務列表", "de": "Dienstleistungen",
+        "es": "Lista de Servicios", "fr": "Liste des Services",
+        "id": "Daftar Layanan", "mn": "Үйлчилгээний жагсаалт", "ru": "Список услуг",
+        "tr": "Hizmet Listesi", "vi": "Danh sách Dịch vụ"
+    },
+    "description": {
+        "ko": "DB 서비스를 카드로 표시", "en": "Display services from database",
+        "ja": "データベースのサービスをカード表示",
+        "zh_CN": "从数据库展示服务卡片", "zh_TW": "從資料庫展示服務卡片",
+        "de": "Dienste aus der Datenbank anzeigen", "es": "Mostrar servicios de la base de datos",
+        "fr": "Afficher les services depuis la base de données", "id": "Tampilkan layanan dari database",
+        "mn": "Мэдээллийн сангаас үйлчилгээ харуулах", "ru": "Отображение услуг из базы данных",
+        "tr": "Veritabanından hizmetleri göster", "vi": "Hiển thị dịch vụ từ cơ sở dữ liệu"
+    },
+    "config_schema": {
+        "fields": [
+            {"key": "title", "type": "text", "label": "Section Title", "i18n": true},
+            {"key": "subtitle", "type": "textarea", "label": "Section Subtitle", "i18n": true},
+            {"key": "count", "type": "number", "label": "Max Items", "default": 6},
+            {"key": "show_price", "type": "toggle", "label": "Show Price", "default": true},
+            {"key": "show_duration", "type": "toggle", "label": "Show Duration", "default": true}
+        ]
+    }
+}
