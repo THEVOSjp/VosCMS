@@ -39,6 +39,8 @@ try {
     // POST 처리 (AJAX)
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Content-Type: application/json; charset=utf-8');
+
+        try {
         $action = $_POST['action'] ?? '';
 
         // master만 관리자 관리 가능
@@ -158,6 +160,11 @@ try {
 
         echo json_encode(['error' => '알 수 없는 요청입니다.']);
         exit;
+
+        } catch (\Throwable $e) {
+            echo json_encode(['error' => 'DB 오류: ' . $e->getMessage()]);
+            exit;
+        }
     }
 
     // 관리자 목록 로드 (스태프 이름/아바타 포함)
