@@ -3,6 +3,7 @@
  * RezlyX Admin - 메뉴 관리 페이지
  * 4단 캐스케이딩 패널: 트리 | 컨텍스트 | 메뉴타입 | 상세폼
  */
+include_once __DIR__ . '/../components/multilang-button.php';
 $pageTitle = __('admin.site.menus.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $baseUrl = '';
 if (!empty($config['app_url'])) {
@@ -432,12 +433,10 @@ function renderShortcutMenuItem($item, $depth = 1) {
                                 <!-- 메뉴 이름 -->
                                 <div>
                                     <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.site.menus.field_name') ?></label>
-                                    <div class="flex">
+                                    <div class="flex items-center gap-1">
                                         <input type="text" id="formTitle" required
-                                               class="flex-1 px-2.5 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded-l bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <button type="button" onclick="openMenuMultilang('title')" class="px-2 border border-l-0 border-zinc-300 dark:border-zinc-600 rounded-r bg-zinc-50 dark:bg-zinc-600 text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-500" title="<?= __('admin.site.menus.multilang') ?>">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-                                        </button>
+                                               class="flex-1 px-2.5 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <?= rzx_multilang_btn("openMenuMultilang('title')") ?>
                                     </div>
                                 </div>
                                 <!-- 메뉴 아이콘 -->
@@ -477,12 +476,10 @@ function renderShortcutMenuItem($item, $depth = 1) {
                                 <!-- 메뉴 설명 -->
                                 <div>
                                     <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.site.menus.field_desc') ?></label>
-                                    <div class="flex">
+                                    <div class="flex items-start gap-1">
                                         <textarea id="formDesc" rows="3"
-                                                  class="flex-1 px-2.5 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded-l bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"></textarea>
-                                        <button type="button" onclick="openMenuMultilang('description')" class="px-2 border border-l-0 border-zinc-300 dark:border-zinc-600 rounded-r bg-zinc-50 dark:bg-zinc-600 text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-500 self-start" title="<?= __('admin.site.menus.multilang') ?>">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-                                        </button>
+                                                  class="flex-1 px-2.5 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"></textarea>
+                                        <?= rzx_multilang_btn("openMenuMultilang('description')") ?>
                                     </div>
                                 </div>
                                 <!-- 메뉴 ID (일반 메뉴용) -->

@@ -3,6 +3,7 @@
  * RezlyX Admin - 서비스 관리 모달 폼
  * services.php에서 include
  */
+include_once __DIR__ . '/components/multilang-button.php';
 ?>
 
 <!-- ═══ 서비스 추가/수정 모달 ═══ -->
@@ -30,9 +31,7 @@
                         <input type="text" id="svcName" name="name" required
                                class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                                placeholder="<?= __('admin.services.placeholder_name') ?>">
-                        <button type="button" onclick="openServiceMultilang('name')" class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg" title="<?= __('admin.settings.site.multilang_title') ?>">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-                        </button>
+                        <?= rzx_multilang_btn("openServiceMultilang('name')") ?>
                     </div>
                 </div>
 
@@ -91,9 +90,7 @@
                 <div>
                     <div class="flex items-center justify-between mb-1">
                         <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.services.fields.description') ?></label>
-                        <button type="button" onclick="openServiceMultilang('description')" class="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg" title="<?= __('admin.settings.site.multilang_title') ?>">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-                        </button>
+                        <?= rzx_multilang_btn("openServiceMultilang('description')") ?>
                     </div>
                     <textarea id="svcDescription" name="description" rows="3"
                               class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"

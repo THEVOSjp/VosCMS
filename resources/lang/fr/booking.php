@@ -23,11 +23,20 @@ return [
     'notes_placeholder' => 'Entrez vos demandes speciales',
     'customer' => 'Client',
     'phone' => 'Telephone',
-    'date' => 'Date',
-    'time' => 'Heure',
+    'date_label' => 'Date',
+    'time_label' => 'Heure',
     'total_price' => 'Montant total',
     'cancel_policy' => 'Les annulations sont autorisees jusqu\'a 24 heures avant l\'heure de reservation. Des frais d\'annulation peuvent s\'appliquer pour les annulations ulterieures.',
-    'success' => 'Votre reservation a ete effectuee ! Un message de confirmation sera envoye.',
+    'success' => 'Réservation terminée !',
+    'success_desc' => 'Une confirmation vous sera envoyée. Veuillez conserver votre numéro de réservation.',
+    'submitting' => 'Traitement...',
+    'select_staff' => 'Sélectionnez un membre du personnel',
+    'no_preference' => 'Pas de préférence',
+    'staff' => 'Personnel',
+    'designation_fee' => 'Frais de désignation',
+    'designation_fee_badge' => '+:amount',
+    'loading_slots' => 'Vérification des créneaux disponibles...',
+    'no_available_slots' => 'Aucun créneau disponible à la date sélectionnée.',
 
     // Steps
     'step' => [
@@ -165,5 +174,6 @@ return [
         'max_capacity' => 'Capacite maximale depassee.',
         'booking_failed' => 'Une erreur est survenue lors du traitement de votre reservation.',
         'required_fields' => 'Veuillez entrer votre nom et vos coordonnees.',
+        'invalid_service' => 'Service invalide.',
     ],
 ];

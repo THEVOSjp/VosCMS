@@ -81,8 +81,10 @@ try {
 
             $userId = trim($_POST['user_id'] ?? '') ?: null;
 
-            $sql = "INSERT INTO {$prefix}staff (user_id, name, name_i18n, email, phone, avatar, bio, bio_i18n, position_id, is_active, sort_order)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)";
+            $designationFee = max(0, (float)($_POST['designation_fee'] ?? 0));
+
+            $sql = "INSERT INTO {$prefix}staff (user_id, name, name_i18n, email, phone, avatar, bio, bio_i18n, designation_fee, position_id, is_active, sort_order)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
                 $userId,
@@ -93,6 +95,7 @@ try {
                 $avatar,
                 trim($_POST['bio'] ?? '') ?: null,
                 $bioI18n ? json_encode(json_decode($bioI18n, true), JSON_UNESCAPED_UNICODE) : null,
+                $designationFee,
                 $positionId,
                 $maxSort + 1,
             ]);
@@ -122,7 +125,8 @@ try {
             }
 
             $userId = trim($_POST['user_id'] ?? '') ?: null;
-            $fields = ['user_id = ?', 'name = ?', 'email = ?', 'phone = ?', 'bio = ?', 'position_id = ?', 'is_active = ?'];
+            $designationFee = max(0, (float)($_POST['designation_fee'] ?? 0));
+            $fields = ['user_id = ?', 'name = ?', 'email = ?', 'phone = ?', 'bio = ?', 'designation_fee = ?', 'position_id = ?', 'is_active = ?'];
             $positionId = (int)($_POST['position_id'] ?? 0) ?: null;
             $params = [
                 $userId,
@@ -130,6 +134,7 @@ try {
                 trim($_POST['email'] ?? '') ?: null,
                 trim($_POST['phone'] ?? '') ?: null,
                 trim($_POST['bio'] ?? '') ?: null,
+                $designationFee,
                 $positionId,
                 isset($_POST['is_active']) ? 1 : 0,
             ];
@@ -236,6 +241,31 @@ try {
     // 서비스 목록
     $services = $pdo->query("SELECT id, name FROM {$prefix}services WHERE is_active = 1 ORDER BY sort_order ASC")->fetchAll(PDO::FETCH_ASSOC);
 
+    // 서비스 다국어 번역 로드
+    $currentLocale = $config['locale'] ?? 'ko';
+    $defaultLocale = $settings['default_language'] ?? 'ko';
+    $localeChain = array_unique(array_filter([$currentLocale, 'en', $defaultLocale]));
+    $lcPlaceholders = implode(',', array_fill(0, count($localeChain), '?'));
+    $trStmt = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations
+        WHERE locale IN ({$lcPlaceholders}) AND lang_key LIKE 'service.%.name'");
+    $trStmt->execute(array_values($localeChain));
+    $svcTranslations = [];
+    while ($tr = $trStmt->fetch(PDO::FETCH_ASSOC)) {
+        $svcTranslations[$tr['lang_key']][$tr['locale']] = $tr['content'];
+    }
+
+    // 서비스 이름 다국어 헬퍼
+    function getServiceTranslated($svcId, $default) {
+        global $svcTranslations, $localeChain;
+        $key = "service.{$svcId}.name";
+        if (isset($svcTranslations[$key])) {
+            foreach ($localeChain as $loc) {
+                if (!empty($svcTranslations[$key][$loc])) return $svcTranslations[$key][$loc];
+            }
+        }
+        return $default;
+    }
+
     // 스태프별 담당 서비스 매핑
     $staffServices = [];
     $ssRows = $pdo->query("SELECT staff_id, service_id FROM {$prefix}staff_services")->fetchAll(PDO::FETCH_ASSOC);
@@ -335,7 +365,7 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                                         if (!empty($myServices)):
                                             $svcNames = [];
                                             foreach ($services as $svc) {
-                                                if (in_array($svc['id'], $myServices)) $svcNames[] = $svc['name'];
+                                                if (in_array($svc['id'], $myServices)) $svcNames[] = getServiceTranslated($svc['id'], $svc['name']);
                                             }
                                     ?>
                                     <div class="flex flex-wrap gap-1 mt-2">
@@ -343,6 +373,12 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                                         <span class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"><?= htmlspecialchars($sn) ?></span>
                                         <?php endforeach; ?>
                                     </div>
+                                    <?php endif; ?>
+                                    <?php if (($settings['staff_designation_fee_enabled'] ?? '0') === '1' && (float)$s['designation_fee'] > 0): ?>
+                                    <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 mt-1 text-[10px] font-medium rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <?= __('admin.staff.fields.designation_fee') ?>: <?= number_format((float)$s['designation_fee']) ?>
+                                    </span>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -354,6 +390,7 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                                 "phone" => $s["phone"], "bio" => $s["bio"], "avatar" => $s["avatar"],
                                 "position_id" => $s["position_id"], "is_active" => $s["is_active"],
                                 "name_i18n" => $nameI18n, "bio_i18n" => $bioI18n,
+                                "designation_fee" => (float)($s["designation_fee"] ?? 0),
                                 "service_ids" => $staffServices[$s["id"]] ?? [],
                             ], JSON_UNESCAPED_UNICODE), ENT_QUOTES) ?>)'
                                     class="px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600 rounded-lg transition">

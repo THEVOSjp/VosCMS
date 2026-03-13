@@ -66,7 +66,7 @@ if (!isset($siteSettings)) $siteSettings = [];
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <style>
-        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; }
     </style>
     <script>
         // 다크 모드 초기화
@@ -179,22 +179,40 @@ if (!isset($siteSettings)) $siteSettings = [];
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="relative bg-gradient-to-br from-blue-600 to-blue-800 dark:from-blue-800 dark:to-dark-950 text-white">
+    <?php
+    // === 위젯 기반 동적 렌더링 (WidgetRenderer 공통 모듈 사용) ===
+    require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetRenderer.php';
+    $widgetRenderer = null;
+    try {
+        $homePdo = new PDO(
+            'mysql:host=' . ($_ENV['DB_HOST'] ?? 'localhost') . ';dbname=' . ($_ENV['DB_DATABASE'] ?? 'rezlyx'),
+            $_ENV['DB_USERNAME'] ?? 'root',
+            $_ENV['DB_PASSWORD'] ?? '',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+        );
+        $widgetRenderer = new \RzxLib\Core\Modules\WidgetRenderer($homePdo, 'home', $currentLocale, $baseUrl);
+    } catch (\PDOException $e) {
+        // 폴백: 기본 콘텐츠
+    }
+    ?>
+
+    <?php if ($widgetRenderer && $widgetRenderer->hasWidgets()): ?>
+    <!-- 위젯 기반 홈 페이지 -->
+    <?= $widgetRenderer->renderAll() ?>
+
+    <?php else: ?>
+    <!-- 기본 홈 콘텐츠 (위젯 미배치 시 폴백) -->
+    <section class="relative bg-gradient-to-br from-blue-600 to-blue-800 dark:from-blue-800 dark:to-zinc-950 text-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
             <div class="text-center">
                 <h1 class="text-4xl md:text-5xl font-bold mb-6">
                     <?= __('home.hero.title_1') ?><br>
                     <span class="text-blue-200"><?= __('home.hero.title_2') ?></span>
                 </h1>
-                <p class="text-xl text-blue-100 dark:text-blue-200 mb-8 max-w-2xl mx-auto">
-                    <?= __('home.hero.subtitle') ?>
-                </p>
-                <a href="<?php echo $baseUrl; ?>/booking" class="inline-flex items-center px-8 py-4 bg-white dark:bg-gray-100 text-blue-600 font-semibold rounded-xl hover:bg-blue-50 dark:hover:bg-gray-200 transition shadow-lg">
+                <p class="text-xl text-blue-100 dark:text-blue-200 mb-8 max-w-2xl mx-auto"><?= __('home.hero.subtitle') ?></p>
+                <a href="<?= $baseUrl ?>/booking" class="inline-flex items-center px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition shadow-lg">
                     <?= __('home.hero.cta_booking') ?>
-                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
+                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </a>
             </div>
         </div>
@@ -207,17 +225,16 @@ if (!isset($siteSettings)) $siteSettings = [];
         <div class="max-w-7xl mx-auto px-4 py-4">
             <div class="flex items-center justify-center space-x-4 text-sm">
                 <span class="px-2 py-1 bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 rounded font-medium">DEV MODE</span>
-                <span class="text-yellow-700 dark:text-yellow-400">PHP <?php echo PHP_VERSION; ?></span>
+                <span class="text-yellow-700 dark:text-yellow-400">PHP <?= PHP_VERSION ?></span>
                 <span class="text-yellow-700 dark:text-yellow-500">|</span>
-                <span class="text-yellow-700 dark:text-yellow-400">Locale: <?php echo $currentLocale; ?></span>
+                <span class="text-yellow-700 dark:text-yellow-400">Locale: <?= $currentLocale ?></span>
                 <span class="text-yellow-700 dark:text-yellow-500">|</span>
-                <a href="<?php echo $baseUrl; ?>/<?php echo $config['admin_path']; ?>" class="text-yellow-800 dark:text-yellow-300 hover:underline font-medium"><?= __('common.nav.admin') ?> →</a>
+                <a href="<?= $baseUrl ?>/<?= $config['admin_path'] ?>" class="text-yellow-800 dark:text-yellow-300 hover:underline font-medium"><?= __('common.nav.admin') ?> →</a>
             </div>
         </div>
     </section>
     <?php endif; ?>
 
-    <!-- Features Section -->
     <section class="py-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
@@ -225,41 +242,25 @@ if (!isset($siteSettings)) $siteSettings = [];
                 <p class="text-gray-600 dark:text-zinc-400"><?= __('home.features.subtitle') ?></p>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Feature 1 -->
-                <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm dark:shadow-zinc-900/50 p-8 text-center hover:shadow-lg dark:hover:shadow-dark-900/70 transition">
-                    <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center mx-auto mb-6">
-                        <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                        </svg>
+                <?php
+                $defaultFeatures = [
+                    ['icon' => 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z', 'color' => 'blue', 'key' => 'mobile'],
+                    ['icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', 'color' => 'green', 'key' => 'realtime'],
+                    ['icon' => 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', 'color' => 'purple', 'key' => 'easy_payment'],
+                ];
+                foreach ($defaultFeatures as $df): ?>
+                <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-8 text-center hover:shadow-lg transition">
+                    <div class="w-16 h-16 bg-<?= $df['color'] ?>-100 dark:bg-<?= $df['color'] ?>-900/50 rounded-xl flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8 text-<?= $df['color'] ?>-600 dark:text-<?= $df['color'] ?>-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $df['icon'] ?>"/></svg>
                     </div>
-                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3"><?= __('home.features.mobile.title') ?></h3>
-                    <p class="text-gray-600 dark:text-zinc-400"><?= __('home.features.mobile.desc') ?></p>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3"><?= __('home.features.' . $df['key'] . '.title') ?></h3>
+                    <p class="text-gray-600 dark:text-zinc-400"><?= __('home.features.' . $df['key'] . '.desc') ?></p>
                 </div>
-
-                <!-- Feature 2 -->
-                <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm dark:shadow-zinc-900/50 p-8 text-center hover:shadow-lg dark:hover:shadow-dark-900/70 transition">
-                    <div class="w-16 h-16 bg-green-100 dark:bg-green-900/50 rounded-xl flex items-center justify-center mx-auto mb-6">
-                        <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3"><?= __('home.features.realtime.title') ?></h3>
-                    <p class="text-gray-600 dark:text-zinc-400"><?= __('home.features.realtime.desc') ?></p>
-                </div>
-
-                <!-- Feature 3 -->
-                <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm dark:shadow-zinc-900/50 p-8 text-center hover:shadow-lg dark:hover:shadow-dark-900/70 transition">
-                    <div class="w-16 h-16 bg-purple-100 dark:bg-purple-900/50 rounded-xl flex items-center justify-center mx-auto mb-6">
-                        <svg class="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3"><?= __('home.features.easy_payment.title') ?></h3>
-                    <p class="text-gray-600 dark:text-zinc-400"><?= __('home.features.easy_payment.desc') ?></p>
-                </div>
+                <?php endforeach; ?>
             </div>
         </div>
     </section>
+    <?php endif; ?>
 
     <!-- Footer -->
     <footer class="bg-white dark:bg-zinc-800 border-t dark:border-zinc-700 transition-colors duration-200">

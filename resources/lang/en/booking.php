@@ -23,11 +23,20 @@ return [
     'notes_placeholder' => 'Enter any special requests',
     'customer' => 'Customer',
     'phone' => 'Phone',
-    'date' => 'Date',
-    'time' => 'Time',
+    'date_label' => 'Date',
+    'time_label' => 'Time',
     'total_price' => 'Total Amount',
     'cancel_policy' => 'Cancellations are allowed up to 24 hours before the reservation time. A cancellation fee may apply for later cancellations.',
-    'success' => 'Your booking has been completed! A confirmation message will be sent.',
+    'success' => 'Booking completed!',
+    'success_desc' => 'A confirmation will be sent. Please keep your booking number below.',
+    'submitting' => 'Processing...',
+    'select_staff' => 'Select a staff member',
+    'no_preference' => 'No preference',
+    'staff' => 'Staff',
+    'designation_fee' => 'Designation Fee',
+    'designation_fee_badge' => '+:amount',
+    'loading_slots' => 'Checking available times...',
+    'no_available_slots' => 'No available times on the selected date.',
 
     // Steps
     'step' => [
@@ -165,5 +174,6 @@ return [
         'max_capacity' => 'Maximum capacity exceeded.',
         'booking_failed' => 'An error occurred while processing your booking.',
         'required_fields' => 'Please enter your name and contact information.',
+        'invalid_service' => 'Invalid service.',
     ],
 ];

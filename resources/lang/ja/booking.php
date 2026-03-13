@@ -23,11 +23,20 @@ return [
     'notes_placeholder' => 'ご要望があればご記入ください',
     'customer' => '予約者',
     'phone' => '電話番号',
-    'date' => '日付',
-    'time' => '時間',
+    'date_label' => '日付',
+    'time_label' => '時間',
     'total_price' => 'お支払い金額',
     'cancel_policy' => '予約確定後、予約時間の24時間前までキャンセル可能です。それ以降のキャンセルにはキャンセル料が発生する場合があります。',
-    'success' => 'ご予約が完了しました！確認メッセージが送信されます。',
+    'success' => '予約が完了しました！',
+    'success_desc' => '確認メッセージが送信されます。下記の予約番号を保管してください。',
+    'submitting' => '処理中...',
+    'select_staff' => 'スタッフを選択してください',
+    'no_preference' => '指定なし',
+    'staff' => '担当スタッフ',
+    'designation_fee' => '指名料',
+    'designation_fee_badge' => '+:amount',
+    'loading_slots' => '空き時間を確認中...',
+    'no_available_slots' => '選択した日付に予約可能な時間がありません。',
 
     // ステップ
     'step' => [
@@ -165,5 +174,6 @@ return [
         'max_capacity' => '予約可能人数を超えています。',
         'booking_failed' => '予約処理中にエラーが発生しました。',
         'required_fields' => 'お名前と連絡先を入力してください。',
+        'invalid_service' => '無効なサービスです。',
     ],
 ];

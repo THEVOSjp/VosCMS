@@ -23,11 +23,20 @@ return [
     'notes_placeholder' => '輸入任何特殊要求',
     'customer' => '客戶',
     'phone' => '電話',
-    'date' => '日期',
-    'time' => '時間',
+    'date_label' => '日期',
+    'time_label' => '時間',
     'total_price' => '總金額',
     'cancel_policy' => '預約時間前24小時內可取消。逾期取消可能收取取消費。',
-    'success' => '您的預約已完成！確認訊息將發送給您。',
+    'success' => '預約已完成！',
+    'success_desc' => '確認簡訊將會發送。請保存下方的預約編號。',
+    'submitting' => '處理中...',
+    'select_staff' => '請選擇工作人員',
+    'no_preference' => '不指定',
+    'staff' => '負責人員',
+    'designation_fee' => '指名費',
+    'designation_fee_badge' => '+:amount',
+    'loading_slots' => '正在確認可用時間...',
+    'no_available_slots' => '所選日期沒有可預約的時間。',
 
     // Steps
     'step' => [
@@ -165,5 +174,6 @@ return [
         'max_capacity' => '超出最大容量。',
         'booking_failed' => '處理預約時發生錯誤。',
         'required_fields' => '請輸入姓名和聯繫方式。',
+        'invalid_service' => '無效的服務。',
     ],
 ];

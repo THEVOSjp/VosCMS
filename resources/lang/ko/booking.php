@@ -23,11 +23,20 @@ return [
     'notes_placeholder' => '요청사항이 있으면 입력해주세요',
     'customer' => '예약자',
     'phone' => '연락처',
-    'date' => '날짜',
-    'time' => '시간',
+    'date_label' => '날짜',
+    'time_label' => '시간',
     'total_price' => '결제 금액',
     'cancel_policy' => '예약 확정 후 예약 시간 24시간 전까지 취소 가능합니다. 이후 취소 시 취소 수수료가 부과될 수 있습니다.',
-    'success' => '예약이 완료되었습니다! 예약 확인 문자가 발송됩니다.',
+    'success' => '예약이 완료되었습니다!',
+    'success_desc' => '예약 확인 문자가 발송됩니다. 아래 예약번호를 보관해주세요.',
+    'submitting' => '처리 중...',
+    'select_staff' => '스태프를 선택해주세요',
+    'no_preference' => '지정 안함',
+    'staff' => '담당 스태프',
+    'designation_fee' => '지명비',
+    'designation_fee_badge' => '+:amount',
+    'loading_slots' => '가능한 시간을 확인하는 중...',
+    'no_available_slots' => '선택한 날짜에 예약 가능한 시간이 없습니다.',
 
     // 단계
     'step' => [
@@ -165,5 +174,6 @@ return [
         'max_capacity' => '예약 가능 인원을 초과했습니다.',
         'booking_failed' => '예약 처리 중 오류가 발생했습니다.',
         'required_fields' => '이름과 연락처를 입력해주세요.',
+        'invalid_service' => '유효하지 않은 서비스입니다.',
     ],
 ];

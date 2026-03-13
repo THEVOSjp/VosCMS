@@ -1,0 +1,310 @@
+<?php
+/**
+ * RezlyX Admin - WYSIWYG 위젯 빌더
+ * 실시간 미리보기 + 드래그앤드롭 + 설정 편집
+ */
+$pageTitle = __('admin.site.widget_builder.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+include_once __DIR__ . '/../components/multilang-button.php';
+
+try {
+    $pdo = new PDO(
+        'mysql:host=' . ($_ENV['DB_HOST'] ?? 'localhost') . ';dbname=' . ($_ENV['DB_DATABASE'] ?? 'rezlyx'),
+        $_ENV['DB_USERNAME'] ?? 'root',
+        $_ENV['DB_PASSWORD'] ?? '',
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+    );
+} catch (PDOException $e) {
+    die('DB 연결 실패');
+}
+
+$baseUrl = $config['app_url'] ?? '';
+$adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
+$currentLocale = $config['locale'] ?? 'ko';
+
+// ======= AJAX 요청 처리 (별도 파일) =======
+include __DIR__ . '/pages-widget-builder-ajax.php';
+
+// ======= 데이터 로드 =======
+$availableWidgets = $pdo->query("SELECT * FROM rzx_widgets WHERE is_active = 1 ORDER BY type, name")->fetchAll(PDO::FETCH_ASSOC);
+$placedWidgets = $pdo->query("
+    SELECT pw.*, w.slug as widget_slug, w.name as widget_name, w.icon, w.type as widget_type, w.config_schema
+    FROM rzx_page_widgets pw
+    JOIN rzx_widgets w ON pw.widget_id = w.id
+    WHERE pw.page_slug = 'home'
+    ORDER BY pw.sort_order ASC
+")->fetchAll(PDO::FETCH_ASSOC);
+
+// 지원 언어 로드
+$supportedLangs = ['ko','en','ja'];
+try {
+    $langSetting = $pdo->query("SELECT `value` FROM rzx_settings WHERE `key` = 'supported_languages'")->fetchColumn();
+    if ($langSetting) $supportedLangs = json_decode($langSetting, true) ?: $supportedLangs;
+} catch (\Exception $e) {}
+$langNames = [
+    'ko' => '한국어', 'en' => 'English', 'ja' => '日本語',
+    'zh_CN' => '简体中文', 'zh_TW' => '繁體中文',
+    'de' => 'Deutsch', 'es' => 'Español', 'fr' => 'Français',
+    'id' => 'Indonesia', 'mn' => 'Монгол', 'ru' => 'Русский',
+    'tr' => 'Türkçe', 'vi' => 'Tiếng Việt'
+];
+
+$iconMap = [
+    'sparkles' => 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
+    'grid' => 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z',
+    'briefcase' => 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+    'chart-bar' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+    'chat' => 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
+    'megaphone' => 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z',
+    'document-text' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+    'arrows-expand' => 'M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4',
+    'cube' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+];
+?>
+<!DOCTYPE html>
+<html lang="<?= $config['locale'] ?? 'ko' ?>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= htmlspecialchars($pageTitle) ?></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <!-- Summernote (richtext editor) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+    <style>
+        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .widget-ghost { opacity: 0.3; }
+        .widget-chosen .widget-toolbar { opacity: 1 !important; }
+        .widget-block:hover .widget-toolbar { opacity: 1; }
+        .widget-palette-item { cursor: pointer; }
+        .widget-palette-item:hover { transform: translateX(2px); }
+        #editSidePanel { transition: width 0.2s ease; }
+        /* Summernote 다크모드 */
+        .note-editor { border-radius: 0.5rem; overflow: hidden; }
+        .dark .note-editor { border-color: #52525b; }
+        .dark .note-editor .note-toolbar { background: #3f3f46; border-color: #52525b; }
+        .dark .note-editor .note-toolbar .note-btn { color: #a1a1aa; background: transparent; border-color: #52525b; }
+        .dark .note-editor .note-toolbar .note-btn:hover { color: #fff; background: #52525b; }
+        .dark .note-editor .note-editing-area { background: #3f3f46; }
+        .dark .note-editor .note-editable { color: #fff; background: #3f3f46; }
+        .dark .note-editor .note-statusbar { background: #3f3f46; border-color: #52525b; }
+        .dark .note-editor .note-codable { background: #27272a; color: #a1a1aa; }
+        .dark .note-dropdown-menu { background: #3f3f46; border-color: #52525b; }
+        .dark .note-dropdown-menu .note-dropdown-item { color: #a1a1aa; }
+        .dark .note-dropdown-menu .note-dropdown-item:hover { background: #52525b; color: #fff; }
+    </style>
+    <script>
+        if (localStorage.getItem('darkMode') === 'true' ||
+            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</head>
+<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen">
+    <div class="flex">
+        <?php include __DIR__ . '/../partials/admin-sidebar.php'; ?>
+
+        <main class="flex-1 ml-64 flex flex-col h-screen">
+            <?php
+            $pageHeaderTitle = __('admin.site.widget_builder.title');
+            include __DIR__ . '/../partials/admin-topbar.php';
+            ?>
+
+            <div class="flex flex-1 overflow-hidden">
+                <!-- 왼쪽: 위젯 팔레트 -->
+                <aside id="widgetPalettePanel" class="w-56 bg-white dark:bg-zinc-800 border-r border-zinc-200 dark:border-zinc-700 flex flex-col overflow-hidden flex-shrink-0">
+                    <div class="px-4 py-3 border-b border-zinc-200 dark:border-zinc-700">
+                        <h3 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('admin.site.widget_builder.available_widgets') ?></h3>
+                    </div>
+                    <div id="widgetPalette" class="flex-1 overflow-y-auto p-2 space-y-1">
+                        <?php foreach ($availableWidgets as $aw): ?>
+                        <div class="widget-palette-item flex items-center p-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-transparent hover:border-blue-200 dark:hover:border-blue-800 transition-all"
+                             data-widget-id="<?= $aw['id'] ?>"
+                             data-widget-slug="<?= htmlspecialchars($aw['slug']) ?>"
+                             data-widget-name="<?= htmlspecialchars($aw['name']) ?>"
+                             data-widget-icon="<?= htmlspecialchars($aw['icon']) ?>"
+                             data-config-schema="<?= htmlspecialchars($aw['config_schema'] ?? '{}') ?>"
+                             data-default-config="<?= htmlspecialchars($aw['default_config'] ?? '{}') ?>">
+                            <div class="w-7 h-7 bg-blue-100 dark:bg-blue-900/30 rounded flex items-center justify-center mr-2.5 flex-shrink-0">
+                                <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $iconMap[$aw['icon']] ?? $iconMap['cube'] ?>"/>
+                                </svg>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-xs font-medium text-zinc-800 dark:text-zinc-200 truncate">
+                                    <?php
+                                    $wKey = 'admin.site.widget_builder.w.' . $aw['slug'];
+                                    $tr = __($wKey);
+                                    echo $tr !== $wKey ? htmlspecialchars($tr) : htmlspecialchars($aw['name']);
+                                    ?>
+                                </p>
+                            </div>
+                            <svg class="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-600 ml-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </aside>
+
+                <!-- 가운데: WYSIWYG 캔버스 -->
+                <div class="flex-1 overflow-y-auto bg-zinc-200/50 dark:bg-zinc-950">
+                    <!-- 상단 툴바 -->
+                    <div class="sticky top-0 z-30 bg-zinc-200/80 dark:bg-zinc-950/80 backdrop-blur-sm border-b border-zinc-300 dark:border-zinc-800 px-6 py-3">
+                        <div class="mx-auto flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <a href="<?= $adminUrl ?>/site/pages" class="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center">
+                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                                    <?= __('admin.site.pages.title') ?>
+                                </a>
+                                <span class="text-zinc-300 dark:text-zinc-700">|</span>
+                                <span id="widgetCount" class="text-xs text-zinc-500 dark:text-zinc-400"></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <a href="<?= $baseUrl ?>/" target="_blank" class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-300 rounded-lg hover:bg-white dark:hover:bg-zinc-800 transition text-xs font-medium flex items-center">
+                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    <?= __('admin.site.widget_builder.preview') ?>
+                                </a>
+                                <button id="btnSaveLayout" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs font-medium flex items-center">
+                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    <?= __('admin.site.widget_builder.save_layout') ?>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 상태 메시지 -->
+                    <div class="mx-auto px-6 pt-4">
+                        <div id="statusMsg" class="hidden mb-3 p-2.5 rounded-lg text-xs"></div>
+                    </div>
+
+                    <!-- 캔버스 프레임 -->
+                    <div class="mx-auto px-6 pb-8">
+                        <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-lg overflow-hidden border border-zinc-200 dark:border-zinc-800">
+                            <!-- 브라우저 바 (시각적 효과) -->
+                            <div class="bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 px-4 py-2 flex items-center gap-2">
+                                <div class="flex gap-1.5">
+                                    <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+                                    <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
+                                    <div class="w-2.5 h-2.5 rounded-full bg-green-400"></div>
+                                </div>
+                                <div class="flex-1 bg-white dark:bg-zinc-700 rounded-md px-3 py-1 text-[10px] text-zinc-400 dark:text-zinc-500 text-center">
+                                    <?= htmlspecialchars($baseUrl) ?>/
+                                </div>
+                            </div>
+                            <!-- 위젯 렌더링 캔버스 -->
+                            <div id="widgetCanvas" class="min-h-[400px]">
+                                <!-- JS에서 동적 생성 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽: 편집 사이드 패널 (기본 숨김) -->
+                <aside id="editSidePanel" class="w-80 bg-white dark:bg-zinc-800 border-l border-zinc-200 dark:border-zinc-700 flex-col overflow-hidden flex-shrink-0 hidden">
+                    <!-- 헤더: 뒤로가기 + 위젯명 -->
+                    <div class="px-4 py-3 border-b border-zinc-200 dark:border-zinc-700 flex items-center gap-2">
+                        <button id="btnEditBack" class="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition" title="<?= __('admin.buttons.cancel') ?>">
+                            <svg class="w-4 h-4 text-zinc-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        </button>
+                        <div class="min-w-0 flex-1">
+                            <h3 id="editPanelTitle" class="text-sm font-semibold text-zinc-900 dark:text-white truncate"></h3>
+                            <p class="text-[10px] text-zinc-400 dark:text-zinc-500"><?= __('admin.site.widget_builder.edit_content') ?? '콘텐츠 편집' ?></p>
+                        </div>
+                    </div>
+                    <!-- 언어 탭 -->
+                    <div id="editLangTabs" class="px-3 py-2 border-b border-zinc-200 dark:border-zinc-700 flex gap-1 overflow-x-auto flex-shrink-0"></div>
+                    <!-- 필드 영역 -->
+                    <div id="editPanelFields" class="flex-1 overflow-y-auto px-4 py-4 space-y-4"></div>
+                    <!-- 하단 버튼 -->
+                    <div class="px-4 py-3 border-t border-zinc-200 dark:border-zinc-700 flex gap-2">
+                        <button id="btnEditPanelCancel" class="flex-1 px-3 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-600 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition">
+                            <?= __('admin.buttons.cancel') ?>
+                        </button>
+                        <button id="btnEditPanelSave" class="flex-1 px-3 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+                            <?= __('admin.buttons.apply') ?>
+                        </button>
+                    </div>
+                </aside>
+            </div>
+        </main>
+    </div>
+
+    <!-- 데이터 -->
+    <script>
+    var widgetIconMap = <?= json_encode($iconMap) ?>;
+    var translations = {
+        empty: '<?= __('admin.site.widget_builder.empty') ?>',
+        remove_confirm: '<?= __('admin.site.widget_builder.remove_confirm') ?>',
+        saved: '<?= __('admin.site.widget_builder.saved') ?>',
+        error_save: '<?= __('admin.site.widget_builder.error_save') ?>',
+        remove_widget: '<?= __('admin.site.widget_builder.remove_widget') ?>',
+        save_layout: '<?= __('admin.site.widget_builder.save_layout') ?>',
+        widgets_count: '<?= __('admin.site.widget_builder.widgets_count') ?? '위젯' ?>',
+        no_config: '<?= __('admin.site.widget_builder.no_config') ?? '설정 가능한 항목이 없습니다' ?>',
+        config_updated: '<?= __('admin.site.widget_builder.config_updated') ?? '설정이 적용되었습니다' ?>',
+        loading: '<?= __('admin.site.widget_builder.loading') ?? '미리보기 로딩 중...' ?>',
+        edit_content: '<?= __('admin.site.widget_builder.edit_content') ?? '콘텐츠 편집' ?>',
+        i18n_fields: '<?= __('admin.site.widget_builder.i18n_fields') ?? '다국어 텍스트' ?>',
+        common_fields: '<?= __('admin.site.widget_builder.common_fields') ?? '공통 설정' ?>',
+        save_apply: '<?= __('admin.buttons.apply') ?>',
+        multilang: '<?= __('admin.site.widget_builder.multilang') ?? '다국어 입력' ?>',
+        inline_editing: '<?= __('admin.site.widget_builder.inline_editing') ?? '인라인 편집 중' ?>',
+        save: '<?= __('admin.buttons.save') ?? '저장' ?>',
+        cancel: '<?= __('admin.buttons.cancel') ?? '취소' ?>'
+    };
+    var supportedLangs = <?= json_encode(array_values($supportedLangs)) ?>;
+    var langNames = <?= json_encode($langNames) ?>;
+    var currentLocale = '<?= $currentLocale ?>';
+    var placedWidgetsData = <?= json_encode(array_map(function($pw) {
+        return [
+            'widget_id' => $pw['widget_id'],
+            'slug' => $pw['widget_slug'],
+            'name' => $pw['widget_name'],
+            'icon' => $pw['icon'],
+            'config' => $pw['config'] ?? '{}',
+            'config_schema' => $pw['config_schema'] ?? '{}',
+        ];
+    }, $placedWidgets)) ?>;
+    </script>
+    <!-- Richtext 편집 모달 (JS보다 먼저 로드되어야 함) -->
+    <style>
+        #richtextModalInner { min-width: 400px; min-height: 300px; }
+        #richtextModalInner.rt-maximized { width: 100vw !important; height: 100vh !important; max-width: 100vw !important; max-height: 100vh !important; margin: 0 !important; border-radius: 0 !important; top: 0 !important; left: 0 !important; transform: none !important; }
+        #richtextModalHeader { cursor: grab; user-select: none; }
+        #richtextModalHeader:active { cursor: grabbing; }
+        #richtextModalResize { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize; z-index: 10; }
+        #richtextModalResize::after { content: ''; position: absolute; right: 3px; bottom: 3px; width: 8px; height: 8px; border-right: 2px solid #a1a1aa; border-bottom: 2px solid #a1a1aa; }
+    </style>
+    <div id="richtextModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div id="richtextModalInner" class="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl flex flex-col border border-zinc-200 dark:border-zinc-700 relative" style="width:900px;height:600px;">
+            <!-- 헤더: 드래그 이동 + 더블클릭 전체화면 -->
+            <div id="richtextModalHeader" class="flex items-center justify-between px-5 py-3 border-b border-zinc-200 dark:border-zinc-700 flex-shrink-0">
+                <h3 id="richtextModalTitle" class="text-sm font-semibold text-zinc-800 dark:text-zinc-200"></h3>
+                <div class="flex items-center gap-1">
+                    <button id="richtextModalMaximize" class="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition" title="최대화/복원">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
+                    </button>
+                    <button id="richtextModalClose" class="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition" title="닫기">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+            <!-- 에디터 영역 -->
+            <div class="flex-1 overflow-y-auto p-5">
+                <textarea id="richtextModalEditor"></textarea>
+            </div>
+            <!-- 하단 버튼 -->
+            <div class="flex justify-end gap-2 px-5 py-3 border-t border-zinc-200 dark:border-zinc-700 flex-shrink-0">
+                <button id="richtextModalCancel" class="px-4 py-2 text-xs text-zinc-600 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-600 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition"><?= __('admin.buttons.cancel') ?? '취소' ?></button>
+                <button id="richtextModalSave" class="px-4 py-2 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"><?= __('admin.buttons.apply') ?? '적용' ?></button>
+            </div>
+            <!-- 리사이즈 핸들 -->
+            <div id="richtextModalResize"></div>
+        </div>
+    </div>
+
+    <?php include __DIR__ . '/pages-widget-builder-js.php'; ?>
+</body>
+</html>

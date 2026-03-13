@@ -2,6 +2,7 @@
 /**
  * RezlyX Admin - 스태프 관리 모달 + JS (index.php에서 include)
  */
+include_once __DIR__ . '/../components/multilang-button.php';
 ?>
 <!-- 사진 편집 모달 (Cropper.js) -->
 <div id="cropperModal" class="fixed inset-0 z-[60] hidden">
@@ -138,9 +139,7 @@
                     <div>
                         <div class="flex items-center gap-2 mb-1">
                             <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.staff.fields.name') ?></label>
-                            <button type="button" onclick="toggleI18n('name')" class="p-1 text-zinc-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition" title="<?= __('admin.staff.settings.position_multilang') ?>">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            </button>
+                            <?= rzx_multilang_btn("toggleI18n('name')") ?>
                         </div>
                         <input type="text" name="name" id="formName" required placeholder="<?= __('admin.staff.placeholder.name') ?>"
                                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500">
@@ -187,9 +186,7 @@
                     <div>
                         <div class="flex items-center gap-2 mb-1">
                             <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.staff.fields.bio') ?></label>
-                            <button type="button" onclick="toggleI18n('bio')" class="p-1 text-zinc-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition" title="<?= __('admin.staff.settings.position_multilang') ?>">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            </button>
+                            <?= rzx_multilang_btn("toggleI18n('bio')") ?>
                         </div>
                         <textarea name="bio" id="formBio" rows="3" placeholder="<?= __('admin.staff.placeholder.bio') ?>"
                                   class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm resize-none"></textarea>
@@ -217,9 +214,22 @@
                                     dark:peer-checked:bg-emerald-900/30 dark:peer-checked:text-emerald-400 dark:peer-checked:border-emerald-700
                                     bg-zinc-100 text-zinc-500 border-zinc-200
                                     dark:bg-zinc-700 dark:text-zinc-400 dark:border-zinc-600
-                                    hover:bg-zinc-200 dark:hover:bg-zinc-600"><?= htmlspecialchars($svc['name']) ?></span>
+                                    hover:bg-zinc-200 dark:hover:bg-zinc-600"><?= htmlspecialchars(getServiceTranslated($svc['id'], $svc['name'])) ?></span>
                             </label>
                             <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- 지명비 (설정 활성 시만 표시) -->
+                    <?php if (($settings['staff_designation_fee_enabled'] ?? '0') === '1'): ?>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.staff.fields.designation_fee') ?></label>
+                        <div class="relative">
+                            <input type="number" name="designation_fee" id="formDesignationFee" min="0" step="1" value="0"
+                                   class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                                   placeholder="0">
+                            <p class="text-xs text-zinc-400 mt-1"><?= __('admin.staff.fields.designation_fee_desc') ?></p>
                         </div>
                     </div>
                     <?php endif; ?>
@@ -455,6 +465,10 @@
             document.getElementById('memberSearchWrap').classList.remove('hidden');
         }
         document.getElementById('memberSearch').value = '';
+
+        // 지명비
+        var feeEl = document.getElementById('formDesignationFee');
+        if (feeEl) feeEl.value = isEdit ? (data.designation_fee || 0) : 0;
 
         // 담당 서비스 초기화
         var selectedSvcs = isEdit ? (data.service_ids || []) : [];

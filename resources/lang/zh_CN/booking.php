@@ -23,11 +23,20 @@ return [
     'notes_placeholder' => '输入任何特殊要求',
     'customer' => '客户',
     'phone' => '电话',
-    'date' => '日期',
-    'time' => '时间',
+    'date_label' => '日期',
+    'time_label' => '时间',
     'total_price' => '总金额',
     'cancel_policy' => '预约时间前24小时内可取消。逾期取消可能收取取消费。',
-    'success' => '您的预约已完成！确认信息将发送给您。',
+    'success' => '预约已完成！',
+    'success_desc' => '确认短信将会发送。请保存下方的预约编号。',
+    'submitting' => '处理中...',
+    'select_staff' => '请选择工作人员',
+    'no_preference' => '不指定',
+    'staff' => '负责人员',
+    'designation_fee' => '指名费',
+    'designation_fee_badge' => '+:amount',
+    'loading_slots' => '正在确认可用时间...',
+    'no_available_slots' => '所选日期没有可预约的时间。',
 
     // Steps
     'step' => [
@@ -165,5 +174,6 @@ return [
         'max_capacity' => '超出最大容量。',
         'booking_failed' => '处理预约时发生错误。',
         'required_fields' => '请输入姓名和联系方式。',
+        'invalid_service' => '无效的服务。',
     ],
 ];

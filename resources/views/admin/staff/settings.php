@@ -6,6 +6,7 @@
 if (!function_exists('__')) {
     require_once BASE_PATH . '/rzxlib/Core/Helpers/lang.php';
 }
+include_once __DIR__ . '/../components/multilang-button.php';
 
 $pageTitle = __('admin.staff.settings.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $baseUrl = $config['app_url'] ?? '';
@@ -101,6 +102,9 @@ try {
                     'staff_show_photo' => isset($_POST['staff_show_photo']) ? '1' : '0',
                     'staff_auto_assign' => trim($_POST['staff_auto_assign'] ?? 'none'),
                     'staff_linked_grade' => trim($_POST['staff_linked_grade'] ?? ''),
+                    'staff_schedule_enabled' => isset($_POST['staff_schedule_enabled']) ? '1' : '0',
+                    'staff_designation_fee_enabled' => isset($_POST['staff_designation_fee_enabled']) ? '1' : '0',
+                    'booking_slot_interval' => trim($_POST['booking_slot_interval'] ?? '30'),
                 ];
 
                 $stmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
@@ -247,6 +251,46 @@ try {
                             <!-- 구분선 -->
                             <div class="border-t border-zinc-200 dark:border-zinc-700"></div>
 
+                            <!-- 스태프 스케줄 관리 -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.staff.settings.schedule_enabled') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"><?= __('admin.staff.settings.schedule_enabled_desc') ?></p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="staff_schedule_enabled" class="sr-only peer" <?= ($settings['staff_schedule_enabled'] ?? '0') === '1' ? 'checked' : '' ?>>
+                                    <div class="w-11 h-6 bg-zinc-200 peer-focus:ring-2 peer-focus:ring-blue-500 dark:bg-zinc-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                                </label>
+                            </div>
+
+                            <!-- 지명비 기능 -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.staff.settings.designation_fee_enabled') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"><?= __('admin.staff.settings.designation_fee_enabled_desc') ?></p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="staff_designation_fee_enabled" class="sr-only peer" <?= ($settings['staff_designation_fee_enabled'] ?? '0') === '1' ? 'checked' : '' ?>>
+                                    <div class="w-11 h-6 bg-zinc-200 peer-focus:ring-2 peer-focus:ring-blue-500 dark:bg-zinc-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                                </label>
+                            </div>
+
+                            <!-- 타임슬롯 간격 -->
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.staff.settings.booking_slot_interval') ?></label>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.staff.settings.booking_slot_interval_desc') ?></p>
+                                <?php $slotInterval = $settings['booking_slot_interval'] ?? '30'; ?>
+                                <select name="booking_slot_interval"
+                                        class="w-32 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <option value="15" <?= $slotInterval === '15' ? 'selected' : '' ?>>15<?= __('common.minutes') ?></option>
+                                    <option value="30" <?= $slotInterval === '30' ? 'selected' : '' ?>>30<?= __('common.minutes') ?></option>
+                                    <option value="60" <?= $slotInterval === '60' ? 'selected' : '' ?>>60<?= __('common.minutes') ?></option>
+                                </select>
+                            </div>
+
+                            <!-- 구분선 -->
+                            <div class="border-t border-zinc-200 dark:border-zinc-700"></div>
+
                             <!-- 스태프 연동 등급 -->
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
@@ -320,10 +364,7 @@ try {
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                         </button>
                                         <!-- 다국어 버튼 -->
-                                        <button type="button" onclick="openEditPosition(<?= $pos['id'] ?>, <?= htmlspecialchars(json_encode($pos['name']), ENT_QUOTES) ?>, <?= htmlspecialchars(json_encode($i18n), ENT_QUOTES) ?>, true)"
-                                                class="p-1.5 text-zinc-500 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-all" title="<?= __('admin.staff.settings.position_multilang') ?>">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        </button>
+                                        <?= rzx_multilang_btn("openEditPosition({$pos['id']}, " . htmlspecialchars(json_encode($pos['name']), ENT_QUOTES) . ", " . htmlspecialchars(json_encode($i18n), ENT_QUOTES) . ", true)") ?>
                                         <!-- 삭제 버튼 -->
                                         <button type="button" onclick="deletePosition(<?= $pos['id'] ?>)"
                                                 class="p-1.5 text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all" title="<?= __('admin.common.delete') ?>">
@@ -385,7 +426,7 @@ try {
                             <!-- 다국어 입력 영역 (토글) -->
                             <div id="editPosI18nSection" class="hidden mb-4">
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                                    <svg class="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <svg class="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
                                     <?= __('admin.staff.settings.position_multilang') ?>
                                 </label>
                                 <div class="space-y-2 max-h-60 overflow-y-auto" id="editPosLangFields"></div>

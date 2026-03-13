@@ -173,6 +173,9 @@ if (empty($path) || $path === 'index.php') {
     // 스태프 관리
     } elseif ($adminRoute === 'staff') {
         include BASE_PATH . '/resources/views/admin/staff/index.php';
+    // 스태프 스케줄 관리
+    } elseif ($adminRoute === 'staff/schedule') {
+        include BASE_PATH . '/resources/views/admin/staff/schedule.php';
     // 스태프 설정 서브페이지 처리 (staff/settings)
     } elseif ($adminRoute === 'staff/settings') {
         include BASE_PATH . '/resources/views/admin/staff/settings.php';
@@ -191,6 +194,22 @@ if (empty($path) || $path === 'index.php') {
         include BASE_PATH . '/resources/views/admin/staff/attendance-report-personal.php';
     } elseif ($adminRoute === 'staff/attendance/report/stats') {
         include BASE_PATH . '/resources/views/admin/staff/attendance-report-stats.php';
+    // 페이지 관리 - 데이터 관리 가이드 편집
+    } elseif ($adminRoute === 'site/pages/compliance') {
+        include BASE_PATH . '/resources/views/admin/site/pages-compliance.php';
+    // 페이지 관리 - 범용 문서 페이지 에디터
+    } elseif ($adminRoute === 'site/pages/edit') {
+        include BASE_PATH . '/resources/views/admin/site/pages-document.php';
+    // 페이지 관리 - 위젯 빌더 (홈 페이지)
+    } elseif ($adminRoute === 'site/pages/widget-builder') {
+        include BASE_PATH . '/resources/views/admin/site/pages-widget-builder.php';
+    // 위젯 관리
+    } elseif ($adminRoute === 'site/widgets') {
+        include BASE_PATH . '/resources/views/admin/site/widgets.php';
+    } elseif ($adminRoute === 'site/widgets/create') {
+        include BASE_PATH . '/resources/views/admin/site/widgets-create.php';
+    } elseif ($adminRoute === 'site/widgets/marketplace') {
+        include BASE_PATH . '/resources/views/admin/site/widgets-marketplace.php';
     } else {
         $adminView = BASE_PATH . '/resources/views/admin/' . $adminRoute . '.php';
         if (file_exists($adminView)) {

@@ -13,7 +13,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             'service_advance_booking_days' => trim($_POST['service_advance_booking_days'] ?? '30'),
             'service_min_notice_hours' => trim($_POST['service_min_notice_hours'] ?? '1'),
             'service_max_capacity' => trim($_POST['service_max_capacity'] ?? '1'),
-            'service_currency' => trim($_POST['service_currency'] ?? 'KRW'),
             'service_price_display' => trim($_POST['service_price_display'] ?? 'show'),
         ];
 
@@ -109,22 +108,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     <input type="number" name="service_max_capacity" min="1" max="100"
                            value="<?= htmlspecialchars($settings['service_max_capacity'] ?? '1') ?>"
                            class="w-32 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                </div>
-
-                <!-- 통화 단위 -->
-                <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                        <?= __('admin.services.settings.general.currency') ?>
-                    </label>
-                    <?php $currencyValue = $settings['service_currency'] ?? 'KRW'; ?>
-                    <select name="service_currency"
-                            class="w-48 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="KRW" <?= $currencyValue === 'KRW' ? 'selected' : '' ?>>KRW (&#8361;)</option>
-                        <option value="USD" <?= $currencyValue === 'USD' ? 'selected' : '' ?>>USD ($)</option>
-                        <option value="JPY" <?= $currencyValue === 'JPY' ? 'selected' : '' ?>>JPY (&#165;)</option>
-                        <option value="EUR" <?= $currencyValue === 'EUR' ? 'selected' : '' ?>>EUR (&euro;)</option>
-                        <option value="CNY" <?= $currencyValue === 'CNY' ? 'selected' : '' ?>>CNY (&#165;)</option>
-                    </select>
                 </div>
 
                 <!-- 가격 표시 -->

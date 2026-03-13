@@ -97,7 +97,14 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                     <p class="text-sm text-zinc-500 dark:text-zinc-400">/</p>
                                 </div>
                             </div>
-                            <span class="text-xs font-medium px-2 py-1 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('admin.site.pages.system_page') ?></span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-medium px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded"><?= __('admin.site.pages.type_widget') ?></span>
+                                <span class="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('admin.site.pages.system_page') ?></span>
+                                <a href="<?= $adminUrl ?>/site/pages/widget-builder"
+                                   class="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition">
+                                    <?= __('admin.buttons.edit') ?>
+                                </a>
+                            </div>
                         </div>
 
                         <div class="p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition">
@@ -112,7 +119,14 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                     <p class="text-sm text-zinc-500 dark:text-zinc-400">/terms</p>
                                 </div>
                             </div>
-                            <span class="text-xs font-medium px-2 py-1 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('admin.site.pages.system_page') ?></span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-medium px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"><?= __('admin.site.pages.type_document') ?></span>
+                                <span class="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('admin.site.pages.system_page') ?></span>
+                                <a href="<?= $adminUrl ?>/site/pages/edit?slug=terms"
+                                   class="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition">
+                                    <?= __('admin.buttons.edit') ?>
+                                </a>
+                            </div>
                         </div>
 
                         <div class="p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition">
@@ -127,7 +141,60 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                     <p class="text-sm text-zinc-500 dark:text-zinc-400">/privacy</p>
                                 </div>
                             </div>
-                            <span class="text-xs font-medium px-2 py-1 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('admin.site.pages.system_page') ?></span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-medium px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"><?= __('admin.site.pages.type_document') ?></span>
+                                <span class="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('admin.site.pages.system_page') ?></span>
+                                <a href="<?= $adminUrl ?>/site/pages/edit?slug=privacy"
+                                   class="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition">
+                                    <?= __('admin.buttons.edit') ?>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- 데이터 관리 가이드 (문서 페이지) -->
+                        <div class="p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center mr-3">
+                                    <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-zinc-900 dark:text-white"><?= __('admin.site.pages.data_policy') ?></h4>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">/data-policy</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-medium px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"><?= __('admin.site.pages.type_document') ?></span>
+                                <span class="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('admin.site.pages.system_page') ?></span>
+                                <a href="<?= $adminUrl ?>/site/pages/compliance"
+                                   class="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition">
+                                    <?= __('admin.buttons.edit') ?>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- 취소 환불 규정 (문서 페이지) -->
+                        <div class="p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center mr-3">
+                                    <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-zinc-900 dark:text-white"><?= __('admin.site.pages.refund_policy') ?></h4>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">/refund-policy</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-medium px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"><?= __('admin.site.pages.type_document') ?></span>
+                                <span class="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('admin.site.pages.system_page') ?></span>
+                                <a href="<?= $adminUrl ?>/site/pages/edit?slug=refund-policy"
+                                   class="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition">
+                                    <?= __('admin.buttons.edit') ?>
+                                </a>
+                            </div>
                         </div>
                     </div>
 

@@ -23,11 +23,20 @@ return [
     'notes_placeholder' => 'Geben Sie besondere Wuensche ein',
     'customer' => 'Kunde',
     'phone' => 'Telefon',
-    'date' => 'Datum',
-    'time' => 'Uhrzeit',
+    'date_label' => 'Datum',
+    'time_label' => 'Uhrzeit',
     'total_price' => 'Gesamtbetrag',
     'cancel_policy' => 'Stornierungen sind bis zu 24 Stunden vor der Reservierungszeit moeglich. Bei spaeteren Stornierungen kann eine Gebuehr anfallen.',
-    'success' => 'Ihre Buchung wurde abgeschlossen! Eine Bestaetigungsnachricht wird gesendet.',
+    'success' => 'Buchung abgeschlossen!',
+    'success_desc' => 'Eine Bestätigung wird gesendet. Bitte bewahren Sie Ihre Buchungsnummer auf.',
+    'submitting' => 'Verarbeitung...',
+    'select_staff' => 'Bitte wählen Sie einen Mitarbeiter',
+    'no_preference' => 'Keine Präferenz',
+    'staff' => 'Mitarbeiter',
+    'designation_fee' => 'Nominierungsgebühr',
+    'designation_fee_badge' => '+:amount',
+    'loading_slots' => 'Verfügbare Zeiten werden geprüft...',
+    'no_available_slots' => 'Keine verfügbaren Zeiten am gewählten Datum.',
 
     // Steps
     'step' => [
@@ -165,5 +174,6 @@ return [
         'max_capacity' => 'Maximale Kapazitaet ueberschritten.',
         'booking_failed' => 'Bei der Verarbeitung Ihrer Buchung ist ein Fehler aufgetreten.',
         'required_fields' => 'Bitte geben Sie Ihren Namen und Kontaktdaten ein.',
+        'invalid_service' => 'Ungültiger Service.',
     ],
 ];

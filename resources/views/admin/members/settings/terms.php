@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/_init.php';
+include_once __DIR__ . '/../../components/multilang-button.php';
 
 $pageTitle = __('admin.members.settings.tabs.terms') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentMemberSettingsPage = 'terms';
@@ -139,13 +140,7 @@ ob_start();
                     <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                         <?= __('admin.members.settings.terms.term_title') ?>
                     </label>
-                    <button type="button" onclick="openMultilangModal('term.<?= $i ?>.title', 'term_<?= $i ?>_title', 'text')"
-                            class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 transition">
-                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
-                        </svg>
-                        <?= __('admin.settings.multilang.button_title') ?>
-                    </button>
+                    <?= rzx_multilang_btn("openMultilangModal('term.{$i}.title', 'term_{$i}_title', 'text')") ?>
                 </div>
                 <?php $termTitleValue = getTranslatedValue("term.{$i}.title", "member_term_{$i}_title", $translations, $memberSettings); ?>
                 <input type="text"
@@ -162,13 +157,7 @@ ob_start();
                     <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                         <?= __('admin.members.settings.terms.term_content') ?>
                     </label>
-                    <button type="button" onclick="openMultilangModal('term.<?= $i ?>.content', 'term_<?= $i ?>_content', 'editor')"
-                            class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 transition">
-                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
-                        </svg>
-                        <?= __('admin.settings.multilang.button_title') ?>
-                    </button>
+                    <?= rzx_multilang_btn("openMultilangModal('term.{$i}.content', 'term_{$i}_content', 'editor')") ?>
                 </div>
                 <?php $termContentValue = getTranslatedValue("term.{$i}.content", "member_term_{$i}_content", $translations, $memberSettings); ?>
                 <textarea id="term_<?= $i ?>_content"

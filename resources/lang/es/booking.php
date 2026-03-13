@@ -23,11 +23,20 @@ return [
     'notes_placeholder' => 'Ingrese cualquier solicitud especial',
     'customer' => 'Cliente',
     'phone' => 'Telefono',
-    'date' => 'Fecha',
-    'time' => 'Hora',
+    'date_label' => 'Fecha',
+    'time_label' => 'Hora',
     'total_price' => 'Monto total',
     'cancel_policy' => 'Las cancelaciones estan permitidas hasta 24 horas antes de la hora de la reserva. Puede aplicarse una tarifa de cancelacion para cancelaciones posteriores.',
-    'success' => 'Su reserva ha sido completada! Se enviara un mensaje de confirmacion.',
+    'success' => '¡Reserva completada!',
+    'success_desc' => 'Se enviará una confirmación. Por favor, guarde su número de reserva.',
+    'submitting' => 'Procesando...',
+    'select_staff' => 'Seleccione un empleado',
+    'no_preference' => 'Sin preferencia',
+    'staff' => 'Personal',
+    'designation_fee' => 'Tarifa de designación',
+    'designation_fee_badge' => '+:amount',
+    'loading_slots' => 'Comprobando horarios disponibles...',
+    'no_available_slots' => 'No hay horarios disponibles en la fecha seleccionada.',
 
     // Steps
     'step' => [
@@ -165,5 +174,6 @@ return [
         'max_capacity' => 'Capacidad maxima excedida.',
         'booking_failed' => 'Ocurrio un error al procesar su reserva.',
         'required_fields' => 'Por favor, ingrese su nombre e informacion de contacto.',
+        'invalid_service' => 'Servicio no válido.',
     ],
 ];

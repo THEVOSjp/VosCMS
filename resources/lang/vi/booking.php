@@ -23,11 +23,20 @@ return [
     'notes_placeholder' => 'Nhập yêu cầu đặc biệt',
     'customer' => 'Khách hàng',
     'phone' => 'Số điện thoại',
-    'date' => 'Ngày',
-    'time' => 'Giờ',
+    'date_label' => 'Ngày',
+    'time_label' => 'Giờ',
     'total_price' => 'Tổng tiền',
     'cancel_policy' => 'Có thể hủy trước 24 giờ so với thời gian đặt chỗ. Phí hủy có thể được áp dụng nếu hủy muộn hơn.',
-    'success' => 'Đặt chỗ của bạn đã hoàn tất! Tin nhắn xác nhận sẽ được gửi.',
+    'success' => 'Đặt lịch hoàn tất!',
+    'success_desc' => 'Tin nhắn xác nhận sẽ được gửi. Vui lòng lưu mã đặt lịch bên dưới.',
+    'submitting' => 'Đang xử lý...',
+    'select_staff' => 'Vui lòng chọn nhân viên',
+    'no_preference' => 'Không chỉ định',
+    'staff' => 'Nhân viên phụ trách',
+    'designation_fee' => 'Phí chỉ định',
+    'designation_fee_badge' => '+:amount',
+    'loading_slots' => 'Đang kiểm tra giờ trống...',
+    'no_available_slots' => 'Không có giờ trống vào ngày đã chọn.',
 
     // Steps
     'step' => [
@@ -165,5 +174,6 @@ return [
         'max_capacity' => 'Đã vượt quá sức chứa tối đa.',
         'booking_failed' => 'Đã xảy ra lỗi khi xử lý đặt chỗ.',
         'required_fields' => 'Vui lòng nhập họ tên và thông tin liên hệ.',
+        'invalid_service' => 'Dịch vụ không hợp lệ.',
     ],
 ];

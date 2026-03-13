@@ -6,6 +6,7 @@
 
 // Initialize database and settings
 require_once __DIR__ . '/_init.php';
+include_once __DIR__ . '/../components/multilang-button.php';
 
 $pageTitle = __('admin.settings.site.page_title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentSettingsPage = 'site';
@@ -263,9 +264,7 @@ ob_start();
                 <div class="flex items-center gap-2">
                     <input type="text" name="site_name" id="site_name" value="<?= htmlspecialchars($settings['site_name'] ?? '') ?>"
                            class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <button type="button" onclick="openMultilangModal('site.name', 'site_name')" class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg" title="<?= __('admin.settings.site.multilang_title') ?>">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-                    </button>
+                    <?= rzx_multilang_btn("openMultilangModal('site.name', 'site_name')") ?>
                 </div>
             </div>
             <div>
@@ -281,9 +280,7 @@ ob_start();
             <div class="flex items-center gap-2">
                 <input type="text" name="site_tagline" id="site_tagline" value="<?= htmlspecialchars($settings['site_tagline'] ?? '') ?>"
                        class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
-                <button type="button" onclick="openMultilangModal('site.tagline', 'site_tagline')" class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg" title="<?= __('admin.settings.site.multilang_title') ?>">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-                </button>
+                <?= rzx_multilang_btn("openMultilangModal('site.tagline', 'site_tagline')") ?>
             </div>
         </div>
 
@@ -315,6 +312,7 @@ ob_start();
                     </select>
                 </div>
             </div>
+
         </div>
 
         <!-- SEO Settings -->
@@ -327,9 +325,7 @@ ob_start();
                         <input type="text" name="seo_keywords" id="seo_keywords" value="<?= htmlspecialchars($settings['seo_keywords'] ?? '') ?>"
                                class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
                                placeholder="<?= __('admin.settings.site.seo.keywords_placeholder') ?>">
-                        <button type="button" onclick="openMultilangModal('seo.keywords', 'seo_keywords')" class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg" title="<?= __('admin.settings.site.multilang_title') ?>">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-                        </button>
+                        <?= rzx_multilang_btn("openMultilangModal('seo.keywords', 'seo_keywords')") ?>
                     </div>
                 </div>
                 <div>
@@ -338,9 +334,7 @@ ob_start();
                         <input type="text" name="seo_description" id="seo_description" value="<?= htmlspecialchars($settings['seo_description'] ?? '') ?>"
                                class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
                                placeholder="<?= __('admin.settings.site.seo.description_placeholder') ?>">
-                        <button type="button" onclick="openMultilangModal('seo.description', 'seo_description')" class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg" title="<?= __('admin.settings.site.multilang_title') ?>">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-                        </button>
+                        <?= rzx_multilang_btn("openMultilangModal('seo.description', 'seo_description')") ?>
                     </div>
                 </div>
             </div>

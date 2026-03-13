@@ -23,11 +23,20 @@ return [
     'notes_placeholder' => 'Masukkan permintaan khusus',
     'customer' => 'Pelanggan',
     'phone' => 'Telepon',
-    'date' => 'Tanggal',
-    'time' => 'Waktu',
+    'date_label' => 'Tanggal',
+    'time_label' => 'Waktu',
     'total_price' => 'Total Jumlah',
     'cancel_policy' => 'Pembatalan diperbolehkan hingga 24 jam sebelum waktu reservasi. Biaya pembatalan mungkin berlaku untuk pembatalan lebih lambat.',
-    'success' => 'Pemesanan Anda telah selesai! Pesan konfirmasi akan dikirim.',
+    'success' => 'Reservasi selesai!',
+    'success_desc' => 'Konfirmasi akan dikirim. Silakan simpan nomor reservasi Anda.',
+    'submitting' => 'Memproses...',
+    'select_staff' => 'Pilih staf',
+    'no_preference' => 'Tidak ada preferensi',
+    'staff' => 'Staf',
+    'designation_fee' => 'Biaya penunjukan',
+    'designation_fee_badge' => '+:amount',
+    'loading_slots' => 'Memeriksa waktu tersedia...',
+    'no_available_slots' => 'Tidak ada waktu tersedia pada tanggal yang dipilih.',
 
     // Steps
     'step' => [
@@ -165,5 +174,6 @@ return [
         'max_capacity' => 'Kapasitas maksimum terlampaui.',
         'booking_failed' => 'Terjadi kesalahan saat memproses pemesanan Anda.',
         'required_fields' => 'Silakan masukkan nama dan informasi kontak Anda.',
+        'invalid_service' => 'Layanan tidak valid.',
     ],
 ];

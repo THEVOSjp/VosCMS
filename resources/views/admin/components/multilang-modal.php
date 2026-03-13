@@ -7,7 +7,16 @@
  * JavaScript API:
  * - openMultilangModal(langKey, inputId, type) : 모달 열기
  * - closeMultilangModal() : 모달 닫기
+ *
+ * PHP API (통합 버튼):
+ * - rzx_multilang_btn($onclick, $title) : 통합 다국어 버튼 HTML 반환
+ *
+ * JS API (동적 생성):
+ * - RZX_MULTILANG_BTN(onclick, title) : 통합 다국어 버튼 HTML 문자열 반환
  */
+
+// 통합 다국어 버튼 컴포넌트 로드
+include_once __DIR__ . '/multilang-button.php';
 
 // API URL 설정
 $multilangApiUrl = $adminUrl ?? '';
@@ -378,3 +387,4 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
     console.log('[Multilang] Component initialized with', MULTILANG_LOCALES.length, 'languages:', MULTILANG_LOCALES.join(', '));
 })();
 </script>
+<?= rzx_multilang_btn_js() ?>

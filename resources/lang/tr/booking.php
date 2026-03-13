@@ -23,11 +23,20 @@ return [
     'notes_placeholder' => 'Özel isteklerinizi girin',
     'customer' => 'Müşteri',
     'phone' => 'Telefon',
-    'date' => 'Tarih',
-    'time' => 'Saat',
+    'date_label' => 'Tarih',
+    'time_label' => 'Saat',
     'total_price' => 'Toplam Tutar',
     'cancel_policy' => 'Rezervasyon saatinden 24 saat öncesine kadar iptal yapılabilir. Daha geç iptallerde iptal ücreti uygulanabilir.',
-    'success' => 'Rezervasyonunuz tamamlandı! Onay mesajı gönderilecektir.',
+    'success' => 'Rezervasyon tamamlandı!',
+    'success_desc' => 'Onay mesajı gönderilecektir. Lütfen rezervasyon numaranızı saklayın.',
+    'submitting' => 'İşleniyor...',
+    'select_staff' => 'Lütfen personel seçin',
+    'no_preference' => 'Tercih yok',
+    'staff' => 'Personel',
+    'designation_fee' => 'Atama ücreti',
+    'designation_fee_badge' => '+:amount',
+    'loading_slots' => 'Mevcut saatler kontrol ediliyor...',
+    'no_available_slots' => 'Seçilen tarihte uygun saat bulunmuyor.',
 
     // Steps
     'step' => [
@@ -165,5 +174,6 @@ return [
         'max_capacity' => 'Maksimum kapasite aşıldı.',
         'booking_failed' => 'Rezervasyon işlenirken bir hata oluştu.',
         'required_fields' => 'Lütfen adınızı ve iletişim bilgilerinizi girin.',
+        'invalid_service' => 'Geçersiz hizmet.',
     ],
 ];
