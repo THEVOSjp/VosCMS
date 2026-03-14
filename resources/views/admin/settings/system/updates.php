@@ -54,9 +54,10 @@ ob_start();
     include __DIR__ . '/../../components/settings-header.php';
     ?>
 
-    <div class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-        <div class="flex items-center">
-            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <!-- 설치 버전 -->
+        <div class="flex items-center p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
+            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-4 shrink-0">
                 <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                 </svg>
@@ -77,6 +78,37 @@ ob_start();
             </div>
         </div>
 
+        <!-- 최신 안정 버전 -->
+        <div class="flex items-center p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
+            <div class="w-12 h-12 <?= !empty($updateInfo['has_update']) ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-green-100 dark:bg-green-900/30' ?> rounded-lg flex items-center justify-center mr-4 shrink-0">
+                <?php if (!empty($updateInfo['has_update'])): ?>
+                <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                <?php else: ?>
+                <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <?php endif; ?>
+            </div>
+            <div>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-0.5"><?= __('system.updates.latest_version') ?></p>
+                <?php if (!empty($updateInfo['latest'])): ?>
+                <p class="text-lg font-bold <?= !empty($updateInfo['has_update']) ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400' ?>">
+                    RezlyX v<?= htmlspecialchars($updateInfo['latest']) ?>
+                </p>
+                <p class="text-sm <?= !empty($updateInfo['has_update']) ? 'text-orange-500 dark:text-orange-400' : 'text-green-500 dark:text-green-400' ?>">
+                    <?= !empty($updateInfo['has_update']) ? __('system.updates.available_short') : __('system.updates.up_to_date') ?>
+                </p>
+                <?php else: ?>
+                <p class="text-lg font-bold text-zinc-400 dark:text-zinc-500" id="latestVersionText">—</p>
+                <p class="text-sm text-zinc-400 dark:text-zinc-500"><?= __('system.updates.check_update') ?></p>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex justify-end">
         <button type="button" id="checkUpdateBtn" onclick="checkForUpdates()"
                 class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

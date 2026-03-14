@@ -3,7 +3,7 @@
  * RezlyX - Modern Reservation System
  *
  * @package RezlyX
- * @version 1.2.2
+ * @version 1.2.3
  */
 
 define('REZLYX_START', microtime(true));

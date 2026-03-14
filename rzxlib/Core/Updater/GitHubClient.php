@@ -164,10 +164,25 @@ class GitHubClient
     }
 
     /**
+     * 마지막 에러 메시지
+     */
+    private ?string $lastError = null;
+
+    /**
+     * 마지막 에러 가져오기
+     */
+    public function getLastError(): ?string
+    {
+        return $this->lastError;
+    }
+
+    /**
      * API 요청
      */
     private function request(string $url): ?array
     {
+        $this->lastError = null;
+
         $ch = curl_init();
         curl_setopt_array($ch, [
             CURLOPT_URL => $url,
@@ -181,16 +196,47 @@ class GitHubClient
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
+        $curlError = curl_error($ch);
+        $curlErrno = curl_errno($ch);
         curl_close($ch);
 
-        if ($response === false || $httpCode !== 200) {
-            error_log("GitHub API Error: {$error} (HTTP {$httpCode}) URL: {$url}");
+        // SSL 인증서 오류 시 SSL 검증 없이 재시도
+        if ($response === false && in_array($curlErrno, [60, 77, 35])) {
+            error_log("GitHub API SSL Error ({$curlErrno}): {$curlError} - Retrying without SSL verify");
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => 0,
+                CURLOPT_USERAGENT => 'RezlyX-Updater/1.0',
+                CURLOPT_HTTPHEADER => $this->getHeaders(),
+            ]);
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+        }
+
+        if ($response === false) {
+            $this->lastError = "cURL Error: {$curlError}";
+            error_log("GitHub API cURL Error: {$curlError} URL: {$url}");
+            return null;
+        }
+
+        if ($httpCode !== 200) {
+            $body = json_decode($response, true);
+            $msg = $body['message'] ?? "HTTP {$httpCode}";
+            $this->lastError = "GitHub API: {$msg} (HTTP {$httpCode})";
+            error_log("GitHub API Error: {$msg} (HTTP {$httpCode}) URL: {$url}");
             return null;
         }
 
         $data = json_decode($response, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->lastError = "JSON Parse Error: " . json_last_error_msg();
             error_log("GitHub API JSON Error: " . json_last_error_msg());
             return null;
         }

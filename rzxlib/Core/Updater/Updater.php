@@ -56,9 +56,14 @@ class Updater
 
         $latestRelease = $this->github->getLatestRelease();
         if ($latestRelease === null) {
+            $apiError = $this->github->getLastError();
+            $errorMsg = \__('updater.no_release_info');
+            if ($apiError) {
+                $errorMsg .= ' (' . $apiError . ')';
+            }
             return [
                 'has_update' => false,
-                'error' => \__('updater.no_release_info'),
+                'error' => $errorMsg,
                 'current_version' => $currentVersion,
             ];
         }
