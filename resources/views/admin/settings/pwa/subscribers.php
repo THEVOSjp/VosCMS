@@ -7,7 +7,7 @@
 // Initialize database and settings
 require_once dirname(__DIR__) . '/_init.php';
 
-$pageTitle = __('admin.settings.pwa.tabs.subscribers') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('settings.pwa.tabs.subscribers') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentSettingsPage = 'pwa';
 $currentPwaTab = 'subscribers';
 
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $saveToInbox = isset($_POST['save_to_inbox']) ? 1 : 0;
 
         if (empty($notifTitle) || empty($notifBody)) {
-            $message = __('admin.settings.pwa.subscribers.error_empty_fields');
+            $message = __('settings.pwa.subscribers.error_empty_fields');
             $messageType = 'error';
         } else {
             try {
@@ -111,13 +111,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 // TODO: Actual push notification sending logic using web-push library
-                $message = __('admin.settings.pwa.subscribers.notification_queued');
+                $message = __('settings.pwa.subscribers.notification_queued');
                 if ($saveToInbox) {
-                    $message .= ' ' . __('admin.settings.pwa.subscribers.saved_to_inbox');
+                    $message .= ' ' . __('settings.pwa.subscribers.saved_to_inbox');
                 }
                 $messageType = 'success';
             } catch (PDOException $e) {
-                $message = __('admin.settings.error_save') . ': ' . $e->getMessage();
+                $message = __('settings.error_save') . ': ' . $e->getMessage();
                 $messageType = 'error';
             }
         }
@@ -127,14 +127,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $stmt = $pdo->prepare("DELETE FROM rzx_push_subscribers WHERE id = ?");
                 $stmt->execute([$subscriberId]);
-                $message = __('admin.settings.pwa.subscribers.deleted');
+                $message = __('settings.pwa.subscribers.deleted');
                 $messageType = 'success';
 
                 // Refresh subscribers list
                 header('Location: ' . $_SERVER['REQUEST_URI']);
                 exit;
             } catch (PDOException $e) {
-                $message = __('admin.settings.error_save') . ': ' . $e->getMessage();
+                $message = __('settings.error_save') . ': ' . $e->getMessage();
                 $messageType = 'error';
             }
         }
@@ -200,14 +200,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             ");
 
-            $message = __('admin.settings.pwa.subscribers.tables_created');
+            $message = __('settings.pwa.subscribers.tables_created');
             $messageType = 'success';
 
             // Refresh page
             header('Location: ' . $_SERVER['REQUEST_URI']);
             exit;
         } catch (PDOException $e) {
-            $message = __('admin.settings.error_save') . ': ' . $e->getMessage();
+            $message = __('settings.error_save') . ': ' . $e->getMessage();
             $messageType = 'error';
         }
     }
@@ -237,12 +237,12 @@ include __DIR__ . '/_tabs.php';
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
         </svg>
         <div class="flex-1">
-            <h3 class="text-lg font-semibold text-yellow-800 dark:text-yellow-200"><?= __('admin.settings.pwa.subscribers.tables_missing') ?></h3>
-            <p class="text-sm text-yellow-700 dark:text-yellow-300 mt-1"><?= __('admin.settings.pwa.subscribers.tables_missing_desc') ?></p>
+            <h3 class="text-lg font-semibold text-yellow-800 dark:text-yellow-200"><?= __('settings.pwa.subscribers.tables_missing') ?></h3>
+            <p class="text-sm text-yellow-700 dark:text-yellow-300 mt-1"><?= __('settings.pwa.subscribers.tables_missing_desc') ?></p>
             <form method="POST" class="mt-4">
                 <input type="hidden" name="action" value="create_tables">
                 <button type="submit" class="px-4 py-2 bg-yellow-600 text-white font-medium rounded-lg hover:bg-yellow-700 transition">
-                    <?= __('admin.settings.pwa.subscribers.create_tables') ?>
+                    <?= __('settings.pwa.subscribers.create_tables') ?>
                 </button>
             </form>
         </div>
@@ -255,7 +255,7 @@ include __DIR__ . '/_tabs.php';
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.pwa.subscribers.stats.total') ?></p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('settings.pwa.subscribers.stats.total') ?></p>
                 <p class="text-2xl font-bold text-zinc-900 dark:text-white"><?= number_format($totalSubscribers) ?></p>
             </div>
             <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
@@ -268,7 +268,7 @@ include __DIR__ . '/_tabs.php';
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.pwa.subscribers.stats.messages_sent') ?></p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('settings.pwa.subscribers.stats.messages_sent') ?></p>
                 <p class="text-2xl font-bold text-zinc-900 dark:text-white"><?= number_format(count($messages)) ?></p>
             </div>
             <div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
@@ -281,7 +281,7 @@ include __DIR__ . '/_tabs.php';
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.pwa.subscribers.stats.webpush_status') ?></p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('settings.pwa.subscribers.stats.webpush_status') ?></p>
                 <p class="text-lg font-semibold <?= ($settings['webpush_enabled'] ?? '0') === '1' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'; ?>">
                     <?= ($settings['webpush_enabled'] ?? '0') === '1' ? __('admin.common.enabled') : __('admin.common.disabled') ?>
                 </p>
@@ -297,7 +297,7 @@ include __DIR__ . '/_tabs.php';
 
 <!-- Send Notification Form -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
-    <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.pwa.subscribers.send.title') ?></h3>
+    <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.pwa.subscribers.send.title') ?></h3>
 
     <form method="POST" class="space-y-4">
         <input type="hidden" name="action" value="send_notification">
@@ -305,15 +305,15 @@ include __DIR__ . '/_tabs.php';
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label for="notif_title" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                    <?= __('admin.settings.pwa.subscribers.send.title_label') ?> <span class="text-red-500">*</span>
+                    <?= __('settings.pwa.subscribers.send.title_label') ?> <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="notif_title" id="notif_title" required
                        class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                       placeholder="<?= __('admin.settings.pwa.subscribers.send.title_placeholder') ?>">
+                       placeholder="<?= __('settings.pwa.subscribers.send.title_placeholder') ?>">
             </div>
             <div>
                 <label for="notif_url" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                    <?= __('admin.settings.pwa.subscribers.send.url_label') ?>
+                    <?= __('settings.pwa.subscribers.send.url_label') ?>
                 </label>
                 <input type="url" name="notif_url" id="notif_url"
                        class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -323,24 +323,24 @@ include __DIR__ . '/_tabs.php';
 
         <div>
             <label for="notif_body" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                <?= __('admin.settings.pwa.subscribers.send.body_label') ?> <span class="text-red-500">*</span>
+                <?= __('settings.pwa.subscribers.send.body_label') ?> <span class="text-red-500">*</span>
             </label>
             <textarea name="notif_body" id="notif_body" rows="3" required
                       class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="<?= __('admin.settings.pwa.subscribers.send.body_placeholder') ?>"></textarea>
+                      placeholder="<?= __('settings.pwa.subscribers.send.body_placeholder') ?>"></textarea>
         </div>
 
         <div class="flex items-center justify-between flex-wrap gap-4">
             <div class="flex items-center gap-6">
                 <div>
                     <label for="notif_target" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                        <?= __('admin.settings.pwa.subscribers.send.target_label') ?>
+                        <?= __('settings.pwa.subscribers.send.target_label') ?>
                     </label>
                     <select name="notif_target" id="notif_target"
                             class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="all"><?= __('admin.settings.pwa.subscribers.send.target_all') ?></option>
-                        <option value="customers"><?= __('admin.settings.pwa.subscribers.send.target_customers') ?></option>
-                        <option value="admins"><?= __('admin.settings.pwa.subscribers.send.target_admins') ?></option>
+                        <option value="all"><?= __('settings.pwa.subscribers.send.target_all') ?></option>
+                        <option value="customers"><?= __('settings.pwa.subscribers.send.target_customers') ?></option>
+                        <option value="admins"><?= __('settings.pwa.subscribers.send.target_admins') ?></option>
                     </select>
                 </div>
 
@@ -348,9 +348,9 @@ include __DIR__ . '/_tabs.php';
                     <label class="flex items-center cursor-pointer">
                         <input type="checkbox" name="save_to_inbox" value="1" checked
                                class="w-4 h-4 text-blue-600 bg-zinc-100 border-zinc-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-zinc-800 focus:ring-2 dark:bg-zinc-700 dark:border-zinc-600">
-                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.settings.pwa.subscribers.send.save_to_inbox') ?></span>
+                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.pwa.subscribers.send.save_to_inbox') ?></span>
                     </label>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 ml-6"><?= __('admin.settings.pwa.subscribers.send.save_to_inbox_hint') ?></p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 ml-6"><?= __('settings.pwa.subscribers.send.save_to_inbox_hint') ?></p>
                 </div>
             </div>
 
@@ -358,7 +358,7 @@ include __DIR__ . '/_tabs.php';
                 <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                 </svg>
-                <?= __('admin.settings.pwa.subscribers.send.submit') ?>
+                <?= __('settings.pwa.subscribers.send.submit') ?>
             </button>
         </div>
     </form>
@@ -367,7 +367,7 @@ include __DIR__ . '/_tabs.php';
 <!-- Subscribers List -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm transition-colors">
     <div class="p-6 border-b border-zinc-200 dark:border-zinc-700">
-        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.settings.pwa.subscribers.list.title') ?></h3>
+        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('settings.pwa.subscribers.list.title') ?></h3>
     </div>
 
     <?php if (empty($subscribers)): ?>
@@ -375,7 +375,7 @@ include __DIR__ . '/_tabs.php';
         <svg class="w-12 h-12 mx-auto text-zinc-300 dark:text-zinc-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        <p class="text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.pwa.subscribers.list.empty') ?></p>
+        <p class="text-zinc-500 dark:text-zinc-400"><?= __('settings.pwa.subscribers.list.empty') ?></p>
     </div>
     <?php else: ?>
     <div class="overflow-x-auto">
@@ -383,10 +383,10 @@ include __DIR__ . '/_tabs.php';
             <thead class="bg-zinc-50 dark:bg-zinc-900">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">ID</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('admin.settings.pwa.subscribers.list.endpoint') ?></th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('admin.settings.pwa.subscribers.list.user_agent') ?></th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('admin.settings.pwa.subscribers.list.created') ?></th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('admin.settings.pwa.subscribers.list.status') ?></th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('settings.pwa.subscribers.list.endpoint') ?></th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('settings.pwa.subscribers.list.user_agent') ?></th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('settings.pwa.subscribers.list.created') ?></th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('settings.pwa.subscribers.list.status') ?></th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('admin.common.actions') ?></th>
                 </tr>
             </thead>
@@ -419,7 +419,7 @@ include __DIR__ . '/_tabs.php';
                         <?php endif; ?>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                        <form method="POST" class="inline" onsubmit="return confirm('<?= __('admin.settings.pwa.subscribers.delete_confirm') ?>')">
+                        <form method="POST" class="inline" onsubmit="return confirm('<?= __('settings.pwa.subscribers.delete_confirm') ?>')">
                             <input type="hidden" name="action" value="delete_subscriber">
                             <input type="hidden" name="subscriber_id" value="<?= $sub['id'] ?>">
                             <button type="submit" class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
@@ -465,16 +465,16 @@ include __DIR__ . '/_tabs.php';
 <?php if (!empty($messages)): ?>
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm mt-6 transition-colors">
     <div class="p-6 border-b border-zinc-200 dark:border-zinc-700">
-        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.settings.pwa.subscribers.messages.title') ?></h3>
+        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('settings.pwa.subscribers.messages.title') ?></h3>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full">
             <thead class="bg-zinc-50 dark:bg-zinc-900">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('admin.settings.pwa.subscribers.messages.title_col') ?></th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('admin.settings.pwa.subscribers.messages.sent_count') ?></th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('admin.settings.pwa.subscribers.messages.status') ?></th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('admin.settings.pwa.subscribers.messages.created') ?></th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('settings.pwa.subscribers.messages.title_col') ?></th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('settings.pwa.subscribers.messages.sent_count') ?></th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('settings.pwa.subscribers.messages.status') ?></th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('settings.pwa.subscribers.messages.created') ?></th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">

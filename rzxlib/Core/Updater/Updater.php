@@ -58,7 +58,7 @@ class Updater
         if ($latestRelease === null) {
             return [
                 'has_update' => false,
-                'error' => '릴리스 정보를 가져올 수 없습니다.',
+                'error' => \__('updater.no_release_info'),
                 'current_version' => $currentVersion,
             ];
         }
@@ -87,14 +87,14 @@ class Updater
         // 1. 최신 릴리스 정보 가져오기
         $latestRelease = $this->github->getLatestRelease();
         if ($latestRelease === null) {
-            return ['success' => false, 'error' => '릴리스 정보를 가져올 수 없습니다.'];
+            return ['success' => false, 'error' => \__('updater.no_release_info')];
         }
 
         $targetVersion = $targetVersion ?? $latestRelease['version'];
 
         // 2. 업데이트 필요 여부 확인
         if (version_compare($targetVersion, $currentVersion, '<=')) {
-            return ['success' => false, 'error' => '이미 최신 버전입니다.'];
+            return ['success' => false, 'error' => \__('updater.already_latest')];
         }
 
         // 3. 메인터넌스 모드 활성화
@@ -104,7 +104,7 @@ class Updater
             // 4. 백업 생성
             $backupPath = $this->backup->createFull($currentVersion);
             if ($backupPath === null) {
-                throw new \Exception('백업 생성에 실패했습니다.');
+                throw new \Exception(\__('updater.backup_failed'));
             }
 
             // 5. 업데이트 다운로드
@@ -113,7 +113,7 @@ class Updater
             $zipPath = $tempDir . '/update.zip';
 
             if (!$this->github->downloadRelease('v' . $targetVersion, $zipPath)) {
-                throw new \Exception('업데이트 다운로드에 실패했습니다.');
+                throw new \Exception(\__('updater.download_failed'));
             }
 
             // 6. ZIP 추출
@@ -122,7 +122,7 @@ class Updater
 
             $zip = new \ZipArchive();
             if ($zip->open($zipPath) !== true) {
-                throw new \Exception('ZIP 파일을 열 수 없습니다.');
+                throw new \Exception(\__('updater.zip_open_failed'));
             }
 
             $zip->extractTo($extractDir);
@@ -134,6 +134,12 @@ class Updater
 
             // 7. 파일 적용
             $this->applyUpdate($sourceDir);
+
+            // 7.5. DB 마이그레이션 실행
+            $migrationResult = $this->runDatabaseMigration($targetVersion);
+            if (!$migrationResult['success'] && !empty($migrationResult['errors'])) {
+                throw new \Exception(\__('updater.db_migration_failed', ['errors' => implode(', ', $migrationResult['errors'])]));
+            }
 
             // 8. 버전 정보 업데이트
             $this->updateVersionInfo($targetVersion);
@@ -152,7 +158,7 @@ class Updater
 
             return [
                 'success' => true,
-                'message' => "v{$currentVersion} → v{$targetVersion} 업데이트가 완료되었습니다.",
+                'message' => \__('updater.update_complete', ['from' => $currentVersion, 'to' => $targetVersion]),
                 'from_version' => $currentVersion,
                 'to_version' => $targetVersion,
                 'backup_path' => $backupPath,
@@ -183,7 +189,7 @@ class Updater
         $backups = $this->backup->getBackupList();
 
         if (empty($backups)) {
-            return ['success' => false, 'error' => '사용 가능한 백업이 없습니다.'];
+            return ['success' => false, 'error' => \__('updater.no_backup_available')];
         }
 
         // 지정된 백업 또는 가장 최근 백업 사용
@@ -192,7 +198,7 @@ class Updater
         }
 
         if (!file_exists($backupPath)) {
-            return ['success' => false, 'error' => '백업 파일을 찾을 수 없습니다.'];
+            return ['success' => false, 'error' => \__('updater.backup_not_found')];
         }
 
         $this->setMaintenanceMode(true);
@@ -201,7 +207,7 @@ class Updater
             $restored = $this->backup->restore($backupPath);
 
             if (!$restored) {
-                throw new \Exception('복원에 실패했습니다.');
+                throw new \Exception(\__('updater.restore_failed'));
             }
 
             $this->setMaintenanceMode(false);
@@ -209,7 +215,7 @@ class Updater
 
             return [
                 'success' => true,
-                'message' => '이전 버전으로 복원되었습니다.',
+                'message' => \__('updater.restore_complete'),
                 'restored_version' => $this->versionInfo['version'] ?? 'unknown',
             ];
 
@@ -217,6 +223,15 @@ class Updater
             $this->setMaintenanceMode(false);
             return ['success' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * DB 마이그레이션 실행
+     */
+    private function runDatabaseMigration(string $targetVersion): array
+    {
+        $migrator = new DatabaseMigrator($this->pdo, $this->basePath);
+        return $migrator->migrate($targetVersion);
     }
 
     /**
@@ -319,7 +334,7 @@ class Updater
         if ($enabled) {
             file_put_contents($maintenanceFile, json_encode([
                 'time' => time(),
-                'message' => '시스템 업데이트 중입니다.',
+                'message' => \__('updater.maintenance_message'),
             ]));
         } else {
             if (file_exists($maintenanceFile)) {

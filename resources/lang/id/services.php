@@ -1,28 +1,100 @@
 <?php
 
 /**
- * Service translations - Indonesian
+ * Services translations - id
  */
 
 return [
-    // Page
-    'title' => 'Layanan',
-    'description' => 'Jelajahi layanan kami dan pesan yang cocok untuk Anda.',
-
-    // Category
-    'all_categories' => 'Semua',
-
-    // Buttons
-    'view_detail' => 'Lihat Detail',
-    'book_now' => 'Pesan Sekarang',
-    'back_to_list' => 'Kembali ke Daftar',
-
-    // Detail page
-    'about_service' => 'Tentang Layanan Ini',
-    'no_description' => 'Tidak ada deskripsi tersedia.',
-    'related_services' => 'Layanan Terkait',
-
-    // CTA
-    'cta_title' => 'Siap Memesan?',
-    'cta_description' => 'Pesan layanan pilihan Anda dengan mudah dan mulai pengalaman istimewa Anda.',
+    'title' => 'Manajemen Layanan',
+    'list' => 'Daftar Layanan',
+    'create' => 'Tambah Layanan',
+    'edit' => 'Edit Layanan',
+    'detail' => 'Detail Layanan',
+    'fields' => [
+        'name' => 'Nama Layanan',
+        'slug' => 'Slug URL',
+        'description' => 'Deskripsi',
+        'short_description' => 'Deskripsi Singkat',
+        'duration' => 'Durasi (menit)',
+        'price' => 'Harga',
+        'category' => 'Kategori',
+        'is_active' => 'Aktif',
+        'max_capacity' => 'Kapasitas Maksimum',
+        'buffer_time' => 'Waktu Jeda (menit)',
+        'advance_booking_days' => 'Pemesanan di Muka (hari)',
+        'min_notice_hours' => 'Pemberitahuan Min (jam)',
+    ],
+    'success' => [
+        'created' => 'Layanan dibuat.',
+        'updated' => 'Layanan diperbarui.',
+        'deleted' => 'Layanan dihapus.',
+        'activated' => 'Layanan diaktifkan.',
+        'deactivated' => 'Layanan dinonaktifkan.',
+    ],
+    'error' => ['has_reservations' => 'Tidak dapat menghapus layanan dengan reservasi yang ada.'],
+    'settings' => [
+        'tabs' => ['general' => 'Umum', 'holidays' => 'Hari Libur'],
+        'general' => [
+            'title' => 'Pengaturan Dasar Layanan',
+            'description' => 'Konfigurasi opsi default untuk reservasi layanan.',
+            'saved' => 'Pengaturan disimpan.',
+            'default_duration' => 'Durasi Default',
+            'default_buffer' => 'Waktu Buffer Default',
+            'advance_booking_days' => 'Periode Pemesanan di Muka',
+            'min_notice_hours' => 'Pemberitahuan Minimum',
+            'max_capacity' => 'Kapasitas Maksimum Default',
+            'currency' => 'Mata Uang',
+            'price_display' => 'Tampilan Harga',
+            'price_show' => 'Tampilkan',
+            'price_hide' => 'Sembunyikan',
+            'price_contact' => 'Hubungi',
+            'days' => 'hari',
+            'hours' => 'jam',
+        ],
+        'holidays' => [
+            'add_title' => 'Tambah Hari Libur',
+            'placeholder_title' => 'cth. Tahun Baru, Lebaran...',
+            'repeat_yearly' => 'Ulangi Setiap Tahun',
+            'yearly' => 'Tahunan',
+            'name' => 'Nama Hari Libur',
+            'date' => 'Tanggal',
+            'status' => 'Status',
+            'empty' => 'Belum ada hari libur terdaftar.',
+            'required' => 'Masukkan nama dan tanggal hari libur.',
+            'created' => 'Hari libur ditambahkan.',
+            'deleted' => 'Hari libur dihapus.',
+            'confirm_delete' => 'Yakin ingin menghapus hari libur ini?',
+        ],
+    ],
+    'categories' => [
+        'title' => 'Manajemen Kategori',
+        'list' => 'Daftar Kategori',
+        'create' => 'Tambah Kategori',
+        'edit' => 'Edit Kategori',
+        'multilang_save_first' => 'Silakan simpan kategori terlebih dahulu sebelum menambahkan konten multibahasa.',
+        'fields' => [
+            'name' => 'Nama Kategori',
+            'slug' => 'Slug URL',
+            'description' => 'Deskripsi',
+            'parent' => 'Kategori Induk',
+            'sort_order' => 'Urutan',
+            'is_active' => 'Aktif',
+        ],
+        'success' => ['created' => 'Kategori dibuat.', 'updated' => 'Kategori diperbarui.', 'deleted' => 'Kategori dihapus.', 'reordered' => 'Urutan kategori telah diperbarui.'],
+    ],
+    'time_slots' => [
+        'title' => 'Manajemen Slot Waktu',
+        'default_slots' => 'Slot Waktu Default',
+        'blocked_dates' => 'Tanggal Diblokir',
+        'fields' => [
+            'day_of_week' => 'Hari dalam Minggu',
+            'start_time' => 'Waktu Mulai',
+            'end_time' => 'Waktu Selesai',
+            'max_bookings' => 'Maksimal Pemesanan',
+            'service' => 'Layanan',
+            'specific_date' => 'Tanggal Khusus',
+        ],
+        'block_date' => 'Blokir Tanggal',
+        'unblock_date' => 'Buka Blokir Tanggal',
+    ],
 ];

@@ -46,7 +46,7 @@
             }
         }).catch(function(err) {
             console.error('[Attendance]', action, 'error:', err);
-            showAlert('<?= __('admin.staff.attendance.error.server') ?>', 'error');
+            showAlert('<?= __('staff.attendance.error.server') ?>', 'error');
         });
     }
 

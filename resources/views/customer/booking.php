@@ -352,7 +352,7 @@ include BASE_PATH . '/resources/views/partials/header.php';
                                 <?php if ($priceDisplay === 'show'): ?>
                                 <span class="text-lg font-bold text-blue-600 dark:text-blue-400"><?= $currencySymbol ?><?= number_format($service['price']) ?></span>
                                 <?php elseif ($priceDisplay === 'contact'): ?>
-                                <span class="text-sm text-gray-500"><?= __('admin.services.settings.general.price_contact') ?></span>
+                                <span class="text-sm text-gray-500"><?= __('services.settings.general.price_contact') ?></span>
                                 <?php endif; ?>
                                 <p class="text-xs text-gray-400"><?= $service['duration'] ?? 60 ?><?= __('common.minutes') ?></p>
                             </div>

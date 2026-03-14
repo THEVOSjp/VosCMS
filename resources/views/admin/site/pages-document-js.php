@@ -132,7 +132,7 @@
             var currentTitle = document.getElementById('editTitle').value;
             var currentContent = getEditorContent();
 
-            if ((currentTitle || currentContent) && !confirm('<?= __('admin.site.pages.document.load_default_confirm') ?>')) {
+            if ((currentTitle || currentContent) && !confirm('<?= __('site.pages.document.load_default_confirm') ?>')) {
                 console.log('[Document] Load default cancelled');
                 return;
             }

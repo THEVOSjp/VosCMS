@@ -25,7 +25,7 @@ $attendanceApiUrl = ($config['app_url'] ?? '') . '/' . ($config['admin_path'] ??
         var s = String(now.getSeconds()).padStart(2, '0');
         document.getElementById('currentTime').textContent = h + ':' + m + ':' + s;
 
-        var days = ['<?= __('admin.staff.attendance.kiosk_sun') ?>', '<?= __('admin.staff.attendance.kiosk_mon') ?>', '<?= __('admin.staff.attendance.kiosk_tue') ?>', '<?= __('admin.staff.attendance.kiosk_wed') ?>', '<?= __('admin.staff.attendance.kiosk_thu') ?>', '<?= __('admin.staff.attendance.kiosk_fri') ?>', '<?= __('admin.staff.attendance.kiosk_sat') ?>'];
+        var days = ['<?= __('staff.attendance.kiosk_sun') ?>', '<?= __('staff.attendance.kiosk_mon') ?>', '<?= __('staff.attendance.kiosk_tue') ?>', '<?= __('staff.attendance.kiosk_wed') ?>', '<?= __('staff.attendance.kiosk_thu') ?>', '<?= __('staff.attendance.kiosk_fri') ?>', '<?= __('staff.attendance.kiosk_sat') ?>'];
         var y = now.getFullYear();
         var mo = String(now.getMonth() + 1).padStart(2, '0');
         var d = String(now.getDate()).padStart(2, '0');
@@ -76,8 +76,8 @@ $attendanceApiUrl = ($config['app_url'] ?? '') . '/' . ($config['admin_path'] ??
             if (data.success) {
                 document.getElementById('successName').textContent = data.staff_name || '';
                 var typeMsg = data.type === 'clock_in'
-                    ? '<?= __('admin.staff.attendance.kiosk_clocked_in') ?>'
-                    : '<?= __('admin.staff.attendance.kiosk_clocked_out') ?>';
+                    ? '<?= __('staff.attendance.kiosk_clocked_in') ?>'
+                    : '<?= __('staff.attendance.kiosk_clocked_out') ?>';
                 document.getElementById('successMsg').textContent = typeMsg;
                 var t = data.time ? data.time.substring(11, 16) : '';
                 document.getElementById('successTime').textContent = t;
@@ -100,7 +100,7 @@ $attendanceApiUrl = ($config['app_url'] ?? '') . '/' . ($config['admin_path'] ??
         })
         .catch(function(err) {
             console.error('[Kiosk] Request error:', err);
-            document.getElementById('errorMsg').textContent = '<?= __('admin.staff.attendance.error.server') ?>';
+            document.getElementById('errorMsg').textContent = '<?= __('staff.attendance.error.server') ?>';
             showState('error');
             clearTimeout(resetTimer);
             resetTimer = setTimeout(resetToIdle, 3000);

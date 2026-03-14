@@ -53,7 +53,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
         <main class="flex-1 ml-64">
             <!-- Top Bar -->
             <?php
-            $pageHeaderTitle = __('admin.site.design.title');
+            $pageHeaderTitle = __('site.design.title');
             include __DIR__ . '/../partials/admin-topbar.php';
             ?>
 
@@ -69,8 +69,8 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                 <div class="mb-6">
                 <?php
                 $headerIcon = 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01';
-                $headerTitle = __('admin.site.design.title');
-                $headerDescription = __('admin.site.design.description');
+                $headerTitle = __('site.design.title');
+                $headerDescription = __('site.design.description');
                 $headerIconColor = ''; $headerActions = '';
                 include __DIR__ . '/../components/settings-header.php';
                 ?>
@@ -86,10 +86,10 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
                                 </svg>
                             </div>
-                            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.site.design.theme_title') ?></h3>
+                            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('site.design.theme_title') ?></h3>
                         </div>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4"><?= __('admin.site.design.theme_desc') ?></p>
-                        <span class="inline-block px-3 py-1 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 rounded-full"><?= __('admin.site.design.coming_soon') ?></span>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4"><?= __('site.design.theme_desc') ?></p>
+                        <span class="inline-block px-3 py-1 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 rounded-full"><?= __('site.design.coming_soon') ?></span>
                     </div>
 
                     <!-- Layout Settings -->
@@ -100,10 +100,10 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
                                 </svg>
                             </div>
-                            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.site.design.layout_title') ?></h3>
+                            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('site.design.layout_title') ?></h3>
                         </div>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4"><?= __('admin.site.design.layout_desc') ?></p>
-                        <span class="inline-block px-3 py-1 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 rounded-full"><?= __('admin.site.design.coming_soon') ?></span>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4"><?= __('site.design.layout_desc') ?></p>
+                        <span class="inline-block px-3 py-1 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 rounded-full"><?= __('site.design.coming_soon') ?></span>
                     </div>
 
                     <!-- Header/Footer -->
@@ -114,10 +114,10 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
                                 </svg>
                             </div>
-                            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.site.design.header_footer_title') ?></h3>
+                            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('site.design.header_footer_title') ?></h3>
                         </div>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4"><?= __('admin.site.design.header_footer_desc') ?></p>
-                        <span class="inline-block px-3 py-1 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 rounded-full"><?= __('admin.site.design.coming_soon') ?></span>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4"><?= __('site.design.header_footer_desc') ?></p>
+                        <span class="inline-block px-3 py-1 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 rounded-full"><?= __('site.design.coming_soon') ?></span>
                     </div>
                 </div>
             </div>

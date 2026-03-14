@@ -73,7 +73,7 @@
         var results = document.getElementById('memberSearchResults');
         results.innerHTML = '';
         if (members.length === 0) {
-            results.innerHTML = '<div class="px-3 py-2 text-sm text-zinc-400"><?= __('admin.staff.no_member_found') ?></div>';
+            results.innerHTML = '<div class="px-3 py-2 text-sm text-zinc-400"><?= __('staff.no_member_found') ?></div>';
             results.classList.remove('hidden');
             return;
         }
@@ -126,7 +126,7 @@
 
     // ─── 모달 ───
     window.openStaffModal = function() {
-        document.getElementById('staffModalTitle').textContent = '<?= __('admin.staff.create') ?>';
+        document.getElementById('staffModalTitle').textContent = '<?= __('staff.create') ?>';
         document.getElementById('staffAction').value = 'create_staff';
         document.getElementById('staffId').value = '';
         document.getElementById('staffUserId').value = '';
@@ -147,7 +147,7 @@
     };
 
     window.editStaff = function(st, svcIds) {
-        document.getElementById('staffModalTitle').textContent = '<?= __('admin.staff.edit') ?>';
+        document.getElementById('staffModalTitle').textContent = '<?= __('staff.edit') ?>';
         document.getElementById('staffAction').value = 'update_staff';
         document.getElementById('staffId').value = st.id;
         document.getElementById('staffUserId').value = st.user_id || '';
@@ -201,16 +201,16 @@
                 closeStaffModal();
                 setTimeout(function() { location.reload(); }, 800);
             } else {
-                showAlert(data.message || '<?= __('admin.staff.error.generic') ?>', 'error');
+                showAlert(data.message || '<?= __('staff.error.generic') ?>', 'error');
             }
         }).catch(function(err) {
             console.error('[Staff] Save error:', err);
-            showAlert('<?= __('admin.staff.error.server') ?>', 'error');
+            showAlert('<?= __('staff.error.server') ?>', 'error');
         });
     };
 
     window.deleteStaff = function(id) {
-        if (!confirm('<?= __('admin.staff.confirm_delete') ?>')) return;
+        if (!confirm('<?= __('staff.confirm_delete') ?>')) return;
         console.log('[Staff] Deleting:', id);
 
         var formData = new FormData();
@@ -227,7 +227,7 @@
             }
         }).catch(function(err) {
             console.error('[Staff] Delete error:', err);
-            showAlert('<?= __('admin.staff.error.server') ?>', 'error');
+            showAlert('<?= __('staff.error.server') ?>', 'error');
         });
     };
 

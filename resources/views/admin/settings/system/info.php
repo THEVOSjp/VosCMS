@@ -7,7 +7,7 @@
 // Initialize database and settings
 require_once __DIR__ . '/../_init.php';
 
-$pageTitle = __('admin.settings.system.tabs.info') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('system.tabs.info') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentSettingsPage = 'system';
 $currentSystemTab = 'info';
 
@@ -78,7 +78,7 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
     <?php
     $headerIcon = 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
-    $headerTitle = __('admin.settings.system.app.title');
+    $headerTitle = __('system.app.title');
     $headerDescription = ''; $headerActions = '';
     $headerIconColor = 'text-blue-600';
     include __DIR__ . '/../../components/settings-header.php';
@@ -86,34 +86,34 @@ ob_start();
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.app.name') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.app.name') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($appInfo['name']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.app.version') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.app.version') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($appInfo['version']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.app.environment') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.app.environment') ?></p>
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $appInfo['environment'] === 'production' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'; ?>">
                 <?= htmlspecialchars(ucfirst($appInfo['environment'])); ?>
             </span>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.app.debug_mode') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.app.debug_mode') ?></p>
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $debugMode ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'; ?>">
-                <?= $debugMode ? __('admin.settings.system.status.on') : __('admin.settings.system.status.off'); ?>
+                <?= $debugMode ? __('system.status.on') : __('system.status.off'); ?>
             </span>
             <?php if ($debugMode): ?>
-            <p class="text-xs text-red-500 mt-1"><?= __('admin.settings.system.app.debug_warning') ?></p>
+            <p class="text-xs text-red-500 mt-1"><?= __('system.app.debug_warning') ?></p>
             <?php endif; ?>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.app.url') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.app.url') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white truncate"><?= htmlspecialchars($appInfo['url']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.app.locale') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.app.locale') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars(strtoupper($appInfo['locale'])); ?></p>
         </div>
     </div>
@@ -123,7 +123,7 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
     <?php
     $headerIcon = 'M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01';
-    $headerTitle = __('admin.settings.system.server.title');
+    $headerTitle = __('system.server.title');
     $headerDescription = ''; $headerActions = '';
     $headerIconColor = 'text-orange-600';
     include __DIR__ . '/../../components/settings-header.php';
@@ -131,23 +131,23 @@ ob_start();
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.server.os') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.server.os') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($systemInfo['os']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.server.os_family') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.server.os_family') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($systemInfo['os_family']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.server.software') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.server.software') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white truncate"><?= htmlspecialchars($systemInfo['server_software']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg md:col-span-2">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.server.document_root') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.server.document_root') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white break-all"><?= htmlspecialchars($systemInfo['document_root']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.server.current_time') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.server.current_time') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($systemInfo['current_time']); ?></p>
         </div>
     </div>
@@ -157,7 +157,7 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
     <?php
     $headerIcon = 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4';
-    $headerTitle = __('admin.settings.system.php.title');
+    $headerTitle = __('system.php.title');
     $headerDescription = ''; $headerActions = '';
     $headerIconColor = 'text-purple-600';
     include __DIR__ . '/../../components/settings-header.php';
@@ -165,35 +165,35 @@ ob_start();
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.php.version') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.php.version') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($systemInfo['php_version']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.php.sapi') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.php.sapi') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($systemInfo['php_sapi']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.php.timezone') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.php.timezone') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($systemInfo['timezone']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.php.memory_limit') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.php.memory_limit') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($systemInfo['memory_limit']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.php.max_execution_time') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.php.max_execution_time') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($systemInfo['max_execution_time']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.php.upload_max_filesize') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.php.upload_max_filesize') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($systemInfo['upload_max_filesize']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.php.post_max_size') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.php.post_max_size') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($systemInfo['post_max_size']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.php.display_errors') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.php.display_errors') ?></p>
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $systemInfo['display_errors'] === 'On' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'; ?>">
                 <?= $systemInfo['display_errors']; ?>
             </span>
@@ -201,7 +201,7 @@ ob_start();
     </div>
 
     <!-- PHP Extensions -->
-    <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-3"><?= __('admin.settings.system.php.extensions') ?></h3>
+    <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-3"><?= __('system.php.extensions') ?></h3>
     <div class="flex flex-wrap gap-2">
         <?php foreach ($requiredExtensions as $ext): ?>
         <?php $isLoaded = in_array($ext, $loadedExtensions); ?>
@@ -225,7 +225,7 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
     <?php
     $headerIcon = 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4';
-    $headerTitle = __('admin.settings.system.db.title');
+    $headerTitle = __('system.db.title');
     $headerDescription = ''; $headerActions = '';
     $headerIconColor = 'text-green-600';
     include __DIR__ . '/../../components/settings-header.php';
@@ -233,27 +233,27 @@ ob_start();
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.db.driver') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.db.driver') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($dbInfo['driver']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.db.version') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.db.version') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($dbInfo['version'] ?? 'Unknown'); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.db.host') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.db.host') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($dbInfo['host']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.db.database') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.db.database') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($dbInfo['database']); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.db.charset') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.db.charset') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($dbInfo['charset'] ?? 'Unknown'); ?></p>
         </div>
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.system.db.collation') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('system.db.collation') ?></p>
             <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($dbInfo['collation'] ?? 'Unknown'); ?></p>
         </div>
     </div>

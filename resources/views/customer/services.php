@@ -147,7 +147,7 @@ include BASE_PATH . '/resources/views/partials/header.php';
                                 <?= $currencySymbol ?><?= number_format($service['price']) ?>
                             </span>
                             <?php elseif ($priceDisplay === 'contact'): ?>
-                            <span class="text-sm font-medium text-gray-500 dark:text-zinc-400"><?= __('admin.services.settings.general.price_contact') ?></span>
+                            <span class="text-sm font-medium text-gray-500 dark:text-zinc-400"><?= __('services.settings.general.price_contact') ?></span>
                             <?php endif; ?>
                         </div>
                     </div>

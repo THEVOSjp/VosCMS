@@ -7,7 +7,7 @@
 // Initialize database and settings
 require_once __DIR__ . '/_init.php';
 
-$pageTitle = __('admin.settings.mail.page_title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('settings.mail.page_title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentSettingsPage = 'mail';
 
 // 지원 언어 목록 가져오기
@@ -58,10 +58,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $settings['smtp_encryption'] = $smtpEncryption;
             $settings['smtp_username'] = $smtpUsername;
 
-            $message = __('admin.settings.success');
+            $message = __('settings.success');
             $messageType = 'success';
         } catch (PDOException $e) {
-            $message = __('admin.settings.error_save') . ': ' . $e->getMessage();
+            $message = __('settings.error_save') . ': ' . $e->getMessage();
             $messageType = 'error';
         }
     } elseif ($action === 'update_email_templates') {
@@ -80,10 +80,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$subjectKey, $subject]);
             $stmt->execute([$templateKey, $body]);
 
-            $message = __('admin.settings.mail.templates.saved');
+            $message = __('settings.mail.templates.saved');
             $messageType = 'success';
         } catch (PDOException $e) {
-            $message = __('admin.settings.error_save') . ': ' . $e->getMessage();
+            $message = __('settings.error_save') . ': ' . $e->getMessage();
             $messageType = 'error';
         }
     } elseif ($action === 'send_test_email') {
@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $templateLang = $_POST['template_lang'] ?? 'ko';
 
         if (empty($testEmail) || !filter_var($testEmail, FILTER_VALIDATE_EMAIL)) {
-            echo json_encode(['success' => false, 'error' => __('admin.settings.mail.test.invalid_email')]);
+            echo json_encode(['success' => false, 'error' => __('settings.mail.test.invalid_email')]);
             exit;
         }
 
@@ -133,9 +133,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sent = @mail($testEmail, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, implode("\r\n", $headers));
 
             if ($sent) {
-                echo json_encode(['success' => true, 'message' => str_replace('{email}', $testEmail, __('admin.settings.mail.test.sent_success'))]);
+                echo json_encode(['success' => true, 'message' => str_replace('{email}', $testEmail, __('settings.mail.test.sent_success'))]);
             } else {
-                echo json_encode(['success' => false, 'error' => __('admin.settings.mail.test.sent_failed')]);
+                echo json_encode(['success' => false, 'error' => __('settings.mail.test.sent_failed')]);
             }
         } catch (\Throwable $e) {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
@@ -152,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $smtpPassword = $_POST['smtp_password'] ?? '';
 
         if (empty($smtpHost)) {
-            echo json_encode(['success' => false, 'error' => __('admin.settings.mail.smtp.host_required')]);
+            echo json_encode(['success' => false, 'error' => __('settings.mail.smtp.host_required')]);
             exit;
         }
 
@@ -172,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fp = @fsockopen($prefix . $smtpHost, $smtpPort, $errno, $errstr, $timeout);
 
             if (!$fp) {
-                echo json_encode(['success' => false, 'error' => __('admin.settings.mail.smtp.connection_failed') . ": $errstr ($errno)"]);
+                echo json_encode(['success' => false, 'error' => __('settings.mail.smtp.connection_failed') . ": $errstr ($errno)"]);
                 exit;
             }
 
@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response = fgets($fp, 515);
             if (substr($response, 0, 3) !== '220') {
                 fclose($fp);
-                echo json_encode(['success' => false, 'error' => __('admin.settings.mail.smtp.server_error') . ': ' . trim($response)]);
+                echo json_encode(['success' => false, 'error' => __('settings.mail.smtp.server_error') . ': ' . trim($response)]);
                 exit;
             }
 
@@ -227,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (substr($loginResp, 0, 3) !== '235') {
                     fclose($fp);
-                    echo json_encode(['success' => false, 'error' => __('admin.settings.mail.smtp.auth_failed') . ': ' . trim($loginResp)]);
+                    echo json_encode(['success' => false, 'error' => __('settings.mail.smtp.auth_failed') . ': ' . trim($loginResp)]);
                     exit;
                 }
             }
@@ -237,8 +237,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             fclose($fp);
 
             $msg = !empty($smtpUsername)
-                ? __('admin.settings.mail.smtp.auth_success')
-                : __('admin.settings.mail.smtp.connected');
+                ? __('settings.mail.smtp.auth_success')
+                : __('settings.mail.smtp.connected');
             echo json_encode(['success' => true, 'message' => $msg]);
             exit;
 
@@ -1078,8 +1078,8 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
     <?php
     $headerIcon = 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z';
-    $headerTitle = __('admin.settings.mail.title');
-    $headerDescription = __('admin.settings.mail.description');
+    $headerTitle = __('settings.mail.title');
+    $headerDescription = __('settings.mail.description');
     $headerIconColor = ''; $headerActions = '';
     include __DIR__ . '/../components/settings-header.php';
     ?>
@@ -1093,25 +1093,25 @@ ob_start();
                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
-                <?= __('admin.settings.mail.sender.title') ?>
+                <?= __('settings.mail.sender.title') ?>
             </h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="mail_from_name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.mail.sender.name') ?></label>
+                    <label for="mail_from_name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.mail.sender.name') ?></label>
                     <input type="text" name="mail_from_name" id="mail_from_name"
                            value="<?= htmlspecialchars($settings['mail_from_name'] ?? ($settings['site_name'] ?? 'RezlyX')) ?>"
                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="<?= __('admin.settings.mail.sender.name_placeholder') ?>">
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.mail.sender.name_hint') ?></p>
+                           placeholder="<?= __('settings.mail.sender.name_placeholder') ?>">
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.mail.sender.name_hint') ?></p>
                 </div>
                 <div>
-                    <label for="mail_from_email" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.mail.sender.email') ?></label>
+                    <label for="mail_from_email" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.mail.sender.email') ?></label>
                     <input type="email" name="mail_from_email" id="mail_from_email"
                            value="<?= htmlspecialchars($settings['mail_from_email'] ?? '') ?>"
                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="<?= __('admin.settings.mail.sender.email_placeholder') ?>">
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.mail.sender.email_hint') ?></p>
+                           placeholder="<?= __('settings.mail.sender.email_placeholder') ?>">
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.mail.sender.email_hint') ?></p>
                 </div>
             </div>
 
@@ -1120,17 +1120,17 @@ ob_start();
                        <?= ($settings['mail_apply_all'] ?? '0') === '1' ? 'checked' : '' ?>
                        class="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500">
                 <label for="mail_apply_all" class="ml-2 text-sm text-zinc-700 dark:text-zinc-300">
-                    <?= __('admin.settings.mail.sender.apply_all') ?>
+                    <?= __('settings.mail.sender.apply_all') ?>
                 </label>
             </div>
 
             <div>
-                <label for="mail_reply_to" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.mail.sender.reply_to') ?></label>
+                <label for="mail_reply_to" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.mail.sender.reply_to') ?></label>
                 <input type="email" name="mail_reply_to" id="mail_reply_to"
                        value="<?= htmlspecialchars($settings['mail_reply_to'] ?? '') ?>"
                        class="w-full md:w-1/2 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                       placeholder="<?= __('admin.settings.mail.sender.reply_to_placeholder') ?>">
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.mail.sender.reply_to_hint') ?></p>
+                       placeholder="<?= __('settings.mail.sender.reply_to_placeholder') ?>">
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.mail.sender.reply_to_hint') ?></p>
             </div>
         </div>
 
@@ -1140,19 +1140,19 @@ ob_start();
                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                 </svg>
-                <?= __('admin.settings.mail.method.title') ?>
+                <?= __('settings.mail.method.title') ?>
             </h3>
 
             <div>
-                <label for="mail_driver" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.mail.method.driver_label') ?></label>
+                <label for="mail_driver" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.mail.method.driver_label') ?></label>
                 <?php $currentDriver = $settings['mail_driver'] ?? 'mail'; ?>
                 <select name="mail_driver" id="mail_driver"
                         class="w-full md:w-1/2 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         onchange="toggleSmtpSettings()">
-                    <option value="mail" <?= $currentDriver === 'mail' ? 'selected' : '' ?>><?= __('admin.settings.mail.method.driver_mail') ?></option>
-                    <option value="smtp" <?= $currentDriver === 'smtp' ? 'selected' : '' ?>><?= __('admin.settings.mail.method.driver_smtp') ?></option>
+                    <option value="mail" <?= $currentDriver === 'mail' ? 'selected' : '' ?>><?= __('settings.mail.method.driver_mail') ?></option>
+                    <option value="smtp" <?= $currentDriver === 'smtp' ? 'selected' : '' ?>><?= __('settings.mail.method.driver_smtp') ?></option>
                 </select>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.mail.method.driver_hint') ?></p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.mail.method.driver_hint') ?></p>
             </div>
         </div>
 
@@ -1162,33 +1162,33 @@ ob_start();
                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
                 </svg>
-                <?= __('admin.settings.mail.smtp.title') ?>
+                <?= __('settings.mail.smtp.title') ?>
             </h4>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="smtp_host" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.mail.smtp.host') ?></label>
+                    <label for="smtp_host" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.mail.smtp.host') ?></label>
                     <input type="text" name="smtp_host" id="smtp_host"
                            value="<?= htmlspecialchars($settings['smtp_host'] ?? '') ?>"
                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="<?= __('admin.settings.mail.smtp.host_placeholder') ?>">
+                           placeholder="<?= __('settings.mail.smtp.host_placeholder') ?>">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label for="smtp_port" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.mail.smtp.port') ?></label>
+                        <label for="smtp_port" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.mail.smtp.port') ?></label>
                         <input type="number" name="smtp_port" id="smtp_port"
                                value="<?= htmlspecialchars($settings['smtp_port'] ?? '587') ?>"
                                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                placeholder="587">
                     </div>
                     <div>
-                        <label for="smtp_encryption" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.mail.smtp.encryption') ?></label>
+                        <label for="smtp_encryption" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.mail.smtp.encryption') ?></label>
                         <?php $currentEncryption = $settings['smtp_encryption'] ?? 'tls'; ?>
                         <select name="smtp_encryption" id="smtp_encryption"
                                 class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="tls" <?= $currentEncryption === 'tls' ? 'selected' : '' ?>><?= __('admin.settings.mail.smtp.encryption_tls') ?></option>
-                            <option value="ssl" <?= $currentEncryption === 'ssl' ? 'selected' : '' ?>><?= __('admin.settings.mail.smtp.encryption_ssl') ?></option>
-                            <option value="none" <?= $currentEncryption === 'none' ? 'selected' : '' ?>><?= __('admin.settings.mail.smtp.encryption_none') ?></option>
+                            <option value="tls" <?= $currentEncryption === 'tls' ? 'selected' : '' ?>><?= __('settings.mail.smtp.encryption_tls') ?></option>
+                            <option value="ssl" <?= $currentEncryption === 'ssl' ? 'selected' : '' ?>><?= __('settings.mail.smtp.encryption_ssl') ?></option>
+                            <option value="none" <?= $currentEncryption === 'none' ? 'selected' : '' ?>><?= __('settings.mail.smtp.encryption_none') ?></option>
                         </select>
                     </div>
                 </div>
@@ -1196,19 +1196,19 @@ ob_start();
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="smtp_username" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.mail.smtp.username') ?></label>
+                    <label for="smtp_username" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.mail.smtp.username') ?></label>
                     <input type="text" name="smtp_username" id="smtp_username"
                            value="<?= htmlspecialchars($settings['smtp_username'] ?? '') ?>"
                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="<?= __('admin.settings.mail.smtp.username_placeholder') ?>">
+                           placeholder="<?= __('settings.mail.smtp.username_placeholder') ?>">
                 </div>
                 <div>
-                    <label for="smtp_password" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.mail.smtp.password') ?></label>
+                    <label for="smtp_password" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.mail.smtp.password') ?></label>
                     <div class="relative">
                         <input type="password" name="smtp_password" id="smtp_password"
                                value=""
                                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
-                               placeholder="<?= !empty($settings['smtp_password']) ? '••••••••' : __('admin.settings.mail.smtp.password_placeholder') ?>">
+                               placeholder="<?= !empty($settings['smtp_password']) ? '••••••••' : __('settings.mail.smtp.password_placeholder') ?>">
                         <button type="button" onclick="togglePasswordVisibility('smtp_password')"
                                 class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1217,7 +1217,7 @@ ob_start();
                             </svg>
                         </button>
                     </div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= !empty($settings['smtp_password']) ? __('admin.settings.mail.smtp.password_change_hint') : __('admin.settings.mail.smtp.password_gmail_hint') ?></p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= !empty($settings['smtp_password']) ? __('settings.mail.smtp.password_change_hint') : __('settings.mail.smtp.password_gmail_hint') ?></p>
                 </div>
             </div>
 
@@ -1228,7 +1228,7 @@ ob_start();
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                     </svg>
-                    <?= __('admin.settings.mail.smtp.test_connection') ?>
+                    <?= __('settings.mail.smtp.test_connection') ?>
                 </button>
                 <span id="smtpTestResult" class="ml-2 text-sm"></span>
             </div>
@@ -1248,21 +1248,21 @@ ob_start();
         <svg class="w-5 h-5 text-zinc-600 dark:text-zinc-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
         </svg>
-        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.settings.mail.templates.title') ?></h2>
+        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('settings.mail.templates.title') ?></h2>
     </div>
-    <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6"><?= __('admin.settings.mail.templates.description') ?></p>
+    <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6"><?= __('settings.mail.templates.description') ?></p>
 
     <!-- 템플릿 선택 -->
     <div class="flex flex-wrap gap-4 mb-6">
         <div>
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.mail.templates.type_label') ?></label>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.mail.templates.type_label') ?></label>
             <select id="templateType" class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg" onchange="loadEmailTemplate()">
-                <option value="welcome"><?= __('admin.settings.mail.templates.type_welcome') ?></option>
-                <option value="password_reset"><?= __('admin.settings.mail.templates.type_password_reset') ?></option>
+                <option value="welcome"><?= __('settings.mail.templates.type_welcome') ?></option>
+                <option value="password_reset"><?= __('settings.mail.templates.type_password_reset') ?></option>
             </select>
         </div>
         <div>
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.mail.templates.language') ?></label>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.mail.templates.language') ?></label>
             <select id="templateLang" class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg" onchange="loadEmailTemplate()">
                 <?php foreach ($supportedLanguages as $langCode):
                     $native = __("admin.languages.{$langCode}.native");
@@ -1285,27 +1285,27 @@ ob_start();
 
         <!-- 사용 가능한 변수 안내 -->
         <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <p class="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1"><?= __('admin.settings.mail.templates.variables_title') ?></p>
+            <p class="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1"><?= __('settings.mail.templates.variables_title') ?></p>
             <p class="text-xs text-blue-700 dark:text-blue-400">
-                <code class="bg-blue-100 dark:bg-blue-800 px-1 rounded">{site_name}</code> <?= __('admin.settings.mail.templates.var_site_name') ?>,
-                <code class="bg-blue-100 dark:bg-blue-800 px-1 rounded">{user_name}</code> <?= __('admin.settings.mail.templates.var_user_name') ?>,
-                <code class="bg-blue-100 dark:bg-blue-800 px-1 rounded">{reset_link}</code> <?= __('admin.settings.mail.templates.var_reset_link') ?>,
-                <code class="bg-blue-100 dark:bg-blue-800 px-1 rounded">{expiry_minutes}</code> <?= __('admin.settings.mail.templates.var_expiry_minutes') ?>
+                <code class="bg-blue-100 dark:bg-blue-800 px-1 rounded">{site_name}</code> <?= __('settings.mail.templates.var_site_name') ?>,
+                <code class="bg-blue-100 dark:bg-blue-800 px-1 rounded">{user_name}</code> <?= __('settings.mail.templates.var_user_name') ?>,
+                <code class="bg-blue-100 dark:bg-blue-800 px-1 rounded">{reset_link}</code> <?= __('settings.mail.templates.var_reset_link') ?>,
+                <code class="bg-blue-100 dark:bg-blue-800 px-1 rounded">{expiry_minutes}</code> <?= __('settings.mail.templates.var_expiry_minutes') ?>
             </p>
         </div>
 
         <div>
-            <label for="email_subject" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.mail.templates.subject') ?></label>
+            <label for="email_subject" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.mail.templates.subject') ?></label>
             <input type="text" name="email_subject" id="email_subject"
                    class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
-                   placeholder="<?= __('admin.settings.mail.templates.subject_placeholder') ?>">
+                   placeholder="<?= __('settings.mail.templates.subject_placeholder') ?>">
         </div>
 
         <div>
-            <label for="email_body" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.mail.templates.body') ?></label>
+            <label for="email_body" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.mail.templates.body') ?></label>
             <textarea name="email_body" id="email_body" rows="12"
                       class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                      placeholder="<?= __('admin.settings.mail.templates.body_placeholder') ?>"></textarea>
+                      placeholder="<?= __('settings.mail.templates.body_placeholder') ?>"></textarea>
         </div>
 
         <!-- 미리보기 및 테스트 -->
@@ -1316,32 +1316,32 @@ ob_start();
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                 </svg>
-                <?= __('admin.settings.mail.templates.preview') ?>
+                <?= __('settings.mail.templates.preview') ?>
             </button>
             <button type="button" onclick="resetToDefault()"
                     class="inline-flex items-center px-4 py-2 text-sm font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50 rounded-lg transition">
                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                 </svg>
-                <?= __('admin.settings.mail.templates.reset_default') ?>
+                <?= __('settings.mail.templates.reset_default') ?>
             </button>
             <div class="flex-1"></div>
             <div class="flex items-center gap-2">
-                <input type="email" id="testEmailAddress" placeholder="<?= __('admin.settings.mail.templates.test_email_placeholder') ?>"
+                <input type="email" id="testEmailAddress" placeholder="<?= __('settings.mail.templates.test_email_placeholder') ?>"
                        class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg text-sm w-48">
                 <button type="button" onclick="sendTestEmail()"
                         class="inline-flex items-center px-4 py-2 text-sm font-medium text-green-600 bg-green-50 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 rounded-lg transition">
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                     </svg>
-                    <?= __('admin.settings.mail.templates.send_test') ?>
+                    <?= __('settings.mail.templates.send_test') ?>
                 </button>
             </div>
         </div>
 
         <div class="flex justify-end pt-4 border-t dark:border-zinc-700">
             <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
-                <?= __('admin.settings.mail.templates.save') ?>
+                <?= __('settings.mail.templates.save') ?>
             </button>
         </div>
     </form>
@@ -1352,7 +1352,7 @@ ob_start();
     <div class="absolute inset-0 bg-black/50" onclick="closeEmailPreview()"></div>
     <div class="absolute inset-4 md:inset-10 bg-white dark:bg-zinc-800 rounded-xl shadow-xl flex flex-col">
         <div class="flex items-center justify-between p-4 border-b dark:border-zinc-700">
-            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.settings.mail.templates.preview_modal_title') ?></h3>
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('settings.mail.templates.preview_modal_title') ?></h3>
             <button onclick="closeEmailPreview()" class="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -1396,7 +1396,7 @@ ob_start();
     }
 
     function resetToDefault() {
-        if (!confirm('<?= __('admin.settings.mail.templates.reset_confirm') ?>')) return;
+        if (!confirm('<?= __('settings.mail.templates.reset_confirm') ?>')) return;
 
         const type = document.getElementById('templateType').value;
         const lang = document.getElementById('templateLang').value;
@@ -1432,7 +1432,7 @@ ob_start();
     function sendTestEmail() {
         const testEmail = document.getElementById('testEmailAddress').value;
         if (!testEmail) {
-            alert('<?= __('admin.settings.mail.test.enter_email') ?>');
+            alert('<?= __('settings.mail.test.enter_email') ?>');
             return;
         }
 
@@ -1449,11 +1449,11 @@ ob_start();
             if (data.success) {
                 alert(data.message);
             } else {
-                alert('<?= __('admin.settings.mail.test.sending_failed') ?>: ' + (data.error || ''));
+                alert('<?= __('settings.mail.test.sending_failed') ?>: ' + (data.error || ''));
             }
         })
         .catch(error => {
-            alert('<?= __('admin.settings.mail.test.request_failed') ?>: ' + error.message);
+            alert('<?= __('settings.mail.test.request_failed') ?>: ' + error.message);
         });
     }
 
@@ -1482,7 +1482,7 @@ ob_start();
     // SMTP connection test
     function testSmtpConnection() {
         const resultEl = document.getElementById('smtpTestResult');
-        resultEl.innerHTML = '<span class="text-blue-600 dark:text-blue-400"><?= __('admin.settings.mail.smtp.testing') ?></span>';
+        resultEl.innerHTML = '<span class="text-blue-600 dark:text-blue-400"><?= __('settings.mail.smtp.testing') ?></span>';
 
         const formData = new FormData();
         formData.append('action', 'test_smtp');
@@ -1499,13 +1499,13 @@ ob_start();
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                resultEl.innerHTML = '<span class="text-green-600 dark:text-green-400"><?= __('admin.settings.mail.smtp.connection_success') ?></span>';
+                resultEl.innerHTML = '<span class="text-green-600 dark:text-green-400"><?= __('settings.mail.smtp.connection_success') ?></span>';
             } else {
-                resultEl.innerHTML = '<span class="text-red-600 dark:text-red-400"><?= __('admin.settings.mail.smtp.connection_failed') ?>: ' + (data.error || '') + '</span>';
+                resultEl.innerHTML = '<span class="text-red-600 dark:text-red-400"><?= __('settings.mail.smtp.connection_failed') ?>: ' + (data.error || '') + '</span>';
             }
         })
         .catch(error => {
-            resultEl.innerHTML = '<span class="text-red-600 dark:text-red-400"><?= __('admin.settings.mail.test.request_failed') ?>: ' + error.message + '</span>';
+            resultEl.innerHTML = '<span class="text-red-600 dark:text-red-400"><?= __('settings.mail.test.request_failed') ?>: ' + error.message + '</span>';
         });
     }
 </script>

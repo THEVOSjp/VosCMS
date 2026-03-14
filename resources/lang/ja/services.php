@@ -1,28 +1,122 @@
 <?php
 
 /**
- * サービス関連翻訳 - 日本語
+ * Services translations - ja
  */
 
 return [
-    // ページ
-    'title' => 'サービス',
-    'description' => '様々なサービスをご確認の上、ご希望のサービスをご予約ください。',
-
-    // カテゴリ
-    'all_categories' => 'すべて',
-
-    // ボタン
-    'view_detail' => '詳細を見る',
-    'book_now' => '予約する',
-    'back_to_list' => '一覧に戻る',
-
-    // 詳細ページ
-    'about_service' => 'サービス紹介',
-    'no_description' => 'サービスの説明がありません。',
-    'related_services' => '関連サービス',
-
-    // CTA
-    'cta_title' => '今すぐ予約',
-    'cta_description' => '簡単にご希望のサービスを予約して、特別な体験を始めましょう。',
+    'title' => 'サービス管理',
+    'list' => 'サービス一覧',
+    'create' => 'サービス追加',
+    'edit' => 'サービス編集',
+    'detail' => 'サービス詳細',
+    'fields' => [
+        'name' => 'サービス名',
+        'slug' => 'URLスラッグ',
+        'description' => '説明',
+        'short_description' => '短い説明',
+        'duration' => '所要時間（分）',
+        'price' => '料金',
+        'category' => 'カテゴリ',
+        'is_active' => '有効',
+        'max_capacity' => '最大収容人数',
+        'buffer_time' => 'バッファ時間（分）',
+        'advance_booking_days' => '予約可能期間（日）',
+        'min_notice_hours' => '最小通知時間（時間）',
+    ],
+    'success' => [
+        'created' => 'サービスが作成されました。',
+        'updated' => 'サービスが更新されました。',
+        'deleted' => 'サービスが削除されました。',
+        'activated' => 'サービスが有効になりました。',
+        'deactivated' => 'サービスが無効になりました。',
+    ],
+    'error' => ['has_reservations' => '予約があるサービスは削除できません。', 'server_error' => 'サーバーエラーが発生しました。', 'generic' => 'エラーが発生しました。', 'delete_failed' => '削除に失敗しました'],
+    'empty' => '登録されたサービスがありません。',
+    'filter_all' => 'すべて',
+    'filter_active' => '有効',
+    'filter_inactive' => '無効',
+    'status_active' => '有効',
+    'status_inactive' => '無効',
+    'confirm_delete' => 'このサービスを削除しますか？',
+    'actions' => '操作',
+    'minute' => '分',
+    'placeholder_name' => '例：カット、カラー、ネイルアート...',
+    'placeholder_slug' => '自動生成（英数字、ハイフン）',
+    'placeholder_description' => 'サービスの簡単な説明...',
+    'select_none' => '-- 選択なし --',
+    'no_buffer' => 'なし',
+    'settings' => [
+        'tabs' => ['general' => '基本設定', 'holidays' => '祝日管理'],
+        'general' => [
+            'title' => 'サービス基本設定',
+            'description' => 'サービス予約のデフォルトオプションを設定します。',
+            'saved' => '設定が保存されました。',
+            'default_duration' => 'デフォルト所要時間',
+            'default_buffer' => 'デフォルトバッファ時間',
+            'advance_booking_days' => '予約可能期間',
+            'min_notice_hours' => '最小事前通知',
+            'max_capacity' => 'デフォルト最大定員',
+            'currency' => '通貨',
+            'price_display' => '価格表示',
+            'price_show' => '表示',
+            'price_hide' => '非表示',
+            'price_contact' => 'お問い合わせ',
+            'days' => '日',
+            'hours' => '時間',
+        ],
+        'holidays' => [
+            'add_title' => '祝日追加',
+            'placeholder_title' => '例：元旦、お盆...',
+            'repeat_yearly' => '毎年繰り返し',
+            'yearly' => '毎年',
+            'name' => '祝日名',
+            'date' => '日付',
+            'status' => 'ステータス',
+            'empty' => '登録された祝日がありません。',
+            'required' => '祝日名と日付を入力してください。',
+            'created' => '祝日が登録されました。',
+            'deleted' => '祝日が削除されました。',
+            'confirm_delete' => 'この祝日を削除しますか？',
+        ],
+    ],
+    'categories' => [
+        'title' => 'カテゴリ管理',
+        'list' => 'カテゴリ一覧',
+        'create' => 'カテゴリ追加',
+        'edit' => 'カテゴリ編集',
+        'fields' => [
+            'name' => 'カテゴリ名',
+            'slug' => 'URLスラッグ',
+            'description' => '説明',
+            'parent' => '親カテゴリ',
+            'sort_order' => '並び順',
+            'is_active' => '有効',
+        ],
+        'success' => ['created' => 'カテゴリが作成されました。', 'updated' => 'カテゴリが更新されました。', 'deleted' => 'カテゴリが削除されました。', 'reordered' => 'カテゴリの順序が変更されました。'],
+        'delete' => '削除',
+        'error' => ['has_services' => 'このカテゴリにサービスが存在します。先にサービスを移動または削除してください。'],
+        'empty' => '登録されたカテゴリがありません。',
+        'confirm_delete' => 'このカテゴリを削除しますか？',
+        'parent_none' => '-- なし（最上位）--',
+        'multilang_save_first' => 'カテゴリを保存してから多言語入力が可能です。',
+        'placeholder_name' => '例：ヘア、ネイル、マッサージ...',
+        'placeholder_slug' => '自動生成',
+        'placeholder_description' => 'カテゴリの説明...',
+    ],
+    'time_slots' => [
+        'title' => '時間帯管理',
+        'default_slots' => 'デフォルト時間帯',
+        'blocked_dates' => 'ブロックされた日付',
+        'fields' => [
+            'day_of_week' => '曜日',
+            'start_time' => '開始時間',
+            'end_time' => '終了時間',
+            'max_bookings' => '最大予約数',
+            'service' => 'サービス',
+            'specific_date' => '特定の日付',
+        ],
+        'block_date' => '日付をブロック',
+        'unblock_date' => 'ブロック解除',
+    ],
 ];

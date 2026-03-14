@@ -79,7 +79,7 @@ function selectMenuItem(id, title, sitemapId, isHome) {
     showPanel(2);
 
     var homeText = document.getElementById('homeToggleText');
-    homeText.textContent = isHome ? '<?= __('admin.site.menus.unset_home') ?>' : '<?= __('admin.site.menus.set_home') ?>';
+    homeText.textContent = isHome ? '<?= __('site.menus.unset_home') ?>' : '<?= __('site.menus.set_home') ?>';
     console.log('[Menu] Selected menu item:', id, title, 'isHome:', isHome);
 }
 
@@ -97,21 +97,21 @@ function toggleTreeChildren(btn, e) {
 
 // ─── 사이트맵 액션 ───
 function addSitemap() {
-    var title = prompt('<?= __('admin.site.menus.enter_sitemap_name') ?>');
+    var title = prompt('<?= __('site.menus.enter_sitemap_name') ?>');
     if (title && title.trim()) {
         apiCall('add_sitemap', { title: title.trim() });
     }
 }
 
 function renameSitemap() {
-    var title = prompt('<?= __('admin.site.menus.enter_new_name') ?>', document.getElementById('panel2Title').textContent);
+    var title = prompt('<?= __('site.menus.enter_new_name') ?>', document.getElementById('panel2Title').textContent);
     if (title && title.trim()) {
         apiCall('rename_sitemap', { id: selectedId, title: title.trim() });
     }
 }
 
 function deleteSitemap() {
-    if (confirm('<?= __('admin.site.menus.confirm_delete_sitemap') ?>')) {
+    if (confirm('<?= __('site.menus.confirm_delete_sitemap') ?>')) {
         apiCall('delete_sitemap', { id: selectedId });
     }
 }
@@ -124,7 +124,7 @@ function editSitemapItems() {
     // 패널3에 사이트맵 편집 UI 표시 (제목 변경)
     closePanel(4);
     var p3 = document.getElementById('panel3');
-    document.getElementById('panel3Title').textContent = '<?= __('admin.site.menus.edit_sitemap') ?>';
+    document.getElementById('panel3Title').textContent = '<?= __('site.menus.edit_sitemap') ?>';
     // 패널3 내용을 사이트맵 편집으로 교체
     document.getElementById('menuTypeList').classList.add('hidden');
     document.getElementById('sitemapEditPanel').classList.remove('hidden');
@@ -155,7 +155,7 @@ function applyDesignBulk() {
 
     // 패널3에 디자인 설정 UI 표시
     closePanel(4);
-    document.getElementById('panel3Title').textContent = '<?= __('admin.site.menus.design_bulk') ?>';
+    document.getElementById('panel3Title').textContent = '<?= __('site.menus.design_bulk') ?>';
     document.getElementById('menuTypeList').classList.add('hidden');
     document.getElementById('sitemapEditPanel').classList.add('hidden');
     document.getElementById('designBulkPanel').classList.remove('hidden');
@@ -169,7 +169,7 @@ function copyMenuItem() {
     clipboard = { id: selectedId, sitemapId: selectedSitemapId, mode: 'copy' };
     console.log('[Menu] Copied:', clipboard);
     // 시각적 피드백
-    showToast('<?= __('admin.site.menus.copied') ?>');
+    showToast('<?= __('site.menus.copied') ?>');
 }
 
 function cutMenuItem() {
@@ -181,7 +181,7 @@ function cutMenuItem() {
     var el = document.querySelector('[data-type="menuItem"][data-id="' + selectedId + '"]');
     if (el) el.classList.add('cut-item');
     console.log('[Menu] Cut:', clipboard);
-    showToast('<?= __('admin.site.menus.cut') ?>');
+    showToast('<?= __('site.menus.cut') ?>');
 }
 
 function pasteSitemap() {
@@ -253,7 +253,7 @@ function openAddMenu() {
     var btn = document.querySelector('[data-ctx="add_menu"]');
     if (btn) btn.classList.add('active');
     closePanel(4);
-    document.getElementById('panel3Title').textContent = '<?= __('admin.site.menus.add_menu') ?>';
+    document.getElementById('panel3Title').textContent = '<?= __('site.menus.add_menu') ?>';
     clearActiveMenuType();
     showPanel(3);
     console.log('[Menu] Open add menu panel');
@@ -266,7 +266,7 @@ function openAddSubMenu() {
     var btn = document.querySelector('[data-ctx="add_sub"]');
     if (btn) btn.classList.add('active');
     closePanel(4);
-    document.getElementById('panel3Title').textContent = '<?= __('admin.site.menus.add_sub_menu') ?>';
+    document.getElementById('panel3Title').textContent = '<?= __('site.menus.add_sub_menu') ?>';
     clearActiveMenuType();
     showPanel(3);
     console.log('[Menu] Open add sub-menu panel');
@@ -280,12 +280,12 @@ function clearActiveMenuType() {
 
 // ─── 메뉴 타입 선택 (패널4 열기) ───
 var menuTypeInfo = {
-    page:     { title: '<?= __('admin.site.menus.type_page') ?>',     desc: '<?= __('admin.site.menus.desc_page') ?>' },
-    widget:   { title: '<?= __('admin.site.menus.type_widget') ?>',   desc: '<?= __('admin.site.menus.desc_widget') ?>' },
-    external: { title: '<?= __('admin.site.menus.type_external') ?>', desc: '<?= __('admin.site.menus.desc_external') ?>' },
-    board:    { title: '<?= __('admin.site.menus.type_board') ?>',    desc: '<?= __('admin.site.menus.desc_board') ?>' },
-    member:   { title: '<?= __('admin.site.menus.type_member') ?>',   desc: '<?= __('admin.site.menus.desc_member') ?>' },
-    shortcut: { title: '<?= __('admin.site.menus.type_shortcut') ?>', desc: '<?= __('admin.site.menus.desc_shortcut') ?>' }
+    page:     { title: '<?= __('site.menus.type_page') ?>',     desc: '<?= __('site.menus.desc_page') ?>' },
+    widget:   { title: '<?= __('site.menus.type_widget') ?>',   desc: '<?= __('site.menus.desc_widget') ?>' },
+    external: { title: '<?= __('site.menus.type_external') ?>', desc: '<?= __('site.menus.desc_external') ?>' },
+    board:    { title: '<?= __('site.menus.type_board') ?>',    desc: '<?= __('site.menus.desc_board') ?>' },
+    member:   { title: '<?= __('site.menus.type_member') ?>',   desc: '<?= __('site.menus.desc_member') ?>' },
+    shortcut: { title: '<?= __('site.menus.type_shortcut') ?>', desc: '<?= __('site.menus.desc_shortcut') ?>' }
 };
 
 function selectMenuType(type) {
@@ -341,7 +341,7 @@ function editMenuItem() {
     var el = document.querySelector('[data-type="menuItem"][data-id="' + selectedId + '"]');
     if (!el) return;
 
-    document.getElementById('panel4Title').textContent = '<?= __('admin.site.menus.edit_item') ?>';
+    document.getElementById('panel4Title').textContent = '<?= __('site.menus.edit_item') ?>';
     document.getElementById('panel4Desc').textContent = '';
 
     document.getElementById('formAction').value = 'update_menu_item';
@@ -375,7 +375,7 @@ function editMenuItem() {
 function renameMenuItem() {
     var el = document.querySelector('[data-type="menuItem"][data-id="' + selectedId + '"]');
     var currentTitle = el ? el.dataset.title : '';
-    var title = prompt('<?= __('admin.site.menus.enter_new_name') ?>', currentTitle);
+    var title = prompt('<?= __('site.menus.enter_new_name') ?>', currentTitle);
     if (title && title.trim()) {
         apiCall('rename_menu_item', { id: selectedId, title: title.trim() });
     }
@@ -383,10 +383,10 @@ function renameMenuItem() {
 
 function deleteMenuItem() {
     if (selectedIsHome) {
-        alert('<?= __('admin.site.menus.cannot_delete_home') ?>');
+        alert('<?= __('site.menus.cannot_delete_home') ?>');
         return;
     }
-    if (confirm('<?= __('admin.site.menus.confirm_delete_item') ?>')) {
+    if (confirm('<?= __('site.menus.confirm_delete_item') ?>')) {
         apiCall('delete_menu_item', { id: selectedId });
     }
 }
@@ -397,7 +397,7 @@ function toggleHomeMenu() {
 
 function installMenuType() {
     console.log('[Menu] Install menu type');
-    alert('<?= __('admin.site.menus.install_coming_soon') ?>');
+    alert('<?= __('site.menus.install_coming_soon') ?>');
 }
 
 // ─── 폼 저장 ───
@@ -405,7 +405,7 @@ function saveForm() {
     var action = document.getElementById('formAction').value;
     var title = document.getElementById('formTitle').value.trim();
     if (!title) {
-        alert('<?= __('admin.site.menus.title_required') ?>');
+        alert('<?= __('site.menus.title_required') ?>');
         document.getElementById('formTitle').focus();
         return;
     }
@@ -462,7 +462,7 @@ function apiCall(action, data, callback) {
     })
     .catch(function(err) {
         console.error('[Menu API] Error:', err);
-        alert('<?= __('admin.site.menus.server_error') ?>');
+        alert('<?= __('site.menus.server_error') ?>');
     });
 }
 

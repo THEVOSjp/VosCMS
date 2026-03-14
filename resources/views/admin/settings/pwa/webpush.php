@@ -7,7 +7,7 @@
 // Initialize database and settings
 require_once dirname(__DIR__) . '/_init.php';
 
-$pageTitle = __('admin.settings.pwa.tabs.webpush') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('settings.pwa.tabs.webpush') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentSettingsPage = 'pwa';
 $currentPwaTab = 'webpush';
 
@@ -52,10 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $settings['notif_vibrate'] = $notifVibrate;
             $settings['notif_require_interaction'] = $notifRequireInteraction;
 
-            $message = __('admin.settings.pwa.webpush.success');
+            $message = __('settings.pwa.webpush.success');
             $messageType = 'success';
         } catch (PDOException $e) {
-            $message = __('admin.settings.error_save') . ': ' . $e->getMessage();
+            $message = __('settings.error_save') . ': ' . $e->getMessage();
             $messageType = 'error';
         }
     } elseif ($action === 'generate_vapid_keys') {
@@ -151,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $generatedKeys = true;
 
                 // Add warning about using random keys
-                $message = __('admin.settings.pwa.webpush.vapid.vapid_generated') . ' (random fallback - 프로덕션에서는 적절한 VAPID 라이브러리 사용 권장)';
+                $message = __('settings.pwa.webpush.vapid.vapid_generated') . ' (random fallback - 프로덕션에서는 적절한 VAPID 라이브러리 사용 권장)';
                 $messageType = 'warning';
             } catch (Exception $e) {
                 // Fallback also failed
@@ -168,13 +168,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $settings['vapid_private_key'] = $privateKey;
 
             if (!isset($message)) {
-                $message = __('admin.settings.pwa.webpush.vapid.vapid_generated');
+                $message = __('settings.pwa.webpush.vapid.vapid_generated');
                 $messageType = 'success';
             }
         } else {
             // Both methods failed
             $opensslError = function_exists('openssl_error_string') ? openssl_error_string() : null;
-            $message = __('admin.settings.pwa.webpush.vapid.vapid_error');
+            $message = __('settings.pwa.webpush.vapid.vapid_error');
             if ($opensslError) {
                 $message .= ' - OpenSSL: ' . $opensslError;
             }
@@ -183,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } elseif ($action === 'test_notification') {
         // Test notification - would need actual implementation
-        $message = __('admin.settings.pwa.webpush.test_sent');
+        $message = __('settings.pwa.webpush.test_sent');
         $messageType = 'info';
     }
 }
@@ -205,8 +205,8 @@ include __DIR__ . '/_tabs.php';
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
         <?php
         $headerIcon = 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9';
-        $headerTitle = __('admin.settings.pwa.webpush.title');
-        $headerDescription = __('admin.settings.pwa.webpush.description');
+        $headerTitle = __('settings.pwa.webpush.title');
+        $headerDescription = __('settings.pwa.webpush.description');
         $headerIconColor = 'text-green-600';
         $headerActions = '<label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" name="webpush_enabled" class="sr-only peer" ' . ($webpushEnabled ? 'checked' : '') . '><div class="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-zinc-600 peer-checked:bg-blue-600"></div></label>';
         include __DIR__ . '/../../components/settings-header.php';
@@ -219,12 +219,12 @@ include __DIR__ . '/_tabs.php';
                 <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <span class="text-sm text-green-700 dark:text-green-300"><?= __('admin.settings.pwa.webpush.status_enabled') ?></span>
+                <span class="text-sm text-green-700 dark:text-green-300"><?= __('settings.pwa.webpush.status_enabled') ?></span>
                 <?php else: ?>
                 <svg class="w-5 h-5 text-zinc-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
                 </svg>
-                <span class="text-sm text-zinc-600 dark:text-zinc-400"><?= __('admin.settings.pwa.webpush.status_disabled') ?></span>
+                <span class="text-sm text-zinc-600 dark:text-zinc-400"><?= __('settings.pwa.webpush.status_disabled') ?></span>
                 <?php endif; ?>
             </div>
         </div>
@@ -234,23 +234,23 @@ include __DIR__ . '/_tabs.php';
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
         <div class="flex items-center justify-between mb-4">
             <div>
-                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.settings.pwa.webpush.vapid.title') ?></h3>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.pwa.webpush.vapid.description') ?></p>
+                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('settings.pwa.webpush.vapid.title') ?></h3>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('settings.pwa.webpush.vapid.description') ?></p>
             </div>
             <button type="submit" name="action" value="generate_vapid_keys"
                     class="px-4 py-2 text-sm bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-600 transition"
-                    onclick="return confirm('<?= __('admin.settings.pwa.webpush.vapid.generate_confirm') ?>')">
+                    onclick="return confirm('<?= __('settings.pwa.webpush.vapid.generate_confirm') ?>')">
                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                 </svg>
-                <?= __('admin.settings.pwa.webpush.vapid.generate') ?>
+                <?= __('settings.pwa.webpush.vapid.generate') ?>
             </button>
         </div>
 
         <div class="space-y-4">
             <div>
                 <label for="vapid_public_key" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                    <?= __('admin.settings.pwa.webpush.vapid.public_key') ?>
+                    <?= __('settings.pwa.webpush.vapid.public_key') ?>
                 </label>
                 <div class="flex gap-2">
                     <input type="text" name="vapid_public_key" id="vapid_public_key"
@@ -263,12 +263,12 @@ include __DIR__ . '/_tabs.php';
                         </svg>
                     </button>
                 </div>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.pwa.webpush.vapid.public_key_hint') ?></p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.pwa.webpush.vapid.public_key_hint') ?></p>
             </div>
 
             <div>
                 <label for="vapid_private_key" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                    <?= __('admin.settings.pwa.webpush.vapid.private_key') ?>
+                    <?= __('settings.pwa.webpush.vapid.private_key') ?>
                 </label>
                 <div class="flex gap-2">
                     <input type="password" name="vapid_private_key" id="vapid_private_key"
@@ -281,30 +281,30 @@ include __DIR__ . '/_tabs.php';
                         </svg>
                     </button>
                 </div>
-                <p class="text-xs text-red-500 dark:text-red-400 mt-1"><?= __('admin.settings.pwa.webpush.vapid.private_key_warning') ?></p>
+                <p class="text-xs text-red-500 dark:text-red-400 mt-1"><?= __('settings.pwa.webpush.vapid.private_key_warning') ?></p>
             </div>
 
             <div>
                 <label for="vapid_subject" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                    <?= __('admin.settings.pwa.webpush.vapid.subject') ?>
+                    <?= __('settings.pwa.webpush.vapid.subject') ?>
                 </label>
                 <input type="text" name="vapid_subject" id="vapid_subject"
                        value="<?= htmlspecialchars($settings['vapid_subject'] ?? 'mailto:admin@example.com'); ?>"
                        class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                        placeholder="mailto:admin@example.com">
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.pwa.webpush.vapid.subject_hint') ?></p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.pwa.webpush.vapid.subject_hint') ?></p>
             </div>
         </div>
     </div>
 
     <!-- Notification Defaults -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
-        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.pwa.webpush.defaults.title') ?></h3>
+        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.pwa.webpush.defaults.title') ?></h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
                 <label for="notif_default_title" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                    <?= __('admin.settings.pwa.webpush.defaults.title_label') ?>
+                    <?= __('settings.pwa.webpush.defaults.title_label') ?>
                 </label>
                 <input type="text" name="notif_default_title" id="notif_default_title"
                        value="<?= htmlspecialchars($settings['notif_default_title'] ?? ($settings['site_name'] ?? 'RezlyX')); ?>"
@@ -312,7 +312,7 @@ include __DIR__ . '/_tabs.php';
             </div>
             <div>
                 <label for="notif_default_icon" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                    <?= __('admin.settings.pwa.webpush.defaults.icon_label') ?>
+                    <?= __('settings.pwa.webpush.defaults.icon_label') ?>
                 </label>
                 <input type="text" name="notif_default_icon" id="notif_default_icon"
                        value="<?= htmlspecialchars($settings['notif_default_icon'] ?? '/assets/icons/icon-192x192.png'); ?>"
@@ -323,31 +323,31 @@ include __DIR__ . '/_tabs.php';
 
         <div class="mb-4">
             <label for="notif_default_badge" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                <?= __('admin.settings.pwa.webpush.defaults.badge_label') ?>
+                <?= __('settings.pwa.webpush.defaults.badge_label') ?>
             </label>
             <input type="text" name="notif_default_badge" id="notif_default_badge"
                    value="<?= htmlspecialchars($settings['notif_default_badge'] ?? '/assets/icons/icon-72x72.png'); ?>"
                    class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                    placeholder="/assets/icons/icon-72x72.png">
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.pwa.webpush.defaults.badge_hint') ?></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.pwa.webpush.defaults.badge_hint') ?></p>
         </div>
 
         <div class="flex items-center gap-6">
             <label class="flex items-center cursor-pointer">
                 <input type="checkbox" name="notif_vibrate" class="w-4 h-4 text-blue-600 bg-zinc-100 border-zinc-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-zinc-800 focus:ring-2 dark:bg-zinc-700 dark:border-zinc-600" <?= ($settings['notif_vibrate'] ?? '1') === '1' ? 'checked' : ''; ?>>
-                <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.settings.pwa.webpush.defaults.vibrate') ?></span>
+                <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.pwa.webpush.defaults.vibrate') ?></span>
             </label>
             <label class="flex items-center cursor-pointer">
                 <input type="checkbox" name="notif_require_interaction" class="w-4 h-4 text-blue-600 bg-zinc-100 border-zinc-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-zinc-800 focus:ring-2 dark:bg-zinc-700 dark:border-zinc-600" <?= ($settings['notif_require_interaction'] ?? '0') === '1' ? 'checked' : ''; ?>>
-                <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.settings.pwa.webpush.defaults.require_interaction') ?></span>
+                <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.pwa.webpush.defaults.require_interaction') ?></span>
             </label>
         </div>
     </div>
 
     <!-- Test Notification -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
-        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.pwa.webpush.test.title') ?></h3>
-        <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4"><?= __('admin.settings.pwa.webpush.test.description') ?></p>
+        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.pwa.webpush.test.title') ?></h3>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4"><?= __('settings.pwa.webpush.test.description') ?></p>
 
         <button type="button" id="testNotificationBtn"
                 class="px-4 py-2 bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-600 transition disabled:opacity-50"
@@ -355,7 +355,7 @@ include __DIR__ . '/_tabs.php';
             <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
             </svg>
-            <?= __('admin.settings.pwa.webpush.test.send_button') ?>
+            <?= __('settings.pwa.webpush.test.send_button') ?>
         </button>
     </div>
 
@@ -390,7 +390,7 @@ include __DIR__ . '/_tabs.php';
 
     function sendTestNotification() {
         if (!('Notification' in window)) {
-            alert('<?= __('admin.settings.pwa.webpush.test.not_supported') ?>');
+            alert('<?= __('settings.pwa.webpush.test.not_supported') ?>');
             return;
         }
 
@@ -398,7 +398,7 @@ include __DIR__ . '/_tabs.php';
             if (permission === 'granted') {
                 const title = document.getElementById('notif_default_title').value || 'Test Notification';
                 const options = {
-                    body: '<?= __('admin.settings.pwa.webpush.test.body') ?>',
+                    body: '<?= __('settings.pwa.webpush.test.body') ?>',
                     icon: document.getElementById('notif_default_icon').value || '/assets/icons/icon-192x192.png',
                     badge: document.getElementById('notif_default_badge').value || '/assets/icons/icon-72x72.png',
                     vibrate: document.querySelector('input[name="notif_vibrate"]').checked ? [200, 100, 200] : undefined
@@ -407,7 +407,7 @@ include __DIR__ . '/_tabs.php';
                 new Notification(title, options);
                 console.log('Test notification sent');
             } else {
-                alert('<?= __('admin.settings.pwa.webpush.test.permission_denied') ?>');
+                alert('<?= __('settings.pwa.webpush.test.permission_denied') ?>');
             }
         });
     }

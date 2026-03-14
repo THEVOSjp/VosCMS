@@ -387,7 +387,7 @@ $router->group(['prefix' => '/admin', 'middleware' => ['auth', 'admin']], functi
     // 사이트 관리 - 메뉴 관리
     $router->get('/site/menus', function () {
         global $config, $siteSettings;
-        $pageHeaderTitle = __('admin.site.menus.title');
+        $pageHeaderTitle = __('site.menus.title');
         include BASE_PATH . '/resources/views/admin/site/menus.php';
     })->name('admin.site.menus');
 
@@ -399,14 +399,14 @@ $router->group(['prefix' => '/admin', 'middleware' => ['auth', 'admin']], functi
     // 사이트 관리 - 디자인
     $router->get('/site/design', function () {
         global $config, $siteSettings;
-        $pageHeaderTitle = __('admin.site.design.title');
+        $pageHeaderTitle = __('site.design.title');
         include BASE_PATH . '/resources/views/admin/site/design.php';
     })->name('admin.site.design');
 
     // 사이트 관리 - 페이지
     $router->get('/site/pages', function () {
         global $config, $siteSettings;
-        $pageHeaderTitle = __('admin.site.pages.title');
+        $pageHeaderTitle = __('site.pages.title');
         include BASE_PATH . '/resources/views/admin/site/pages.php';
     })->name('admin.site.pages');
 

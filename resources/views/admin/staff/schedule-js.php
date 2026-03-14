@@ -140,7 +140,7 @@
             })
             .finally(function() {
                 btn.disabled = false;
-                btn.textContent = '<?= __('admin.staff.schedule.save_weekly') ?>';
+                btn.textContent = '<?= __('staff.schedule.save_weekly') ?>';
             });
     });
 
@@ -148,21 +148,21 @@
     function populateOverrides(overrides) {
         var list = document.getElementById('overrideList');
         if (!overrides || overrides.length === 0) {
-            list.innerHTML = '<div class="px-6 py-8 text-center text-sm text-zinc-400"><?= __('admin.staff.schedule.no_overrides') ?></div>';
+            list.innerHTML = '<div class="px-6 py-8 text-center text-sm text-zinc-400"><?= __('staff.schedule.no_overrides') ?></div>';
             return;
         }
 
         var html = '';
         overrides.forEach(function(ov) {
             var statusBadge = parseInt(ov.is_working)
-                ? '<span class="px-2 py-0.5 text-[10px] font-medium rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><?= __('admin.staff.schedule.working') ?></span>'
-                : '<span class="px-2 py-0.5 text-[10px] font-medium rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"><?= __('admin.staff.schedule.day_off') ?></span>';
+                ? '<span class="px-2 py-0.5 text-[10px] font-medium rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><?= __('staff.schedule.working') ?></span>'
+                : '<span class="px-2 py-0.5 text-[10px] font-medium rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"><?= __('staff.schedule.day_off') ?></span>';
 
             var timeStr = '';
             if (parseInt(ov.is_working) && ov.start_time && ov.end_time) {
                 timeStr = ov.start_time.substring(0, 5) + ' ~ ' + ov.end_time.substring(0, 5);
                 if (ov.break_start && ov.break_end) {
-                    timeStr += ' (<?= __('admin.staff.schedule.break_start') ?> ' + ov.break_start.substring(0, 5) + '~' + ov.break_end.substring(0, 5) + ')';
+                    timeStr += ' (<?= __('staff.schedule.break_start') ?> ' + ov.break_start.substring(0, 5) + '~' + ov.break_end.substring(0, 5) + ')';
                 }
             }
 
@@ -243,7 +243,7 @@
 
     // === 오버라이드 삭제 ===
     window.deleteOverride = function(id) {
-        if (!confirm('<?= __('admin.staff.schedule.confirm_delete_override') ?>')) return;
+        if (!confirm('<?= __('staff.schedule.confirm_delete_override') ?>')) return;
         console.log('[Schedule] Deleting override:', id);
 
         var fd = new FormData();

@@ -7,7 +7,7 @@ if (!function_exists('__')) {
     require_once BASE_PATH . '/rzxlib/Core/Helpers/lang.php';
 }
 
-$pageTitle = __('admin.members.groups.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('members.groups.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
@@ -45,7 +45,7 @@ try {
                     $benefits = trim($_POST['benefits'] ?? '');
 
                     if (empty($name)) {
-                        echo json_encode(['success' => false, 'message' => __('admin.members.groups.error.name_required')]);
+                        echo json_encode(['success' => false, 'message' => __('members.groups.error.name_required')]);
                         exit;
                     }
                     if (empty($slug)) {
@@ -56,7 +56,7 @@ try {
                     $chk = $pdo->prepare("SELECT id FROM {$prefix}member_grades WHERE slug = ?");
                     $chk->execute([$slug]);
                     if ($chk->fetch()) {
-                        echo json_encode(['success' => false, 'message' => __('admin.members.groups.error.slug_duplicate')]);
+                        echo json_encode(['success' => false, 'message' => __('members.groups.error.slug_duplicate')]);
                         exit;
                     }
 
@@ -66,7 +66,7 @@ try {
                     $stmt = $pdo->prepare("INSERT INTO {$prefix}member_grades (id, name, slug, color, discount_rate, point_rate, min_reservations, min_spent, benefits, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                     $stmt->execute([$id, $name, $slug, $color, $discountRate, $pointRate, $minReservations, $minSpent, $benefitsJson, $maxSort]);
 
-                    echo json_encode(['success' => true, 'message' => __('admin.members.groups.success.created'), 'id' => $id]);
+                    echo json_encode(['success' => true, 'message' => __('members.groups.success.created'), 'id' => $id]);
                     exit;
 
                 case 'update_grade':
@@ -81,7 +81,7 @@ try {
                     $benefits = trim($_POST['benefits'] ?? '');
 
                     if (empty($name)) {
-                        echo json_encode(['success' => false, 'message' => __('admin.members.groups.error.name_required')]);
+                        echo json_encode(['success' => false, 'message' => __('members.groups.error.name_required')]);
                         exit;
                     }
 
@@ -89,7 +89,7 @@ try {
                     $chk = $pdo->prepare("SELECT id FROM {$prefix}member_grades WHERE slug = ? AND id != ?");
                     $chk->execute([$slug, $id]);
                     if ($chk->fetch()) {
-                        echo json_encode(['success' => false, 'message' => __('admin.members.groups.error.slug_duplicate')]);
+                        echo json_encode(['success' => false, 'message' => __('members.groups.error.slug_duplicate')]);
                         exit;
                     }
 
@@ -97,7 +97,7 @@ try {
                     $stmt = $pdo->prepare("UPDATE {$prefix}member_grades SET name=?, slug=?, color=?, discount_rate=?, point_rate=?, min_reservations=?, min_spent=?, benefits=? WHERE id=?");
                     $stmt->execute([$name, $slug, $color, $discountRate, $pointRate, $minReservations, $minSpent, $benefitsJson, $id]);
 
-                    echo json_encode(['success' => true, 'message' => __('admin.members.groups.success.updated')]);
+                    echo json_encode(['success' => true, 'message' => __('members.groups.success.updated')]);
                     exit;
 
                 case 'delete_grade':
@@ -108,7 +108,7 @@ try {
                     $chk->execute([$id]);
                     $grade = $chk->fetch(PDO::FETCH_ASSOC);
                     if ($grade && $grade['is_default']) {
-                        echo json_encode(['success' => false, 'message' => __('admin.members.groups.error.cannot_delete_default')]);
+                        echo json_encode(['success' => false, 'message' => __('members.groups.error.cannot_delete_default')]);
                         exit;
                     }
 
@@ -125,14 +125,14 @@ try {
                     }
 
                     $pdo->prepare("DELETE FROM {$prefix}member_grades WHERE id = ?")->execute([$id]);
-                    echo json_encode(['success' => true, 'message' => __('admin.members.groups.success.deleted')]);
+                    echo json_encode(['success' => true, 'message' => __('members.groups.success.deleted')]);
                     exit;
 
                 case 'set_default':
                     $id = trim($_POST['id'] ?? '');
                     $pdo->exec("UPDATE {$prefix}member_grades SET is_default = 0");
                     $pdo->prepare("UPDATE {$prefix}member_grades SET is_default = 1 WHERE id = ?")->execute([$id]);
-                    echo json_encode(['success' => true, 'message' => __('admin.members.groups.success.default_changed')]);
+                    echo json_encode(['success' => true, 'message' => __('members.groups.success.default_changed')]);
                     exit;
 
                 default:
@@ -193,13 +193,13 @@ try {
                 <!-- 헤더 -->
                 <div class="flex items-center justify-between mb-6">
                     <div>
-                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('admin.members.groups.title') ?></h1>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.members.groups.description') ?></p>
+                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('members.groups.title') ?></h1>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('members.groups.description') ?></p>
                     </div>
                     <button onclick="openGradeModal()"
                             class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <?= __('admin.members.groups.create') ?>
+                        <?= __('members.groups.create') ?>
                     </button>
                 </div>
 
@@ -215,7 +215,7 @@ try {
                                     <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: <?= htmlspecialchars($g['color']) ?>"></span>
                                     <h3 class="font-semibold text-zinc-900 dark:text-white"><?= htmlspecialchars($g['name']) ?></h3>
                                     <?php if ($g['is_default']): ?>
-                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"><?= __('admin.members.groups.default') ?></span>
+                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"><?= __('members.groups.default') ?></span>
                                     <?php endif; ?>
                                 </div>
                                 <span class="text-xs text-zinc-400"><?= htmlspecialchars($g['slug']) ?></span>
@@ -225,26 +225,26 @@ try {
                             <div class="grid grid-cols-3 gap-2 mb-4">
                                 <div class="bg-zinc-50 dark:bg-zinc-700/50 rounded-lg p-2.5 text-center">
                                     <div class="text-lg font-bold text-zinc-900 dark:text-white"><?= $gradeMemberCounts[$g['id']] ?? 0 ?></div>
-                                    <div class="text-[11px] text-zinc-500 dark:text-zinc-400"><?= __('admin.members.groups.member_count') ?></div>
+                                    <div class="text-[11px] text-zinc-500 dark:text-zinc-400"><?= __('members.groups.member_count') ?></div>
                                 </div>
                                 <div class="bg-zinc-50 dark:bg-zinc-700/50 rounded-lg p-2.5 text-center">
                                     <div class="text-lg font-bold text-zinc-900 dark:text-white"><?= number_format($g['discount_rate'], 1) ?>%</div>
-                                    <div class="text-[11px] text-zinc-500 dark:text-zinc-400"><?= __('admin.members.groups.fields.discount_rate') ?></div>
+                                    <div class="text-[11px] text-zinc-500 dark:text-zinc-400"><?= __('members.groups.fields.discount_rate') ?></div>
                                 </div>
                                 <div class="bg-zinc-50 dark:bg-zinc-700/50 rounded-lg p-2.5 text-center">
                                     <div class="text-lg font-bold text-zinc-900 dark:text-white"><?= number_format($g['point_rate'], 1) ?>%</div>
-                                    <div class="text-[11px] text-zinc-500 dark:text-zinc-400"><?= __('admin.members.groups.fields.point_rate') ?></div>
+                                    <div class="text-[11px] text-zinc-500 dark:text-zinc-400"><?= __('members.groups.fields.point_rate') ?></div>
                                 </div>
                             </div>
 
                             <!-- 혜택 요약 -->
                             <div class="text-xs text-zinc-500 dark:text-zinc-400 space-y-1 mb-4">
                                 <div class="flex justify-between">
-                                    <span><?= __('admin.members.groups.fields.min_reservations') ?></span>
+                                    <span><?= __('members.groups.fields.min_reservations') ?></span>
                                     <span class="font-medium text-zinc-700 dark:text-zinc-300"><?= $g['min_reservations'] ?></span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span><?= __('admin.members.groups.fields.min_spent') ?></span>
+                                    <span><?= __('members.groups.fields.min_spent') ?></span>
                                     <span class="font-medium text-zinc-700 dark:text-zinc-300"><?= number_format($g['min_spent']) ?></span>
                                 </div>
                             </div>
@@ -253,12 +253,12 @@ try {
                             <div class="flex items-center gap-2 pt-3 border-t border-zinc-100 dark:border-zinc-700">
                                 <button onclick='editGrade(<?= json_encode($g, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'
                                         class="flex-1 text-center py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors">
-                                    <?= __('admin.members.groups.edit') ?>
+                                    <?= __('members.groups.edit') ?>
                                 </button>
                                 <?php if (!$g['is_default']): ?>
                                 <button onclick="setDefault('<?= htmlspecialchars($g['id']) ?>')"
                                         class="flex-1 text-center py-1.5 text-xs font-medium text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors">
-                                    <?= __('admin.members.groups.set_default') ?>
+                                    <?= __('members.groups.set_default') ?>
                                 </button>
                                 <button onclick="deleteGrade('<?= htmlspecialchars($g['id']) ?>')"
                                         class="py-1.5 px-2 text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
@@ -273,7 +273,7 @@ try {
                     <?php if (empty($grades)): ?>
                     <div class="col-span-full p-12 text-center text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700">
                         <svg class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        <p><?= __('admin.members.groups.empty') ?></p>
+                        <p><?= __('members.groups.empty') ?></p>
                     </div>
                     <?php endif; ?>
                 </div>

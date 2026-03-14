@@ -8,40 +8,40 @@
 require_once __DIR__ . '/_init.php';
 include_once __DIR__ . '/../components/multilang-button.php';
 
-$pageTitle = __('admin.settings.site.page_title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('settings.site.page_title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentSettingsPage = 'site';
 
 // 타임존 목록
 $timezones = [
-    '' => __('admin.settings.site.timezones.system_default'),
-    'Asia/Seoul' => __('admin.settings.site.timezones.asia_seoul'),
-    'Asia/Tokyo' => __('admin.settings.site.timezones.asia_tokyo'),
-    'Asia/Shanghai' => __('admin.settings.site.timezones.asia_shanghai'),
-    'Asia/Hong_Kong' => __('admin.settings.site.timezones.asia_hong_kong'),
-    'Asia/Singapore' => __('admin.settings.site.timezones.asia_singapore'),
-    'America/New_York' => __('admin.settings.site.timezones.america_new_york'),
-    'America/Los_Angeles' => __('admin.settings.site.timezones.america_los_angeles'),
-    'America/Chicago' => __('admin.settings.site.timezones.america_chicago'),
-    'Europe/London' => __('admin.settings.site.timezones.europe_london'),
-    'Europe/Paris' => __('admin.settings.site.timezones.europe_paris'),
-    'Europe/Berlin' => __('admin.settings.site.timezones.europe_berlin'),
-    'Australia/Sydney' => __('admin.settings.site.timezones.australia_sydney'),
-    'Pacific/Auckland' => __('admin.settings.site.timezones.pacific_auckland'),
+    '' => __('settings.site.timezones.system_default'),
+    'Asia/Seoul' => __('settings.site.timezones.asia_seoul'),
+    'Asia/Tokyo' => __('settings.site.timezones.asia_tokyo'),
+    'Asia/Shanghai' => __('settings.site.timezones.asia_shanghai'),
+    'Asia/Hong_Kong' => __('settings.site.timezones.asia_hong_kong'),
+    'Asia/Singapore' => __('settings.site.timezones.asia_singapore'),
+    'America/New_York' => __('settings.site.timezones.america_new_york'),
+    'America/Los_Angeles' => __('settings.site.timezones.america_los_angeles'),
+    'America/Chicago' => __('settings.site.timezones.america_chicago'),
+    'Europe/London' => __('settings.site.timezones.europe_london'),
+    'Europe/Paris' => __('settings.site.timezones.europe_paris'),
+    'Europe/Berlin' => __('settings.site.timezones.europe_berlin'),
+    'Australia/Sydney' => __('settings.site.timezones.australia_sydney'),
+    'Pacific/Auckland' => __('settings.site.timezones.pacific_auckland'),
 ];
 
 // 언어 목록
 $locales = [
-    '' => __('admin.settings.site.locales.system_default'),
-    'ko' => __('admin.settings.site.locales.ko'),
-    'en' => __('admin.settings.site.locales.en'),
-    'ja' => __('admin.settings.site.locales.ja'),
+    '' => __('settings.site.locales.system_default'),
+    'ko' => __('settings.site.locales.ko'),
+    'en' => __('settings.site.locales.en'),
+    'ja' => __('settings.site.locales.ja'),
 ];
 
 // 색상 조합 옵션
 $colorSchemes = [
-    'auto' => __('admin.settings.site.color_schemes.auto'),
-    'light' => __('admin.settings.site.color_schemes.light'),
-    'dark' => __('admin.settings.site.color_schemes.dark'),
+    'auto' => __('settings.site.color_schemes.auto'),
+    'light' => __('settings.site.color_schemes.light'),
+    'dark' => __('settings.site.color_schemes.dark'),
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -183,10 +183,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $settings['footer_scripts'] = $footerScripts;
             $settings['color_scheme'] = $colorScheme;
 
-            $message = __('admin.settings.success');
+            $message = __('settings.success');
             $messageType = 'success';
         } catch (PDOException $e) {
-            $message = __('admin.settings.error_save') . ': ' . $e->getMessage();
+            $message = __('settings.error_save') . ': ' . $e->getMessage();
             $messageType = 'error';
         }
     } elseif ($action === 'delete_logo') {
@@ -194,28 +194,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($logoImage && file_exists(BASE_PATH . $logoImage)) @unlink(BASE_PATH . $logoImage);
         $pdo->prepare("UPDATE rzx_settings SET `value` = '' WHERE `key` = 'logo_image'")->execute();
         $settings['logo_image'] = '';
-        $message = __('admin.settings.site.deleted.logo');
+        $message = __('settings.site.deleted.logo');
         $messageType = 'success';
     } elseif ($action === 'delete_favicon') {
         $favicon = $settings['favicon'] ?? '';
         if ($favicon && file_exists(BASE_PATH . $favicon)) @unlink(BASE_PATH . $favicon);
         $pdo->prepare("UPDATE rzx_settings SET `value` = '' WHERE `key` = 'favicon'")->execute();
         $settings['favicon'] = '';
-        $message = __('admin.settings.site.deleted.favicon');
+        $message = __('settings.site.deleted.favicon');
         $messageType = 'success';
     } elseif ($action === 'delete_mobile_icon') {
         $icon = $settings['mobile_icon'] ?? '';
         if ($icon && file_exists(BASE_PATH . $icon)) @unlink(BASE_PATH . $icon);
         $pdo->prepare("UPDATE rzx_settings SET `value` = '' WHERE `key` = 'mobile_icon'")->execute();
         $settings['mobile_icon'] = '';
-        $message = __('admin.settings.site.deleted.mobile_icon');
+        $message = __('settings.site.deleted.mobile_icon');
         $messageType = 'success';
     } elseif ($action === 'delete_og_image') {
         $og = $settings['og_image'] ?? '';
         if ($og && file_exists(BASE_PATH . $og)) @unlink(BASE_PATH . $og);
         $pdo->prepare("UPDATE rzx_settings SET `value` = '' WHERE `key` = 'og_image'")->execute();
         $settings['og_image'] = '';
-        $message = __('admin.settings.site.deleted.og_image');
+        $message = __('settings.site.deleted.og_image');
         $messageType = 'success';
     }
 }
@@ -230,7 +230,7 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
     <?php
     $headerIcon = 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z';
-    $headerTitle = __('admin.settings.site.title');
+    $headerTitle = __('settings.site.title');
     $headerDescription = ''; $headerIconColor = ''; $headerActions = '';
     include __DIR__ . '/../components/settings-header.php';
     ?>
@@ -239,14 +239,14 @@ ob_start();
 
         <!-- Site Category -->
         <div>
-            <label for="site_category" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.site.category_label') ?></label>
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.site.category_description') ?></p>
+            <label for="site_category" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.category_label') ?></label>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.site.category_description') ?></p>
             <?php
             $currentCategory = $settings['site_category'] ?? '';
             $categoryKeys = ['beauty_salon', 'nail_salon', 'skincare', 'massage', 'hospital', 'dental', 'studio', 'restaurant', 'accommodation', 'sports', 'education', 'consulting', 'pet', 'car', 'other'];
-            $categories = ['' => __('admin.settings.site.category_placeholder')];
+            $categories = ['' => __('settings.site.category_placeholder')];
             foreach ($categoryKeys as $key) {
-                $categories[$key] = __('admin.settings.site.categories.' . $key);
+                $categories[$key] = __('settings.site.categories.' . $key);
             }
             ?>
             <select name="site_category" id="site_category"
@@ -260,7 +260,7 @@ ob_start();
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Site Name -->
             <div>
-                <label for="site_name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.site.name') ?></label>
+                <label for="site_name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.name') ?></label>
                 <div class="flex items-center gap-2">
                     <input type="text" name="site_name" id="site_name" value="<?= htmlspecialchars($settings['site_name'] ?? '') ?>"
                            class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
@@ -268,7 +268,7 @@ ob_start();
                 </div>
             </div>
             <div>
-                <label for="site_url" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.site.url') ?></label>
+                <label for="site_url" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.url') ?></label>
                 <input type="url" name="site_url" id="site_url" value="<?= htmlspecialchars($settings['site_url'] ?? '') ?>"
                        class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
             </div>
@@ -276,7 +276,7 @@ ob_start();
 
         <!-- Site Tagline -->
         <div>
-            <label for="site_tagline" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.site.tagline') ?></label>
+            <label for="site_tagline" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.tagline') ?></label>
             <div class="flex items-center gap-2">
                 <input type="text" name="site_tagline" id="site_tagline" value="<?= htmlspecialchars($settings['site_tagline'] ?? '') ?>"
                        class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
@@ -286,10 +286,10 @@ ob_start();
 
         <!-- Language & Timezone -->
         <div class="border-t dark:border-zinc-700 pt-6">
-            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.site.language_timezone.title') ?></h3>
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.site.language_timezone.title') ?></h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="default_locale" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.site.language_timezone.default_locale') ?></label>
+                    <label for="default_locale" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.language_timezone.default_locale') ?></label>
                     <div class="flex items-center gap-4">
                         <select name="default_locale" id="default_locale" class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                             <?php foreach ($locales as $value => $label): ?>
@@ -299,12 +299,12 @@ ob_start();
                         <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 whitespace-nowrap">
                             <input type="checkbox" name="force_locale" value="1" <?= ($settings['force_locale'] ?? '0') === '1' ? 'checked' : '' ?>
                                    class="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500">
-                            <?= __('admin.settings.site.language_timezone.force_locale') ?>
+                            <?= __('settings.site.language_timezone.force_locale') ?>
                         </label>
                     </div>
                 </div>
                 <div>
-                    <label for="timezone" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.site.language_timezone.timezone') ?></label>
+                    <label for="timezone" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.language_timezone.timezone') ?></label>
                     <select name="timezone" id="timezone" class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                         <?php foreach ($timezones as $value => $label): ?>
                         <option value="<?= $value ?>" <?= ($settings['timezone'] ?? '') === $value ? 'selected' : '' ?>><?= $label ?></option>
@@ -317,23 +317,23 @@ ob_start();
 
         <!-- SEO Settings -->
         <div class="border-t dark:border-zinc-700 pt-6">
-            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.site.seo.title') ?></h3>
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.site.seo.title') ?></h3>
             <div class="space-y-4">
                 <div>
-                    <label for="seo_keywords" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.site.seo.keywords') ?></label>
+                    <label for="seo_keywords" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.seo.keywords') ?></label>
                     <div class="flex items-center gap-2">
                         <input type="text" name="seo_keywords" id="seo_keywords" value="<?= htmlspecialchars($settings['seo_keywords'] ?? '') ?>"
                                class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
-                               placeholder="<?= __('admin.settings.site.seo.keywords_placeholder') ?>">
+                               placeholder="<?= __('settings.site.seo.keywords_placeholder') ?>">
                         <?= rzx_multilang_btn("openMultilangModal('seo.keywords', 'seo_keywords')") ?>
                     </div>
                 </div>
                 <div>
-                    <label for="seo_description" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.site.seo.description') ?></label>
+                    <label for="seo_description" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.seo.description') ?></label>
                     <div class="flex items-center gap-2">
                         <input type="text" name="seo_description" id="seo_description" value="<?= htmlspecialchars($settings['seo_description'] ?? '') ?>"
                                class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
-                               placeholder="<?= __('admin.settings.site.seo.description_placeholder') ?>">
+                               placeholder="<?= __('settings.site.seo.description_placeholder') ?>">
                         <?= rzx_multilang_btn("openMultilangModal('seo.description', 'seo_description')") ?>
                     </div>
                 </div>
@@ -342,53 +342,53 @@ ob_start();
 
         <!-- Scripts -->
         <div class="border-t dark:border-zinc-700 pt-6">
-            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.site.scripts.title') ?></h3>
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.site.scripts.title') ?></h3>
             <div class="space-y-4">
                 <div>
-                    <label for="header_scripts" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.site.scripts.header') ?></label>
+                    <label for="header_scripts" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.scripts.header') ?></label>
                     <textarea name="header_scripts" id="header_scripts" rows="4"
                               class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                              placeholder="<?= __('admin.settings.site.scripts.placeholder') ?>"><?= htmlspecialchars($settings['header_scripts'] ?? '') ?></textarea>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.site.scripts.header_hint') ?></p>
+                              placeholder="<?= __('settings.site.scripts.placeholder') ?>"><?= htmlspecialchars($settings['header_scripts'] ?? '') ?></textarea>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.site.scripts.header_hint') ?></p>
                 </div>
                 <div>
-                    <label for="footer_scripts" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.site.scripts.footer') ?></label>
+                    <label for="footer_scripts" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.scripts.footer') ?></label>
                     <textarea name="footer_scripts" id="footer_scripts" rows="4"
                               class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                              placeholder="<?= __('admin.settings.site.scripts.placeholder') ?>"><?= htmlspecialchars($settings['footer_scripts'] ?? '') ?></textarea>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.site.scripts.footer_hint') ?></p>
+                              placeholder="<?= __('settings.site.scripts.placeholder') ?>"><?= htmlspecialchars($settings['footer_scripts'] ?? '') ?></textarea>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.site.scripts.footer_hint') ?></p>
                 </div>
             </div>
         </div>
 
         <!-- Logo Settings -->
         <div class="border-t dark:border-zinc-700 pt-6">
-            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.logo.title') ?></h3>
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.logo.title') ?></h3>
             <!-- Logo Type -->
             <div class="mb-4">
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.settings.logo.type_label') ?></label>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('settings.logo.type_label') ?></label>
                 <div class="flex flex-wrap gap-4">
                     <?php $currentLogoType = $settings['logo_type'] ?? 'text'; ?>
                     <label class="flex items-center cursor-pointer">
                         <input type="radio" name="logo_type" value="text" <?= $currentLogoType === 'text' ? 'checked' : '' ?> class="w-4 h-4 text-blue-600">
-                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.settings.logo.type_text') ?></span>
+                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.logo.type_text') ?></span>
                     </label>
                     <label class="flex items-center cursor-pointer">
                         <input type="radio" name="logo_type" value="image" <?= $currentLogoType === 'image' ? 'checked' : '' ?> class="w-4 h-4 text-blue-600">
-                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.settings.logo.type_image') ?></span>
+                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.logo.type_image') ?></span>
                     </label>
                     <label class="flex items-center cursor-pointer">
                         <input type="radio" name="logo_type" value="image_text" <?= $currentLogoType === 'image_text' ? 'checked' : '' ?> class="w-4 h-4 text-blue-600">
-                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.settings.logo.type_image_text') ?></span>
+                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.logo.type_image_text') ?></span>
                     </label>
                 </div>
             </div>
             <!-- Logo Upload -->
             <div class="mb-4">
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.settings.logo.image_label') ?></label>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('settings.logo.image_label') ?></label>
                 <?php if (!empty($settings['logo_image'])): ?>
                 <div class="mb-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg inline-flex items-center gap-4">
-                    <img src="<?= $baseUrl . htmlspecialchars($settings['logo_image']) ?>" alt="<?= __('admin.settings.site.images.current_logo') ?>" class="max-h-12 object-contain">
+                    <img src="<?= $baseUrl . htmlspecialchars($settings['logo_image']) ?>" alt="<?= __('settings.site.images.current_logo') ?>" class="max-h-12 object-contain">
                     <button type="button" onclick="deleteFile('logo')" class="text-sm text-red-600 hover:text-red-700"><?= __('admin.buttons.delete') ?></button>
                 </div>
                 <?php endif; ?>
@@ -398,11 +398,11 @@ ob_start();
 
         <!-- Site Images -->
         <div class="border-t dark:border-zinc-700 pt-6">
-            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.site.images.title') ?></h3>
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.site.images.title') ?></h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Favicon -->
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.settings.site.images.favicon') ?></label>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('settings.site.images.favicon') ?></label>
                     <?php if (!empty($settings['favicon'])): ?>
                     <div class="mb-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg inline-flex items-center gap-4">
                         <img src="<?= $baseUrl . htmlspecialchars($settings['favicon']) ?>" alt="Favicon" class="w-8 h-8 object-contain">
@@ -410,11 +410,11 @@ ob_start();
                     </div>
                     <?php endif; ?>
                     <input type="file" name="favicon" accept=".ico,.png" class="block w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.site.images.favicon_hint') ?></p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.site.images.favicon_hint') ?></p>
                 </div>
                 <!-- Mobile Icon -->
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.settings.site.images.mobile_icon') ?></label>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('settings.site.images.mobile_icon') ?></label>
                     <?php if (!empty($settings['mobile_icon'])): ?>
                     <div class="mb-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg inline-flex items-center gap-4">
                         <img src="<?= $baseUrl . htmlspecialchars($settings['mobile_icon']) ?>" alt="Mobile Icon" class="w-12 h-12 object-contain rounded-lg">
@@ -422,11 +422,11 @@ ob_start();
                     </div>
                     <?php endif; ?>
                     <input type="file" name="mobile_icon" accept=".png" class="block w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.site.images.mobile_icon_hint') ?></p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.site.images.mobile_icon_hint') ?></p>
                 </div>
                 <!-- OG Image -->
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.settings.site.images.og_image') ?></label>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('settings.site.images.og_image') ?></label>
                     <?php if (!empty($settings['og_image'])): ?>
                     <div class="mb-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg inline-flex items-center gap-4">
                         <img src="<?= $baseUrl . htmlspecialchars($settings['og_image']) ?>" alt="OG Image" class="w-20 h-12 object-cover rounded">
@@ -434,22 +434,22 @@ ob_start();
                     </div>
                     <?php endif; ?>
                     <input type="file" name="og_image" accept=".jpg,.jpeg,.png" class="block w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.site.images.og_image_hint') ?></p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.site.images.og_image_hint') ?></p>
                 </div>
             </div>
         </div>
 
         <!-- Color Scheme -->
         <div class="border-t dark:border-zinc-700 pt-6">
-            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.site.theme.title') ?></h3>
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.site.theme.title') ?></h3>
             <div>
-                <label for="color_scheme" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.site.theme.color_scheme') ?></label>
+                <label for="color_scheme" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.theme.color_scheme') ?></label>
                 <select name="color_scheme" id="color_scheme" class="w-full md:w-1/2 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                     <?php foreach ($colorSchemes as $value => $label): ?>
                     <option value="<?= $value ?>" <?= ($settings['color_scheme'] ?? 'auto') === $value ? 'selected' : '' ?>><?= $label ?></option>
                     <?php endforeach; ?>
                 </select>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.site.theme.color_scheme_hint') ?></p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.site.theme.color_scheme_hint') ?></p>
             </div>
         </div>
 
@@ -469,7 +469,7 @@ function deleteFile(type) {
         'mobile_icon': 'delete_mobile_icon',
         'og_image': 'delete_og_image'
     };
-    if (confirm('<?= __('admin.settings.site.delete_confirm') ?>')) {
+    if (confirm('<?= __('settings.site.delete_confirm') ?>')) {
         const form = document.createElement('form');
         form.method = 'POST';
         form.innerHTML = '<input type="hidden" name="action" value="' + actions[type] + '">';

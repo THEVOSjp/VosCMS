@@ -30,19 +30,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $repeatYearly = isset($_POST['repeat_yearly']) ? 1 : 0;
 
                 if (empty($title) || empty($date)) {
-                    echo json_encode(['success' => false, 'message' => __('admin.services.settings.holidays.required')]);
+                    echo json_encode(['success' => false, 'message' => __('services.settings.holidays.required')]);
                     exit;
                 }
 
                 $stmt = $pdo->prepare("INSERT INTO {$prefix}holidays (title, holiday_date, repeat_yearly) VALUES (?, ?, ?)");
                 $stmt->execute([$title, $date, $repeatYearly]);
-                echo json_encode(['success' => true, 'message' => __('admin.services.settings.holidays.created')]);
+                echo json_encode(['success' => true, 'message' => __('services.settings.holidays.created')]);
                 exit;
 
             case 'delete_holiday':
                 $id = (int)$_POST['id'];
                 $pdo->prepare("DELETE FROM {$prefix}holidays WHERE id = ?")->execute([$id]);
-                echo json_encode(['success' => true, 'message' => __('admin.services.settings.holidays.deleted')]);
+                echo json_encode(['success' => true, 'message' => __('services.settings.holidays.deleted')]);
                 exit;
 
             case 'toggle_holiday':
@@ -84,16 +84,16 @@ $holidaysApiUrl = $adminUrl . '/services/settings/holidays';
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm mb-6">
     <div class="p-6">
         <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
-            <?= __('admin.services.settings.holidays.add_title') ?>
+            <?= __('services.settings.holidays.add_title') ?>
         </h3>
         <div class="flex flex-col sm:flex-row gap-3">
-            <input type="text" id="holidayTitle" placeholder="<?= __('admin.services.settings.holidays.placeholder_title') ?>"
+            <input type="text" id="holidayTitle" placeholder="<?= __('services.settings.holidays.placeholder_title') ?>"
                    class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm">
             <input type="date" id="holidayDate"
                    class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm">
             <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 whitespace-nowrap">
                 <input type="checkbox" id="holidayRepeat" class="rounded border-zinc-300 dark:border-zinc-600">
-                <?= __('admin.services.settings.holidays.repeat_yearly') ?>
+                <?= __('services.settings.holidays.repeat_yearly') ?>
             </label>
             <button onclick="addHoliday()"
                     class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
@@ -110,18 +110,18 @@ $holidaysApiUrl = $adminUrl . '/services/settings/holidays';
         <svg class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        <p><?= __('admin.services.settings.holidays.empty') ?></p>
+        <p><?= __('services.settings.holidays.empty') ?></p>
     </div>
     <?php else: ?>
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="bg-zinc-50 dark:bg-zinc-700/50">
                 <tr>
-                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.services.settings.holidays.name') ?></th>
-                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.services.settings.holidays.date') ?></th>
-                    <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.services.settings.holidays.repeat_yearly') ?></th>
-                    <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.services.settings.holidays.status') ?></th>
-                    <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.services.actions') ?></th>
+                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('services.settings.holidays.name') ?></th>
+                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('services.settings.holidays.date') ?></th>
+                    <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('services.settings.holidays.repeat_yearly') ?></th>
+                    <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('services.settings.holidays.status') ?></th>
+                    <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('services.actions') ?></th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -131,7 +131,7 @@ $holidaysApiUrl = $adminUrl . '/services/settings/holidays';
                     <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400"><?= $h['holiday_date'] ?></td>
                     <td class="px-4 py-3 text-center">
                         <?php if ($h['repeat_yearly']): ?>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"><?= __('admin.services.settings.holidays.yearly') ?></span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"><?= __('services.settings.holidays.yearly') ?></span>
                         <?php else: ?>
                         <span class="text-zinc-400">-</span>
                         <?php endif; ?>
@@ -165,7 +165,7 @@ function addHoliday() {
     var repeat = document.getElementById('holidayRepeat').checked;
 
     if (!title || !date) {
-        showAlert('<?= __('admin.services.settings.holidays.required') ?>', 'error');
+        showAlert('<?= __('services.settings.holidays.required') ?>', 'error');
         return;
     }
 
@@ -188,7 +188,7 @@ function addHoliday() {
 }
 
 function deleteHoliday(id) {
-    if (!confirm('<?= __('admin.services.settings.holidays.confirm_delete') ?>')) return;
+    if (!confirm('<?= __('services.settings.holidays.confirm_delete') ?>')) return;
     var fd = new FormData();
     fd.append('action', 'delete_holiday');
     fd.append('id', id);

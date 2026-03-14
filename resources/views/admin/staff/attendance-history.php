@@ -7,7 +7,7 @@ if (!function_exists('__')) {
     require_once BASE_PATH . '/rzxlib/Core/Helpers/lang.php';
 }
 
-$pageTitle = __('admin.staff.attendance.history_title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('staff.attendance.history_title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
@@ -53,7 +53,7 @@ try {
 
             $stmt = $pdo->prepare("UPDATE {$prefix}attendance SET clock_in = ?, clock_out = ?, work_hours = ?, status = ?, memo = ? WHERE id = ?");
             $stmt->execute([$clockIn, $clockOut, $workHours, $status, $memo, $id]);
-            echo json_encode(['success' => true, 'message' => __('admin.staff.attendance.success.updated')]);
+            echo json_encode(['success' => true, 'message' => __('staff.attendance.success.updated')]);
             exit;
         }
 
@@ -61,7 +61,7 @@ try {
             $id = trim($_POST['id'] ?? '');
             $stmt = $pdo->prepare("DELETE FROM {$prefix}attendance WHERE id = ?");
             $stmt->execute([$id]);
-            echo json_encode(['success' => true, 'message' => __('admin.staff.attendance.success.deleted')]);
+            echo json_encode(['success' => true, 'message' => __('staff.attendance.success.deleted')]);
             exit;
         }
 
@@ -84,7 +84,7 @@ try {
             $id = bin2hex(random_bytes(18));
             $stmt = $pdo->prepare("INSERT INTO {$prefix}attendance (id, staff_id, clock_in, clock_out, work_hours, status, source, memo, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
             $stmt->execute([$id, $staffId, $clockIn, $clockOut, $workHours, $status, $source, $memo]);
-            echo json_encode(['success' => true, 'message' => __('admin.staff.attendance.success.added')]);
+            echo json_encode(['success' => true, 'message' => __('staff.attendance.success.added')]);
             exit;
         }
     }
@@ -121,13 +121,13 @@ try {
 }
 
 $statusLabels = [
-    'working'     => __('admin.staff.attendance.status.working'),
-    'completed'   => __('admin.staff.attendance.status.completed'),
-    'absent'      => __('admin.staff.attendance.status.absent'),
-    'late'        => __('admin.staff.attendance.status.late'),
-    'early_leave' => __('admin.staff.attendance.status.early_leave'),
-    'break'       => __('admin.staff.attendance.status.break'),
-    'outside'     => __('admin.staff.attendance.status.outside'),
+    'working'     => __('staff.attendance.status.working'),
+    'completed'   => __('staff.attendance.status.completed'),
+    'absent'      => __('staff.attendance.status.absent'),
+    'late'        => __('staff.attendance.status.late'),
+    'early_leave' => __('staff.attendance.status.early_leave'),
+    'break'       => __('staff.attendance.status.break'),
+    'outside'     => __('staff.attendance.status.outside'),
 ];
 ?>
 <!DOCTYPE html>
@@ -159,15 +159,15 @@ $statusLabels = [
                 <!-- 헤더 -->
                 <div class="flex items-center justify-between mb-6">
                     <div>
-                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('admin.staff.attendance.history_title') ?></h1>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.staff.attendance.history_desc') ?></p>
+                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('staff.attendance.history_title') ?></h1>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('staff.attendance.history_desc') ?></p>
                     </div>
                     <div class="flex gap-2">
                         <a href="<?= $adminUrl ?>/staff/attendance" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors">
-                            <?= __('admin.staff.attendance.tab_today') ?>
+                            <?= __('staff.attendance.tab_today') ?>
                         </a>
                         <button onclick="openAddModal()" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
-                            + <?= __('admin.staff.attendance.add_record') ?>
+                            + <?= __('staff.attendance.add_record') ?>
                         </button>
                     </div>
                 </div>
@@ -176,24 +176,24 @@ $statusLabels = [
                 <div class="bg-white dark:bg-zinc-800 rounded-xl p-4 shadow-sm mb-6">
                     <form method="GET" class="flex items-end gap-4">
                         <div>
-                            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.staff.attendance.filter_staff') ?></label>
+                            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('staff.attendance.filter_staff') ?></label>
                             <select name="staff_id" class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
-                                <option value=""><?= __('admin.staff.attendance.all_staff') ?></option>
+                                <option value=""><?= __('staff.attendance.all_staff') ?></option>
                                 <?php foreach ($staffList as $s): ?>
                                 <option value="<?= $s['id'] ?>" <?= $filterStaff == $s['id'] ? 'selected' : '' ?>><?= htmlspecialchars($s['name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.staff.attendance.filter_from') ?></label>
+                            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('staff.attendance.filter_from') ?></label>
                             <input type="date" name="date_from" value="<?= $filterDateFrom ?>" class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.staff.attendance.filter_to') ?></label>
+                            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('staff.attendance.filter_to') ?></label>
                             <input type="date" name="date_to" value="<?= $filterDateTo ?>" class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
                         </div>
                         <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-zinc-700 hover:bg-zinc-800 dark:bg-zinc-600 dark:hover:bg-zinc-500 rounded-lg transition-colors">
-                            <?= __('admin.staff.attendance.search') ?>
+                            <?= __('staff.attendance.search') ?>
                         </button>
                     </form>
                 </div>
@@ -203,15 +203,15 @@ $statusLabels = [
                     <table class="w-full text-sm">
                         <thead class="bg-zinc-50 dark:bg-zinc-700/50">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.col_date') ?></th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.col_staff') ?></th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.clock_in') ?></th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.clock_out') ?></th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.work_hours') ?></th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.col_status') ?></th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.col_source') ?></th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.col_memo') ?></th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.col_actions') ?></th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.col_date') ?></th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.col_staff') ?></th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.clock_in') ?></th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.clock_out') ?></th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.work_hours') ?></th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.col_status') ?></th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.col_source') ?></th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.col_memo') ?></th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.col_actions') ?></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-zinc-100 dark:divide-zinc-700">
@@ -238,7 +238,7 @@ $statusLabels = [
                             </tr>
                             <?php endforeach; ?>
                             <?php if (empty($records)): ?>
-                            <tr><td colspan="9" class="px-4 py-8 text-center text-zinc-400"><?= __('admin.staff.attendance.no_records') ?></td></tr>
+                            <tr><td colspan="9" class="px-4 py-8 text-center text-zinc-400"><?= __('staff.attendance.no_records') ?></td></tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -246,7 +246,7 @@ $statusLabels = [
                     <!-- 페이지네이션 -->
                     <?php if ($totalPages > 1): ?>
                     <div class="px-4 py-3 border-t border-zinc-100 dark:border-zinc-700 flex items-center justify-between">
-                        <p class="text-xs text-zinc-500"><?= __('admin.staff.attendance.total_records', ['count' => $totalRecords]) ?></p>
+                        <p class="text-xs text-zinc-500"><?= __('staff.attendance.total_records', ['count' => $totalRecords]) ?></p>
                         <div class="flex gap-1">
                             <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                             <a href="?staff_id=<?= $filterStaff ?>&date_from=<?= $filterDateFrom ?>&date_to=<?= $filterDateTo ?>&page=<?= $i ?>"
@@ -266,7 +266,7 @@ $statusLabels = [
         <div class="fixed inset-0 flex items-center justify-center p-4">
             <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-xl w-full max-w-md relative">
                 <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
-                    <h2 id="recordModalTitle" class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.staff.attendance.add_record') ?></h2>
+                    <h2 id="recordModalTitle" class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('staff.attendance.add_record') ?></h2>
                     <button onclick="closeRecordModal()" class="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
@@ -275,7 +275,7 @@ $statusLabels = [
                     <input type="hidden" id="recordId" name="id" value="">
                     <input type="hidden" id="recordAction" name="action" value="add_record">
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.staff.attendance.col_staff') ?> *</label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('staff.attendance.col_staff') ?> *</label>
                         <select id="recordStaff" name="staff_id" required class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
                             <?php foreach ($staffList as $s): ?>
                             <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['name']) ?></option>
@@ -284,16 +284,16 @@ $statusLabels = [
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.staff.attendance.clock_in') ?> *</label>
+                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('staff.attendance.clock_in') ?> *</label>
                             <input type="datetime-local" id="recordClockIn" name="clock_in" required class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.staff.attendance.clock_out') ?></label>
+                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('staff.attendance.clock_out') ?></label>
                             <input type="datetime-local" id="recordClockOut" name="clock_out" class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.staff.attendance.col_status') ?></label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('staff.attendance.col_status') ?></label>
                         <select id="recordStatus" name="status" class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
                             <?php foreach ($statusLabels as $k => $v): ?>
                             <option value="<?= $k ?>"><?= $v ?></option>
@@ -301,7 +301,7 @@ $statusLabels = [
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.staff.attendance.col_memo') ?></label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('staff.attendance.col_memo') ?></label>
                         <input type="text" id="recordMemo" name="memo" class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
                     </div>
                 </form>
@@ -328,7 +328,7 @@ $statusLabels = [
         window.openAddModal = function() {
             document.getElementById('recordId').value = '';
             document.getElementById('recordAction').value = 'add_record';
-            document.getElementById('recordModalTitle').textContent = '<?= __('admin.staff.attendance.add_record') ?>';
+            document.getElementById('recordModalTitle').textContent = '<?= __('staff.attendance.add_record') ?>';
             document.getElementById('recordForm').reset();
             document.getElementById('recordModal').classList.remove('hidden');
             console.log('[AttendanceHistory] Add modal opened');
@@ -336,7 +336,7 @@ $statusLabels = [
         window.editRecord = function(r) {
             document.getElementById('recordId').value = r.id;
             document.getElementById('recordAction').value = 'update_record';
-            document.getElementById('recordModalTitle').textContent = '<?= __('admin.staff.attendance.edit_record') ?>';
+            document.getElementById('recordModalTitle').textContent = '<?= __('staff.attendance.edit_record') ?>';
             document.getElementById('recordStaff').value = r.staff_id;
             document.getElementById('recordClockIn').value = r.clock_in ? r.clock_in.replace(' ', 'T').substring(0, 16) : '';
             document.getElementById('recordClockOut').value = r.clock_out ? r.clock_out.replace(' ', 'T').substring(0, 16) : '';
@@ -356,16 +356,16 @@ $statusLabels = [
             postData(fd).then(function(data) {
                 if (data.success) { showAlert(data.message, 'success'); closeRecordModal(); setTimeout(function() { location.reload(); }, 800); }
                 else { showAlert(data.message || 'Error', 'error'); }
-            }).catch(function(e) { console.error('[AttendanceHistory] Save error:', e); showAlert('<?= __('admin.staff.attendance.error.server') ?>', 'error'); });
+            }).catch(function(e) { console.error('[AttendanceHistory] Save error:', e); showAlert('<?= __('staff.attendance.error.server') ?>', 'error'); });
         };
         window.deleteRecord = function(id) {
-            if (!confirm('<?= __('admin.staff.attendance.confirm_delete') ?>')) return;
+            if (!confirm('<?= __('staff.attendance.confirm_delete') ?>')) return;
             console.log('[AttendanceHistory] Deleting:', id);
             var fd = new FormData(); fd.append('action', 'delete_record'); fd.append('id', id);
             postData(fd).then(function(data) {
                 if (data.success) { showAlert(data.message, 'success'); var row = document.getElementById('record-' + id); if (row) row.remove(); }
                 else { showAlert(data.message || 'Error', 'error'); }
-            }).catch(function(e) { console.error('[AttendanceHistory] Delete error:', e); showAlert('<?= __('admin.staff.attendance.error.server') ?>', 'error'); });
+            }).catch(function(e) { console.error('[AttendanceHistory] Delete error:', e); showAlert('<?= __('staff.attendance.error.server') ?>', 'error'); });
         };
         console.log('[AttendanceHistory] Page initialized');
     })();

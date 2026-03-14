@@ -138,9 +138,9 @@ if (!empty($user['profile_image'])) {
 
 // 성별 라벨
 $genderLabels = [
-    'male' => __('admin.members.list.gender_male'),
-    'female' => __('admin.members.list.gender_female'),
-    'other' => __('admin.members.list.gender_other'),
+    'male' => __('members.list.gender_male'),
+    'female' => __('members.list.gender_female'),
+    'other' => __('members.list.gender_other'),
 ];
 
 $notSet = '<span class="text-zinc-400 dark:text-zinc-500">' . __('auth.profile.not_set') . '</span>';
@@ -210,28 +210,28 @@ include BASE_PATH . '/resources/views/partials/header.php';
 
                         <?php if (in_array('birth_date', $registerFields)): ?>
                         <div class="py-4 flex items-center">
-                            <span class="w-32 text-sm font-medium text-gray-500 dark:text-zinc-400 flex-shrink-0"><?= __('admin.members.settings.register.fields.birth_date') ?></span>
+                            <span class="w-32 text-sm font-medium text-gray-500 dark:text-zinc-400 flex-shrink-0"><?= __('members.settings.register.fields.birth_date') ?></span>
                             <span class="text-sm text-gray-900 dark:text-white"><?= !empty($user['birth_date']) ? htmlspecialchars($user['birth_date']) : $notSet ?></span>
                         </div>
                         <?php endif; ?>
 
                         <?php if (in_array('gender', $registerFields)): ?>
                         <div class="py-4 flex items-center">
-                            <span class="w-32 text-sm font-medium text-gray-500 dark:text-zinc-400 flex-shrink-0"><?= __('admin.members.settings.register.fields.gender') ?></span>
+                            <span class="w-32 text-sm font-medium text-gray-500 dark:text-zinc-400 flex-shrink-0"><?= __('members.settings.register.fields.gender') ?></span>
                             <span class="text-sm text-gray-900 dark:text-white"><?= !empty($user['gender']) ? ($genderLabels[$user['gender']] ?? $user['gender']) : $notSet ?></span>
                         </div>
                         <?php endif; ?>
 
                         <?php if (in_array('company', $registerFields)): ?>
                         <div class="py-4 flex items-center">
-                            <span class="w-32 text-sm font-medium text-gray-500 dark:text-zinc-400 flex-shrink-0"><?= __('admin.members.settings.register.fields.company') ?></span>
+                            <span class="w-32 text-sm font-medium text-gray-500 dark:text-zinc-400 flex-shrink-0"><?= __('members.settings.register.fields.company') ?></span>
                             <span class="text-sm text-gray-900 dark:text-white"><?= !empty($user['company']) ? htmlspecialchars($user['company']) : $notSet ?></span>
                         </div>
                         <?php endif; ?>
 
                         <?php if (in_array('blog', $registerFields)): ?>
                         <div class="py-4 flex items-center">
-                            <span class="w-32 text-sm font-medium text-gray-500 dark:text-zinc-400 flex-shrink-0"><?= __('admin.members.settings.register.fields.blog') ?></span>
+                            <span class="w-32 text-sm font-medium text-gray-500 dark:text-zinc-400 flex-shrink-0"><?= __('members.settings.register.fields.blog') ?></span>
                             <span class="text-sm text-gray-900 dark:text-white">
                                 <?php if (!empty($user['blog'])): ?>
                                     <a href="<?= htmlspecialchars($user['blog']) ?>" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline"><?= htmlspecialchars($user['blog']) ?></a>
@@ -271,7 +271,7 @@ include BASE_PATH . '/resources/views/partials/header.php';
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <label class="<?= $labelClass ?>"><?= __('admin.members.settings.register.fields.profile_photo') ?></label>
+                                <label class="<?= $labelClass ?>"><?= __('members.settings.register.fields.profile_photo') ?></label>
                                 <input type="file" id="profileImageInput" name="profile_image" accept="image/jpeg,image/png,image/webp"
                                        class="text-sm text-zinc-600 dark:text-zinc-400 file:mr-2 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:text-sm file:bg-blue-50 dark:file:bg-blue-900/30 file:text-blue-600 dark:file:text-blue-400 file:cursor-pointer"
                                        onchange="openProfileCropper(this)">
@@ -323,7 +323,7 @@ include BASE_PATH . '/resources/views/partials/header.php';
                         <!-- 생년월일 -->
                         <?php if (in_array('birth_date', $registerFields)): ?>
                         <div>
-                            <label for="birth_date" class="<?= $labelClass ?>"><?= __('admin.members.settings.register.fields.birth_date') ?></label>
+                            <label for="birth_date" class="<?= $labelClass ?>"><?= __('members.settings.register.fields.birth_date') ?></label>
                             <input type="date" name="birth_date" id="birth_date"
                                    value="<?= htmlspecialchars($user['birth_date'] ?? '') ?>"
                                    class="<?= $inputClass ?>">
@@ -335,18 +335,18 @@ include BASE_PATH . '/resources/views/partials/header.php';
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <?php if (in_array('gender', $registerFields)): ?>
                             <div>
-                                <label for="gender" class="<?= $labelClass ?>"><?= __('admin.members.settings.register.fields.gender') ?></label>
+                                <label for="gender" class="<?= $labelClass ?>"><?= __('members.settings.register.fields.gender') ?></label>
                                 <select name="gender" id="gender" class="<?= $inputClass ?>">
                                     <option value="">-</option>
-                                    <option value="male" <?= ($user['gender'] ?? '') === 'male' ? 'selected' : '' ?>><?= __('admin.members.list.gender_male') ?></option>
-                                    <option value="female" <?= ($user['gender'] ?? '') === 'female' ? 'selected' : '' ?>><?= __('admin.members.list.gender_female') ?></option>
-                                    <option value="other" <?= ($user['gender'] ?? '') === 'other' ? 'selected' : '' ?>><?= __('admin.members.list.gender_other') ?></option>
+                                    <option value="male" <?= ($user['gender'] ?? '') === 'male' ? 'selected' : '' ?>><?= __('members.list.gender_male') ?></option>
+                                    <option value="female" <?= ($user['gender'] ?? '') === 'female' ? 'selected' : '' ?>><?= __('members.list.gender_female') ?></option>
+                                    <option value="other" <?= ($user['gender'] ?? '') === 'other' ? 'selected' : '' ?>><?= __('members.list.gender_other') ?></option>
                                 </select>
                             </div>
                             <?php endif; ?>
                             <?php if (in_array('company', $registerFields)): ?>
                             <div>
-                                <label for="company" class="<?= $labelClass ?>"><?= __('admin.members.settings.register.fields.company') ?></label>
+                                <label for="company" class="<?= $labelClass ?>"><?= __('members.settings.register.fields.company') ?></label>
                                 <input type="text" name="company" id="company"
                                        value="<?= htmlspecialchars($user['company'] ?? '') ?>"
                                        class="<?= $inputClass ?>">
@@ -358,7 +358,7 @@ include BASE_PATH . '/resources/views/partials/header.php';
                         <!-- 블로그 -->
                         <?php if (in_array('blog', $registerFields)): ?>
                         <div>
-                            <label for="blog" class="<?= $labelClass ?>"><?= __('admin.members.settings.register.fields.blog') ?></label>
+                            <label for="blog" class="<?= $labelClass ?>"><?= __('members.settings.register.fields.blog') ?></label>
                             <input type="url" name="blog" id="blog"
                                    value="<?= htmlspecialchars($user['blog'] ?? '') ?>"
                                    class="<?= $inputClass ?>" placeholder="https://">
@@ -390,7 +390,7 @@ include BASE_PATH . '/resources/views/partials/header.php';
         <div class="fixed inset-0 flex items-center justify-center p-4">
             <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-xl w-full max-w-md">
                 <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
-                    <h3 class="text-base font-semibold text-zinc-900 dark:text-white"><?= __('admin.staff.photo_editor.title') ?></h3>
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-white"><?= __('staff.photo_editor.title') ?></h3>
                     <button onclick="closeProfileCropper()" class="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
@@ -400,26 +400,26 @@ include BASE_PATH . '/resources/views/partials/header.php';
                         <img id="profileCropperImage" src="" class="max-w-full">
                     </div>
                     <div class="flex items-center justify-center gap-2 mt-3">
-                        <button type="button" onclick="profileCropAction('zoom', 0.1)" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg" title="<?= __('admin.staff.photo_editor.zoom_in') ?>">
+                        <button type="button" onclick="profileCropAction('zoom', 0.1)" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg" title="<?= __('staff.photo_editor.zoom_in') ?>">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/></svg>
                         </button>
-                        <button type="button" onclick="profileCropAction('zoom', -0.1)" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg" title="<?= __('admin.staff.photo_editor.zoom_out') ?>">
+                        <button type="button" onclick="profileCropAction('zoom', -0.1)" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg" title="<?= __('staff.photo_editor.zoom_out') ?>">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/></svg>
                         </button>
-                        <button type="button" onclick="profileCropAction('rotate', -90)" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg" title="<?= __('admin.staff.photo_editor.rotate_left') ?>">
+                        <button type="button" onclick="profileCropAction('rotate', -90)" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg" title="<?= __('staff.photo_editor.rotate_left') ?>">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a4 4 0 014 4v2M3 10l4-4M3 10l4 4"/></svg>
                         </button>
-                        <button type="button" onclick="profileCropAction('rotate', 90)" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg" title="<?= __('admin.staff.photo_editor.rotate_right') ?>">
+                        <button type="button" onclick="profileCropAction('rotate', 90)" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg" title="<?= __('staff.photo_editor.rotate_right') ?>">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10H11a4 4 0 00-4 4v2M21 10l-4-4M21 10l-4 4"/></svg>
                         </button>
-                        <button type="button" onclick="profileCropAction('reset')" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg" title="<?= __('admin.staff.photo_editor.reset') ?>">
+                        <button type="button" onclick="profileCropAction('reset')" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg" title="<?= __('staff.photo_editor.reset') ?>">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 0114.32-4.32M20 15a9 9 0 01-14.32 4.32"/></svg>
                         </button>
                     </div>
                 </div>
                 <div class="px-6 py-4 border-t border-zinc-200 dark:border-zinc-700 flex justify-end gap-3">
                     <button onclick="closeProfileCropper()" class="px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg"><?= __('common.buttons.cancel') ?></button>
-                    <button onclick="applyProfileCrop()" class="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg"><?= __('admin.staff.photo_editor.apply') ?></button>
+                    <button onclick="applyProfileCrop()" class="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg"><?= __('staff.photo_editor.apply') ?></button>
                 </div>
             </div>
         </div>

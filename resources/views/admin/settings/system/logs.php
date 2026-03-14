@@ -7,7 +7,7 @@
 // Initialize database and settings
 require_once __DIR__ . '/../_init.php';
 
-$pageTitle = __('admin.settings.system.tabs.logs') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('system.tabs.logs') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentSettingsPage = 'system';
 $currentSystemTab = 'logs';
 
@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $filePath = $logPath . '/' . $filename;
             if ($filename && file_exists($filePath) && pathinfo($filename, PATHINFO_EXTENSION) === 'log') {
                 unlink($filePath);
-                $message = __('admin.settings.system.logs.deleted');
+                $message = __('system.logs.deleted');
                 $messageType = 'success';
             }
             break;
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
             }
             if ($deletedCount > 0) {
-                $message = __('admin.settings.system.logs.selected_deleted', ['count' => $deletedCount]);
+                $message = __('system.logs.selected_deleted', ['count' => $deletedCount]);
                 $messageType = 'success';
             }
             break;
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 foreach ($files as $file) {
                     unlink($file);
                 }
-                $message = __('admin.settings.system.logs.all_cleared');
+                $message = __('system.logs.all_cleared');
                 $messageType = 'success';
             }
             break;
@@ -143,8 +143,8 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
     <?php
     $headerIcon = 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z';
-    $headerTitle = __('admin.settings.system.logs.title');
-    $headerDescription = __('admin.settings.system.logs.description');
+    $headerTitle = __('system.logs.title');
+    $headerDescription = __('system.logs.description');
     $headerActions = ''; $headerIconColor = 'text-orange-600';
     include __DIR__ . '/../../components/settings-header.php';
     ?>
@@ -161,7 +161,7 @@ ob_start();
                     <?= htmlspecialchars($viewLogName) ?>
                 </h3>
                 <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                    <?= formatLogSize($viewLogSize) ?> | <?= __('admin.settings.system.logs.last_lines', ['count' => 500]) ?>
+                    <?= formatLogSize($viewLogSize) ?> | <?= __('system.logs.last_lines', ['count' => 500]) ?>
                 </p>
             </div>
             <div class="flex items-center gap-3">
@@ -169,13 +169,13 @@ ob_start();
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                     </svg>
-                    <?= __('admin.settings.system.logs.download') ?>
+                    <?= __('system.logs.download') ?>
                 </a>
                 <a href="<?= $baseUrl ?>/<?= $adminPath ?>/settings/system/logs" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-700 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-600 transition">
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                     </svg>
-                    <?= __('admin.settings.system.logs.back_to_list') ?>
+                    <?= __('system.logs.back_to_list') ?>
                 </a>
             </div>
         </div>
@@ -188,7 +188,7 @@ ob_start();
                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                     </svg>
-                    <?= __('admin.settings.system.logs.copy') ?>
+                    <?= __('system.logs.copy') ?>
                 </button>
             </div>
             <div class="p-4 overflow-x-auto max-h-[500px] overflow-y-auto">
@@ -203,8 +203,8 @@ ob_start();
         <svg class="w-16 h-16 mx-auto mb-4 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
         </svg>
-        <p class="text-lg font-medium"><?= __('admin.settings.system.logs.no_logs') ?></p>
-        <p class="text-sm mt-1"><?= __('admin.settings.system.logs.no_logs_desc') ?></p>
+        <p class="text-lg font-medium"><?= __('system.logs.no_logs') ?></p>
+        <p class="text-sm mt-1"><?= __('system.logs.no_logs_desc') ?></p>
     </div>
     <?php else: ?>
 
@@ -213,30 +213,30 @@ ob_start();
         <div class="flex items-center justify-between mb-4 pb-4 border-b border-zinc-200 dark:border-zinc-700">
             <div class="flex items-center gap-2">
                 <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                    <?= __('admin.settings.system.logs.total_files', ['count' => count($logFiles)]) ?> | <?= formatLogSize($totalSize) ?>
+                    <?= __('system.logs.total_files', ['count' => count($logFiles)]) ?> | <?= formatLogSize($totalSize) ?>
                 </span>
             </div>
             <div class="flex items-center gap-2">
                 <!-- Selected Actions -->
                 <div id="selectedActions" class="hidden items-center gap-2">
-                    <span class="text-sm text-zinc-600 dark:text-zinc-400" id="selectedCount">0 <?= __('admin.settings.system.logs.selected') ?></span>
+                    <span class="text-sm text-zinc-600 dark:text-zinc-400" id="selectedCount">0 <?= __('system.logs.selected') ?></span>
                     <button type="submit" name="action" value="delete_selected"
-                            onclick="return confirm('<?= __('admin.settings.system.logs.confirm_delete_selected') ?>')"
+                            onclick="return confirm('<?= __('system.logs.confirm_delete_selected') ?>')"
                             class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition">
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
-                        <?= __('admin.settings.system.logs.delete_selected') ?>
+                        <?= __('system.logs.delete_selected') ?>
                     </button>
                 </div>
                 <!-- Clear All -->
                 <button type="submit" name="action" value="clear_all"
-                        onclick="return confirm('<?= __('admin.settings.system.logs.confirm_clear_all') ?>')"
+                        onclick="return confirm('<?= __('system.logs.confirm_clear_all') ?>')"
                         class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition">
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
-                    <?= __('admin.settings.system.logs.clear_all') ?>
+                    <?= __('system.logs.clear_all') ?>
                 </button>
             </div>
         </div>
@@ -249,10 +249,10 @@ ob_start();
                         <th class="text-left py-3 px-4 w-10">
                             <input type="checkbox" id="selectAll" class="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-blue-600 focus:ring-blue-500 dark:bg-zinc-700">
                         </th>
-                        <th class="text-left py-3 px-4 font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.system.logs.filename') ?></th>
-                        <th class="text-left py-3 px-4 font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.system.logs.size') ?></th>
-                        <th class="text-left py-3 px-4 font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.system.logs.modified') ?></th>
-                        <th class="text-right py-3 px-4 font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.system.logs.actions') ?></th>
+                        <th class="text-left py-3 px-4 font-medium text-zinc-500 dark:text-zinc-400"><?= __('system.logs.filename') ?></th>
+                        <th class="text-left py-3 px-4 font-medium text-zinc-500 dark:text-zinc-400"><?= __('system.logs.size') ?></th>
+                        <th class="text-left py-3 px-4 font-medium text-zinc-500 dark:text-zinc-400"><?= __('system.logs.modified') ?></th>
+                        <th class="text-right py-3 px-4 font-medium text-zinc-500 dark:text-zinc-400"><?= __('system.logs.actions') ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -277,30 +277,30 @@ ob_start();
                                 <!-- View Button -->
                                 <a href="?view=<?= urlencode($log['name']); ?>"
                                    class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40 transition"
-                                   title="<?= __('admin.settings.system.logs.view') ?>">
+                                   title="<?= __('system.logs.view') ?>">
                                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                     </svg>
-                                    <?= __('admin.settings.system.logs.view') ?>
+                                    <?= __('system.logs.view') ?>
                                 </a>
                                 <!-- Download Button -->
                                 <a href="?download=<?= urlencode($log['name']); ?>"
                                    class="inline-flex items-center px-2 py-1 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded hover:bg-green-100 dark:hover:bg-green-900/40 transition"
-                                   title="<?= __('admin.settings.system.logs.download') ?>">
+                                   title="<?= __('system.logs.download') ?>">
                                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                                     </svg>
-                                    <?= __('admin.settings.system.logs.download') ?>
+                                    <?= __('system.logs.download') ?>
                                 </a>
                                 <!-- Delete Button -->
                                 <button type="button" onclick="deleteLog('<?= htmlspecialchars($log['name']); ?>')"
                                         class="inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded hover:bg-red-100 dark:hover:bg-red-900/40 transition"
-                                        title="<?= __('admin.settings.system.logs.delete') ?>">
+                                        title="<?= __('system.logs.delete') ?>">
                                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>
-                                    <?= __('admin.settings.system.logs.delete') ?>
+                                    <?= __('system.logs.delete') ?>
                                 </button>
                             </div>
                         </td>
@@ -312,7 +312,7 @@ ob_start();
 
         <?php if (count($logFiles) > 50): ?>
         <div class="mt-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
-            <?= __('admin.settings.system.logs.showing_first', ['count' => 50, 'total' => count($logFiles)]) ?>
+            <?= __('system.logs.showing_first', ['count' => 50, 'total' => count($logFiles)]) ?>
         </div>
         <?php endif; ?>
     </form>
@@ -352,7 +352,7 @@ ob_start();
     function updateSelectedCount() {
         const checked = document.querySelectorAll('.log-checkbox:checked').length;
         if (selectedCount) {
-            selectedCount.textContent = checked + ' <?= __('admin.settings.system.logs.selected') ?>';
+            selectedCount.textContent = checked + ' <?= __('system.logs.selected') ?>';
         }
         if (selectedActions) {
             if (checked > 0) {
@@ -373,7 +373,7 @@ ob_start();
 
     // Single delete
     function deleteLog(filename) {
-        if (confirm('<?= __('admin.settings.system.logs.confirm_delete') ?>')) {
+        if (confirm('<?= __('system.logs.confirm_delete') ?>')) {
             document.getElementById('deleteFilename').value = filename;
             document.getElementById('deleteForm').submit();
         }
@@ -384,7 +384,7 @@ ob_start();
         const logContent = document.getElementById('logContent');
         if (logContent) {
             navigator.clipboard.writeText(logContent.textContent).then(() => {
-                alert('<?= __('admin.settings.system.logs.copied') ?>');
+                alert('<?= __('system.logs.copied') ?>');
             });
         }
     }

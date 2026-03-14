@@ -1,28 +1,122 @@
 <?php
 
 /**
- * Service translations - Spanish
+ * Services translations - es
  */
 
 return [
-    // Page
-    'title' => 'Servicios',
-    'description' => 'Explore nuestros servicios y reserve el que mas le convenga.',
-
-    // Category
-    'all_categories' => 'Todos',
-
-    // Buttons
-    'view_detail' => 'Ver detalles',
-    'book_now' => 'Reservar ahora',
-    'back_to_list' => 'Volver a la lista',
-
-    // Detail page
-    'about_service' => 'Acerca de este servicio',
-    'no_description' => 'No hay descripcion disponible.',
-    'related_services' => 'Servicios relacionados',
-
-    // CTA
-    'cta_title' => 'Listo para reservar?',
-    'cta_description' => 'Reserve facilmente su servicio preferido y comience su experiencia especial.',
+    'title' => 'Gestion de servicios',
+    'list' => 'Lista de servicios',
+    'create' => 'Agregar servicio',
+    'edit' => 'Editar servicio',
+    'detail' => 'Detalles del servicio',
+    'fields' => [
+        'name' => 'Nombre del servicio',
+        'slug' => 'Slug URL',
+        'description' => 'Descripcion',
+        'short_description' => 'Descripcion corta',
+        'duration' => 'Duracion (min)',
+        'price' => 'Precio',
+        'category' => 'Categoria',
+        'is_active' => 'Activo',
+        'max_capacity' => 'Capacidad maxima',
+        'buffer_time' => 'Tiempo de espera (min)',
+        'advance_booking_days' => 'Reserva anticipada (dias)',
+        'min_notice_hours' => 'Aviso minimo (horas)',
+    ],
+    'success' => [
+        'created' => 'Servicio creado.',
+        'updated' => 'Servicio actualizado.',
+        'deleted' => 'Servicio eliminado.',
+        'activated' => 'Servicio activado.',
+        'deactivated' => 'Servicio desactivado.',
+    ],
+    'error' => ['has_reservations' => 'No se puede eliminar el servicio con reservas existentes.', 'server_error' => 'Error del servidor.', 'generic' => 'Se produjo un error.', 'delete_failed' => 'Error al eliminar'],
+    'empty' => 'No hay servicios registrados.',
+    'filter_all' => 'Todos',
+    'filter_active' => 'Activo',
+    'filter_inactive' => 'Inactivo',
+    'status_active' => 'Activo',
+    'status_inactive' => 'Inactivo',
+    'confirm_delete' => '¿Eliminar este servicio?',
+    'actions' => 'Acciones',
+    'minute' => 'min',
+    'placeholder_name' => 'ej: Corte, Tinte, Uñas...',
+    'placeholder_slug' => 'Generado automáticamente',
+    'placeholder_description' => 'Breve descripción del servicio...',
+    'select_none' => '-- Ninguno --',
+    'no_buffer' => 'Ninguno',
+    'settings' => [
+        'tabs' => ['general' => 'General', 'holidays' => 'Festivos'],
+        'general' => [
+            'title' => 'Configuración General de Servicios',
+            'description' => 'Configure las opciones predeterminadas para las reservas de servicios.',
+            'saved' => 'Configuración guardada.',
+            'default_duration' => 'Duración predeterminada',
+            'default_buffer' => 'Tiempo de buffer predeterminado',
+            'advance_booking_days' => 'Período de reserva anticipada',
+            'min_notice_hours' => 'Aviso mínimo',
+            'max_capacity' => 'Capacidad máxima predeterminada',
+            'currency' => 'Moneda',
+            'price_display' => 'Visualización de precios',
+            'price_show' => 'Mostrar',
+            'price_hide' => 'Ocultar',
+            'price_contact' => 'Consultar',
+            'days' => 'días',
+            'hours' => 'horas',
+        ],
+        'holidays' => [
+            'add_title' => 'Agregar festivo',
+            'placeholder_title' => 'ej. Año Nuevo, Navidad...',
+            'repeat_yearly' => 'Repetir anualmente',
+            'yearly' => 'Anual',
+            'name' => 'Nombre del festivo',
+            'date' => 'Fecha',
+            'status' => 'Estado',
+            'empty' => 'No hay festivos registrados.',
+            'required' => 'Ingrese el nombre y la fecha del festivo.',
+            'created' => 'Festivo agregado.',
+            'deleted' => 'Festivo eliminado.',
+            'confirm_delete' => '¿Está seguro de eliminar este festivo?',
+        ],
+    ],
+    'categories' => [
+        'title' => 'Gestion de categorias',
+        'list' => 'Lista de categorias',
+        'create' => 'Agregar categoria',
+        'edit' => 'Editar categoria',
+        'fields' => [
+            'name' => 'Nombre de la categoria',
+            'slug' => 'Slug URL',
+            'description' => 'Descripcion',
+            'parent' => 'Categoria padre',
+            'sort_order' => 'Orden',
+            'is_active' => 'Activo',
+        ],
+        'success' => ['created' => 'Categoria creada.', 'updated' => 'Categoria actualizada.', 'deleted' => 'Categoria eliminada.', 'reordered' => 'El orden de las categorías ha sido actualizado.'],
+        'delete' => 'Eliminar',
+        'error' => ['has_services' => 'Esta categoría tiene servicios. Mueva o elimine los servicios primero.'],
+        'empty' => 'No hay categorías registradas.',
+        'confirm_delete' => '¿Eliminar esta categoría?',
+        'parent_none' => '-- Ninguno (Superior) --',
+        'multilang_save_first' => 'Guarde la categoría primero antes de agregar contenido multilingüe.',
+        'placeholder_name' => 'ej: Cabello, Uñas, Masaje...',
+        'placeholder_slug' => 'Generado automáticamente',
+        'placeholder_description' => 'Descripción de la categoría...',
+    ],
+    'time_slots' => [
+        'title' => 'Gestion de horarios',
+        'default_slots' => 'Horarios predeterminados',
+        'blocked_dates' => 'Fechas bloqueadas',
+        'fields' => [
+            'day_of_week' => 'Dia de la semana',
+            'start_time' => 'Hora de inicio',
+            'end_time' => 'Hora de fin',
+            'max_bookings' => 'Reservas maximas',
+            'service' => 'Servicio',
+            'specific_date' => 'Fecha especifica',
+        ],
+        'block_date' => 'Bloquear fecha',
+        'unblock_date' => 'Desbloquear fecha',
+    ],
 ];

@@ -10,7 +10,7 @@
         <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto relative">
             <!-- 헤더 -->
             <div class="sticky top-0 bg-white dark:bg-zinc-800 px-6 py-4 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between rounded-t-2xl z-10">
-                <h2 id="gradeModalTitle" class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.members.groups.create') ?></h2>
+                <h2 id="gradeModalTitle" class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('members.groups.create') ?></h2>
                 <button onclick="closeGradeModal()" class="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -24,13 +24,13 @@
                 <!-- 이름 + 색상 -->
                 <div class="flex gap-3">
                     <div class="flex-1">
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.members.groups.fields.name') ?> <span class="text-red-500">*</span></label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('members.groups.fields.name') ?> <span class="text-red-500">*</span></label>
                         <input type="text" id="gradeName" name="name" required
                                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm"
-                               placeholder="<?= __('admin.members.groups.placeholder.name') ?>">
+                               placeholder="<?= __('members.groups.placeholder.name') ?>">
                     </div>
                     <div class="w-20">
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.members.groups.fields.color') ?></label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('members.groups.fields.color') ?></label>
                         <input type="color" id="gradeColor" name="color" value="#6B7280"
                                class="w-full h-[38px] border border-zinc-300 dark:border-zinc-600 rounded-lg cursor-pointer">
                     </div>
@@ -38,22 +38,22 @@
 
                 <!-- 슬러그 -->
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.members.groups.fields.slug') ?></label>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('members.groups.fields.slug') ?></label>
                     <input type="text" id="gradeSlug" name="slug"
                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm"
-                           placeholder="<?= __('admin.members.groups.placeholder.slug') ?>">
-                    <p class="text-xs text-zinc-400 mt-1"><?= __('admin.members.groups.slug_desc') ?></p>
+                           placeholder="<?= __('members.groups.placeholder.slug') ?>">
+                    <p class="text-xs text-zinc-400 mt-1"><?= __('members.groups.slug_desc') ?></p>
                 </div>
 
                 <!-- 할인율 / 포인트율 -->
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.members.groups.fields.discount_rate') ?> (%)</label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('members.groups.fields.discount_rate') ?> (%)</label>
                         <input type="number" id="gradeDiscount" name="discount_rate" step="0.1" min="0" max="100" value="0"
                                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.members.groups.fields.point_rate') ?> (%)</label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('members.groups.fields.point_rate') ?> (%)</label>
                         <input type="number" id="gradePoint" name="point_rate" step="0.1" min="0" max="100" value="0"
                                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm">
                     </div>
@@ -62,12 +62,12 @@
                 <!-- 승급 조건 -->
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.members.groups.fields.min_reservations') ?></label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('members.groups.fields.min_reservations') ?></label>
                         <input type="number" id="gradeMinRes" name="min_reservations" min="0" value="0"
                                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.members.groups.fields.min_spent') ?></label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('members.groups.fields.min_spent') ?></label>
                         <input type="number" id="gradeMinSpent" name="min_spent" step="1" min="0" value="0"
                                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm">
                     </div>
@@ -75,10 +75,10 @@
 
                 <!-- 혜택 설명 -->
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.members.groups.fields.benefits') ?></label>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('members.groups.fields.benefits') ?></label>
                     <textarea id="gradeBenefits" name="benefits" rows="3"
                               class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-                              placeholder="<?= __('admin.members.groups.placeholder.benefits') ?>"></textarea>
+                              placeholder="<?= __('members.groups.placeholder.benefits') ?>"></textarea>
                 </div>
             </form>
 

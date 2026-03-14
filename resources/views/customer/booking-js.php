@@ -349,7 +349,7 @@
             if (PRICE_DISPLAY === 'show') {
                 cprice.textContent = CURRENCY_SYMBOL + Number(getTotalPrice()).toLocaleString();
             } else if (PRICE_DISPLAY === 'contact') {
-                cprice.textContent = '<?= __('admin.services.settings.general.price_contact') ?>';
+                cprice.textContent = '<?= __('services.settings.general.price_contact') ?>';
             } else {
                 cprice.textContent = '';
             }

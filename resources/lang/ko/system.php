@@ -1,0 +1,107 @@
+<?php
+
+/**
+ * 시스템 번역 - 한국어
+ * admin.php의 'settings.system' 섹션에서 분리
+ */
+
+return [
+    // 탭 메뉴
+    'tabs' => [
+        'info' => '정보관리', 'cache' => '캐시관리', 'mode' => '모드관리',
+        'logs' => '로그관리', 'updates' => '업데이트',
+    ],
+    'app' => [
+        'title' => '애플리케이션 정보', 'name' => '앱 이름', 'version' => '버전',
+        'environment' => '환경', 'debug_mode' => '디버그 모드',
+        'debug_warning' => '프로덕션 환경에서는 디버그 모드를 비활성화하세요.',
+        'url' => 'URL', 'locale' => '언어',
+    ],
+    'php' => [
+        'title' => 'PHP 정보', 'version' => 'PHP 버전', 'sapi' => 'SAPI', 'timezone' => '타임존',
+        'memory_limit' => '메모리 제한', 'max_execution_time' => '최대 실행 시간',
+        'upload_max_filesize' => '최대 업로드 크기', 'post_max_size' => '최대 POST 크기',
+        'display_errors' => '오류 표시', 'extensions' => '필수 확장 모듈',
+    ],
+    'db' => [
+        'title' => '데이터베이스 정보', 'driver' => '드라이버', 'version' => '버전',
+        'host' => '호스트', 'database' => '데이터베이스', 'charset' => '문자셋', 'collation' => '콜레이션',
+    ],
+    'server' => [
+        'title' => '서버 정보', 'os' => '운영체제', 'os_family' => 'OS 계열',
+        'software' => '서버 소프트웨어', 'document_root' => '문서 루트', 'current_time' => '현재 시간',
+    ],
+    'status' => ['on' => '켜짐', 'off' => '꺼짐'],
+    // 캐시관리
+    'cache' => [
+        'title' => '캐시 관리',
+        'description' => '애플리케이션 캐시를 관리합니다. 캐시를 삭제하면 성능이 일시적으로 저하될 수 있습니다.',
+        'view' => '뷰 캐시', 'view_desc' => '컴파일된 뷰 템플릿 캐시',
+        'config' => '설정 캐시', 'config_desc' => '애플리케이션 설정 캐시',
+        'route' => '라우트 캐시', 'route_desc' => '라우팅 정보 캐시',
+        'clear' => '삭제', 'clear_all' => '모든 캐시 삭제',
+        'cached' => '캐시됨', 'not_cached' => '없음',
+        'confirm_clear' => '캐시를 삭제하시겠습니까?', 'cleared' => '캐시가 삭제되었습니다.',
+    ],
+    // 모드관리
+    'mode' => [
+        'title' => '모드 관리', 'description' => '애플리케이션 실행 모드를 관리합니다.',
+        'debug' => '디버그 모드', 'debug_desc' => '상세 오류 메시지를 표시합니다. 프로덕션에서는 비활성화하세요.',
+        'maintenance' => '점검 모드', 'maintenance_desc' => '사이트 점검 중 사용자 접근을 차단합니다.',
+        'environment' => '환경', 'environment_desc' => '현재 애플리케이션 실행 환경',
+        'env_notice' => '디버그 모드와 환경 설정은 .env 파일에서 변경할 수 있습니다.',
+        'enable_maintenance' => '점검 모드 활성화', 'disable_maintenance' => '점검 모드 해제',
+        'confirm_enable_maintenance' => '점검 모드를 활성화하시겠습니까? 관리자를 제외한 모든 사용자가 사이트에 접근할 수 없게 됩니다.',
+        'confirm_disable_maintenance' => '점검 모드를 해제하시겠습니까?',
+        'maintenance_enabled' => '점검 모드가 활성화되었습니다.', 'maintenance_disabled' => '점검 모드가 해제되었습니다.',
+        'maintenance_message' => '현재 사이트 점검 중입니다. 잠시 후 다시 방문해 주세요.',
+        'enable_debug' => '디버그 모드 활성화', 'disable_debug' => '디버그 모드 비활성화',
+        'confirm_enable_debug' => '디버그 모드를 활성화하시겠습니까? 오류 상세 정보가 표시됩니다.',
+        'confirm_disable_debug' => '디버그 모드를 비활성화하시겠습니까?',
+        'debug_enabled' => '디버그 모드가 활성화되었습니다.', 'debug_disabled' => '디버그 모드가 비활성화되었습니다.',
+        'debug_error' => '디버그 모드 설정 중 오류가 발생했습니다.',
+        'debug_env_locked' => '.env 파일에서 APP_DEBUG=true로 설정되어 있어 비활성화할 수 없습니다.',
+    ],
+    // 로그관리
+    'logs' => [
+        'title' => '로그 관리', 'description' => '애플리케이션 로그 파일을 관리합니다.',
+        'filename' => '파일명', 'size' => '크기', 'modified' => '수정일', 'actions' => '작업',
+        'view' => '보기', 'delete' => '삭제', 'download' => '다운로드',
+        'copy' => '복사', 'copied' => '클립보드에 복사되었습니다.',
+        'clear_all' => '모든 로그 삭제', 'no_logs' => '로그 파일이 없습니다.',
+        'no_logs_desc' => '아직 기록된 로그가 없습니다.',
+        'confirm_delete' => '이 로그 파일을 삭제하시겠습니까?',
+        'confirm_clear_all' => '모든 로그 파일을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+        'deleted' => '로그 파일이 삭제되었습니다.', 'all_cleared' => '모든 로그 파일이 삭제되었습니다.',
+        'back_to_list' => '목록으로', 'selected' => '개 선택됨', 'delete_selected' => '선택 삭제',
+        'confirm_delete_selected' => '선택한 로그 파일들을 삭제하시겠습니까?',
+        'selected_deleted' => ':count개의 로그 파일이 삭제되었습니다.',
+        'total_files' => '총 :count개 파일', 'last_lines' => '최근 :count줄 표시',
+        'showing_first' => ':total개 중 :count개만 표시됩니다.',
+    ],
+    // 업데이트 관리
+    'updates' => [
+        'title' => '업데이트 관리', 'description' => 'GitHub를 통해 시스템 업데이트를 관리합니다.',
+        'current_version' => '현재 버전', 'installed_version' => '설치 버전', 'latest_version' => '최신 버전',
+        'update_available_msg' => '새 버전이 출시되었습니다. 업데이트 버튼을 클릭하여 업데이트하시기 바랍니다.',
+        'download' => '다운로드', 'channel' => '채널',
+        'check_update' => '업데이트 확인', 'checking' => '확인 중...',
+        'check_failed' => '업데이트 확인에 실패했습니다.', 'up_to_date' => '최신 버전을 사용 중입니다.',
+        'new_version_available' => '새 버전이 있습니다!', 'view_details' => '상세 보기',
+        'release_notes' => '릴리스 노트', 'no_notes' => '릴리스 노트가 없습니다.',
+        'no_releases' => '릴리스를 찾을 수 없습니다.',
+        'requirements' => '시스템 요구사항', 'writable_root' => '루트 디렉토리 쓰기 권한',
+        'writable_storage' => 'Storage 디렉토리 쓰기 권한', 'not_available' => '불가',
+        'requirements_warning' => '일부 요구사항이 충족되지 않아 자동 업데이트가 제한될 수 있습니다.',
+        'notes_title' => '업데이트 안내',
+        'note_backup' => '업데이트 전 자동으로 백업이 생성됩니다.',
+        'note_maintenance' => '업데이트 중에는 사이트가 유지보수 모드로 전환됩니다.',
+        'note_rollback' => '업데이트 실패 시 자동으로 이전 버전으로 복원됩니다.',
+        'backups' => '백업 목록', 'no_backups' => '저장된 백업이 없습니다.',
+        'restore' => '복원', 'confirm_restore' => '이 백업으로 복원하시겠습니까? 현재 파일들이 덮어씌워집니다.',
+        'restore_failed' => '복원에 실패했습니다.',
+        'update_now' => '지금 업데이트',
+        'confirm_update' => '업데이트를 진행하시겠습니까? 업데이트 전 자동으로 백업이 생성됩니다.',
+        'update_failed' => '업데이트에 실패했습니다.', 'reload_page' => '잠시 후 페이지가 새로고침됩니다.',
+    ],
+];

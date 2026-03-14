@@ -55,7 +55,7 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
 
         <div id="multilangModalContent" class="relative z-50 w-full max-w-lg p-6 bg-white dark:bg-zinc-800 rounded-xl shadow-xl transform transition-all">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.settings.multilang.modal_title') ?></h3>
+                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('settings.multilang.modal_title') ?></h3>
                 <button type="button" onclick="closeMultilangModal()" class="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -63,7 +63,7 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
                 </button>
             </div>
 
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4"><?= __('admin.settings.multilang.modal_description') ?></p>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4"><?= __('settings.multilang.modal_description') ?></p>
 
             <!-- 탭 네비게이션 (동적 생성) -->
             <div id="multilangTabNav" class="flex flex-wrap border-b border-zinc-200 dark:border-zinc-700 mb-4 gap-0 overflow-x-auto">
@@ -99,11 +99,11 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
             <div class="flex justify-end gap-3 mt-6">
                 <button type="button" onclick="closeMultilangModal()"
                         class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 rounded-lg transition">
-                    <?= __('admin.settings.multilang.cancel') ?>
+                    <?= __('settings.multilang.cancel') ?>
                 </button>
                 <button type="button" onclick="saveMultilangData()"
                         class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
-                    <?= __('admin.settings.multilang.save') ?>
+                    <?= __('settings.multilang.save') ?>
                 </button>
             </div>
         </div>
@@ -356,14 +356,14 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
                     }
                 }
 
-                showMultilangToast('<?= __('admin.settings.multilang.saved') ?>', 'success');
+                showMultilangToast('<?= __('settings.multilang.saved') ?>', 'success');
                 closeMultilangModal();
             } else {
-                showMultilangToast('<?= __('admin.settings.multilang.error') ?>', 'error');
+                showMultilangToast('<?= __('settings.multilang.error') ?>', 'error');
             }
         } catch (error) {
             console.error('[Multilang] Error saving translations:', error);
-            showMultilangToast('<?= __('admin.settings.multilang.error') ?>', 'error');
+            showMultilangToast('<?= __('settings.multilang.error') ?>', 'error');
         }
     };
 

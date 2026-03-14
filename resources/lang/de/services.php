@@ -1,28 +1,122 @@
 <?php
 
 /**
- * Service translations - German
+ * Services translations - de
  */
 
 return [
-    // Page
-    'title' => 'Dienstleistungen',
-    'description' => 'Durchsuchen Sie unsere Dienstleistungen und buchen Sie die passende fuer Sie.',
-
-    // Category
-    'all_categories' => 'Alle',
-
-    // Buttons
-    'view_detail' => 'Details anzeigen',
-    'book_now' => 'Jetzt buchen',
-    'back_to_list' => 'Zurueck zur Liste',
-
-    // Detail page
-    'about_service' => 'Ueber diese Dienstleistung',
-    'no_description' => 'Keine Beschreibung verfuegbar.',
-    'related_services' => 'Aehnliche Dienstleistungen',
-
-    // CTA
-    'cta_title' => 'Bereit zu buchen?',
-    'cta_description' => 'Buchen Sie einfach Ihre bevorzugte Dienstleistung und starten Sie Ihr besonderes Erlebnis.',
+    'title' => 'Dienstleistungsverwaltung',
+    'list' => 'Dienstleistungsliste',
+    'create' => 'Dienstleistung hinzufuegen',
+    'edit' => 'Dienstleistung bearbeiten',
+    'detail' => 'Dienstleistungsdetails',
+    'fields' => [
+        'name' => 'Dienstleistungsname',
+        'slug' => 'URL-Slug',
+        'description' => 'Beschreibung',
+        'short_description' => 'Kurzbeschreibung',
+        'duration' => 'Dauer (Min.)',
+        'price' => 'Preis',
+        'category' => 'Kategorie',
+        'is_active' => 'Aktiv',
+        'max_capacity' => 'Max. Kapazitaet',
+        'buffer_time' => 'Pufferzeit (Min.)',
+        'advance_booking_days' => 'Vorlaufzeit (Tage)',
+        'min_notice_hours' => 'Min. Vorlaufzeit (Stunden)',
+    ],
+    'success' => [
+        'created' => 'Dienstleistung erstellt.',
+        'updated' => 'Dienstleistung aktualisiert.',
+        'deleted' => 'Dienstleistung geloescht.',
+        'activated' => 'Dienstleistung aktiviert.',
+        'deactivated' => 'Dienstleistung deaktiviert.',
+    ],
+    'error' => ['has_reservations' => 'Dienstleistung mit bestehenden Reservierungen kann nicht geloescht werden.', 'server_error' => 'Serverfehler.', 'generic' => 'Ein Fehler ist aufgetreten.', 'delete_failed' => 'Löschen fehlgeschlagen'],
+    'empty' => 'Keine Dienste registriert.',
+    'filter_all' => 'Alle',
+    'filter_active' => 'Aktiv',
+    'filter_inactive' => 'Inaktiv',
+    'status_active' => 'Aktiv',
+    'status_inactive' => 'Inaktiv',
+    'confirm_delete' => 'Diesen Dienst löschen?',
+    'actions' => 'Aktionen',
+    'minute' => 'Min.',
+    'placeholder_name' => 'z.B. Haarschnitt, Färbung, Nagelkunst...',
+    'placeholder_slug' => 'Automatisch generiert',
+    'placeholder_description' => 'Kurze Beschreibung des Dienstes...',
+    'select_none' => '-- Keine --',
+    'no_buffer' => 'Keine',
+    'settings' => [
+        'tabs' => ['general' => 'Allgemein', 'holidays' => 'Feiertage'],
+        'general' => [
+            'title' => 'Service-Grundeinstellungen',
+            'description' => 'Standardoptionen für Servicebuchungen konfigurieren.',
+            'saved' => 'Einstellungen gespeichert.',
+            'default_duration' => 'Standarddauer',
+            'default_buffer' => 'Standard-Pufferzeit',
+            'advance_booking_days' => 'Vorausbuchungszeitraum',
+            'min_notice_hours' => 'Mindestvorlaufzeit',
+            'max_capacity' => 'Standard-Maximalkapazität',
+            'currency' => 'Währung',
+            'price_display' => 'Preisanzeige',
+            'price_show' => 'Anzeigen',
+            'price_hide' => 'Ausblenden',
+            'price_contact' => 'Anfrage',
+            'days' => 'Tage',
+            'hours' => 'Stunden',
+        ],
+        'holidays' => [
+            'add_title' => 'Feiertag hinzufügen',
+            'placeholder_title' => 'z.B. Neujahr, Weihnachten...',
+            'repeat_yearly' => 'Jährlich wiederholen',
+            'yearly' => 'Jährlich',
+            'name' => 'Feiertagsname',
+            'date' => 'Datum',
+            'status' => 'Status',
+            'empty' => 'Keine Feiertage registriert.',
+            'required' => 'Bitte Feiertagsname und Datum eingeben.',
+            'created' => 'Feiertag wurde hinzugefügt.',
+            'deleted' => 'Feiertag wurde gelöscht.',
+            'confirm_delete' => 'Diesen Feiertag wirklich löschen?',
+        ],
+    ],
+    'categories' => [
+        'title' => 'Kategorieverwaltung',
+        'list' => 'Kategorieliste',
+        'create' => 'Kategorie hinzufuegen',
+        'edit' => 'Kategorie bearbeiten',
+        'fields' => [
+            'name' => 'Kategoriename',
+            'slug' => 'URL-Slug',
+            'description' => 'Beschreibung',
+            'parent' => 'Uebergeordnete Kategorie',
+            'sort_order' => 'Sortierreihenfolge',
+            'is_active' => 'Aktiv',
+        ],
+        'success' => ['created' => 'Kategorie erstellt.', 'updated' => 'Kategorie aktualisiert.', 'deleted' => 'Kategorie geloescht.', 'reordered' => 'Kategoriereihenfolge wurde aktualisiert.'],
+        'delete' => 'Löschen',
+        'error' => ['has_services' => 'Diese Kategorie enthält Dienste. Bitte zuerst Dienste verschieben oder löschen.'],
+        'empty' => 'Keine Kategorien registriert.',
+        'confirm_delete' => 'Diese Kategorie löschen?',
+        'parent_none' => '-- Keine (Oberste) --',
+        'multilang_save_first' => 'Bitte speichern Sie die Kategorie zuerst, bevor Sie mehrsprachige Inhalte hinzufügen.',
+        'placeholder_name' => 'z.B. Haar, Nagel, Massage...',
+        'placeholder_slug' => 'Automatisch generiert',
+        'placeholder_description' => 'Kategoriebeschreibung...',
+    ],
+    'time_slots' => [
+        'title' => 'Zeitfensterverwaltung',
+        'default_slots' => 'Standard-Zeitfenster',
+        'blocked_dates' => 'Gesperrte Termine',
+        'fields' => [
+            'day_of_week' => 'Wochentag',
+            'start_time' => 'Startzeit',
+            'end_time' => 'Endzeit',
+            'max_bookings' => 'Max. Buchungen',
+            'service' => 'Dienstleistung',
+            'specific_date' => 'Bestimmtes Datum',
+        ],
+        'block_date' => 'Datum sperren',
+        'unblock_date' => 'Datum freigeben',
+    ],
 ];

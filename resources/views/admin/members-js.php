@@ -80,7 +80,7 @@
 
     // ── 회원 추가 모달 ──
     window.openCreateMember = function() {
-        document.getElementById('memberModalTitle').textContent = '<?= __('admin.members.list.create') ?>';
+        document.getElementById('memberModalTitle').textContent = '<?= __('members.list.create') ?>';
         document.getElementById('memberAction').value = 'create_member';
         document.getElementById('memberId').value = '';
 
@@ -121,7 +121,7 @@
 
     // ── 회원 수정 모달 ──
     window.editMember = function(m) {
-        document.getElementById('memberModalTitle').textContent = '<?= __('admin.members.list.edit') ?>';
+        document.getElementById('memberModalTitle').textContent = '<?= __('members.list.edit') ?>';
         document.getElementById('memberAction').value = 'update_member';
         document.getElementById('memberId').value = m.id;
 
@@ -222,16 +222,16 @@
                 closeMemberModal();
                 setTimeout(function() { location.reload(); }, 800);
             } else {
-                showAlert(data.message || '<?= __('admin.members.list.error.generic') ?>', 'error');
+                showAlert(data.message || '<?= __('members.list.error.generic') ?>', 'error');
             }
         }).catch(function(err) {
             console.error('[Members] Save error:', err);
-            showAlert('<?= __('admin.members.list.error.server') ?>', 'error');
+            showAlert('<?= __('members.list.error.server') ?>', 'error');
         });
     };
 
     window.deleteMember = function(id) {
-        if (!confirm('<?= __('admin.members.list.confirm_delete') ?>')) return;
+        if (!confirm('<?= __('members.list.confirm_delete') ?>')) return;
         console.log('[Members] Deleting:', id);
 
         var formData = new FormData();
@@ -248,7 +248,7 @@
             }
         }).catch(function(err) {
             console.error('[Members] Delete error:', err);
-            showAlert('<?= __('admin.members.list.error.server') ?>', 'error');
+            showAlert('<?= __('members.list.error.server') ?>', 'error');
         });
     };
 

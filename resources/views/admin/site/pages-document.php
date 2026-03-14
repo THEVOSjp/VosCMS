@@ -100,11 +100,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 VALUES (?, ?, ?, ?, 1, ?)
                 ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content), is_active = VALUES(is_active)");
             $stmt->execute([$pageSlug, $locale, $title, $content, $isActive]);
-            $message = __('admin.settings.success');
+            $message = __('settings.success');
             $messageType = 'success';
             $savedContents[$locale] = ['locale' => $locale, 'title' => $title, 'content' => $content, 'is_active' => $isActive];
         } catch (PDOException $e) {
-            $message = __('admin.settings.error_save') . ': ' . $e->getMessage();
+            $message = __('settings.error_save') . ': ' . $e->getMessage();
             $messageType = 'error';
         }
     }
@@ -250,7 +250,7 @@ $languageNames = [
 
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.site.pages.document.page_title') ?></label>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.pages.document.page_title') ?></label>
                                 <input type="text" name="page_title" id="editTitle"
                                        value="<?= htmlspecialchars($savedContents[$currentLocale]['title'] ?? '') ?>"
                                        placeholder="<?= __($pageMeta['title_key']) ?>"
@@ -258,7 +258,7 @@ $languageNames = [
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.site.pages.document.page_content') ?></label>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.pages.document.page_content') ?></label>
                                 <textarea name="page_content" id="editContent"
                                           class="summernote-editor"><?= htmlspecialchars($savedContents[$currentLocale]['content'] ?? '') ?></textarea>
                             </div>
@@ -267,7 +267,7 @@ $languageNames = [
                                 <input type="checkbox" name="is_active" id="editActive" value="1"
                                        <?= ($savedContents[$currentLocale]['is_active'] ?? '1') ? 'checked' : '' ?>
                                        class="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500">
-                                <label for="editActive" class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.site.pages.document.is_active') ?></label>
+                                <label for="editActive" class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('site.pages.document.is_active') ?></label>
                             </div>
                         </div>
 
@@ -279,7 +279,7 @@ $languageNames = [
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                     </svg>
-                                    <?= __('admin.site.pages.document.preview') ?>
+                                    <?= __('site.pages.document.preview') ?>
                                 </button>
                                 <?php if ($hasDefaults): ?>
                                 <button type="button" id="btnLoadDefault"
@@ -287,7 +287,7 @@ $languageNames = [
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                                     </svg>
-                                    <?= __('admin.site.pages.document.load_default') ?>
+                                    <?= __('site.pages.document.load_default') ?>
                                 </button>
                                 <?php endif; ?>
                             </div>
@@ -306,7 +306,7 @@ $languageNames = [
         <div class="absolute inset-0 bg-black/50" id="previewOverlay"></div>
         <div class="absolute inset-4 md:inset-8 lg:inset-12 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
             <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800">
-                <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.site.pages.document.preview') ?></span>
+                <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('site.pages.document.preview') ?></span>
                 <button type="button" id="btnClosePreview" class="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>

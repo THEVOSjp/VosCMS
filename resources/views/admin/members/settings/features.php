@@ -6,7 +6,7 @@
 
 require_once __DIR__ . '/_init.php';
 
-$pageTitle = __('admin.members.settings.tabs.features') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('members.settings.tabs.features') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentMemberSettingsPage = 'features';
 
 // Handle form submission
@@ -42,10 +42,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute(['member_auto_login_manage', $autoLoginManage]);
             $memberSettings['member_auto_login_manage'] = $autoLoginManage;
 
-            $message = __('admin.settings.success');
+            $message = __('settings.success');
             $messageType = 'success';
         } catch (PDOException $e) {
-            $message = __('admin.settings.error_save') . ': ' . $e->getMessage();
+            $message = __('settings.error_save') . ': ' . $e->getMessage();
             $messageType = 'error';
         }
     }
@@ -57,8 +57,8 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
     <?php
     $headerIcon = 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z';
-    $headerTitle = __('admin.members.settings.features.title');
-    $headerDescription = __('admin.members.settings.features.description');
+    $headerTitle = __('members.settings.features.title');
+    $headerDescription = __('members.settings.features.description');
     $headerIconColor = ''; $headerActions = '';
     include __DIR__ . '/../../components/settings-header.php';
     ?>
@@ -69,8 +69,8 @@ ob_start();
         <!-- 스크랩 보기 -->
         <div class="flex items-center justify-between py-4 border-b dark:border-zinc-700">
             <div>
-                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('admin.members.settings.features.view_scrap') ?></h3>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.members.settings.features.view_scrap_desc') ?></p>
+                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('members.settings.features.view_scrap') ?></h3>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('members.settings.features.view_scrap_desc') ?></p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" name="member_view_scrap" class="sr-only peer" <?php echo ($memberSettings['member_view_scrap'] ?? '1') === '1' ? 'checked' : ''; ?>>
@@ -81,8 +81,8 @@ ob_start();
         <!-- 저장함 보기 -->
         <div class="flex items-center justify-between py-4 border-b dark:border-zinc-700">
             <div>
-                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('admin.members.settings.features.view_bookmark') ?></h3>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.members.settings.features.view_bookmark_desc') ?></p>
+                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('members.settings.features.view_bookmark') ?></h3>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('members.settings.features.view_bookmark_desc') ?></p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" name="member_view_bookmark" class="sr-only peer" <?php echo ($memberSettings['member_view_bookmark'] ?? '1') === '1' ? 'checked' : ''; ?>>
@@ -93,8 +93,8 @@ ob_start();
         <!-- 작성 글 보기 -->
         <div class="flex items-center justify-between py-4 border-b dark:border-zinc-700">
             <div>
-                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('admin.members.settings.features.view_posts') ?></h3>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.members.settings.features.view_posts_desc') ?></p>
+                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('members.settings.features.view_posts') ?></h3>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('members.settings.features.view_posts_desc') ?></p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" name="member_view_posts" class="sr-only peer" <?php echo ($memberSettings['member_view_posts'] ?? '1') === '1' ? 'checked' : ''; ?>>
@@ -105,8 +105,8 @@ ob_start();
         <!-- 작성 댓글 보기 -->
         <div class="flex items-center justify-between py-4 border-b dark:border-zinc-700">
             <div>
-                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('admin.members.settings.features.view_comments') ?></h3>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.members.settings.features.view_comments_desc') ?></p>
+                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('members.settings.features.view_comments') ?></h3>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('members.settings.features.view_comments_desc') ?></p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" name="member_view_comments" class="sr-only peer" <?php echo ($memberSettings['member_view_comments'] ?? '1') === '1' ? 'checked' : ''; ?>>
@@ -117,8 +117,8 @@ ob_start();
         <!-- 자동 로그인 관리 -->
         <div class="flex items-center justify-between py-4">
             <div>
-                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('admin.members.settings.features.auto_login_manage') ?></h3>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.members.settings.features.auto_login_manage_desc') ?></p>
+                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('members.settings.features.auto_login_manage') ?></h3>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('members.settings.features.auto_login_manage_desc') ?></p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" name="member_auto_login_manage" class="sr-only peer" <?php echo ($memberSettings['member_auto_login_manage'] ?? '1') === '1' ? 'checked' : ''; ?>>

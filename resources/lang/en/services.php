@@ -1,28 +1,122 @@
 <?php
 
 /**
- * Service translations - English
+ * Services translations - en
  */
 
 return [
-    // Page
-    'title' => 'Services',
-    'description' => 'Browse our services and book the one that suits you.',
-
-    // Category
-    'all_categories' => 'All',
-
-    // Buttons
-    'view_detail' => 'View Details',
-    'book_now' => 'Book Now',
-    'back_to_list' => 'Back to List',
-
-    // Detail page
-    'about_service' => 'About This Service',
-    'no_description' => 'No description available.',
-    'related_services' => 'Related Services',
-
-    // CTA
-    'cta_title' => 'Ready to Book?',
-    'cta_description' => 'Easily book your preferred service and start your special experience.',
+    'title' => 'Service Management',
+    'list' => 'Service List',
+    'create' => 'Add Service',
+    'edit' => 'Edit Service',
+    'detail' => 'Service Details',
+    'fields' => [
+        'name' => 'Service Name',
+        'slug' => 'URL Slug',
+        'description' => 'Description',
+        'short_description' => 'Short Description',
+        'duration' => 'Duration (min)',
+        'price' => 'Price',
+        'category' => 'Category',
+        'is_active' => 'Active',
+        'max_capacity' => 'Max Capacity',
+        'buffer_time' => 'Buffer Time (min)',
+        'advance_booking_days' => 'Advance Booking (days)',
+        'min_notice_hours' => 'Min Notice (hours)',
+    ],
+    'success' => [
+        'created' => 'Service created.',
+        'updated' => 'Service updated.',
+        'deleted' => 'Service deleted.',
+        'activated' => 'Service activated.',
+        'deactivated' => 'Service deactivated.',
+    ],
+    'error' => ['has_reservations' => 'Cannot delete service with existing reservations.', 'server_error' => 'A server error occurred.', 'generic' => 'An error occurred.', 'delete_failed' => 'Delete failed'],
+    'empty' => 'No services registered.',
+    'filter_all' => 'All',
+    'filter_active' => 'Active',
+    'filter_inactive' => 'Inactive',
+    'status_active' => 'Active',
+    'status_inactive' => 'Inactive',
+    'confirm_delete' => 'Delete this service?',
+    'actions' => 'Actions',
+    'minute' => 'min',
+    'placeholder_name' => 'e.g. Haircut, Coloring, Nail Art...',
+    'placeholder_slug' => 'Auto-generated (letters, numbers, hyphens)',
+    'placeholder_description' => 'Brief description of the service...',
+    'select_none' => '-- None --',
+    'no_buffer' => 'None',
+    'settings' => [
+        'tabs' => ['general' => 'General', 'holidays' => 'Holidays'],
+        'general' => [
+            'title' => 'Service General Settings',
+            'description' => 'Configure default options for service reservations.',
+            'saved' => 'Settings saved successfully.',
+            'default_duration' => 'Default Duration',
+            'default_buffer' => 'Default Buffer Time',
+            'advance_booking_days' => 'Advance Booking Period',
+            'min_notice_hours' => 'Minimum Notice',
+            'max_capacity' => 'Default Max Capacity',
+            'currency' => 'Currency',
+            'price_display' => 'Price Display',
+            'price_show' => 'Show',
+            'price_hide' => 'Hide',
+            'price_contact' => 'Contact',
+            'days' => 'days',
+            'hours' => 'hours',
+        ],
+        'holidays' => [
+            'add_title' => 'Add Holiday',
+            'placeholder_title' => 'e.g., New Year, Christmas...',
+            'repeat_yearly' => 'Repeat Yearly',
+            'yearly' => 'Yearly',
+            'name' => 'Holiday Name',
+            'date' => 'Date',
+            'status' => 'Status',
+            'empty' => 'No holidays registered.',
+            'required' => 'Please enter holiday name and date.',
+            'created' => 'Holiday has been added.',
+            'deleted' => 'Holiday has been deleted.',
+            'confirm_delete' => 'Are you sure you want to delete this holiday?',
+        ],
+    ],
+    'categories' => [
+        'title' => 'Category Management',
+        'list' => 'Category List',
+        'create' => 'Add Category',
+        'edit' => 'Edit Category',
+        'delete' => 'Delete',
+        'fields' => [
+            'name' => 'Category Name',
+            'slug' => 'URL Slug',
+            'description' => 'Description',
+            'parent' => 'Parent Category',
+            'sort_order' => 'Sort Order',
+            'is_active' => 'Active',
+        ],
+        'success' => ['created' => 'Category created.', 'updated' => 'Category updated.', 'deleted' => 'Category deleted.', 'reordered' => 'Category order has been updated.'],
+        'error' => ['has_services' => 'This category has services. Move or delete services first.'],
+        'empty' => 'No categories registered.',
+        'confirm_delete' => 'Delete this category?',
+        'parent_none' => '-- None (Top level) --',
+        'multilang_save_first' => 'Please save the category first before adding multilingual content.',
+        'placeholder_name' => 'e.g. Hair, Nail, Massage...',
+        'placeholder_slug' => 'Auto-generated',
+        'placeholder_description' => 'Category description...',
+    ],
+    'time_slots' => [
+        'title' => 'Time Slot Management',
+        'default_slots' => 'Default Time Slots',
+        'blocked_dates' => 'Blocked Dates',
+        'fields' => [
+            'day_of_week' => 'Day of Week',
+            'start_time' => 'Start Time',
+            'end_time' => 'End Time',
+            'max_bookings' => 'Max Bookings',
+            'service' => 'Service',
+            'specific_date' => 'Specific Date',
+        ],
+        'block_date' => 'Block Date',
+        'unblock_date' => 'Unblock Date',
+    ],
 ];

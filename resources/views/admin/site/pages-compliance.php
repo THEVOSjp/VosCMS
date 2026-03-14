@@ -3,7 +3,7 @@
  * RezlyX Admin - 데이터 관리 가이드 편집
  * 국가별/업종별 컴플라이언스 정보를 관리자가 확인하고 커스터마이징
  */
-$pageTitle = __('admin.site.pages.compliance.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('site.pages.compliance.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 
 // Database connection
 try {
@@ -67,13 +67,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 VALUES ('data-policy', ?, ?, ?, 1, ?)
                 ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content), is_active = VALUES(is_active)");
             $stmt->execute([$locale, $title, $content, $isActive]);
-            $message = __('admin.settings.success');
+            $message = __('settings.success');
             $messageType = 'success';
 
             // 저장 후 다시 로드
             $savedContents[$locale] = ['locale' => $locale, 'title' => $title, 'content' => $content];
         } catch (PDOException $e) {
-            $message = __('admin.settings.error_save') . ': ' . $e->getMessage();
+            $message = __('settings.error_save') . ': ' . $e->getMessage();
             $messageType = 'error';
         }
     } elseif ($action === 'generate_default') {
@@ -102,28 +102,28 @@ $languageNames = [
 $categoryKeys = ['beauty_salon', 'nail_salon', 'skincare', 'massage', 'hospital', 'dental', 'studio', 'restaurant', 'accommodation', 'sports', 'education', 'consulting', 'pet', 'car', 'other'];
 $categoryNames = [];
 foreach ($categoryKeys as $ck) {
-    $categoryNames[$ck] = __('admin.settings.site.categories.' . $ck);
+    $categoryNames[$ck] = __('settings.site.categories.' . $ck);
 }
 
 // 국가 목록
 $countryNames = [
-    'KR' => '🇰🇷 ' . __('admin.settings.site.country.kr'),
-    'JP' => '🇯🇵 ' . __('admin.settings.site.country.jp'),
-    'US' => '🇺🇸 ' . __('admin.settings.site.country.us'),
-    'CN' => '🇨🇳 ' . __('admin.settings.site.country.cn'),
-    'TW' => '🇹🇼 ' . __('admin.settings.site.country.tw'),
-    'DE' => '🇩🇪 ' . __('admin.settings.site.country.de'),
-    'FR' => '🇫🇷 ' . __('admin.settings.site.country.fr'),
-    'ES' => '🇪🇸 ' . __('admin.settings.site.country.es'),
-    'GB' => '🇬🇧 ' . __('admin.settings.site.country.gb'),
-    'AU' => '🇦🇺 ' . __('admin.settings.site.country.au'),
-    'ID' => '🇮🇩 ' . __('admin.settings.site.country.id'),
-    'MN' => '🇲🇳 ' . __('admin.settings.site.country.mn'),
-    'RU' => '🇷🇺 ' . __('admin.settings.site.country.ru'),
-    'TR' => '🇹🇷 ' . __('admin.settings.site.country.tr'),
-    'VN' => '🇻🇳 ' . __('admin.settings.site.country.vn'),
-    'SG' => '🇸🇬 ' . __('admin.settings.site.country.sg'),
-    'NZ' => '🇳🇿 ' . __('admin.settings.site.country.nz'),
+    'KR' => '🇰🇷 ' . __('settings.site.country.kr'),
+    'JP' => '🇯🇵 ' . __('settings.site.country.jp'),
+    'US' => '🇺🇸 ' . __('settings.site.country.us'),
+    'CN' => '🇨🇳 ' . __('settings.site.country.cn'),
+    'TW' => '🇹🇼 ' . __('settings.site.country.tw'),
+    'DE' => '🇩🇪 ' . __('settings.site.country.de'),
+    'FR' => '🇫🇷 ' . __('settings.site.country.fr'),
+    'ES' => '🇪🇸 ' . __('settings.site.country.es'),
+    'GB' => '🇬🇧 ' . __('settings.site.country.gb'),
+    'AU' => '🇦🇺 ' . __('settings.site.country.au'),
+    'ID' => '🇮🇩 ' . __('settings.site.country.id'),
+    'MN' => '🇲🇳 ' . __('settings.site.country.mn'),
+    'RU' => '🇷🇺 ' . __('settings.site.country.ru'),
+    'TR' => '🇹🇷 ' . __('settings.site.country.tr'),
+    'VN' => '🇻🇳 ' . __('settings.site.country.vn'),
+    'SG' => '🇸🇬 ' . __('settings.site.country.sg'),
+    'NZ' => '🇳🇿 ' . __('settings.site.country.nz'),
 ];
 ?>
 <!DOCTYPE html>
@@ -200,7 +200,7 @@ $countryNames = [
 
         <main class="flex-1 ml-64">
             <?php
-            $pageHeaderTitle = __('admin.site.pages.compliance.title');
+            $pageHeaderTitle = __('site.pages.compliance.title');
             include __DIR__ . '/../partials/admin-topbar.php';
             ?>
 
@@ -217,8 +217,8 @@ $countryNames = [
                 <div class="mb-6">
                 <?php
                 $headerIcon = 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z';
-                $headerTitle = __('admin.site.pages.compliance.title');
-                $headerDescription = __('admin.site.pages.compliance.description');
+                $headerTitle = __('site.pages.compliance.title');
+                $headerDescription = __('site.pages.compliance.description');
                 $headerIconColor = 'text-amber-600';
                 $headerActions = '<a href="' . $adminUrl . '/site/pages" class="px-4 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-600 transition">' . __('admin.buttons.back') . '</a>';
                 include __DIR__ . '/../components/settings-header.php';
@@ -228,8 +228,8 @@ $countryNames = [
                 <?php if (!$siteCountry): ?>
                 <div class="mb-6 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                     <p class="text-sm text-amber-700 dark:text-amber-300">
-                        <?= __('admin.site.pages.compliance.no_country_warning') ?>
-                        <a href="<?= $adminUrl ?>/settings/general" class="underline font-medium"><?= __('admin.site.pages.compliance.go_settings') ?></a>
+                        <?= __('site.pages.compliance.no_country_warning') ?>
+                        <a href="<?= $adminUrl ?>/settings/general" class="underline font-medium"><?= __('site.pages.compliance.go_settings') ?></a>
                     </p>
                 </div>
                 <?php endif; ?>
@@ -245,7 +245,7 @@ $countryNames = [
                                 <?php if ($siteCategory): ?> · <?= $categoryNames[$siteCategory] ?? $siteCategory ?><?php endif; ?>
                             </span>
                             <?php if ($isDetailedCountry): ?>
-                            <span class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><?= __('admin.site.pages.compliance.detailed') ?></span>
+                            <span class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><?= __('site.pages.compliance.detailed') ?></span>
                             <?php endif; ?>
                             <?php endif; ?>
                         </div>
@@ -273,19 +273,19 @@ $countryNames = [
 
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.site.pages.compliance.page_title') ?></label>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.pages.compliance.page_title') ?></label>
                                 <input type="text" name="page_title" id="editTitle"
                                        value="<?= htmlspecialchars($savedContents[$currentLocale]['title'] ?? '') ?>"
-                                       placeholder="<?= __('admin.site.pages.compliance.title_placeholder') ?>"
+                                       placeholder="<?= __('site.pages.compliance.title_placeholder') ?>"
                                        class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                             </div>
 
                             <div>
                                 <div class="flex items-center justify-between mb-1">
-                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.site.pages.compliance.page_content') ?></label>
+                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('site.pages.compliance.page_content') ?></label>
                                     <button type="button" id="btnLoadDefault"
                                             class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                                        <?= __('admin.site.pages.compliance.load_default') ?>
+                                        <?= __('site.pages.compliance.load_default') ?>
                                     </button>
                                 </div>
                                 <textarea name="page_content" id="editContent"
@@ -295,7 +295,7 @@ $countryNames = [
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" name="is_active" id="editActive" value="1" checked
                                        class="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500">
-                                <label for="editActive" class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.site.pages.compliance.is_active') ?></label>
+                                <label for="editActive" class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('site.pages.compliance.is_active') ?></label>
                             </div>
                         </div>
 
@@ -306,7 +306,7 @@ $countryNames = [
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                 </svg>
-                                <?= __('admin.site.pages.compliance.preview') ?>
+                                <?= __('site.pages.compliance.preview') ?>
                             </button>
                             <button type="submit" class="px-5 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
                                 <?= __('admin.buttons.save') ?>
@@ -329,7 +329,7 @@ $countryNames = [
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                     </svg>
-                    <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.site.pages.compliance.preview') ?></span>
+                    <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('site.pages.compliance.preview') ?></span>
                 </div>
                 <button type="button" id="btnClosePreview" class="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

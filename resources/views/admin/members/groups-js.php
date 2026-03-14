@@ -49,7 +49,7 @@
     }
 
     window.openGradeModal = function() {
-        document.getElementById('gradeModalTitle').textContent = '<?= __('admin.members.groups.create') ?>';
+        document.getElementById('gradeModalTitle').textContent = '<?= __('members.groups.create') ?>';
         document.getElementById('gradeAction').value = 'create_grade';
         document.getElementById('gradeId').value = '';
         document.getElementById('gradeName').value = '';
@@ -66,7 +66,7 @@
     };
 
     window.editGrade = function(g) {
-        document.getElementById('gradeModalTitle').textContent = '<?= __('admin.members.groups.edit') ?>';
+        document.getElementById('gradeModalTitle').textContent = '<?= __('members.groups.edit') ?>';
         document.getElementById('gradeAction').value = 'update_grade';
         document.getElementById('gradeId').value = g.id;
         document.getElementById('gradeName').value = g.name || '';
@@ -106,16 +106,16 @@
                 closeGradeModal();
                 setTimeout(function() { location.reload(); }, 800);
             } else {
-                showAlert(data.message || '<?= __('admin.members.groups.error.generic') ?>', 'error');
+                showAlert(data.message || '<?= __('members.groups.error.generic') ?>', 'error');
             }
         }).catch(function(err) {
             console.error('[Groups] Save error:', err);
-            showAlert('<?= __('admin.members.groups.error.server') ?>', 'error');
+            showAlert('<?= __('members.groups.error.server') ?>', 'error');
         });
     };
 
     window.deleteGrade = function(id) {
-        if (!confirm('<?= __('admin.members.groups.confirm_delete') ?>')) return;
+        if (!confirm('<?= __('members.groups.confirm_delete') ?>')) return;
         console.log('[Groups] Deleting:', id);
 
         var formData = new FormData();
@@ -132,7 +132,7 @@
             }
         }).catch(function(err) {
             console.error('[Groups] Delete error:', err);
-            showAlert('<?= __('admin.members.groups.error.server') ?>', 'error');
+            showAlert('<?= __('members.groups.error.server') ?>', 'error');
         });
     };
 

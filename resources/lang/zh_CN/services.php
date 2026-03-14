@@ -1,28 +1,122 @@
 <?php
 
 /**
- * Service translations - Simplified Chinese (简体中文)
+ * Services translations - zh_CN
  */
 
 return [
-    // Page
-    'title' => '服务',
-    'description' => '浏览我们的服务，选择适合您的。',
-
-    // Category
-    'all_categories' => '全部',
-
-    // Buttons
-    'view_detail' => '查看详情',
-    'book_now' => '立即预约',
-    'back_to_list' => '返回列表',
-
-    // Detail page
-    'about_service' => '关于此服务',
-    'no_description' => '暂无描述。',
-    'related_services' => '相关服务',
-
-    // CTA
-    'cta_title' => '准备预约了吗？',
-    'cta_description' => '轻松预约您想要的服务，开始您的特别体验。',
+    'title' => '服务管理',
+    'list' => '服务列表',
+    'create' => '添加服务',
+    'edit' => '编辑服务',
+    'detail' => '服务详情',
+    'fields' => [
+        'name' => '服务名称',
+        'slug' => 'URL别名',
+        'description' => '描述',
+        'short_description' => '简短描述',
+        'duration' => '时长（分钟）',
+        'price' => '价格',
+        'category' => '分类',
+        'is_active' => '启用',
+        'max_capacity' => '最大容量',
+        'buffer_time' => '缓冲时间（分钟）',
+        'advance_booking_days' => '提前预约天数',
+        'min_notice_hours' => '最短提前通知（小时）',
+    ],
+    'success' => [
+        'created' => '服务已创建。',
+        'updated' => '服务已更新。',
+        'deleted' => '服务已删除。',
+        'activated' => '服务已启用。',
+        'deactivated' => '服务已停用。',
+    ],
+    'error' => ['has_reservations' => '无法删除有预约的服务。', 'server_error' => '服务器错误。', 'generic' => '发生错误。', 'delete_failed' => '删除失败'],
+    'empty' => '没有注册的服务。',
+    'filter_all' => '全部',
+    'filter_active' => '启用',
+    'filter_inactive' => '禁用',
+    'status_active' => '启用',
+    'status_inactive' => '禁用',
+    'confirm_delete' => '确定要删除此服务吗？',
+    'actions' => '操作',
+    'minute' => '分钟',
+    'placeholder_name' => '例如：剪发、染发、美甲...',
+    'placeholder_slug' => '自动生成（字母、数字、连字符）',
+    'placeholder_description' => '服务的简要描述...',
+    'select_none' => '-- 不选择 --',
+    'no_buffer' => '无',
+    'settings' => [
+        'tabs' => ['general' => '基本设置', 'holidays' => '节假日管理'],
+        'general' => [
+            'title' => '服务基本设置',
+            'description' => '配置服务预约的默认选项。',
+            'saved' => '设置已保存。',
+            'default_duration' => '默认时长',
+            'default_buffer' => '默认缓冲时间',
+            'advance_booking_days' => '可预订期限',
+            'min_notice_hours' => '最短提前通知',
+            'max_capacity' => '默认最大容量',
+            'currency' => '货币',
+            'price_display' => '价格显示',
+            'price_show' => '显示',
+            'price_hide' => '隐藏',
+            'price_contact' => '咨询',
+            'days' => '天',
+            'hours' => '小时',
+        ],
+        'holidays' => [
+            'add_title' => '添加节假日',
+            'placeholder_title' => '例：春节、国庆节...',
+            'repeat_yearly' => '每年重复',
+            'yearly' => '每年',
+            'name' => '节假日名称',
+            'date' => '日期',
+            'status' => '状态',
+            'empty' => '暂无节假日。',
+            'required' => '请输入节假日名称和日期。',
+            'created' => '节假日已添加。',
+            'deleted' => '节假日已删除。',
+            'confirm_delete' => '确定要删除此节假日吗？',
+        ],
+    ],
+    'categories' => [
+        'title' => '分类管理',
+        'list' => '分类列表',
+        'create' => '添加分类',
+        'edit' => '编辑分类',
+        'delete' => '删除',
+        'fields' => [
+            'name' => '分类名称',
+            'slug' => 'URL别名',
+            'description' => '描述',
+            'parent' => '上级分类',
+            'sort_order' => '排序',
+            'is_active' => '启用',
+        ],
+        'success' => ['created' => '分类已创建。', 'updated' => '分类已更新。', 'deleted' => '分类已删除。', 'reordered' => '分类顺序已更新。'],
+        'error' => ['has_services' => '此分类下有服务。请先移动或删除服务。'],
+        'empty' => '没有注册的分类。',
+        'confirm_delete' => '确定要删除此分类吗？',
+        'parent_none' => '-- 无（顶级）--',
+        'multilang_save_first' => '请先保存分类，然后才能添加多语言内容。',
+        'placeholder_name' => '例如：美发、美甲、按摩...',
+        'placeholder_slug' => '自动生成',
+        'placeholder_description' => '分类描述...',
+    ],
+    'time_slots' => [
+        'title' => '时间段管理',
+        'default_slots' => '默认时间段',
+        'blocked_dates' => '禁用日期',
+        'fields' => [
+            'day_of_week' => '星期',
+            'start_time' => '开始时间',
+            'end_time' => '结束时间',
+            'max_bookings' => '最大预约数',
+            'service' => '服务',
+            'specific_date' => '特定日期',
+        ],
+        'block_date' => '禁用日期',
+        'unblock_date' => '启用日期',
+    ],
 ];

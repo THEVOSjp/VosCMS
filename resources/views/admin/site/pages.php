@@ -53,7 +53,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
         <main class="flex-1 ml-64">
             <!-- Top Bar -->
             <?php
-            $pageHeaderTitle = __('admin.site.pages.title');
+            $pageHeaderTitle = __('site.pages.title');
             include __DIR__ . '/../partials/admin-topbar.php';
             ?>
 
@@ -69,10 +69,10 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                 <div class="mb-6">
                 <?php
                 $headerIcon = 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z';
-                $headerTitle = __('admin.site.pages.title');
-                $headerDescription = __('admin.site.pages.description');
+                $headerTitle = __('site.pages.title');
+                $headerDescription = __('site.pages.description');
                 $headerIconColor = '';
-                $headerActions = '<button class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition flex items-center"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>' . __('admin.site.pages.add') . '</button>';
+                $headerActions = '<button class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition flex items-center"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>' . __('site.pages.add') . '</button>';
                 include __DIR__ . '/../components/settings-header.php';
                 ?>
                 </div>
@@ -80,7 +80,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                 <!-- Page List -->
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm transition-colors">
                     <div class="p-4 border-b border-zinc-200 dark:border-zinc-700">
-                        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.site.pages.list') ?></h2>
+                        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('site.pages.list') ?></h2>
                     </div>
 
                     <!-- Default Pages -->
@@ -93,13 +93,13 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                     </svg>
                                 </div>
                                 <div>
-                                    <h4 class="font-medium text-zinc-900 dark:text-white"><?= __('admin.site.pages.home') ?></h4>
+                                    <h4 class="font-medium text-zinc-900 dark:text-white"><?= __('site.pages.home') ?></h4>
                                     <p class="text-sm text-zinc-500 dark:text-zinc-400">/</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-medium px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded"><?= __('admin.site.pages.type_widget') ?></span>
-                                <span class="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('admin.site.pages.system_page') ?></span>
+                                <span class="text-xs font-medium px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded"><?= __('site.pages.type_widget') ?></span>
+                                <span class="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('site.pages.system_page') ?></span>
                                 <a href="<?= $adminUrl ?>/site/pages/widget-builder"
                                    class="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition">
                                     <?= __('admin.buttons.edit') ?>
@@ -115,13 +115,13 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                     </svg>
                                 </div>
                                 <div>
-                                    <h4 class="font-medium text-zinc-900 dark:text-white"><?= __('admin.site.pages.terms') ?></h4>
+                                    <h4 class="font-medium text-zinc-900 dark:text-white"><?= __('site.pages.terms') ?></h4>
                                     <p class="text-sm text-zinc-500 dark:text-zinc-400">/terms</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-medium px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"><?= __('admin.site.pages.type_document') ?></span>
-                                <span class="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('admin.site.pages.system_page') ?></span>
+                                <span class="text-xs font-medium px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"><?= __('site.pages.type_document') ?></span>
+                                <span class="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('site.pages.system_page') ?></span>
                                 <a href="<?= $adminUrl ?>/site/pages/edit?slug=terms"
                                    class="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition">
                                     <?= __('admin.buttons.edit') ?>
@@ -137,13 +137,13 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                     </svg>
                                 </div>
                                 <div>
-                                    <h4 class="font-medium text-zinc-900 dark:text-white"><?= __('admin.site.pages.privacy') ?></h4>
+                                    <h4 class="font-medium text-zinc-900 dark:text-white"><?= __('site.pages.privacy') ?></h4>
                                     <p class="text-sm text-zinc-500 dark:text-zinc-400">/privacy</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-medium px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"><?= __('admin.site.pages.type_document') ?></span>
-                                <span class="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('admin.site.pages.system_page') ?></span>
+                                <span class="text-xs font-medium px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"><?= __('site.pages.type_document') ?></span>
+                                <span class="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('site.pages.system_page') ?></span>
                                 <a href="<?= $adminUrl ?>/site/pages/edit?slug=privacy"
                                    class="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition">
                                     <?= __('admin.buttons.edit') ?>
@@ -160,13 +160,13 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                     </svg>
                                 </div>
                                 <div>
-                                    <h4 class="font-medium text-zinc-900 dark:text-white"><?= __('admin.site.pages.data_policy') ?></h4>
+                                    <h4 class="font-medium text-zinc-900 dark:text-white"><?= __('site.pages.data_policy') ?></h4>
                                     <p class="text-sm text-zinc-500 dark:text-zinc-400">/data-policy</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-medium px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"><?= __('admin.site.pages.type_document') ?></span>
-                                <span class="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('admin.site.pages.system_page') ?></span>
+                                <span class="text-xs font-medium px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"><?= __('site.pages.type_document') ?></span>
+                                <span class="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('site.pages.system_page') ?></span>
                                 <a href="<?= $adminUrl ?>/site/pages/compliance"
                                    class="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition">
                                     <?= __('admin.buttons.edit') ?>
@@ -183,13 +183,13 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                     </svg>
                                 </div>
                                 <div>
-                                    <h4 class="font-medium text-zinc-900 dark:text-white"><?= __('admin.site.pages.refund_policy') ?></h4>
+                                    <h4 class="font-medium text-zinc-900 dark:text-white"><?= __('site.pages.refund_policy') ?></h4>
                                     <p class="text-sm text-zinc-500 dark:text-zinc-400">/refund-policy</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-medium px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"><?= __('admin.site.pages.type_document') ?></span>
-                                <span class="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('admin.site.pages.system_page') ?></span>
+                                <span class="text-xs font-medium px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"><?= __('site.pages.type_document') ?></span>
+                                <span class="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded"><?= __('site.pages.system_page') ?></span>
                                 <a href="<?= $adminUrl ?>/site/pages/edit?slug=refund-policy"
                                    class="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition">
                                     <?= __('admin.buttons.edit') ?>
@@ -203,8 +203,8 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                         <svg class="w-12 h-12 mx-auto mb-4 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.site.pages.empty') ?></p>
-                        <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1"><?= __('admin.site.pages.empty_hint') ?></p>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('site.pages.empty') ?></p>
+                        <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1"><?= __('site.pages.empty_hint') ?></p>
                     </div>
                 </div>
             </div>

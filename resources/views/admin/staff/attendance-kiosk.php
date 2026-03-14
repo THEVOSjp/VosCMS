@@ -18,7 +18,7 @@ $attendanceUrl = $adminUrl . '/staff/attendance';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= __('admin.staff.attendance.kiosk_title') ?> - <?= htmlspecialchars($appName) ?></title>
+    <title><?= __('staff.attendance.kiosk_title') ?> - <?= htmlspecialchars($appName) ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
@@ -58,8 +58,8 @@ $attendanceUrl = $adminUrl . '/staff/attendance';
                 </div>
                 <div class="absolute inset-0 w-32 h-32 rounded-full border-2 border-purple-400/50 pulse-ring"></div>
             </div>
-            <p class="text-2xl text-white mt-8 font-medium"><?= __('admin.staff.attendance.kiosk_scan') ?></p>
-            <p class="text-zinc-500 mt-2 text-sm"><?= __('admin.staff.attendance.kiosk_scan_desc') ?></p>
+            <p class="text-2xl text-white mt-8 font-medium"><?= __('staff.attendance.kiosk_scan') ?></p>
+            <p class="text-zinc-500 mt-2 text-sm"><?= __('staff.attendance.kiosk_scan_desc') ?></p>
         </div>
 
         <!-- 성공 상태 -->
@@ -90,7 +90,7 @@ $attendanceUrl = $adminUrl . '/staff/attendance';
 
     <!-- 하단: 관리자 링크 -->
     <div class="absolute bottom-6 flex items-center gap-4">
-        <a href="<?= $attendanceUrl ?>" class="text-xs text-zinc-600 hover:text-zinc-400 cursor-pointer"><?= __('admin.staff.attendance.kiosk_exit') ?></a>
+        <a href="<?= $attendanceUrl ?>" class="text-xs text-zinc-600 hover:text-zinc-400 cursor-pointer"><?= __('staff.attendance.kiosk_exit') ?></a>
         <span class="text-zinc-700">|</span>
         <span class="text-xs text-zinc-700"><?= htmlspecialchars($appName) ?></span>
     </div>

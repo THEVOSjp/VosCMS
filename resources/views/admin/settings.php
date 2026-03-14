@@ -249,7 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute(['og_image', $ogImage]);
                 }
 
-                $message = __('admin.settings.seo.success');
+                $message = __('settings.seo.success');
                 $messageType = 'success';
 
                 // 설정 다시 로드
@@ -368,7 +368,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            $message = __('admin.settings.pwa.success');
+            $message = __('settings.pwa.success');
             $messageType = 'success';
 
             // 설정 다시 로드
@@ -397,7 +397,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("DELETE FROM rzx_settings WHERE `key` = ?");
             $stmt->execute(['pwa_front_icon']);
             unset($settings['pwa_front_icon']);
-            $message = __('admin.settings.pwa.icon_deleted');
+            $message = __('settings.pwa.icon_deleted');
             $messageType = 'success';
         } catch (PDOException $e) {
             $message = '삭제 실패: ' . $e->getMessage();
@@ -413,7 +413,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("DELETE FROM rzx_settings WHERE `key` = ?");
             $stmt->execute(['pwa_admin_icon']);
             unset($settings['pwa_admin_icon']);
-            $message = __('admin.settings.pwa.icon_deleted');
+            $message = __('settings.pwa.icon_deleted');
             $messageType = 'success';
         } catch (PDOException $e) {
             $message = '삭제 실패: ' . $e->getMessage();
@@ -476,7 +476,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
         <main class="flex-1 ml-64">
             <!-- Top Bar -->
             <header class="bg-white dark:bg-zinc-800 shadow-sm h-16 flex items-center justify-between px-6 transition-colors">
-                <h1 class="text-xl font-semibold text-zinc-900 dark:text-white"><?= __('admin.settings.title') ?></h1>
+                <h1 class="text-xl font-semibold text-zinc-900 dark:text-white"><?= __('settings.title') ?></h1>
                 <div class="flex items-center space-x-4">
                     <!-- Language Selector -->
                     <div class="relative">
@@ -535,16 +535,16 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                 <!-- Admin Path Settings -->
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
-                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.admin_path.title') ?></h2>
+                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.admin_path.title') ?></h2>
                     <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                        <?= __('admin.settings.admin_path.description') ?><br>
-                        <?= __('admin.settings.admin_path.current_url') ?>: <code class="bg-zinc-100 dark:bg-zinc-700 px-2 py-1 rounded text-blue-600 dark:text-blue-400"><?php echo htmlspecialchars($config['app_url'] ?? ''); ?>/<?php echo htmlspecialchars($settings['admin_path'] ?? 'admin'); ?>/</code>
+                        <?= __('settings.admin_path.description') ?><br>
+                        <?= __('settings.admin_path.current_url') ?>: <code class="bg-zinc-100 dark:bg-zinc-700 px-2 py-1 rounded text-blue-600 dark:text-blue-400"><?php echo htmlspecialchars($config['app_url'] ?? ''); ?>/<?php echo htmlspecialchars($settings['admin_path'] ?? 'admin'); ?>/</code>
                     </p>
 
                     <form method="POST" class="space-y-4">
                         <input type="hidden" name="action" value="update_admin_path">
                         <div>
-                            <label for="admin_path" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.admin_path.label') ?></label>
+                            <label for="admin_path" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.admin_path.label') ?></label>
                             <div class="flex items-center space-x-2">
                                 <span class="text-zinc-500 dark:text-zinc-400">/</span>
                                 <input type="text" name="admin_path" id="admin_path"
@@ -555,17 +555,17 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                        required>
                                 <span class="text-zinc-500 dark:text-zinc-400">/</span>
                             </div>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.admin_path.hint') ?></p>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.admin_path.hint') ?></p>
                         </div>
                         <div class="flex items-center justify-between pt-4 border-t dark:border-zinc-700">
                             <p class="text-sm text-amber-600">
                                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                                 </svg>
-                                <?= __('admin.settings.admin_path.warning') ?>
+                                <?= __('settings.admin_path.warning') ?>
                             </p>
                             <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
-                                <?= __('admin.settings.admin_path.button') ?>
+                                <?= __('settings.admin_path.button') ?>
                             </button>
                         </div>
                     </form>
@@ -573,20 +573,20 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                 <!-- Site Settings -->
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
-                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.site.title') ?></h2>
+                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.site.title') ?></h2>
                     <form method="POST" enctype="multipart/form-data" class="space-y-6">
                         <input type="hidden" name="action" value="update_site_settings">
 
                         <!-- 사이트 분류 -->
                         <div>
-                            <label for="site_category" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.site.category_label') ?></label>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.site.category_description') ?></p>
+                            <label for="site_category" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.category_label') ?></label>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.site.category_description') ?></p>
                             <?php
                             $currentCategory = $settings['site_category'] ?? '';
                             $categoryKeys = ['beauty_salon', 'nail_salon', 'skincare', 'massage', 'hospital', 'dental', 'studio', 'restaurant', 'accommodation', 'sports', 'education', 'consulting', 'pet', 'car', 'other'];
-                            $categories = ['' => __('admin.settings.site.category_placeholder')];
+                            $categories = ['' => __('settings.site.category_placeholder')];
                             foreach ($categoryKeys as $key) {
-                                $categories[$key] = __('admin.settings.site.categories.' . $key);
+                                $categories[$key] = __('settings.site.categories.' . $key);
                             }
                             ?>
                             <select name="site_category" id="site_category"
@@ -602,7 +602,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- 사이트 이름 (다국어 지원) -->
                             <div>
-                                <label for="site_name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.site.name') ?></label>
+                                <label for="site_name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.name') ?></label>
                                 <div class="flex items-center gap-2">
                                     <input type="text" name="site_name" id="site_name"
                                            value="<?php echo htmlspecialchars($settings['site_name'] ?? ''); ?>"
@@ -611,7 +611,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                 </div>
                             </div>
                             <div>
-                                <label for="site_url" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.site.url') ?></label>
+                                <label for="site_url" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.url') ?></label>
                                 <input type="url" name="site_url" id="site_url"
                                        value="<?php echo htmlspecialchars($settings['site_url'] ?? ''); ?>"
                                        class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -620,57 +620,57 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                         <!-- 사이트 제목 (다국어 지원) -->
                         <div>
-                            <label for="site_tagline" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.site.tagline') ?></label>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.site.tagline_hint') ?></p>
+                            <label for="site_tagline" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.tagline') ?></label>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.site.tagline_hint') ?></p>
                             <div class="flex items-center gap-2">
                                 <input type="text" name="site_tagline" id="site_tagline"
                                        value="<?php echo htmlspecialchars($settings['site_tagline'] ?? ''); ?>"
                                        class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                       placeholder="<?= __('admin.settings.multilang.placeholder') ?>">
+                                       placeholder="<?= __('settings.multilang.placeholder') ?>">
                                 <?= rzx_multilang_btn("openMultilangModal('site.tagline', 'site_tagline')") ?>
                             </div>
                         </div>
 
                         <!-- 로고 설정 -->
                         <div class="border-t dark:border-zinc-700 pt-6">
-                            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.logo.title') ?></h3>
+                            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.logo.title') ?></h3>
 
                             <!-- 로고 형식 선택 -->
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.settings.logo.type_label') ?></label>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('settings.logo.type_label') ?></label>
                                 <div class="flex flex-wrap gap-4">
                                     <?php $currentLogoType = $settings['logo_type'] ?? 'text'; ?>
                                     <label class="flex items-center cursor-pointer">
                                         <input type="radio" name="logo_type" value="text"
                                                <?php echo $currentLogoType === 'text' ? 'checked' : ''; ?>
                                                class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.settings.logo.type_text') ?></span>
+                                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.logo.type_text') ?></span>
                                     </label>
                                     <label class="flex items-center cursor-pointer">
                                         <input type="radio" name="logo_type" value="image"
                                                <?php echo $currentLogoType === 'image' ? 'checked' : ''; ?>
                                                class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.settings.logo.type_image') ?></span>
+                                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.logo.type_image') ?></span>
                                     </label>
                                     <label class="flex items-center cursor-pointer">
                                         <input type="radio" name="logo_type" value="image_text"
                                                <?php echo $currentLogoType === 'image_text' ? 'checked' : ''; ?>
                                                class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.settings.logo.type_image_text') ?></span>
+                                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.logo.type_image_text') ?></span>
                                     </label>
                                 </div>
                             </div>
 
                             <!-- 로고 이미지 업로드 -->
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.settings.logo.image_label') ?></label>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('settings.logo.image_label') ?></label>
 
                                 <?php if (!empty($settings['logo_image'])): ?>
                                 <!-- 현재 로고 미리보기 -->
                                 <div class="mb-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg inline-block">
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.logo.current') ?>:</p>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.logo.current') ?>:</p>
                                     <img src="<?php echo $baseUrl . htmlspecialchars($settings['logo_image']); ?>"
-                                         alt="<?= __('admin.settings.logo.current') ?>" class="max-h-16 object-contain">
+                                         alt="<?= __('settings.logo.current') ?>" class="max-h-16 object-contain">
                                 </div>
                                 <?php endif; ?>
 
@@ -686,7 +686,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                                       dark:file:bg-blue-900/30 dark:file:text-blue-400
                                                       hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50
                                                       cursor-pointer">
-                                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.logo.hint') ?></p>
+                                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400"><?= __('settings.logo.hint') ?></p>
                                     </div>
 
                                     <?php if (!empty($settings['logo_image'])): ?>
@@ -694,23 +694,23 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                         <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
-                                        <?= __('admin.settings.logo.delete') ?>
+                                        <?= __('settings.logo.delete') ?>
                                     </button>
                                     <?php endif; ?>
                                 </div>
 
                                 <!-- 이미지 미리보기 -->
                                 <div id="logoPreview" class="mt-3 hidden">
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.logo.preview') ?>:</p>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.logo.preview') ?>:</p>
                                     <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg inline-block">
-                                        <img id="logoPreviewImg" src="" alt="<?= __('admin.settings.logo.preview') ?>" class="max-h-16 object-contain">
+                                        <img id="logoPreviewImg" src="" alt="<?= __('settings.logo.preview') ?>" class="max-h-16 object-contain">
                                     </div>
                                 </div>
                             </div>
 
                             <!-- 로고 미리보기 (실제 표시 형태) -->
                             <div class="p-4 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.logo.display_preview') ?>:</p>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.logo.display_preview') ?>:</p>
                                 <div id="logoDisplayPreview" class="flex items-center text-xl font-bold text-blue-600 dark:text-blue-400">
                                     <?php
                                     $logoType = $settings['logo_type'] ?? 'text';
@@ -892,20 +892,20 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                 <!-- SEO Settings -->
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
-                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"><?= __('admin.settings.seo.title') ?></h2>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6"><?= __('admin.settings.seo.description') ?></p>
+                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"><?= __('settings.seo.title') ?></h2>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6"><?= __('settings.seo.description') ?></p>
 
                     <form method="POST" enctype="multipart/form-data" class="space-y-6">
                         <input type="hidden" name="action" value="update_seo_settings">
 
                         <!-- 메타 태그 섹션 -->
                         <div class="border-b dark:border-zinc-700 pb-6">
-                            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.seo.meta.title') ?></h3>
+                            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.meta.title') ?></h3>
 
                             <!-- 메타 설명 (다국어 지원) -->
                             <div class="mb-4">
-                                <label for="seo_description" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.seo.meta.description_label') ?></label>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.meta.description_hint') ?></p>
+                                <label for="seo_description" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.seo.meta.description_label') ?></label>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.meta.description_hint') ?></p>
                                 <div class="flex items-start gap-2">
                                     <textarea name="seo_description" id="seo_description" rows="3"
                                               class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -917,13 +917,13 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                             <!-- 메타 키워드 (다국어 지원) -->
                             <div>
-                                <label for="seo_keywords" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.seo.meta.keywords_label') ?></label>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.meta.keywords_hint') ?></p>
+                                <label for="seo_keywords" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.seo.meta.keywords_label') ?></label>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.meta.keywords_hint') ?></p>
                                 <div class="flex items-center gap-2">
                                     <input type="text" name="seo_keywords" id="seo_keywords"
                                            value="<?php echo htmlspecialchars($settings['seo_keywords'] ?? ''); ?>"
                                            class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                           placeholder="<?= __('admin.settings.seo.meta.keywords_placeholder') ?>">
+                                           placeholder="<?= __('settings.seo.meta.keywords_placeholder') ?>">
                                     <?= rzx_multilang_btn("openMultilangModal('seo.keywords', 'seo_keywords')") ?>
                                 </div>
                             </div>
@@ -931,16 +931,16 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                         <!-- 소셜 미디어 (Open Graph) 섹션 -->
                         <div class="border-b dark:border-zinc-700 pb-6">
-                            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-2"><?= __('admin.settings.seo.og.title') ?></h3>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4"><?= __('admin.settings.seo.og.description') ?></p>
+                            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-2"><?= __('settings.seo.og.title') ?></h3>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4"><?= __('settings.seo.og.description') ?></p>
 
                             <!-- OG 이미지 -->
                             <div>
-                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.settings.seo.og.image_label') ?></label>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('settings.seo.og.image_label') ?></label>
 
                                 <?php if (!empty($settings['og_image'])): ?>
                                 <div class="mb-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg inline-block">
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.og.image_current') ?>:</p>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.og.image_current') ?>:</p>
                                     <img src="<?php echo $baseUrl . htmlspecialchars($settings['og_image']); ?>"
                                          alt="OG Image" class="max-h-32 object-contain rounded">
                                 </div>
@@ -958,7 +958,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                                       dark:file:bg-blue-900/30 dark:file:text-blue-400
                                                       hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50
                                                       cursor-pointer">
-                                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.seo.og.image_hint') ?></p>
+                                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400"><?= __('settings.seo.og.image_hint') ?></p>
                                     </div>
 
                                     <?php if (!empty($settings['og_image'])): ?>
@@ -966,14 +966,14 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                                         <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
-                                        <?= __('admin.settings.seo.og.image_delete') ?>
+                                        <?= __('settings.seo.og.image_delete') ?>
                                     </button>
                                     <?php endif; ?>
                                 </div>
 
                                 <!-- OG 이미지 미리보기 -->
                                 <div id="ogImagePreview" class="mt-3 hidden">
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.og.image_preview') ?>:</p>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.og.image_preview') ?>:</p>
                                     <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg inline-block">
                                         <img id="ogImagePreviewImg" src="" alt="Preview" class="max-h-32 object-contain rounded">
                                     </div>
@@ -983,25 +983,25 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                         <!-- 검색 엔진 설정 섹션 -->
                         <div class="border-b dark:border-zinc-700 pb-6">
-                            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.seo.search_engine.title') ?></h3>
+                            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.search_engine.title') ?></h3>
 
                             <!-- Robots 설정 -->
                             <div>
-                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.settings.seo.search_engine.robots_label') ?></label>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.search_engine.robots_hint') ?></p>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('settings.seo.search_engine.robots_label') ?></label>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.search_engine.robots_hint') ?></p>
                                 <?php $currentRobots = $settings['seo_robots'] ?? 'index'; ?>
                                 <div class="flex flex-wrap gap-4">
                                     <label class="flex items-center cursor-pointer">
                                         <input type="radio" name="seo_robots" value="index"
                                                <?php echo $currentRobots === 'index' ? 'checked' : ''; ?>
                                                class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.settings.seo.search_engine.robots_index') ?></span>
+                                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.seo.search_engine.robots_index') ?></span>
                                     </label>
                                     <label class="flex items-center cursor-pointer">
                                         <input type="radio" name="seo_robots" value="noindex"
                                                <?php echo $currentRobots === 'noindex' ? 'checked' : ''; ?>
                                                class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.settings.seo.search_engine.robots_noindex') ?></span>
+                                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.seo.search_engine.robots_noindex') ?></span>
                                     </label>
                                 </div>
                             </div>
@@ -1009,54 +1009,54 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                         <!-- 웹마스터 도구 인증 섹션 -->
                         <div class="border-b dark:border-zinc-700 pb-6">
-                            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.seo.webmaster.title') ?></h3>
+                            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.webmaster.title') ?></h3>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <!-- Google Search Console -->
                                 <div>
-                                    <label for="google_verification" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.seo.webmaster.google_label') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.webmaster.google_hint') ?></p>
+                                    <label for="google_verification" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.seo.webmaster.google_label') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.webmaster.google_hint') ?></p>
                                     <input type="text" name="google_verification" id="google_verification"
                                            value="<?php echo htmlspecialchars($settings['google_verification'] ?? ''); ?>"
                                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                           placeholder="<?= __('admin.settings.seo.webmaster.google_placeholder') ?>">
+                                           placeholder="<?= __('settings.seo.webmaster.google_placeholder') ?>">
                                 </div>
 
                                 <!-- 네이버 웹마스터 -->
                                 <div>
-                                    <label for="naver_verification" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.seo.webmaster.naver_label') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.webmaster.naver_hint') ?></p>
+                                    <label for="naver_verification" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.seo.webmaster.naver_label') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.webmaster.naver_hint') ?></p>
                                     <input type="text" name="naver_verification" id="naver_verification"
                                            value="<?php echo htmlspecialchars($settings['naver_verification'] ?? ''); ?>"
                                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                           placeholder="<?= __('admin.settings.seo.webmaster.naver_placeholder') ?>">
+                                           placeholder="<?= __('settings.seo.webmaster.naver_placeholder') ?>">
                                 </div>
                             </div>
                         </div>
 
                         <!-- 분석 도구 연동 섹션 -->
                         <div>
-                            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.seo.analytics.title') ?></h3>
+                            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.analytics.title') ?></h3>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <!-- Google Analytics -->
                                 <div>
-                                    <label for="ga_tracking_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.seo.analytics.ga_label') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.analytics.ga_hint') ?></p>
+                                    <label for="ga_tracking_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.seo.analytics.ga_label') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.analytics.ga_hint') ?></p>
                                     <input type="text" name="ga_tracking_id" id="ga_tracking_id"
                                            value="<?php echo htmlspecialchars($settings['ga_tracking_id'] ?? ''); ?>"
                                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                           placeholder="<?= __('admin.settings.seo.analytics.ga_placeholder') ?>">
+                                           placeholder="<?= __('settings.seo.analytics.ga_placeholder') ?>">
                                 </div>
 
                                 <!-- Google Tag Manager -->
                                 <div>
-                                    <label for="gtm_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.seo.analytics.gtm_label') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.analytics.gtm_hint') ?></p>
+                                    <label for="gtm_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.seo.analytics.gtm_label') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.analytics.gtm_hint') ?></p>
                                     <input type="text" name="gtm_id" id="gtm_id"
                                            value="<?php echo htmlspecialchars($settings['gtm_id'] ?? ''); ?>"
                                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                           placeholder="<?= __('admin.settings.seo.analytics.gtm_placeholder') ?>">
+                                           placeholder="<?= __('settings.seo.analytics.gtm_placeholder') ?>">
                                 </div>
                             </div>
                         </div>
@@ -1071,8 +1071,8 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                 <!-- PWA Settings -->
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
-                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"><?= __('admin.settings.pwa.title') ?></h2>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6"><?= __('admin.settings.pwa.description') ?></p>
+                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"><?= __('settings.pwa.title') ?></h2>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6"><?= __('settings.pwa.description') ?></p>
 
                     <form method="POST" enctype="multipart/form-data" class="space-y-8">
                         <input type="hidden" name="action" value="update_pwa_settings">
@@ -1081,8 +1081,8 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                         <div class="border dark:border-zinc-700 rounded-lg p-6">
                             <div class="flex items-center justify-between mb-4">
                                 <div>
-                                    <h3 class="text-md font-semibold text-zinc-900 dark:text-white"><?= __('admin.settings.pwa.front.title') ?></h3>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.pwa.front.description') ?></p>
+                                    <h3 class="text-md font-semibold text-zinc-900 dark:text-white"><?= __('settings.pwa.front.title') ?></h3>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('settings.pwa.front.description') ?></p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" name="pwa_front_enabled" value="1"
@@ -1095,8 +1095,8 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <!-- 앱 이름 -->
                                 <div>
-                                    <label for="pwa_front_name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.pwa.front.app_name') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.pwa.front.app_name_hint') ?></p>
+                                    <label for="pwa_front_name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.pwa.front.app_name') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.pwa.front.app_name_hint') ?></p>
                                     <input type="text" name="pwa_front_name" id="pwa_front_name"
                                            value="<?php echo htmlspecialchars($settings['pwa_front_name'] ?? 'RezlyX'); ?>"
                                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -1104,8 +1104,8 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                                 <!-- 짧은 이름 -->
                                 <div>
-                                    <label for="pwa_front_short_name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.pwa.front.short_name') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.pwa.front.short_name_hint') ?></p>
+                                    <label for="pwa_front_short_name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.pwa.front.short_name') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.pwa.front.short_name_hint') ?></p>
                                     <input type="text" name="pwa_front_short_name" id="pwa_front_short_name" maxlength="12"
                                            value="<?php echo htmlspecialchars($settings['pwa_front_short_name'] ?? 'RezlyX'); ?>"
                                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -1113,8 +1113,8 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                                 <!-- 앱 설명 -->
                                 <div class="md:col-span-2">
-                                    <label for="pwa_front_description" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.pwa.front.app_description') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.pwa.front.app_description_hint') ?></p>
+                                    <label for="pwa_front_description" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.pwa.front.app_description') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.pwa.front.app_description_hint') ?></p>
                                     <input type="text" name="pwa_front_description" id="pwa_front_description"
                                            value="<?php echo htmlspecialchars($settings['pwa_front_description'] ?? ''); ?>"
                                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -1122,8 +1122,8 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                                 <!-- 테마 색상 -->
                                 <div>
-                                    <label for="pwa_front_theme_color" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.pwa.front.theme_color') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.pwa.front.theme_color_hint') ?></p>
+                                    <label for="pwa_front_theme_color" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.pwa.front.theme_color') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.pwa.front.theme_color_hint') ?></p>
                                     <div class="flex items-center gap-2">
                                         <input type="color" name="pwa_front_theme_color" id="pwa_front_theme_color"
                                                value="<?php echo htmlspecialchars($settings['pwa_front_theme_color'] ?? '#3b82f6'); ?>"
@@ -1137,8 +1137,8 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                                 <!-- 배경 색상 -->
                                 <div>
-                                    <label for="pwa_front_bg_color" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.pwa.front.background_color') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.pwa.front.background_color_hint') ?></p>
+                                    <label for="pwa_front_bg_color" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.pwa.front.background_color') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.pwa.front.background_color_hint') ?></p>
                                     <div class="flex items-center gap-2">
                                         <input type="color" name="pwa_front_bg_color" id="pwa_front_bg_color"
                                                value="<?php echo htmlspecialchars($settings['pwa_front_bg_color'] ?? '#ffffff'); ?>"
@@ -1152,12 +1152,12 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                                 <!-- 앱 아이콘 -->
                                 <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.pwa.front.icon') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.pwa.front.icon_hint') ?></p>
+                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.pwa.front.icon') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.pwa.front.icon_hint') ?></p>
 
                                     <?php if (!empty($settings['pwa_front_icon'])): ?>
                                     <div class="mb-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg inline-block">
-                                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.pwa.front.icon_current') ?>:</p>
+                                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.pwa.front.icon_current') ?>:</p>
                                         <img src="<?php echo $baseUrl . htmlspecialchars($settings['pwa_front_icon']); ?>"
                                              alt="Front Icon" class="w-16 h-16 object-contain rounded">
                                     </div>
@@ -1184,7 +1184,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                                     <!-- 새 아이콘 미리보기 -->
                                     <div id="pwaFrontIconPreview" class="mt-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg inline-block hidden">
-                                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.pwa.front.icon_preview') ?>:</p>
+                                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.pwa.front.icon_preview') ?>:</p>
                                         <img id="pwaFrontIconPreviewImg" src="" alt="New Icon Preview" class="w-16 h-16 object-contain rounded">
                                     </div>
                                 </div>
@@ -1195,8 +1195,8 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                         <div class="border dark:border-zinc-700 rounded-lg p-6">
                             <div class="flex items-center justify-between mb-4">
                                 <div>
-                                    <h3 class="text-md font-semibold text-zinc-900 dark:text-white"><?= __('admin.settings.pwa.admin.title') ?></h3>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.pwa.admin.description') ?></p>
+                                    <h3 class="text-md font-semibold text-zinc-900 dark:text-white"><?= __('settings.pwa.admin.title') ?></h3>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('settings.pwa.admin.description') ?></p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" name="pwa_admin_enabled" value="1"
@@ -1209,8 +1209,8 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <!-- 앱 이름 -->
                                 <div>
-                                    <label for="pwa_admin_name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.pwa.admin.app_name') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.pwa.admin.app_name_hint') ?></p>
+                                    <label for="pwa_admin_name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.pwa.admin.app_name') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.pwa.admin.app_name_hint') ?></p>
                                     <input type="text" name="pwa_admin_name" id="pwa_admin_name"
                                            value="<?php echo htmlspecialchars($settings['pwa_admin_name'] ?? 'RezlyX Admin'); ?>"
                                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -1218,8 +1218,8 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                                 <!-- 짧은 이름 -->
                                 <div>
-                                    <label for="pwa_admin_short_name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.pwa.admin.short_name') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.pwa.admin.short_name_hint') ?></p>
+                                    <label for="pwa_admin_short_name" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.pwa.admin.short_name') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.pwa.admin.short_name_hint') ?></p>
                                     <input type="text" name="pwa_admin_short_name" id="pwa_admin_short_name" maxlength="12"
                                            value="<?php echo htmlspecialchars($settings['pwa_admin_short_name'] ?? 'Admin'); ?>"
                                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -1227,8 +1227,8 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                                 <!-- 테마 색상 -->
                                 <div>
-                                    <label for="pwa_admin_theme_color" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.pwa.admin.theme_color') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.pwa.admin.theme_color_hint') ?></p>
+                                    <label for="pwa_admin_theme_color" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.pwa.admin.theme_color') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.pwa.admin.theme_color_hint') ?></p>
                                     <div class="flex items-center gap-2">
                                         <input type="color" name="pwa_admin_theme_color" id="pwa_admin_theme_color"
                                                value="<?php echo htmlspecialchars($settings['pwa_admin_theme_color'] ?? '#18181b'); ?>"
@@ -1242,8 +1242,8 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                                 <!-- 배경 색상 -->
                                 <div>
-                                    <label for="pwa_admin_bg_color" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.pwa.admin.background_color') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.pwa.admin.background_color_hint') ?></p>
+                                    <label for="pwa_admin_bg_color" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.pwa.admin.background_color') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.pwa.admin.background_color_hint') ?></p>
                                     <div class="flex items-center gap-2">
                                         <input type="color" name="pwa_admin_bg_color" id="pwa_admin_bg_color"
                                                value="<?php echo htmlspecialchars($settings['pwa_admin_bg_color'] ?? '#18181b'); ?>"
@@ -1257,12 +1257,12 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                                 <!-- 앱 아이콘 -->
                                 <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.pwa.admin.icon') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.pwa.admin.icon_hint') ?></p>
+                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.pwa.admin.icon') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.pwa.admin.icon_hint') ?></p>
 
                                     <?php if (!empty($settings['pwa_admin_icon'])): ?>
                                     <div class="mb-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg inline-block">
-                                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.pwa.admin.icon_current') ?>:</p>
+                                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.pwa.admin.icon_current') ?>:</p>
                                         <img src="<?php echo $baseUrl . htmlspecialchars($settings['pwa_admin_icon']); ?>"
                                              alt="Admin Icon" class="w-16 h-16 object-contain rounded">
                                     </div>
@@ -1289,7 +1289,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                                     <!-- 새 아이콘 미리보기 -->
                                     <div id="pwaAdminIconPreview" class="mt-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg inline-block hidden">
-                                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.pwa.admin.icon_preview') ?>:</p>
+                                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.pwa.admin.icon_preview') ?>:</p>
                                         <img id="pwaAdminIconPreviewImg" src="" alt="New Icon Preview" class="w-16 h-16 object-contain rounded">
                                     </div>
                                 </div>
@@ -1306,23 +1306,23 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                 <!-- System Info -->
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
-                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.system_info.title') ?></h2>
+                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.system_info.title') ?></h2>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
-                            <span class="text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.system_info.php_version') ?></span>
+                            <span class="text-zinc-500 dark:text-zinc-400"><?= __('settings.system_info.php_version') ?></span>
                             <p class="font-medium text-zinc-900 dark:text-white"><?php echo PHP_VERSION; ?></p>
                         </div>
                         <div>
-                            <span class="text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.system_info.environment') ?></span>
+                            <span class="text-zinc-500 dark:text-zinc-400"><?= __('settings.system_info.environment') ?></span>
                             <p class="font-medium text-zinc-900 dark:text-white"><?php echo $_ENV['APP_ENV'] ?? 'local'; ?></p>
                         </div>
                         <div>
-                            <span class="text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.system_info.timezone') ?></span>
+                            <span class="text-zinc-500 dark:text-zinc-400"><?= __('settings.system_info.timezone') ?></span>
                             <p class="font-medium text-zinc-900 dark:text-white"><?php echo $_ENV['APP_TIMEZONE'] ?? 'Asia/Seoul'; ?></p>
                         </div>
                         <div>
-                            <span class="text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.system_info.debug_mode') ?></span>
-                            <p class="font-medium text-zinc-900 dark:text-white"><?php echo ($_ENV['APP_DEBUG'] ?? 'false') === 'true' ? __('admin.settings.system_info.enabled') : __('admin.settings.system_info.disabled'); ?></p>
+                            <span class="text-zinc-500 dark:text-zinc-400"><?= __('settings.system_info.debug_mode') ?></span>
+                            <p class="font-medium text-zinc-900 dark:text-white"><?php echo ($_ENV['APP_DEBUG'] ?? 'false') === 'true' ? __('settings.system_info.enabled') : __('settings.system_info.disabled'); ?></p>
                         </div>
                     </div>
                 </div>
@@ -1381,7 +1381,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
         // 로고 삭제
         function deleteLogo() {
-            if (confirm('<?= __('admin.settings.logo.delete_confirm') ?>')) {
+            if (confirm('<?= __('settings.logo.delete_confirm') ?>')) {
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.innerHTML = '<input type="hidden" name="action" value="delete_logo">';
@@ -1392,7 +1392,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
         // OG 이미지 삭제
         function deleteOgImage() {
-            if (confirm('<?= __('admin.settings.seo.og.image_delete_confirm') ?>')) {
+            if (confirm('<?= __('settings.seo.og.image_delete_confirm') ?>')) {
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.innerHTML = '<input type="hidden" name="action" value="delete_og_image">';
@@ -1403,7 +1403,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
         // PWA 아이콘 삭제
         function deletePwaIcon(type) {
-            const confirmMsg = '<?= __('admin.settings.logo.delete_confirm') ?>';
+            const confirmMsg = '<?= __('settings.logo.delete_confirm') ?>';
             if (confirm(confirmMsg)) {
                 const form = document.createElement('form');
                 form.method = 'POST';

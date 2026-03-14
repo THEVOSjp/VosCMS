@@ -46,13 +46,13 @@ try {
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $statusMap = [
-            'working' => __('admin.staff.attendance.status.working'),
-            'completed' => __('admin.staff.attendance.status.completed'),
-            'absent' => __('admin.staff.attendance.status.absent'),
-            'late' => __('admin.staff.attendance.status.late'),
-            'early_leave' => __('admin.staff.attendance.status.early_leave'),
-            'break' => __('admin.staff.attendance.status.break'),
-            'outside' => __('admin.staff.attendance.status.outside'),
+            'working' => __('staff.attendance.status.working'),
+            'completed' => __('staff.attendance.status.completed'),
+            'absent' => __('staff.attendance.status.absent'),
+            'late' => __('staff.attendance.status.late'),
+            'early_leave' => __('staff.attendance.status.early_leave'),
+            'break' => __('staff.attendance.status.break'),
+            'outside' => __('staff.attendance.status.outside'),
         ];
 
         header('Content-Type: text/csv; charset=utf-8');
@@ -60,15 +60,15 @@ try {
         $out = fopen('php://output', 'w');
         fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM
         fputcsv($out, [
-            __('admin.staff.attendance.col_staff'),
-            __('admin.staff.attendance.col_date'),
-            __('admin.staff.attendance.clock_in'),
-            __('admin.staff.attendance.clock_out'),
-            __('admin.staff.attendance.work_hours'),
-            __('admin.staff.attendance.break_time'),
-            __('admin.staff.attendance.col_status'),
-            __('admin.staff.attendance.col_source'),
-            __('admin.staff.attendance.col_memo'),
+            __('staff.attendance.col_staff'),
+            __('staff.attendance.col_date'),
+            __('staff.attendance.clock_in'),
+            __('staff.attendance.clock_out'),
+            __('staff.attendance.work_hours'),
+            __('staff.attendance.break_time'),
+            __('staff.attendance.col_status'),
+            __('staff.attendance.col_source'),
+            __('staff.attendance.col_memo'),
         ]);
         foreach ($rows as $r) {
             $bmVal = (int)$r['break_minutes'];
@@ -121,7 +121,7 @@ try {
     $dbError = $e->getMessage();
 }
 
-$pageTitle = __('admin.staff.attendance.report_title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('staff.attendance.report_title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 ?>
 <!DOCTYPE html>
 <html lang="<?= $config['locale'] ?? 'ko' ?>">
@@ -150,12 +150,12 @@ $pageTitle = __('admin.staff.attendance.report_title') . ' - ' . ($config['app_n
                 <!-- 헤더 -->
                 <div class="flex items-center justify-between mb-6">
                     <div>
-                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('admin.staff.attendance.report_title') ?></h1>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.staff.attendance.report_desc') ?></p>
+                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('staff.attendance.report_title') ?></h1>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('staff.attendance.report_desc') ?></p>
                     </div>
                     <div class="flex gap-2">
-                        <a href="<?= $adminUrl ?>/staff/attendance" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"><?= __('admin.staff.attendance.tab_today') ?></a>
-                        <a href="<?= $adminUrl ?>/staff/attendance/report/stats" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"><?= __('admin.staff.attendance.tab_stats') ?></a>
+                        <a href="<?= $adminUrl ?>/staff/attendance" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"><?= __('staff.attendance.tab_today') ?></a>
+                        <a href="<?= $adminUrl ?>/staff/attendance/report/stats" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"><?= __('staff.attendance.tab_stats') ?></a>
                     </div>
                 </div>
 
@@ -163,27 +163,27 @@ $pageTitle = __('admin.staff.attendance.report_title') . ' - ' . ($config['app_n
                 <div class="bg-white dark:bg-zinc-800 rounded-xl p-4 shadow-sm mb-6">
                     <form method="GET" class="flex items-end gap-4 flex-wrap">
                         <div>
-                            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.staff.attendance.filter_staff') ?></label>
+                            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('staff.attendance.filter_staff') ?></label>
                             <select name="staff_id" class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
-                                <option value=""><?= __('admin.staff.attendance.all_staff') ?></option>
+                                <option value=""><?= __('staff.attendance.all_staff') ?></option>
                                 <?php foreach ($staffList as $s): ?>
                                 <option value="<?= $s['id'] ?>" <?= $filterStaff == $s['id'] ? 'selected' : '' ?>><?= htmlspecialchars($s['name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.staff.attendance.filter_from') ?></label>
+                            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('staff.attendance.filter_from') ?></label>
                             <input type="date" name="date_from" value="<?= $filterDateFrom ?>" class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.staff.attendance.filter_to') ?></label>
+                            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('staff.attendance.filter_to') ?></label>
                             <input type="date" name="date_to" value="<?= $filterDateTo ?>" class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
                         </div>
-                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-zinc-700 hover:bg-zinc-800 dark:bg-zinc-600 dark:hover:bg-zinc-500 rounded-lg transition-colors"><?= __('admin.staff.attendance.search') ?></button>
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-zinc-700 hover:bg-zinc-800 dark:bg-zinc-600 dark:hover:bg-zinc-500 rounded-lg transition-colors"><?= __('staff.attendance.search') ?></button>
                         <a href="?staff_id=<?= $filterStaff ?>&date_from=<?= $filterDateFrom ?>&date_to=<?= $filterDateTo ?>&export=csv"
                            class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors flex items-center gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                            <?= __('admin.staff.attendance.export_csv') ?>
+                            <?= __('staff.attendance.export_csv') ?>
                         </a>
                     </form>
                 </div>
@@ -191,27 +191,27 @@ $pageTitle = __('admin.staff.attendance.report_title') . ' - ' . ($config['app_n
                 <!-- 요약 카드 -->
                 <div class="grid grid-cols-3 md:grid-cols-6 gap-4 mb-6">
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-4 shadow-sm">
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.staff.attendance.rpt_total_days') ?></p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('staff.attendance.rpt_total_days') ?></p>
                         <p class="text-2xl font-bold text-zinc-900 dark:text-white"><?= $summary['total_days'] ?></p>
                     </div>
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-4 shadow-sm">
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.staff.attendance.rpt_total_hours') ?></p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('staff.attendance.rpt_total_hours') ?></p>
                         <p class="text-2xl font-bold text-blue-600"><?= round($summary['total_hours'], 1) ?>h</p>
                     </div>
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-4 shadow-sm">
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.staff.attendance.dash_avg_hours') ?></p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('staff.attendance.dash_avg_hours') ?></p>
                         <p class="text-2xl font-bold text-cyan-600"><?= $summary['avg_hours'] ?>h</p>
                     </div>
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-4 shadow-sm">
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.staff.attendance.dash_late') ?></p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('staff.attendance.dash_late') ?></p>
                         <p class="text-2xl font-bold text-orange-600"><?= $summary['late'] ?></p>
                     </div>
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-4 shadow-sm">
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.staff.attendance.dash_early_leave') ?></p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('staff.attendance.dash_early_leave') ?></p>
                         <p class="text-2xl font-bold text-yellow-600"><?= $summary['early_leave'] ?></p>
                     </div>
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-4 shadow-sm">
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.staff.attendance.break_time') ?></p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('staff.attendance.break_time') ?></p>
                         <?php $bkm = $summary['break_min']; $bkStr = $bkm > 0 ? floor($bkm / 60) . 'h ' . ($bkm % 60) . 'm' : '0'; ?>
                         <p class="text-2xl font-bold text-amber-600"><?= $bkStr ?></p>
                     </div>
@@ -220,19 +220,19 @@ $pageTitle = __('admin.staff.attendance.report_title') . ' - ' . ($config['app_n
                 <!-- 스태프별 요약 테이블 -->
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm overflow-hidden">
                     <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-700">
-                        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.staff.attendance.rpt_staff_summary') ?> (<?= $filterDateFrom ?> ~ <?= $filterDateTo ?>)</h2>
+                        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('staff.attendance.rpt_staff_summary') ?> (<?= $filterDateFrom ?> ~ <?= $filterDateTo ?>)</h2>
                     </div>
                     <table class="w-full text-sm">
                         <thead class="bg-zinc-50 dark:bg-zinc-700/50">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.col_staff') ?></th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.dash_work_days') ?></th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.dash_total_hours') ?></th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.dash_avg_hours') ?></th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.dash_late') ?></th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.dash_early_leave') ?></th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.break_time') ?></th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.attendance.rpt_outside') ?></th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.col_staff') ?></th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.dash_work_days') ?></th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.dash_total_hours') ?></th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.dash_avg_hours') ?></th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.dash_late') ?></th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.dash_early_leave') ?></th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.break_time') ?></th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400"><?= __('staff.attendance.rpt_outside') ?></th>
                                 <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400"></th>
                             </tr>
                         </thead>
@@ -256,12 +256,12 @@ $pageTitle = __('admin.staff.attendance.report_title') . ' - ' . ($config['app_n
                                 <td class="px-4 py-3 text-center"><?php if ((int)$s['outside_count'] > 0): ?><span class="px-2 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-700"><?= (int)$s['outside_count'] ?></span><?php else: ?><span class="text-zinc-300">0</span><?php endif; ?></td>
                                 <td class="px-4 py-3 text-center">
                                     <a href="<?= $adminUrl ?>/staff/attendance/report/personal/<?= $s['id'] ?>?date_from=<?= $filterDateFrom ?>&date_to=<?= $filterDateTo ?>"
-                                       class="text-blue-600 hover:text-blue-800 text-xs font-medium"><?= __('admin.staff.attendance.rpt_detail') ?></a>
+                                       class="text-blue-600 hover:text-blue-800 text-xs font-medium"><?= __('staff.attendance.rpt_detail') ?></a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
                             <?php if (empty($reportData)): ?>
-                            <tr><td colspan="9" class="px-4 py-8 text-center text-zinc-400"><?= __('admin.staff.attendance.no_staff') ?></td></tr>
+                            <tr><td colspan="9" class="px-4 py-8 text-center text-zinc-400"><?= __('staff.attendance.no_staff') ?></td></tr>
                             <?php endif; ?>
                         </tbody>
                     </table>

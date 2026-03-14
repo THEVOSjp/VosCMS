@@ -6,20 +6,20 @@
 
 require_once __DIR__ . '/_init.php';
 
-$pageTitle = __('admin.members.settings.tabs.register') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('members.settings.tabs.register') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentMemberSettingsPage = 'register';
 
 // Available form fields
 $availableFields = [
-    'name' => __('admin.members.settings.register.fields.name'),
-    'email' => __('admin.members.settings.register.fields.email'),
-    'password' => __('admin.members.settings.register.fields.password'),
-    'phone' => __('admin.members.settings.register.fields.phone'),
-    'birth_date' => __('admin.members.settings.register.fields.birth_date'),
-    'gender' => __('admin.members.settings.register.fields.gender'),
-    'company' => __('admin.members.settings.register.fields.company'),
-    'blog' => __('admin.members.settings.register.fields.blog'),
-    'profile_photo' => __('admin.members.settings.register.fields.profile_photo'),
+    'name' => __('members.settings.register.fields.name'),
+    'email' => __('members.settings.register.fields.email'),
+    'password' => __('members.settings.register.fields.password'),
+    'phone' => __('members.settings.register.fields.phone'),
+    'birth_date' => __('members.settings.register.fields.birth_date'),
+    'gender' => __('members.settings.register.fields.gender'),
+    'company' => __('members.settings.register.fields.company'),
+    'blog' => __('members.settings.register.fields.blog'),
+    'profile_photo' => __('members.settings.register.fields.profile_photo'),
 ];
 
 // Handle form submission
@@ -59,10 +59,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute(['member_email_provider_list', $emailProviderList]);
             $memberSettings['member_email_provider_list'] = $emailProviderList;
 
-            $message = __('admin.settings.success');
+            $message = __('settings.success');
             $messageType = 'success';
         } catch (PDOException $e) {
-            $message = __('admin.settings.error_save') . ': ' . $e->getMessage();
+            $message = __('settings.error_save') . ': ' . $e->getMessage();
             $messageType = 'error';
         }
     }
@@ -76,8 +76,8 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors mb-6">
     <?php
     $headerIcon = 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z';
-    $headerTitle = __('admin.members.settings.register.title');
-    $headerDescription = __('admin.members.settings.register.description');
+    $headerTitle = __('members.settings.register.title');
+    $headerDescription = __('members.settings.register.description');
     $headerIconColor = ''; $headerActions = '';
     include __DIR__ . '/../../components/settings-header.php';
     ?>
@@ -87,8 +87,8 @@ ob_start();
 
         <!-- 회원가입 필드 선택 -->
         <div class="py-4 border-b dark:border-zinc-700">
-            <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-1"><?= __('admin.members.settings.register.form_fields') ?></label>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3"><?= __('admin.members.settings.register.form_fields_desc') ?></p>
+            <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-1"><?= __('members.settings.register.form_fields') ?></label>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3"><?= __('members.settings.register.form_fields_desc') ?></p>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <?php foreach ($availableFields as $key => $label): ?>
                 <label class="flex items-center p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
@@ -103,7 +103,7 @@ ob_start();
                 </label>
                 <?php endforeach; ?>
             </div>
-            <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400"><?= __('admin.members.settings.register.required_note') ?></p>
+            <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400"><?= __('members.settings.register.required_note') ?></p>
             <!-- Hidden inputs for required fields -->
             <input type="hidden" name="member_register_fields[]" value="name">
             <input type="hidden" name="member_register_fields[]" value="email">
@@ -113,8 +113,8 @@ ob_start();
         <!-- 캡차 사용 -->
         <div class="flex items-center justify-between py-4 border-b dark:border-zinc-700">
             <div>
-                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('admin.members.settings.register.use_captcha') ?></h3>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.members.settings.register.use_captcha_desc') ?></p>
+                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('members.settings.register.use_captcha') ?></h3>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('members.settings.register.use_captcha_desc') ?></p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" name="member_register_captcha" class="sr-only peer" <?php echo ($memberSettings['member_register_captcha'] ?? '0') === '1' ? 'checked' : ''; ?>>
@@ -124,8 +124,8 @@ ob_start();
 
         <!-- 이메일 제공자 관리 -->
         <div class="py-4 border-b dark:border-zinc-700">
-            <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-1"><?= __('admin.members.settings.register.email_provider') ?></label>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3"><?= __('admin.members.settings.register.email_provider_desc') ?></p>
+            <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-1"><?= __('members.settings.register.email_provider') ?></label>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3"><?= __('members.settings.register.email_provider_desc') ?></p>
 
             <!-- 허가/제한 라디오 -->
             <div class="flex items-center space-x-6 mb-4">
@@ -135,21 +135,21 @@ ob_start();
                            <?= $currentMode === 'none' ? 'checked' : '' ?>
                            class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500"
                            onchange="toggleEmailProviderList()">
-                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.register.email_provider_none') ?></span>
+                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('members.settings.register.email_provider_none') ?></span>
                 </label>
                 <label class="inline-flex items-center cursor-pointer">
                     <input type="radio" name="member_email_provider_mode" value="allow"
                            <?= $currentMode === 'allow' ? 'checked' : '' ?>
                            class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500"
                            onchange="toggleEmailProviderList()">
-                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.register.email_provider_allow') ?></span>
+                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('members.settings.register.email_provider_allow') ?></span>
                 </label>
                 <label class="inline-flex items-center cursor-pointer">
                     <input type="radio" name="member_email_provider_mode" value="block"
                            <?= $currentMode === 'block' ? 'checked' : '' ?>
                            class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500"
                            onchange="toggleEmailProviderList()">
-                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.register.email_provider_block') ?></span>
+                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('members.settings.register.email_provider_block') ?></span>
                 </label>
             </div>
 
@@ -180,14 +180,14 @@ ob_start();
                 <!-- 새 도메인 추가 -->
                 <div class="flex gap-2 mb-2">
                     <input type="text" id="newEmailProvider"
-                           placeholder="<?= __('admin.members.settings.register.email_provider_placeholder') ?>"
+                           placeholder="<?= __('members.settings.register.email_provider_placeholder') ?>"
                            class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <button type="button" onclick="addEmailProvider()"
                             class="px-4 py-2 bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-600 transition">
                         <?= __('admin.buttons.add') ?>
                     </button>
                 </div>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('admin.members.settings.register.email_provider_hint') ?></p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('members.settings.register.email_provider_hint') ?></p>
 
                 <!-- 숨겨진 textarea로 실제 값 저장 -->
                 <textarea name="member_email_provider_list" id="emailProviderListInput" class="hidden"><?= htmlspecialchars($providerList) ?></textarea>
@@ -197,8 +197,8 @@ ob_start();
         <!-- 환영 이메일 -->
         <div class="flex items-center justify-between py-4 border-b dark:border-zinc-700">
             <div>
-                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('admin.members.settings.register.welcome_email') ?></h3>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.members.settings.register.welcome_email_desc') ?></p>
+                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('members.settings.register.welcome_email') ?></h3>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('members.settings.register.welcome_email_desc') ?></p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" name="member_welcome_email" class="sr-only peer" <?php echo ($memberSettings['member_welcome_email'] ?? '1') === '1' ? 'checked' : ''; ?>>
@@ -208,13 +208,13 @@ ob_start();
 
         <!-- 회원가입 후 이동 URL -->
         <div class="py-4">
-            <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-1"><?= __('admin.members.settings.register.redirect_url') ?></label>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3"><?= __('admin.members.settings.register.redirect_url_desc') ?></p>
+            <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-1"><?= __('members.settings.register.redirect_url') ?></label>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3"><?= __('members.settings.register.redirect_url_desc') ?></p>
             <input type="text" name="member_register_redirect_url"
                    value="<?= htmlspecialchars($memberSettings['member_register_redirect_url'] ?? '') ?>"
-                   placeholder="<?= __('admin.members.settings.register.redirect_url_placeholder') ?>"
+                   placeholder="<?= __('members.settings.register.redirect_url_placeholder') ?>"
                    class="w-full md:w-1/2 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400"><?= __('admin.members.settings.register.redirect_url_hint') ?></p>
+            <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400"><?= __('members.settings.register.redirect_url_hint') ?></p>
         </div>
 
         <div class="flex justify-end pt-4 border-t dark:border-zinc-700">
@@ -255,7 +255,7 @@ function addEmailProvider() {
 
     // 도메인 형식 검증 (간단한 검증)
     if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(value)) {
-        alert('<?= __('admin.members.settings.register.email_provider_invalid') ?>');
+        alert('<?= __('members.settings.register.email_provider_invalid') ?>');
         return;
     }
 
@@ -263,7 +263,7 @@ function addEmailProvider() {
     const existing = document.querySelectorAll('#emailProviderTags span');
     for (const tag of existing) {
         if (tag.childNodes[0].textContent.trim() === value) {
-            alert('<?= __('admin.members.settings.register.email_provider_duplicate') ?>');
+            alert('<?= __('members.settings.register.email_provider_duplicate') ?>');
             return;
         }
     }

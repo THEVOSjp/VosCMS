@@ -3,7 +3,7 @@
  * RezlyX Admin - WYSIWYG 위젯 빌더
  * 실시간 미리보기 + 드래그앤드롭 + 설정 편집
  */
-$pageTitle = __('admin.site.widget_builder.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('site.widget_builder.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 include_once __DIR__ . '/../components/multilang-button.php';
 
 try {
@@ -120,7 +120,7 @@ $iconMap = [
 
         <main class="flex-1 ml-64 flex flex-col h-screen">
             <?php
-            $pageHeaderTitle = __('admin.site.widget_builder.title');
+            $pageHeaderTitle = __('site.widget_builder.title');
             include __DIR__ . '/../partials/admin-topbar.php';
             ?>
 
@@ -142,12 +142,12 @@ $iconMap = [
                 ?>
                 <aside id="widgetPalettePanel" class="relative w-48 bg-white dark:bg-zinc-800 border-r border-zinc-200 dark:border-zinc-700 flex flex-col overflow-visible flex-shrink-0 z-30">
                     <div class="px-4 py-3 border-b border-zinc-200 dark:border-zinc-700">
-                        <h3 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('admin.site.widget_builder.available_widgets') ?></h3>
+                        <h3 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('site.widget_builder.available_widgets') ?></h3>
                     </div>
                     <div id="widgetPalette" class="flex-1 overflow-y-auto py-2">
                         <?php foreach ($widgetCategories as $catKey => $catWidgets):
                             $meta = $categoryMeta[$catKey] ?? $categoryMeta['general'];
-                            $catLabel = __('admin.site.widget_builder.cat.' . $catKey);
+                            $catLabel = __('site.widget_builder.cat.' . $catKey);
                             if ($catLabel === 'admin.site.widget_builder.cat.' . $catKey) $catLabel = ucfirst($catKey);
                         ?>
                         <div class="category-item group flex items-center px-4 py-2.5" data-category="<?= $catKey ?>">
@@ -213,7 +213,7 @@ $iconMap = [
                             <div class="flex items-center gap-3">
                                 <a href="<?= $adminUrl ?>/site/pages" class="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center">
                                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                                    <?= __('admin.site.pages.title') ?>
+                                    <?= __('site.pages.title') ?>
                                 </a>
                                 <span class="text-zinc-300 dark:text-zinc-700">|</span>
                                 <span id="widgetCount" class="text-xs text-zinc-500 dark:text-zinc-400"></span>
@@ -221,11 +221,11 @@ $iconMap = [
                             <div class="flex items-center gap-2">
                                 <a href="<?= $baseUrl ?>/" target="_blank" class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-300 rounded-lg hover:bg-white dark:hover:bg-zinc-800 transition text-xs font-medium flex items-center">
                                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                    <?= __('admin.site.widget_builder.preview') ?>
+                                    <?= __('site.widget_builder.preview') ?>
                                 </a>
                                 <button id="btnSaveLayout" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs font-medium flex items-center">
                                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                    <?= __('admin.site.widget_builder.save_layout') ?>
+                                    <?= __('site.widget_builder.save_layout') ?>
                                 </button>
                             </div>
                         </div>
@@ -267,7 +267,7 @@ $iconMap = [
                         </button>
                         <div class="min-w-0 flex-1">
                             <h3 id="editPanelTitle" class="text-sm font-semibold text-zinc-900 dark:text-white truncate"></h3>
-                            <p class="text-[10px] text-zinc-400 dark:text-zinc-500"><?= __('admin.site.widget_builder.edit_content') ?? '콘텐츠 편집' ?></p>
+                            <p class="text-[10px] text-zinc-400 dark:text-zinc-500"><?= __('site.widget_builder.edit_content') ?? '콘텐츠 편집' ?></p>
                         </div>
                     </div>
                     <!-- 언어 탭 -->
@@ -327,22 +327,22 @@ $iconMap = [
         echo json_encode($ct, JSON_UNESCAPED_UNICODE);
     ?>;
     var translations = {
-        empty: '<?= __('admin.site.widget_builder.empty') ?>',
-        remove_confirm: '<?= __('admin.site.widget_builder.remove_confirm') ?>',
-        saved: '<?= __('admin.site.widget_builder.saved') ?>',
-        error_save: '<?= __('admin.site.widget_builder.error_save') ?>',
-        remove_widget: '<?= __('admin.site.widget_builder.remove_widget') ?>',
-        save_layout: '<?= __('admin.site.widget_builder.save_layout') ?>',
-        widgets_count: '<?= __('admin.site.widget_builder.widgets_count') ?? '위젯' ?>',
-        no_config: '<?= __('admin.site.widget_builder.no_config') ?? '설정 가능한 항목이 없습니다' ?>',
-        config_updated: '<?= __('admin.site.widget_builder.config_updated') ?? '설정이 적용되었습니다' ?>',
-        loading: '<?= __('admin.site.widget_builder.loading') ?? '미리보기 로딩 중...' ?>',
-        edit_content: '<?= __('admin.site.widget_builder.edit_content') ?? '콘텐츠 편집' ?>',
-        i18n_fields: '<?= __('admin.site.widget_builder.i18n_fields') ?? '다국어 텍스트' ?>',
-        common_fields: '<?= __('admin.site.widget_builder.common_fields') ?? '공통 설정' ?>',
+        empty: '<?= __('site.widget_builder.empty') ?>',
+        remove_confirm: '<?= __('site.widget_builder.remove_confirm') ?>',
+        saved: '<?= __('site.widget_builder.saved') ?>',
+        error_save: '<?= __('site.widget_builder.error_save') ?>',
+        remove_widget: '<?= __('site.widget_builder.remove_widget') ?>',
+        save_layout: '<?= __('site.widget_builder.save_layout') ?>',
+        widgets_count: '<?= __('site.widget_builder.widgets_count') ?? '위젯' ?>',
+        no_config: '<?= __('site.widget_builder.no_config') ?? '설정 가능한 항목이 없습니다' ?>',
+        config_updated: '<?= __('site.widget_builder.config_updated') ?? '설정이 적용되었습니다' ?>',
+        loading: '<?= __('site.widget_builder.loading') ?? '미리보기 로딩 중...' ?>',
+        edit_content: '<?= __('site.widget_builder.edit_content') ?? '콘텐츠 편집' ?>',
+        i18n_fields: '<?= __('site.widget_builder.i18n_fields') ?? '다국어 텍스트' ?>',
+        common_fields: '<?= __('site.widget_builder.common_fields') ?? '공통 설정' ?>',
         save_apply: '<?= __('admin.buttons.apply') ?>',
-        multilang: '<?= __('admin.site.widget_builder.multilang') ?? '다국어 입력' ?>',
-        inline_editing: '<?= __('admin.site.widget_builder.inline_editing') ?? '인라인 편집 중' ?>',
+        multilang: '<?= __('site.widget_builder.multilang') ?? '다국어 입력' ?>',
+        inline_editing: '<?= __('site.widget_builder.inline_editing') ?? '인라인 편집 중' ?>',
         save: '<?= __('admin.buttons.save') ?? '저장' ?>',
         cancel: '<?= __('admin.buttons.cancel') ?? '취소' ?>'
     };

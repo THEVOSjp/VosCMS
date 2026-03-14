@@ -15,23 +15,23 @@ $adminPath = $adminPath ?? $config['admin_path'] ?? $_ENV['ADMIN_PATH'] ?? 'admi
 $systemTabs = [
     'info' => [
         'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
-        'label' => __('admin.settings.system.tabs.info'),
+        'label' => __('system.tabs.info'),
     ],
     'cache' => [
         'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>',
-        'label' => __('admin.settings.system.tabs.cache'),
+        'label' => __('system.tabs.cache'),
     ],
     'mode' => [
         'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>',
-        'label' => __('admin.settings.system.tabs.mode'),
+        'label' => __('system.tabs.mode'),
     ],
     'logs' => [
         'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
-        'label' => __('admin.settings.system.tabs.logs'),
+        'label' => __('system.tabs.logs'),
     ],
     'updates' => [
         'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>',
-        'label' => __('admin.settings.system.tabs.updates'),
+        'label' => __('system.tabs.updates'),
     ],
 ];
 ?>

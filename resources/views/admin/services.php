@@ -10,7 +10,7 @@ if (!function_exists('__')) {
     require_once BASE_PATH . '/rzxlib/Core/Helpers/lang.php';
 }
 
-$pageTitle = __('admin.services.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('services.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
@@ -52,7 +52,7 @@ try {
                     $isActive = isset($_POST['is_active']) ? 1 : 0;
 
                     if (empty($name)) {
-                        echo json_encode(['success' => false, 'message' => __('admin.services.fields.name') . ' required']);
+                        echo json_encode(['success' => false, 'message' => __('services.fields.name') . ' required']);
                         exit;
                     }
                     if (empty($slug)) {
@@ -64,7 +64,7 @@ try {
                     $stmt = $pdo->prepare("INSERT INTO {$prefix}services (id, category_id, name, slug, description, price, duration, buffer_time, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                     $stmt->execute([$id, $categoryId, $name, $slug, $description, $price, $duration, $bufferTime, $maxSort, $isActive]);
 
-                    echo json_encode(['success' => true, 'message' => __('admin.services.success.created'), 'id' => $id]);
+                    echo json_encode(['success' => true, 'message' => __('services.success.created'), 'id' => $id]);
                     exit;
 
                 case 'update_service':
@@ -81,7 +81,7 @@ try {
                     $stmt = $pdo->prepare("UPDATE {$prefix}services SET category_id=?, name=?, slug=?, description=?, price=?, duration=?, buffer_time=?, is_active=? WHERE id=?");
                     $stmt->execute([$categoryId, $name, $slug, $description, $price, $duration, $bufferTime, $isActive, $id]);
 
-                    echo json_encode(['success' => true, 'message' => __('admin.services.success.updated')]);
+                    echo json_encode(['success' => true, 'message' => __('services.success.updated')]);
                     exit;
 
                 case 'delete_service':
@@ -90,11 +90,11 @@ try {
                     $cnt = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}reservations WHERE service_id = ?");
                     $cnt->execute([$id]);
                     if ($cnt->fetchColumn() > 0) {
-                        echo json_encode(['success' => false, 'message' => __('admin.services.error.has_reservations')]);
+                        echo json_encode(['success' => false, 'message' => __('services.error.has_reservations')]);
                         exit;
                     }
                     $pdo->prepare("DELETE FROM {$prefix}services WHERE id = ?")->execute([$id]);
-                    echo json_encode(['success' => true, 'message' => __('admin.services.success.deleted')]);
+                    echo json_encode(['success' => true, 'message' => __('services.success.deleted')]);
                     exit;
 
                 case 'toggle_service':
@@ -256,7 +256,7 @@ $currency = $currencySymbols[$serviceCurrency] ?? $serviceCurrency;
         <main class="flex-1 ml-64">
             <!-- Top Bar -->
             <?php
-            $pageHeaderTitle = __('admin.services.title');
+            $pageHeaderTitle = __('services.title');
             include __DIR__ . '/partials/admin-topbar.php';
             ?>
 
@@ -269,7 +269,7 @@ $currency = $currencySymbols[$serviceCurrency] ?? $serviceCurrency;
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-5 border border-zinc-200 dark:border-zinc-700">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.services.list') ?></p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('services.list') ?></p>
                                 <p class="text-2xl font-bold mt-1 text-zinc-900 dark:text-white"><?= $totalServices ?></p>
                             </div>
                             <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
@@ -280,7 +280,7 @@ $currency = $currencySymbols[$serviceCurrency] ?? $serviceCurrency;
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-5 border border-zinc-200 dark:border-zinc-700">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.services.fields.is_active') ?></p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('services.fields.is_active') ?></p>
                                 <p class="text-2xl font-bold mt-1 text-green-600"><?= $activeServices ?></p>
                             </div>
                             <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
@@ -291,7 +291,7 @@ $currency = $currencySymbols[$serviceCurrency] ?? $serviceCurrency;
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-5 border border-zinc-200 dark:border-zinc-700">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.categories.title') ?></p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('services.categories.title') ?></p>
                                 <p class="text-2xl font-bold mt-1 text-zinc-900 dark:text-white"><?= $totalCategories ?></p>
                             </div>
                             <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
@@ -308,22 +308,22 @@ $currency = $currencySymbols[$serviceCurrency] ?? $serviceCurrency;
                         <div class="flex items-center gap-2">
                             <select id="filterCategory" onchange="applyFilter()"
                                     class="text-sm border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 bg-white dark:bg-zinc-800 dark:text-white">
-                                <option value=""><?= __('admin.services.fields.category') ?> - <?= __('admin.services.filter_all') ?></option>
+                                <option value=""><?= __('services.fields.category') ?> - <?= __('services.filter_all') ?></option>
                                 <?php foreach ($categories as $cat): ?>
                                 <option value="<?= $cat['id'] ?>" <?= $filterCategory == $cat['id'] ? 'selected' : '' ?>><?= htmlspecialchars(getCategoryTranslated($cat['id'], 'name', $cat['name'])) ?></option>
                                 <?php endforeach; ?>
                             </select>
                             <select id="filterStatus" onchange="applyFilter()"
                                     class="text-sm border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 bg-white dark:bg-zinc-800 dark:text-white">
-                                <option value=""><?= __('admin.services.fields.is_active') ?> - <?= __('admin.services.filter_all') ?></option>
-                                <option value="active" <?= $filterStatus === 'active' ? 'selected' : '' ?>><?= __('admin.services.filter_active') ?></option>
-                                <option value="inactive" <?= $filterStatus === 'inactive' ? 'selected' : '' ?>><?= __('admin.services.filter_inactive') ?></option>
+                                <option value=""><?= __('services.fields.is_active') ?> - <?= __('services.filter_all') ?></option>
+                                <option value="active" <?= $filterStatus === 'active' ? 'selected' : '' ?>><?= __('services.filter_active') ?></option>
+                                <option value="inactive" <?= $filterStatus === 'inactive' ? 'selected' : '' ?>><?= __('services.filter_inactive') ?></option>
                             </select>
                         </div>
                         <button onclick="openServiceModal()"
                                 class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            <?= __('admin.services.create') ?>
+                            <?= __('services.create') ?>
                         </button>
                     </div>
 
@@ -332,20 +332,20 @@ $currency = $currencySymbols[$serviceCurrency] ?? $serviceCurrency;
                         <?php if (empty($services)): ?>
                         <div class="p-12 text-center text-zinc-500 dark:text-zinc-400">
                             <svg class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
-                            <p><?= __('admin.services.empty') ?></p>
-                            <button onclick="openServiceModal()" class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium">+ <?= __('admin.services.create') ?></button>
+                            <p><?= __('services.empty') ?></p>
+                            <button onclick="openServiceModal()" class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium">+ <?= __('services.create') ?></button>
                         </div>
                         <?php else: ?>
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead class="bg-zinc-50 dark:bg-zinc-700/50">
                                     <tr>
-                                        <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.services.fields.name') ?></th>
-                                        <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.services.fields.category') ?></th>
-                                        <th class="text-right px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.services.fields.price') ?></th>
-                                        <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.services.fields.duration') ?></th>
-                                        <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.services.fields.is_active') ?></th>
-                                        <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.services.actions') ?></th>
+                                        <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('services.fields.name') ?></th>
+                                        <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('services.fields.category') ?></th>
+                                        <th class="text-right px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('services.fields.price') ?></th>
+                                        <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('services.fields.duration') ?></th>
+                                        <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('services.fields.is_active') ?></th>
+                                        <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('services.actions') ?></th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -370,12 +370,12 @@ $currency = $currencySymbols[$serviceCurrency] ?? $serviceCurrency;
                                             <?php if ($priceDisplay === 'show'): ?>
                                                 <?= $currency ?><?= number_format($svc['price']) ?>
                                             <?php elseif ($priceDisplay === 'contact'): ?>
-                                                <span class="text-zinc-500 dark:text-zinc-400 text-xs"><?= __('admin.services.settings.general.price_contact') ?></span>
+                                                <span class="text-zinc-500 dark:text-zinc-400 text-xs"><?= __('services.settings.general.price_contact') ?></span>
                                             <?php else: ?>
                                                 <span class="text-zinc-400">-</span>
                                             <?php endif; ?>
                                         </td>
-                                        <td class="px-4 py-3 text-center text-zinc-900 dark:text-white"><?= $svc['duration'] ?><?= __('admin.services.minute') ?></td>
+                                        <td class="px-4 py-3 text-center text-zinc-900 dark:text-white"><?= $svc['duration'] ?><?= __('services.minute') ?></td>
                                         <td class="px-4 py-3 text-center">
                                             <button onclick="toggleService('<?= $svc['id'] ?>')"
                                                     class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors <?= $svc['is_active'] ? 'bg-green-500' : 'bg-zinc-300 dark:bg-zinc-600' ?>"
@@ -386,11 +386,11 @@ $currency = $currencySymbols[$serviceCurrency] ?? $serviceCurrency;
                                         <td class="px-4 py-3 text-center">
                                             <div class="flex items-center justify-center gap-1">
                                                 <button onclick='editService(<?= json_encode($svc, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'
-                                                        class="p-1.5 text-zinc-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors" title="<?= __('admin.services.edit') ?>">
+                                                        class="p-1.5 text-zinc-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors" title="<?= __('services.edit') ?>">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                 </button>
                                                 <button onclick="deleteService('<?= $svc['id'] ?>')"
-                                                        class="p-1.5 text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="<?= __('admin.categories.delete') ?>">
+                                                        class="p-1.5 text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="<?= __('services.categories.delete') ?>">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                                 </button>
                                             </div>

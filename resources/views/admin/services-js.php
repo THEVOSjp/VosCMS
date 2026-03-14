@@ -85,7 +85,7 @@
     // ═══ 서비스 모달 ═══
     window.openServiceModal = function() {
         svcMultilangTempKey = null;
-        document.getElementById('serviceModalTitle').textContent = '<?= __('admin.services.create') ?>';
+        document.getElementById('serviceModalTitle').textContent = '<?= __('services.create') ?>';
         document.getElementById('svcAction').value = 'create_service';
         document.getElementById('svcId').value = '';
         document.getElementById('svcName').value = '';
@@ -103,7 +103,7 @@
     window.editService = function(svc) {
         svcMultilangTempKey = null;
         var tr = svcTranslations[svc.id] || {};
-        document.getElementById('serviceModalTitle').textContent = '<?= __('admin.services.edit') ?>';
+        document.getElementById('serviceModalTitle').textContent = '<?= __('services.edit') ?>';
         document.getElementById('svcAction').value = 'update_service';
         document.getElementById('svcId').value = svc.id;
         document.getElementById('svcName').value = tr.name || svc.name || '';
@@ -150,16 +150,16 @@
                 closeServiceModal();
                 setTimeout(function() { location.reload(); }, 800);
             } else {
-                showAlert(data.message || '<?= __('admin.services.error.generic') ?>', 'error');
+                showAlert(data.message || '<?= __('services.error.generic') ?>', 'error');
             }
         }).catch(function(err) {
             console.error('[Services] Save error:', err);
-            showAlert('<?= __('admin.services.error.server_error') ?>', 'error');
+            showAlert('<?= __('services.error.server_error') ?>', 'error');
         });
     };
 
     window.deleteService = function(id) {
-        if (!confirm('<?= __('admin.services.confirm_delete') ?>')) return;
+        if (!confirm('<?= __('services.confirm_delete') ?>')) return;
         console.log('[Services] Deleting service:', id);
 
         var formData = new FormData();
@@ -172,11 +172,11 @@
                 var row = document.getElementById('svc-' + id);
                 if (row) row.remove();
             } else {
-                showAlert(data.message || '<?= __('admin.services.error.delete_failed') ?>', 'error');
+                showAlert(data.message || '<?= __('services.error.delete_failed') ?>', 'error');
             }
         }).catch(function(err) {
             console.error('[Services] Delete error:', err);
-            showAlert('<?= __('admin.services.error.server_error') ?>', 'error');
+            showAlert('<?= __('services.error.server_error') ?>', 'error');
         });
     };
 

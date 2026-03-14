@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $isActive = isset($_POST['is_active']) ? 1 : 0;
 
                 if (empty($name)) {
-                    echo json_encode(['success' => false, 'message' => __('admin.categories.fields.name') . ' required']);
+                    echo json_encode(['success' => false, 'message' => __('services.categories.fields.name') . ' required']);
                     exit;
                 }
                 if (empty($slug)) {
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $stmt = $pdo->prepare("INSERT INTO {$prefix}service_categories (name, slug, description, parent_id, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?)");
                 $stmt->execute([$name, $slug, $description, $parentId, $maxSort, $isActive]);
 
-                echo json_encode(['success' => true, 'message' => __('admin.categories.success.created'), 'id' => $pdo->lastInsertId()]);
+                echo json_encode(['success' => true, 'message' => __('services.categories.success.created'), 'id' => $pdo->lastInsertId()]);
                 exit;
 
             case 'update_category':
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $stmt = $pdo->prepare("UPDATE {$prefix}service_categories SET name=?, slug=?, description=?, parent_id=?, is_active=? WHERE id=?");
                 $stmt->execute([$name, $slug, $description, $parentId, $isActive, $id]);
 
-                echo json_encode(['success' => true, 'message' => __('admin.categories.success.updated')]);
+                echo json_encode(['success' => true, 'message' => __('services.categories.success.updated')]);
                 exit;
 
             case 'delete_category':
@@ -53,11 +53,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $cnt = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}services WHERE category_id = ?");
                 $cnt->execute([$id]);
                 if ($cnt->fetchColumn() > 0) {
-                    echo json_encode(['success' => false, 'message' => __('admin.categories.error.has_services')]);
+                    echo json_encode(['success' => false, 'message' => __('services.categories.error.has_services')]);
                     exit;
                 }
                 $pdo->prepare("DELETE FROM {$prefix}service_categories WHERE id = ?")->execute([$id]);
-                echo json_encode(['success' => true, 'message' => __('admin.categories.success.deleted')]);
+                echo json_encode(['success' => true, 'message' => __('services.categories.success.deleted')]);
                 exit;
 
             case 'reorder_categories':
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         $stmt->execute([$i + 1, (int)$id]);
                     }
                 }
-                echo json_encode(['success' => true, 'message' => __('admin.categories.success.reordered')]);
+                echo json_encode(['success' => true, 'message' => __('services.categories.success.reordered')]);
                 exit;
         }
     } catch (PDOException $e) {
@@ -122,11 +122,11 @@ foreach ($categories as $cat) {
 <div id="alertBox" class="hidden mb-6 p-4 rounded-lg border"></div>
 
 <div class="flex items-center justify-between mb-4">
-    <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.categories.list') ?> (<?= $totalCategories ?>)</p>
+    <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('services.categories.list') ?> (<?= $totalCategories ?>)</p>
     <button onclick="openCategoryModal()"
             class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        <?= __('admin.categories.create') ?>
+        <?= __('services.categories.create') ?>
     </button>
 </div>
 
@@ -164,15 +164,15 @@ foreach ($categories as $cat) {
             <?php endif; ?>
         </div>
         <span class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?= $cat['is_active'] ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400' ?>">
-            <?= $cat['is_active'] ? __('admin.services.status_active') : __('admin.services.status_inactive') ?>
+            <?= $cat['is_active'] ? __('services.status_active') : __('services.status_inactive') ?>
         </span>
         <div class="flex-shrink-0 flex items-center gap-1">
             <button onclick='editCategory(<?= json_encode($cat, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'
-                    class="p-1.5 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors" title="<?= __('admin.categories.edit') ?>">
+                    class="p-1.5 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors" title="<?= __('services.categories.edit') ?>">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
             </button>
             <button onclick="deleteCategory(<?= $cat['id'] ?>)"
-                    class="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="<?= __('admin.categories.delete') ?>">
+                    class="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="<?= __('services.categories.delete') ?>">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
             </button>
         </div>
@@ -182,8 +182,8 @@ foreach ($categories as $cat) {
 
 <?php if (empty($categories)): ?>
 <div class="p-12 text-center text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700">
-    <p><?= __('admin.categories.empty') ?></p>
-    <button onclick="openCategoryModal()" class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium">+ <?= __('admin.categories.create') ?></button>
+    <p><?= __('services.categories.empty') ?></p>
+    <button onclick="openCategoryModal()" class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium">+ <?= __('services.categories.create') ?></button>
 </div>
 <?php endif; ?>
 
@@ -216,7 +216,7 @@ function openCategoryMultilang(field) {
 
 function openCategoryModal() {
     catMultilangTempKey = null;
-    document.getElementById('catModalTitle').textContent = '<?= __('admin.categories.create') ?>';
+    document.getElementById('catModalTitle').textContent = '<?= __('services.categories.create') ?>';
     document.getElementById('catId').value = '';
     document.getElementById('catName').value = '';
     document.getElementById('catSlug').value = '';
@@ -229,7 +229,7 @@ function openCategoryModal() {
 
 function editCategory(cat) {
     catMultilangTempKey = null;
-    document.getElementById('catModalTitle').textContent = '<?= __('admin.categories.edit') ?>';
+    document.getElementById('catModalTitle').textContent = '<?= __('services.categories.edit') ?>';
     document.getElementById('catId').value = cat.id;
     var tr = catTranslations[cat.id] || {};
     document.getElementById('catName').value = tr.name || cat.name;
@@ -290,7 +290,7 @@ function migrateCategoryMultilangKeys(oldPrefix, newPrefix) {
 }
 
 function deleteCategory(id) {
-    if (!confirm('<?= __('admin.categories.confirm_delete') ?>')) return;
+    if (!confirm('<?= __('services.categories.confirm_delete') ?>')) return;
     var formData = new FormData();
     formData.append('action', 'delete_category');
     formData.append('id', id);

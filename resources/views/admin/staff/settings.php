@@ -8,7 +8,7 @@ if (!function_exists('__')) {
 }
 include_once __DIR__ . '/../components/multilang-button.php';
 
-$pageTitle = __('admin.staff.settings.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('staff.settings.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
@@ -41,7 +41,7 @@ try {
                 $maxSort = (int)$stmt->fetchColumn();
                 $stmt = $pdo->prepare("INSERT INTO {$prefix}staff_positions (name, is_active, sort_order) VALUES (?, 1, ?)");
                 $stmt->execute([$posName, $maxSort + 1]);
-                $message = __('admin.staff.settings.position_added');
+                $message = __('staff.settings.position_added');
                 $messageType = 'success';
             }
         }
@@ -60,7 +60,7 @@ try {
                     $stmt = $pdo->prepare("UPDATE {$prefix}staff_positions SET name = ? WHERE id = ?");
                     $stmt->execute([$posName, $posId]);
                 }
-                $message = __('admin.staff.settings.position_updated');
+                $message = __('staff.settings.position_updated');
                 $messageType = 'success';
             }
         }
@@ -74,7 +74,7 @@ try {
                 $stmt->execute([$posId]);
                 $stmt = $pdo->prepare("DELETE FROM {$prefix}staff_positions WHERE id = ?");
                 $stmt->execute([$posId]);
-                $message = __('admin.staff.settings.position_deleted');
+                $message = __('staff.settings.position_deleted');
                 $messageType = 'success';
             }
         }
@@ -89,7 +89,7 @@ try {
                 $stmt = $pdo->prepare("UPDATE {$prefix}staff_positions SET is_active = 1 WHERE id IN ({$placeholders})");
                 $stmt->execute(array_map('intval', $activeIds));
             }
-            $message = __('admin.staff.settings.position_saved');
+            $message = __('staff.settings.position_saved');
             $messageType = 'success';
         }
 
@@ -120,14 +120,14 @@ try {
                     require_once BASE_PATH . '/rzxlib/Core/Helpers/StaffSync.php';
                     $syncResult = StaffSync::syncAllByGrade($pdo, $prefix, $newLinkedGrade);
                     if ($syncResult['created'] > 0 || $syncResult['activated'] > 0) {
-                        $syncMsg = ' (' . __('admin.staff.settings.sync_result', [
+                        $syncMsg = ' (' . __('staff.settings.sync_result', [
                             'created' => $syncResult['created'],
                             'activated' => $syncResult['activated']
                         ]) . ')';
                     }
                 }
 
-                $message = __('admin.staff.settings.saved') . $syncMsg;
+                $message = __('staff.settings.saved') . $syncMsg;
                 $messageType = 'success';
 
                 foreach ($fields as $key => $value) {
@@ -187,8 +187,8 @@ try {
 
                 <!-- 헤더 -->
                 <div class="mb-6">
-                    <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('admin.staff.settings.title') ?></h1>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.staff.settings.description') ?></p>
+                    <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('staff.settings.title') ?></h1>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('staff.settings.description') ?></p>
                 </div>
 
                 <!-- 설정 폼 -->
@@ -200,8 +200,8 @@ try {
                             <!-- 예약 시 스태프 선택 필수 -->
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.staff.settings.selection_required') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"><?= __('admin.staff.settings.selection_required_desc') ?></p>
+                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('staff.settings.selection_required') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"><?= __('staff.settings.selection_required_desc') ?></p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" name="staff_selection_required" class="sr-only peer" <?= ($settings['staff_selection_required'] ?? '0') === '1' ? 'checked' : '' ?>>
@@ -212,8 +212,8 @@ try {
                             <!-- 소개 표시 -->
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.staff.settings.show_bio') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"><?= __('admin.staff.settings.show_bio_desc') ?></p>
+                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('staff.settings.show_bio') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"><?= __('staff.settings.show_bio_desc') ?></p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" name="staff_show_bio" class="sr-only peer" <?= ($settings['staff_show_bio'] ?? '1') === '1' ? 'checked' : '' ?>>
@@ -224,8 +224,8 @@ try {
                             <!-- 사진 표시 -->
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.staff.settings.show_photo') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"><?= __('admin.staff.settings.show_photo_desc') ?></p>
+                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('staff.settings.show_photo') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"><?= __('staff.settings.show_photo_desc') ?></p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" name="staff_show_photo" class="sr-only peer" <?= ($settings['staff_show_photo'] ?? '1') === '1' ? 'checked' : '' ?>>
@@ -236,15 +236,15 @@ try {
                             <!-- 자동 배정 -->
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                                    <?= __('admin.staff.settings.auto_assign') ?>
+                                    <?= __('staff.settings.auto_assign') ?>
                                 </label>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.staff.settings.auto_assign_desc') ?></p>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('staff.settings.auto_assign_desc') ?></p>
                                 <?php $autoAssign = $settings['staff_auto_assign'] ?? 'none'; ?>
                                 <select name="staff_auto_assign"
                                         class="w-48 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm">
-                                    <option value="none" <?= $autoAssign === 'none' ? 'selected' : '' ?>><?= __('admin.staff.settings.assign_none') ?></option>
-                                    <option value="round_robin" <?= $autoAssign === 'round_robin' ? 'selected' : '' ?>><?= __('admin.staff.settings.assign_round_robin') ?></option>
-                                    <option value="least_busy" <?= $autoAssign === 'least_busy' ? 'selected' : '' ?>><?= __('admin.staff.settings.assign_least_busy') ?></option>
+                                    <option value="none" <?= $autoAssign === 'none' ? 'selected' : '' ?>><?= __('staff.settings.assign_none') ?></option>
+                                    <option value="round_robin" <?= $autoAssign === 'round_robin' ? 'selected' : '' ?>><?= __('staff.settings.assign_round_robin') ?></option>
+                                    <option value="least_busy" <?= $autoAssign === 'least_busy' ? 'selected' : '' ?>><?= __('staff.settings.assign_least_busy') ?></option>
                                 </select>
                             </div>
 
@@ -254,8 +254,8 @@ try {
                             <!-- 스태프 스케줄 관리 -->
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.staff.settings.schedule_enabled') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"><?= __('admin.staff.settings.schedule_enabled_desc') ?></p>
+                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('staff.settings.schedule_enabled') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"><?= __('staff.settings.schedule_enabled_desc') ?></p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" name="staff_schedule_enabled" class="sr-only peer" <?= ($settings['staff_schedule_enabled'] ?? '0') === '1' ? 'checked' : '' ?>>
@@ -266,8 +266,8 @@ try {
                             <!-- 지명비 기능 -->
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.staff.settings.designation_fee_enabled') ?></label>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"><?= __('admin.staff.settings.designation_fee_enabled_desc') ?></p>
+                                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('staff.settings.designation_fee_enabled') ?></label>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"><?= __('staff.settings.designation_fee_enabled_desc') ?></p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" name="staff_designation_fee_enabled" class="sr-only peer" <?= ($settings['staff_designation_fee_enabled'] ?? '0') === '1' ? 'checked' : '' ?>>
@@ -277,8 +277,8 @@ try {
 
                             <!-- 타임슬롯 간격 -->
                             <div>
-                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.staff.settings.booking_slot_interval') ?></label>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.staff.settings.booking_slot_interval_desc') ?></p>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('staff.settings.booking_slot_interval') ?></label>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('staff.settings.booking_slot_interval_desc') ?></p>
                                 <?php $slotInterval = $settings['booking_slot_interval'] ?? '30'; ?>
                                 <select name="booking_slot_interval"
                                         class="w-32 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm">
@@ -294,13 +294,13 @@ try {
                             <!-- 스태프 연동 등급 -->
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                                    <?= __('admin.staff.settings.linked_grade') ?>
+                                    <?= __('staff.settings.linked_grade') ?>
                                 </label>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.staff.settings.linked_grade_desc') ?></p>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('staff.settings.linked_grade_desc') ?></p>
                                 <?php $linkedGrade = $settings['staff_linked_grade'] ?? ''; ?>
                                 <select name="staff_linked_grade"
                                         class="w-64 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-purple-500 text-sm">
-                                    <option value="" <?= $linkedGrade === '' ? 'selected' : '' ?>><?= __('admin.staff.settings.grade_none') ?></option>
+                                    <option value="" <?= $linkedGrade === '' ? 'selected' : '' ?>><?= __('staff.settings.grade_none') ?></option>
                                     <?php foreach ($memberGrades as $grade): ?>
                                     <option value="<?= htmlspecialchars($grade['id']) ?>" <?= $linkedGrade === $grade['id'] ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($grade['name']) ?>
@@ -311,7 +311,7 @@ try {
                                 <div class="mt-2 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
                                     <p class="text-xs text-purple-700 dark:text-purple-300">
                                         <svg class="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        <?= __('admin.staff.settings.linked_grade_info') ?>
+                                        <?= __('staff.settings.linked_grade_info') ?>
                                     </p>
                                 </div>
                                 <?php endif; ?>
@@ -330,8 +330,8 @@ try {
                 <!-- 스태프 직책 관리 -->
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm mt-6">
                     <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-700">
-                        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.staff.settings.position_title') ?></h2>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.staff.settings.position_desc') ?></p>
+                        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('staff.settings.position_title') ?></h2>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('staff.settings.position_desc') ?></p>
                     </div>
 
                     <!-- 직책 체크박스 목록 + 활성화 저장 -->
@@ -350,17 +350,17 @@ try {
                                                class="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-blue-600 focus:ring-blue-500 dark:bg-zinc-700">
                                         <span class="text-sm text-zinc-900 dark:text-white font-medium"><?= htmlspecialchars($pos['name']) ?></span>
                                         <?php if ($pos['is_active']): ?>
-                                        <span class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><?= __('admin.staff.settings.position_active') ?></span>
+                                        <span class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><?= __('staff.settings.position_active') ?></span>
                                         <?php endif; ?>
                                         <?php if (!empty($i18n)): ?>
-                                        <span class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"><?= count($i18n) ?> <?= __('admin.staff.settings.position_langs') ?></span>
+                                        <span class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"><?= count($i18n) ?> <?= __('staff.settings.position_langs') ?></span>
                                         <?php endif; ?>
                                     </div>
                                     <!-- 액션 버튼들 -->
                                     <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pos-actions" data-id="<?= $pos['id'] ?>">
                                         <!-- 수정 버튼 -->
                                         <button type="button" onclick="openEditPosition(<?= $pos['id'] ?>, <?= htmlspecialchars(json_encode($pos['name']), ENT_QUOTES) ?>, <?= htmlspecialchars(json_encode($i18n), ENT_QUOTES) ?>)"
-                                                class="p-1.5 text-zinc-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-all" title="<?= __('admin.staff.settings.position_edit') ?>">
+                                                class="p-1.5 text-zinc-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-all" title="<?= __('staff.settings.position_edit') ?>">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                         </button>
                                         <!-- 다국어 버튼 -->
@@ -375,12 +375,12 @@ try {
                                 <?php endforeach; ?>
                             </div>
                             <?php else: ?>
-                            <p class="text-sm text-zinc-400"><?= __('admin.staff.settings.position_empty') ?></p>
+                            <p class="text-sm text-zinc-400"><?= __('staff.settings.position_empty') ?></p>
                             <?php endif; ?>
                         </div>
                         <div class="px-6 py-3 border-t border-zinc-200 dark:border-zinc-700 flex justify-end">
                             <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
-                                <?= __('admin.staff.settings.position_save_active') ?>
+                                <?= __('staff.settings.position_save_active') ?>
                             </button>
                         </div>
                     </form>
@@ -389,11 +389,11 @@ try {
                     <div class="px-6 py-4 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-200 dark:border-zinc-700 rounded-b-xl">
                         <form method="POST" action="<?= $adminUrl ?>/staff/settings" class="flex gap-2 items-center">
                             <input type="hidden" name="action" value="add_position">
-                            <input type="text" name="position_name" placeholder="<?= __('admin.staff.settings.position_placeholder') ?>"
+                            <input type="text" name="position_name" placeholder="<?= __('staff.settings.position_placeholder') ?>"
                                    class="flex-1 max-w-xs px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500" required>
                             <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors flex items-center gap-1">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                <?= __('admin.staff.settings.position_add') ?>
+                                <?= __('staff.settings.position_add') ?>
                             </button>
                         </form>
                     </div>
@@ -406,7 +406,7 @@ try {
                     <div class="fixed inset-0 bg-zinc-900/75 transition-opacity" onclick="closeEditPosition()"></div>
                     <div class="relative z-50 w-full max-w-lg bg-white dark:bg-zinc-800 rounded-xl shadow-xl p-6">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.staff.settings.position_edit') ?></h3>
+                            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('staff.settings.position_edit') ?></h3>
                             <button type="button" onclick="closeEditPosition()" class="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
@@ -418,7 +418,7 @@ try {
 
                             <!-- 기본 이름 -->
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.staff.settings.position_name_label') ?></label>
+                                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('staff.settings.position_name_label') ?></label>
                                 <input type="text" name="position_name" id="editPosName" required
                                        class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500">
                             </div>
@@ -427,13 +427,13 @@ try {
                             <div id="editPosI18nSection" class="hidden mb-4">
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                                     <svg class="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-                                    <?= __('admin.staff.settings.position_multilang') ?>
+                                    <?= __('staff.settings.position_multilang') ?>
                                 </label>
                                 <div class="space-y-2 max-h-60 overflow-y-auto" id="editPosLangFields"></div>
                             </div>
 
                             <div class="flex justify-end gap-2">
-                                <button type="button" onclick="closeEditPosition()" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 rounded-lg transition"><?= __('admin.settings.multilang.cancel') ?></button>
+                                <button type="button" onclick="closeEditPosition()" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 rounded-lg transition"><?= __('settings.multilang.cancel') ?></button>
                                 <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition"><?= __('admin.common.save') ?></button>
                             </div>
                         </form>
@@ -512,7 +512,7 @@ try {
 
         // 삭제
         window.deletePosition = function(id) {
-            if (!confirm('<?= __('admin.staff.settings.position_delete_confirm') ?>')) return;
+            if (!confirm('<?= __('staff.settings.position_delete_confirm') ?>')) return;
             document.getElementById('deletePosId').value = id;
             document.getElementById('deletePositionForm').submit();
             console.log('[StaffPositions] Deleting position:', id);

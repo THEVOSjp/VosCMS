@@ -7,7 +7,7 @@ if (!function_exists('__')) {
     require_once BASE_PATH . '/rzxlib/Core/Helpers/lang.php';
 }
 
-$pageTitle = __('admin.staff.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('staff.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 $uploadDir = '/storage/uploads/staff/';
@@ -58,7 +58,7 @@ try {
         if ($action === 'create') {
             $name = trim($_POST['name'] ?? '');
             if ($name === '') {
-                echo json_encode(['success' => false, 'message' => __('admin.staff.error.name_required')]);
+                echo json_encode(['success' => false, 'message' => __('staff.error.name_required')]);
                 exit;
             }
 
@@ -118,7 +118,7 @@ try {
                 }
             }
 
-            echo json_encode(['success' => true, 'message' => __('admin.staff.success.created')]);
+            echo json_encode(['success' => true, 'message' => __('staff.success.created')]);
             exit;
         }
 
@@ -127,7 +127,7 @@ try {
             $id = (int)($_POST['id'] ?? 0);
             $name = trim($_POST['name'] ?? '');
             if (!$id || $name === '') {
-                echo json_encode(['success' => false, 'message' => __('admin.staff.error.name_required')]);
+                echo json_encode(['success' => false, 'message' => __('staff.error.name_required')]);
                 exit;
             }
 
@@ -203,7 +203,7 @@ try {
                 }
             }
 
-            echo json_encode(['success' => true, 'message' => __('admin.staff.success.updated')]);
+            echo json_encode(['success' => true, 'message' => __('staff.success.updated')]);
             exit;
         }
 
@@ -241,7 +241,7 @@ try {
             if ($id) {
                 $pdo->prepare("DELETE FROM {$prefix}staff_services WHERE staff_id = ?")->execute([$id]);
                 $pdo->prepare("DELETE FROM {$prefix}staff WHERE id = ?")->execute([$id]);
-                echo json_encode(['success' => true, 'message' => __('admin.staff.success.deleted')]);
+                echo json_encode(['success' => true, 'message' => __('staff.success.deleted')]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Invalid ID']);
             }
@@ -336,13 +336,13 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                 <!-- 헤더 -->
                 <div class="flex items-center justify-between mb-6">
                     <div>
-                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('admin.staff.title') ?></h1>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.staff.description') ?></p>
+                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('staff.title') ?></h1>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('staff.description') ?></p>
                     </div>
                     <button type="button" onclick="openStaffModal()"
                             class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <?= __('admin.staff.create') ?>
+                        <?= __('staff.create') ?>
                     </button>
                 </div>
 
@@ -397,7 +397,7 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                                     <?php if (($settings['staff_designation_fee_enabled'] ?? '0') === '1' && (float)$s['designation_fee'] > 0): ?>
                                     <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 mt-1 text-[10px] font-medium rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        <?= __('admin.staff.fields.designation_fee') ?>: <?= number_format((float)$s['designation_fee']) ?>
+                                        <?= __('staff.fields.designation_fee') ?>: <?= number_format((float)$s['designation_fee']) ?>
                                     </span>
                                     <?php endif; ?>
                                 </div>
@@ -414,11 +414,11 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                                 "service_ids" => $staffServices[$s["id"]] ?? [],
                             ], JSON_UNESCAPED_UNICODE), ENT_QUOTES) ?>)'
                                     class="px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600 rounded-lg transition">
-                                <?= __('admin.staff.edit') ?>
+                                <?= __('staff.edit') ?>
                             </button>
                             <button type="button" onclick="deleteStaff(<?= $s['id'] ?>, '<?= htmlspecialchars($s['name'], ENT_QUOTES) ?>')"
                                     class="px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition">
-                                <?= __('admin.staff.delete') ?>
+                                <?= __('staff.delete') ?>
                             </button>
                         </div>
                     </div>
@@ -426,7 +426,7 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                 </div>
                 <?php else: ?>
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-12 text-center">
-                    <p class="text-zinc-400"><?= __('admin.staff.empty') ?></p>
+                    <p class="text-zinc-400"><?= __('staff.empty') ?></p>
                 </div>
                 <?php endif; ?>
             </div>

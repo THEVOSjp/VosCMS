@@ -84,20 +84,20 @@ try {
 }
 
 $statusLabels = [
-    'working' => __('admin.staff.attendance.status.working'),
-    'completed' => __('admin.staff.attendance.status.completed'),
-    'absent' => __('admin.staff.attendance.status.absent'),
-    'late' => __('admin.staff.attendance.status.late'),
-    'early_leave' => __('admin.staff.attendance.status.early_leave'),
-    'break' => __('admin.staff.attendance.status.break'),
-    'outside' => __('admin.staff.attendance.status.outside'),
+    'working' => __('staff.attendance.status.working'),
+    'completed' => __('staff.attendance.status.completed'),
+    'absent' => __('staff.attendance.status.absent'),
+    'late' => __('staff.attendance.status.late'),
+    'early_leave' => __('staff.attendance.status.early_leave'),
+    'break' => __('staff.attendance.status.break'),
+    'outside' => __('staff.attendance.status.outside'),
 ];
 $statusColorMap = [
     'working'=>'#22c55e','completed'=>'#71717a','absent'=>'#ef4444',
     'late'=>'#f97316','early_leave'=>'#eab308','break'=>'#f59e0b','outside'=>'#6366f1'
 ];
 
-$pageTitle = __('admin.staff.attendance.stats_title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('staff.attendance.stats_title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 ?>
 <!DOCTYPE html>
 <html lang="<?= $config['locale'] ?? 'ko' ?>">
@@ -127,14 +127,14 @@ $pageTitle = __('admin.staff.attendance.stats_title') . ' - ' . ($config['app_na
                 <!-- 헤더 -->
                 <div class="flex items-center justify-between mb-6">
                     <div>
-                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('admin.staff.attendance.stats_title') ?></h1>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.staff.attendance.stats_desc') ?></p>
+                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('staff.attendance.stats_title') ?></h1>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('staff.attendance.stats_desc') ?></p>
                     </div>
                     <div class="flex gap-2 items-center">
-                        <a href="<?= $adminUrl ?>/staff/attendance/report" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"><?= __('admin.staff.attendance.report_title') ?></a>
+                        <a href="<?= $adminUrl ?>/staff/attendance/report" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"><?= __('staff.attendance.report_title') ?></a>
                         <form method="GET" class="flex gap-2">
                             <input type="month" name="month" value="<?= $filterMonth ?>" class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
-                            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-zinc-700 hover:bg-zinc-800 dark:bg-zinc-600 dark:hover:bg-zinc-500 rounded-lg"><?= __('admin.staff.attendance.search') ?></button>
+                            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-zinc-700 hover:bg-zinc-800 dark:bg-zinc-600 dark:hover:bg-zinc-500 rounded-lg"><?= __('staff.attendance.search') ?></button>
                         </form>
                     </div>
                 </div>
@@ -143,25 +143,25 @@ $pageTitle = __('admin.staff.attendance.stats_title') . ' - ' . ($config['app_na
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     <!-- 출근율 트렌드 (6개월) -->
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-6 shadow-sm">
-                        <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-4"><?= __('admin.staff.attendance.chart_trend') ?></h3>
+                        <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-4"><?= __('staff.attendance.chart_trend') ?></h3>
                         <div style="height:250px;"><canvas id="trendChart"></canvas></div>
                     </div>
 
                     <!-- 상태별 분포 (도넛) -->
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-6 shadow-sm">
-                        <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-4"><?= __('admin.staff.attendance.chart_status') ?> — <?= $filterMonth ?></h3>
+                        <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-4"><?= __('staff.attendance.chart_status') ?> — <?= $filterMonth ?></h3>
                         <div style="height:250px;"><canvas id="statusChart"></canvas></div>
                     </div>
 
                     <!-- 스태프별 근무시간 -->
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-6 shadow-sm">
-                        <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-4"><?= __('admin.staff.attendance.chart_staff_hours') ?> — <?= $filterMonth ?></h3>
+                        <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-4"><?= __('staff.attendance.chart_staff_hours') ?> — <?= $filterMonth ?></h3>
                         <div style="height:250px;"><canvas id="staffChart"></canvas></div>
                     </div>
 
                     <!-- 일별 출근 인원 -->
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-6 shadow-sm">
-                        <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-4"><?= __('admin.staff.attendance.chart_daily') ?> — <?= $filterMonth ?></h3>
+                        <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-4"><?= __('staff.attendance.chart_daily') ?> — <?= $filterMonth ?></h3>
                         <div style="height:250px;"><canvas id="dailyChart"></canvas></div>
                     </div>
                 </div>
@@ -182,7 +182,7 @@ $pageTitle = __('admin.staff.attendance.stats_title') . ' - ' . ($config['app_na
             data: {
                 labels: <?= json_encode(array_keys($monthlyTrend)) ?>,
                 datasets: [{
-                    label: '<?= __('admin.staff.attendance.dash_rate') ?>',
+                    label: '<?= __('staff.attendance.dash_rate') ?>',
                     data: <?= json_encode(array_values($monthlyTrend)) ?>,
                     borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)',
                     fill: true, tension: 0.3, pointRadius: 5, pointBackgroundColor: '#3b82f6'
@@ -225,7 +225,7 @@ $pageTitle = __('admin.staff.attendance.stats_title') . ' - ' . ($config['app_na
             data: {
                 labels: Object.keys(staffData),
                 datasets: [{
-                    label: '<?= __('admin.staff.attendance.work_hours') ?>',
+                    label: '<?= __('staff.attendance.work_hours') ?>',
                     data: Object.values(staffData),
                     backgroundColor: 'rgba(99,102,241,0.6)',
                     borderRadius: 4
@@ -248,7 +248,7 @@ $pageTitle = __('admin.staff.attendance.stats_title') . ' - ' . ($config['app_na
             data: {
                 labels: Object.keys(dailyData),
                 datasets: [{
-                    label: '<?= __('admin.staff.attendance.chart_daily_count') ?>',
+                    label: '<?= __('staff.attendance.chart_daily_count') ?>',
                     data: Object.values(dailyData),
                     backgroundColor: 'rgba(34,197,94,0.6)',
                     borderRadius: 4

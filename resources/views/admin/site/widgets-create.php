@@ -2,7 +2,7 @@
 /**
  * RezlyX Admin - 커스텀 위젯 생성/편집
  */
-$pageTitle = __('admin.site.widgets.create') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('site.widgets.create') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 
 try {
     $pdo = new PDO(
@@ -28,7 +28,7 @@ if ($editId > 0) {
     $stmt->execute([$editId]);
     $widget = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($widget) {
-        $pageTitle = __('admin.site.widgets.edit') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+        $pageTitle = __('site.widgets.edit') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
     }
 }
 
@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$name, $slug, $description, $category, $template, $css, $js, $configSchema]);
                 $editId = (int)$pdo->lastInsertId();
             }
-            $message = __('admin.site.widgets.saved');
+            $message = __('site.widgets.saved');
             $messageType = 'success';
             // 리로드
             $stmt = $pdo->prepare("SELECT * FROM rzx_widgets WHERE id = ?");
@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <main class="flex-1 ml-64">
             <?php
-            $pageHeaderTitle = $widget ? __('admin.site.widgets.edit') : __('admin.site.widgets.create');
+            $pageHeaderTitle = $widget ? __('site.widgets.edit') : __('site.widgets.create');
             include __DIR__ . '/../partials/admin-topbar.php';
             ?>
 
@@ -121,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Back link -->
                 <a href="<?= $adminUrl ?>/site/widgets" class="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:underline mb-4">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    <?= __('admin.site.widgets.title') ?>
+                    <?= __('site.widgets.title') ?>
                 </a>
 
                 <form method="POST" id="widgetForm">
@@ -129,33 +129,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <!-- Left: Basic Info -->
                         <div class="lg:col-span-1 space-y-6">
                             <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6">
-                                <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.site.widgets.form.name') ?></h2>
+                                <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('site.widgets.form.name') ?></h2>
 
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.site.widgets.form.name') ?></label>
-                                        <input type="text" name="name" value="<?= htmlspecialchars($widget['name'] ?? '') ?>" placeholder="<?= __('admin.site.widgets.form.name_placeholder') ?>" required
+                                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.widgets.form.name') ?></label>
+                                        <input type="text" name="name" value="<?= htmlspecialchars($widget['name'] ?? '') ?>" placeholder="<?= __('site.widgets.form.name_placeholder') ?>" required
                                                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.site.widgets.form.slug') ?></label>
-                                        <input type="text" name="slug" value="<?= htmlspecialchars($widget['slug'] ?? '') ?>" placeholder="<?= __('admin.site.widgets.form.slug_placeholder') ?>" required
+                                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.widgets.form.slug') ?></label>
+                                        <input type="text" name="slug" value="<?= htmlspecialchars($widget['slug'] ?? '') ?>" placeholder="<?= __('site.widgets.form.slug_placeholder') ?>" required
                                                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.site.widgets.form.description') ?></label>
-                                        <textarea name="description" rows="3" placeholder="<?= __('admin.site.widgets.form.description_placeholder') ?>"
+                                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.widgets.form.description') ?></label>
+                                        <textarea name="description" rows="3" placeholder="<?= __('site.widgets.form.description_placeholder') ?>"
                                                   class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"><?= htmlspecialchars($widget['description'] ?? '') ?></textarea>
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.site.widgets.form.category') ?></label>
+                                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.widgets.form.category') ?></label>
                                         <select name="category" class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                            <option value="general" <?= ($widget['category'] ?? '') === 'general' ? 'selected' : '' ?>><?= __('admin.site.widgets.categories.general') ?></option>
-                                            <option value="layout" <?= ($widget['category'] ?? '') === 'layout' ? 'selected' : '' ?>><?= __('admin.site.widgets.categories.layout') ?></option>
-                                            <option value="content" <?= ($widget['category'] ?? '') === 'content' ? 'selected' : '' ?>><?= __('admin.site.widgets.categories.content') ?></option>
+                                            <option value="general" <?= ($widget['category'] ?? '') === 'general' ? 'selected' : '' ?>><?= __('site.widgets.categories.general') ?></option>
+                                            <option value="layout" <?= ($widget['category'] ?? '') === 'layout' ? 'selected' : '' ?>><?= __('site.widgets.categories.layout') ?></option>
+                                            <option value="content" <?= ($widget['category'] ?? '') === 'content' ? 'selected' : '' ?>><?= __('site.widgets.categories.content') ?></option>
                                         </select>
                                     </div>
                                 </div>
@@ -163,8 +163,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             <!-- Config Schema -->
                             <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6">
-                                <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.site.widgets.form.config_schema') ?></h2>
-                                <textarea name="config_schema" rows="8" placeholder="<?= __('admin.site.widgets.form.config_schema_placeholder') ?>"
+                                <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('site.widgets.form.config_schema') ?></h2>
+                                <textarea name="config_schema" rows="8" placeholder="<?= __('site.widgets.form.config_schema_placeholder') ?>"
                                           class="code-editor w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"><?= htmlspecialchars($widget['config_schema'] ?? '{}') ?></textarea>
                                 <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-2">JSON 형식으로 위젯 설정 필드를 정의합니다.</p>
                             </div>
@@ -174,23 +174,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="lg:col-span-2 space-y-6">
                             <!-- HTML Template -->
                             <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6">
-                                <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.site.widgets.form.template') ?></h2>
-                                <textarea name="template" rows="12" placeholder="<?= htmlspecialchars(__('admin.site.widgets.form.template_placeholder')) ?>"
+                                <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('site.widgets.form.template') ?></h2>
+                                <textarea name="template" rows="12" placeholder="<?= htmlspecialchars(__('site.widgets.form.template_placeholder')) ?>"
                                           class="code-editor w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"><?= htmlspecialchars($widget['template'] ?? '') ?></textarea>
                                 <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-2">{{변수명}} 구문으로 설정값을 삽입할 수 있습니다.</p>
                             </div>
 
                             <!-- CSS -->
                             <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6">
-                                <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.site.widgets.form.css') ?></h2>
-                                <textarea name="css" rows="6" placeholder="<?= __('admin.site.widgets.form.css_placeholder') ?>"
+                                <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('site.widgets.form.css') ?></h2>
+                                <textarea name="css" rows="6" placeholder="<?= __('site.widgets.form.css_placeholder') ?>"
                                           class="code-editor w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"><?= htmlspecialchars($widget['css'] ?? '') ?></textarea>
                             </div>
 
                             <!-- JS -->
                             <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6">
-                                <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.site.widgets.form.js') ?></h2>
-                                <textarea name="js" rows="6" placeholder="<?= __('admin.site.widgets.form.js_placeholder') ?>"
+                                <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('site.widgets.form.js') ?></h2>
+                                <textarea name="js" rows="6" placeholder="<?= __('site.widgets.form.js_placeholder') ?>"
                                           class="code-editor w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"><?= htmlspecialchars($widget['js'] ?? '') ?></textarea>
                             </div>
 

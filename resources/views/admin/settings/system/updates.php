@@ -6,7 +6,7 @@
 
 require_once __DIR__ . '/../_init.php';
 
-$pageTitle = __('admin.settings.system.tabs.updates') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('system.tabs.updates') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentSettingsPage = 'system';
 $currentSystemTab = 'updates';
 
@@ -48,7 +48,7 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
     <?php
     $headerIcon = 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
-    $headerTitle = __('admin.settings.system.updates.current_version');
+    $headerTitle = __('system.updates.current_version');
     $headerDescription = ''; $headerActions = '';
     $headerIconColor = 'text-blue-600';
     include __DIR__ . '/../../components/settings-header.php';
@@ -62,9 +62,10 @@ ob_start();
                 </svg>
             </div>
             <div>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-0.5"><?= __('system.updates.installed_version') ?></p>
                 <p class="text-lg font-bold text-zinc-900 dark:text-white">RezlyX v<?= htmlspecialchars($currentVersion) ?></p>
                 <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                    <?= __('admin.settings.system.updates.channel') ?>:
+                    <?= __('system.updates.channel') ?>:
                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium <?= $channel === 'dev' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' ?>">
                         <?= htmlspecialchars(ucfirst($channel)) ?>
                     </span>
@@ -81,7 +82,7 @@ ob_start();
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
             </svg>
-            <?= __('admin.settings.system.updates.check_update') ?>
+            <?= __('system.updates.check_update') ?>
         </button>
     </div>
 
@@ -93,7 +94,7 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
     <?php
     $headerIcon = 'M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4';
-    $headerTitle = __('admin.settings.system.updates.backups');
+    $headerTitle = __('system.updates.backups');
     $headerDescription = ''; $headerActions = '';
     $headerIconColor = 'text-green-600';
     include __DIR__ . '/../../components/settings-header.php';
@@ -115,7 +116,7 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
     <?php
     $headerIcon = 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z';
-    $headerTitle = __('admin.settings.system.updates.requirements');
+    $headerTitle = __('system.updates.requirements');
     $headerDescription = ''; $headerActions = '';
     $headerIconColor = 'text-orange-600';
     include __DIR__ . '/../../components/settings-header.php';
@@ -129,8 +130,8 @@ ob_start();
             'zip' => 'ZipArchive Extension',
             'openssl' => 'OpenSSL Extension',
             'allow_url_fopen' => 'allow_url_fopen',
-            'writable_root' => __('admin.settings.system.updates.writable_root'),
-            'writable_storage' => __('admin.settings.system.updates.writable_storage'),
+            'writable_root' => __('system.updates.writable_root'),
+            'writable_storage' => __('system.updates.writable_storage'),
         ];
         foreach ($requirements as $key => $met):
         ?>
@@ -148,7 +149,7 @@ ob_start();
                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                 </svg>
-                <?= __('admin.settings.system.updates.not_available') ?>
+                <?= __('system.updates.not_available') ?>
             </span>
             <?php endif; ?>
         </div>
@@ -161,7 +162,7 @@ ob_start();
             <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
             </svg>
-            <?= __('admin.settings.system.updates.requirements_warning') ?>
+            <?= __('system.updates.requirements_warning') ?>
         </p>
     </div>
     <?php endif; ?>
@@ -171,7 +172,7 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
     <?php
     $headerIcon = 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
-    $headerTitle = __('admin.settings.system.updates.notes_title');
+    $headerTitle = __('system.updates.notes_title');
     $headerDescription = ''; $headerActions = '';
     $headerIconColor = 'text-purple-600';
     include __DIR__ . '/../../components/settings-header.php';
@@ -183,19 +184,19 @@ ob_start();
                 <svg class="w-4 h-4 mr-2 mt-0.5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                 </svg>
-                <?= __('admin.settings.system.updates.note_backup') ?>
+                <?= __('system.updates.note_backup') ?>
             </li>
             <li class="flex items-start">
                 <svg class="w-4 h-4 mr-2 mt-0.5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                 </svg>
-                <?= __('admin.settings.system.updates.note_maintenance') ?>
+                <?= __('system.updates.note_maintenance') ?>
             </li>
             <li class="flex items-start">
                 <svg class="w-4 h-4 mr-2 mt-0.5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                 </svg>
-                <?= __('admin.settings.system.updates.note_rollback') ?>
+                <?= __('system.updates.note_rollback') ?>
             </li>
         </ul>
     </div>
@@ -206,7 +207,7 @@ ob_start();
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-xl max-w-lg w-full mx-4 overflow-hidden">
         <div class="p-6">
             <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4" id="modalTitle">
-                <?= __('admin.settings.system.updates.new_version_available') ?>
+                <?= __('system.updates.new_version_available') ?>
             </h3>
             <div id="modalContent"></div>
         </div>
@@ -217,7 +218,7 @@ ob_start();
             </button>
             <button type="button" id="modalConfirmBtn" onclick="performUpdate()"
                     class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
-                <?= __('admin.settings.system.updates.update_now') ?>
+                <?= __('system.updates.update_now') ?>
             </button>
         </div>
     </div>
@@ -246,7 +247,7 @@ async function checkForUpdates() {
     const statusDiv = document.getElementById('updateStatus');
 
     btn.disabled = true;
-    btn.innerHTML = '<svg class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><?= __('admin.settings.system.updates.checking') ?>';
+    btn.innerHTML = '<svg class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><?= __('system.updates.checking') ?>';
 
     try {
         const response = await fetch(ajaxUrl, {
@@ -261,30 +262,55 @@ async function checkForUpdates() {
         const data = await response.json();
 
         if (!data.success) {
-            throw new Error(data.error || '<?= __('admin.settings.system.updates.check_failed') ?>');
+            throw new Error(data.error || '<?= __('system.updates.check_failed') ?>');
         }
 
         const result = data.data;
 
-        if (result.has_update) {
+        // 에러가 있으면 (릴리스 정보 없음 등) 에러로 표시
+        if (result.error && !result.has_update) {
+            statusDiv.innerHTML = `
+                <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg flex items-center">
+                    <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    <p class="text-sm font-medium text-yellow-800 dark:text-yellow-400">${escapeHtml(result.error)}</p>
+                </div>
+            `;
+        } else if (result.has_update) {
             latestVersion = result.latest_version;
             statusDiv.innerHTML = `
                 <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <div class="flex items-center justify-between mb-3">
                         <div>
-                            <p class="text-sm font-medium text-blue-800 dark:text-blue-400">
-                                <?= __('admin.settings.system.updates.new_version_available') ?>
-                            </p>
+                            <p class="text-xs text-blue-600 dark:text-blue-400 mb-0.5"><?= __('system.updates.latest_version') ?></p>
                             <p class="text-lg font-bold text-blue-900 dark:text-blue-300">v${result.latest_version}</p>
                         </div>
-                        <button onclick="showUpdateModal('${result.latest_version}', \`${escapeHtml(result.release_notes || '')}\`)"
-                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
-                            <?= __('admin.settings.system.updates.update_now') ?>
-                        </button>
+                        <div class="flex items-center gap-2">
+                            ${result.download_url ? `
+                            <a href="${result.download_url}" target="_blank"
+                               class="px-4 py-2 border border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/30 text-sm font-medium rounded-lg transition flex items-center">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                <?= __('system.updates.download') ?>
+                            </a>
+                            ` : ''}
+                            <button onclick="showUpdateModal('${result.latest_version}', \`${escapeHtml(result.release_notes || '')}\`)"
+                                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition flex items-center">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                                <?= __('system.updates.update_now') ?>
+                            </button>
+                        </div>
                     </div>
+                    <p class="text-sm text-blue-700 dark:text-blue-400 mb-3">
+                        <?= __('system.updates.update_available_msg') ?>
+                    </p>
                     ${result.release_notes ? `
                     <div class="text-sm text-blue-700 dark:text-blue-400">
-                        <p class="font-medium mb-1"><?= __('admin.settings.system.updates.release_notes') ?>:</p>
+                        <p class="font-medium mb-1"><?= __('system.updates.release_notes') ?>:</p>
                         <div class="bg-white/50 dark:bg-zinc-800/50 p-3 rounded max-h-32 overflow-y-auto whitespace-pre-wrap">${escapeHtml(result.release_notes)}</div>
                     </div>
                     ` : ''}
@@ -296,7 +322,7 @@ async function checkForUpdates() {
                     <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                     </svg>
-                    <p class="text-sm font-medium text-green-800 dark:text-green-400"><?= __('admin.settings.system.updates.up_to_date') ?></p>
+                    <p class="text-sm font-medium text-green-800 dark:text-green-400"><?= __('system.updates.up_to_date') ?></p>
                 </div>
             `;
         }
@@ -307,7 +333,7 @@ async function checkForUpdates() {
         statusDiv.classList.remove('hidden');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><?= __('admin.settings.system.updates.check_update') ?>';
+        btn.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><?= __('system.updates.check_update') ?>';
     }
 }
 
@@ -322,7 +348,7 @@ function showUpdateModal(version, notes) {
         </p>
         ${notes ? `
         <div class="bg-zinc-50 dark:bg-zinc-900 p-3 rounded-lg max-h-48 overflow-y-auto">
-            <p class="text-xs text-zinc-500 mb-2"><?= __('admin.settings.system.updates.release_notes') ?></p>
+            <p class="text-xs text-zinc-500 mb-2"><?= __('system.updates.release_notes') ?></p>
             <div class="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap">${notes}</div>
         </div>
         ` : ''}
@@ -331,7 +357,7 @@ function showUpdateModal(version, notes) {
                 <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
                 </svg>
-                <?= __('admin.settings.system.updates.confirm_update') ?>
+                <?= __('system.updates.confirm_update') ?>
             </p>
         </div>
     `;
@@ -377,13 +403,13 @@ async function performUpdate() {
                         </svg>
                         <p class="text-sm font-medium text-green-800 dark:text-green-400">${data.data.message}</p>
                     </div>
-                    <p class="mt-2 text-sm text-green-700 dark:text-green-300"><?= __('admin.settings.system.updates.reload_page') ?></p>
+                    <p class="mt-2 text-sm text-green-700 dark:text-green-300"><?= __('system.updates.reload_page') ?></p>
                 </div>
             `;
             // 3초 후 페이지 새로고침
             setTimeout(() => location.reload(), 3000);
         } else {
-            throw new Error(data.error || data.data?.error || '<?= __('admin.settings.system.updates.update_failed') ?>');
+            throw new Error(data.error || data.data?.error || '<?= __('system.updates.update_failed') ?>');
         }
 
     } catch (error) {
@@ -415,7 +441,7 @@ async function loadBackups() {
                     <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                     </svg>
-                    <p><?= __('admin.settings.system.updates.no_backups') ?></p>
+                    <p><?= __('system.updates.no_backups') ?></p>
                 </div>
             `;
             return;
@@ -429,7 +455,7 @@ async function loadBackups() {
                 </div>
                 <button onclick="restoreBackup('${backup.path}')"
                         class="px-3 py-1 text-xs text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition">
-                    <?= __('admin.settings.system.updates.restore') ?>
+                    <?= __('system.updates.restore') ?>
                 </button>
             </div>
         `).join('');
@@ -441,7 +467,7 @@ async function loadBackups() {
 
 // 백업 복원
 async function restoreBackup(backupPath) {
-    if (!confirm('<?= __('admin.settings.system.updates.confirm_restore') ?>')) {
+    if (!confirm('<?= __('system.updates.confirm_restore') ?>')) {
         return;
     }
 
@@ -461,7 +487,7 @@ async function restoreBackup(backupPath) {
             alert(data.data.message);
             location.reload();
         } else {
-            throw new Error(data.error || '<?= __('admin.settings.system.updates.restore_failed') ?>');
+            throw new Error(data.error || '<?= __('system.updates.restore_failed') ?>');
         }
     } catch (error) {
         alert(error.message);

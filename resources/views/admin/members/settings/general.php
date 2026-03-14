@@ -6,7 +6,7 @@
 
 require_once __DIR__ . '/_init.php';
 
-$pageTitle = __('admin.members.settings.tabs.general') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('members.settings.tabs.general') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentMemberSettingsPage = 'general';
 
 // Handle form submission
@@ -52,20 +52,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute(['member_password_recovery_method', $passwordRecoveryMethod]);
             $memberSettings['member_password_recovery_method'] = $passwordRecoveryMethod;
 
-            $message = __('admin.settings.success');
+            $message = __('settings.success');
             $messageType = 'success';
         } catch (PDOException $e) {
-            $message = __('admin.settings.error_save') . ': ' . $e->getMessage();
+            $message = __('settings.error_save') . ': ' . $e->getMessage();
             $messageType = 'error';
         }
     } elseif ($action === 'sync_member_data') {
         try {
             // 회원정보 동기화 로직
             // TODO: 실제 동기화 로직 구현
-            $message = __('admin.members.settings.general.sync_complete');
+            $message = __('members.settings.general.sync_complete');
             $messageType = 'success';
         } catch (Exception $e) {
-            $message = __('admin.members.settings.general.sync_error') . ': ' . $e->getMessage();
+            $message = __('members.settings.general.sync_error') . ': ' . $e->getMessage();
             $messageType = 'error';
         }
     }
@@ -77,8 +77,8 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors mb-6">
     <?php
     $headerIcon = 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z';
-    $headerTitle = __('admin.members.settings.general.title');
-    $headerDescription = __('admin.members.settings.general.description');
+    $headerTitle = __('members.settings.general.title');
+    $headerDescription = __('members.settings.general.description');
     $headerIconColor = ''; $headerActions = '';
     include __DIR__ . '/../../components/settings-header.php';
     ?>
@@ -88,8 +88,8 @@ ob_start();
 
         <!-- 회원 가입 허가 -->
         <div class="py-4 border-b dark:border-zinc-700">
-            <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-1"><?= __('admin.members.settings.general.registration_mode') ?></label>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3"><?= __('admin.members.settings.general.registration_mode_desc') ?></p>
+            <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-1"><?= __('members.settings.general.registration_mode') ?></label>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3"><?= __('members.settings.general.registration_mode_desc') ?></p>
             <div class="flex flex-wrap gap-4 mb-3">
                 <?php $currentMode = $memberSettings['member_registration_mode'] ?? 'yes'; ?>
                 <label class="flex items-center cursor-pointer">
@@ -111,25 +111,25 @@ ob_start();
                            <?php echo $currentMode === 'url_key' ? 'checked' : ''; ?>
                            class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500"
                            onchange="toggleUrlKeyField()">
-                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.general.registration_url_key') ?></span>
+                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('members.settings.general.registration_url_key') ?></span>
                 </label>
             </div>
             <!-- URL 키 입력 필드 -->
             <div id="urlKeyField" class="<?php echo $currentMode === 'url_key' ? '' : 'hidden'; ?> mt-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.members.settings.general.url_key_label') ?></label>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('members.settings.general.url_key_label') ?></label>
                 <input type="text" name="member_registration_url_key"
                        value="<?php echo htmlspecialchars($memberSettings['member_registration_url_key'] ?? ''); ?>"
                        class="w-full md:w-1/2 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                       placeholder="<?= __('admin.members.settings.general.url_key_placeholder') ?>">
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-2"><?= __('admin.members.settings.general.url_key_hint') ?></p>
+                       placeholder="<?= __('members.settings.general.url_key_placeholder') ?>">
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-2"><?= __('members.settings.general.url_key_hint') ?></p>
             </div>
         </div>
 
         <!-- 메일 인증 사용 -->
         <div class="flex items-center justify-between py-4 border-b dark:border-zinc-700">
             <div>
-                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('admin.members.settings.general.email_verification') ?></h3>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.members.settings.general.email_verification_desc') ?></p>
+                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('members.settings.general.email_verification') ?></h3>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('members.settings.general.email_verification_desc') ?></p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" name="member_email_verification" class="sr-only peer" <?php echo ($memberSettings['member_email_verification'] ?? '1') === '1' ? 'checked' : ''; ?>>
@@ -139,22 +139,22 @@ ob_start();
 
         <!-- 인증 메일 유효기간 -->
         <div class="py-4 border-b dark:border-zinc-700">
-            <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-1"><?= __('admin.members.settings.general.email_validity') ?></label>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3"><?= __('admin.members.settings.general.email_validity_desc') ?></p>
+            <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-1"><?= __('members.settings.general.email_validity') ?></label>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3"><?= __('members.settings.general.email_validity_desc') ?></p>
             <div class="flex items-center space-x-2">
                 <input type="number" name="member_email_validity_days"
                        value="<?php echo htmlspecialchars($memberSettings['member_email_validity_days'] ?? '1'); ?>"
                        min="1" max="30"
                        class="w-20 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center">
-                <span class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.general.days') ?></span>
+                <span class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('members.settings.general.days') ?></span>
             </div>
         </div>
 
         <!-- 회원 프로필사진 보이기 -->
         <div class="flex items-center justify-between py-4 border-b dark:border-zinc-700">
             <div>
-                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('admin.members.settings.general.show_profile_photo') ?></h3>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.members.settings.general.show_profile_photo_desc') ?></p>
+                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('members.settings.general.show_profile_photo') ?></h3>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('members.settings.general.show_profile_photo_desc') ?></p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" name="member_show_profile_photo" class="sr-only peer" <?php echo ($memberSettings['member_show_profile_photo'] ?? '1') === '1' ? 'checked' : ''; ?>>
@@ -165,8 +165,8 @@ ob_start();
         <!-- 비번 변경시 다른 기기 로그아웃 -->
         <div class="flex items-center justify-between py-4 border-b dark:border-zinc-700">
             <div>
-                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('admin.members.settings.general.logout_on_password_change') ?></h3>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.members.settings.general.logout_on_password_change_desc') ?></p>
+                <h3 class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('members.settings.general.logout_on_password_change') ?></h3>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('members.settings.general.logout_on_password_change_desc') ?></p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" name="member_logout_on_password_change" class="sr-only peer" <?php echo ($memberSettings['member_logout_on_password_change'] ?? '1') === '1' ? 'checked' : ''; ?>>
@@ -176,22 +176,22 @@ ob_start();
 
         <!-- ID/PW 찾기 방법 -->
         <div class="py-4">
-            <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-1"><?= __('admin.members.settings.general.password_recovery_method') ?></label>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3"><?= __('admin.members.settings.general.password_recovery_method_desc') ?></p>
+            <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-1"><?= __('members.settings.general.password_recovery_method') ?></label>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3"><?= __('members.settings.general.password_recovery_method_desc') ?></p>
             <div class="flex flex-wrap gap-4">
                 <?php $currentMethod = $memberSettings['member_password_recovery_method'] ?? 'link'; ?>
                 <label class="flex items-center cursor-pointer">
                     <input type="radio" name="member_password_recovery_method" value="link"
                            <?php echo $currentMethod === 'link' ? 'checked' : ''; ?>
                            class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.general.recovery_link') ?></span>
+                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('members.settings.general.recovery_link') ?></span>
                     <span class="ml-1 text-xs text-green-600 dark:text-green-400">(<?= __('admin.common.recommended') ?>)</span>
                 </label>
                 <label class="flex items-center cursor-pointer">
                     <input type="radio" name="member_password_recovery_method" value="random"
                            <?php echo $currentMethod === 'random' ? 'checked' : ''; ?>
                            class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.general.recovery_random') ?></span>
+                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('members.settings.general.recovery_random') ?></span>
                 </label>
             </div>
         </div>
@@ -208,7 +208,7 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
     <?php
     $headerIcon = 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15';
-    $headerTitle = __('admin.members.settings.general.sync_title');
+    $headerTitle = __('members.settings.general.sync_title');
     $headerDescription = ''; $headerActions = '';
     $headerIconColor = 'text-amber-600';
     include __DIR__ . '/../../components/settings-header.php';
@@ -216,19 +216,19 @@ ob_start();
     <form method="POST" onsubmit="return confirmSync()">
         <input type="hidden" name="action" value="sync_member_data">
         <div class="flex items-center justify-between">
-            <p class="text-sm text-zinc-600 dark:text-zinc-400"><?= __('admin.members.settings.general.sync_description') ?></p>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400"><?= __('members.settings.general.sync_description') ?></p>
             <button type="submit" class="px-4 py-2 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                 </svg>
-                <?= __('admin.members.settings.general.sync_button') ?>
+                <?= __('members.settings.general.sync_button') ?>
             </button>
         </div>
         <p class="mt-3 text-xs text-amber-600 dark:text-amber-400">
             <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
             </svg>
-            <?= __('admin.members.settings.general.sync_warning') ?>
+            <?= __('members.settings.general.sync_warning') ?>
         </p>
     </form>
 </div>
@@ -248,7 +248,7 @@ ob_start();
     }
 
     function confirmSync() {
-        return confirm('<?= __('admin.members.settings.general.sync_confirm') ?>');
+        return confirm('<?= __('members.settings.general.sync_confirm') ?>');
     }
 </script>
 

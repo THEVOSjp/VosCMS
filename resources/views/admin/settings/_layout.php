@@ -55,7 +55,7 @@
         <main class="flex-1 ml-64">
             <!-- Top Bar -->
             <?php
-            $pageHeaderTitle = __('admin.settings.title');
+            $pageHeaderTitle = __('settings.title');
             include __DIR__ . '/../partials/admin-topbar.php';
             ?>
 

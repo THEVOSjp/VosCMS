@@ -26,7 +26,7 @@
             $editor.summernote({
                 lang: 'ko-KR',
                 height: 350,
-                placeholder: '<?= __('admin.site.pages.compliance.content_placeholder') ?>',
+                placeholder: '<?= __('site.pages.compliance.content_placeholder') ?>',
                 toolbar: [
                     ['style', ['style']],
                     ['font', ['bold', 'italic', 'underline', 'strikethrough', 'clear']],
@@ -117,7 +117,7 @@
                     if (result.success && result.data) {
                         var html = generateDefaultHtml(result.data, locale);
                         setEditorContent(html);
-                        showAlert('<?= __('admin.site.pages.compliance.default_loaded') ?>', 'success');
+                        showAlert('<?= __('site.pages.compliance.default_loaded') ?>', 'success');
                     }
                 })
                 .catch(function(err) {
@@ -134,10 +134,10 @@
         // 테이블 헤더
         lines.push('<table class="w-full text-sm border-collapse">');
         lines.push('<thead><tr class="bg-zinc-100 dark:bg-zinc-700">');
-        lines.push('<th class="px-4 py-2 text-left border"><?= __('admin.site.pages.compliance.col_type') ?></th>');
-        lines.push('<th class="px-4 py-2 text-left border"><?= __('admin.site.pages.compliance.col_retention') ?></th>');
-        lines.push('<th class="px-4 py-2 text-left border"><?= __('admin.site.pages.compliance.col_basis') ?></th>');
-        lines.push('<th class="px-4 py-2 text-left border"><?= __('admin.site.pages.compliance.col_note') ?></th>');
+        lines.push('<th class="px-4 py-2 text-left border"><?= __('site.pages.compliance.col_type') ?></th>');
+        lines.push('<th class="px-4 py-2 text-left border"><?= __('site.pages.compliance.col_retention') ?></th>');
+        lines.push('<th class="px-4 py-2 text-left border"><?= __('site.pages.compliance.col_basis') ?></th>');
+        lines.push('<th class="px-4 py-2 text-left border"><?= __('site.pages.compliance.col_note') ?></th>');
         lines.push('</tr></thead><tbody>');
 
         // 데이터 행
@@ -157,7 +157,7 @@
         if (data.tips && data.tips.length > 0) {
             lines.push('');
             lines.push('<div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">');
-            lines.push('<h4 class="font-semibold text-sm mb-2"><?= __('admin.site.pages.compliance.tips_title') ?></h4>');
+            lines.push('<h4 class="font-semibold text-sm mb-2"><?= __('site.pages.compliance.tips_title') ?></h4>');
             lines.push('<ul class="list-disc list-inside text-sm space-y-1">');
             data.tips.forEach(function(tipKey) {
                 lines.push('<li>' + translateKey(tipKey) + '</li>');
@@ -169,7 +169,7 @@
         if (data.references && data.references.length > 0) {
             lines.push('');
             lines.push('<div class="mt-4">');
-            lines.push('<h4 class="font-semibold text-sm mb-2"><?= __('admin.site.pages.compliance.references') ?></h4>');
+            lines.push('<h4 class="font-semibold text-sm mb-2"><?= __('site.pages.compliance.references') ?></h4>');
             lines.push('<ul class="text-sm space-y-1">');
             data.references.forEach(function(ref) {
                 lines.push('<li><a href="' + ref.url + '" target="_blank" class="text-blue-600 hover:underline">' + translateKey(ref.title_key) + '</a></li>');
@@ -231,7 +231,7 @@
         console.log('[Compliance] Opening preview, title:', title);
 
         document.getElementById('previewTitle').textContent = title;
-        document.getElementById('previewBody').innerHTML = content || '<p class="text-zinc-400"><?= __('admin.site.pages.compliance.content_placeholder') ?></p>';
+        document.getElementById('previewBody').innerHTML = content || '<p class="text-zinc-400"><?= __('site.pages.compliance.content_placeholder') ?></p>';
         previewModal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     }

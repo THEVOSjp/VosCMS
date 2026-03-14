@@ -7,7 +7,7 @@ if (!function_exists('__')) {
     require_once BASE_PATH . '/rzxlib/Core/Helpers/lang.php';
 }
 
-$pageTitle = __('admin.staff.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('staff.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
@@ -57,7 +57,7 @@ try {
                     $userId = trim($_POST['user_id'] ?? '') ?: null;
 
                     if (empty($name)) {
-                        echo json_encode(['success' => false, 'message' => __('admin.staff.error.name_required')]);
+                        echo json_encode(['success' => false, 'message' => __('staff.error.name_required')]);
                         exit;
                     }
 
@@ -66,7 +66,7 @@ try {
                         $chk = $pdo->prepare("SELECT id FROM {$prefix}staff WHERE user_id = ?");
                         $chk->execute([$userId]);
                         if ($chk->fetch()) {
-                            echo json_encode(['success' => false, 'message' => __('admin.staff.error.already_linked')]);
+                            echo json_encode(['success' => false, 'message' => __('staff.error.already_linked')]);
                             exit;
                         }
                     }
@@ -86,7 +86,7 @@ try {
                         }
                     }
 
-                    echo json_encode(['success' => true, 'message' => __('admin.staff.success.created'), 'id' => $newId]);
+                    echo json_encode(['success' => true, 'message' => __('staff.success.created'), 'id' => $newId]);
                     exit;
 
                 case 'update_staff':
@@ -99,7 +99,7 @@ try {
                     $userId = trim($_POST['user_id'] ?? '') ?: null;
 
                     if (empty($name)) {
-                        echo json_encode(['success' => false, 'message' => __('admin.staff.error.name_required')]);
+                        echo json_encode(['success' => false, 'message' => __('staff.error.name_required')]);
                         exit;
                     }
 
@@ -108,7 +108,7 @@ try {
                         $chk = $pdo->prepare("SELECT id FROM {$prefix}staff WHERE user_id = ? AND id != ?");
                         $chk->execute([$userId, $id]);
                         if ($chk->fetch()) {
-                            echo json_encode(['success' => false, 'message' => __('admin.staff.error.already_linked')]);
+                            echo json_encode(['success' => false, 'message' => __('staff.error.already_linked')]);
                             exit;
                         }
                     }
@@ -127,14 +127,14 @@ try {
                         }
                     }
 
-                    echo json_encode(['success' => true, 'message' => __('admin.staff.success.updated')]);
+                    echo json_encode(['success' => true, 'message' => __('staff.success.updated')]);
                     exit;
 
                 case 'delete_staff':
                     $id = (int)$_POST['id'];
                     $pdo->prepare("DELETE FROM {$prefix}staff_services WHERE staff_id = ?")->execute([$id]);
                     $pdo->prepare("DELETE FROM {$prefix}staff WHERE id = ?")->execute([$id]);
-                    echo json_encode(['success' => true, 'message' => __('admin.staff.success.deleted')]);
+                    echo json_encode(['success' => true, 'message' => __('staff.success.deleted')]);
                     exit;
 
                 case 'toggle_staff':
@@ -208,8 +208,8 @@ try {
                 <!-- 헤더 -->
                 <div class="flex items-center justify-between mb-6">
                     <div>
-                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('admin.staff.title') ?></h1>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.staff.description') ?></p>
+                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('staff.title') ?></h1>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('staff.description') ?></p>
                     </div>
                 </div>
 
@@ -218,7 +218,7 @@ try {
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-5 border border-zinc-200 dark:border-zinc-700">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.total') ?></p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('staff.total') ?></p>
                                 <p class="text-2xl font-bold mt-1"><?= $totalStaff ?></p>
                             </div>
                             <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
@@ -229,7 +229,7 @@ try {
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-5 border border-zinc-200 dark:border-zinc-700">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.staff.active') ?></p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('staff.active') ?></p>
                                 <p class="text-2xl font-bold mt-1"><?= $activeStaff ?></p>
                             </div>
                             <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
@@ -244,7 +244,7 @@ try {
                     <button onclick="openStaffModal()"
                             class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <?= __('admin.staff.create') ?>
+                        <?= __('staff.create') ?>
                     </button>
                 </div>
 
@@ -253,19 +253,19 @@ try {
                     <?php if (empty($staffList)): ?>
                     <div class="p-12 text-center text-zinc-500 dark:text-zinc-400">
                         <svg class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                        <p><?= __('admin.staff.empty') ?></p>
-                        <button onclick="openStaffModal()" class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium">+ <?= __('admin.staff.create') ?></button>
+                        <p><?= __('staff.empty') ?></p>
+                        <button onclick="openStaffModal()" class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium">+ <?= __('staff.create') ?></button>
                     </div>
                     <?php else: ?>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead class="bg-zinc-50 dark:bg-zinc-700/50">
                                 <tr>
-                                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.staff.fields.name') ?></th>
-                                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.staff.fields.contact') ?></th>
-                                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.staff.fields.services') ?></th>
-                                    <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.staff.fields.is_active') ?></th>
-                                    <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.staff.actions') ?></th>
+                                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('staff.fields.name') ?></th>
+                                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('staff.fields.contact') ?></th>
+                                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('staff.fields.services') ?></th>
+                                    <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('staff.fields.is_active') ?></th>
+                                    <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('staff.actions') ?></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -280,7 +280,7 @@ try {
                                                 <div class="font-medium text-zinc-900 dark:text-white">
                                                     <?= htmlspecialchars($st['name']) ?>
                                                     <?php if (!empty($st['user_id'])): ?>
-                                                    <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300" title="<?= __('admin.staff.linked_member') ?>"><?= __('admin.staff.linked') ?></span>
+                                                    <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300" title="<?= __('staff.linked_member') ?>"><?= __('staff.linked') ?></span>
                                                     <?php endif; ?>
                                                 </div>
                                                 <?php if (!empty($st['bio'])): ?>
@@ -325,11 +325,11 @@ try {
                                     <td class="px-4 py-3 text-center">
                                         <div class="flex items-center justify-center gap-1">
                                             <button onclick='editStaff(<?= json_encode($st, JSON_HEX_APOS | JSON_HEX_QUOT) ?>, <?= json_encode($staffServices[$st['id']] ?? []) ?>)'
-                                                    class="p-1.5 text-zinc-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors" title="<?= __('admin.staff.edit') ?>">
+                                                    class="p-1.5 text-zinc-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors" title="<?= __('staff.edit') ?>">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                             </button>
                                             <button onclick="deleteStaff(<?= $st['id'] ?>)"
-                                                    class="p-1.5 text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="<?= __('admin.staff.delete') ?>">
+                                                    class="p-1.5 text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="<?= __('staff.delete') ?>">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                             </button>
                                         </div>

@@ -7,7 +7,7 @@
 require_once __DIR__ . '/_init.php';
 include_once __DIR__ . '/../../components/multilang-button.php';
 
-$pageTitle = __('admin.members.settings.tabs.terms') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('members.settings.tabs.terms') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentMemberSettingsPage = 'terms';
 
 // DB 컬럼 타입 확인 및 자동 수정
@@ -103,10 +103,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $debugInfo .= "{$key}: POST={$info['raw_length']}bytes, Clean={$info['clean_length']}bytes, DB={$dbLen}bytes\n";
             }
 
-            $message = __('admin.settings.success') . "\n\n" . $debugInfo;
+            $message = __('settings.success') . "\n\n" . $debugInfo;
             $messageType = 'success';
         } catch (PDOException $e) {
-            $message = __('admin.settings.error_save') . ': ' . $e->getMessage();
+            $message = __('settings.error_save') . ': ' . $e->getMessage();
             $messageType = 'error';
         }
     }
@@ -121,8 +121,8 @@ ob_start();
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors mb-6">
         <?php
         $headerIcon = 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z';
-        $headerTitle = __('admin.members.settings.terms.title');
-        $headerDescription = __('admin.members.settings.terms.description');
+        $headerTitle = __('members.settings.terms.title');
+        $headerDescription = __('members.settings.terms.description');
         $headerIconColor = ''; $headerActions = '';
         include __DIR__ . '/../../components/settings-header.php';
         ?>
@@ -131,14 +131,14 @@ ob_start();
         <!-- 회원 가입 약관 <?= $i ?> -->
         <div class="<?= $i > 1 ? 'mt-8 pt-8 border-t dark:border-zinc-700' : '' ?>">
             <h3 class="text-base font-semibold text-zinc-900 dark:text-white mb-4">
-                <?= __('admin.members.settings.terms.term_section') ?> <?= $i ?>
+                <?= __('members.settings.terms.term_section') ?> <?= $i ?>
             </h3>
 
             <!-- 약관 제목 -->
             <div class="mb-4">
                 <div class="flex items-center gap-2 mb-2">
                     <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                        <?= __('admin.members.settings.terms.term_title') ?>
+                        <?= __('members.settings.terms.term_title') ?>
                     </label>
                     <?= rzx_multilang_btn("openMultilangModal('term.{$i}.title', 'term_{$i}_title', 'text')") ?>
                 </div>
@@ -147,7 +147,7 @@ ob_start();
                        id="term_<?= $i ?>_title"
                        name="member_term_<?= $i ?>_title"
                        value="<?= htmlspecialchars($termTitleValue) ?>"
-                       placeholder="<?= __('admin.members.settings.terms.term_title_placeholder') ?>"
+                       placeholder="<?= __('members.settings.terms.term_title_placeholder') ?>"
                        class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
 
@@ -155,7 +155,7 @@ ob_start();
             <div class="mb-4">
                 <div class="flex items-center gap-2 mb-2">
                     <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                        <?= __('admin.members.settings.terms.term_content') ?>
+                        <?= __('members.settings.terms.term_content') ?>
                     </label>
                     <?= rzx_multilang_btn("openMultilangModal('term.{$i}.content', 'term_{$i}_content', 'editor')") ?>
                 </div>
@@ -168,26 +168,26 @@ ob_start();
             <!-- 동의 필수 여부 -->
             <div class="flex items-center space-x-6">
                 <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    <?= __('admin.members.settings.terms.consent_required') ?>
+                    <?= __('members.settings.terms.consent_required') ?>
                 </span>
                 <?php $currentConsent = $memberSettings["member_term_{$i}_consent"] ?? 'disabled'; ?>
                 <label class="inline-flex items-center cursor-pointer">
                     <input type="radio" name="member_term_<?= $i ?>_consent" value="required"
                            <?= $currentConsent === 'required' ? 'checked' : '' ?>
                            class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.terms.consent_required_option') ?></span>
+                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('members.settings.terms.consent_required_option') ?></span>
                 </label>
                 <label class="inline-flex items-center cursor-pointer">
                     <input type="radio" name="member_term_<?= $i ?>_consent" value="optional"
                            <?= $currentConsent === 'optional' ? 'checked' : '' ?>
                            class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.terms.consent_optional_option') ?></span>
+                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('members.settings.terms.consent_optional_option') ?></span>
                 </label>
                 <label class="inline-flex items-center cursor-pointer">
                     <input type="radio" name="member_term_<?= $i ?>_consent" value="disabled"
                            <?= $currentConsent === 'disabled' ? 'checked' : '' ?>
                            class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.members.settings.terms.consent_disabled_option') ?></span>
+                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('members.settings.terms.consent_disabled_option') ?></span>
                 </label>
             </div>
         </div>

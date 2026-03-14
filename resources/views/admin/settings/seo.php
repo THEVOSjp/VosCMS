@@ -7,7 +7,7 @@
 // Initialize database and settings
 require_once __DIR__ . '/_init.php';
 
-$pageTitle = __('admin.settings.tabs.seo') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('settings.tabs.seo') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentSettingsPage = 'seo';
 
 // Handle form submission
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
             } else {
-                $message = __('admin.settings.error_image_type');
+                $message = __('settings.error_image_type');
                 $messageType = 'error';
             }
         }
@@ -76,10 +76,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $settings['ga_tracking_id'] = $gaTrackingId;
                 $settings['gtm_id'] = $gtmId;
 
-                $message = __('admin.settings.seo.success');
+                $message = __('settings.seo.success');
                 $messageType = 'success';
             } catch (PDOException $e) {
-                $message = __('admin.settings.error_save') . ': ' . $e->getMessage();
+                $message = __('settings.error_save') . ': ' . $e->getMessage();
                 $messageType = 'error';
             }
         }
@@ -94,10 +94,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute(['og_image']);
 
             unset($settings['og_image']);
-            $message = __('admin.settings.seo.og.image_deleted');
+            $message = __('settings.seo.og.image_deleted');
             $messageType = 'success';
         } catch (PDOException $e) {
-            $message = __('admin.settings.error_save') . ': ' . $e->getMessage();
+            $message = __('settings.error_save') . ': ' . $e->getMessage();
             $messageType = 'error';
         }
     }
@@ -110,8 +110,8 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
     <?php
     $headerIcon = 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z';
-    $headerTitle = __('admin.settings.seo.title');
-    $headerDescription = __('admin.settings.seo.description');
+    $headerTitle = __('settings.seo.title');
+    $headerDescription = __('settings.seo.description');
     $headerIconColor = ''; $headerActions = '';
     include __DIR__ . '/../components/settings-header.php';
     ?>
@@ -121,11 +121,11 @@ ob_start();
 
         <!-- Meta Tags Section -->
         <div class="border-b dark:border-zinc-700 pb-6">
-            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.seo.meta.title') ?></h3>
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.meta.title') ?></h3>
 
             <div class="mb-4">
-                <label for="seo_description" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.seo.meta.description_label') ?></label>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.meta.description_hint') ?></p>
+                <label for="seo_description" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.seo.meta.description_label') ?></label>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.meta.description_hint') ?></p>
                 <textarea name="seo_description" id="seo_description" rows="3"
                           class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           maxlength="200"><?= htmlspecialchars($settings['seo_description'] ?? ''); ?></textarea>
@@ -133,26 +133,26 @@ ob_start();
             </div>
 
             <div>
-                <label for="seo_keywords" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.seo.meta.keywords_label') ?></label>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.meta.keywords_hint') ?></p>
+                <label for="seo_keywords" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.seo.meta.keywords_label') ?></label>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.meta.keywords_hint') ?></p>
                 <input type="text" name="seo_keywords" id="seo_keywords"
                        value="<?= htmlspecialchars($settings['seo_keywords'] ?? ''); ?>"
                        class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                       placeholder="<?= __('admin.settings.seo.meta.keywords_placeholder') ?>">
+                       placeholder="<?= __('settings.seo.meta.keywords_placeholder') ?>">
             </div>
         </div>
 
         <!-- Open Graph Section -->
         <div class="border-b dark:border-zinc-700 pb-6">
-            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-2"><?= __('admin.settings.seo.og.title') ?></h3>
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4"><?= __('admin.settings.seo.og.description') ?></p>
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-2"><?= __('settings.seo.og.title') ?></h3>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4"><?= __('settings.seo.og.description') ?></p>
 
             <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.settings.seo.og.image_label') ?></label>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('settings.seo.og.image_label') ?></label>
 
                 <?php if (!empty($settings['og_image'])): ?>
                 <div class="mb-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg inline-block">
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.og.image_current') ?>:</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.og.image_current') ?>:</p>
                     <img src="<?= $baseUrl . htmlspecialchars($settings['og_image']); ?>" alt="OG Image" class="max-h-32 object-contain rounded">
                 </div>
                 <?php endif; ?>
@@ -162,7 +162,7 @@ ob_start();
                         <input type="file" name="og_image" id="og_image"
                                accept="image/jpeg,image/png,image/webp"
                                class="block w-full text-sm text-zinc-500 dark:text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/30 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50 cursor-pointer">
-                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.seo.og.image_hint') ?></p>
+                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400"><?= __('settings.seo.og.image_hint') ?></p>
                     </div>
 
                     <?php if (!empty($settings['og_image'])): ?>
@@ -170,13 +170,13 @@ ob_start();
                         <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
-                        <?= __('admin.settings.seo.og.image_delete') ?>
+                        <?= __('settings.seo.og.image_delete') ?>
                     </button>
                     <?php endif; ?>
                 </div>
 
                 <div id="ogImagePreview" class="mt-3 hidden">
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.og.image_preview') ?>:</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.og.image_preview') ?>:</p>
                     <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg inline-block">
                         <img id="ogImagePreviewImg" src="" alt="Preview" class="max-h-32 object-contain rounded">
                     </div>
@@ -186,22 +186,22 @@ ob_start();
 
         <!-- Search Engine Section -->
         <div class="border-b dark:border-zinc-700 pb-6">
-            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.seo.search_engine.title') ?></h3>
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.search_engine.title') ?></h3>
 
             <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.settings.seo.search_engine.robots_label') ?></label>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.search_engine.robots_hint') ?></p>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('settings.seo.search_engine.robots_label') ?></label>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.search_engine.robots_hint') ?></p>
                 <?php $currentRobots = $settings['seo_robots'] ?? 'index'; ?>
                 <div class="flex flex-wrap gap-4">
                     <label class="flex items-center cursor-pointer">
                         <input type="radio" name="seo_robots" value="index" <?= $currentRobots === 'index' ? 'checked' : ''; ?>
                                class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.settings.seo.search_engine.robots_index') ?></span>
+                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.seo.search_engine.robots_index') ?></span>
                     </label>
                     <label class="flex items-center cursor-pointer">
                         <input type="radio" name="seo_robots" value="noindex" <?= $currentRobots === 'noindex' ? 'checked' : ''; ?>
                                class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.settings.seo.search_engine.robots_noindex') ?></span>
+                        <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.seo.search_engine.robots_noindex') ?></span>
                     </label>
                 </div>
             </div>
@@ -209,50 +209,50 @@ ob_start();
 
         <!-- Webmaster Tools Section -->
         <div class="border-b dark:border-zinc-700 pb-6">
-            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.seo.webmaster.title') ?></h3>
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.webmaster.title') ?></h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="google_verification" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.seo.webmaster.google_label') ?></label>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.webmaster.google_hint') ?></p>
+                    <label for="google_verification" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.seo.webmaster.google_label') ?></label>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.webmaster.google_hint') ?></p>
                     <input type="text" name="google_verification" id="google_verification"
                            value="<?= htmlspecialchars($settings['google_verification'] ?? ''); ?>"
                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="<?= __('admin.settings.seo.webmaster.google_placeholder') ?>">
+                           placeholder="<?= __('settings.seo.webmaster.google_placeholder') ?>">
                 </div>
 
                 <div>
-                    <label for="naver_verification" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.seo.webmaster.naver_label') ?></label>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.webmaster.naver_hint') ?></p>
+                    <label for="naver_verification" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.seo.webmaster.naver_label') ?></label>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.webmaster.naver_hint') ?></p>
                     <input type="text" name="naver_verification" id="naver_verification"
                            value="<?= htmlspecialchars($settings['naver_verification'] ?? ''); ?>"
                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="<?= __('admin.settings.seo.webmaster.naver_placeholder') ?>">
+                           placeholder="<?= __('settings.seo.webmaster.naver_placeholder') ?>">
                 </div>
             </div>
         </div>
 
         <!-- Analytics Section -->
         <div>
-            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('admin.settings.seo.analytics.title') ?></h3>
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.analytics.title') ?></h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="ga_tracking_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.seo.analytics.ga_label') ?></label>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.analytics.ga_hint') ?></p>
+                    <label for="ga_tracking_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.seo.analytics.ga_label') ?></label>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.analytics.ga_hint') ?></p>
                     <input type="text" name="ga_tracking_id" id="ga_tracking_id"
                            value="<?= htmlspecialchars($settings['ga_tracking_id'] ?? ''); ?>"
                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="<?= __('admin.settings.seo.analytics.ga_placeholder') ?>">
+                           placeholder="<?= __('settings.seo.analytics.ga_placeholder') ?>">
                 </div>
 
                 <div>
-                    <label for="gtm_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.settings.seo.analytics.gtm_label') ?></label>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.seo.analytics.gtm_hint') ?></p>
+                    <label for="gtm_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.seo.analytics.gtm_label') ?></label>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.analytics.gtm_hint') ?></p>
                     <input type="text" name="gtm_id" id="gtm_id"
                            value="<?= htmlspecialchars($settings['gtm_id'] ?? ''); ?>"
                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="<?= __('admin.settings.seo.analytics.gtm_placeholder') ?>">
+                           placeholder="<?= __('settings.seo.analytics.gtm_placeholder') ?>">
                 </div>
             </div>
         </div>
@@ -267,7 +267,7 @@ ob_start();
 
 <script>
     function deleteOgImage() {
-        if (confirm('<?= __('admin.settings.seo.og.image_delete_confirm') ?>')) {
+        if (confirm('<?= __('settings.seo.og.image_delete_confirm') ?>')) {
             const form = document.createElement('form');
             form.method = 'POST';
             form.innerHTML = '<input type="hidden" name="action" value="delete_og_image">';

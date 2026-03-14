@@ -7,7 +7,7 @@
 // Initialize database and settings
 require_once __DIR__ . '/../_init.php';
 
-$pageTitle = __('admin.settings.system.tabs.mode') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('system.tabs.mode') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentSettingsPage = 'system';
 $currentSystemTab = 'mode';
 
@@ -58,11 +58,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $dbDebugMode = $newDebugMode === '1';
                     $debugMode = $dbDebugMode;
                     $message = $dbDebugMode
-                        ? __('admin.settings.system.mode.debug_enabled')
-                        : __('admin.settings.system.mode.debug_disabled');
+                        ? __('system.mode.debug_enabled')
+                        : __('system.mode.debug_disabled');
                     $messageType = 'success';
                 } catch (PDOException $e) {
-                    $message = __('admin.settings.system.mode.debug_error');
+                    $message = __('system.mode.debug_error');
                     $messageType = 'error';
                 }
             }
@@ -74,14 +74,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 if (file_exists($maintenanceFile)) {
                     unlink($maintenanceFile);
                     $maintenanceMode = false;
-                    $message = __('admin.settings.system.mode.maintenance_disabled');
+                    $message = __('system.mode.maintenance_disabled');
                     $messageType = 'success';
                 }
             } else {
                 // Enable maintenance mode
                 $downContent = json_encode([
                     'time' => time(),
-                    'message' => __('admin.settings.system.mode.maintenance_message'),
+                    'message' => __('system.mode.maintenance_message'),
                     'retry' => 60,
                 ]);
                 if (!is_dir(dirname($maintenanceFile))) {
@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
                 file_put_contents($maintenanceFile, $downContent);
                 $maintenanceMode = true;
-                $message = __('admin.settings.system.mode.maintenance_enabled');
+                $message = __('system.mode.maintenance_enabled');
                 $messageType = 'success';
             }
             break;
@@ -106,8 +106,8 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
     <?php
     $headerIcon = 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4';
-    $headerTitle = __('admin.settings.system.mode.title');
-    $headerDescription = __('admin.settings.system.mode.description');
+    $headerTitle = __('system.mode.title');
+    $headerDescription = __('system.mode.description');
     $headerActions = ''; $headerIconColor = 'text-purple-600';
     include __DIR__ . '/../../components/settings-header.php';
     ?>
@@ -117,8 +117,8 @@ ob_start();
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
             <div class="flex items-center justify-between mb-4">
                 <div>
-                    <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('admin.settings.system.mode.debug') ?></p>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.system.mode.debug_desc') ?></p>
+                    <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('system.mode.debug') ?></p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('system.mode.debug_desc') ?></p>
                 </div>
                 <div class="flex items-center gap-2">
                     <?php if ($envDebug): ?>
@@ -127,7 +127,7 @@ ob_start();
                     </span>
                     <?php endif; ?>
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $debugMode ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'; ?>">
-                        <?= $debugMode ? __('admin.settings.system.status.on') : __('admin.settings.system.status.off'); ?>
+                        <?= $debugMode ? __('system.status.on') : __('system.status.off'); ?>
                     </span>
                 </div>
             </div>
@@ -136,14 +136,14 @@ ob_start();
                 <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                 </svg>
-                <?= __('admin.settings.system.mode.debug_env_locked') ?>
+                <?= __('system.mode.debug_env_locked') ?>
             </p>
             <?php else: ?>
             <form method="POST">
                 <input type="hidden" name="action" value="toggle_debug">
-                <button type="submit" onclick="return confirm('<?= $debugMode ? __('admin.settings.system.mode.confirm_disable_debug') : __('admin.settings.system.mode.confirm_enable_debug') ?>')"
+                <button type="submit" onclick="return confirm('<?= $debugMode ? __('system.mode.confirm_disable_debug') : __('system.mode.confirm_enable_debug') ?>')"
                         class="px-4 py-2 text-sm font-medium rounded-lg transition <?= $debugMode ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'; ?>">
-                    <?= $debugMode ? __('admin.settings.system.mode.disable_debug') : __('admin.settings.system.mode.enable_debug'); ?>
+                    <?= $debugMode ? __('system.mode.disable_debug') : __('system.mode.enable_debug'); ?>
                 </button>
             </form>
             <?php endif; ?>
@@ -153,18 +153,18 @@ ob_start();
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
             <div class="flex items-center justify-between mb-4">
                 <div>
-                    <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('admin.settings.system.mode.maintenance') ?></p>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.system.mode.maintenance_desc') ?></p>
+                    <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('system.mode.maintenance') ?></p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('system.mode.maintenance_desc') ?></p>
                 </div>
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $maintenanceMode ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'; ?>">
-                    <?= $maintenanceMode ? __('admin.settings.system.status.on') : __('admin.settings.system.status.off'); ?>
+                    <?= $maintenanceMode ? __('system.status.on') : __('system.status.off'); ?>
                 </span>
             </div>
             <form method="POST">
                 <input type="hidden" name="action" value="toggle_maintenance">
-                <button type="submit" onclick="return confirm('<?= $maintenanceMode ? __('admin.settings.system.mode.confirm_disable_maintenance') : __('admin.settings.system.mode.confirm_enable_maintenance') ?>')"
+                <button type="submit" onclick="return confirm('<?= $maintenanceMode ? __('system.mode.confirm_disable_maintenance') : __('system.mode.confirm_enable_maintenance') ?>')"
                         class="px-4 py-2 text-sm font-medium rounded-lg transition <?= $maintenanceMode ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-yellow-600 hover:bg-yellow-700 text-white'; ?>">
-                    <?= $maintenanceMode ? __('admin.settings.system.mode.disable_maintenance') : __('admin.settings.system.mode.enable_maintenance'); ?>
+                    <?= $maintenanceMode ? __('system.mode.disable_maintenance') : __('system.mode.enable_maintenance'); ?>
                 </button>
             </form>
         </div>
@@ -172,8 +172,8 @@ ob_start();
         <!-- Environment -->
         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('admin.settings.system.mode.environment') ?></p>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.system.mode.environment_desc') ?></p>
+                <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= __('system.mode.environment') ?></p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('system.mode.environment_desc') ?></p>
             </div>
             <div class="flex items-center">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $appInfo['environment'] === 'production' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'; ?>">
@@ -188,7 +188,7 @@ ob_start();
             <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
             </svg>
-            <?= __('admin.settings.system.mode.env_notice') ?>
+            <?= __('system.mode.env_notice') ?>
         </p>
     </div>
 </div>

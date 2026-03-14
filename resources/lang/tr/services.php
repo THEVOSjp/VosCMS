@@ -1,28 +1,107 @@
 <?php
 
 /**
- * Service translations - Turkish
+ * Services translations - tr
  */
 
 return [
-    // Page
-    'title' => 'Hizmetler',
-    'description' => 'Hizmetlerimize göz atın ve size uygun olanı rezerve edin.',
-
-    // Category
-    'all_categories' => 'Tümü',
-
-    // Buttons
-    'view_detail' => 'Detayları Görüntüle',
-    'book_now' => 'Şimdi Rezervasyon Yap',
-    'back_to_list' => 'Listeye Dön',
-
-    // Detail page
-    'about_service' => 'Bu Hizmet Hakkında',
-    'no_description' => 'Açıklama mevcut değil.',
-    'related_services' => 'İlgili Hizmetler',
-
-    // CTA
-    'cta_title' => 'Rezervasyon Yapmaya Hazır mısınız?',
-    'cta_description' => 'Tercih ettiğiniz hizmeti kolayca rezerve edin ve özel deneyiminize başlayın.',
+    'title' => 'Hizmet Yönetimi',
+    'list' => 'Hizmet Listesi',
+    'create' => 'Hizmet Ekle',
+    'edit' => 'Hizmet Düzenle',
+    'detail' => 'Hizmet Detayları',
+    'fields' => [
+        'name' => 'Hizmet Adı',
+        'slug' => 'URL Takma Adı',
+        'description' => 'Açıklama',
+        'short_description' => 'Kısa Açıklama',
+        'duration' => 'Süre (dk)',
+        'price' => 'Fiyat',
+        'category' => 'Kategori',
+        'is_active' => 'Aktif',
+        'max_capacity' => 'Maks. kapasite',
+        'buffer_time' => 'Tampon süresi (dk)',
+        'advance_booking_days' => 'Ön rezervasyon (gün)',
+        'min_notice_hours' => 'Min. bildirim (saat)',
+    ],
+    'success' => [
+        'created' => 'Hizmet oluşturuldu.',
+        'updated' => 'Hizmet güncellendi.',
+        'deleted' => 'Hizmet silindi.',
+        'activated' => 'Hizmet etkinleştirildi.',
+        'deactivated' => 'Hizmet devre dışı bırakıldı.',
+    ],
+    'error' => ['has_reservations' => 'Mevcut rezervasyonları olan hizmet silinemez.', 'server_error' => 'Sunucu hatası.', 'generic' => 'Bir hata oluştu.', 'delete_failed' => 'Silme başarısız'],
+    'empty' => 'Kayıtlı hizmet yok.',
+    'filter_all' => 'Tümü',
+    'filter_active' => 'Aktif',
+    'filter_inactive' => 'Pasif',
+    'status_active' => 'Aktif',
+    'status_inactive' => 'Pasif',
+    'confirm_delete' => 'Bu hizmeti silmek istiyor musunuz?',
+    'actions' => 'İşlemler',
+    'minute' => 'dk',
+    'placeholder_name' => 'Örn: Saç Kesimi, Boyama, Tırnak...',
+    'placeholder_slug' => 'Otomatik oluşturulur',
+    'placeholder_description' => 'Hizmetin kısa açıklaması...',
+    'select_none' => '-- Seçim yok --',
+    'no_buffer' => 'Yok',
+    'settings' => [
+        'tabs' => ['general' => 'Genel', 'holidays' => 'Tatiller'],
+        'general' => [
+            'title' => 'Hizmet Genel Ayarları',
+            'description' => 'Hizmet rezervasyonları için varsayılan seçenekleri yapılandırın.',
+            'saved' => 'Ayarlar kaydedildi.',
+            'default_duration' => 'Varsayılan Süre',
+            'default_buffer' => 'Varsayılan Tampon Süresi',
+            'advance_booking_days' => 'Önceden Rezervasyon Süresi',
+            'min_notice_hours' => 'Minimum Bildirim',
+            'max_capacity' => 'Varsayılan Maksimum Kapasite',
+            'currency' => 'Para Birimi',
+            'price_display' => 'Fiyat Gösterimi',
+            'price_show' => 'Göster',
+            'price_hide' => 'Gizle',
+            'price_contact' => 'İletişim',
+            'days' => 'gün',
+            'hours' => 'saat',
+        ],
+        'holidays' => [
+            'add_title' => 'Tatil Ekle',
+            'placeholder_title' => 'örn. Yılbaşı, Bayram...',
+            'repeat_yearly' => 'Her Yıl Tekrarla',
+            'yearly' => 'Yıllık',
+            'name' => 'Tatil Adı',
+            'date' => 'Tarih',
+            'status' => 'Durum',
+            'empty' => 'Kayıtlı tatil bulunmamaktadır.',
+            'required' => 'Tatil adı ve tarihi girin.',
+            'created' => 'Tatil eklendi.',
+            'deleted' => 'Tatil silindi.',
+            'confirm_delete' => 'Bu tatili silmek istediğinizden emin misiniz?',
+        ],
+    ],
+    'categories' => [
+        'title' => 'Kategori Yönetimi',
+        'list' => 'Kategori Listesi',
+        'create' => 'Kategori Ekle',
+        'edit' => 'Kategori Düzenle',
+        'fields' => [
+            'name' => 'Kategori Adı',
+            'slug' => 'URL Takma Adı',
+            'description' => 'Açıklama',
+            'parent' => 'Üst Kategori',
+            'sort_order' => 'Sıralama',
+            'is_active' => 'Aktif',
+        ],
+        'success' => ['created' => 'Kategori oluşturuldu.', 'updated' => 'Kategori güncellendi.', 'deleted' => 'Kategori silindi.', 'reordered' => 'Kategori sıralaması güncellendi.'],
+        'delete' => 'Sil',
+        'error' => ['has_services' => 'Bu kategoride hizmetler var. Önce hizmetleri taşıyın veya silin.'],
+        'empty' => 'Kayıtlı kategori yok.',
+        'confirm_delete' => 'Bu kategoriyi silmek istiyor musunuz?',
+        'parent_none' => '-- Yok (Üst düzey) --',
+        'multilang_save_first' => 'Çok dilli içerik eklemeden önce lütfen kategoriyi kaydedin.',
+        'placeholder_name' => 'Örn: Saç, Tırnak, Masaj...',
+        'placeholder_slug' => 'Otomatik oluşturulur',
+        'placeholder_description' => 'Kategori açıklaması...',
+    ],
 ];

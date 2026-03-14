@@ -11,7 +11,7 @@ include_once __DIR__ . '/../components/multilang-button.php';
         <div class="relative bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
             <!-- 헤더 -->
             <div class="px-5 py-3 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-zinc-900 dark:text-white"><?= __('admin.staff.photo_editor.title') ?></h3>
+                <h3 class="text-sm font-semibold text-zinc-900 dark:text-white"><?= __('staff.photo_editor.title') ?></h3>
                 <button type="button" onclick="closeCropperModal()" class="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -22,28 +22,28 @@ include_once __DIR__ . '/../components/multilang-button.php';
             </div>
             <!-- 도구 바 -->
             <div class="px-5 py-3 flex items-center justify-center gap-2 border-t border-zinc-200 dark:border-zinc-700">
-                <button type="button" onclick="cropperAction('zoomIn')" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition" title="<?= __('admin.staff.photo_editor.zoom_in') ?>">
+                <button type="button" onclick="cropperAction('zoomIn')" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition" title="<?= __('staff.photo_editor.zoom_in') ?>">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/></svg>
                 </button>
-                <button type="button" onclick="cropperAction('zoomOut')" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition" title="<?= __('admin.staff.photo_editor.zoom_out') ?>">
+                <button type="button" onclick="cropperAction('zoomOut')" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition" title="<?= __('staff.photo_editor.zoom_out') ?>">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/></svg>
                 </button>
                 <div class="w-px h-6 bg-zinc-300 dark:bg-zinc-600 mx-1"></div>
-                <button type="button" onclick="cropperAction('rotateLeft')" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition" title="<?= __('admin.staff.photo_editor.rotate_left') ?>">
+                <button type="button" onclick="cropperAction('rotateLeft')" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition" title="<?= __('staff.photo_editor.rotate_left') ?>">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h1m0 0a8 8 0 1016 0H4z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10V4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10H10"/></svg>
                 </button>
-                <button type="button" onclick="cropperAction('rotateRight')" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition" title="<?= __('admin.staff.photo_editor.rotate_right') ?>">
+                <button type="button" onclick="cropperAction('rotateRight')" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition" title="<?= __('staff.photo_editor.rotate_right') ?>">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10h-1m0 0a8 8 0 10-16 0h17z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 10V4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 10H14"/></svg>
                 </button>
                 <div class="w-px h-6 bg-zinc-300 dark:bg-zinc-600 mx-1"></div>
-                <button type="button" onclick="cropperAction('flipH')" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition" title="<?= __('admin.staff.photo_editor.flip_h') ?>">
+                <button type="button" onclick="cropperAction('flipH')" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition" title="<?= __('staff.photo_editor.flip_h') ?>">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4l-4 6h8M17 16V4l4 6h-8"/></svg>
                 </button>
-                <button type="button" onclick="cropperAction('flipV')" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition" title="<?= __('admin.staff.photo_editor.flip_v') ?>">
+                <button type="button" onclick="cropperAction('flipV')" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition" title="<?= __('staff.photo_editor.flip_v') ?>">
                     <svg class="w-5 h-5 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4l-4 6h8M17 16V4l4 6h-8"/></svg>
                 </button>
                 <div class="w-px h-6 bg-zinc-300 dark:bg-zinc-600 mx-1"></div>
-                <button type="button" onclick="cropperAction('reset')" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition" title="<?= __('admin.staff.photo_editor.reset') ?>">
+                <button type="button" onclick="cropperAction('reset')" class="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition" title="<?= __('staff.photo_editor.reset') ?>">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9a9 9 0 0115.36-6.36M20 15a9 9 0 01-15.36 6.36"/></svg>
                 </button>
             </div>
@@ -53,7 +53,7 @@ include_once __DIR__ . '/../components/multilang-button.php';
                     <?= __('common.buttons.cancel') ?>
                 </button>
                 <button type="button" onclick="applyCrop()" class="px-5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
-                    <?= __('admin.staff.photo_editor.apply') ?>
+                    <?= __('staff.photo_editor.apply') ?>
                 </button>
             </div>
         </div>
@@ -77,7 +77,7 @@ include_once __DIR__ . '/../components/multilang-button.php';
         <div class="fixed inset-0 bg-zinc-900/75 transition-opacity" onclick="closeStaffModal()"></div>
         <div class="relative z-50 w-full max-w-xl bg-white dark:bg-zinc-800 rounded-xl shadow-xl">
             <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-700">
-                <h3 id="modalTitle" class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.staff.create') ?></h3>
+                <h3 id="modalTitle" class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('staff.create') ?></h3>
                 <button type="button" onclick="closeStaffModal()" class="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -96,8 +96,8 @@ include_once __DIR__ . '/../components/multilang-button.php';
                 <div class="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
                     <!-- 회원 연동 -->
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.staff.fields.linked_member') ?></label>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.staff.link_member_desc') ?></p>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('staff.fields.linked_member') ?></label>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('staff.link_member_desc') ?></p>
                         <div class="relative">
                             <div id="linkedMemberDisplay" class="hidden items-center gap-2 px-3 py-2 mb-2 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
                                 <svg class="w-4 h-4 text-purple-600 dark:text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
@@ -109,7 +109,7 @@ include_once __DIR__ . '/../components/multilang-button.php';
                             <div id="memberSearchWrap">
                                 <input type="text" id="memberSearch" autocomplete="off"
                                        class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                                       placeholder="<?= __('admin.staff.search_member_placeholder') ?>">
+                                       placeholder="<?= __('staff.search_member_placeholder') ?>">
                                 <div id="memberSearchResults" class="hidden absolute z-20 w-full mt-1 bg-white dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-lg shadow-lg max-h-48 overflow-y-auto"></div>
                             </div>
                         </div>
@@ -117,7 +117,7 @@ include_once __DIR__ . '/../components/multilang-button.php';
 
                     <!-- 사진 -->
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.staff.fields.avatar') ?></label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('staff.fields.avatar') ?></label>
                         <div class="flex items-center gap-4">
                             <div id="avatarPreview" class="w-20 h-20 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-2xl font-bold text-zinc-500 overflow-hidden shrink-0">
                                 <svg class="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
@@ -125,11 +125,11 @@ include_once __DIR__ . '/../components/multilang-button.php';
                             <div class="flex flex-col gap-2">
                                 <label class="px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-300 hover:bg-blue-50 dark:border-blue-700 dark:hover:bg-blue-900/20 rounded-lg cursor-pointer transition inline-flex items-center gap-1">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                    <?= __('admin.staff.fields.upload_photo') ?>
+                                    <?= __('staff.fields.upload_photo') ?>
                                     <input type="file" name="avatar" id="avatarInput" accept="image/*" class="hidden" onchange="previewAvatar(this)">
                                 </label>
                                 <button type="button" id="removeAvatarBtn" onclick="removeAvatar()" class="hidden px-3 py-1.5 text-xs font-medium text-red-600 border border-red-300 hover:bg-red-50 dark:border-red-700 dark:hover:bg-red-900/20 rounded-lg transition">
-                                    <?= __('admin.staff.fields.remove_photo') ?>
+                                    <?= __('staff.fields.remove_photo') ?>
                                 </button>
                             </div>
                         </div>
@@ -137,18 +137,18 @@ include_once __DIR__ . '/../components/multilang-button.php';
 
                     <!-- 배너 이미지 -->
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.staff.fields.banner') ?? '배너 이미지' ?></label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('staff.fields.banner') ?? '배너 이미지' ?></label>
                         <div id="bannerPreview" class="w-full h-24 rounded-lg bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center overflow-hidden mb-2">
-                            <span class="text-xs text-zinc-400"><?= __('admin.staff.fields.no_banner') ?? 'No banner' ?></span>
+                            <span class="text-xs text-zinc-400"><?= __('staff.fields.no_banner') ?? 'No banner' ?></span>
                         </div>
                         <div class="flex gap-2">
                             <label class="px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-300 hover:bg-blue-50 dark:border-blue-700 dark:hover:bg-blue-900/20 rounded-lg cursor-pointer transition inline-flex items-center gap-1">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                <?= __('admin.staff.fields.upload_banner') ?? '배너 업로드' ?>
+                                <?= __('staff.fields.upload_banner') ?? '배너 업로드' ?>
                                 <input type="file" name="banner" id="bannerInput" accept="image/*" class="hidden" onchange="previewBanner(this)">
                             </label>
                             <button type="button" id="removeBannerBtn" onclick="removeBanner()" class="hidden px-3 py-1.5 text-xs font-medium text-red-600 border border-red-300 hover:bg-red-50 dark:border-red-700 dark:hover:bg-red-900/20 rounded-lg transition">
-                                <?= __('admin.staff.fields.remove') ?? '삭제' ?>
+                                <?= __('staff.fields.remove') ?? '삭제' ?>
                             </button>
                         </div>
                         <input type="hidden" name="remove_banner" id="formRemoveBanner" value="0">
@@ -157,10 +157,10 @@ include_once __DIR__ . '/../components/multilang-button.php';
                     <!-- 이름 + 다국어 -->
                     <div>
                         <div class="flex items-center gap-2 mb-1">
-                            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.staff.fields.name') ?></label>
+                            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('staff.fields.name') ?></label>
                             <?= rzx_multilang_btn("toggleI18n('name')") ?>
                         </div>
-                        <input type="text" name="name" id="formName" required placeholder="<?= __('admin.staff.placeholder.name') ?>"
+                        <input type="text" name="name" id="formName" required placeholder="<?= __('staff.placeholder.name') ?>"
                                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500">
                         <div id="nameI18nFields" class="hidden mt-2 space-y-1.5 pl-3 border-l-2 border-purple-300 dark:border-purple-700">
                             <?php foreach ($supportedLangs as $code): ?>
@@ -176,7 +176,7 @@ include_once __DIR__ . '/../components/multilang-button.php';
                     <!-- 직책 -->
                     <?php if (!empty($positions)): ?>
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.staff.fields.position') ?></label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('staff.fields.position') ?></label>
                         <select name="position_id" id="formPosition"
                                 class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
                             <option value="">-</option>
@@ -190,13 +190,13 @@ include_once __DIR__ . '/../components/multilang-button.php';
                     <!-- 이메일 / 전화번호 -->
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.staff.fields.email') ?></label>
-                            <input type="email" name="email" id="formEmail" placeholder="<?= __('admin.staff.placeholder.email') ?>"
+                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('staff.fields.email') ?></label>
+                            <input type="email" name="email" id="formEmail" placeholder="<?= __('staff.placeholder.email') ?>"
                                    class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.staff.fields.phone') ?></label>
-                            <input type="text" name="phone" id="formPhone" placeholder="<?= __('admin.staff.placeholder.phone') ?>"
+                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('staff.fields.phone') ?></label>
+                            <input type="text" name="phone" id="formPhone" placeholder="<?= __('staff.placeholder.phone') ?>"
                                    class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
                         </div>
                     </div>
@@ -204,10 +204,10 @@ include_once __DIR__ . '/../components/multilang-button.php';
                     <!-- 소개 + 다국어 -->
                     <div>
                         <div class="flex items-center gap-2 mb-1">
-                            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.staff.fields.bio') ?></label>
+                            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('staff.fields.bio') ?></label>
                             <?= rzx_multilang_btn("toggleI18n('bio')") ?>
                         </div>
-                        <textarea name="bio" id="formBio" rows="3" placeholder="<?= __('admin.staff.placeholder.bio') ?>"
+                        <textarea name="bio" id="formBio" rows="3" placeholder="<?= __('staff.placeholder.bio') ?>"
                                   class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm resize-none"></textarea>
                         <div id="bioI18nFields" class="hidden mt-2 space-y-1.5 pl-3 border-l-2 border-purple-300 dark:border-purple-700">
                             <?php foreach ($supportedLangs as $code): ?>
@@ -223,7 +223,7 @@ include_once __DIR__ . '/../components/multilang-button.php';
                     <!-- 담당 서비스 -->
                     <?php if (!empty($services)): ?>
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.staff.fields.services') ?></label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('staff.fields.services') ?></label>
                         <div id="serviceSelector" class="flex flex-wrap gap-1.5">
                             <?php foreach ($services as $svc): ?>
                             <label class="inline-flex items-center cursor-pointer">
@@ -243,19 +243,19 @@ include_once __DIR__ . '/../components/multilang-button.php';
                     <!-- 지명비 (설정 활성 시만 표시) -->
                     <?php if (($settings['staff_designation_fee_enabled'] ?? '0') === '1'): ?>
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.staff.fields.designation_fee') ?></label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('staff.fields.designation_fee') ?></label>
                         <div class="relative">
                             <input type="number" name="designation_fee" id="formDesignationFee" min="0" step="1" value="0"
                                    class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
                                    placeholder="0">
-                            <p class="text-xs text-zinc-400 mt-1"><?= __('admin.staff.fields.designation_fee_desc') ?></p>
+                            <p class="text-xs text-zinc-400 mt-1"><?= __('staff.fields.designation_fee_desc') ?></p>
                         </div>
                     </div>
                     <?php endif; ?>
 
                     <!-- 활성 상태 (수정 시만) -->
                     <div id="activeField" class="hidden flex items-center justify-between">
-                        <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.staff.fields.is_active') ?></label>
+                        <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('staff.fields.is_active') ?></label>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="is_active" id="formActive" class="sr-only peer" checked>
                             <div class="w-11 h-6 bg-zinc-200 peer-focus:ring-2 peer-focus:ring-blue-500 dark:bg-zinc-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
@@ -265,7 +265,7 @@ include_once __DIR__ . '/../components/multilang-button.php';
 
                 <!-- 버튼 -->
                 <div class="px-6 py-4 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-200 dark:border-zinc-700 rounded-b-xl flex justify-end gap-2">
-                    <button type="button" onclick="closeStaffModal()" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 rounded-lg transition"><?= __('admin.settings.multilang.cancel') ?></button>
+                    <button type="button" onclick="closeStaffModal()" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 rounded-lg transition"><?= __('settings.multilang.cancel') ?></button>
                     <button type="submit" id="submitBtn" class="px-5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition"><?= __('admin.common.save') ?></button>
                 </div>
             </form>
@@ -358,7 +358,7 @@ include_once __DIR__ . '/../components/multilang-button.php';
         var results = document.getElementById('memberSearchResults');
         results.innerHTML = '';
         if (members.length === 0) {
-            results.innerHTML = '<div class="px-3 py-2 text-sm text-zinc-400"><?= __('admin.staff.no_member_found') ?></div>';
+            results.innerHTML = '<div class="px-3 py-2 text-sm text-zinc-400"><?= __('staff.no_member_found') ?></div>';
             results.classList.remove('hidden');
             return;
         }
@@ -434,7 +434,7 @@ include_once __DIR__ . '/../components/multilang-button.php';
     // 모달 열기
     window.openStaffModal = function(data) {
         var isEdit = !!data;
-        document.getElementById('modalTitle').textContent = isEdit ? '<?= __('admin.staff.edit') ?>' : '<?= __('admin.staff.create') ?>';
+        document.getElementById('modalTitle').textContent = isEdit ? '<?= __('staff.edit') ?>' : '<?= __('staff.create') ?>';
         document.getElementById('formAction').value = isEdit ? 'update' : 'create';
         document.getElementById('formId').value = isEdit ? data.id : '';
         document.getElementById('formUserId').value = isEdit ? (data.user_id || '') : '';
@@ -479,7 +479,7 @@ include_once __DIR__ . '/../components/multilang-button.php';
             bannerPreview.innerHTML = '<img src="' + data.banner + '" class="w-full h-full object-cover">';
             removeBannerBtn.classList.remove('hidden');
         } else {
-            bannerPreview.innerHTML = '<span class="text-xs text-zinc-400"><?= __('admin.staff.fields.no_banner') ?? 'No banner' ?></span>';
+            bannerPreview.innerHTML = '<span class="text-xs text-zinc-400"><?= __('staff.fields.no_banner') ?? 'No banner' ?></span>';
             removeBannerBtn.classList.add('hidden');
         }
         document.getElementById('bannerInput').value = '';
@@ -695,7 +695,7 @@ include_once __DIR__ . '/../components/multilang-button.php';
     };
 
     window.removeBanner = function() {
-        document.getElementById('bannerPreview').innerHTML = '<span class="text-xs text-zinc-400"><?= __('admin.staff.fields.no_banner') ?? 'No banner' ?></span>';
+        document.getElementById('bannerPreview').innerHTML = '<span class="text-xs text-zinc-400"><?= __('staff.fields.no_banner') ?? 'No banner' ?></span>';
         document.getElementById('bannerInput').value = '';
         document.getElementById('removeBannerBtn').classList.add('hidden');
         document.getElementById('formRemoveBanner').value = '1';
@@ -743,7 +743,7 @@ include_once __DIR__ . '/../components/multilang-button.php';
             }
         } catch (err) {
             console.error('[StaffManage] Error:', err);
-            showAlert('<?= __('admin.staff.error.server') ?>', 'error');
+            showAlert('<?= __('staff.error.server') ?>', 'error');
         }
 
         btn.disabled = false;
@@ -752,7 +752,7 @@ include_once __DIR__ . '/../components/multilang-button.php';
 
     // 삭제
     window.deleteStaff = async function(id, name) {
-        if (!confirm('<?= __('admin.staff.confirm_delete') ?>')) return;
+        if (!confirm('<?= __('staff.confirm_delete') ?>')) return;
         try {
             var formData = new FormData();
             formData.append('action', 'delete');
@@ -769,7 +769,7 @@ include_once __DIR__ . '/../components/multilang-button.php';
             }
         } catch (err) {
             console.error('[StaffManage] Delete error:', err);
-            showAlert('<?= __('admin.staff.error.server') ?>', 'error');
+            showAlert('<?= __('staff.error.server') ?>', 'error');
         }
     };
 

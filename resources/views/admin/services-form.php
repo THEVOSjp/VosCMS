@@ -13,7 +13,7 @@ include_once __DIR__ . '/components/multilang-button.php';
         <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto relative">
             <!-- 헤더 -->
             <div class="sticky top-0 bg-white dark:bg-zinc-800 px-6 py-4 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between rounded-t-2xl z-10">
-                <h2 id="serviceModalTitle" class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.services.create') ?></h2>
+                <h2 id="serviceModalTitle" class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('services.create') ?></h2>
                 <button onclick="closeServiceModal()" class="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -26,29 +26,29 @@ include_once __DIR__ . '/components/multilang-button.php';
 
                 <!-- 서비스명 -->
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.services.fields.name') ?> <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('services.fields.name') ?> <span class="text-red-500">*</span></label>
                     <div class="flex gap-2">
                         <input type="text" id="svcName" name="name" required
                                class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                               placeholder="<?= __('admin.services.placeholder_name') ?>">
+                               placeholder="<?= __('services.placeholder_name') ?>">
                         <?= rzx_multilang_btn("openServiceMultilang('name')") ?>
                     </div>
                 </div>
 
                 <!-- 슬러그 -->
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.services.fields.slug') ?></label>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('services.fields.slug') ?></label>
                     <input type="text" id="svcSlug" name="slug"
                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                           placeholder="<?= __('admin.services.placeholder_slug') ?>">
+                           placeholder="<?= __('services.placeholder_slug') ?>">
                 </div>
 
                 <!-- 카테고리 -->
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.services.fields.category') ?></label>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('services.fields.category') ?></label>
                     <select id="svcCategory" name="category_id"
                             class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
-                        <option value=""><?= __('admin.services.select_none') ?></option>
+                        <option value=""><?= __('services.select_none') ?></option>
                         <?php foreach ($categories as $cat): ?>
                         <option value="<?= $cat['id'] ?>"><?= htmlspecialchars(getCategoryTranslated($cat['id'], 'name', $cat['name'])) ?></option>
                         <?php endforeach; ?>
@@ -58,16 +58,16 @@ include_once __DIR__ . '/components/multilang-button.php';
                 <!-- 가격 + 소요시간 -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.services.fields.price') ?> (<?= $currency ?>)</label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('services.fields.price') ?> (<?= $currency ?>)</label>
                         <input type="number" id="svcPrice" name="price" min="0" step="100" value="0"
                                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.services.fields.duration') ?></label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('services.fields.duration') ?></label>
                         <select id="svcDuration" name="duration"
                                 class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
                             <?php foreach ([10, 15, 20, 30, 40, 45, 60, 90, 120, 150, 180] as $min): ?>
-                            <option value="<?= $min ?>" <?= $min === 30 ? 'selected' : '' ?>><?= $min ?><?= __('admin.services.minute') ?><?= $min >= 60 ? ' (' . floor($min/60) . 'h' . ($min%60 ? $min%60 . 'm' : '') . ')' : '' ?></option>
+                            <option value="<?= $min ?>" <?= $min === 30 ? 'selected' : '' ?>><?= $min ?><?= __('services.minute') ?><?= $min >= 60 ? ' (' . floor($min/60) . 'h' . ($min%60 ? $min%60 . 'm' : '') . ')' : '' ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -75,26 +75,26 @@ include_once __DIR__ . '/components/multilang-button.php';
 
                 <!-- 버퍼 시간 -->
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('admin.services.fields.buffer_time') ?></label>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('services.fields.buffer_time') ?></label>
                     <select id="svcBuffer" name="buffer_time"
                             class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
-                        <option value="0"><?= __('admin.services.no_buffer') ?></option>
-                        <option value="5">5<?= __('admin.services.minute') ?></option>
-                        <option value="10">10<?= __('admin.services.minute') ?></option>
-                        <option value="15">15<?= __('admin.services.minute') ?></option>
-                        <option value="30">30<?= __('admin.services.minute') ?></option>
+                        <option value="0"><?= __('services.no_buffer') ?></option>
+                        <option value="5">5<?= __('services.minute') ?></option>
+                        <option value="10">10<?= __('services.minute') ?></option>
+                        <option value="15">15<?= __('services.minute') ?></option>
+                        <option value="30">30<?= __('services.minute') ?></option>
                     </select>
                 </div>
 
                 <!-- 설명 -->
                 <div>
                     <div class="flex items-center justify-between mb-1">
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('admin.services.fields.description') ?></label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('services.fields.description') ?></label>
                         <?= rzx_multilang_btn("openServiceMultilang('description')") ?>
                     </div>
                     <textarea id="svcDescription" name="description" rows="3"
                               class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
-                              placeholder="<?= __('admin.services.placeholder_description') ?>"></textarea>
+                              placeholder="<?= __('services.placeholder_description') ?>"></textarea>
                 </div>
 
                 <!-- 활성 상태 -->
@@ -103,7 +103,7 @@ include_once __DIR__ . '/components/multilang-button.php';
                         <input type="checkbox" id="svcActive" name="is_active" checked class="sr-only peer">
                         <div class="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 dark:bg-zinc-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                     </label>
-                    <span class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('admin.services.fields.is_active') ?></span>
+                    <span class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('services.fields.is_active') ?></span>
                 </div>
             </form>
 

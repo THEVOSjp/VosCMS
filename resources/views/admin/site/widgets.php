@@ -2,7 +2,7 @@
 /**
  * RezlyX Admin - 위젯 관리
  */
-$pageTitle = __('admin.site.widgets.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('site.widgets.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 
 try {
     $pdo = new PDO(
@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $active = (int)($_POST['is_active'] ?? 0);
         $stmt = $pdo->prepare("UPDATE rzx_widgets SET is_active = ? WHERE id = ?");
         $stmt->execute([$active, $id]);
-        $message = __('admin.site.widgets.saved');
+        $message = __('site.widgets.saved');
         $messageType = 'success';
 
     } elseif ($action === 'delete_widget') {
@@ -42,10 +42,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($w && $w['type'] !== 'builtin' && !$isFileWidget) {
             $pdo->prepare("DELETE FROM rzx_page_widgets WHERE widget_id = ?")->execute([$id]);
             $pdo->prepare("DELETE FROM rzx_widgets WHERE id = ?")->execute([$id]);
-            $message = __('admin.site.widgets.deleted');
+            $message = __('site.widgets.deleted');
             $messageType = 'success';
         } elseif ($isFileWidget) {
-            $message = __('admin.site.widgets.file_widget_no_delete');
+            $message = __('site.widgets.file_widget_no_delete');
             $messageType = 'error';
         }
 
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare("INSERT INTO rzx_widgets (name, slug, description, type, category, template, css, js, config_schema, icon) VALUES (?, ?, ?, 'custom', ?, ?, ?, ?, ?, 'puzzle-piece')");
                 $stmt->execute([$name, $slug, $description, $category, $template, $css, $js, $configSchema]);
             }
-            $message = __('admin.site.widgets.saved');
+            $message = __('site.widgets.saved');
             $messageType = 'success';
         }
     }
@@ -142,7 +142,7 @@ function getWidgetIcon($icon, $iconMap) {
 
         <main class="flex-1 ml-64">
             <?php
-            $pageHeaderTitle = __('admin.site.widgets.title');
+            $pageHeaderTitle = __('site.widgets.title');
             include __DIR__ . '/../partials/admin-topbar.php';
             ?>
 
@@ -157,22 +157,22 @@ function getWidgetIcon($icon, $iconMap) {
                 <div class="mb-6">
                 <?php
                 $headerIcon = 'M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z';
-                $headerTitle = __('admin.site.widgets.title');
-                $headerDescription = __('admin.site.widgets.description');
+                $headerTitle = __('site.widgets.title');
+                $headerDescription = __('site.widgets.description');
                 $headerIconColor = '';
-                $headerActions = '<a href="' . $adminUrl . '/site/widgets/create" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition flex items-center"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>' . __('admin.site.widgets.create') . '</a>';
+                $headerActions = '<a href="' . $adminUrl . '/site/widgets/create" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition flex items-center"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>' . __('site.widgets.create') . '</a>';
                 include __DIR__ . '/../components/settings-header.php';
                 ?>
                 </div>
 
                 <!-- Tabs -->
                 <div class="flex items-center gap-2 mb-6">
-                    <a href="<?= $adminUrl ?>/site/widgets" class="px-4 py-2 rounded-lg text-sm font-medium <?= $filterType === 'all' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700' ?> transition"><?= __('admin.site.widgets.categories.all') ?></a>
-                    <a href="<?= $adminUrl ?>/site/widgets?type=builtin" class="px-4 py-2 rounded-lg text-sm font-medium <?= $filterType === 'builtin' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700' ?> transition"><?= __('admin.site.widgets.builtin') ?></a>
-                    <a href="<?= $adminUrl ?>/site/widgets?type=custom" class="px-4 py-2 rounded-lg text-sm font-medium <?= $filterType === 'custom' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700' ?> transition"><?= __('admin.site.widgets.custom') ?></a>
+                    <a href="<?= $adminUrl ?>/site/widgets" class="px-4 py-2 rounded-lg text-sm font-medium <?= $filterType === 'all' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700' ?> transition"><?= __('site.widgets.categories.all') ?></a>
+                    <a href="<?= $adminUrl ?>/site/widgets?type=builtin" class="px-4 py-2 rounded-lg text-sm font-medium <?= $filterType === 'builtin' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700' ?> transition"><?= __('site.widgets.builtin') ?></a>
+                    <a href="<?= $adminUrl ?>/site/widgets?type=custom" class="px-4 py-2 rounded-lg text-sm font-medium <?= $filterType === 'custom' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700' ?> transition"><?= __('site.widgets.custom') ?></a>
                     <a href="<?= $adminUrl ?>/site/widgets/marketplace" class="px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition flex items-center">
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
-                        <?= __('admin.site.widgets.marketplace') ?>
+                        <?= __('site.widgets.marketplace') ?>
                     </a>
                 </div>
 
@@ -182,7 +182,7 @@ function getWidgetIcon($icon, $iconMap) {
                     <svg class="w-16 h-16 mx-auto mb-4 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $iconMap['puzzle-piece'] ?>"/>
                     </svg>
-                    <p class="text-zinc-500 dark:text-zinc-400"><?= __('admin.site.widgets.no_widgets') ?></p>
+                    <p class="text-zinc-500 dark:text-zinc-400"><?= __('site.widgets.no_widgets') ?></p>
                 </div>
                 <?php else: ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -214,12 +214,12 @@ function getWidgetIcon($icon, $iconMap) {
                             <!-- 배지 오버레이 -->
                             <div class="absolute top-2 right-2 flex flex-col items-end gap-1">
                                 <span class="text-xs font-medium px-2 py-0.5 rounded backdrop-blur-sm <?= $w['type'] === 'builtin' ? 'bg-emerald-100/90 dark:bg-emerald-900/70 text-emerald-700 dark:text-emerald-300' : ($w['type'] === 'custom' ? 'bg-purple-100/90 dark:bg-purple-900/70 text-purple-700 dark:text-purple-300' : 'bg-amber-100/90 dark:bg-amber-900/70 text-amber-700 dark:text-amber-300') ?>">
-                                    <?= __('admin.site.widgets.types.' . $w['type']) ?>
+                                    <?= __('site.widgets.types.' . $w['type']) ?>
                                 </span>
                                 <?php if ($isFileBased): ?>
                                 <span class="text-xs font-medium px-2 py-0.5 rounded backdrop-blur-sm bg-blue-100/90 dark:bg-blue-900/70 text-blue-700 dark:text-blue-300" title="widgets/<?= htmlspecialchars($slug) ?>/">
                                     <svg class="w-3 h-3 inline -mt-0.5 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-                                    <?= __('admin.site.widgets.file_based') ?>
+                                    <?= __('site.widgets.file_based') ?>
                                 </span>
                                 <?php endif; ?>
                             </div>
@@ -242,11 +242,11 @@ function getWidgetIcon($icon, $iconMap) {
                                 </div>
                                 <div class="flex flex-col items-end gap-1">
                                     <span class="text-xs font-medium px-2 py-0.5 rounded <?= $w['type'] === 'builtin' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : ($w['type'] === 'custom' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300') ?>">
-                                        <?= __('admin.site.widgets.types.' . $w['type']) ?>
+                                        <?= __('site.widgets.types.' . $w['type']) ?>
                                     </span>
                                     <?php if ($isFileBased): ?>
                                     <span class="text-xs font-medium px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
-                                        <?= __('admin.site.widgets.file_based') ?>
+                                        <?= __('site.widgets.file_based') ?>
                                     </span>
                                     <?php endif; ?>
                                 </div>
@@ -263,7 +263,7 @@ function getWidgetIcon($icon, $iconMap) {
 
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-xs text-zinc-400 dark:text-zinc-500"><?= __('admin.site.widgets.category') ?>: <?= __('admin.site.widgets.categories.' . ($w['category'] ?: 'general')) ?></span>
+                                    <span class="text-xs text-zinc-400 dark:text-zinc-500"><?= __('site.widgets.category') ?>: <?= __('site.widgets.categories.' . ($w['category'] ?: 'general')) ?></span>
                                 </div>
                                 <div class="flex items-center gap-1">
                                     <!-- Toggle Active -->
@@ -271,7 +271,7 @@ function getWidgetIcon($icon, $iconMap) {
                                         <input type="hidden" name="action" value="toggle_widget">
                                         <input type="hidden" name="widget_id" value="<?= $w['id'] ?>">
                                         <input type="hidden" name="is_active" value="<?= $w['is_active'] ? 0 : 1 ?>">
-                                        <button type="submit" class="p-1.5 rounded-lg transition <?= $w['is_active'] ? 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20' : 'text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700' ?>" title="<?= $w['is_active'] ? __('admin.site.widgets.active') : __('admin.site.widgets.inactive') ?>">
+                                        <button type="submit" class="p-1.5 rounded-lg transition <?= $w['is_active'] ? 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20' : 'text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700' ?>" title="<?= $w['is_active'] ? __('site.widgets.active') : __('site.widgets.inactive') ?>">
                                             <svg class="w-4 h-4" fill="<?= $w['is_active'] ? 'currentColor' : 'none' ?>" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                             </svg>
@@ -280,16 +280,16 @@ function getWidgetIcon($icon, $iconMap) {
 
                                     <?php if ($w['type'] === 'custom' && !$isFileBased): ?>
                                     <!-- Edit (커스텀 + DB 전용만) -->
-                                    <a href="<?= $adminUrl ?>/site/widgets/create?id=<?= $w['id'] ?>" class="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="<?= __('admin.site.widgets.edit') ?>">
+                                    <a href="<?= $adminUrl ?>/site/widgets/create?id=<?= $w['id'] ?>" class="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="<?= __('site.widgets.edit') ?>">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                     </a>
                                     <!-- Delete (커스텀 + DB 전용만) -->
-                                    <form method="POST" class="inline" onsubmit="return confirm('<?= __('admin.site.widgets.delete_confirm') ?>')">
+                                    <form method="POST" class="inline" onsubmit="return confirm('<?= __('site.widgets.delete_confirm') ?>')">
                                         <input type="hidden" name="action" value="delete_widget">
                                         <input type="hidden" name="widget_id" value="<?= $w['id'] ?>">
-                                        <button type="submit" class="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition" title="<?= __('admin.site.widgets.delete') ?>">
+                                        <button type="submit" class="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition" title="<?= __('site.widgets.delete') ?>">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                             </svg>

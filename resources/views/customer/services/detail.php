@@ -134,7 +134,7 @@ include BASE_PATH . '/resources/views/partials/header.php';
                                 <?= $currencySymbol ?><?= number_format($service['price']) ?>
                             </span>
                             <?php elseif ($priceDisplay === 'contact'): ?>
-                            <span class="text-lg font-medium text-gray-500 dark:text-zinc-400"><?= __('admin.services.settings.general.price_contact') ?></span>
+                            <span class="text-lg font-medium text-gray-500 dark:text-zinc-400"><?= __('services.settings.general.price_contact') ?></span>
                             <?php else: ?>
                             <span class="text-gray-400">-</span>
                             <?php endif; ?>
@@ -214,7 +214,7 @@ include BASE_PATH . '/resources/views/partials/header.php';
                             <?php if ($priceDisplay === 'show'): ?>
                             <span class="font-bold text-blue-600 dark:text-blue-400"><?= $currencySymbol ?><?= number_format($related['price']) ?></span>
                             <?php elseif ($priceDisplay === 'contact'): ?>
-                            <span class="text-sm text-gray-500 dark:text-zinc-400"><?= __('admin.services.settings.general.price_contact') ?></span>
+                            <span class="text-sm text-gray-500 dark:text-zinc-400"><?= __('services.settings.general.price_contact') ?></span>
                             <?php endif; ?>
                         </div>
                     </div>

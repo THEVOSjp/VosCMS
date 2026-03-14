@@ -3,7 +3,7 @@
  * RezlyX - Modern Reservation System
  *
  * @package RezlyX
- * @version 1.2.0
+ * @version 1.2.1
  */
 
 define('REZLYX_START', microtime(true));
@@ -134,6 +134,34 @@ try {
     if ($config['debug']) {
         error_log('RezlyX DB Error: ' . $e->getMessage());
     }
+}
+
+// 자동 DB 마이그레이션 체크 (플래그 파일로 매 요청 방지)
+if (isset($pdo)) {
+    $migrationFlag = BASE_PATH . '/storage/.migration_checked';
+    $codeVersion = null;
+    if (preg_match('/@version\s+(\d+\.\d+\.\d+)/', file_get_contents(__FILE__), $_vm)) {
+        $codeVersion = $_vm[1];
+    }
+    $flagValid = file_exists($migrationFlag) && (filemtime($migrationFlag) > time() - 3600)
+        && trim(file_get_contents($migrationFlag)) === ($codeVersion ?? '');
+
+    if (!$flagValid && $codeVersion) {
+        try {
+            require_once BASE_PATH . '/rzxlib/Core/Updater/DatabaseMigrator.php';
+            $migrator = new \RzxLib\Core\Updater\DatabaseMigrator($pdo, BASE_PATH);
+            if ($migrator->needsMigration($codeVersion)) {
+                $migResult = $migrator->migrate($codeVersion);
+                if (!$migResult['success']) {
+                    error_log('RezlyX Auto-Migration failed: ' . implode(', ', $migResult['errors'] ?? []));
+                }
+            }
+            @file_put_contents($migrationFlag, $codeVersion);
+        } catch (\Exception $e) {
+            error_log('RezlyX Migration check error: ' . $e->getMessage());
+        }
+    }
+    unset($migrationFlag, $codeVersion, $flagValid, $migrator, $migResult, $_vm);
 }
 
 // Parse request

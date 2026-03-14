@@ -7,7 +7,7 @@
 // Initialize database and settings
 require_once __DIR__ . '/_init.php';
 
-$pageTitle = __('admin.settings.translations.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('settings.translations.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentSettingsPage = 'translations';
 
 // 기본 제공 언어 목록
@@ -95,16 +95,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $targetLocale = $_POST['target_locale'] ?? '';
 
         if (empty($targetLocale)) {
-            $message = __('admin.settings.translations.msg_no_locale_delete');
+            $message = __('settings.translations.msg_no_locale_delete');
             $messageType = 'error';
         } elseif ($targetLocale === $defaultLanguage) {
-            $message = __('admin.settings.translations.msg_default_nodelete');
+            $message = __('settings.translations.msg_default_nodelete');
             $messageType = 'error';
         } else {
             $targetPath = $langPath . DIRECTORY_SEPARATOR . $targetLocale;
 
             if (!is_dir($targetPath)) {
-                $message = __('admin.settings.translations.msg_no_files_delete');
+                $message = __('settings.translations.msg_no_files_delete');
                 $messageType = 'error';
             } else {
                 try {
@@ -119,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     rmdir($targetPath);
 
                     $langName = $allLanguages[$targetLocale]['native'] ?? $targetLocale;
-                    $message = str_replace('{name}', $langName, __('admin.settings.translations.msg_deleted'));
+                    $message = str_replace('{name}', $langName, __('settings.translations.msg_deleted'));
                     $messageType = 'success';
 
                     // 상태 업데이트
@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'path' => $targetPath,
                     ];
                 } catch (Exception $e) {
-                    $message = __('admin.settings.translations.msg_error_delete') . ': ' . $e->getMessage();
+                    $message = __('settings.translations.msg_error_delete') . ': ' . $e->getMessage();
                     $messageType = 'error';
                 }
             }
@@ -141,13 +141,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $targetLocale = $_POST['target_locale'] ?? '';
 
         if (empty($targetLocale)) {
-            $message = __('admin.settings.translations.msg_no_locale_download');
+            $message = __('settings.translations.msg_no_locale_download');
             $messageType = 'error';
         } else {
             $targetPath = $langPath . DIRECTORY_SEPARATOR . $targetLocale;
 
             if (!is_dir($targetPath)) {
-                $message = __('admin.settings.translations.msg_no_files_download');
+                $message = __('settings.translations.msg_no_files_download');
                 $messageType = 'error';
             } else {
                 try {
@@ -170,11 +170,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         unlink($zipFile); // 임시 파일 삭제
                         exit;
                     } else {
-                        $message = __('admin.settings.translations.msg_error_zip');
+                        $message = __('settings.translations.msg_error_zip');
                         $messageType = 'error';
                     }
                 } catch (Exception $e) {
-                    $message = __('admin.settings.translations.msg_error_download') . ': ' . $e->getMessage();
+                    $message = __('settings.translations.msg_error_download') . ': ' . $e->getMessage();
                     $messageType = 'error';
                 }
             }
@@ -186,10 +186,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $targetLocale = $_POST['target_locale'] ?? '';
 
         if (empty($targetLocale)) {
-            $message = __('admin.settings.translations.msg_no_locale_upload');
+            $message = __('settings.translations.msg_no_locale_upload');
             $messageType = 'error';
         } elseif (!isset($_FILES['lang_zip']) || $_FILES['lang_zip']['error'] !== UPLOAD_ERR_OK) {
-            $message = __('admin.settings.translations.msg_error_upload_file');
+            $message = __('settings.translations.msg_error_upload_file');
             $messageType = 'error';
         } else {
             $uploadedFile = $_FILES['lang_zip']['tmp_name'];
@@ -217,7 +217,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $zip->close();
 
                     $langName = $allLanguages[$targetLocale]['native'] ?? $targetLocale;
-                    $message = str_replace(['{name}', '{count}'], [$langName, $uploadedCount], __('admin.settings.translations.msg_uploaded'));
+                    $message = str_replace(['{name}', '{count}'], [$langName, $uploadedCount], __('settings.translations.msg_uploaded'));
                     $messageType = 'success';
 
                     // 상태 업데이트
@@ -231,11 +231,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'path' => $targetPath,
                     ];
                 } else {
-                    $message = __('admin.settings.translations.msg_error_zip_open');
+                    $message = __('settings.translations.msg_error_zip_open');
                     $messageType = 'error';
                 }
             } catch (Exception $e) {
-                $message = __('admin.settings.translations.msg_error_upload') . ': ' . $e->getMessage();
+                $message = __('settings.translations.msg_error_upload') . ': ' . $e->getMessage();
                 $messageType = 'error';
             }
         }
@@ -247,17 +247,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sourceLocale = $_POST['source_locale'] ?? 'ko';
 
         if (empty($targetLocale)) {
-            $message = __('admin.settings.translations.msg_no_locale_create');
+            $message = __('settings.translations.msg_no_locale_create');
             $messageType = 'error';
         } elseif (!isset($allLanguages[$targetLocale])) {
-            $message = __('admin.settings.translations.msg_invalid_code');
+            $message = __('settings.translations.msg_invalid_code');
             $messageType = 'error';
         } else {
             $sourcePath = $langPath . DIRECTORY_SEPARATOR . $sourceLocale;
             $targetPath = $langPath . DIRECTORY_SEPARATOR . $targetLocale;
 
             if (!is_dir($sourcePath)) {
-                $message = __('admin.settings.translations.msg_source_missing');
+                $message = __('settings.translations.msg_source_missing');
                 $messageType = 'error';
             } else {
                 try {
@@ -287,10 +287,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ];
 
                     $langName = $allLanguages[$targetLocale]['native'] ?? $targetLocale;
-                    $message = str_replace(['{name}', '{count}'], [$langName, $copiedFiles], __('admin.settings.translations.msg_created'));
+                    $message = str_replace(['{name}', '{count}'], [$langName, $copiedFiles], __('settings.translations.msg_created'));
                     $messageType = 'success';
                 } catch (Exception $e) {
-                    $message = __('admin.settings.translations.msg_error_create') . ': ' . $e->getMessage();
+                    $message = __('settings.translations.msg_error_create') . ': ' . $e->getMessage();
                     $messageType = 'error';
                 }
             }
@@ -304,7 +304,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $translations = $_POST['translations'] ?? [];
 
         if (empty($saveLocale) || empty($saveFile)) {
-            $message = __('admin.settings.translations.msg_no_save_info');
+            $message = __('settings.translations.msg_no_save_info');
             $messageType = 'error';
         } else {
             $filePath = $langPath . DIRECTORY_SEPARATOR . $saveLocale . DIRECTORY_SEPARATOR . $saveFile . '.php';
@@ -337,13 +337,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $phpContent = "<?php\n/**\n * " . ($allLanguages[$saveLocale]['native'] ?? $saveLocale) . " Language File\n */\n\nreturn " . var_export($existingContent, true) . ";\n";
                 file_put_contents($filePath, $phpContent);
 
-                $message = __('admin.settings.translations.translation_saved');
+                $message = __('settings.translations.translation_saved');
                 $messageType = 'success';
 
                 // 편집 내용 다시 로드
                 $editContent = $existingContent;
             } catch (Exception $e) {
-                $message = __('admin.settings.translations.msg_error_save') . ': ' . $e->getMessage();
+                $message = __('settings.translations.msg_error_save') . ': ' . $e->getMessage();
                 $messageType = 'error';
             }
         }
@@ -404,7 +404,7 @@ ob_start();
                         <?= htmlspecialchars($allLanguages[$editLocale]['native'] ?? $editLocale) ?>
                     </span>
                 </h2>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.settings.translations.edit_hint') ?></p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('settings.translations.edit_hint') ?></p>
             </div>
         </div>
     </div>
@@ -433,7 +433,7 @@ ob_start();
                 </div>
                 <div>
                     <?php if ($editLocale !== 'ko'): ?>
-                    <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1"><?= __('admin.settings.translations.translation') ?></label>
+                    <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1"><?= __('settings.translations.translation') ?></label>
                     <?php endif; ?>
                     <input type="text" name="translations[<?= htmlspecialchars($key) ?>]"
                            value="<?= htmlspecialchars($value) ?>"
@@ -446,11 +446,11 @@ ob_start();
         <div class="flex justify-end gap-3 pt-6 mt-6 border-t dark:border-zinc-700">
             <a href="<?= $adminUrl ?>/settings/translations"
                class="px-4 py-2 text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-600 transition">
-                <?= __('admin.settings.translations.cancel') ?>
+                <?= __('settings.translations.cancel') ?>
             </a>
             <button type="submit"
                     class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
-                <?= __('admin.settings.translations.save') ?>
+                <?= __('settings.translations.save') ?>
             </button>
         </div>
     </form>
@@ -461,15 +461,15 @@ ob_start();
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
     <?php
     $headerIcon = 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z';
-    $headerTitle = __('admin.settings.translations.translation_files');
-    $headerDescription = __('admin.settings.translations.description_full');
+    $headerTitle = __('settings.translations.translation_files');
+    $headerDescription = __('settings.translations.description_full');
     $headerIconColor = ''; $headerActions = '';
     include __DIR__ . '/../components/settings-header.php';
     ?>
 
     <!-- 번역 그룹 목록 -->
     <div class="mb-6">
-        <h3 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.settings.translations.translation_groups') ?></h3>
+        <h3 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('settings.translations.translation_groups') ?></h3>
         <div class="flex flex-wrap gap-2">
             <?php foreach ($translationGroups as $group): ?>
             <span class="px-2 py-1 text-xs font-medium bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded">
@@ -481,7 +481,7 @@ ob_start();
 
     <!-- 언어별 번역 파일 상태 -->
     <div class="border-t dark:border-zinc-700 pt-6">
-        <h3 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-4"><?= __('admin.settings.translations.supported_languages') ?></h3>
+        <h3 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-4"><?= __('settings.translations.supported_languages') ?></h3>
         <div class="space-y-4">
             <?php
             // 기본 언어를 맨 위로 정렬
@@ -508,7 +508,7 @@ ob_start();
                         </span>
                         <?php if ($locale === $defaultLanguage): ?>
                         <span class="px-2 py-0.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded">
-                            <?= __('admin.settings.translations.default') ?>
+                            <?= __('settings.translations.default') ?>
                         </span>
                         <?php endif; ?>
                     </div>
@@ -530,27 +530,27 @@ ob_start();
                             </span>
                             <button type="button" onclick="openCreateFilesModal('<?= htmlspecialchars($locale) ?>', '<?= htmlspecialchars($langInfo['native']) ?>')"
                                     class="px-2 py-1 text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 transition">
-                                <?= __('admin.settings.translations.create_missing') ?>
+                                <?= __('settings.translations.create_missing') ?>
                             </button>
                             <?php endif; ?>
                             <!-- 내보내기 버튼 -->
                             <form method="POST" class="inline">
                                 <input type="hidden" name="action" value="download_lang_files">
                                 <input type="hidden" name="target_locale" value="<?= htmlspecialchars($locale) ?>">
-                                <button type="submit" class="px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 rounded hover:bg-zinc-200 dark:hover:bg-zinc-600 transition" title="<?= __('admin.settings.translations.export') ?>">
-                                    <?= __('admin.settings.translations.export') ?>
+                                <button type="submit" class="px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 rounded hover:bg-zinc-200 dark:hover:bg-zinc-600 transition" title="<?= __('settings.translations.export') ?>">
+                                    <?= __('settings.translations.export') ?>
                                 </button>
                             </form>
                             <!-- 가져오기 버튼 -->
                             <button type="button" onclick="openUploadModal('<?= htmlspecialchars($locale) ?>', '<?= htmlspecialchars($langInfo['native']) ?>')"
-                                    class="px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 rounded hover:bg-zinc-200 dark:hover:bg-zinc-600 transition" title="<?= __('admin.settings.translations.import') ?>">
-                                <?= __('admin.settings.translations.import') ?>
+                                    class="px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 rounded hover:bg-zinc-200 dark:hover:bg-zinc-600 transition" title="<?= __('settings.translations.import') ?>">
+                                <?= __('settings.translations.import') ?>
                             </button>
                             <!-- 삭제 버튼 (기본 언어 제외) -->
                             <?php if ($locale !== $defaultLanguage): ?>
                             <button type="button" onclick="openDeleteModal('<?= htmlspecialchars($locale) ?>', '<?= htmlspecialchars($langInfo['native']) ?>')"
-                                    class="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition" title="<?= __('admin.settings.translations.delete') ?>">
-                                <?= __('admin.settings.translations.delete') ?>
+                                    class="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition" title="<?= __('settings.translations.delete') ?>">
+                                <?= __('settings.translations.delete') ?>
                             </button>
                             <?php endif; ?>
                         <?php else: ?>
@@ -558,16 +558,16 @@ ob_start();
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                 </svg>
-                                <?= __('admin.settings.translations.no_files') ?>
+                                <?= __('settings.translations.no_files') ?>
                             </span>
                             <button type="button" onclick="openCreateFilesModal('<?= htmlspecialchars($locale) ?>', '<?= htmlspecialchars($langInfo['native']) ?>')"
                                     class="px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition">
-                                <?= __('admin.settings.translations.create_files') ?>
+                                <?= __('settings.translations.create_files') ?>
                             </button>
                             <!-- 가져오기 버튼 (파일 없을 때도) -->
                             <button type="button" onclick="openUploadModal('<?= htmlspecialchars($locale) ?>', '<?= htmlspecialchars($langInfo['native']) ?>')"
-                                    class="px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 rounded hover:bg-zinc-200 dark:hover:bg-zinc-600 transition" title="<?= __('admin.settings.translations.import') ?>">
-                                <?= __('admin.settings.translations.import') ?>
+                                    class="px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 rounded hover:bg-zinc-200 dark:hover:bg-zinc-600 transition" title="<?= __('settings.translations.import') ?>">
+                                <?= __('settings.translations.import') ?>
                             </button>
                         <?php endif; ?>
                     </div>
@@ -599,9 +599,9 @@ ob_start();
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             <div>
-                <p class="text-sm font-medium text-blue-800 dark:text-blue-300"><?= __('admin.settings.translations.edit_tip_title') ?></p>
+                <p class="text-sm font-medium text-blue-800 dark:text-blue-300"><?= __('settings.translations.edit_tip_title') ?></p>
                 <p class="text-xs text-blue-700 dark:text-blue-400 mt-1">
-                    <?= __('admin.settings.translations.edit_tip_desc') ?>
+                    <?= __('settings.translations.edit_tip_desc') ?>
                 </p>
             </div>
         </div>
@@ -615,7 +615,7 @@ ob_start();
     <div class="absolute inset-0 flex items-center justify-center p-4">
         <div class="relative w-full max-w-md bg-white dark:bg-zinc-800 rounded-xl shadow-xl" onclick="event.stopPropagation()">
             <div class="flex items-center justify-between p-4 border-b dark:border-zinc-700">
-                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.settings.translations.create_modal_title') ?></h3>
+                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('settings.translations.create_modal_title') ?></h3>
                 <button type="button" onclick="closeCreateFilesModal()" class="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -628,13 +628,13 @@ ob_start();
 
                 <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
                     <p class="text-sm text-zinc-700 dark:text-zinc-300">
-                        <strong id="targetLanguageName"></strong> - <?= __('admin.settings.translations.create_modal_desc') ?>
+                        <strong id="targetLanguageName"></strong> - <?= __('settings.translations.create_modal_desc') ?>
                     </p>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.settings.translations.source_language') ?></label>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('admin.settings.translations.source_language_hint') ?></p>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('settings.translations.source_language') ?></label>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.translations.source_language_hint') ?></p>
                     <select name="source_locale" id="sourceLocale"
                             class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                         <?php foreach ($langFileStatus as $locale => $status): ?>
@@ -650,11 +650,11 @@ ob_start();
                 <div class="flex justify-end gap-3 pt-4 border-t dark:border-zinc-700">
                     <button type="button" onclick="closeCreateFilesModal()"
                             class="px-4 py-2 text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-600 transition">
-                        <?= __('admin.settings.translations.cancel') ?>
+                        <?= __('settings.translations.cancel') ?>
                     </button>
                     <button type="submit"
                             class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
-                        <?= __('admin.settings.translations.create') ?>
+                        <?= __('settings.translations.create') ?>
                     </button>
                 </div>
             </form>
@@ -671,19 +671,19 @@ ob_start();
                 <svg class="w-12 h-12 mx-auto mb-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                 </svg>
-                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"><?= __('admin.settings.translations.delete_modal_title') ?></h3>
+                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"><?= __('settings.translations.delete_modal_title') ?></h3>
                 <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6">
-                    <strong id="deleteLanguageName"></strong> <?= __('admin.settings.translations.delete_confirm') ?><br><?= __('admin.settings.translations.delete_warning') ?>
+                    <strong id="deleteLanguageName"></strong> <?= __('settings.translations.delete_confirm') ?><br><?= __('settings.translations.delete_warning') ?>
                 </p>
                 <form method="POST" class="flex gap-3 justify-center">
                     <input type="hidden" name="action" value="delete_lang_files">
                     <input type="hidden" name="target_locale" id="deleteLocale">
                     <button type="button" onclick="closeDeleteModal()"
                             class="px-4 py-2 text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-600 transition">
-                        <?= __('admin.settings.translations.cancel') ?>
+                        <?= __('settings.translations.cancel') ?>
                     </button>
                     <button type="submit" class="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition">
-                        <?= __('admin.settings.translations.delete') ?>
+                        <?= __('settings.translations.delete') ?>
                     </button>
                 </form>
             </div>
@@ -697,7 +697,7 @@ ob_start();
     <div class="absolute inset-0 flex items-center justify-center p-4">
         <div class="relative w-full max-w-md bg-white dark:bg-zinc-800 rounded-xl shadow-xl" onclick="event.stopPropagation()">
             <div class="flex items-center justify-between p-4 border-b dark:border-zinc-700">
-                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('admin.settings.translations.import_title') ?></h3>
+                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('settings.translations.import_title') ?></h3>
                 <button type="button" onclick="closeUploadModal()" class="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -709,22 +709,22 @@ ob_start();
                 <input type="hidden" name="target_locale" id="uploadLocale">
                 <div class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
                     <p class="text-sm text-zinc-700 dark:text-zinc-300">
-                        <strong id="uploadLanguageName"></strong> - <?= __('admin.settings.translations.import_desc') ?>
+                        <strong id="uploadLanguageName"></strong> - <?= __('settings.translations.import_desc') ?>
                     </p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('admin.settings.translations.select_zip') ?></label>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('settings.translations.select_zip') ?></label>
                     <input type="file" name="lang_zip" accept=".zip" required
                            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.settings.translations.import_hint') ?></p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.translations.import_hint') ?></p>
                 </div>
                 <div class="flex justify-end gap-3 pt-4 border-t dark:border-zinc-700">
                     <button type="button" onclick="closeUploadModal()"
                             class="px-4 py-2 text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-600 transition">
-                        <?= __('admin.settings.translations.cancel') ?>
+                        <?= __('settings.translations.cancel') ?>
                     </button>
                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
-                        <?= __('admin.settings.translations.import') ?>
+                        <?= __('settings.translations.import') ?>
                     </button>
                 </div>
             </form>

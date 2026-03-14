@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                 json_encode($item['config'] ?? new \stdClass())
             ]);
         }
-        echo json_encode(['success' => true, 'message' => __('admin.site.widget_builder.saved')]);
+        echo json_encode(['success' => true, 'message' => __('site.widget_builder.saved')]);
         exit;
     }
 

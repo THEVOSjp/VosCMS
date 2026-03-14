@@ -10,7 +10,7 @@ if (!function_exists('__')) {
 require_once BASE_PATH . '/rzxlib/Core/Helpers/Encryption.php';
 use RzxLib\Core\Helpers\Encryption;
 
-$pageTitle = __('admin.members.list.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('members.list.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
@@ -91,7 +91,7 @@ try {
                     $extra = parseExtraFields($_POST);
 
                     if (empty($name) || empty($email) || empty($password)) {
-                        echo json_encode(['success' => false, 'message' => __('admin.members.list.error.required')]);
+                        echo json_encode(['success' => false, 'message' => __('members.list.error.required')]);
                         exit;
                     }
 
@@ -99,7 +99,7 @@ try {
                     $chk = $pdo->prepare("SELECT id FROM {$prefix}users WHERE email = ?");
                     $chk->execute([$email]);
                     if ($chk->fetch()) {
-                        echo json_encode(['success' => false, 'message' => __('admin.members.list.error.email_duplicate')]);
+                        echo json_encode(['success' => false, 'message' => __('members.list.error.email_duplicate')]);
                         exit;
                     }
 
@@ -121,7 +121,7 @@ try {
                         $extra['company'], $extra['blog'], $gradeId, $status, $profileImage,
                     ]);
 
-                    echo json_encode(['success' => true, 'message' => __('admin.members.list.success.created')]);
+                    echo json_encode(['success' => true, 'message' => __('members.list.success.created')]);
                     exit;
 
                 case 'update_member':
@@ -133,7 +133,7 @@ try {
                     $extra = parseExtraFields($_POST);
 
                     if (empty($name) || empty($email)) {
-                        echo json_encode(['success' => false, 'message' => __('admin.members.list.error.required')]);
+                        echo json_encode(['success' => false, 'message' => __('members.list.error.required')]);
                         exit;
                     }
 
@@ -141,7 +141,7 @@ try {
                     $chk = $pdo->prepare("SELECT id FROM {$prefix}users WHERE email = ? AND id != ?");
                     $chk->execute([$email, $id]);
                     if ($chk->fetch()) {
-                        echo json_encode(['success' => false, 'message' => __('admin.members.list.error.email_duplicate')]);
+                        echo json_encode(['success' => false, 'message' => __('members.list.error.email_duplicate')]);
                         exit;
                     }
 
@@ -180,7 +180,7 @@ try {
                         StaffSync::onGradeChanged($pdo, $prefix, $id, $gradeId, $oldGradeId);
                     }
 
-                    echo json_encode(['success' => true, 'message' => __('admin.members.list.success.updated')]);
+                    echo json_encode(['success' => true, 'message' => __('members.list.success.updated')]);
                     exit;
 
                 case 'change_status':
@@ -191,7 +191,7 @@ try {
                         exit;
                     }
                     $pdo->prepare("UPDATE {$prefix}users SET status = ? WHERE id = ?")->execute([$status, $id]);
-                    echo json_encode(['success' => true, 'message' => __('admin.members.list.success.status_changed')]);
+                    echo json_encode(['success' => true, 'message' => __('members.list.success.status_changed')]);
                     exit;
 
                 case 'change_grade':
@@ -209,7 +209,7 @@ try {
                         StaffSync::onGradeChanged($pdo, $prefix, $id, $gradeId, $oldGradeId);
                     }
 
-                    echo json_encode(['success' => true, 'message' => __('admin.members.list.success.grade_changed')]);
+                    echo json_encode(['success' => true, 'message' => __('members.list.success.grade_changed')]);
                     exit;
 
                 case 'delete_member':
@@ -217,7 +217,7 @@ try {
                     // 관련 스태프 비활성화
                     $pdo->prepare("UPDATE {$prefix}staff SET is_active = 0 WHERE user_id = ?")->execute([$id]);
                     $pdo->prepare("DELETE FROM {$prefix}users WHERE id = ?")->execute([$id]);
-                    echo json_encode(['success' => true, 'message' => __('admin.members.list.success.deleted')]);
+                    echo json_encode(['success' => true, 'message' => __('members.list.success.deleted')]);
                     exit;
 
                 default:
@@ -336,28 +336,28 @@ try {
                 <!-- 헤더 -->
                 <div class="flex items-center justify-between mb-6">
                     <div>
-                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('admin.members.list.title') ?></h1>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('admin.members.list.description') ?></p>
+                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('members.list.title') ?></h1>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('members.list.description') ?></p>
                     </div>
                     <button type="button" onclick="openCreateMember()"
                             class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <?= __('admin.members.list.create') ?>
+                        <?= __('members.list.create') ?>
                     </button>
                 </div>
 
                 <!-- 통계 카드 -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-5 border border-zinc-200 dark:border-zinc-700">
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.members.list.stat_total') ?></p>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('members.list.stat_total') ?></p>
                         <p class="text-2xl font-bold mt-1"><?= $totalAll ?></p>
                     </div>
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-5 border border-zinc-200 dark:border-zinc-700">
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.members.list.stat_active') ?></p>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('members.list.stat_active') ?></p>
                         <p class="text-2xl font-bold mt-1 text-green-600"><?= $totalActive ?></p>
                     </div>
                     <div class="bg-white dark:bg-zinc-800 rounded-xl p-5 border border-zinc-200 dark:border-zinc-700">
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('admin.members.list.stat_inactive') ?></p>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('members.list.stat_inactive') ?></p>
                         <p class="text-2xl font-bold mt-1 text-zinc-400"><?= $totalInactive ?></p>
                     </div>
                 </div>
@@ -368,26 +368,26 @@ try {
                         <div class="flex-1 min-w-[200px]">
                             <input type="text" name="q" value="<?= htmlspecialchars($search) ?>"
                                    class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
-                                   placeholder="<?= __('admin.members.list.search_placeholder') ?>">
+                                   placeholder="<?= __('members.list.search_placeholder') ?>">
                         </div>
                         <select name="grade" class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
-                            <option value=""><?= __('admin.members.list.filter_all_grades') ?></option>
-                            <option value="_none" <?= $filterGrade === '_none' ? 'selected' : '' ?>><?= __('admin.members.list.filter_no_grade') ?></option>
+                            <option value=""><?= __('members.list.filter_all_grades') ?></option>
+                            <option value="_none" <?= $filterGrade === '_none' ? 'selected' : '' ?>><?= __('members.list.filter_no_grade') ?></option>
                             <?php foreach ($grades as $g): ?>
                             <option value="<?= htmlspecialchars($g['id']) ?>" <?= $filterGrade === $g['id'] ? 'selected' : '' ?>><?= htmlspecialchars($g['name']) ?></option>
                             <?php endforeach; ?>
                         </select>
                         <select name="status" class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
-                            <option value=""><?= __('admin.members.list.filter_all_status') ?></option>
-                            <option value="active" <?= $filterStatus === 'active' ? 'selected' : '' ?>><?= __('admin.members.list.status_active') ?></option>
-                            <option value="inactive" <?= $filterStatus === 'inactive' ? 'selected' : '' ?>><?= __('admin.members.list.status_inactive') ?></option>
-                            <option value="withdrawn" <?= $filterStatus === 'withdrawn' ? 'selected' : '' ?>><?= __('admin.members.list.status_withdrawn') ?></option>
+                            <option value=""><?= __('members.list.filter_all_status') ?></option>
+                            <option value="active" <?= $filterStatus === 'active' ? 'selected' : '' ?>><?= __('members.list.status_active') ?></option>
+                            <option value="inactive" <?= $filterStatus === 'inactive' ? 'selected' : '' ?>><?= __('members.list.status_inactive') ?></option>
+                            <option value="withdrawn" <?= $filterStatus === 'withdrawn' ? 'selected' : '' ?>><?= __('members.list.status_withdrawn') ?></option>
                         </select>
                         <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
-                            <?= __('admin.members.list.search') ?>
+                            <?= __('members.list.search') ?>
                         </button>
                         <?php if ($search || $filterGrade || $filterStatus): ?>
-                        <a href="<?= $adminUrl ?>/members" class="px-3 py-2 text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"><?= __('admin.members.list.reset') ?></a>
+                        <a href="<?= $adminUrl ?>/members" class="px-3 py-2 text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"><?= __('members.list.reset') ?></a>
                         <?php endif; ?>
                     </form>
                 </div>
@@ -397,20 +397,20 @@ try {
                     <?php if (empty($members)): ?>
                     <div class="p-12 text-center text-zinc-500 dark:text-zinc-400">
                         <svg class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        <p><?= __('admin.members.list.empty') ?></p>
+                        <p><?= __('members.list.empty') ?></p>
                     </div>
                     <?php else: ?>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead class="bg-zinc-50 dark:bg-zinc-700/50">
                                 <tr>
-                                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.members.list.col_name') ?></th>
-                                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.members.list.col_email') ?></th>
-                                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.members.list.col_phone') ?></th>
-                                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.members.list.col_grade') ?></th>
-                                    <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.members.list.col_status') ?></th>
-                                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.members.list.col_joined') ?></th>
-                                    <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('admin.members.list.col_actions') ?></th>
+                                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('members.list.col_name') ?></th>
+                                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('members.list.col_email') ?></th>
+                                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('members.list.col_phone') ?></th>
+                                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('members.list.col_grade') ?></th>
+                                    <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('members.list.col_status') ?></th>
+                                    <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('members.list.col_joined') ?></th>
+                                    <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('members.list.col_actions') ?></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -422,7 +422,7 @@ try {
                                         'withdrawn' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
                                     ];
                                     $statusClass = $statusColors[$m['status']] ?? $statusColors['active'];
-                                    $statusLabel = __('admin.members.list.status_' . $m['status']);
+                                    $statusLabel = __('members.list.status_' . $m['status']);
                                 ?>
                                 <tr id="member-<?= htmlspecialchars($m['id']) ?>" class="hover:bg-zinc-50 dark:hover:bg-zinc-700/30 transition-colors">
                                     <td class="px-4 py-3">
@@ -452,11 +452,11 @@ try {
                                     <td class="px-4 py-3 text-center">
                                         <div class="flex items-center justify-center gap-1">
                                             <button onclick='editMember(<?= json_encode($m, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'
-                                                    class="p-1.5 text-zinc-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors" title="<?= __('admin.members.list.edit') ?>">
+                                                    class="p-1.5 text-zinc-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors" title="<?= __('members.list.edit') ?>">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                             </button>
                                             <button onclick="deleteMember('<?= htmlspecialchars($m['id']) ?>')"
-                                                    class="p-1.5 text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="<?= __('admin.members.list.delete') ?>">
+                                                    class="p-1.5 text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="<?= __('members.list.delete') ?>">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                             </button>
                                         </div>
@@ -471,7 +471,7 @@ try {
                     <?php if ($totalPages > 1): ?>
                     <div class="px-4 py-3 bg-zinc-50 dark:bg-zinc-700/30 border-t border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
                         <div class="text-xs text-zinc-500 dark:text-zinc-400">
-                            <?= __('admin.members.list.showing', ['from' => ($offset + 1), 'to' => min($offset + $perPage, $totalMembers), 'total' => $totalMembers]) ?>
+                            <?= __('members.list.showing', ['from' => ($offset + 1), 'to' => min($offset + $perPage, $totalMembers), 'total' => $totalMembers]) ?>
                         </div>
                         <div class="flex items-center gap-1">
                             <?php
