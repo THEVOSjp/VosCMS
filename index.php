@@ -3,7 +3,7 @@
  * RezlyX - Modern Reservation System
  *
  * @package RezlyX
- * @version 1.2.1
+ * @version 1.2.2
  */
 
 define('REZLYX_START', microtime(true));
@@ -213,6 +213,15 @@ if (empty($path) || $path === 'index.php') {
         http_response_code(403);
         include BASE_PATH . '/resources/views/admin/403.php';
         exit;
+    }
+
+    // 업데이트 확인 (캐시 기반, 1시간 TTL)
+    $updateInfo = null;
+    try {
+        require_once BASE_PATH . '/rzxlib/Core/Updater/UpdateChecker.php';
+        $updateInfo = \RzxLib\Core\Updater\UpdateChecker::check($pdo, BASE_PATH);
+    } catch (\Throwable $e) {
+        // 업데이트 확인 실패 시 무시
     }
 
     // 파일 기반 위젯 DB 동기화 (1시간에 1회)

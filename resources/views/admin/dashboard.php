@@ -90,6 +90,33 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
             <!-- Dashboard Content -->
             <div class="p-6">
+                <!-- Update Available Banner -->
+                <?php if (!empty($updateInfo) && !empty($updateInfo['has_update'])): ?>
+                <?php $updateUrl = ($config['app_url'] ?? '') . '/' . ($config['admin_path'] ?? 'admin') . '/settings/system/updates'; ?>
+                <div class="mb-6 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-4 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center text-white">
+                            <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mr-4">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-lg">RezlyX v<?= htmlspecialchars($updateInfo['latest'] ?? '') ?> <?= __('system.updates.available_short') ?></p>
+                                <p class="text-blue-100 text-sm"><?= __('system.updates.update_recommend') ?></p>
+                            </div>
+                        </div>
+                        <a href="<?= htmlspecialchars($updateUrl) ?>"
+                           class="px-5 py-2.5 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition shadow-sm flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            <?= __('system.updates.update_now') ?>
+                        </a>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <!-- Status Banner -->
                 <?php if ($dbConnected): ?>
                 <div class="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
@@ -161,7 +188,11 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-zinc-500 dark:text-zinc-400">시스템 버전</p>
-                                <p class="text-3xl font-bold text-zinc-900 dark:text-white mt-1">1.0.0</p>
+                                <?php
+                                    $vj = json_decode(file_get_contents(BASE_PATH . '/version.json'), true);
+                                    $curVer = $vj['version'] ?? '0.0.0';
+                                ?>
+                                <p class="text-3xl font-bold text-zinc-900 dark:text-white mt-1"><?= htmlspecialchars($curVer) ?></p>
                             </div>
                             <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
                                 <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

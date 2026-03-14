@@ -153,6 +153,9 @@ class Updater
             // 11. 메인터넌스 모드 해제
             $this->setMaintenanceMode(false);
 
+            // 11.5. 업데이트 캐시 무효화
+            UpdateChecker::clearCache($this->basePath);
+
             // 12. 업데이트 로그 기록
             $this->logUpdate($currentVersion, $targetVersion, true);
 
@@ -179,6 +182,194 @@ class Updater
                 'rolled_back' => isset($backupPath),
             ];
         }
+    }
+
+    /**
+     * 변경분만 업데이트 (Patch 모드)
+     * 현재 버전과 대상 버전 사이 변경된 파일만 개별 다운로드
+     */
+    public function performPatchUpdate(string $targetVersion = null): array
+    {
+        $currentVersion = $this->versionInfo['version'] ?? '0.0.0';
+
+        // 1. 최신 릴리스 정보
+        $latestRelease = $this->github->getLatestRelease();
+        if ($latestRelease === null) {
+            return ['success' => false, 'error' => \__('updater.no_release_info')];
+        }
+
+        $targetVersion = $targetVersion ?? $latestRelease['version'];
+
+        if (version_compare($targetVersion, $currentVersion, '<=')) {
+            return ['success' => false, 'error' => \__('updater.already_latest')];
+        }
+
+        // 2. 변경 파일 목록 조회
+        $compare = $this->github->getCompare('v' . $currentVersion, 'v' . $targetVersion);
+        if ($compare === null) {
+            return ['success' => false, 'error' => \__('updater.compare_failed')];
+        }
+
+        $files = $compare['files'] ?? [];
+        if (empty($files)) {
+            return ['success' => false, 'error' => \__('updater.no_changes')];
+        }
+
+        // 3. 파일 수 초과 시 전체 업데이트로 폴백 권장
+        $maxPatchFiles = 200;
+        if (count($files) > $maxPatchFiles) {
+            return [
+                'success' => false,
+                'error' => \__('updater.too_many_changes', ['count' => count($files), 'max' => $maxPatchFiles]),
+                'suggest_full' => true,
+            ];
+        }
+
+        // 4. 메인터넌스 모드
+        $this->setMaintenanceMode(true);
+
+        try {
+            // 5. 백업 생성
+            $backupPath = $this->backup->createFull($currentVersion);
+            if ($backupPath === null) {
+                throw new \Exception(\__('updater.backup_failed'));
+            }
+
+            $applied = 0;
+            $deleted = 0;
+            $errors = [];
+
+            // 6. 파일별 처리
+            foreach ($files as $file) {
+                $filename = $file['filename'];
+
+                // 보존 파일 스킵
+                if ($this->shouldPreserve($filename)) {
+                    continue;
+                }
+
+                $targetPath = $this->basePath . '/' . $filename;
+
+                if ($file['status'] === 'removed') {
+                    // 삭제된 파일
+                    if (file_exists($targetPath)) {
+                        @unlink($targetPath);
+                        $deleted++;
+                    }
+                } else {
+                    // 추가/수정된 파일 — GitHub에서 내용 다운로드
+                    $content = $this->github->getFileContent($filename, 'v' . $targetVersion);
+                    if ($content === null) {
+                        $errors[] = $filename;
+                        continue;
+                    }
+
+                    $dir = dirname($targetPath);
+                    if (!is_dir($dir)) {
+                        mkdir($dir, 0755, true);
+                    }
+                    file_put_contents($targetPath, $content);
+                    $applied++;
+                }
+            }
+
+            // 7. 다운로드 실패 파일이 전체의 20% 이상이면 롤백
+            if (!empty($errors) && count($errors) > count($files) * 0.2) {
+                throw new \Exception(\__('updater.patch_too_many_errors', ['count' => count($errors)]));
+            }
+
+            // 8. DB 마이그레이션
+            $migrationResult = $this->runDatabaseMigration($targetVersion);
+            if (!$migrationResult['success'] && !empty($migrationResult['errors'])) {
+                throw new \Exception(\__('updater.db_migration_failed', ['errors' => implode(', ', $migrationResult['errors'])]));
+            }
+
+            // 9. 버전 정보 업데이트
+            $this->updateVersionInfo($targetVersion);
+
+            // 10. 백업 정리
+            $this->backup->cleanOldBackups(5);
+
+            // 11. 메인터넌스 해제
+            $this->setMaintenanceMode(false);
+
+            // 12. 업데이트 캐시 무효화
+            UpdateChecker::clearCache($this->basePath);
+
+            // 13. 로그
+            $this->logUpdate($currentVersion, $targetVersion, true, "patch: {$applied} applied, {$deleted} deleted" . (!empty($errors) ? ', ' . count($errors) . ' errors' : ''));
+
+            return [
+                'success' => true,
+                'message' => \__('updater.update_complete', ['from' => $currentVersion, 'to' => $targetVersion]),
+                'from_version' => $currentVersion,
+                'to_version' => $targetVersion,
+                'applied' => $applied,
+                'deleted' => $deleted,
+                'errors' => $errors,
+                'backup_path' => $backupPath,
+            ];
+
+        } catch (\Exception $e) {
+            if (isset($backupPath) && $backupPath) {
+                $this->backup->restore($backupPath);
+            }
+            $this->setMaintenanceMode(false);
+            $this->logUpdate($currentVersion, $targetVersion ?? 'unknown', false, $e->getMessage());
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+                'rolled_back' => isset($backupPath),
+            ];
+        }
+    }
+
+    /**
+     * 변경 파일 목록 조회 (미리보기용)
+     */
+    public function getChangedFiles(string $targetVersion = null): array
+    {
+        $currentVersion = $this->versionInfo['version'] ?? '0.0.0';
+
+        if ($targetVersion === null) {
+            $latestRelease = $this->github->getLatestRelease();
+            $targetVersion = $latestRelease['version'] ?? $currentVersion;
+        }
+
+        $compare = $this->github->getCompare('v' . $currentVersion, 'v' . $targetVersion);
+        if ($compare === null) {
+            return ['success' => false, 'error' => \__('updater.compare_failed')];
+        }
+
+        // 카테고리별 분류
+        $added = [];
+        $modified = [];
+        $removed = [];
+
+        foreach ($compare['files'] ?? [] as $file) {
+            $entry = [
+                'filename' => $file['filename'],
+                'additions' => $file['additions'],
+                'deletions' => $file['deletions'],
+            ];
+            match ($file['status']) {
+                'added' => $added[] = $entry,
+                'removed' => $removed[] = $entry,
+                default => $modified[] = $entry,
+            };
+        }
+
+        return [
+            'success' => true,
+            'current_version' => $currentVersion,
+            'target_version' => $targetVersion,
+            'total_commits' => $compare['total_commits'],
+            'total_files' => count($compare['files']),
+            'added' => $added,
+            'modified' => $modified,
+            'removed' => $removed,
+        ];
     }
 
     /**

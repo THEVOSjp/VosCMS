@@ -34,6 +34,18 @@ try {
             echo json_encode(['success' => $result['success'], 'data' => $result]);
             break;
 
+        case 'patch':
+            $version = $_POST['version'] ?? null;
+            $result = $updater->performPatchUpdate($version);
+            echo json_encode(['success' => $result['success'], 'data' => $result]);
+            break;
+
+        case 'compare':
+            $version = $_POST['version'] ?? $_GET['version'] ?? null;
+            $result = $updater->getChangedFiles($version);
+            echo json_encode(['success' => $result['success'] ?? false, 'data' => $result]);
+            break;
+
         case 'rollback':
             $backupPath = $_POST['backup_path'] ?? null;
             $result = $updater->rollback($backupPath);

@@ -14,6 +14,22 @@
 <header class="bg-white dark:bg-zinc-800 shadow-sm h-16 flex items-center justify-between px-6 transition-colors">
     <h1 class="text-xl font-semibold text-zinc-900 dark:text-white"><?= htmlspecialchars($pageHeaderTitle ?? '') ?></h1>
     <div class="flex items-center space-x-4">
+        <!-- Update Notification Badge -->
+        <?php if (!empty($updateInfo) && !empty($updateInfo['has_update'])): ?>
+        <?php
+            $updateUrl = ($config['app_url'] ?? '') . '/' . ($config['admin_path'] ?? 'admin') . '/settings/system/updates';
+        ?>
+        <a href="<?= htmlspecialchars($updateUrl) ?>" class="relative p-2 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition group" title="<?= __('system.updates.new_version_available') ?>">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            <span class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-zinc-800 animate-pulse"></span>
+            <span class="absolute invisible group-hover:visible -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs rounded whitespace-nowrap z-50">
+                v<?= htmlspecialchars($updateInfo['latest'] ?? '') ?> <?= __('system.updates.available_short') ?>
+            </span>
+        </a>
+        <?php endif; ?>
+
         <!-- Language Selector (공용 컴포넌트) -->
         <?php include BASE_PATH . '/resources/views/components/language-selector.php'; ?>
 
