@@ -10,6 +10,7 @@ $baseUrl = $config['app_url'] ?? '';
 $staffId = (int)($routeParams['id'] ?? 0);
 $currentLocale = $config['locale'] ?? 'ko';
 $isLoggedIn = Auth::check();
+$currentUser = $isLoggedIn ? Auth::user() : null;
 
 if (!$staffId) {
     header('Location: ' . $baseUrl . '/staff');
@@ -55,191 +56,7 @@ try {
 
     // ========== AJAX 처리 ==========
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        header('Content-Type: application/json; charset=utf-8');
-        $input = json_decode(file_get_contents('php://input'), true);
-        $action = $input['action'] ?? '';
-
-        // 기본 영업시간
-        $bhRows = $pdo->query("SELECT day_of_week, is_open, open_time, close_time, break_start, break_end FROM {$prefix}business_hours ORDER BY day_of_week")->fetchAll(PDO::FETCH_ASSOC);
-        $bh = [];
-        foreach ($bhRows as $r) $bh[$r['day_of_week']] = $r;
-
-        // ---- 월별 근무일 조회 ----
-        if ($action === 'get_month_schedule') {
-            $year = (int)($input['year'] ?? date('Y'));
-            $month = (int)($input['month'] ?? date('n'));
-            $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
-
-            // 주간 스케줄
-            $wkStmt = $pdo->prepare("SELECT day_of_week, is_working, start_time, end_time FROM {$prefix}staff_schedules WHERE staff_id = ?");
-            $wkStmt->execute([$staffId]);
-            $weekly = [];
-            while ($w = $wkStmt->fetch(PDO::FETCH_ASSOC)) $weekly[$w['day_of_week']] = $w;
-
-            // 해당 월 오버라이드
-            $ovStmt = $pdo->prepare("SELECT override_date, is_working, start_time, end_time FROM {$prefix}staff_schedule_overrides WHERE staff_id = ? AND override_date BETWEEN ? AND ?");
-            $firstDay = sprintf('%04d-%02d-01', $year, $month);
-            $lastDay = sprintf('%04d-%02d-%02d', $year, $month, $daysInMonth);
-            $ovStmt->execute([$staffId, $firstDay, $lastDay]);
-            $overrides = [];
-            while ($o = $ovStmt->fetch(PDO::FETCH_ASSOC)) $overrides[$o['override_date']] = $o;
-
-            // 휴일 조회
-            $holStmt = $pdo->prepare("SELECT date FROM {$prefix}holidays WHERE date BETWEEN ? AND ?");
-            $holStmt->execute([$firstDay, $lastDay]);
-            $holidays = [];
-            while ($h = $holStmt->fetch(PDO::FETCH_ASSOC)) $holidays[] = $h['date'];
-
-            $days = [];
-            $today = date('Y-m-d');
-            for ($d = 1; $d <= $daysInMonth; $d++) {
-                $date = sprintf('%04d-%02d-%02d', $year, $month, $d);
-                $dow = (int)date('w', strtotime($date));
-                $working = false;
-                $hours = '';
-
-                // 과거 날짜 → 비활성
-                if ($date < $today) {
-                    $days[] = ['date' => $date, 'working' => false, 'past' => true, 'hours' => ''];
-                    continue;
-                }
-
-                // 휴일 체크
-                if (in_array($date, $holidays)) {
-                    $days[] = ['date' => $date, 'working' => false, 'holiday' => true, 'hours' => ''];
-                    continue;
-                }
-
-                // 오버라이드 → 주간 스케줄 → 영업시간 폴백
-                if (isset($overrides[$date])) {
-                    $ov = $overrides[$date];
-                    $working = (bool)$ov['is_working'];
-                    if ($working) $hours = substr($ov['start_time'], 0, 5) . '-' . substr($ov['end_time'], 0, 5);
-                } elseif ($scheduleEnabled && isset($weekly[$dow])) {
-                    $wk = $weekly[$dow];
-                    $working = (bool)$wk['is_working'];
-                    if ($working) $hours = substr($wk['start_time'], 0, 5) . '-' . substr($wk['end_time'], 0, 5);
-                } elseif (isset($bh[$dow])) {
-                    $working = (bool)$bh[$dow]['is_open'];
-                    if ($working) $hours = substr($bh[$dow]['open_time'], 0, 5) . '-' . substr($bh[$dow]['close_time'], 0, 5);
-                }
-
-                $days[] = ['date' => $date, 'working' => $working, 'hours' => $hours];
-            }
-
-            echo json_encode(['success' => true, 'days' => $days, 'year' => $year, 'month' => $month]);
-            exit;
-        }
-
-        // ---- 날짜별 슬롯 조회 ----
-        if ($action === 'get_day_slots') {
-            $reqDate = $input['date'] ?? '';
-            $reqDuration = max(15, (int)($input['duration'] ?? 60));
-
-            if (!$reqDate || $reqDate < date('Y-m-d')) {
-                echo json_encode(['success' => true, 'slots' => []]);
-                exit;
-            }
-
-            $dow = (int)date('w', strtotime($reqDate));
-            $openTime = null;
-            $closeTime = null;
-            $breakStart = null;
-            $breakEnd = null;
-            $isWorking = false;
-
-            // 1. 오버라이드
-            if ($scheduleEnabled) {
-                $ovStmt = $pdo->prepare("SELECT is_working, start_time, end_time, break_start, break_end FROM {$prefix}staff_schedule_overrides WHERE staff_id = ? AND override_date = ?");
-                $ovStmt->execute([$staffId, $reqDate]);
-                $override = $ovStmt->fetch(PDO::FETCH_ASSOC);
-                if ($override) {
-                    $isWorking = (bool)$override['is_working'];
-                    $openTime = $override['start_time'];
-                    $closeTime = $override['end_time'];
-                    $breakStart = $override['break_start'];
-                    $breakEnd = $override['break_end'];
-                }
-            }
-
-            // 2. 주간 스케줄
-            if ($openTime === null && $scheduleEnabled) {
-                $schStmt = $pdo->prepare("SELECT is_working, start_time, end_time, break_start, break_end FROM {$prefix}staff_schedules WHERE staff_id = ? AND day_of_week = ?");
-                $schStmt->execute([$staffId, $dow]);
-                $sch = $schStmt->fetch(PDO::FETCH_ASSOC);
-                if ($sch) {
-                    $isWorking = (bool)$sch['is_working'];
-                    $openTime = $sch['start_time'];
-                    $closeTime = $sch['end_time'];
-                    $breakStart = $sch['break_start'];
-                    $breakEnd = $sch['break_end'];
-                }
-            }
-
-            // 3. 기본 영업시간
-            if ($openTime === null) {
-                $bhItem = $bh[$dow] ?? null;
-                if ($bhItem) {
-                    $isWorking = (bool)$bhItem['is_open'];
-                    $openTime = $bhItem['open_time'];
-                    $closeTime = $bhItem['close_time'];
-                    $breakStart = $bhItem['break_start'];
-                    $breakEnd = $bhItem['break_end'];
-                } else {
-                    $isWorking = true;
-                    $openTime = '09:00:00';
-                    $closeTime = '20:00:00';
-                }
-            }
-
-            if (!$isWorking) {
-                echo json_encode(['success' => true, 'slots' => [], 'message' => 'day_off']);
-                exit;
-            }
-
-            // 기존 예약 조회
-            $bookedSlots = [];
-            $bkStmt = $pdo->prepare("SELECT start_time, end_time FROM {$prefix}reservations WHERE reservation_date = ? AND staff_id = ? AND status NOT IN ('cancelled', 'no_show')");
-            $bkStmt->execute([$reqDate, $staffId]);
-            while ($bk = $bkStmt->fetch(PDO::FETCH_ASSOC)) {
-                $bookedSlots[] = ['start' => $bk['start_time'], 'end' => $bk['end_time']];
-            }
-
-            // 슬롯 생성
-            $slots = [];
-            $startMin = (int)substr($openTime, 0, 2) * 60 + (int)substr($openTime, 3, 2);
-            $endMin = (int)substr($closeTime, 0, 2) * 60 + (int)substr($closeTime, 3, 2);
-            $breakStartMin = $breakStart ? ((int)substr($breakStart, 0, 2) * 60 + (int)substr($breakStart, 3, 2)) : null;
-            $breakEndMin = $breakEnd ? ((int)substr($breakEnd, 0, 2) * 60 + (int)substr($breakEnd, 3, 2)) : null;
-
-            for ($m = $startMin; $m + $reqDuration <= $endMin; $m += $slotInterval) {
-                $slotEnd = $m + $reqDuration;
-                if ($breakStartMin !== null && $breakEndMin !== null) {
-                    if ($m < $breakEndMin && $slotEnd > $breakStartMin) continue;
-                }
-                $slotTimeStr = sprintf('%02d:%02d', intdiv($m, 60), $m % 60);
-                $slotEndStr = sprintf('%02d:%02d:00', intdiv($slotEnd, 60), $slotEnd % 60);
-                $slotStartFull = $slotTimeStr . ':00';
-
-                $conflict = false;
-                foreach ($bookedSlots as $booked) {
-                    if ($slotStartFull < $booked['end'] && $slotEndStr > $booked['start']) {
-                        $conflict = true;
-                        break;
-                    }
-                }
-                if ($conflict) continue;
-                if ($reqDate === date('Y-m-d') && $slotTimeStr <= date('H:i')) continue;
-
-                $slots[] = $slotTimeStr;
-            }
-
-            echo json_encode(['success' => true, 'slots' => $slots]);
-            exit;
-        }
-
-        echo json_encode(['success' => false, 'message' => 'Unknown action']);
-        exit;
+        include BASE_PATH . '/resources/views/customer/staff-detail-ajax.php';
     }
 
     // ========== 페이지 데이터 로드 ==========
@@ -265,6 +82,24 @@ try {
         ORDER BY sv.sort_order, sv.name");
     $stmt->execute([$staffId]);
     $staffServices = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // 해당 스태프에 할당된 활성 번들 조회
+    $staffBundles = [];
+    $bundleStmt = $pdo->prepare("
+        SELECT b.*, GROUP_CONCAT(bi.service_id ORDER BY bi.sort_order) as service_id_list,
+               COUNT(bi.id) as item_count,
+               COALESCE(SUM(sv.price), 0) as original_total,
+               COALESCE(SUM(sv.duration), 0) as total_duration
+        FROM {$prefix}staff_bundles sb
+        JOIN {$prefix}service_bundles b ON sb.bundle_id = b.id
+        JOIN {$prefix}service_bundle_items bi ON b.id = bi.bundle_id
+        JOIN {$prefix}services sv ON bi.service_id = sv.id
+        WHERE sb.staff_id = ? AND b.is_active = 1
+        GROUP BY b.id
+        ORDER BY b.display_order, b.name
+    ");
+    $bundleStmt->execute([$staffId]);
+    $staffBundles = $bundleStmt->fetchAll(PDO::FETCH_ASSOC);
 
     // 주간 스케줄 (프로필 표시용)
     $stmt = $pdo->prepare("SELECT * FROM {$prefix}staff_schedules WHERE staff_id = ? ORDER BY day_of_week");
@@ -383,6 +218,130 @@ include BASE_PATH . '/resources/views/partials/header.php';
             </div>
         </div>
 
+        <!-- Bundle Packages -->
+        <?php if (!empty($staffBundles)): ?>
+        <div class="border-t border-gray-200 dark:border-zinc-700 pt-6 mb-6">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4"><?= __('bundles.customer.title') ?></h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="sdBundleList">
+                <?php foreach ($staffBundles as $bdl):
+                    $bdlPrice = (float)$bdl['bundle_price'];
+                    $origPrice = (float)$bdl['original_total'];
+                    $discPct = $origPrice > 0 && $bdlPrice < $origPrice ? round((1 - $bdlPrice / $origPrice) * 100) : 0;
+                    $svcIdList = $bdl['service_id_list'] ?? '';
+                ?>
+                <div class="sd-bundle-card cursor-pointer" data-bundle-id="<?= htmlspecialchars($bdl['id']) ?>" data-services="<?= htmlspecialchars($svcIdList) ?>" data-price="<?= $bdlPrice ?>" data-duration="<?= (int)$bdl['total_duration'] ?>" data-name="<?= htmlspecialchars($bdl['name']) ?>">
+                    <div class="sd-bundle-inner relative rounded-xl border-2 border-gray-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-600 p-4 transition-all bg-white dark:bg-zinc-800 hover:shadow-md">
+                        <!-- 할인 뱃지 -->
+                        <?php if ($discPct > 0): ?>
+                        <div class="absolute -top-2 -right-2 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full shadow">-<?= $discPct ?>%</div>
+                        <?php endif; ?>
+                        <!-- 선택 체크 -->
+                        <div class="absolute top-3 left-3 w-5 h-5 rounded-full border-2 border-gray-300 dark:border-zinc-600 flex items-center justify-center sd-bundle-circle">
+                            <svg class="w-3 h-3 text-white hidden sd-bundle-check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <div class="pl-7">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                <h3 class="font-semibold text-gray-900 dark:text-white text-sm"><?= htmlspecialchars($bdl['name']) ?></h3>
+                            </div>
+                            <?php if (!empty($bdl['description'])): ?>
+                            <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1 line-clamp-2"><?= htmlspecialchars($bdl['description']) ?></p>
+                            <?php endif; ?>
+                            <div class="flex items-center justify-between mt-2">
+                                <span class="text-xs text-gray-400 dark:text-zinc-500"><?= (int)$bdl['item_count'] ?><?= __('bundles.services_count') ?> · <?= (int)$bdl['total_duration'] ?><?= __('common.minutes') ?></span>
+                                <div class="text-right">
+                                    <span class="text-base font-bold text-blue-600 dark:text-blue-400">&yen;<?= number_format($bdlPrice) ?></span>
+                                    <?php if ($discPct > 0): ?>
+                                    <span class="text-xs text-gray-400 line-through ml-1">&yen;<?= number_format($origPrice) ?></span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Available Services -->
+        <?php if (!empty($staffServices)): ?>
+        <div class="border-t border-gray-200 dark:border-zinc-700 pt-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white"><?= __('staff_page.available_services') ?></h2>
+            </div>
+
+            <!-- 카테고리 필터 -->
+            <?php
+            $sdCategories = [];
+            foreach ($staffServices as $s) {
+                $cid = $s['category_id'] ?? '';
+                $cname = $s['category_name'] ?? '';
+                if ($cid && $cname && !isset($sdCategories[$cid])) {
+                    $sdCategories[$cid] = $cname;
+                }
+            }
+            ?>
+            <?php if (!empty($sdCategories)): ?>
+            <div id="sdCatFilter" class="flex flex-wrap gap-2 mb-3">
+                <button type="button" class="sd-cat-btn px-3 py-1 text-xs font-medium rounded-full transition-all bg-blue-600 text-white" data-cat=""><?= __('common.all') ?></button>
+                <?php foreach ($sdCategories as $cid => $cname): ?>
+                <button type="button" class="sd-cat-btn px-3 py-1 text-xs font-medium rounded-full transition-all bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-600" data-cat="<?= htmlspecialchars($cid) ?>"><?= htmlspecialchars($cname) ?></button>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <?php foreach ($staffServices as $svc):
+                    $svcName = htmlspecialchars($svc['name']);
+                    $svcPrice = (float)$svc['price'];
+                    $svcDuration = (int)$svc['duration'];
+                    $svcImage = $svc['image'] ?? '';
+                    $hasImage = !empty($svcImage);
+                    $svcCatId = $svc['category_id'] ?? '';
+                    $svcCatName = $svc['category_name'] ?? '';
+                ?>
+                <div class="sd-svc-card cursor-pointer" data-cat="<?= htmlspecialchars($svcCatId) ?>">
+                    <input type="checkbox" class="hidden sd-svc-check" value="<?= $svc['id'] ?>"
+                           data-name="<?= $svcName ?>" data-price="<?= $svcPrice ?>" data-duration="<?= $svcDuration ?>">
+                    <div class="sd-card-inner group relative rounded-xl border-2 border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 hover:shadow-md cursor-pointer transition-all overflow-hidden"
+                         style="min-height:150px;<?php if ($hasImage): ?>background-image:url('<?= htmlspecialchars($baseUrl . '/storage/' . $svcImage) ?>');background-size:cover;background-position:center<?php endif; ?>">
+                        <?php if (!$hasImage): ?>
+                        <div class="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-zinc-700 dark:to-zinc-800"></div>
+                        <?php endif; ?>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                        <div class="absolute inset-0 bg-blue-500/20 hidden sd-overlay"></div>
+                        <!-- 선택 체크 -->
+                        <div class="absolute top-2 right-2 w-6 h-6 rounded-full border-2 border-white/70 bg-black/20 flex items-center justify-center transition-all shadow-sm z-10 sd-circle">
+                            <svg class="w-3.5 h-3.5 text-white hidden sd-check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                        <?php if ($svcCatName): ?>
+                        <div class="absolute top-2 left-2 z-10">
+                            <span class="px-2 py-0.5 text-[10px] font-medium rounded-full bg-black/40 text-white/90 backdrop-blur-sm"><?= htmlspecialchars($svcCatName) ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <div class="absolute bottom-0 left-0 right-0 p-3 z-10">
+                            <p class="text-sm font-bold text-white truncate drop-shadow-sm"><?= $svcName ?></p>
+                            <div class="flex items-center justify-between mt-1">
+                                <span class="text-xs text-white/70 flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <?= $svcDuration ?><?= __('common.minutes') ?>
+                                </span>
+                                <span class="text-sm font-bold text-white drop-shadow-sm">&yen;<?= number_format($svcPrice) ?></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- 선택 개수 표시 -->
+            <div id="sdSvcCount" class="hidden mt-3 text-sm text-blue-600 dark:text-blue-400 font-medium"></div>
+        </div>
+        <?php endif; ?>
+
         <!-- Monthly Calendar + Slots Section -->
         <div class="border-t border-gray-200 dark:border-zinc-700 pt-6 mb-8">
             <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4"><?= __('staff_page.schedule_calendar') ?></h2>
@@ -429,49 +388,88 @@ include BASE_PATH . '/resources/views/partials/header.php';
             </div>
         </div>
 
-        <!-- Available Services -->
+        <!-- Booking Summary Panel -->
         <?php if (!empty($staffServices)): ?>
-        <div class="border-t border-gray-200 dark:border-zinc-700 pt-6">
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4"><?= __('staff_page.available_services') ?></h2>
+        <div id="sdBookingSummary" class="border-t border-gray-200 dark:border-zinc-700 pt-6 mb-8 hidden">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4"><?= __('staff_page.booking_summary') ?></h2>
+            <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 overflow-hidden">
+                <!-- 선택 서비스 목록 -->
+                <div id="sdSelectedList" class="divide-y divide-gray-100 dark:divide-zinc-700/50">
+                    <!-- JS fills -->
+                </div>
 
-            <div class="space-y-3">
-                <?php foreach ($staffServices as $svc):
-                    $svcName = htmlspecialchars($svc['name']);
-                    $svcDesc = htmlspecialchars($svc['description'] ?? '');
-                    $svcPrice = (float)$svc['price'];
-                    $svcDuration = (int)$svc['duration'];
-                    $svcImage = $svc['image'] ?? '';
-                    $svcCategory = $svc['category_name'] ?? '';
-                ?>
-                <div class="flex gap-3 p-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg hover:shadow-md transition-shadow">
-                    <?php if (!empty($svcImage)): ?>
-                    <div class="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-700">
-                        <img src="<?= htmlspecialchars($svcImage) ?>" alt="<?= $svcName ?>" class="w-full h-full object-cover">
+                <div class="p-4 space-y-2 border-t border-gray-200 dark:border-zinc-700">
+                    <!-- 지명료 -->
+                    <?php if ($designationFee > 0): ?>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500 dark:text-zinc-400"><?= __('staff_page.designation_fee') ?></span>
+                        <span class="text-gray-900 dark:text-white">&yen;<?= number_format($designationFee) ?></span>
                     </div>
                     <?php endif; ?>
 
-                    <div class="flex-1 min-w-0">
-                        <?php if (!empty($svcCategory)): ?>
-                        <span class="text-xs text-blue-600 dark:text-blue-400 font-medium"><?= htmlspecialchars($svcCategory) ?></span>
-                        <?php endif; ?>
-                        <h3 class="font-semibold text-gray-900 dark:text-white text-sm"><?= $svcName ?></h3>
-                        <div class="flex items-center gap-2 text-xs mt-0.5">
-                            <span class="text-red-600 dark:text-red-400 font-bold">&yen;<?= number_format($svcPrice) ?></span>
-                            <?php if ($svcDuration > 0): ?>
-                            <span class="text-gray-400">|</span>
-                            <span class="text-gray-500 dark:text-zinc-400"><?= $svcDuration ?><?= __('staff_page.minutes') ?></span>
-                            <?php endif; ?>
-                        </div>
+                    <!-- 총 소요시간 -->
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500 dark:text-zinc-400"><?= __('booking.total_duration') ?></span>
+                        <span id="sdSumDuration" class="text-gray-900 dark:text-white font-medium"></span>
                     </div>
 
-                    <div class="flex-shrink-0 flex items-center">
-                        <a href="<?= $baseUrl ?>/booking?staff=<?= $staff['id'] ?>&service=<?= $svc['id'] ?>"
-                           class="px-3 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-medium rounded-lg hover:bg-gray-700 dark:hover:bg-gray-200 transition">
-                            <?= __('staff_page.select_service') ?>
-                        </a>
+                    <!-- 예약 일시 -->
+                    <div id="sdDateTimeRow" class="hidden flex justify-between text-sm">
+                        <span class="text-gray-500 dark:text-zinc-400"><?= __('staff_page.booking_datetime') ?></span>
+                        <span id="sdDateTimeLabel" class="text-blue-600 dark:text-blue-400 font-medium"></span>
+                    </div>
+
+                    <!-- 합계 -->
+                    <div class="border-t border-gray-200 dark:border-zinc-700 pt-3 mt-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-base font-bold text-gray-900 dark:text-white"><?= __('staff_page.total_amount') ?></span>
+                            <span id="sdGrandTotal" class="text-xl font-bold text-blue-600 dark:text-blue-400"></span>
+                        </div>
                     </div>
                 </div>
-                <?php endforeach; ?>
+
+                <!-- 고객 정보 입력 -->
+                <div id="sdCustomerForm" class="p-4 border-t border-gray-200 dark:border-zinc-700 space-y-3">
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white"><?= __('booking.enter_info') ?></h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-500 dark:text-zinc-400 mb-1"><?= __('booking.form.customer_name') ?> <span class="text-red-500">*</span></label>
+                            <input id="sdCustName" type="text" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   value="<?= htmlspecialchars($isLoggedIn && $currentUser ? ($currentUser['name'] ?? '') : '') ?>">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 dark:text-zinc-400 mb-1"><?= __('booking.form.customer_phone') ?> <span class="text-red-500">*</span></label>
+                            <input id="sdCustPhone" type="tel" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   value="<?= htmlspecialchars($isLoggedIn && $currentUser ? ($currentUser['phone'] ?? '') : '') ?>">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 dark:text-zinc-400 mb-1"><?= __('booking.form.customer_email') ?></label>
+                        <input id="sdCustEmail" type="email" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               value="<?= htmlspecialchars($isLoggedIn && $currentUser ? ($currentUser['email'] ?? '') : '') ?>">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 dark:text-zinc-400 mb-1"><?= __('booking.form.notes') ?></label>
+                        <textarea id="sdCustNotes" rows="2" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="<?= __('booking.form.notes_placeholder') ?>"></textarea>
+                    </div>
+                </div>
+
+                <!-- 예약 버튼 -->
+                <div class="p-4 border-t border-gray-200 dark:border-zinc-700">
+                    <button id="sdBookBtn" type="button" disabled
+                            class="w-full py-3 text-white font-semibold rounded-lg transition shadow-lg bg-gray-300 dark:bg-zinc-600 text-gray-500 dark:text-zinc-400 cursor-not-allowed">
+                        <?= __('staff_page.book_selected') ?>
+                    </button>
+                    <p id="sdBookHint" class="text-xs text-center text-gray-400 dark:text-zinc-500 mt-2"><?= __('staff_page.select_all_hint') ?></p>
+                </div>
+            </div>
+
+            <!-- 예약 완료 메시지 -->
+            <div id="sdBookingSuccess" class="hidden mt-4 p-6 bg-green-50 dark:bg-green-900/20 rounded-xl text-center">
+                <svg class="w-12 h-12 text-green-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <h3 class="text-lg font-bold text-green-700 dark:text-green-400 mb-1"><?= __('booking.success') ?></h3>
+                <p class="text-sm text-green-600 dark:text-green-500"><?= __('booking.success_desc') ?></p>
+                <p class="mt-2 text-lg font-mono font-bold text-green-700 dark:text-green-400" id="sdReservationNumber"></p>
             </div>
         </div>
         <?php endif; ?>

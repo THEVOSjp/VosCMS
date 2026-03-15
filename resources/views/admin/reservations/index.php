@@ -25,7 +25,7 @@ if ($filterStatus) {
     $params[] = $filterStatus;
 }
 if ($filterService) {
-    $sql .= " AND service_id = ?";
+    $sql .= " AND id IN (SELECT reservation_id FROM {$prefix}reservation_services WHERE service_id = ?)";
     $params[] = $filterService;
 }
 if ($filterSearch) {
@@ -154,7 +154,12 @@ include __DIR__ . '/_head.php';
                         <p class="font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($r['customer_name']) ?></p>
                         <p class="text-xs text-zinc-500"><?= htmlspecialchars($r['customer_phone']) ?></p>
                     </td>
-                    <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300"><?= htmlspecialchars(getServiceName($pdo, $prefix, $r['service_id'])) ?></td>
+                    <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">
+                        <?= htmlspecialchars(getServiceName($pdo, $prefix, $r['id'])) ?>
+                        <?php $bdlName = getBundleName($pdo, $prefix, $r['id']); if ($bdlName): ?>
+                        <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400" title="<?= htmlspecialchars($bdlName) ?>">📦</span>
+                        <?php endif; ?>
+                    </td>
                     <td class="px-4 py-3">
                         <p class="text-zinc-900 dark:text-white"><?= $r['reservation_date'] ?></p>
                         <p class="text-xs text-zinc-500"><?= substr($r['start_time'], 0, 5) ?> ~ <?= substr($r['end_time'] ?? '', 0, 5) ?></p>

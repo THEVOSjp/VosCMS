@@ -79,4 +79,18 @@ return [
     'pos_pay_cash' => '現金',
     'pos_pay_transfer' => '振込',
     'pos_pay_submit' => '決済処理',
+    'pos_service_detail' => 'サービス内訳',
+    'pos_add_service' => 'サービス追加',
+    'pos_add_service_submit' => '選択したサービスを追加',
+    'pos_no_services' => '登録されたサービスがありません',
+    'pos_service_count' => '件',
+
+    // スペース型POS（レストラン、宿泊施設など）
+    'pos_space_available' => '空席',
+    'pos_space_reserved' => '予約済',
+    'pos_space_occupied' => '使用中',
+    'pos_space_cleaning' => '清掃中',
+    'pos_space_assign' => '配席',
+    'pos_space_clear_confirm' => 'このスペースを空けますか？すべてのサービスが完了処理されます。',
+    'pos_space_capacity_unit' => '名',
 ];

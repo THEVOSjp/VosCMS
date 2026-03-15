@@ -271,6 +271,17 @@ $router->group(['prefix' => '/admin', 'middleware' => ['auth', 'admin']], functi
         ->middleware('csrf')
         ->name('admin.services.toggle');
 
+    // 번들(묶음서비스) 관리
+    $router->get('/bundles', function () {
+        $config = app()->getConfig();
+        include BASE_PATH . '/resources/views/admin/bundles/index.php';
+    })->name('admin.bundles.index');
+
+    $router->post('/bundles', function () {
+        $config = app()->getConfig();
+        include BASE_PATH . '/resources/views/admin/bundles/index.php';
+    })->name('admin.bundles.store');
+
     // 카테고리 관리
     $router->resource('categories', 'Admin\\CategoryController');
 

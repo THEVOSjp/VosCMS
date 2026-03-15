@@ -79,4 +79,18 @@ return [
     'pos_pay_cash' => 'Cash',
     'pos_pay_transfer' => 'Transfer',
     'pos_pay_submit' => 'Process Payment',
+    'pos_service_detail' => 'Service Details',
+    'pos_add_service' => 'Add Service',
+    'pos_add_service_submit' => 'Add Selected Services',
+    'pos_no_services' => 'No services registered',
+    'pos_service_count' => '',
+
+    // Space-based POS (restaurant, accommodation, etc.)
+    'pos_space_available' => 'Available',
+    'pos_space_reserved' => 'Reserved',
+    'pos_space_occupied' => 'Occupied',
+    'pos_space_cleaning' => 'Cleaning',
+    'pos_space_assign' => 'Assign',
+    'pos_space_clear_confirm' => 'Clear this space? All services will be marked as completed.',
+    'pos_space_capacity_unit' => 'pax',
 ];

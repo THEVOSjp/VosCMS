@@ -12,6 +12,7 @@ return [
 
     // Search
     'search' => 'Cari',
+    'all' => 'Semua',
 
     // Country names (worldwide)
     'countries' => [

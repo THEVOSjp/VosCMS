@@ -23,6 +23,7 @@ return [
     'available_services' => 'Available Services',
     'weekly_schedule' => 'Weekly Schedule',
     'select_service' => 'Select',
+    'book_selected' => 'Book Selected Services',
     'price' => 'Price',
     'duration' => 'Duration',
     'minutes' => 'min',
@@ -30,4 +31,8 @@ return [
     'schedule_calendar' => 'Booking Calendar',
     'no_available_slots' => 'No available time slots',
     'selected_date_slots' => ':date Available Times',
+    'booking_summary' => 'Booking Summary',
+    'booking_datetime' => 'Date & Time',
+    'total_amount' => 'Total',
+    'select_all_hint' => 'Please select service, date and time',
 ];

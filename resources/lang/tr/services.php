@@ -23,6 +23,7 @@ return [
         'buffer_time' => 'Tampon süresi (dk)',
         'advance_booking_days' => 'Ön rezervasyon (gün)',
         'min_notice_hours' => 'Min. bildirim (saat)',
+        'image' => 'Hizmet Görseli',
     ],
     'success' => [
         'created' => 'Hizmet oluşturuldu.',
@@ -46,6 +47,10 @@ return [
     'placeholder_description' => 'Hizmetin kısa açıklaması...',
     'select_none' => '-- Seçim yok --',
     'no_buffer' => 'Yok',
+    'image_upload_hint' => 'Görsel yüklemek için tıklayın veya sürükleyin',
+    'image_formats' => 'JPG, PNG, WebP, GIF (maks. 5MB)',
+    'image_size' => 'Görsel Boyutu',
+    'image_too_large' => 'Görsel dosyası çok büyük. (maks. 5MB)',
     'settings' => [
         'tabs' => ['general' => 'Genel', 'holidays' => 'Tatiller'],
         'general' => [

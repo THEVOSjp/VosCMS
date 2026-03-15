@@ -3,7 +3,7 @@
  * RezlyX - Modern Reservation System
  *
  * @package RezlyX
- * @version 1.3.0
+ * @version 1.4.0
  */
 
 define('REZLYX_START', microtime(true));
@@ -289,6 +289,15 @@ if (empty($path) || $path === 'index.php') {
     // 예약 관리 — POST API (상태변경, 생성, 수정)
     } elseif ($adminRoute === 'reservations' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $apiAction = 'store'; $apiId = null;
+        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
+    } elseif ($adminRoute === 'reservations/customer-services' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $apiAction = 'customer-services'; $apiId = null;
+        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
+    } elseif ($adminRoute === 'reservations/search-customers' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $apiAction = 'search-customers'; $apiId = null;
+        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
+    } elseif ($adminRoute === 'reservations/add-service' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $apiAction = 'add-service'; $apiId = null;
         include BASE_PATH . '/resources/views/admin/reservations/_api.php';
     } elseif (preg_match('#^reservations/([\w-]+)/(confirm|cancel|complete|no-show|start-service|payment)$#', $adminRoute, $m) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $apiId = $m[1]; $apiAction = $m[2];

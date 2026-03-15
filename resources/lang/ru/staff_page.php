@@ -23,6 +23,7 @@ return [
     'available_services' => 'Доступные услуги',
     'weekly_schedule' => 'Недельное расписание',
     'select_service' => 'Выбрать',
+    'book_selected' => 'Забронировать выбранные услуги',
     'price' => 'Цена',
     'duration' => 'Продолжительность',
     'minutes' => 'мин',
@@ -30,4 +31,8 @@ return [
     'schedule_calendar' => 'Календарь записи',
     'no_available_slots' => 'Нет доступного времени',
     'selected_date_slots' => ':date Доступное время',
+    'booking_summary' => 'Сводка бронирования',
+    'booking_datetime' => 'Дата и время',
+    'total_amount' => 'Итого',
+    'select_all_hint' => 'Выберите услугу, дату и время',
 ];

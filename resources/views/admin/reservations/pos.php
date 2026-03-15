@@ -12,53 +12,43 @@ $today = date('Y-m-d');
 $nowTime = date('H:i:s');
 
 // 서비스 목록 (접수 컴포넌트용)
-$calServices = $pdo->query("SELECT id, name, description, duration, price FROM {$prefix}services WHERE is_active = 1 ORDER BY sort_order ASC, name ASC")->fetchAll(PDO::FETCH_ASSOC);
+$calServices = $pdo->query("SELECT s.id, s.name, s.description, s.duration, s.price, s.image, s.category_id, c.name as category_name FROM {$prefix}services s LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id WHERE s.is_active = 1 ORDER BY s.sort_order ASC, s.name ASC")->fetchAll(PDO::FETCH_ASSOC);
 
-// 오늘 전체 예약
+// 오늘 전체 예약 (junction table 기반 + 서비스 이미지 + 회원 프로필)
 $stmtToday = $pdo->prepare("
-    SELECT r.*, s.name as service_name, s.duration as service_duration
+    SELECT r.*,
+        (SELECT GROUP_CONCAT(rs.service_name ORDER BY rs.sort_order SEPARATOR ', ') FROM {$prefix}reservation_services rs WHERE rs.reservation_id = r.id) as service_name,
+        (SELECT SUM(rs2.duration) FROM {$prefix}reservation_services rs2 WHERE rs2.reservation_id = r.id) as service_duration,
+        (SELECT s.image FROM {$prefix}reservation_services rs3 JOIN {$prefix}services s ON rs3.service_id = s.id WHERE rs3.reservation_id = r.id AND s.image IS NOT NULL AND s.image != '' ORDER BY rs3.sort_order ASC LIMIT 1) as service_image,
+        u.profile_image as user_profile_image
     FROM {$prefix}reservations r
-    LEFT JOIN {$prefix}services s ON r.service_id = s.id
+    LEFT JOIN {$prefix}users u ON r.user_id = u.id
     WHERE r.reservation_date = ?
     ORDER BY r.start_time ASC
 ");
 $stmtToday->execute([$today]);
 $todayAll = $stmtToday->fetchAll(PDO::FETCH_ASSOC);
 
-// 분류
-$inService = [];       // 이용중 (confirmed & 시간범위내)
-$waitingCards = [];    // 대기 카드 (왼쪽: pending/confirmed & 아직 시작전)
-$reservationList = []; // 사전 예약 건만 (source != walk_in)
-$waitingList = [];     // 현장접수 대기 (source = walk_in)
-$completedCount = 0;
+// 업종별 POS 어댑터 로드
+require_once BASE_PATH . '/rzxlib/Core/Modules/BusinessType/PosAdapterInterface.php';
+require_once BASE_PATH . '/rzxlib/Core/Modules/BusinessType/CustomerBasedAdapter.php';
+require_once BASE_PATH . '/rzxlib/Core/Modules/BusinessType/SpaceBasedAdapter.php';
+require_once BASE_PATH . '/rzxlib/Core/Modules/BusinessType/BusinessTypeModule.php';
 
-foreach ($todayAll as $r) {
-    $st = $r['status'] ?? 'pending';
-    $src = $r['source'] ?? 'online';
-    $isInSvc = ($st === 'confirmed' && ($r['start_time'] ?? '') <= $nowTime && (($r['end_time'] ?? '23:59:59') >= $nowTime));
+use RzxLib\Core\Modules\BusinessType\BusinessTypeModule;
 
-    if ($isInSvc) {
-        $inService[] = $r;
-    } elseif ($st === 'pending' || ($st === 'confirmed' && !$isInSvc)) {
-        $waitingCards[] = $r;
-        if ($src === 'walk_in') {
-            $waitingList[] = $r;
-        }
-    }
-    // 예약자 리스트: 사전 예약 건만 (현장접수 제외)
-    if ($src !== 'walk_in' && $st !== 'cancelled' && $st !== 'no_show') {
-        $reservationList[] = $r;
-    }
-    if ($st === 'completed') $completedCount++;
-}
+$siteCategory = $config['site_category'] ?? '';
+$posViewPath = __DIR__;
+$posAdapter = BusinessTypeModule::createPosAdapter($siteCategory, $posViewPath, $pdo, $prefix);
+$posMode = $posAdapter->getMode();
 
-$allCards = array_merge($inService, $waitingCards);
-$counts = [
-    'in_service' => count($inService),
-    'waiting' => count($waitingCards),
-    'reservations' => count($reservationList),
-    'total' => count($todayAll),
-];
+// 어댑터를 통한 데이터 그룹핑
+$posData = $posAdapter->groupReservations($todayAll, $nowTime);
+$allCards       = $posData['cards'];
+$counts         = $posData['counts'];
+$reservationList = $posData['tab_data']['reservations'];
+$waitingList     = $posData['tab_data']['waiting'];
+$completedCount  = $posData['completed'];
 
 include __DIR__ . '/_head.php';
 ?>
@@ -106,121 +96,13 @@ include __DIR__ . '/_head.php';
         <?php else: ?>
         <div class="flex-1 overflow-y-auto pr-1">
             <div class="grid grid-cols-3 gap-3">
-                <?php foreach ($allCards as $r):
-                    $st = $r['status'] ?? 'pending';
-                    $pSt = $r['payment_status'] ?? 'unpaid';
-                    $isInSvc = ($st === 'confirmed' && ($r['start_time'] ?? '') <= $nowTime && (($r['end_time'] ?? '23:59:59') >= $nowTime));
-                    $isWaiting = !$isInSvc;
-                    $startT = substr($r['start_time'] ?? '', 0, 5);
-                    $endT = substr($r['end_time'] ?? '', 0, 5);
-                    $dur = (int)($r['service_duration'] ?? 0);
-                    $finalAmt = (float)($r['final_amount'] ?? $r['total_amount'] ?? 0);
-                    $rJson = htmlspecialchars(json_encode($r, JSON_UNESCAPED_UNICODE));
-
-                    // 진행률 (이용중만)
-                    $progress = 0; $remaining = 0; $isOvertime = false;
-                    if ($isInSvc) {
-                        $startMin = intval(substr($startT, 0, 2)) * 60 + intval(substr($startT, 3, 2));
-                        $endMin = $endT ? intval(substr($endT, 0, 2)) * 60 + intval(substr($endT, 3, 2)) : $startMin + $dur;
-                        $nowMin = intval(date('H')) * 60 + intval(date('i'));
-                        $totalMin = max($endMin - $startMin, 1);
-                        $elapsed = max(0, $nowMin - $startMin);
-                        $progress = min(100, round($elapsed / $totalMin * 100));
-                        $remaining = max(0, $endMin - $nowMin);
-                        $isOvertime = $remaining <= 0;
-                    }
-
-                    // 카드 색상
-                    if ($isWaiting) {
-                        $borderCls = 'border-amber-300 dark:border-amber-600';
-                        $barCls = 'bg-amber-400';
-                    } elseif ($isOvertime) {
-                        $borderCls = 'border-red-400 dark:border-red-500';
-                        $barCls = 'bg-red-500';
-                    } else {
-                        $borderCls = 'border-emerald-300 dark:border-emerald-600';
-                        $barCls = 'bg-emerald-500';
-                    }
-                ?>
-                <div class="pos-card bg-white dark:bg-zinc-800 rounded-xl border-2 <?= $borderCls ?> shadow-sm relative overflow-hidden hover:shadow-md transition flex flex-col">
-                    <?php if ($isInSvc): ?>
-                    <div class="absolute bottom-0 left-0 h-1.5 <?= $barCls ?> transition-all z-10" style="width: <?= $progress ?>%"></div>
-                    <?php endif; ?>
-
-                    <!-- 카드 상단: 고객 정보 (클릭 → 상세) -->
-                    <div class="p-4 pb-2 cursor-pointer" onclick="POS.showDetail(<?= $rJson ?>)">
-                        <div class="flex items-start justify-between mb-2">
-                            <div>
-                                <p class="text-lg font-bold text-zinc-900 dark:text-white"><?= htmlspecialchars($r['customer_name'] ?? '') ?></p>
-                                <p class="text-xs text-zinc-400 dark:text-zinc-500"><?= htmlspecialchars($r['customer_phone'] ?? '') ?></p>
-                            </div>
-                            <div class="flex flex-col items-end gap-1">
-                                <?php if ($isWaiting): ?>
-                                    <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"><?= __('reservations.pos_waiting') ?></span>
-                                <?php elseif ($isOvertime): ?>
-                                    <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 animate-pulse"><?= __('reservations.pos_overtime') ?></span>
-                                <?php else: ?>
-                                    <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"><?= __('reservations.pos_in_service') ?></span>
-                                <?php endif; ?>
-                                <?php if ($pSt === 'paid'): ?>
-                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"><?= __('reservations.pos_paid') ?></span>
-                                <?php elseif ($pSt === 'partial'): ?>
-                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400"><?= __('reservations.pos_partial_paid') ?></span>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-
-                        <div class="mb-2">
-                            <p class="text-sm font-semibold text-blue-600 dark:text-blue-400"><?= htmlspecialchars($r['service_name'] ?? '') ?></p>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"><?= $startT ?><?= $endT ? ' ~ ' . $endT : '' ?></p>
-                        </div>
-
-                        <div class="flex items-center justify-between">
-                            <?php if ($isInSvc): ?>
-                            <div class="flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5 <?= $isOvertime ? 'text-red-500' : 'text-emerald-500' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                <span class="text-xs font-bold <?= $isOvertime ? 'text-red-600' : 'text-emerald-600 dark:text-emerald-400' ?>">
-                                    <?= $isOvertime ? '+' . abs($remaining) : $remaining ?><?= __('reservations.pos_min') ?> <?= $isOvertime ? '' : __('reservations.pos_remaining') ?>
-                                </span>
-                            </div>
-                            <?php else: ?>
-                            <span class="text-xs text-amber-600 dark:text-amber-400"><?= $startT ?> <?= __('reservations.pos_scheduled') ?></span>
-                            <?php endif; ?>
-                            <span class="text-sm font-bold text-zinc-900 dark:text-white"><?= formatPrice($finalAmt) ?></span>
-                        </div>
-                    </div>
-
-                    <!-- 카드 하단: 액션 버튼 (터치 친화적 44px+) -->
-                    <div class="px-3 pb-3 pt-1 flex gap-2 mt-auto">
-                        <?php if ($st === 'pending' || ($isWaiting && $st === 'confirmed')): ?>
-                            <!-- 대기(pending/confirmed 시작전): 진행 / 취소 -->
-                            <button onclick="event.stopPropagation();POS.startService('<?= $r['id'] ?>')"
-                                    class="flex-1 h-11 flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg text-sm font-bold transition">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
-                                <?= __('reservations.pos_btn_start') ?>
-                            </button>
-                            <button onclick="event.stopPropagation();POS.changeStatus('<?= $r['id'] ?>','cancel')"
-                                    class="h-11 px-3 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 active:bg-zinc-400 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-zinc-600 dark:text-zinc-300 rounded-lg text-sm transition">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                            </button>
-                        <?php else: ?>
-                            <!-- 이용중 / 초과: 결제 + 완료 -->
-                            <?php if ($pSt !== 'paid'): ?>
-                            <button onclick="event.stopPropagation();POS.openPayment('<?= $r['id'] ?>', <?= $finalAmt ?>, <?= (float)($r['paid_amount'] ?? 0) ?>)"
-                                    class="flex-1 h-11 flex items-center justify-center gap-1.5 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white rounded-lg text-sm font-bold transition">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                                <?= __('reservations.pos_btn_payment') ?>
-                            </button>
-                            <?php endif; ?>
-                            <button onclick="event.stopPropagation();POS.changeStatus('<?= $r['id'] ?>','complete')"
-                                    class="<?= $pSt === 'paid' ? 'flex-1' : '' ?> h-11 px-4 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-lg text-sm font-bold transition">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                <?= __('reservations.pos_btn_complete') ?>
-                            </button>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <?php endforeach; ?>
+                <?php foreach ($allCards as $g):
+                    // 어댑터를 통한 카드 데이터 준비 + 모드별 카드 뷰 include
+                    $cd = $posAdapter->prepareCardData($g, $nowTime);
+                    extract($cd);
+                    $card = $cd['card'];
+                    include $posAdapter->getCardViewPath();
+                endforeach; ?>
             </div>
         </div>
         <?php endif; ?>
@@ -314,114 +196,22 @@ include __DIR__ . '/_head.php';
     </div>
 </div>
 
-<!-- 상세/상태변경 모달 -->
-<div id="posDetailModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4" onclick="POS.closeDetail(event)">
-    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden" onclick="event.stopPropagation()">
-        <div class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-700">
-            <h3 id="posDetailTitle" class="text-base font-bold text-zinc-900 dark:text-white"></h3>
-            <button onclick="POS.closeDetail()" class="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg">
-                <svg class="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-        </div>
-        <div id="posDetailBody" class="p-4"></div>
-        <div id="posDetailActions" class="px-4 pb-4 flex gap-2"></div>
-    </div>
-</div>
+<?php include __DIR__ . '/pos-modals.php'; ?>
 
-<!-- 당일 접수 모달 (예약 접수 컴포넌트 재사용) -->
-<div id="posCheckinModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4" onclick="POS.closeCheckinModal(event)">
-    <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-        <div class="flex items-center justify-between p-5 border-b border-zinc-200 dark:border-zinc-700 sticky top-0 bg-white dark:bg-zinc-800 z-10 rounded-t-2xl">
-            <h3 class="text-lg font-bold text-zinc-900 dark:text-white flex items-center">
-                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <?= __('reservations.pos_tab_checkin') ?>
-            </h3>
-            <button onclick="POS.closeCheckinModal()" class="p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition">
-                <svg class="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-        </div>
-        <div class="p-5">
-            <?php
-            $resForm = [
-                'services'         => $calServices,
-                'adminUrl'         => $adminUrl,
-                'csrfToken'        => $csrfToken,
-                'currencySymbol'   => $currencySymbol,
-                'currencyPosition' => $currencyPosition,
-                'formId'           => 'posCheckinForm',
-                'mode'             => 'modal',
-                'defaultDate'      => $today,
-                'source'           => 'walk_in',
-                'old'              => [],
-            ];
-            include BASE_PATH . '/resources/views/admin/components/reservation-form.php';
-            ?>
-        </div>
-    </div>
-</div>
-
-<!-- 결제 모달 -->
-<div id="posPaymentModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4" onclick="POS.closePayment(event)">
-    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden" onclick="event.stopPropagation()">
-        <div class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-700">
-            <h3 class="text-base font-bold text-zinc-900 dark:text-white flex items-center">
-                <svg class="w-5 h-5 mr-2 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                <?= __('reservations.pos_btn_payment') ?>
-            </h3>
-            <button onclick="POS.closePayment()" class="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg">
-                <svg class="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-        </div>
-        <div class="p-4 space-y-4">
-            <input type="hidden" id="payReservationId">
-            <!-- 금액 요약 -->
-            <div class="space-y-2 text-sm">
-                <div class="flex justify-between"><span class="text-zinc-500"><?= __('reservations.pos_pay_total') ?></span><span id="payTotalAmount" class="font-bold text-zinc-900 dark:text-white"></span></div>
-                <div class="flex justify-between"><span class="text-zinc-500"><?= __('reservations.pos_pay_paid') ?></span><span id="payPaidAmount" class="font-medium text-emerald-600"></span></div>
-                <div class="flex justify-between border-t border-zinc-200 dark:border-zinc-700 pt-2"><span class="font-bold text-zinc-900 dark:text-white"><?= __('reservations.pos_pay_remaining') ?></span><span id="payRemaining" class="font-bold text-lg text-violet-600"></span></div>
-            </div>
-            <!-- 결제 금액 -->
-            <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('reservations.pos_pay_amount') ?></label>
-                <input type="number" id="payAmount" min="0" step="1"
-                       class="w-full h-12 px-4 text-lg font-bold border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
-            </div>
-            <!-- 결제 방법 -->
-            <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('reservations.pos_pay_method') ?></label>
-                <div class="grid grid-cols-3 gap-2">
-                    <label class="cursor-pointer">
-                        <input type="radio" name="pay_method_radio" value="card" checked class="sr-only peer" onchange="document.getElementById('payMethod').value='card'">
-                        <div class="h-11 flex items-center justify-center rounded-lg border-2 border-zinc-200 dark:border-zinc-600 peer-checked:border-violet-500 peer-checked:bg-violet-50 dark:peer-checked:bg-violet-900/20 text-sm font-medium text-zinc-600 dark:text-zinc-300 peer-checked:text-violet-700 dark:peer-checked:text-violet-400 transition">
-                            <?= __('reservations.pos_pay_card') ?>
-                        </div>
-                    </label>
-                    <label class="cursor-pointer">
-                        <input type="radio" name="pay_method_radio" value="cash" class="sr-only peer" onchange="document.getElementById('payMethod').value='cash'">
-                        <div class="h-11 flex items-center justify-center rounded-lg border-2 border-zinc-200 dark:border-zinc-600 peer-checked:border-violet-500 peer-checked:bg-violet-50 dark:peer-checked:bg-violet-900/20 text-sm font-medium text-zinc-600 dark:text-zinc-300 peer-checked:text-violet-700 dark:peer-checked:text-violet-400 transition">
-                            <?= __('reservations.pos_pay_cash') ?>
-                        </div>
-                    </label>
-                    <label class="cursor-pointer">
-                        <input type="radio" name="pay_method_radio" value="transfer" class="sr-only peer" onchange="document.getElementById('payMethod').value='transfer'">
-                        <div class="h-11 flex items-center justify-center rounded-lg border-2 border-zinc-200 dark:border-zinc-600 peer-checked:border-violet-500 peer-checked:bg-violet-50 dark:peer-checked:bg-violet-900/20 text-sm font-medium text-zinc-600 dark:text-zinc-300 peer-checked:text-violet-700 dark:peer-checked:text-violet-400 transition">
-                            <?= __('reservations.pos_pay_transfer') ?>
-                        </div>
-                    </label>
-                </div>
-                <input type="hidden" id="payMethod" value="card">
-            </div>
-        </div>
-        <!-- 결제 버튼 -->
-        <div class="px-4 pb-4">
-            <button onclick="POS.submitPayment()"
-                    class="w-full h-12 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white rounded-lg text-base font-bold transition">
-                <?= __('reservations.pos_pay_submit') ?>
-            </button>
-        </div>
-    </div>
-</div>
+<script>
+// POS 모드 및 전체 서비스 목록
+const posMode = '<?= $posMode ?>';
+const posAllServices = <?= json_encode($calServices, JSON_UNESCAPED_UNICODE) ?>;
+</script>
 
 <?php include BASE_PATH . '/resources/views/admin/components/reservation-form-js.php'; ?>
 <?php include __DIR__ . '/pos-js.php'; ?>
+<?php include __DIR__ . '/pos-service-js.php'; ?>
+<?php
+// 업종별 추가 JS (공간 중심 등)
+$extraJs = $posAdapter->getExtraJsPath();
+if ($extraJs && file_exists($extraJs)) {
+    include $extraJs;
+}
+?>
 <?php include __DIR__ . '/_foot.php'; ?>

@@ -23,6 +23,7 @@ return [
         'buffer_time' => 'Waktu Jeda (menit)',
         'advance_booking_days' => 'Pemesanan di Muka (hari)',
         'min_notice_hours' => 'Pemberitahuan Min (jam)',
+        'image' => 'Gambar Layanan',
     ],
     'success' => [
         'created' => 'Layanan dibuat.',
@@ -32,6 +33,10 @@ return [
         'deactivated' => 'Layanan dinonaktifkan.',
     ],
     'error' => ['has_reservations' => 'Tidak dapat menghapus layanan dengan reservasi yang ada.'],
+    'image_upload_hint' => 'Klik atau seret untuk mengunggah gambar',
+    'image_formats' => 'JPG, PNG, WebP, GIF (maks. 5MB)',
+    'image_size' => 'Ukuran Gambar',
+    'image_too_large' => 'File gambar terlalu besar. (maks. 5MB)',
     'settings' => [
         'tabs' => ['general' => 'Umum', 'holidays' => 'Hari Libur'],
         'general' => [

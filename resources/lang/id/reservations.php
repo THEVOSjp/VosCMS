@@ -79,4 +79,18 @@ return [
     'pos_pay_cash' => 'Tunai',
     'pos_pay_transfer' => 'Transfer',
     'pos_pay_submit' => 'Proses Pembayaran',
+    'pos_service_detail' => 'Detail Layanan',
+    'pos_add_service' => 'Tambah Layanan',
+    'pos_add_service_submit' => 'Tambah Layanan Terpilih',
+    'pos_no_services' => 'Tidak ada layanan terdaftar',
+    'pos_service_count' => '',
+
+    // POS berbasis ruang (restoran, akomodasi, dll.)
+    'pos_space_available' => 'Tersedia',
+    'pos_space_reserved' => 'Dipesan',
+    'pos_space_occupied' => 'Terisi',
+    'pos_space_cleaning' => 'Pembersihan',
+    'pos_space_assign' => 'Tetapkan',
+    'pos_space_clear_confirm' => 'Kosongkan ruang ini? Semua layanan akan ditandai selesai.',
+    'pos_space_capacity_unit' => 'org',
 ];

@@ -37,6 +37,8 @@ return [
     'designation_fee_badge' => '+:amount',
     'loading_slots' => 'Vérification des créneaux disponibles...',
     'no_available_slots' => 'Aucun créneau disponible à la date sélectionnée.',
+    'items_selected' => 'sélectionnés',
+    'total_duration' => 'Durée totale',
 
     // Steps
     'step' => [

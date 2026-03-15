@@ -23,6 +23,7 @@ return [
         'buffer_time' => 'Буферное время (мин)',
         'advance_booking_days' => 'Предв. бронирование (дней)',
         'min_notice_hours' => 'Мин. уведомление (часов)',
+        'image' => 'Изображение услуги',
     ],
     'success' => [
         'created' => 'Услуга создана.',
@@ -46,6 +47,10 @@ return [
     'placeholder_description' => 'Краткое описание услуги...',
     'select_none' => '-- Не выбрано --',
     'no_buffer' => 'Нет',
+    'image_upload_hint' => 'Нажмите или перетащите для загрузки изображения',
+    'image_formats' => 'JPG, PNG, WebP, GIF (макс. 5 МБ)',
+    'image_size' => 'Размер изображения',
+    'image_too_large' => 'Файл изображения слишком большой. (макс. 5 МБ)',
     'settings' => [
         'tabs' => ['general' => 'Основные', 'holidays' => 'Праздники'],
         'general' => [

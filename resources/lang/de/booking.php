@@ -37,6 +37,8 @@ return [
     'designation_fee_badge' => '+:amount',
     'loading_slots' => 'Verfügbare Zeiten werden geprüft...',
     'no_available_slots' => 'Keine verfügbaren Zeiten am gewählten Datum.',
+    'items_selected' => 'ausgewählt',
+    'total_duration' => 'Gesamtdauer',
 
     // Steps
     'step' => [

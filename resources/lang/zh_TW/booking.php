@@ -37,6 +37,8 @@ return [
     'designation_fee_badge' => '+:amount',
     'loading_slots' => '正在確認可用時間...',
     'no_available_slots' => '所選日期沒有可預約的時間。',
+    'items_selected' => '個已選',
+    'total_duration' => '總時長',
 
     // Steps
     'step' => [

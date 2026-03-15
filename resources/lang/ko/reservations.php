@@ -7,7 +7,7 @@
 
 return [
     'title' => '예약 관리', 'list' => '예약 목록', 'calendar' => '캘린더 보기',
-    'statistics' => '통계', 'create' => '예약 추가', 'edit' => '예약 수정', 'detail' => '예약 상세',
+    'statistics' => '통계', 'create' => '예약 추가', 'edit' => '예약 수정', 'detail' => '상세',
     'filter' => [
         'all' => '전체', 'today' => '오늘', 'pending' => '대기중', 'confirmed' => '확정',
     ],
@@ -70,4 +70,18 @@ return [
     'pos_pay_cash' => '현금',
     'pos_pay_transfer' => '이체',
     'pos_pay_submit' => '결제 처리',
+    'pos_service_detail' => '서비스 내역',
+    'pos_add_service' => '서비스 추가',
+    'pos_add_service_submit' => '선택한 서비스 추가',
+    'pos_no_services' => '등록된 서비스가 없습니다',
+    'pos_service_count' => '건',
+
+    // 공간 중심 POS (레스토랑, 숙박 등)
+    'pos_space_available' => '비어있음',
+    'pos_space_reserved' => '예약됨',
+    'pos_space_occupied' => '사용중',
+    'pos_space_cleaning' => '정리중',
+    'pos_space_assign' => '배정',
+    'pos_space_clear_confirm' => '이 공간을 비우시겠습니까? 모든 서비스가 완료 처리됩니다.',
+    'pos_space_capacity_unit' => '인',
 ];

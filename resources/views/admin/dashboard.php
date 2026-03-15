@@ -46,7 +46,7 @@ try {
     $calFirstDay = sprintf('%04d-%02d-01', $calYear, $calMonth);
     $calLastDay = date('Y-m-t', strtotime($calFirstDay));
 
-    $calStmt = $pdo->prepare("SELECT r.*, s.name as service_name FROM {$prefix}reservations r LEFT JOIN {$prefix}services s ON r.service_id = s.id WHERE r.reservation_date BETWEEN ? AND ? ORDER BY r.start_time ASC");
+    $calStmt = $pdo->prepare("SELECT r.*, (SELECT GROUP_CONCAT(rs.service_name ORDER BY rs.sort_order SEPARATOR ', ') FROM {$prefix}reservation_services rs WHERE rs.reservation_id = r.id) as service_name FROM {$prefix}reservations r WHERE r.reservation_date BETWEEN ? AND ? ORDER BY r.start_time ASC");
     $calStmt->execute([$calFirstDay, $calLastDay]);
     $calReservations = $calStmt->fetchAll(PDO::FETCH_ASSOC);
     $calByDate = [];

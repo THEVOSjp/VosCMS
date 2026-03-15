@@ -87,7 +87,8 @@ const POS = {
                 ${r.notes ? '<div class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900 p-2 rounded-lg">' + this.escHtml(r.notes) + '</div>' : ''}
             </div>`;
 
-        let actions = `<a href="${this.adminUrl}/reservations/${r.id}" class="flex-1 text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition"><?= __('reservations.detail') ?></a>`;
+        this._detailData = r;
+        let actions = `<button onclick="POS.closeDetail();POS.showServices(POS._detailData)" class="flex-1 text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition"><?= __('reservations.detail') ?></button>`;
         if (r.status === 'pending') {
             actions += `<button onclick="POS.changeStatus('${r.id}','confirm')" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition"><?= __('reservations.actions.confirm') ?></button>`;
             actions += `<button onclick="POS.changeStatus('${r.id}','cancel')" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition"><?= __('reservations.actions.cancel') ?></button>`;
@@ -140,11 +141,90 @@ const POS = {
         }
     },
 
+    // ─── 그룹(고객) 단위 일괄 시작 ───
+    async startAllServices(group) {
+        const ids = group.service_ids || [];
+        console.log('[POS] Start all services:', ids);
+        for (const id of ids) {
+            try {
+                await fetch(`${this.adminUrl}/reservations/${id}/start-service`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: `_token=${encodeURIComponent(this.csrfToken)}`
+                });
+            } catch (e) { console.error('[POS] Start error:', id, e); }
+        }
+        location.reload();
+    },
+
+    // ─── 그룹 단위 일괄 취소 ───
+    async cancelAllServices(group) {
+        if (!confirm('<?= __('reservations.cancel_msg') ?>')) return;
+        const ids = group.service_ids || [];
+        const reason = prompt('<?= __('reservations.cancel_reason') ?>:', '') || '';
+        for (const id of ids) {
+            try {
+                await fetch(`${this.adminUrl}/reservations/${id}/cancel`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: `_token=${encodeURIComponent(this.csrfToken)}&reason=${encodeURIComponent(reason)}`
+                });
+            } catch (e) { console.error('[POS] Cancel error:', id, e); }
+        }
+        location.reload();
+    },
+
+    // ─── 그룹 단위 일괄 완료 ───
+    async completeAllServices(group) {
+        if (!confirm('<?= __('reservations.complete_msg') ?>')) return;
+        const ids = group.service_ids || [];
+        for (const id of ids) {
+            try {
+                await fetch(`${this.adminUrl}/reservations/${id}/complete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: `_token=${encodeURIComponent(this.csrfToken)}`
+                });
+            } catch (e) { console.error('[POS] Complete error:', id, e); }
+        }
+        location.reload();
+    },
+
+    // ─── 그룹 단위 결제 (첫 번째 미결제 건에 전액 적용) ───
+    async openGroupPayment(group, totalAmount, paidAmount) {
+        // 그룹 내 미결제 서비스 ID 목록 저장
+        this._payGroupIds = group.service_ids || [];
+        this.openPayment(this._payGroupIds[0], totalAmount, paidAmount);
+
+        // 서비스 상세 내역 로드
+        const detailEl = document.getElementById('payServiceDetails');
+        detailEl.innerHTML = '<p class="text-xs text-zinc-400 text-center py-1"><?= __('admin.messages.processing') ?></p>';
+        try {
+            const resp = await fetch(`${this.adminUrl}/reservations/customer-services?name=${encodeURIComponent(group.customer_name)}&phone=${encodeURIComponent(group.customer_phone)}&date=${encodeURIComponent(group.reservation_date)}`);
+            const data = await resp.json();
+            if (data.success && data.data.length > 0) {
+                detailEl.innerHTML = data.data.map(s => `
+                    <div class="flex items-center justify-between py-1.5 px-2 bg-zinc-50 dark:bg-zinc-900 rounded text-sm">
+                        <span class="text-zinc-700 dark:text-zinc-300 truncate mr-2">${this.escHtml(s.service_name || '-')}</span>
+                        <span class="font-medium text-zinc-900 dark:text-white whitespace-nowrap">${this.fmtCurrency(s.final_amount || 0)}</span>
+                    </div>`).join('');
+            } else {
+                detailEl.innerHTML = '';
+            }
+        } catch (e) {
+            console.error('[POS] Load payment services error:', e);
+            detailEl.innerHTML = '';
+        }
+    },
+
+    _payGroupIds: [],
+
     // ─── 결제 모달 ───
     openPayment(id, totalAmount, paidAmount) {
         console.log('[POS] Open payment:', id, totalAmount, paidAmount);
         const remaining = totalAmount - paidAmount;
         document.getElementById('payReservationId').value = id;
+        document.getElementById('payServiceDetails').innerHTML = '';
         document.getElementById('payTotalAmount').textContent = this.fmtCurrency(totalAmount);
         document.getElementById('payPaidAmount').textContent = this.fmtCurrency(paidAmount);
         document.getElementById('payRemaining').textContent = this.fmtCurrency(remaining);
@@ -220,6 +300,12 @@ function rzxCalCloseAdd() {
 // ─── ESC 닫기 ───
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
+        // 서비스 상세 모달
+        const svcModal = document.getElementById('posServiceModal');
+        if (svcModal && !svcModal.classList.contains('hidden')) {
+            POS.closeServiceModal();
+            return;
+        }
         // 결제 모달이 열려있으면 먼저 닫기
         const payModal = document.getElementById('posPaymentModal');
         if (payModal && !payModal.classList.contains('hidden')) {
@@ -250,7 +336,8 @@ function startAutoRefresh() {
         const detailOpen = !document.getElementById('posDetailModal').classList.contains('hidden');
         const checkinOpen = !document.getElementById('posCheckinModal').classList.contains('hidden');
         const payOpen = !document.getElementById('posPaymentModal').classList.contains('hidden');
-        if (document.visibilityState === 'visible' && !detailOpen && !checkinOpen && !payOpen) {
+        const svcOpen = !document.getElementById('posServiceModal').classList.contains('hidden');
+        if (document.visibilityState === 'visible' && !detailOpen && !checkinOpen && !payOpen && !svcOpen) {
             console.log('[POS] Auto refresh');
             location.reload();
         }

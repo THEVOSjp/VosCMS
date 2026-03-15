@@ -79,4 +79,18 @@ return [
     'pos_pay_cash' => '现金',
     'pos_pay_transfer' => '转账',
     'pos_pay_submit' => '处理付款',
+    'pos_service_detail' => '服务明细',
+    'pos_add_service' => '添加服务',
+    'pos_add_service_submit' => '添加所选服务',
+    'pos_no_services' => '没有注册的服务',
+    'pos_service_count' => '项',
+
+    // 空间型POS（餐厅、住宿等）
+    'pos_space_available' => '空闲',
+    'pos_space_reserved' => '已预约',
+    'pos_space_occupied' => '使用中',
+    'pos_space_cleaning' => '清理中',
+    'pos_space_assign' => '分配',
+    'pos_space_clear_confirm' => '清空此空间？所有服务将标记为已完成。',
+    'pos_space_capacity_unit' => '人',
 ];

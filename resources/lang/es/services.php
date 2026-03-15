@@ -23,6 +23,7 @@ return [
         'buffer_time' => 'Tiempo de espera (min)',
         'advance_booking_days' => 'Reserva anticipada (dias)',
         'min_notice_hours' => 'Aviso minimo (horas)',
+        'image' => 'Imagen del servicio',
     ],
     'success' => [
         'created' => 'Servicio creado.',
@@ -46,6 +47,10 @@ return [
     'placeholder_description' => 'Breve descripción del servicio...',
     'select_none' => '-- Ninguno --',
     'no_buffer' => 'Ninguno',
+    'image_upload_hint' => 'Haz clic o arrastra para subir imagen',
+    'image_formats' => 'JPG, PNG, WebP, GIF (máx. 5MB)',
+    'image_size' => 'Tamaño de imagen',
+    'image_too_large' => 'El archivo de imagen es demasiado grande. (máx. 5MB)',
     'settings' => [
         'tabs' => ['general' => 'General', 'holidays' => 'Festivos'],
         'general' => [

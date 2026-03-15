@@ -37,6 +37,8 @@ return [
     'designation_fee_badge' => '+:amount',
     'loading_slots' => 'Memeriksa waktu tersedia...',
     'no_available_slots' => 'Tidak ada waktu tersedia pada tanggal yang dipilih.',
+    'items_selected' => 'dipilih',
+    'total_duration' => 'Total durasi',
 
     // Steps
     'step' => [

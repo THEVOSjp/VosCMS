@@ -42,18 +42,35 @@ $stmt = $pdo->prepare("SELECT
 $stmt->execute([$dateFrom, $dateTo]);
 $stats = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// 서비스별 통계
+// 서비스별 통계 (junction table 기반)
 $stmt = $pdo->prepare("SELECT
-    r.service_id, s.name as service_name,
-    COUNT(*) as count,
-    COALESCE(SUM(r.final_amount), 0) as revenue
-    FROM {$prefix}reservations r
-    LEFT JOIN {$prefix}services s ON r.service_id = s.id
+    rs.service_id, rs.service_name,
+    COUNT(DISTINCT rs.reservation_id) as count,
+    COALESCE(SUM(rs.price), 0) as revenue
+    FROM {$prefix}reservation_services rs
+    JOIN {$prefix}reservations r ON rs.reservation_id = r.id
     WHERE r.reservation_date BETWEEN ? AND ?
-    GROUP BY r.service_id, s.name
-    ORDER BY count DESC");
+    AND r.status NOT IN ('cancelled','no_show')
+    GROUP BY rs.service_id, rs.service_name
+    ORDER BY revenue DESC");
 $stmt->execute([$dateFrom, $dateTo]);
 $serviceStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// 번들별 통계
+$stmt = $pdo->prepare("SELECT
+    rs.bundle_id, b.name as bundle_name, b.bundle_price,
+    COUNT(DISTINCT rs.reservation_id) as count,
+    COUNT(DISTINCT rs.reservation_id) * b.bundle_price as revenue
+    FROM {$prefix}reservation_services rs
+    JOIN {$prefix}reservations r ON rs.reservation_id = r.id
+    JOIN {$prefix}service_bundles b ON rs.bundle_id = b.id
+    WHERE r.reservation_date BETWEEN ? AND ?
+    AND r.status NOT IN ('cancelled','no_show')
+    AND rs.bundle_id IS NOT NULL
+    GROUP BY rs.bundle_id, b.name, b.bundle_price
+    ORDER BY count DESC");
+$stmt->execute([$dateFrom, $dateTo]);
+$bundleStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 일별 추이 (최근 30일 또는 기간 내)
 $stmt = $pdo->prepare("SELECT
@@ -198,6 +215,33 @@ include __DIR__ . '/_head.php';
             <?php endif; ?>
         </div>
     </div>
+
+    <!-- 번들별 통계 -->
+    <?php if (!empty($bundleStats)): ?>
+    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
+            <svg class="w-5 h-5 inline -mt-0.5 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            <?= __('bundles.nav') ?> <?= __('reservations.statistics') ?>
+        </h3>
+        <div class="space-y-3">
+            <?php
+            $maxBdlCount = max(array_column($bundleStats, 'count'));
+            foreach ($bundleStats as $bs):
+                $barWidth = max(round($bs['count'] / max($maxBdlCount, 1) * 100), 2);
+            ?>
+            <div>
+                <div class="flex items-center justify-between text-sm mb-1">
+                    <span class="text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars($bs['bundle_name']) ?></span>
+                    <span class="text-zinc-500"><?= $bs['count'] ?>건 / <?= formatPrice((float)$bs['revenue']) ?></span>
+                </div>
+                <div class="h-2 bg-zinc-100 dark:bg-zinc-700 rounded-full overflow-hidden">
+                    <div class="h-full bg-purple-500 rounded-full" style="width: <?= $barWidth ?>%"></div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <!-- 시간대별 분포 -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6 mb-6">

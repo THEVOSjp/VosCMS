@@ -23,6 +23,7 @@ return [
         'buffer_time' => 'Temps tampon (min)',
         'advance_booking_days' => 'Reservation anticipee (jours)',
         'min_notice_hours' => 'Preavis minimum (heures)',
+        'image' => 'Image du service',
     ],
     'success' => [
         'created' => 'Service cree.',
@@ -46,6 +47,10 @@ return [
     'placeholder_description' => 'Brève description du service...',
     'select_none' => '-- Aucun --',
     'no_buffer' => 'Aucun',
+    'image_upload_hint' => 'Cliquez ou glissez pour télécharger une image',
+    'image_formats' => 'JPG, PNG, WebP, GIF (max 5 Mo)',
+    'image_size' => 'Taille de l\'image',
+    'image_too_large' => 'Le fichier image est trop volumineux. (max 5 Mo)',
     'settings' => [
         'tabs' => ['general' => 'Général', 'holidays' => 'Jours fériés'],
         'general' => [

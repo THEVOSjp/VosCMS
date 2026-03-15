@@ -28,8 +28,8 @@ try {
     );
     $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
 
-    // 서비스 로드
-    $services = $pdo->query("SELECT * FROM {$prefix}services WHERE is_active = 1 ORDER BY sort_order, name")->fetchAll(PDO::FETCH_ASSOC);
+    // 서비스 로드 (카테고리 JOIN)
+    $services = $pdo->query("SELECT s.*, c.name as category_name FROM {$prefix}services s LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id WHERE s.is_active = 1 ORDER BY s.sort_order, s.name")->fetchAll(PDO::FETCH_ASSOC);
 
     // 서비스 번역 로드 (rzx_translations)
     $currentLocale = $config['locale'] ?? 'ko';
@@ -249,24 +249,25 @@ try {
         $userId = $isLoggedIn ? ($currentUser['id'] ?? null) : null;
         $id = bin2hex(random_bytes(4)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(6));
 
-        // 메인 예약 (service_id = 첫 번째 서비스)
+        // 메인 예약 (service_id 제거 → reservation_services로 관리)
         $sql = "INSERT INTO {$prefix}reservations
-            (id, reservation_number, user_id, service_id, staff_id, customer_name, customer_phone, customer_email,
-             reservation_date, start_time, end_time, total_amount, final_amount, designation_fee, status, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)";
+            (id, reservation_number, user_id, staff_id, customer_name, customer_phone, customer_email,
+             reservation_date, start_time, end_time, total_amount, final_amount, designation_fee, status, source, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'online', ?)";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
             $id, $reservationNumber, $userId,
-            $selectedServices[0]['id'], $staffId ?: null,
+            $staffId ?: null,
             $name, $phone, $email ?: null,
             $date, $time . ':00', $endDt->format('H:i:s'),
             $totalPrice, $finalAmount, $designationFee, $notes ?: null,
         ]);
 
-        // 예약-서비스 관계 저장
-        $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, price, duration) VALUES (?, ?, ?, ?)");
+        // 예약-서비스 관계 저장 (service_name 스냅샷 포함)
+        $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
+        $sortIdx = 0;
         foreach ($selectedServices as $s) {
-            $rsStmt->execute([$id, $s['id'], $s['price'], $s['duration']]);
+            $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $sortIdx++]);
         }
 
         echo json_encode([
@@ -331,30 +332,86 @@ include BASE_PATH . '/resources/views/partials/header.php';
                 <p class="text-gray-500 dark:text-zinc-400"><?= __('booking.no_services') ?></p>
             </div>
             <?php else: ?>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <?php foreach ($services as $service): ?>
-                <label class="service-card cursor-pointer">
-                    <?php
-                        $svcName = getBookingSvcTranslated($service['id'], 'name', $service['name']);
-                        $svcDesc = getBookingSvcTranslated($service['id'], 'description', $service['description'] ?? '');
-                    ?>
+
+            <!-- 카테고리 필터 -->
+            <?php
+            $bkCategories = [];
+            foreach ($services as $s) {
+                $cid = $s['category_id'] ?? '';
+                $cname = $s['category_name'] ?? '';
+                if ($cid && $cname && !isset($bkCategories[$cid])) {
+                    $bkCategories[$cid] = $cname;
+                }
+            }
+            ?>
+            <?php if (!empty($bkCategories)): ?>
+            <div id="bkCatFilter" class="flex flex-wrap gap-2 mb-4">
+                <button type="button" class="bk-cat-btn px-4 py-1.5 text-xs font-medium rounded-full transition-all bg-blue-600 text-white" data-cat=""><?= __('common.all') ?></button>
+                <?php foreach ($bkCategories as $cid => $cname): ?>
+                <button type="button" class="bk-cat-btn px-4 py-1.5 text-xs font-medium rounded-full transition-all bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-600" data-cat="<?= htmlspecialchars($cid) ?>"><?= htmlspecialchars($cname) ?></button>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+
+            <!-- 선택 요약 -->
+            <div id="bkSelectedSummary" class="hidden mb-4 flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 rounded-lg px-4 py-2">
+                <span id="bkSelectedCount" class="text-sm text-blue-700 dark:text-blue-300 font-medium">0</span>
+                <div class="text-sm">
+                    <span class="text-gray-500 dark:text-zinc-400"><?= __('booking.total_duration') ?>:</span>
+                    <span id="bkTotalDuration" class="font-medium text-gray-900 dark:text-white ml-1">0<?= __('common.minutes') ?></span>
+                    <?php if ($priceDisplay === 'show'): ?>
+                    <span class="mx-2 text-gray-300">|</span>
+                    <span id="bkTotalPrice" class="font-bold text-blue-600 dark:text-blue-400"><?= $currencySymbol ?>0</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <?php foreach ($services as $service):
+                    $svcName = getBookingSvcTranslated($service['id'], 'name', $service['name']);
+                    $svcDesc = getBookingSvcTranslated($service['id'], 'description', $service['description'] ?? '');
+                    $svcImage = $service['image'] ?? '';
+                    $hasImage = !empty($svcImage);
+                    $svcCatId = $service['category_id'] ?? '';
+                    $svcCatName = $service['category_name'] ?? '';
+                    $svcPrice = (float)($service['price'] ?? 0);
+                    $svcDuration = (int)($service['duration'] ?? 60);
+                ?>
+                <label class="service-card cursor-pointer" data-cat="<?= htmlspecialchars($svcCatId) ?>" data-sname="<?= htmlspecialchars(strtolower($svcName)) ?>">
                     <input type="checkbox" name="service[]" value="<?= $service['id'] ?>" class="hidden"
                            data-name="<?= htmlspecialchars($svcName) ?>"
-                           data-price="<?= $service['price'] ?>"
-                           data-duration="<?= $service['duration'] ?? 60 ?>">
-                    <div class="border-2 border-gray-200 dark:border-zinc-700 rounded-xl p-4 hover:border-blue-500 dark:hover:border-blue-400 transition-all">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <h3 class="font-semibold text-gray-900 dark:text-white"><?= htmlspecialchars($svcName) ?></h3>
-                                <p class="text-sm text-gray-500 dark:text-zinc-400 mt-1"><?= htmlspecialchars($svcDesc) ?></p>
-                            </div>
-                            <div class="text-right shrink-0 ml-3">
+                           data-price="<?= $svcPrice ?>"
+                           data-duration="<?= $svcDuration ?>">
+                    <div class="bk-svc-card group relative rounded-xl border-2 border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 hover:shadow-md cursor-pointer transition-all overflow-hidden"
+                         style="min-height:150px;<?php if ($hasImage): ?>background-image:url('<?= htmlspecialchars($baseUrl . '/storage/' . $svcImage) ?>');background-size:cover;background-position:center<?php endif; ?>">
+                        <?php if (!$hasImage): ?>
+                        <div class="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-zinc-700 dark:to-zinc-800"></div>
+                        <?php endif; ?>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                        <div class="absolute inset-0 bg-blue-500/20 hidden bk-overlay"></div>
+                        <!-- 선택 체크 -->
+                        <div class="absolute top-2 right-2 w-6 h-6 rounded-full border-2 border-white/70 bg-black/20 flex items-center justify-center transition-all shadow-sm z-10 bk-circle">
+                            <svg class="w-3.5 h-3.5 text-white hidden bk-check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                        <?php if ($svcCatName): ?>
+                        <div class="absolute top-2 left-2 z-10">
+                            <span class="px-2 py-0.5 text-[10px] font-medium rounded-full bg-black/40 text-white/90 backdrop-blur-sm"><?= htmlspecialchars($svcCatName) ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <div class="absolute bottom-0 left-0 right-0 p-3 z-10">
+                            <p class="text-sm font-bold text-white truncate drop-shadow-sm"><?= htmlspecialchars($svcName) ?></p>
+                            <div class="flex items-center justify-between mt-1">
+                                <span class="text-xs text-white/70 flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <?= $svcDuration ?><?= __('common.minutes') ?>
+                                </span>
                                 <?php if ($priceDisplay === 'show'): ?>
-                                <span class="text-lg font-bold text-blue-600 dark:text-blue-400"><?= $currencySymbol ?><?= number_format($service['price']) ?></span>
+                                <span class="text-sm font-bold text-white drop-shadow-sm"><?= $currencySymbol ?><?= number_format($svcPrice) ?></span>
                                 <?php elseif ($priceDisplay === 'contact'): ?>
-                                <span class="text-sm text-gray-500"><?= __('services.settings.general.price_contact') ?></span>
+                                <span class="text-xs text-white/80"><?= __('services.settings.general.price_contact') ?></span>
                                 <?php endif; ?>
-                                <p class="text-xs text-gray-400"><?= $service['duration'] ?? 60 ?><?= __('common.minutes') ?></p>
                             </div>
                         </div>
                     </div>

@@ -37,6 +37,8 @@ return [
     'designation_fee_badge' => '+:amount',
     'loading_slots' => 'Боломжит цагийг шалгаж байна...',
     'no_available_slots' => 'Сонгосон өдөр захиалга авах боломжгүй.',
+    'items_selected' => 'сонгосон',
+    'total_duration' => 'Нийт хугацаа',
 
     // Steps
     'step' => [

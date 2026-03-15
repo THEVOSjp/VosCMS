@@ -23,6 +23,7 @@ return [
     'available_services' => '担当サービスメニュー',
     'weekly_schedule' => '週間スケジュール',
     'select_service' => '選択する',
+    'book_selected' => '選択したサービスを予約',
     'price' => '料金',
     'duration' => '所要時間',
     'minutes' => '分',
@@ -30,4 +31,8 @@ return [
     'schedule_calendar' => '予約カレンダー',
     'no_available_slots' => '予約可能な時間がありません',
     'selected_date_slots' => ':date 予約可能時間',
+    'booking_summary' => '予約内容',
+    'booking_datetime' => '予約日時',
+    'total_amount' => '合計',
+    'select_all_hint' => 'サービス、日付、時間をすべて選択してください',
 ];

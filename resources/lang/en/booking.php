@@ -37,6 +37,8 @@ return [
     'designation_fee_badge' => '+:amount',
     'loading_slots' => 'Checking available times...',
     'no_available_slots' => 'No available times on the selected date.',
+    'items_selected' => 'selected',
+    'total_duration' => 'Total duration',
 
     // Steps
     'step' => [

@@ -23,6 +23,7 @@ return [
     'available_services' => 'Servicios disponibles',
     'weekly_schedule' => 'Horario semanal',
     'select_service' => 'Seleccionar',
+    'book_selected' => 'Reservar servicios seleccionados',
     'price' => 'Precio',
     'duration' => 'Duración',
     'minutes' => 'min',
@@ -30,4 +31,8 @@ return [
     'schedule_calendar' => 'Calendario de reservas',
     'no_available_slots' => 'No hay horarios disponibles',
     'selected_date_slots' => ':date Horarios disponibles',
+    'booking_summary' => 'Resumen de reserva',
+    'booking_datetime' => 'Fecha y hora',
+    'total_amount' => 'Total',
+    'select_all_hint' => 'Seleccione servicio, fecha y hora',
 ];

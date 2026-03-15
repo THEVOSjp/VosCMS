@@ -12,7 +12,16 @@ $stmt->execute([$id]);
 $r = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$r) { http_response_code(404); echo '<p>예약을 찾을 수 없습니다.</p>'; exit; }
 
-$serviceName = getServiceName($pdo, $prefix, $r['service_id']);
+$serviceName = getServiceName($pdo, $prefix, $r['id']);
+
+// 번들 정보 조회
+$bundleInfo = null;
+$bdlStmt = $pdo->prepare("SELECT DISTINCT b.name, b.bundle_price
+    FROM {$prefix}reservation_services rs
+    JOIN {$prefix}service_bundles b ON rs.bundle_id = b.id
+    WHERE rs.reservation_id = ? AND rs.bundle_id IS NOT NULL LIMIT 1");
+$bdlStmt->execute([$r['id']]);
+$bundleInfo = $bdlStmt->fetch(PDO::FETCH_ASSOC);
 
 // 스태프 정보
 $staffName = '-';
@@ -132,7 +141,15 @@ include __DIR__ . '/_head.php';
                 </div>
                 <div>
                     <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">서비스</p>
-                    <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($serviceName) ?></p>
+                    <p class="text-sm font-medium text-zinc-900 dark:text-white">
+                        <?= htmlspecialchars($serviceName) ?>
+                        <?php if ($bundleInfo): ?>
+                        <span class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                            <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                            <?= htmlspecialchars($bundleInfo['name']) ?>
+                        </span>
+                        <?php endif; ?>
+                    </p>
                 </div>
                 <div>
                     <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">담당 스태프</p>

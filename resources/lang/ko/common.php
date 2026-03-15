@@ -12,6 +12,7 @@ return [
 
     // 검색
     'search' => '검색',
+    'all' => '전체',
 
     // 국가명 (전세계)
     'countries' => [

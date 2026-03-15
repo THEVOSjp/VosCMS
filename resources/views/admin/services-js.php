@@ -82,6 +82,64 @@
         }).then(function(r) { return r.json(); });
     }
 
+    // ═══ 이미지 미리보기 ═══
+    window.previewServiceImage = function(input) {
+        if (!input.files || !input.files[0]) return;
+        var file = input.files[0];
+        if (file.size > 5 * 1024 * 1024) {
+            showAlert('<?= __('services.image_too_large') ?>', 'error');
+            input.value = '';
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('svcImagePreviewImg').src = e.target.result;
+            document.getElementById('svcImagePreview').classList.remove('hidden');
+            document.getElementById('svcImagePlaceholder').classList.add('hidden');
+            document.getElementById('svcImageRemove').value = '0';
+        };
+        reader.readAsDataURL(file);
+        console.log('[Services] Image selected:', file.name, file.size);
+    };
+
+    window.handleImageDrop = function(e) {
+        var dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length) {
+            var input = document.getElementById('svcImageInput');
+            input.files = dt.files;
+            previewServiceImage(input);
+        }
+    };
+
+    window.removeServiceImage = function() {
+        document.getElementById('svcImageInput').value = '';
+        document.getElementById('svcImagePreview').classList.add('hidden');
+        document.getElementById('svcImagePlaceholder').classList.remove('hidden');
+        document.getElementById('svcImageRemove').value = '1';
+        document.getElementById('svcImageExisting').value = '';
+        console.log('[Services] Image removed');
+    };
+
+    function resetImageUI() {
+        document.getElementById('svcImageInput').value = '';
+        document.getElementById('svcImagePreview').classList.add('hidden');
+        document.getElementById('svcImagePlaceholder').classList.remove('hidden');
+        document.getElementById('svcImageExisting').value = '';
+        document.getElementById('svcImageRemove').value = '0';
+        document.getElementById('svcImageWidth').value = '800';
+        document.getElementById('svcImageHeight').value = '600';
+    }
+
+    function loadExistingImage(imagePath) {
+        if (!imagePath) { resetImageUI(); return; }
+        var baseUrl = '<?= $baseUrl ?>';
+        document.getElementById('svcImagePreviewImg').src = baseUrl + '/storage/' + imagePath;
+        document.getElementById('svcImagePreview').classList.remove('hidden');
+        document.getElementById('svcImagePlaceholder').classList.add('hidden');
+        document.getElementById('svcImageExisting').value = imagePath;
+        document.getElementById('svcImageRemove').value = '0';
+    }
+
     // ═══ 서비스 모달 ═══
     window.openServiceModal = function() {
         svcMultilangTempKey = null;
@@ -96,6 +154,7 @@
         document.getElementById('svcBuffer').value = '0';
         document.getElementById('svcDescription').value = '';
         document.getElementById('svcActive').checked = true;
+        resetImageUI();
         document.getElementById('serviceModal').classList.remove('hidden');
         console.log('[Services] Service modal opened (create)');
     };
@@ -114,6 +173,7 @@
         document.getElementById('svcBuffer').value = svc.buffer_time || 0;
         document.getElementById('svcDescription').value = tr.description || svc.description || '';
         document.getElementById('svcActive').checked = svc.is_active == 1;
+        loadExistingImage(svc.image || '');
         document.getElementById('serviceModal').classList.remove('hidden');
         console.log('[Services] Service modal opened (edit):', svc.id);
     };

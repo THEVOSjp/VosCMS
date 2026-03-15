@@ -12,6 +12,7 @@ return [
 
     // Search
     'search' => 'Rechercher',
+    'all' => 'Tout',
 
     // Country names (worldwide)
     'countries' => [

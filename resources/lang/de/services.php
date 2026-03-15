@@ -23,6 +23,7 @@ return [
         'buffer_time' => 'Pufferzeit (Min.)',
         'advance_booking_days' => 'Vorlaufzeit (Tage)',
         'min_notice_hours' => 'Min. Vorlaufzeit (Stunden)',
+        'image' => 'Servicebild',
     ],
     'success' => [
         'created' => 'Dienstleistung erstellt.',
@@ -46,6 +47,10 @@ return [
     'placeholder_description' => 'Kurze Beschreibung des Dienstes...',
     'select_none' => '-- Keine --',
     'no_buffer' => 'Keine',
+    'image_upload_hint' => 'Klicken oder ziehen, um ein Bild hochzuladen',
+    'image_formats' => 'JPG, PNG, WebP, GIF (max. 5MB)',
+    'image_size' => 'Bildgröße',
+    'image_too_large' => 'Bilddatei ist zu groß. (max. 5MB)',
     'settings' => [
         'tabs' => ['general' => 'Allgemein', 'holidays' => 'Feiertage'],
         'general' => [

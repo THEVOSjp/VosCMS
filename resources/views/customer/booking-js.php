@@ -129,19 +129,44 @@
             });
         });
 
-        // 하이라이트
+        // 카드 스타일 업데이트
         document.querySelectorAll('.service-card').forEach(card => {
             const cb = card.querySelector('input[name="service[]"]');
-            const div = card.querySelector(':scope > div');
+            const div = card.querySelector('.bk-svc-card');
             if (!cb || !div) return;
+            const circle = div.querySelector('.bk-circle');
+            const icon = div.querySelector('.bk-check-icon');
+            const overlay = div.querySelector('.bk-overlay');
             if (cb.checked) {
                 div.classList.remove('border-gray-200', 'dark:border-zinc-700');
-                div.classList.add('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/20');
+                div.classList.add('border-blue-500', 'ring-2', 'ring-blue-500/30');
+                if (circle) { circle.classList.remove('border-white/70', 'bg-black/20'); circle.classList.add('border-blue-500', 'bg-blue-500'); }
+                if (icon) icon.classList.remove('hidden');
+                if (overlay) overlay.classList.remove('hidden');
             } else {
-                div.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/20');
+                div.classList.remove('border-blue-500', 'ring-2', 'ring-blue-500/30');
                 div.classList.add('border-gray-200', 'dark:border-zinc-700');
+                if (circle) { circle.classList.add('border-white/70', 'bg-black/20'); circle.classList.remove('border-blue-500', 'bg-blue-500'); }
+                if (icon) icon.classList.add('hidden');
+                if (overlay) overlay.classList.add('hidden');
             }
         });
+
+        // 선택 요약 업데이트
+        const summary = document.getElementById('bkSelectedSummary');
+        const countEl = document.getElementById('bkSelectedCount');
+        const durEl = document.getElementById('bkTotalDuration');
+        const priceEl = document.getElementById('bkTotalPrice');
+        if (summary && selected.services.length > 0) {
+            summary.classList.remove('hidden');
+            summary.classList.add('flex');
+            if (countEl) countEl.textContent = selected.services.length + '<?= __('booking.items_selected') ?>';
+            if (durEl) durEl.textContent = getTotalDuration() + '<?= __('common.minutes') ?>';
+            if (priceEl) priceEl.textContent = CURRENCY_SYMBOL + Number(getServicePrice()).toLocaleString();
+        } else if (summary) {
+            summary.classList.add('hidden');
+            summary.classList.remove('flex');
+        }
 
         const btn = document.getElementById('btnServiceNext');
         if (btn) btn.disabled = selected.services.length === 0;
@@ -152,6 +177,28 @@
     document.querySelectorAll('.service-card input[name="service[]"]').forEach(cb => {
         cb.addEventListener('change', updateServiceSelection);
     });
+
+    // === 카테고리 필터 ===
+    let bkActiveCat = '';
+    const bkCatFilter = document.getElementById('bkCatFilter');
+    if (bkCatFilter) {
+        bkCatFilter.querySelectorAll('.bk-cat-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                bkActiveCat = this.dataset.cat || '';
+                bkCatFilter.querySelectorAll('.bk-cat-btn').forEach(b => {
+                    b.classList.remove('bg-blue-600', 'text-white');
+                    b.classList.add('bg-gray-100', 'dark:bg-zinc-700', 'text-gray-600', 'dark:text-zinc-300');
+                });
+                this.classList.add('bg-blue-600', 'text-white');
+                this.classList.remove('bg-gray-100', 'dark:bg-zinc-700', 'text-gray-600', 'dark:text-zinc-300');
+                document.querySelectorAll('.service-card').forEach(card => {
+                    const matchCat = !bkActiveCat || (card.dataset.cat || '') === bkActiveCat;
+                    card.style.display = matchCat ? '' : 'none';
+                });
+                console.log('[Booking] Category filter:', bkActiveCat || 'all');
+            });
+        });
+    }
 
     // === 스태프 선택 ===
     document.querySelectorAll('.staff-card input[name="staff"]').forEach(radio => {

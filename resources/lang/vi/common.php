@@ -12,6 +12,7 @@ return [
 
     // Search
     'search' => 'Tìm kiếm',
+    'all' => 'Tất cả',
 
     // Country names (worldwide)
     'countries' => [

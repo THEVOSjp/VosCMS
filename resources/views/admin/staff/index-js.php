@@ -92,6 +92,7 @@ include_once __DIR__ . '/../components/multilang-button.php';
                 <input type="hidden" name="remove_avatar" id="formRemoveAvatar" value="0">
                 <input type="hidden" name="member_avatar_url" id="formMemberAvatarUrl" value="">
                 <input type="hidden" name="service_ids" id="formServiceIds">
+                <input type="hidden" name="bundle_ids" id="formBundleIds">
 
                 <div class="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
                     <!-- 회원 연동 -->
@@ -234,6 +235,29 @@ include_once __DIR__ . '/../components/multilang-button.php';
                                     bg-zinc-100 text-zinc-500 border-zinc-200
                                     dark:bg-zinc-700 dark:text-zinc-400 dark:border-zinc-600
                                     hover:bg-zinc-200 dark:hover:bg-zinc-600"><?= htmlspecialchars(getServiceTranslated($svc['id'], $svc['name'])) ?></span>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- 담당 번들 -->
+                    <?php if (!empty($allBundles)): ?>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('bundles.nav') ?></label>
+                        <div id="bundleSelector" class="flex flex-wrap gap-1.5">
+                            <?php foreach ($allBundles as $bdl): ?>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer bdl-check" value="<?= htmlspecialchars($bdl['id']) ?>">
+                                <span class="px-2.5 py-1 text-xs font-medium rounded-full border transition-colors
+                                    peer-checked:bg-blue-100 peer-checked:text-blue-700 peer-checked:border-blue-300
+                                    dark:peer-checked:bg-blue-900/30 dark:peer-checked:text-blue-400 dark:peer-checked:border-blue-700
+                                    bg-zinc-100 text-zinc-500 border-zinc-200
+                                    dark:bg-zinc-700 dark:text-zinc-400 dark:border-zinc-600
+                                    hover:bg-zinc-200 dark:hover:bg-zinc-600">
+                                    <svg class="w-3 h-3 inline mr-0.5 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                    <?= htmlspecialchars($bdl['name']) ?>
+                                </span>
                             </label>
                             <?php endforeach; ?>
                         </div>
@@ -508,6 +532,12 @@ include_once __DIR__ . '/../components/multilang-button.php';
             cb.checked = selectedSvcs.indexOf(cb.value) !== -1;
         });
 
+        // 담당 번들 초기화
+        var selectedBdls = isEdit ? (data.bundle_ids || []) : [];
+        document.querySelectorAll('.bdl-check').forEach(function(cb) {
+            cb.checked = selectedBdls.indexOf(cb.value) !== -1;
+        });
+
         // 다국어 필드 초기화
         fillI18nFields('name', isEdit ? (data.name_i18n || {}) : {});
         fillI18nFields('bio', isEdit ? (data.bio_i18n || {}) : {});
@@ -720,6 +750,14 @@ include_once __DIR__ . '/../components/multilang-button.php';
         });
         document.getElementById('formServiceIds').value = JSON.stringify(selectedServices);
         console.log('[StaffManage] Selected services:', selectedServices.length);
+
+        // 담당 번들 수집
+        var selectedBundles = [];
+        document.querySelectorAll('.bdl-check:checked').forEach(function(cb) {
+            selectedBundles.push(cb.value);
+        });
+        document.getElementById('formBundleIds').value = JSON.stringify(selectedBundles);
+        console.log('[StaffManage] Selected bundles:', selectedBundles.length);
 
         var formData = new FormData(this);
 

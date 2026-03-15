@@ -14,6 +14,7 @@ return [
         'category' => '카테고리', 'is_active' => '활성 상태', 'max_capacity' => '최대 수용 인원',
         'buffer_time' => '버퍼 시간 (분)', 'advance_booking_days' => '예약 가능 기간 (일)',
         'min_notice_hours' => '최소 사전 알림 (시간)',
+        'image' => '서비스 이미지',
     ],
     'success' => [
         'created' => '서비스가 생성되었습니다.', 'updated' => '서비스가 수정되었습니다.',
@@ -32,6 +33,10 @@ return [
     'placeholder_slug' => '자동 생성 (영문, 숫자, 하이픈)',
     'placeholder_description' => '서비스에 대한 간단한 설명...',
     'select_none' => '-- 선택 안함 --', 'no_buffer' => '없음',
+    'image_upload_hint' => '클릭 또는 드래그하여 이미지 업로드',
+    'image_formats' => 'JPG, PNG, WebP, GIF (최대 5MB)',
+    'image_size' => '이미지 크기',
+    'image_too_large' => '이미지 파일이 너무 큽니다. (최대 5MB)',
     'settings' => [
         'tabs' => ['general' => '기본설정', 'holidays' => '공휴일 관리'],
         'general' => [

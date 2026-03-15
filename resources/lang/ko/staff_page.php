@@ -24,6 +24,7 @@ return [
     'available_services' => '담당 서비스 메뉴',
     'weekly_schedule' => '주간 스케줄',
     'select_service' => '선택하기',
+    'book_selected' => '선택한 서비스 예약하기',
     'price' => '가격',
     'duration' => '소요시간',
     'minutes' => '분',
@@ -31,4 +32,8 @@ return [
     'schedule_calendar' => '예약 캘린더',
     'no_available_slots' => '예약 가능한 시간이 없습니다',
     'selected_date_slots' => ':date 예약 가능 시간',
+    'booking_summary' => '예약 요약',
+    'booking_datetime' => '예약 일시',
+    'total_amount' => '합계',
+    'select_all_hint' => '서비스, 날짜, 시간을 모두 선택해주세요',
 ];

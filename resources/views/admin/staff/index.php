@@ -118,6 +118,15 @@ try {
                 }
             }
 
+            // 담당 번들 저장
+            $bundleIds = isset($_POST['bundle_ids']) ? json_decode($_POST['bundle_ids'], true) : [];
+            if (!empty($bundleIds) && is_array($bundleIds)) {
+                $sbStmt = $pdo->prepare("INSERT INTO {$prefix}staff_bundles (staff_id, bundle_id) VALUES (?, ?)");
+                foreach ($bundleIds as $bid) {
+                    $sbStmt->execute([$newStaffId, $bid]);
+                }
+            }
+
             echo json_encode(['success' => true, 'message' => __('staff.success.created')]);
             exit;
         }
@@ -200,6 +209,16 @@ try {
                 $ssStmt = $pdo->prepare("INSERT INTO {$prefix}staff_services (staff_id, service_id) VALUES (?, ?)");
                 foreach ($serviceIds as $sid) {
                     $ssStmt->execute([$id, $sid]);
+                }
+            }
+
+            // 담당 번들 갱신
+            $pdo->prepare("DELETE FROM {$prefix}staff_bundles WHERE staff_id = ?")->execute([$id]);
+            $bundleIds = isset($_POST['bundle_ids']) ? json_decode($_POST['bundle_ids'], true) : [];
+            if (!empty($bundleIds) && is_array($bundleIds)) {
+                $sbStmt = $pdo->prepare("INSERT INTO {$prefix}staff_bundles (staff_id, bundle_id) VALUES (?, ?)");
+                foreach ($bundleIds as $bid) {
+                    $sbStmt->execute([$id, $bid]);
                 }
             }
 
@@ -291,6 +310,16 @@ try {
     $ssRows = $pdo->query("SELECT staff_id, service_id FROM {$prefix}staff_services")->fetchAll(PDO::FETCH_ASSOC);
     foreach ($ssRows as $row) {
         $staffServices[$row['staff_id']][] = $row['service_id'];
+    }
+
+    // 번들 목록
+    $allBundles = $pdo->query("SELECT id, name, bundle_price, is_active FROM {$prefix}service_bundles WHERE is_active = 1 ORDER BY display_order, name")->fetchAll(PDO::FETCH_ASSOC);
+
+    // 스태프별 담당 번들 매핑
+    $staffBundlesMap = [];
+    $sbRows = $pdo->query("SELECT staff_id, bundle_id FROM {$prefix}staff_bundles")->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($sbRows as $row) {
+        $staffBundlesMap[$row['staff_id']][] = $row['bundle_id'];
     }
 
     $dbConnected = true;
@@ -412,6 +441,7 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                                 "name_i18n" => $nameI18n, "bio_i18n" => $bioI18n,
                                 "designation_fee" => (float)($s["designation_fee"] ?? 0),
                                 "service_ids" => $staffServices[$s["id"]] ?? [],
+                                "bundle_ids" => $staffBundlesMap[$s["id"]] ?? [],
                             ], JSON_UNESCAPED_UNICODE), ENT_QUOTES) ?>)'
                                     class="px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600 rounded-lg transition">
                                 <?= __('staff.edit') ?>

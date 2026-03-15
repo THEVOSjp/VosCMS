@@ -12,6 +12,7 @@ return [
 
     // Search
     'search' => 'Поиск',
+    'all' => 'Все',
 
     // Country names (worldwide)
     'countries' => [

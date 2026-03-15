@@ -12,6 +12,7 @@ return [
 
     // Search
     'search' => 'Хайх',
+    'all' => 'Бүгд',
 
     // Country names (worldwide)
     'countries' => [

@@ -79,4 +79,18 @@ return [
     'pos_pay_cash' => 'Tiền mặt',
     'pos_pay_transfer' => 'Chuyển khoản',
     'pos_pay_submit' => 'Xử lý thanh toán',
+    'pos_service_detail' => 'Chi tiết dịch vụ',
+    'pos_add_service' => 'Thêm dịch vụ',
+    'pos_add_service_submit' => 'Thêm dịch vụ đã chọn',
+    'pos_no_services' => 'Không có dịch vụ nào được đăng ký',
+    'pos_service_count' => '',
+
+    // POS dựa trên không gian (nhà hàng, lưu trú, v.v.)
+    'pos_space_available' => 'Trống',
+    'pos_space_reserved' => 'Đã đặt',
+    'pos_space_occupied' => 'Đang sử dụng',
+    'pos_space_cleaning' => 'Đang dọn',
+    'pos_space_assign' => 'Phân bổ',
+    'pos_space_clear_confirm' => 'Giải phóng không gian này? Tất cả dịch vụ sẽ được đánh dấu hoàn thành.',
+    'pos_space_capacity_unit' => 'người',
 ];

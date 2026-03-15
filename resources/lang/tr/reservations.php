@@ -75,4 +75,18 @@ return [
     'pos_pay_cash' => 'Nakit',
     'pos_pay_transfer' => 'Havale',
     'pos_pay_submit' => 'Ödeme Yap',
+    'pos_service_detail' => 'Hizmet Detayları',
+    'pos_add_service' => 'Hizmet Ekle',
+    'pos_add_service_submit' => 'Seçili Hizmetleri Ekle',
+    'pos_no_services' => 'Kayıtlı hizmet yok',
+    'pos_service_count' => '',
+
+    // Alan tabanlı POS (restoran, konaklama vb.)
+    'pos_space_available' => 'Müsait',
+    'pos_space_reserved' => 'Rezerve',
+    'pos_space_occupied' => 'Dolu',
+    'pos_space_cleaning' => 'Temizlik',
+    'pos_space_assign' => 'Ata',
+    'pos_space_clear_confirm' => 'Bu alan boşaltılsın mı? Tüm hizmetler tamamlandı olarak işaretlenecektir.',
+    'pos_space_capacity_unit' => 'kişi',
 ];

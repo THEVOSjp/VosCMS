@@ -36,7 +36,7 @@ function statusBadge(string $status): string {
 function getServices(\PDO $pdo, string $prefix): array {
     static $cache = null;
     if ($cache !== null) return $cache;
-    $stmt = $pdo->query("SELECT * FROM {$prefix}services WHERE is_active = 1 ORDER BY name");
+    $stmt = $pdo->query("SELECT s.*, c.name as category_name FROM {$prefix}services s LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id WHERE s.is_active = 1 ORDER BY s.sort_order ASC, s.name ASC");
     $cache = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $cache;
 }
@@ -59,11 +59,18 @@ function formatPrice(float $amount): string {
         : $currencySymbol . $formatted;
 }
 
-// 서비스 이름 가져오기
-function getServiceName(\PDO $pdo, string $prefix, ?string $serviceId): string {
-    if (!$serviceId) return '-';
-    foreach (getServices($pdo, $prefix) as $s) {
-        if ($s['id'] === $serviceId) return $s['name'];
-    }
-    return '-';
+// 서비스 이름 가져오기 (junction table 기반)
+function getServiceName(\PDO $pdo, string $prefix, ?string $reservationId): string {
+    if (!$reservationId) return '-';
+    $stmt = $pdo->prepare("SELECT GROUP_CONCAT(service_name ORDER BY sort_order SEPARATOR ', ') FROM {$prefix}reservation_services WHERE reservation_id = ?");
+    $stmt->execute([$reservationId]);
+    $name = $stmt->fetchColumn();
+    return $name ?: '-';
+}
+
+function getBundleName(\PDO $pdo, string $prefix, ?string $reservationId): ?string {
+    if (!$reservationId) return null;
+    $stmt = $pdo->prepare("SELECT DISTINCT b.name FROM {$prefix}reservation_services rs JOIN {$prefix}service_bundles b ON rs.bundle_id = b.id WHERE rs.reservation_id = ? AND rs.bundle_id IS NOT NULL LIMIT 1");
+    $stmt->execute([$reservationId]);
+    return $stmt->fetchColumn() ?: null;
 }

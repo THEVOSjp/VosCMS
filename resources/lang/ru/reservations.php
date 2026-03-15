@@ -79,4 +79,18 @@ return [
     'pos_pay_cash' => 'Наличные',
     'pos_pay_transfer' => 'Перевод',
     'pos_pay_submit' => 'Провести оплату',
+    'pos_service_detail' => 'Детали услуг',
+    'pos_add_service' => 'Добавить услугу',
+    'pos_add_service_submit' => 'Добавить выбранные услуги',
+    'pos_no_services' => 'Нет зарегистрированных услуг',
+    'pos_service_count' => '',
+
+    // POS на основе пространств (ресторан, размещение и т.д.)
+    'pos_space_available' => 'Свободно',
+    'pos_space_reserved' => 'Забронировано',
+    'pos_space_occupied' => 'Занято',
+    'pos_space_cleaning' => 'Уборка',
+    'pos_space_assign' => 'Назначить',
+    'pos_space_clear_confirm' => 'Освободить это место? Все услуги будут отмечены как завершённые.',
+    'pos_space_capacity_unit' => 'чел.',
 ];

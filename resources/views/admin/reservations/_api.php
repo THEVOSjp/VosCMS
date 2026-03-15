@@ -3,17 +3,20 @@
  * 예약 관리 POST API 핸들러
  * 라우트: POST /admin/reservations/* (AJAX)
  * 변수: $pdo, $prefix, $apiAction, $apiId (index.php에서 설정)
+ *
+ * DB 구조: rzx_reservations (1건) ↔ rzx_reservation_services (N건)
  */
 
 include __DIR__ . '/_init.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-// CSRF 검증
-$token = $_POST['_token'] ?? '';
-if ($token !== ($_SESSION['csrf_token'] ?? '')) {
-    echo json_encode(['error' => true, 'message' => 'CSRF 토큰이 유효하지 않습니다.']);
-    exit;
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    $token = $_POST['_token'] ?? '';
+    if ($token !== ($_SESSION['csrf_token'] ?? '')) {
+        echo json_encode(['error' => true, 'message' => 'CSRF 토큰이 유효하지 않습니다.']);
+        exit;
+    }
 }
 
 $method = $_POST['_method'] ?? $_SERVER['REQUEST_METHOD'];
@@ -36,8 +39,9 @@ try {
         $reservationDate = $_POST['reservation_date'] ?? '';
         $startTime = $_POST['start_time'] ?? '';
         $endTime = $_POST['end_time'] ?? '';
+        $staffId = $_POST['staff_id'] ?? null;
         $notes = trim($_POST['notes'] ?? '');
-        $source = $_POST['source'] ?? 'online'; // online, walk_in, admin
+        $source = $_POST['source'] ?? 'admin';
 
         if (!$customerName || !$customerPhone || !$reservationDate || !$startTime) {
             $_SESSION['errors'] = ['필수 항목을 모두 입력해주세요.'];
@@ -46,58 +50,60 @@ try {
             exit;
         }
 
-        $createdIds = [];
+        // 서비스 조회 + 합산
+        $ph = implode(',', array_fill(0, count($serviceIds), '?'));
+        $svcStmt = $pdo->prepare("SELECT id, name, price, duration FROM {$prefix}services WHERE id IN ({$ph})");
+        $svcStmt->execute(array_values($serviceIds));
+        $services = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
+        if (empty($services)) {
+            echo json_encode(['error' => true, 'message' => '유효한 서비스가 없습니다.']);
+            exit;
+        }
+
+        $totalAmount = 0;
+        $totalDuration = 0;
+        foreach ($services as $s) {
+            $totalAmount += (float)$s['price'];
+            $totalDuration += (int)$s['duration'];
+        }
+
+        // end_time 계산
+        if (!$endTime) {
+            $startParts = explode(':', $startTime);
+            $endMinutes = ((int)$startParts[0]) * 60 + ((int)($startParts[1] ?? 0)) + $totalDuration;
+            $endTime = sprintf('%02d:%02d', floor($endMinutes / 60) % 24, $endMinutes % 60);
+        }
+
         $pdo->beginTransaction();
 
-        foreach ($serviceIds as $serviceId) {
-            // 서비스 정보 조회
-            $svcStmt = $pdo->prepare("SELECT * FROM {$prefix}services WHERE id = ?");
-            $svcStmt->execute([$serviceId]);
-            $svc = $svcStmt->fetch(PDO::FETCH_ASSOC);
-            if (!$svc) continue;
+        $id = bin2hex(random_bytes(18));
+        $reservationNumber = 'RZX' . date('YmdHis') . strtoupper(substr(bin2hex(random_bytes(2)), 0, 4));
 
-            $totalAmount = (float)($svc['price'] ?? 0);
-            $finalAmount = $totalAmount;
-            $duration = (int)($svc['duration'] ?? 60);
+        $insertStmt = $pdo->prepare("INSERT INTO {$prefix}reservations
+            (id, reservation_number, staff_id, customer_name, customer_phone, customer_email,
+             reservation_date, start_time, end_time, total_amount, final_amount, status, source, notes, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, NOW(), NOW())");
+        $insertStmt->execute([
+            $id, $reservationNumber, $staffId ?: null,
+            $customerName, $customerPhone, $customerEmail,
+            $reservationDate, $startTime, $endTime,
+            $totalAmount, $totalAmount, $source, $notes
+        ]);
 
-            // 종료 시간 계산
-            $calcEnd = $endTime;
-            if (!$calcEnd) {
-                $startParts = explode(':', $startTime);
-                $endMinutes = ((int)$startParts[0]) * 60 + ((int)($startParts[1] ?? 0)) + $duration;
-                $calcEnd = sprintf('%02d:%02d', floor($endMinutes / 60) % 24, $endMinutes % 60);
-            }
-
-            // 예약번호 생성
-            $reservationNumber = 'RZX' . date('YmdHis') . strtoupper(substr(bin2hex(random_bytes(2)), 0, 4));
-
-            $id = bin2hex(random_bytes(18));
-
-            $insertStmt = $pdo->prepare("INSERT INTO {$prefix}reservations
-                (id, reservation_number, service_id, customer_name, customer_phone, customer_email,
-                 reservation_date, start_time, end_time, total_amount, final_amount, status, source, notes, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, NOW(), NOW())");
-
-            $insertStmt->execute([
-                $id, $reservationNumber, $serviceId,
-                $customerName, $customerPhone, $customerEmail,
-                $reservationDate, $startTime, $calcEnd,
-                $totalAmount, $finalAmount, $source, $notes
-            ]);
-
-            $createdIds[] = $id;
-            console_log("[Reservations API] Created: {$reservationNumber}");
+        // 서비스 관계 저장
+        $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
+        $idx = 0;
+        foreach ($services as $s) {
+            $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $idx++]);
         }
 
         $pdo->commit();
+        console_log("[Reservations API] Created: {$reservationNumber} ({$idx} services)");
 
-        // POS 접수(walk_in)이면 POS 페이지로, 그 외엔 상세/목록으로
         if ($source === 'walk_in') {
             header("Location: {$adminUrl}/reservations/pos");
-        } elseif (count($createdIds) === 1) {
-            header("Location: {$adminUrl}/reservations/{$createdIds[0]}");
         } else {
-            header("Location: {$adminUrl}/reservations");
+            header("Location: {$adminUrl}/reservations/{$id}");
         }
         exit;
     }
@@ -121,20 +127,18 @@ try {
         }
 
         // 전체 수정
-        $serviceId = $_POST['service_id'] ?? $r['service_id'];
         $totalAmount = (float)($_POST['total_amount'] ?? $r['total_amount']);
         $discountAmount = (float)($_POST['discount_amount'] ?? $r['discount_amount']);
         $finalAmount = $totalAmount - $discountAmount;
 
         $updateStmt = $pdo->prepare("UPDATE {$prefix}reservations SET
-            service_id = ?, reservation_date = ?, start_time = ?, end_time = ?,
+            reservation_date = ?, start_time = ?, end_time = ?,
             customer_name = ?, customer_phone = ?, customer_email = ?,
             total_amount = ?, discount_amount = ?, final_amount = ?,
             notes = ?, admin_notes = ?, updated_at = NOW()
             WHERE id = ?");
 
         $updateStmt->execute([
-            $serviceId,
             $_POST['reservation_date'] ?? $r['reservation_date'],
             $_POST['start_time'] ?? $r['start_time'],
             $_POST['end_time'] ?? $r['end_time'],
@@ -161,12 +165,13 @@ try {
             exit;
         }
 
-        // 현재 시간으로 start_time 업데이트, 서비스 duration으로 end_time 재계산
         $nowTime = date('H:i:s');
-        $svc = $pdo->prepare("SELECT duration FROM {$prefix}services WHERE id = ?");
-        $svc->execute([$r['service_id']]);
-        $duration = (int)($svc->fetchColumn() ?: 60);
-        $endMinutes = intval(date('H')) * 60 + intval(date('i')) + $duration;
+        // junction 테이블에서 총 duration 조회
+        $durStmt = $pdo->prepare("SELECT COALESCE(SUM(duration), 60) FROM {$prefix}reservation_services WHERE reservation_id = ?");
+        $durStmt->execute([$apiId]);
+        $totalDuration = (int)$durStmt->fetchColumn();
+
+        $endMinutes = intval(date('H')) * 60 + intval(date('i')) + $totalDuration;
         $endTime = sprintf('%02d:%02d:00', floor($endMinutes / 60) % 24, $endMinutes % 60);
 
         $updateStmt = $pdo->prepare("UPDATE {$prefix}reservations SET status = 'confirmed', start_time = ?, end_time = ?, updated_at = NOW() WHERE id = ?");
@@ -188,15 +193,13 @@ try {
         }
 
         $payAmount = (float)($_POST['amount'] ?? 0);
-        $payMethod = trim($_POST['method'] ?? 'card');
         $currentPaid = (float)($r['paid_amount'] ?? 0);
         $finalAmount = (float)($r['final_amount'] ?? 0);
         $newPaid = $currentPaid + $payAmount;
 
-        // 결제 상태 결정
         if ($newPaid >= $finalAmount) {
             $paymentStatus = 'paid';
-            $newPaid = $finalAmount; // 초과 방지
+            $newPaid = $finalAmount;
         } elseif ($newPaid > 0) {
             $paymentStatus = 'partial';
         } else {
@@ -206,7 +209,7 @@ try {
         $updateStmt = $pdo->prepare("UPDATE {$prefix}reservations SET paid_amount = ?, payment_status = ?, updated_at = NOW() WHERE id = ?");
         $updateStmt->execute([$newPaid, $paymentStatus, $apiId]);
 
-        console_log("[Reservations API] Payment: {$apiId}, +{$payAmount} ({$payMethod}), total paid: {$newPaid}/{$finalAmount} → {$paymentStatus}");
+        console_log("[Reservations API] Payment: {$apiId}, +{$payAmount}, total: {$newPaid}/{$finalAmount} → {$paymentStatus}");
         echo json_encode(['success' => true, 'message' => '결제가 처리되었습니다.', 'payment_status' => $paymentStatus, 'paid_amount' => $newPaid]);
         exit;
     }
@@ -250,7 +253,7 @@ try {
             'no-show'  => '노쇼',
         };
 
-        console_log("[Reservations API] Status changed: {$apiId} → {$newStatus}");
+        console_log("[Reservations API] Status: {$apiId} → {$newStatus}");
 
         $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
         if ($isAjax) {
@@ -258,6 +261,131 @@ try {
         } else {
             header("Location: {$adminUrl}/reservations/{$apiId}");
         }
+        exit;
+    }
+
+    // ─── 고객 검색 (이름/전화번호 자동완성, 암호화 필드 복호화 후 검색) ───
+    if ($apiAction === 'search-customers' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $q = trim($_GET['q'] ?? '');
+        if (mb_strlen($q) < 1) {
+            echo json_encode(['success' => true, 'customers' => []]);
+            exit;
+        }
+
+        require_once BASE_PATH . '/rzxlib/Core/Helpers/Encryption.php';
+        $qLower = mb_strtolower($q);
+
+        $stmt = $pdo->query("SELECT id, name, phone, email FROM {$prefix}users WHERE status = 'active' AND deleted_at IS NULL ORDER BY created_at DESC");
+        $allUsers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $results = [];
+        foreach ($allUsers as $u) {
+            $decName = \RzxLib\Core\Helpers\Encryption::decrypt($u['name'] ?? '') ?: '';
+            $decPhone = \RzxLib\Core\Helpers\Encryption::decrypt($u['phone'] ?? '') ?: '';
+            $decEmail = \RzxLib\Core\Helpers\Encryption::decrypt($u['email'] ?? '') ?: '';
+            if (mb_strpos(mb_strtolower($decName), $qLower) !== false ||
+                mb_strpos($decPhone, $q) !== false ||
+                mb_strpos(mb_strtolower($decEmail), $qLower) !== false) {
+                $results[] = [
+                    'id' => $u['id'],
+                    'name' => $decName,
+                    'phone' => $decPhone,
+                    'email' => $decEmail,
+                ];
+                if (count($results) >= 10) break;
+            }
+        }
+
+        echo json_encode(['success' => true, 'customers' => $results]);
+        exit;
+    }
+
+    // ─── 고객 서비스 내역 조회 (POS) ───
+    if ($apiAction === 'customer-services' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $name = trim($_GET['name'] ?? '');
+        $phone = trim($_GET['phone'] ?? '');
+        $date = trim($_GET['date'] ?? date('Y-m-d'));
+        if (!$name || !$phone) {
+            echo json_encode(['error' => true, 'message' => '고객 정보가 필요합니다.']);
+            exit;
+        }
+        // 예약 목록 + junction 테이블에서 서비스 정보 조회
+        $stmt = $pdo->prepare("
+            SELECT r.id, r.status, r.start_time, r.end_time,
+                   r.total_amount, r.final_amount, r.paid_amount, r.payment_status, r.source,
+                   GROUP_CONCAT(rs.service_name ORDER BY rs.sort_order SEPARATOR ', ') as service_names,
+                   SUM(rs.duration) as total_duration
+            FROM {$prefix}reservations r
+            LEFT JOIN {$prefix}reservation_services rs ON r.id = rs.reservation_id
+            WHERE r.customer_name = ? AND r.customer_phone = ? AND r.reservation_date = ?
+              AND r.status NOT IN ('cancelled','no_show')
+            GROUP BY r.id
+            ORDER BY r.created_at ASC
+        ");
+        $stmt->execute([$name, $phone, $date]);
+        $services = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode(['success' => true, 'data' => $services]);
+        exit;
+    }
+
+    // ─── 서비스 추가 (POS 현장) ───
+    if ($apiAction === 'add-service') {
+        $serviceIds = $_POST['service_ids'] ?? [];
+        $customerName = trim($_POST['customer_name'] ?? '');
+        $customerPhone = trim($_POST['customer_phone'] ?? '');
+        $customerEmail = trim($_POST['customer_email'] ?? '');
+        $reservationDate = $_POST['reservation_date'] ?? date('Y-m-d');
+        $source = $_POST['source'] ?? 'walk_in';
+
+        if (empty($serviceIds) || !$customerName || !$customerPhone) {
+            echo json_encode(['error' => true, 'message' => '필수 항목을 입력해주세요.']);
+            exit;
+        }
+
+        // 서비스 조회
+        $ph = implode(',', array_fill(0, count($serviceIds), '?'));
+        $svcStmt = $pdo->prepare("SELECT id, name, price, duration FROM {$prefix}services WHERE id IN ({$ph})");
+        $svcStmt->execute(array_values($serviceIds));
+        $services = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
+        if (empty($services)) {
+            echo json_encode(['error' => true, 'message' => '유효한 서비스가 없습니다.']);
+            exit;
+        }
+
+        $totalAmount = 0;
+        $totalDuration = 0;
+        foreach ($services as $s) {
+            $totalAmount += (float)$s['price'];
+            $totalDuration += (int)$s['duration'];
+        }
+
+        $nowTime = date('H:i:s');
+        $endMinutes = intval(date('H')) * 60 + intval(date('i')) + $totalDuration;
+        $endTime = sprintf('%02d:%02d:00', floor($endMinutes / 60) % 24, $endMinutes % 60);
+
+        $pdo->beginTransaction();
+
+        $id = bin2hex(random_bytes(18));
+        $resNum = 'RZX' . date('YmdHis') . strtoupper(substr(bin2hex(random_bytes(2)), 0, 4));
+
+        $insertStmt = $pdo->prepare("INSERT INTO {$prefix}reservations
+            (id, reservation_number, customer_name, customer_phone, customer_email,
+             reservation_date, start_time, end_time, total_amount, final_amount, status, source, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, NOW(), NOW())");
+        $insertStmt->execute([
+            $id, $resNum, $customerName, $customerPhone, $customerEmail,
+            $reservationDate, $nowTime, $endTime, $totalAmount, $totalAmount, $source
+        ]);
+
+        $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
+        $idx = 0;
+        foreach ($services as $s) {
+            $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $idx++]);
+        }
+
+        $pdo->commit();
+        console_log("[POS API] Added {$idx} services for {$customerName} (reservation: {$id})");
+        echo json_encode(['success' => true, 'message' => '서비스가 추가되었습니다.', 'ids' => [$id]]);
         exit;
     }
 

@@ -23,6 +23,7 @@ return [
     'available_services' => 'Mevcut Hizmetler',
     'weekly_schedule' => 'Haftalık Program',
     'select_service' => 'Seç',
+    'book_selected' => 'Seçilen hizmetleri rezerve et',
     'price' => 'Fiyat',
     'duration' => 'Süre',
     'minutes' => 'dk',
@@ -30,4 +31,8 @@ return [
     'schedule_calendar' => 'Randevu Takvimi',
     'no_available_slots' => 'Uygun zaman dilimi yok',
     'selected_date_slots' => ':date Uygun Saatler',
+    'booking_summary' => 'Rezervasyon Özeti',
+    'booking_datetime' => 'Tarih ve Saat',
+    'total_amount' => 'Toplam',
+    'select_all_hint' => 'Hizmet, tarih ve saat seçiniz',
 ];

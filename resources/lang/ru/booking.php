@@ -37,6 +37,8 @@ return [
     'designation_fee_badge' => '+:amount',
     'loading_slots' => 'Проверка доступного времени...',
     'no_available_slots' => 'Нет доступного времени на выбранную дату.',
+    'items_selected' => 'выбрано',
+    'total_duration' => 'Общая длительность',
 
     // Steps
     'step' => [

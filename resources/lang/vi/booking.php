@@ -37,6 +37,8 @@ return [
     'designation_fee_badge' => '+:amount',
     'loading_slots' => 'Đang kiểm tra giờ trống...',
     'no_available_slots' => 'Không có giờ trống vào ngày đã chọn.',
+    'items_selected' => 'đã chọn',
+    'total_duration' => 'Tổng thời gian',
 
     // Steps
     'step' => [

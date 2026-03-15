@@ -97,6 +97,44 @@ include_once __DIR__ . '/components/multilang-button.php';
                               placeholder="<?= __('services.placeholder_description') ?>"></textarea>
                 </div>
 
+                <!-- 서비스 이미지 -->
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('services.fields.image') ?></label>
+                    <div id="svcImageArea" class="relative border-2 border-dashed border-zinc-300 dark:border-zinc-600 rounded-lg hover:border-blue-400 dark:hover:border-blue-500 transition cursor-pointer"
+                         onclick="document.getElementById('svcImageInput').click()"
+                         ondragover="event.preventDefault();this.classList.add('border-blue-500','bg-blue-50','dark:bg-blue-900/20')"
+                         ondragleave="this.classList.remove('border-blue-500','bg-blue-50','dark:bg-blue-900/20')"
+                         ondrop="event.preventDefault();this.classList.remove('border-blue-500','bg-blue-50','dark:bg-blue-900/20');handleImageDrop(event)">
+                        <!-- 업로드 안내 (이미지 없을 때) -->
+                        <div id="svcImagePlaceholder" class="flex flex-col items-center justify-center py-6 text-zinc-400 dark:text-zinc-500">
+                            <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <p class="text-xs"><?= __('services.image_upload_hint') ?></p>
+                            <p class="text-[10px] mt-1 text-zinc-300 dark:text-zinc-600"><?= __('services.image_formats') ?></p>
+                        </div>
+                        <!-- 이미지 미리보기 (이미지 있을 때) -->
+                        <div id="svcImagePreview" class="hidden relative">
+                            <img id="svcImagePreviewImg" src="" alt="" class="w-full rounded-lg object-cover" style="max-height: 200px;">
+                            <button type="button" onclick="event.stopPropagation();removeServiceImage()"
+                                    class="absolute top-2 right-2 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="file" id="svcImageInput" name="image" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" onchange="previewServiceImage(this)">
+                    <input type="hidden" id="svcImageExisting" name="existing_image" value="">
+                    <input type="hidden" id="svcImageRemove" name="remove_image" value="0">
+                    <!-- 이미지 크기 설정 -->
+                    <div class="flex items-center gap-2 mt-2">
+                        <span class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('services.image_size') ?>:</span>
+                        <input type="number" id="svcImageWidth" name="image_width" min="50" max="2000" value="800" placeholder="W"
+                               class="w-20 px-2 py-1 text-xs border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white">
+                        <span class="text-xs text-zinc-400">×</span>
+                        <input type="number" id="svcImageHeight" name="image_height" min="50" max="2000" value="600" placeholder="H"
+                               class="w-20 px-2 py-1 text-xs border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white">
+                        <span class="text-xs text-zinc-400">px</span>
+                    </div>
+                </div>
+
                 <!-- 활성 상태 -->
                 <div class="flex items-center gap-3">
                     <label class="relative inline-flex items-center cursor-pointer">

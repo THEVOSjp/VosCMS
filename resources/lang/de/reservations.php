@@ -79,4 +79,18 @@ return [
     'pos_pay_cash' => 'Bargeld',
     'pos_pay_transfer' => 'Überweisung',
     'pos_pay_submit' => 'Zahlung verarbeiten',
+    'pos_service_detail' => 'Servicedetails',
+    'pos_add_service' => 'Service hinzufügen',
+    'pos_add_service_submit' => 'Ausgewählte Services hinzufügen',
+    'pos_no_services' => 'Keine Services registriert',
+    'pos_service_count' => '',
+
+    // Raumbasiertes POS (Restaurant, Unterkunft usw.)
+    'pos_space_available' => 'Verfügbar',
+    'pos_space_reserved' => 'Reserviert',
+    'pos_space_occupied' => 'Belegt',
+    'pos_space_cleaning' => 'Reinigung',
+    'pos_space_assign' => 'Zuweisen',
+    'pos_space_clear_confirm' => 'Diesen Platz räumen? Alle Dienste werden als abgeschlossen markiert.',
+    'pos_space_capacity_unit' => 'Pers.',
 ];

@@ -37,6 +37,8 @@ return [
     'designation_fee_badge' => '+:amount',
     'loading_slots' => '가능한 시간을 확인하는 중...',
     'no_available_slots' => '선택한 날짜에 예약 가능한 시간이 없습니다.',
+    'items_selected' => '개 선택',
+    'total_duration' => '총 소요시간',
 
     // 단계
     'step' => [

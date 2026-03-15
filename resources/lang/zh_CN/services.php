@@ -23,6 +23,7 @@ return [
         'buffer_time' => '缓冲时间（分钟）',
         'advance_booking_days' => '提前预约天数',
         'min_notice_hours' => '最短提前通知（小时）',
+        'image' => '服务图片',
     ],
     'success' => [
         'created' => '服务已创建。',
@@ -46,6 +47,10 @@ return [
     'placeholder_description' => '服务的简要描述...',
     'select_none' => '-- 不选择 --',
     'no_buffer' => '无',
+    'image_upload_hint' => '点击或拖拽上传图片',
+    'image_formats' => 'JPG, PNG, WebP, GIF (最大5MB)',
+    'image_size' => '图片尺寸',
+    'image_too_large' => '图片文件太大。(最大5MB)',
     'settings' => [
         'tabs' => ['general' => '基本设置', 'holidays' => '节假日管理'],
         'general' => [

@@ -23,6 +23,7 @@ return [
         'buffer_time' => 'Buffer Time (min)',
         'advance_booking_days' => 'Advance Booking (days)',
         'min_notice_hours' => 'Min Notice (hours)',
+        'image' => 'Service Image',
     ],
     'success' => [
         'created' => 'Service created.',
@@ -46,6 +47,10 @@ return [
     'placeholder_description' => 'Brief description of the service...',
     'select_none' => '-- None --',
     'no_buffer' => 'None',
+    'image_upload_hint' => 'Click or drag to upload image',
+    'image_formats' => 'JPG, PNG, WebP, GIF (max 5MB)',
+    'image_size' => 'Image Size',
+    'image_too_large' => 'Image file is too large. (max 5MB)',
     'settings' => [
         'tabs' => ['general' => 'General', 'holidays' => 'Holidays'],
         'general' => [

@@ -23,6 +23,7 @@ return [
     'available_services' => 'Хариуцсан үйлчилгээний цэс',
     'weekly_schedule' => 'Долоо хоногийн хуваарь',
     'select_service' => 'Сонгох',
+    'book_selected' => 'Сонгосон үйлчилгээг захиалах',
     'price' => 'Үнэ',
     'duration' => 'Хугацаа',
     'minutes' => 'мин',
@@ -30,4 +31,8 @@ return [
     'schedule_calendar' => 'Захиалгын хуанли',
     'no_available_slots' => 'Боломжтой цаг байхгүй байна',
     'selected_date_slots' => ':date Боломжтой цагууд',
+    'booking_summary' => 'Захиалгын хураангуй',
+    'booking_datetime' => 'Огноо & Цаг',
+    'total_amount' => 'Нийт',
+    'select_all_hint' => 'Үйлчилгээ, огноо, цагийг сонгоно уу',
 ];

@@ -188,21 +188,14 @@ include BASE_PATH . '/resources/views/partials/header.php';
                     <?php endif; ?>
                 </div>
 
-                <!-- Buttons -->
-                <div class="flex justify-center gap-2 mt-3">
-                    <a href="<?= $baseUrl ?>/booking?staff=<?= $staff['id'] ?>"
-                       class="inline-flex items-center px-3 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-medium rounded hover:bg-gray-700 dark:hover:bg-gray-200 transition">
+                <!-- Button -->
+                <div class="mt-3">
+                    <a href="<?= $baseUrl ?>/staff/<?= $staff['id'] ?>"
+                       class="flex items-center justify-center w-full py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-medium rounded hover:bg-gray-700 dark:hover:bg-gray-200 transition">
                         <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
                         <?= __('staff_page.book_with') ?>
-                    </a>
-                    <a href="<?= $baseUrl ?>/staff/<?= $staff['id'] ?>"
-                       class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-zinc-300 text-xs font-medium rounded hover:bg-gray-50 dark:hover:bg-zinc-700 transition">
-                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                        <?= __('staff_page.schedule') ?>
                     </a>
                 </div>
             </div>

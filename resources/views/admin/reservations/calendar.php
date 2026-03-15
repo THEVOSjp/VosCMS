@@ -23,7 +23,7 @@ $nextMonth = $month == 12 ? 1 : $month + 1;
 $dateFrom = sprintf('%04d-%02d-01', $year, $month);
 $dateTo = sprintf('%04d-%02d-%02d', $year, $month, $daysInMonth);
 
-$stmt = $pdo->prepare("SELECT r.*, s.name as service_name FROM {$prefix}reservations r LEFT JOIN {$prefix}services s ON r.service_id = s.id WHERE r.reservation_date BETWEEN ? AND ? ORDER BY r.start_time ASC");
+$stmt = $pdo->prepare("SELECT r.*, (SELECT GROUP_CONCAT(rs.service_name ORDER BY rs.sort_order SEPARATOR ', ') FROM {$prefix}reservation_services rs WHERE rs.reservation_id = r.id) as service_name FROM {$prefix}reservations r WHERE r.reservation_date BETWEEN ? AND ? ORDER BY r.start_time ASC");
 $stmt->execute([$dateFrom, $dateTo]);
 $reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -33,7 +33,7 @@ foreach ($reservations as $r) {
 }
 
 // 서비스 목록 (빠른 예약 추가용)
-$calServices = $pdo->query("SELECT id, name, duration, price FROM {$prefix}services WHERE is_active = 1 ORDER BY sort_order ASC, name ASC")->fetchAll(PDO::FETCH_ASSOC);
+$calServices = $pdo->query("SELECT s.id, s.name, s.description, s.duration, s.price, s.image, s.category_id, c.name as category_name FROM {$prefix}services s LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id WHERE s.is_active = 1 ORDER BY s.sort_order ASC, s.name ASC")->fetchAll(PDO::FETCH_ASSOC);
 
 $pageTitle = __('reservations.calendar') . ' - ' . sprintf('%04d-%02d', $year, $month);
 

@@ -23,6 +23,7 @@ return [
         'buffer_time' => 'Завсарлага (мин)',
         'advance_booking_days' => 'Урьдчилсан захиалга (хоног)',
         'min_notice_hours' => 'Хамгийн бага мэдэгдэл (цаг)',
+        'image' => 'Үйлчилгээний зураг',
     ],
     'success' => [
         'created' => 'Үйлчилгээ үүсгэгдлээ.',
@@ -46,6 +47,10 @@ return [
     'placeholder_description' => 'Үйлчилгээний товч тайлбар...',
     'select_none' => '-- Сонгохгүй --',
     'no_buffer' => 'Байхгүй',
+    'image_upload_hint' => 'Зураг байршуулахын тулд дарах эсвэл чирнэ үү',
+    'image_formats' => 'JPG, PNG, WebP, GIF (хамгийн ихдээ 5MB)',
+    'image_size' => 'Зургийн хэмжээ',
+    'image_too_large' => 'Зургийн файл хэт том байна. (хамгийн ихдээ 5MB)',
     'settings' => [
         'tabs' => ['general' => 'Ерөнхий', 'holidays' => 'Баяр ёслол'],
         'general' => [

@@ -37,6 +37,8 @@ return [
     'designation_fee_badge' => '+:amount',
     'loading_slots' => 'Mevcut saatler kontrol ediliyor...',
     'no_available_slots' => 'Seçilen tarihte uygun saat bulunmuyor.',
+    'items_selected' => 'seçildi',
+    'total_duration' => 'Toplam süre',
 
     // Steps
     'step' => [

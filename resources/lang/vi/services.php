@@ -23,6 +23,7 @@ return [
         'buffer_time' => 'Thời gian đệm (phút)',
         'advance_booking_days' => 'Đặt trước (ngày)',
         'min_notice_hours' => 'Thông báo tối thiểu (giờ)',
+        'image' => 'Hình ảnh dịch vụ',
     ],
     'success' => [
         'created' => 'Đã tạo dịch vụ.',
@@ -46,6 +47,10 @@ return [
     'placeholder_description' => 'Mô tả ngắn về dịch vụ...',
     'select_none' => '-- Không chọn --',
     'no_buffer' => 'Không',
+    'image_upload_hint' => 'Nhấp hoặc kéo để tải ảnh lên',
+    'image_formats' => 'JPG, PNG, WebP, GIF (tối đa 5MB)',
+    'image_size' => 'Kích thước ảnh',
+    'image_too_large' => 'File ảnh quá lớn. (tối đa 5MB)',
     'settings' => [
         'tabs' => ['general' => 'Cài đặt chung', 'holidays' => 'Ngày lễ'],
         'general' => [

@@ -75,4 +75,18 @@ return [
     'pos_pay_cash' => 'Бэлэн мөнгө',
     'pos_pay_transfer' => 'Шилжүүлэг',
     'pos_pay_submit' => 'Төлбөр хийх',
+    'pos_service_detail' => 'Үйлчилгээний дэлгэрэнгүй',
+    'pos_add_service' => 'Үйлчилгээ нэмэх',
+    'pos_add_service_submit' => 'Сонгосон үйлчилгээг нэмэх',
+    'pos_no_services' => 'Бүртгэлтэй үйлчилгээ байхгүй',
+    'pos_service_count' => '',
+
+    // Орон зайн POS (ресторан, буудал гэх мэт)
+    'pos_space_available' => 'Чөлөөтэй',
+    'pos_space_reserved' => 'Захиалсан',
+    'pos_space_occupied' => 'Ашиглагдаж байна',
+    'pos_space_cleaning' => 'Цэвэрлэж байна',
+    'pos_space_assign' => 'Хуваарилах',
+    'pos_space_clear_confirm' => 'Энэ орон зайг чөлөөлөх үү? Бүх үйлчилгээ дууссан гэж тэмдэглэгдэнэ.',
+    'pos_space_capacity_unit' => 'хүн',
 ];

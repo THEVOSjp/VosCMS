@@ -23,6 +23,7 @@ return [
     'available_services' => '負責服務菜單',
     'weekly_schedule' => '每週日程',
     'select_service' => '選擇',
+    'book_selected' => '預約所選服務',
     'price' => '價格',
     'duration' => '所需時間',
     'minutes' => '分鐘',
@@ -30,4 +31,8 @@ return [
     'schedule_calendar' => '預約日曆',
     'no_available_slots' => '沒有可預約的時間',
     'selected_date_slots' => ':date 可預約時間',
+    'booking_summary' => '預約摘要',
+    'booking_datetime' => '預約日期和時間',
+    'total_amount' => '合計',
+    'select_all_hint' => '請選擇服務、日期和時間',
 ];

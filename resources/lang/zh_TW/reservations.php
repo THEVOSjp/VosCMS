@@ -79,4 +79,18 @@ return [
     'pos_pay_cash' => '現金',
     'pos_pay_transfer' => '轉帳',
     'pos_pay_submit' => '處理付款',
+    'pos_service_detail' => '服務明細',
+    'pos_add_service' => '新增服務',
+    'pos_add_service_submit' => '新增所選服務',
+    'pos_no_services' => '沒有註冊的服務',
+    'pos_service_count' => '項',
+
+    // 空間型POS（餐廳、住宿等）
+    'pos_space_available' => '空閒',
+    'pos_space_reserved' => '已預約',
+    'pos_space_occupied' => '使用中',
+    'pos_space_cleaning' => '清理中',
+    'pos_space_assign' => '分配',
+    'pos_space_clear_confirm' => '清空此空間？所有服務將標記為已完成。',
+    'pos_space_capacity_unit' => '人',
 ];

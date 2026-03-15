@@ -27,8 +27,9 @@ $isReservationsStatsPage = strpos($currentPath, '/reservations/statistics') !== 
 $isReservationsCreatePage = strpos($currentPath, '/reservations/create') !== false;
 
 // 서비스 관리 서브페이지 여부
-$isServicesPage = strpos($currentPath, '/services') !== false && strpos($currentPath, '/staff') === false;
+$isServicesPage = (strpos($currentPath, '/services') !== false && strpos($currentPath, '/staff') === false) || strpos($currentPath, '/bundles') !== false;
 $isServicesSettingsPage = strpos($currentPath, '/services/settings') !== false;
+$isBundlesPage = strpos($currentPath, '/bundles') !== false;
 
 // 스태프 관리 여부
 $isStaffPage = strpos($currentPath, '/staff') !== false;
@@ -147,11 +148,17 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
                 </svg>
             </button>
             <div id="servicesSubMenu" class="<?php echo $isServicesPage ? '' : 'hidden'; ?> bg-zinc-900">
-                <a href="<?php echo $adminUrl; ?>/services" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isServicesPage && !$isServicesSettingsPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                <a href="<?php echo $adminUrl; ?>/services" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isServicesPage && !$isServicesSettingsPage && !$isBundlesPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                     <?= __('services.list') ?>
+                </a>
+                <a href="<?php echo $adminUrl; ?>/bundles" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isBundlesPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                    <?= __('bundles.nav') ?>
                 </a>
                 <a href="<?php echo $adminUrl; ?>/services/settings" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isServicesSettingsPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

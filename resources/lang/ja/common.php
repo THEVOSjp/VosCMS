@@ -9,6 +9,7 @@ return [
     'terms' => '利用規約',
     'privacy' => 'プライバシーポリシー',
     'confirm' => '確認',
+    'all' => 'すべて',
 
     // 国名
     'countries' => [

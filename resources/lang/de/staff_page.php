@@ -23,6 +23,7 @@ return [
     'available_services' => 'Verfügbare Dienstleistungen',
     'weekly_schedule' => 'Wochenplan',
     'select_service' => 'Auswählen',
+    'book_selected' => 'Ausgewählte Dienste buchen',
     'price' => 'Preis',
     'duration' => 'Dauer',
     'minutes' => 'Min.',
@@ -30,4 +31,8 @@ return [
     'schedule_calendar' => 'Buchungskalender',
     'no_available_slots' => 'Keine verfügbaren Zeitfenster',
     'selected_date_slots' => ':date Verfügbare Zeiten',
+    'booking_summary' => 'Buchungsübersicht',
+    'booking_datetime' => 'Datum & Uhrzeit',
+    'total_amount' => 'Gesamt',
+    'select_all_hint' => 'Bitte Service, Datum und Uhrzeit auswählen',
 ];

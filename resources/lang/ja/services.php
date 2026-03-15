@@ -23,6 +23,7 @@ return [
         'buffer_time' => 'バッファ時間（分）',
         'advance_booking_days' => '予約可能期間（日）',
         'min_notice_hours' => '最小通知時間（時間）',
+        'image' => 'サービス画像',
     ],
     'success' => [
         'created' => 'サービスが作成されました。',
@@ -46,6 +47,10 @@ return [
     'placeholder_description' => 'サービスの簡単な説明...',
     'select_none' => '-- 選択なし --',
     'no_buffer' => 'なし',
+    'image_upload_hint' => 'クリックまたはドラッグして画像をアップロード',
+    'image_formats' => 'JPG, PNG, WebP, GIF (最大5MB)',
+    'image_size' => '画像サイズ',
+    'image_too_large' => '画像ファイルが大きすぎます。(最大5MB)',
     'settings' => [
         'tabs' => ['general' => '基本設定', 'holidays' => '祝日管理'],
         'general' => [

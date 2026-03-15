@@ -12,6 +12,7 @@ return [
 
     // Search
     'search' => '搜索',
+    'all' => '全部',
 
     // Country names
     'countries' => [

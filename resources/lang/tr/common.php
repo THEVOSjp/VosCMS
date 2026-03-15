@@ -12,6 +12,7 @@ return [
 
     // Search
     'search' => 'Ara',
+    'all' => 'Tümü',
 
     // Country names (worldwide)
     'countries' => [

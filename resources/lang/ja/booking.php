@@ -37,6 +37,8 @@ return [
     'designation_fee_badge' => '+:amount',
     'loading_slots' => '空き時間を確認中...',
     'no_available_slots' => '選択した日付に予約可能な時間がありません。',
+    'items_selected' => '件選択',
+    'total_duration' => '合計所要時間',
 
     // ステップ
     'step' => [

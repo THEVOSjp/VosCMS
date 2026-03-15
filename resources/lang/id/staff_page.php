@@ -23,6 +23,7 @@ return [
     'available_services' => 'Layanan yang Tersedia',
     'weekly_schedule' => 'Jadwal Mingguan',
     'select_service' => 'Pilih',
+    'book_selected' => 'Pesan layanan yang dipilih',
     'price' => 'Harga',
     'duration' => 'Durasi',
     'minutes' => 'menit',
@@ -30,4 +31,8 @@ return [
     'schedule_calendar' => 'Kalender Pemesanan',
     'no_available_slots' => 'Tidak ada waktu yang tersedia',
     'selected_date_slots' => ':date Waktu Tersedia',
+    'booking_summary' => 'Ringkasan Pemesanan',
+    'booking_datetime' => 'Tanggal & Waktu',
+    'total_amount' => 'Total',
+    'select_all_hint' => 'Silakan pilih layanan, tanggal, dan waktu',
 ];

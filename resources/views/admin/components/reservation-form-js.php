@@ -49,19 +49,26 @@
 
     function styleCard(card, on) {
         const circle = card.querySelector('.rounded-full');
-        const icon = circle.querySelector('svg');
+        const icon = circle ? circle.querySelector('svg') : null;
+        const overlay = card.querySelector('.rf-overlay');
         if (on) {
             card.classList.remove('border-zinc-200', 'dark:border-zinc-700');
-            card.classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
-            circle.classList.remove('border-zinc-300', 'dark:border-zinc-600');
-            circle.classList.add('border-blue-500', 'bg-blue-500');
-            icon.classList.remove('hidden');
+            card.classList.add('border-blue-500', 'ring-2', 'ring-blue-500/30');
+            if (circle) {
+                circle.classList.remove('border-white/70', 'bg-black/20');
+                circle.classList.add('border-blue-500', 'bg-blue-500');
+            }
+            if (icon) icon.classList.remove('hidden');
+            if (overlay) overlay.classList.remove('hidden');
         } else {
             card.classList.add('border-zinc-200', 'dark:border-zinc-700');
-            card.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
-            circle.classList.add('border-zinc-300', 'dark:border-zinc-600');
-            circle.classList.remove('border-blue-500', 'bg-blue-500');
-            icon.classList.add('hidden');
+            card.classList.remove('border-blue-500', 'ring-2', 'ring-blue-500/30');
+            if (circle) {
+                circle.classList.add('border-white/70', 'bg-black/20');
+                circle.classList.remove('border-blue-500', 'bg-blue-500');
+            }
+            if (icon) icon.classList.add('hidden');
+            if (overlay) overlay.classList.add('hidden');
         }
     }
 
@@ -102,14 +109,38 @@
         if (dur > 0) calcEnd(dur);
     });
 
-    // 검색
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            const q = this.value.toLowerCase().trim();
-            cards.forEach(card => {
-                card.style.display = (!q || (card.dataset.name || '').includes(q)) ? '' : 'none';
+    // 카테고리 필터
+    let activeCat = '';
+    const catFilter = document.getElementById(fId + '_catFilter');
+    if (catFilter) {
+        catFilter.querySelectorAll('.rf-cat-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                activeCat = this.dataset.cat || '';
+                // 버튼 스타일 토글
+                catFilter.querySelectorAll('.rf-cat-btn').forEach(b => {
+                    b.classList.remove('bg-blue-600', 'text-white');
+                    b.classList.add('bg-zinc-100', 'dark:bg-zinc-700', 'text-zinc-600', 'dark:text-zinc-300');
+                });
+                this.classList.add('bg-blue-600', 'text-white');
+                this.classList.remove('bg-zinc-100', 'dark:bg-zinc-700', 'text-zinc-600', 'dark:text-zinc-300');
+                filterCards();
+                console.log('[ResForm] Category filter:', activeCat || 'all');
             });
         });
+    }
+
+    // 검색 + 카테고리 통합 필터
+    function filterCards() {
+        const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        cards.forEach(card => {
+            const matchCat = !activeCat || (card.dataset.cat || '') === activeCat;
+            const matchSearch = !q || (card.dataset.name || '').includes(q);
+            card.style.display = (matchCat && matchSearch) ? '' : 'none';
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', filterCards);
     }
 
     // 폼 제출 검증 + 더블클릭 방지
@@ -125,6 +156,66 @@
         submitBtn.textContent = '처리중...';
         console.log('[ResForm] Submit:', fId, 'services:', checked.length);
     });
+
+    // ─── 고객 검색 자동완성 ───
+    const nameInput = document.getElementById(fId + '_name');
+    const nameDropdown = document.getElementById(fId + '_nameDropdown');
+    const phoneInput = document.getElementById(fId + '_phone');
+    const emailInput = form.querySelector('input[name="customer_email"]');
+    let searchTimer = null;
+    const SEARCH_URL = '<?= $resForm['adminUrl'] ?>/reservations/search-customers';
+
+    if (nameInput && nameDropdown) {
+        nameInput.addEventListener('input', function() {
+            clearTimeout(searchTimer);
+            const q = this.value.trim();
+            if (q.length < 1) { nameDropdown.classList.add('hidden'); return; }
+            searchTimer = setTimeout(async () => {
+                try {
+                    console.log('[ResForm] Customer search:', q);
+                    const resp = await fetch(SEARCH_URL + '?q=' + encodeURIComponent(q));
+                    const data = await resp.json();
+                    if (!data.success || !data.customers.length) {
+                        nameDropdown.classList.add('hidden');
+                        return;
+                    }
+                    nameDropdown.innerHTML = data.customers.map(c => {
+                        const ph = c.phone || '';
+                        const em = c.email || '';
+                        return `<div class="rf-ac-item px-3 py-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition text-sm" data-name="${escAttr(c.name)}" data-phone="${escAttr(ph)}" data-email="${escAttr(em)}">
+                            <span class="font-medium text-zinc-900 dark:text-white">${escHtml(c.name)}</span>
+                            ${ph ? '<span class="ml-2 text-zinc-400 text-xs">' + escHtml(ph) + '</span>' : ''}
+                            ${em ? '<span class="ml-2 text-zinc-400 text-xs">' + escHtml(em) + '</span>' : ''}
+                        </div>`;
+                    }).join('');
+                    nameDropdown.classList.remove('hidden');
+                    // 클릭 바인딩
+                    nameDropdown.querySelectorAll('.rf-ac-item').forEach(item => {
+                        item.addEventListener('click', function() {
+                            nameInput.value = this.dataset.name || '';
+                            if (phoneInput) phoneInput.value = this.dataset.phone || '';
+                            if (emailInput) emailInput.value = this.dataset.email || '';
+                            nameDropdown.classList.add('hidden');
+                            console.log('[ResForm] Customer selected:', this.dataset.name);
+                        });
+                    });
+                } catch (e) {
+                    console.error('[ResForm] Customer search error:', e);
+                    nameDropdown.classList.add('hidden');
+                }
+            }, 300);
+        });
+
+        // 외부 클릭 시 드롭다운 닫기
+        document.addEventListener('click', function(e) {
+            if (!nameInput.contains(e.target) && !nameDropdown.contains(e.target)) {
+                nameDropdown.classList.add('hidden');
+            }
+        });
+    }
+
+    function escHtml(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+    function escAttr(s) { return (s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
     // 초기화
     recalc();
@@ -146,6 +237,13 @@
         form.querySelectorAll('textarea').forEach(t => t.value = '');
         form.querySelectorAll('input[type="email"]').forEach(t => t.value = '');
         if (searchInput) searchInput.value = '';
+        activeCat = '';
+        if (catFilter) {
+            catFilter.querySelectorAll('.rf-cat-btn').forEach((b, i) => {
+                if (i === 0) { b.classList.add('bg-blue-600', 'text-white'); b.classList.remove('bg-zinc-100', 'dark:bg-zinc-700', 'text-zinc-600', 'dark:text-zinc-300'); }
+                else { b.classList.remove('bg-blue-600', 'text-white'); b.classList.add('bg-zinc-100', 'dark:bg-zinc-700', 'text-zinc-600', 'dark:text-zinc-300'); }
+            });
+        }
         cards.forEach(c => c.style.display = '');
         recalc();
         console.log('[ResForm] Reset:', fId, 'date:', date);

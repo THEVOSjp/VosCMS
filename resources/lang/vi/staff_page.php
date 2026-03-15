@@ -23,6 +23,7 @@ return [
     'available_services' => 'Dịch vụ phụ trách',
     'weekly_schedule' => 'Lịch tuần',
     'select_service' => 'Chọn',
+    'book_selected' => 'Đặt dịch vụ đã chọn',
     'price' => 'Giá',
     'duration' => 'Thời gian',
     'minutes' => 'phút',
@@ -30,4 +31,8 @@ return [
     'schedule_calendar' => 'Lịch đặt hẹn',
     'no_available_slots' => 'Không có thời gian trống',
     'selected_date_slots' => ':date Thời gian có sẵn',
+    'booking_summary' => 'Tóm tắt đặt lịch',
+    'booking_datetime' => 'Ngày & Giờ',
+    'total_amount' => 'Tổng cộng',
+    'select_all_hint' => 'Vui lòng chọn dịch vụ, ngày và giờ',
 ];
