@@ -154,6 +154,8 @@ return [
         'restore' => '還原',
         'confirm_restore' => '從此備份還原？目前檔案將被覆蓋。',
         'restore_failed' => '還原失敗。',
+        'delete_backup' => '刪除', 'confirm_delete_backup' => '確定要刪除此備份嗎？刪除後將無法復原。',
+        'backup_deleted' => '備份已刪除。', 'backup_delete_failed' => '刪除備份失敗。',
         'update_now' => '立即更新',
         'confirm_update' => '繼續更新？將自動建立備份。',
         'update_failed' => '更新失敗。',

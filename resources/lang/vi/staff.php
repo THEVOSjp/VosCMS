@@ -37,6 +37,7 @@ return [
         'remove_photo' => 'Xóa ảnh',
         'position' => 'Chức vụ',
         'designation_fee' => 'Phí chỉ định',
+        'banner' => 'Ảnh banner', 'no_banner' => 'Không có banner', 'upload_banner' => 'Tải banner lên', 'remove' => 'Xóa',
         'designation_fee_desc' => 'Phí bổ sung khi chỉ định nhân viên này',
     ],
     'placeholder' => [

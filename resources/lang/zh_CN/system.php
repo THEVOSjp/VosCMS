@@ -154,6 +154,8 @@ return [
         'restore' => '恢复',
         'confirm_restore' => '从此备份恢复？当前文件将被覆盖。',
         'restore_failed' => '恢复失败。',
+        'delete_backup' => '删除', 'confirm_delete_backup' => '确定要删除此备份吗？删除后将无法恢复。',
+        'backup_deleted' => '备份已删除。', 'backup_delete_failed' => '删除备份失败。',
         'update_now' => '立即更新',
         'confirm_update' => '继续更新？将自动创建备份。',
         'update_failed' => '更新失败。',

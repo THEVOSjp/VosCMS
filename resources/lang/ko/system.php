@@ -100,6 +100,8 @@ return [
         'backups' => '백업 목록', 'no_backups' => '저장된 백업이 없습니다.',
         'restore' => '복원', 'confirm_restore' => '이 백업으로 복원하시겠습니까? 현재 파일들이 덮어씌워집니다.',
         'restore_failed' => '복원에 실패했습니다.',
+        'delete_backup' => '삭제', 'confirm_delete_backup' => '이 백업을 삭제하시겠습니까? 삭제 후 복원할 수 없습니다.',
+        'backup_deleted' => '백업이 삭제되었습니다.', 'backup_delete_failed' => '백업 삭제에 실패했습니다.',
         'update_now' => '지금 업데이트',
         'confirm_update' => '업데이트를 진행하시겠습니까? 업데이트 전 자동으로 백업이 생성됩니다.',
         'update_failed' => '업데이트에 실패했습니다.', 'reload_page' => '잠시 후 페이지가 새로고침됩니다.',

@@ -193,9 +193,15 @@ class Updater
      * 변경분만 업데이트 (Patch 모드)
      * 현재 버전과 대상 버전 사이 변경된 파일만 개별 다운로드
      */
+    private function _dbg(string $msg): void {
+        @file_put_contents($this->basePath . '/storage/logs/update-debug.log',
+            '[' . date('H:i:s') . '] [Updater] ' . $msg . "\n", FILE_APPEND);
+    }
+
     public function performPatchUpdate(string $targetVersion = null): array
     {
         $currentVersion = $this->versionInfo['version'] ?? '0.0.0';
+        $this->_dbg("patch: start v{$currentVersion}");
 
         // 1. 최신 릴리스 정보
         $latestRelease = $this->github->getLatestRelease();
@@ -210,6 +216,7 @@ class Updater
         }
 
         // 2. 변경 파일 목록 조회
+        $this->_dbg("patch: getCompare v{$currentVersion}..v{$targetVersion}");
         $compare = $this->github->getCompare('v' . $currentVersion, 'v' . $targetVersion);
         if ($compare === null) {
             return ['success' => false, 'error' => \__('updater.compare_failed')];
@@ -232,13 +239,16 @@ class Updater
 
         // 4. 메인터넌스 모드
         $this->setMaintenanceMode(true);
+        $this->_dbg("patch: maintenance ON, files=" . count($files));
 
         try {
             // 5. 백업 생성
+            $this->_dbg("patch: creating backup...");
             $backupPath = $this->backup->createFull($currentVersion);
             if ($backupPath === null) {
                 throw new \Exception(\__('updater.backup_failed'));
             }
+            $this->_dbg("patch: backup OK");
 
             $applied = 0;
             $deleted = 0;
@@ -256,13 +266,11 @@ class Updater
                 $targetPath = $this->basePath . '/' . $filename;
 
                 if ($file['status'] === 'removed') {
-                    // 삭제된 파일
                     if (file_exists($targetPath)) {
                         @unlink($targetPath);
                         $deleted++;
                     }
                 } else {
-                    // 추가/수정된 파일 — GitHub에서 내용 다운로드
                     $content = $this->github->getFileContent($filename, 'v' . $targetVersion);
                     if ($content === null) {
                         $errors[] = $filename;
@@ -277,6 +285,7 @@ class Updater
                     $applied++;
                 }
             }
+            $this->_dbg("patch: files done, applied={$applied}, deleted={$deleted}, errors=" . count($errors));
 
             // 7. 다운로드 실패 파일이 전체의 20% 이상이면 롤백
             if (!empty($errors) && count($errors) > count($files) * 0.2) {
@@ -284,12 +293,15 @@ class Updater
             }
 
             // 8. DB 마이그레이션
+            $this->_dbg("patch: running migration...");
             $migrationResult = $this->runDatabaseMigration($targetVersion);
+            $this->_dbg("patch: migration result=" . json_encode($migrationResult));
             if (!$migrationResult['success'] && !empty($migrationResult['errors'])) {
                 throw new \Exception(\__('updater.db_migration_failed', ['errors' => implode(', ', $migrationResult['errors'])]));
             }
 
             // 9. 버전 정보 업데이트
+            $this->_dbg("patch: updating version info...");
             $this->updateVersionInfo($targetVersion);
 
             // 10. 백업 정리
@@ -303,6 +315,7 @@ class Updater
 
             // 13. 로그
             $this->logUpdate($currentVersion, $targetVersion, true, "patch: {$applied} applied, {$deleted} deleted" . (!empty($errors) ? ', ' . count($errors) . ' errors' : ''));
+            $this->_dbg("patch: SUCCESS");
 
             return [
                 'success' => true,
@@ -316,6 +329,7 @@ class Updater
             ];
 
         } catch (\Exception $e) {
+            $this->_dbg("patch: FAILED at " . basename($e->getFile()) . ":" . $e->getLine() . " - " . $e->getMessage());
             if (isset($backupPath) && $backupPath) {
                 $this->backup->restore($backupPath);
             }
@@ -422,12 +436,27 @@ class Updater
     }
 
     /**
-     * DB 마이그레이션 실행
+     * DB 마이그레이션 실행 (별도 PDO 연결로 충돌 방지)
      */
     private function runDatabaseMigration(string $targetVersion): array
     {
-        $migrator = new DatabaseMigrator($this->pdo, $this->basePath);
-        return $migrator->migrate($targetVersion);
+        // 기존 PDO가 오염될 수 있으므로 완전히 새로운 연결 사용
+        $dsn = 'mysql:host=' . ($_ENV['DB_HOST'] ?? '127.0.0.1')
+             . ';port=' . ($_ENV['DB_PORT'] ?? '3306')
+             . ';dbname=' . ($_ENV['DB_DATABASE'] ?? 'rezlyx')
+             . ';charset=utf8mb4';
+        $migPdo = new \PDO($dsn, $_ENV['DB_USERNAME'] ?? 'root', $_ENV['DB_PASSWORD'] ?? '', [
+            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+            \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
+        ]);
+        $migPdo->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
+
+        $this->_dbg("migration: fresh PDO created");
+        $migrator = new DatabaseMigrator($migPdo, $this->basePath);
+        $result = $migrator->migrate($targetVersion);
+        $this->_dbg("migration: result=" . json_encode($result));
+        $migPdo = null;
+        return $result;
     }
 
     /**
@@ -514,7 +543,9 @@ class Updater
         try {
             $stmt = $this->pdo->prepare("SELECT `value` FROM rzx_settings WHERE `key` = 'github_token'");
             $stmt->execute();
-            return $stmt->fetchColumn() ?: null;
+            $rows = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $stmt->closeCursor();
+            return !empty($rows) ? $rows[0] : null;
         } catch (\PDOException $e) {
             return null;
         }

@@ -4,7 +4,8 @@ console.log('[Updates] Page loaded');
 const csrfToken = '<?= htmlspecialchars($csrfToken) ?>';
 const currentVersion = '<?= htmlspecialchars($currentVersion) ?>';
 const currentPath = window.location.pathname;
-const ajaxUrl = currentPath + '/ajax';
+// 독립 엔드포인트 사용 (index.php PDO 충돌 회피)
+const ajaxUrl = window.location.origin + '/update-api.php';
 let latestVersion = null;
 
 // 번역 문자열
@@ -26,6 +27,8 @@ const i18n = {
     restore: '<?= __('system.updates.restore') ?>',
     confirmRestore: '<?= __('system.updates.confirm_restore') ?>',
     restoreFailed: '<?= __('system.updates.restore_failed') ?>',
+    deleteBackup: '<?= __('system.updates.delete_backup') ?>',
+    confirmDelete: '<?= __('system.updates.confirm_delete_backup') ?>',
     // 패치 관련
     fullUpdate: '<?= __('system.updates.full_update') ?>',
     patchUpdate: '<?= __('system.updates.patch_update') ?>',
@@ -112,24 +115,24 @@ function renderUpdateAvailable(result) {
                 <p class="text-xs text-blue-600 dark:text-blue-400 mb-0.5">${i18n.latestVersion}</p>
                 <p class="text-lg font-bold text-blue-900 dark:text-blue-300">v${result.latest_version}</p>
             </div>
-            <div class="flex items-center gap-2 flex-wrap justify-end">
-                ${downloadBtn}
-                <button onclick="compareFiles('${result.latest_version}')"
-                        class="px-3 py-2 border border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-400 dark:text-indigo-400 dark:hover:bg-indigo-900/30 text-sm font-medium rounded-lg transition flex items-center" id="compareBtn">
-                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                    </svg>
-                    ${i18n.compareFiles}
-                </button>
-                <button onclick="showUpdateModal('${result.latest_version}', \`${escapeHtml(result.release_notes || '')}\`)"
-                        class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition flex items-center">
-                    ${refreshIcon()}
-                    ${i18n.updateNow}
-                </button>
-            </div>
         </div>
-        <p class="text-sm text-blue-700 dark:text-blue-400">${i18n.updateAvailableMsg}</p>
+        <p class="text-sm text-blue-700 dark:text-blue-400 mb-3">${i18n.updateAvailableMsg}</p>
         ${notes}
+        <div class="flex items-center gap-2 flex-wrap mt-4">
+            ${downloadBtn}
+            <button onclick="compareFiles('${result.latest_version}')"
+                    class="px-3 py-2 border border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-400 dark:text-indigo-400 dark:hover:bg-indigo-900/30 text-sm font-medium rounded-lg transition flex items-center" id="compareBtn">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                ${i18n.compareFiles}
+            </button>
+            <button onclick="showUpdateModal('${result.latest_version}', \`${escapeHtml(result.release_notes || '')}\`)"
+                    class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition flex items-center">
+                ${refreshIcon()}
+                ${i18n.updateNow}
+            </button>
+        </div>
     </div>`;
 }
 
@@ -447,13 +450,36 @@ async function loadBackups() {
                     <p class="text-sm font-medium text-zinc-900 dark:text-white">v${backup.version}</p>
                     <p class="text-xs text-zinc-500 dark:text-zinc-400">${backup.created_at} · ${formatFileSize(backup.size)}</p>
                 </div>
-                <button onclick="restoreBackup('${backup.path}')"
-                        class="px-3 py-1 text-xs text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition">
-                    ${i18n.restore}
-                </button>
+                <div class="flex items-center gap-1">
+                    <button onclick="restoreBackup('${backup.path}')"
+                            class="px-3 py-1 text-xs text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition">
+                        ${i18n.restore}
+                    </button>
+                    <button onclick="deleteBackup('${backup.path}')"
+                            class="px-2 py-1 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition"
+                            title="${i18n.deleteBackup}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
+                </div>
             </div>`).join('');
     } catch (error) {
         listDiv.innerHTML = errorBox(error.message);
+    }
+}
+
+async function deleteBackup(backupPath) {
+    if (!confirm(i18n.confirmDelete)) return;
+    try {
+        const data = await ajaxPost('delete_backup', '&backup_path=' + encodeURIComponent(backupPath));
+        if (data.success) {
+            loadBackups();
+        } else {
+            alert(data.message || data.error || 'Delete failed');
+        }
+    } catch (error) {
+        alert(error.message);
     }
 }
 

@@ -154,6 +154,8 @@ return [
         'restore' => 'Restaurer',
         'confirm_restore' => 'Restaurer a partir de cette sauvegarde ? Les fichiers actuels seront ecrases.',
         'restore_failed' => 'Echec de la restauration.',
+        'delete_backup' => 'Supprimer', 'confirm_delete_backup' => 'Êtes-vous sûr de vouloir supprimer cette sauvegarde ? Elle ne pourra pas être récupérée après la suppression.',
+        'backup_deleted' => 'La sauvegarde a été supprimée.', 'backup_delete_failed' => 'Échec de la suppression de la sauvegarde.',
         'update_now' => 'Mettre a jour maintenant',
         'confirm_update' => 'Proceder a la mise a jour ? Une sauvegarde sera creee automatiquement.',
         'update_failed' => 'Echec de la mise a jour.',

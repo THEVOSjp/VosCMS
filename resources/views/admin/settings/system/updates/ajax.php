@@ -18,6 +18,9 @@ use RzxLib\Core\Updater\Updater;
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
+// 글로벌 $pdo를 새 버퍼링된 연결로 교체 (index.php의 unbuffered 쿼리 충돌 완전 해결)
+$pdo = null; // 기존 연결 해제
+
 /**
  * 별도 PDO 연결 생성 (index.php의 unbuffered 쿼리 충돌 방지)
  */

@@ -37,6 +37,7 @@ return [
         'remove_photo' => 'Remove Photo',
         'position' => 'Position',
         'designation_fee' => 'Designation Fee',
+        'banner' => 'Banner Image', 'no_banner' => 'No banner', 'upload_banner' => 'Upload Banner', 'remove' => 'Remove',
         'designation_fee_desc' => 'Additional fee charged when this staff member is designated',
     ],
     'placeholder' => [

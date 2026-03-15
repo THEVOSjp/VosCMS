@@ -37,6 +37,7 @@ return [
         'remove_photo' => 'Удалить фото',
         'position' => 'Должность',
         'designation_fee' => 'Плата за назначение',
+        'banner' => 'Баннер', 'no_banner' => 'Нет баннера', 'upload_banner' => 'Загрузить баннер', 'remove' => 'Удалить',
         'designation_fee_desc' => 'Дополнительная плата при выборе этого сотрудника',
     ],
     'placeholder' => [

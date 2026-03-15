@@ -37,6 +37,7 @@ return [
         'remove_photo' => 'Eliminar foto',
         'position' => 'Cargo',
         'designation_fee' => 'Tarifa de designación',
+        'banner' => 'Imagen de banner', 'no_banner' => 'Sin banner', 'upload_banner' => 'Subir banner', 'remove' => 'Eliminar',
         'designation_fee_desc' => 'Tarifa adicional al designar a este empleado',
     ],
     'placeholder' => [

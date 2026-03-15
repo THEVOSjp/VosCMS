@@ -27,6 +27,18 @@ class ReservationController extends Controller
     }
 
     /**
+     * POS (Point of Sale)
+     */
+    public function pos(Request $request): Response
+    {
+        $services = Service::active();
+
+        return $this->view('admin.reservations.pos', [
+            'services' => $services,
+        ]);
+    }
+
+    /**
      * 예약 목록
      */
     public function index(Request $request): Response

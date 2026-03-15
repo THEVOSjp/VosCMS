@@ -163,6 +163,29 @@ class Backup
     }
 
     /**
+     * 개별 백업 삭제
+     */
+    public function deleteBackup(string $backupPath): bool
+    {
+        if (!file_exists($backupPath) || !str_starts_with(realpath($backupPath), realpath($this->backupDir))) {
+            return false;
+        }
+
+        $deleted = false;
+        if (unlink($backupPath)) {
+            $deleted = true;
+        }
+
+        // 메타 JSON도 삭제
+        $metaPath = $this->backupDir . '/' . pathinfo(basename($backupPath), PATHINFO_FILENAME) . '.json';
+        if (file_exists($metaPath)) {
+            unlink($metaPath);
+        }
+
+        return $deleted;
+    }
+
+    /**
      * 오래된 백업 정리
      */
     public function cleanOldBackups(int $keepCount = 5): int

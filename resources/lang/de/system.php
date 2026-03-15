@@ -154,6 +154,8 @@ return [
         'restore' => 'Wiederherstellen',
         'confirm_restore' => 'Aus diesem Backup wiederherstellen? Aktuelle Dateien werden ueberschrieben.',
         'restore_failed' => 'Wiederherstellung fehlgeschlagen.',
+        'delete_backup' => 'Löschen', 'confirm_delete_backup' => 'Möchten Sie dieses Backup wirklich löschen? Es kann nach dem Löschen nicht wiederhergestellt werden.',
+        'backup_deleted' => 'Backup wurde gelöscht.', 'backup_delete_failed' => 'Backup konnte nicht gelöscht werden.',
         'update_now' => 'Jetzt aktualisieren',
         'confirm_update' => 'Mit Update fortfahren? Ein Backup wird automatisch erstellt.',
         'update_failed' => 'Update fehlgeschlagen.',

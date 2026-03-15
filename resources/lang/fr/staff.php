@@ -37,6 +37,7 @@ return [
         'remove_photo' => 'Supprimer la photo',
         'position' => 'Poste',
         'designation_fee' => 'Frais de désignation',
+        'banner' => 'Image bannière', 'no_banner' => 'Pas de bannière', 'upload_banner' => 'Télécharger bannière', 'remove' => 'Supprimer',
         'designation_fee_desc' => 'Frais supplémentaires pour la désignation de ce membre du personnel',
     ],
     'placeholder' => [

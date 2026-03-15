@@ -37,6 +37,7 @@ return [
         'remove_photo' => 'Foto entfernen',
         'position' => 'Position',
         'designation_fee' => 'Nominierungsgebühr',
+        'banner' => 'Bannerbild', 'no_banner' => 'Kein Banner', 'upload_banner' => 'Banner hochladen', 'remove' => 'Entfernen',
         'designation_fee_desc' => 'Zusätzliche Gebühr bei Auswahl dieses Mitarbeiters',
     ],
     'placeholder' => [

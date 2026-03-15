@@ -3,7 +3,7 @@
  * RezlyX - Modern Reservation System
  *
  * @package RezlyX
- * @version 1.2.3
+ * @version 1.3.0
  */
 
 define('REZLYX_START', microtime(true));
@@ -106,7 +106,7 @@ try {
         'mysql:host=' . ($_ENV['DB_HOST'] ?? 'localhost') . ';dbname=' . ($_ENV['DB_DATABASE'] ?? 'rezlyx'),
         $_ENV['DB_USERNAME'] ?? 'root',
         $_ENV['DB_PASSWORD'] ?? '',
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true]
     );
 
     // 모든 설정 불러오기
@@ -279,6 +279,34 @@ if (empty($path) || $path === 'index.php') {
     // 페이지 관리 - 위젯 빌더 (홈 페이지)
     } elseif ($adminRoute === 'site/pages/widget-builder') {
         include BASE_PATH . '/resources/views/admin/site/pages-widget-builder.php';
+    // 위젯 관리
+    // 예약 관리 — POST API (상태변경, 생성, 수정)
+    } elseif ($adminRoute === 'reservations' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $apiAction = 'store'; $apiId = null;
+        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
+    } elseif (preg_match('#^reservations/([\w-]+)/(confirm|cancel|complete|no-show|start-service|payment)$#', $adminRoute, $m) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $apiId = $m[1]; $apiAction = $m[2];
+        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
+    } elseif (preg_match('#^reservations/([\w-]+)$#', $adminRoute, $m) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $apiId = $m[1]; $apiAction = 'update';
+        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
+    // 예약 관리 — GET 페이지
+    } elseif ($adminRoute === 'reservations/pos') {
+        include BASE_PATH . '/resources/views/admin/reservations/pos.php';
+    } elseif ($adminRoute === 'reservations') {
+        include BASE_PATH . '/resources/views/admin/reservations/index.php';
+    } elseif ($adminRoute === 'reservations/calendar') {
+        include BASE_PATH . '/resources/views/admin/reservations/calendar.php';
+    } elseif ($adminRoute === 'reservations/statistics') {
+        include BASE_PATH . '/resources/views/admin/reservations/statistics.php';
+    } elseif ($adminRoute === 'reservations/create') {
+        include BASE_PATH . '/resources/views/admin/reservations/create.php';
+    } elseif (preg_match('#^reservations/([\w-]+)/edit$#', $adminRoute, $m)) {
+        $reservationId = $m[1];
+        include BASE_PATH . '/resources/views/admin/reservations/edit.php';
+    } elseif (preg_match('#^reservations/([\w-]+)$#', $adminRoute, $m)) {
+        $reservationId = $m[1];
+        include BASE_PATH . '/resources/views/admin/reservations/show.php';
     // 위젯 관리
     } elseif ($adminRoute === 'site/widgets') {
         include BASE_PATH . '/resources/views/admin/site/widgets.php';

@@ -22,6 +22,7 @@ return [
         'linked_member' => '회원 연동', 'card_number' => '카드번호 (RFID/NFC)',
         'avatar' => '사진', 'upload_photo' => '사진 선택', 'remove_photo' => '사진 삭제',
         'position' => '직책', 'designation_fee' => '지명비',
+        'banner' => '배너 이미지', 'no_banner' => '배너 없음', 'upload_banner' => '배너 업로드', 'remove' => '삭제',
         'designation_fee_desc' => '이 스태프를 지명할 때 부과되는 추가 요금',
     ],
     'placeholder' => [

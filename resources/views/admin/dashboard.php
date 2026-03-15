@@ -38,6 +38,35 @@ try {
         $settings[$row['key']] = $row['value'];
     }
 
+    // 이번 달 예약 현황 (풀 캘린더용) - 월 이동 지원
+    $calYear = (int)($_GET['cal_year'] ?? date('Y'));
+    $calMonth = (int)($_GET['cal_month'] ?? date('m'));
+    if ($calMonth < 1) { $calMonth = 12; $calYear--; }
+    if ($calMonth > 12) { $calMonth = 1; $calYear++; }
+    $calFirstDay = sprintf('%04d-%02d-01', $calYear, $calMonth);
+    $calLastDay = date('Y-m-t', strtotime($calFirstDay));
+
+    $calStmt = $pdo->prepare("SELECT r.*, s.name as service_name FROM {$prefix}reservations r LEFT JOIN {$prefix}services s ON r.service_id = s.id WHERE r.reservation_date BETWEEN ? AND ? ORDER BY r.start_time ASC");
+    $calStmt->execute([$calFirstDay, $calLastDay]);
+    $calReservations = $calStmt->fetchAll(PDO::FETCH_ASSOC);
+    $calByDate = [];
+    foreach ($calReservations as $cr) {
+        $calByDate[$cr['reservation_date']][] = $cr;
+    }
+
+    // 통화 설정
+    $currencySymbols = [
+        'KRW' => '₩', 'USD' => '$', 'JPY' => '¥', 'EUR' => '€',
+        'CNY' => '¥', 'GBP' => '£', 'THB' => '฿', 'VND' => '₫',
+        'MNT' => '₮', 'RUB' => '₽', 'TRY' => '₺', 'IDR' => 'Rp',
+    ];
+    $dashCurrency = $settings['service_currency'] ?? 'KRW';
+    $dashCurrencySymbol = $currencySymbols[$dashCurrency] ?? $dashCurrency;
+    $dashCurrencyPosition = $settings['service_currency_position'] ?? 'prefix';
+
+    // 서비스 목록 (빠른 예약 추가용)
+    $dashServices = $pdo->query("SELECT id, name, duration, price FROM {$prefix}services WHERE is_active = 1 ORDER BY sort_order ASC, name ASC")->fetchAll(PDO::FETCH_ASSOC);
+
     $dbConnected = true;
 } catch (Exception $e) {
     $dbConnected = false;
@@ -257,6 +286,12 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                         </div>
                     </div>
                 </div>
+
+                <!-- 예약 현황 캘린더 (풀 캘린더) -->
+                <?php if ($dbConnected): ?>
+                <?php include __DIR__ . '/dashboard-calendar.php'; ?>
+                <?php endif; ?>
+
             </div>
         </main>
     </div>

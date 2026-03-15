@@ -154,6 +154,8 @@ return [
         'restore' => 'Geri Yükle',
         'confirm_restore' => 'Bu yedekten geri yüklemek istiyor musunuz? Mevcut dosyalar üzerine yazılacaktır.',
         'restore_failed' => 'Geri yükleme başarısız oldu.',
+        'delete_backup' => 'Sil', 'confirm_delete_backup' => 'Bu yedeği silmek istediğinizden emin misiniz? Silindikten sonra kurtarılamaz.',
+        'backup_deleted' => 'Yedek silindi.', 'backup_delete_failed' => 'Yedek silinemedi.',
         'update_now' => 'Şimdi Güncelle',
         'confirm_update' => 'Güncellemeye devam etmek istiyor musunuz? Güncellemeden önce otomatik olarak yedek oluşturulur.',
         'update_failed' => 'Güncelleme başarısız oldu.',

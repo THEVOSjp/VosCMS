@@ -37,6 +37,7 @@ return [
         'remove_photo' => '写真を削除',
         'position' => '役職',
         'designation_fee' => '指名料',
+        'banner' => 'バナー画像', 'no_banner' => 'バナーなし', 'upload_banner' => 'バナーアップロード', 'remove' => '削除',
         'designation_fee_desc' => 'このスタッフを指名した際に追加される料金',
     ],
     'placeholder' => [

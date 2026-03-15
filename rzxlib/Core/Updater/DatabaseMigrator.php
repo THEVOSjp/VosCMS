@@ -37,7 +37,9 @@ class DatabaseMigrator
                 "SELECT `value` FROM {$this->prefix}settings WHERE `key` = 'version'"
             );
             $stmt->execute();
-            return $stmt->fetchColumn() ?: '1.0.0';
+            $rows = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $stmt->closeCursor();
+            return !empty($rows) ? $rows[0] : '1.0.0';
         } catch (\PDOException $e) {
             return '1.0.0';
         }
@@ -170,26 +172,36 @@ class DatabaseMigrator
             $sql = str_replace('rzx_', $this->prefix, $sql);
         }
 
+        // AFTER 절 제거 (대상 컬럼이 없으면 에러 → 안전하게 제거)
+        $sql = preg_replace('/\bAFTER\s+`?\w+`?/i', '', $sql);
+
+        // SELECT 1 → DO 0 (결과셋 반환 방지)
+        $sql = str_replace("'SELECT 1'", "'DO 0'", $sql);
+
         // SQL 문 분리 (세미콜론 기준, 문자열 내 세미콜론 무시)
         $statements = $this->splitSql($sql);
 
-        $this->pdo->beginTransaction();
+        // DDL(ALTER TABLE 등)은 MySQL에서 암시적 커밋을 유발하므로
+        // 트랜잭션 대신 개별 실행 + 에러 시 중단 방식 사용
         try {
             foreach ($statements as $stmt) {
                 $stmt = trim($stmt);
                 if (empty($stmt) || str_starts_with($stmt, '--') || str_starts_with($stmt, '#')) {
                     continue;
                 }
-                $this->pdo->exec($stmt);
+                // query() 사용: EXECUTE stmt가 SELECT를 실행할 경우
+                // 결과셋이 반환되므로 이를 소비해야 unbuffered query 에러 방지
+                $result = $this->pdo->query($stmt);
+                if ($result !== false) {
+                    $result->closeCursor();
+                }
             }
-            $this->pdo->commit();
 
             // 마이그레이션 기록
             $this->recordMigration($patch['filename']);
 
             return ['success' => true];
         } catch (\PDOException $e) {
-            $this->pdo->rollBack();
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -245,6 +257,7 @@ class DatabaseMigrator
              ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)"
         );
         $stmt->execute([$version]);
+        $stmt->closeCursor();
     }
 
     /**
@@ -258,6 +271,7 @@ class DatabaseMigrator
                  VALUES (?, (SELECT COALESCE(MAX(b.batch), 0) + 1 FROM {$this->prefix}migrations b))"
             );
             $stmt->execute(['patch_' . $name]);
+            $stmt->closeCursor();
         } catch (\PDOException $e) {
             // migrations 테이블이 없어도 패치 자체는 성공
             error_log('Migration record failed: ' . $e->getMessage());

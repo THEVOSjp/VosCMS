@@ -37,6 +37,7 @@ return [
         'remove_photo' => 'Зураг устгах',
         'position' => 'Албан тушаал',
         'designation_fee' => 'Нэрлэсэн төлбөр',
+        'banner' => 'Баннер зураг', 'no_banner' => 'Баннер байхгүй', 'upload_banner' => 'Баннер оруулах', 'remove' => 'Устгах',
         'designation_fee_desc' => 'Энэ ажилтныг сонгоход нэмэлт төлбөр',
     ],
     'placeholder' => [

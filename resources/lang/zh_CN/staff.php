@@ -37,6 +37,7 @@ return [
         'remove_photo' => '删除照片',
         'position' => '职位',
         'designation_fee' => '指名费',
+        'banner' => '横幅图片', 'no_banner' => '无横幅', 'upload_banner' => '上传横幅', 'remove' => '删除',
         'designation_fee_desc' => '指定此员工时收取的附加费用',
     ],
     'placeholder' => [

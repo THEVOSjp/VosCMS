@@ -56,7 +56,9 @@ class UpdateChecker
         try {
             $stmt = $pdo->prepare("SELECT `value` FROM rzx_settings WHERE `key` = 'github_token'");
             $stmt->execute();
-            $encToken = $stmt->fetchColumn();
+            $rows = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $stmt->closeCursor();
+            $encToken = !empty($rows) ? $rows[0] : null;
             if ($encToken) {
                 $token = \RzxLib\Core\Helpers\Encryption::decrypt($encToken);
             }

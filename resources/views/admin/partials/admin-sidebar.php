@@ -19,6 +19,13 @@ if (!function_exists('isActiveMenu')) {
     }
 }
 
+// 예약 관리 서브페이지 여부
+$isReservationsPage = strpos($currentPath, '/reservations') !== false;
+$isReservationsPosPage = strpos($currentPath, '/reservations/pos') !== false;
+$isReservationsCalendarPage = strpos($currentPath, '/reservations/calendar') !== false;
+$isReservationsStatsPage = strpos($currentPath, '/reservations/statistics') !== false;
+$isReservationsCreatePage = strpos($currentPath, '/reservations/create') !== false;
+
 // 서비스 관리 서브페이지 여부
 $isServicesPage = strpos($currentPath, '/services') !== false && strpos($currentPath, '/staff') === false;
 $isServicesSettingsPage = strpos($currentPath, '/services/settings') !== false;
@@ -79,12 +86,51 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
             <span class="sidebar-text"><?= __('admin.nav.dashboard') ?></span>
         </a>
         <?php if (\RzxLib\Core\Auth\AdminAuth::can('reservations')): ?>
-        <a href="<?php echo $adminUrl; ?>/reservations" class="flex items-center px-6 py-3 <?php echo isActiveMenu('/reservations', $currentPath) ? 'text-white bg-blue-600' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="<?= __('admin.nav.reservations') ?>">
-            <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-            <span class="sidebar-text"><?= __('admin.nav.reservations') ?></span>
-        </a>
+        <div class="reservations-management-menu has-submenu" data-submenu="reservationsSubMenu">
+            <button onclick="toggleReservationsMenu()" class="flex items-center justify-between w-full px-6 py-3 <?php echo $isReservationsPage ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="<?= __('admin.nav.reservations') ?>">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="sidebar-text"><?= __('admin.nav.reservations') ?></span>
+                </div>
+                <svg id="reservationsMenuArrow" class="w-4 h-4 transition-transform sidebar-text <?php echo $isReservationsPage ? 'rotate-180' : ''; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div id="reservationsSubMenu" class="<?php echo $isReservationsPage ? '' : 'hidden'; ?> bg-zinc-900">
+                <a href="<?php echo $adminUrl; ?>/reservations/pos" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isReservationsPosPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                    <?= __('reservations.pos') ?>
+                </a>
+                <a href="<?php echo $adminUrl; ?>/reservations" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isReservationsPage && !$isReservationsPosPage && !$isReservationsCalendarPage && !$isReservationsStatsPage && !$isReservationsCreatePage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <?= __('reservations.list') ?>
+                </a>
+                <a href="<?php echo $adminUrl; ?>/reservations/calendar" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isReservationsCalendarPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <?= __('reservations.calendar') ?>
+                </a>
+                <a href="<?php echo $adminUrl; ?>/reservations/statistics" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isReservationsStatsPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <?= __('reservations.statistics') ?>
+                </a>
+                <a href="<?php echo $adminUrl; ?>/reservations/create" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isReservationsCreatePage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    <?= __('reservations.create') ?>
+                </a>
+            </div>
+        </div>
         <?php endif; ?>
         <!-- 서비스 관리 메뉴 -->
         <?php if (\RzxLib\Core\Auth\AdminAuth::can('services')): ?>
@@ -425,6 +471,11 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
         return document.getElementById('adminSidebar').classList.contains('sidebar-collapsed');
     }
 
+    function toggleReservationsMenu() {
+        if (isCollapsed()) return;
+        var s = document.getElementById('reservationsSubMenu'), a = document.getElementById('reservationsMenuArrow');
+        if (s && a) { s.classList.toggle('hidden'); a.classList.toggle('rotate-180'); }
+    }
     function toggleServicesMenu() {
         if (isCollapsed()) return;
         var s = document.getElementById('servicesSubMenu'), a = document.getElementById('servicesMenuArrow');

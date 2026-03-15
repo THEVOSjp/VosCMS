@@ -154,6 +154,8 @@ return [
         'restore' => 'Restaurar',
         'confirm_restore' => 'Restaurar desde esta copia de seguridad? Los archivos actuales seran sobrescritos.',
         'restore_failed' => 'Error al restaurar.',
+        'delete_backup' => 'Eliminar', 'confirm_delete_backup' => '¿Está seguro de que desea eliminar esta copia de seguridad? No se podrá recuperar después de la eliminación.',
+        'backup_deleted' => 'La copia de seguridad ha sido eliminada.', 'backup_delete_failed' => 'Error al eliminar la copia de seguridad.',
         'update_now' => 'Actualizar ahora',
         'confirm_update' => 'Proceder con la actualizacion? Se creara una copia de seguridad automaticamente.',
         'update_failed' => 'Error en la actualizacion.',

@@ -182,6 +182,8 @@ $router->group(['prefix' => '/admin', 'middleware' => ['auth', 'admin']], functi
     $router->get('/stats', 'Admin\\DashboardController@stats')->name('admin.stats');
 
     // 예약 관리
+    $router->get('/reservations/pos', 'Admin\\ReservationController@pos')
+        ->name('admin.reservations.pos');
     $router->get('/reservations', 'Admin\\ReservationController@index')
         ->name('admin.reservations.index');
     $router->get('/reservations/calendar', 'Admin\\ReservationController@calendar')

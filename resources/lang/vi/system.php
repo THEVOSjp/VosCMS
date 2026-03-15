@@ -154,6 +154,8 @@ return [
         'restore' => 'Khôi phục',
         'confirm_restore' => 'Khôi phục từ bản sao lưu này? Các file hiện tại sẽ bị ghi đè.',
         'restore_failed' => 'Khôi phục thất bại.',
+        'delete_backup' => 'Xóa', 'confirm_delete_backup' => 'Bạn có chắc chắn muốn xóa bản sao lưu này không? Không thể khôi phục sau khi xóa.',
+        'backup_deleted' => 'Bản sao lưu đã được xóa.', 'backup_delete_failed' => 'Xóa bản sao lưu thất bại.',
         'update_now' => 'Cập nhật ngay',
         'confirm_update' => 'Tiến hành cập nhật? Sao lưu sẽ được tự động tạo.',
         'update_failed' => 'Cập nhật thất bại.',

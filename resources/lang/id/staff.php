@@ -37,6 +37,7 @@ return [
         'remove_photo' => 'Hapus foto',
         'position' => 'Jabatan',
         'designation_fee' => 'Biaya penunjukan',
+        'banner' => 'Gambar Banner', 'no_banner' => 'Tidak ada banner', 'upload_banner' => 'Unggah Banner', 'remove' => 'Hapus',
         'designation_fee_desc' => 'Biaya tambahan saat staf ini ditunjuk',
     ],
     'placeholder' => [

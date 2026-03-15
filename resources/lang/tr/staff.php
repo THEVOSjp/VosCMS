@@ -37,6 +37,7 @@ return [
         'remove_photo' => 'Fotoğrafı kaldır',
         'position' => 'Pozisyon',
         'designation_fee' => 'Atama ücreti',
+        'banner' => 'Banner Görseli', 'no_banner' => 'Banner yok', 'upload_banner' => 'Banner Yükle', 'remove' => 'Kaldır',
         'designation_fee_desc' => 'Bu personel seçildiğinde alınan ek ücret',
     ],
     'placeholder' => [

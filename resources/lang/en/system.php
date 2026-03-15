@@ -154,6 +154,8 @@ return [
         'restore' => 'Restore',
         'confirm_restore' => 'Restore from this backup? Current files will be overwritten.',
         'restore_failed' => 'Failed to restore.',
+        'delete_backup' => 'Delete', 'confirm_delete_backup' => 'Are you sure you want to delete this backup? It cannot be recovered after deletion.',
+        'backup_deleted' => 'Backup has been deleted.', 'backup_delete_failed' => 'Failed to delete backup.',
         'update_now' => 'Update Now',
         'confirm_update' => 'Proceed with update? A backup will be created automatically.',
         'update_failed' => 'Update failed.',

@@ -154,6 +154,8 @@ return [
         'restore' => '復元',
         'confirm_restore' => 'このバックアップから復元しますか？現在のファイルが上書きされます。',
         'restore_failed' => '復元に失敗しました。',
+        'delete_backup' => '削除', 'confirm_delete_backup' => 'このバックアップを削除してもよろしいですか？削除後は復元できません。',
+        'backup_deleted' => 'バックアップが削除されました。', 'backup_delete_failed' => 'バックアップの削除に失敗しました。',
         'update_now' => '今すぐアップデート',
         'confirm_update' => 'アップデートを実行しますか？自動的にバックアップが作成されます。',
         'update_failed' => 'アップデートに失敗しました。',

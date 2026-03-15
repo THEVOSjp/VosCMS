@@ -154,6 +154,8 @@ return [
         'restore' => 'Pulihkan',
         'confirm_restore' => 'Pulihkan dari cadangan ini? File saat ini akan ditimpa.',
         'restore_failed' => 'Gagal memulihkan.',
+        'delete_backup' => 'Hapus', 'confirm_delete_backup' => 'Apakah Anda yakin ingin menghapus cadangan ini? Cadangan tidak dapat dipulihkan setelah dihapus.',
+        'backup_deleted' => 'Cadangan telah dihapus.', 'backup_delete_failed' => 'Gagal menghapus cadangan.',
         'update_now' => 'Perbarui Sekarang',
         'confirm_update' => 'Lanjutkan pembaruan? Cadangan akan dibuat secara otomatis.',
         'update_failed' => 'Pembaruan gagal.',

@@ -10,10 +10,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $fields = [
             'service_default_duration' => trim($_POST['service_default_duration'] ?? '60'),
             'service_default_buffer' => trim($_POST['service_default_buffer'] ?? '0'),
+            'booking_same_day' => trim($_POST['booking_same_day'] ?? '1'),
             'service_advance_booking_days' => trim($_POST['service_advance_booking_days'] ?? '30'),
             'service_min_notice_hours' => trim($_POST['service_min_notice_hours'] ?? '1'),
             'service_max_capacity' => trim($_POST['service_max_capacity'] ?? '1'),
             'service_price_display' => trim($_POST['service_price_display'] ?? 'show'),
+            'service_deposit_enabled' => trim($_POST['service_deposit_enabled'] ?? '0'),
+            'service_deposit_type' => trim($_POST['service_deposit_type'] ?? 'fixed'),
+            'service_deposit_amount' => trim($_POST['service_deposit_amount'] ?? '0'),
+            'service_deposit_percent' => trim($_POST['service_deposit_percent'] ?? '0'),
+            'service_deposit_refund_hours' => trim($_POST['service_deposit_refund_hours'] ?? '24'),
         ];
 
         $stmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
@@ -74,6 +80,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     </div>
                 </div>
 
+                <!-- 당일 예약 허용 -->
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                        <?= __('services.settings.general.same_day_booking') ?>
+                    </label>
+                    <?php $sameDayEnabled = ($settings['booking_same_day'] ?? '1') === '1'; ?>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="hidden" name="booking_same_day" value="0">
+                        <input type="checkbox" name="booking_same_day" value="1"
+                               <?= $sameDayEnabled ? 'checked' : '' ?>
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-zinc-200 peer-focus:ring-2 peer-focus:ring-blue-500 dark:peer-focus:ring-blue-600 rounded-full peer dark:bg-zinc-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:after:border-zinc-500 peer-checked:bg-blue-600"></div>
+                        <span class="ml-3 text-sm text-zinc-500 dark:text-zinc-400"><?= __('services.settings.general.same_day_booking_hint') ?></span>
+                    </label>
+                </div>
+
                 <!-- 예약 가능 기간 -->
                 <div>
                     <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
@@ -87,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     </div>
                 </div>
 
-                <!-- 최소 사전 알림 -->
+                <!-- 최소 사전 예약 마감 -->
                 <div>
                     <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                         <?= __('services.settings.general.min_notice_hours') ?>
@@ -98,6 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                                class="w-32 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <span class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('services.settings.general.hours') ?></span>
                     </div>
+                    <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1"><?= __('services.settings.general.min_notice_hours_hint') ?></p>
                 </div>
 
                 <!-- 기본 최대 수용 인원 -->
@@ -124,6 +147,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     </select>
                 </div>
             </div>
+
+            <!-- 예약금 설정 구분선 -->
+            <hr class="border-zinc-200 dark:border-zinc-700">
+
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white flex items-center">
+                <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <?= __('services.settings.general.deposit_title') ?>
+            </h3>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 -mt-4">
+                <?= __('services.settings.general.deposit_description') ?>
+            </p>
+
+            <?php
+                $depositEnabled = ($settings['service_deposit_enabled'] ?? '0') === '1';
+                $depositType = $settings['service_deposit_type'] ?? 'fixed';
+                $depositAmount = $settings['service_deposit_amount'] ?? '0';
+                $depositPercent = $settings['service_deposit_percent'] ?? '0';
+                $depositRefundHours = $settings['service_deposit_refund_hours'] ?? '24';
+
+                // 통화 기호
+                $currencySymbols = [
+                    'KRW' => '₩', 'USD' => '$', 'JPY' => '¥', 'EUR' => '€',
+                    'CNY' => '¥', 'GBP' => '£', 'THB' => '฿', 'VND' => '₫',
+                    'MNT' => '₮', 'RUB' => '₽', 'TRY' => '₺', 'IDR' => 'Rp',
+                ];
+                $sCurrency = $settings['service_currency'] ?? 'KRW';
+                $sCurrencySymbol = $currencySymbols[$sCurrency] ?? $sCurrency;
+            ?>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 예약금 사용 여부 -->
+                <div class="md:col-span-2">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="hidden" name="service_deposit_enabled" value="0">
+                        <input type="checkbox" name="service_deposit_enabled" value="1"
+                               id="depositEnabled"
+                               <?= $depositEnabled ? 'checked' : '' ?>
+                               class="sr-only peer"
+                               onchange="toggleDepositFields()">
+                        <div class="w-11 h-6 bg-zinc-200 peer-focus:ring-2 peer-focus:ring-blue-500 dark:peer-focus:ring-blue-600 rounded-full peer dark:bg-zinc-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:after:border-zinc-500 peer-checked:bg-blue-600"></div>
+                        <span class="ml-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            <?= __('services.settings.general.deposit_enabled') ?>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- 예약금 타입 -->
+                <div id="depositTypeField" class="<?= $depositEnabled ? '' : 'opacity-50 pointer-events-none' ?>">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                        <?= __('services.settings.general.deposit_type') ?>
+                    </label>
+                    <select name="service_deposit_type" id="depositType"
+                            onchange="toggleDepositAmountFields()"
+                            class="w-48 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="fixed" <?= $depositType === 'fixed' ? 'selected' : '' ?>><?= __('services.settings.general.deposit_type_fixed') ?></option>
+                        <option value="percent" <?= $depositType === 'percent' ? 'selected' : '' ?>><?= __('services.settings.general.deposit_type_percent') ?></option>
+                    </select>
+                </div>
+
+                <!-- 예약금 금액 (고정) -->
+                <div id="depositAmountField" class="<?= $depositEnabled ? '' : 'opacity-50 pointer-events-none' ?> <?= $depositType === 'percent' ? 'hidden' : '' ?>">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                        <?= __('services.settings.general.deposit_amount') ?>
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-zinc-500 dark:text-zinc-400"><?= $sCurrencySymbol ?></span>
+                        <input type="number" name="service_deposit_amount" min="0" step="1"
+                               value="<?= htmlspecialchars($depositAmount) ?>"
+                               class="w-40 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- 예약금 비율 (%) -->
+                <div id="depositPercentField" class="<?= $depositEnabled ? '' : 'opacity-50 pointer-events-none' ?> <?= $depositType === 'fixed' ? 'hidden' : '' ?>">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                        <?= __('services.settings.general.deposit_percent') ?>
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" name="service_deposit_percent" min="0" max="100" step="1"
+                               value="<?= htmlspecialchars($depositPercent) ?>"
+                               class="w-32 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <span class="text-sm text-zinc-500 dark:text-zinc-400">%</span>
+                    </div>
+                    <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1"><?= __('services.settings.general.deposit_percent_hint') ?></p>
+                </div>
+
+                <!-- 환불 기한 -->
+                <div id="depositRefundField" class="<?= $depositEnabled ? '' : 'opacity-50 pointer-events-none' ?>">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                        <?= __('services.settings.general.deposit_refund_hours') ?>
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" name="service_deposit_refund_hours" min="0" max="168"
+                               value="<?= htmlspecialchars($depositRefundHours) ?>"
+                               class="w-32 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <span class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('services.settings.general.hours') ?></span>
+                    </div>
+                    <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1"><?= __('services.settings.general.deposit_refund_hint') ?></p>
+                </div>
+            </div>
         </div>
 
         <!-- 저장 버튼 -->
@@ -135,3 +258,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         </div>
     </form>
 </div>
+
+<script>
+console.log('[ServiceSettings] General tab loaded');
+
+function toggleDepositFields() {
+    const enabled = document.getElementById('depositEnabled').checked;
+    console.log('[ServiceSettings] Deposit enabled:', enabled);
+    const fields = ['depositTypeField', 'depositAmountField', 'depositPercentField', 'depositRefundField'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (enabled) {
+                el.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                el.classList.add('opacity-50', 'pointer-events-none');
+            }
+        }
+    });
+    if (enabled) toggleDepositAmountFields();
+}
+
+function toggleDepositAmountFields() {
+    const type = document.getElementById('depositType').value;
+    console.log('[ServiceSettings] Deposit type:', type);
+    const amountField = document.getElementById('depositAmountField');
+    const percentField = document.getElementById('depositPercentField');
+    if (type === 'fixed') {
+        amountField.classList.remove('hidden');
+        percentField.classList.add('hidden');
+    } else {
+        amountField.classList.add('hidden');
+        percentField.classList.remove('hidden');
+    }
+}
+</script>
