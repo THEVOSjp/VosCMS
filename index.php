@@ -87,9 +87,15 @@ if (isset($_GET['lang'])) {
     exit;
 }
 
+$_appVersion = '1.0.0';
+if (preg_match('/@version\s+(\d+\.\d+\.\d+)/', file_get_contents(__FILE__), $_vm)) {
+    $_appVersion = $_vm[1];
+}
+
 $config = [
     'app_name' => $_ENV['APP_NAME'] ?? 'RezlyX',
     'app_url' => $_ENV['APP_URL'] ?? 'http://localhost',
+    'app_version' => $_appVersion,
     'debug' => ($_ENV['APP_DEBUG'] ?? 'false') === 'true',
     'locale' => current_locale(),
     'admin_path' => $_ENV['ADMIN_PATH'] ?? 'admin',
