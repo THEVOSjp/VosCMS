@@ -23,6 +23,7 @@ class Updater
     private array $preserve = [
         '.env',
         '.env.local',
+        '.htaccess',    // 서버별 RewriteBase 설정 보존
         'storage',
         'uploads',
         'version.json', // 업데이트 후 별도 처리
