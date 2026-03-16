@@ -14,4 +14,9 @@ return [
     'restore_complete' => '이전 버전으로 복원되었습니다.',
     'no_patches' => '적용할 패치가 없습니다.',
     'file_read_failed' => '파일 읽기 실패',
+    'compare_failed' => '버전 비교에 실패했습니다.',
+    'no_changes' => '변경된 파일이 없습니다.',
+    'too_many_changes' => '변경 파일이 :count개로 너무 많습니다 (최대 :max). 전체 업데이트를 사용하세요.',
+    'patch_too_many_errors' => '다운로드 실패 파일이 :count개입니다. 롤백합니다.',
+    'health_check_failed' => '업데이트 후 헬스체크 실패 - 핵심 파일 누락',
 ];

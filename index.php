@@ -3,7 +3,7 @@
  * RezlyX - Modern Reservation System
  *
  * @package RezlyX
- * @version 1.5.0
+ * @see version.json for current version
  */
 
 define('REZLYX_START', microtime(true));
@@ -87,10 +87,10 @@ if (isset($_GET['lang'])) {
     exit;
 }
 
-$_appVersion = '1.0.0';
-if (preg_match('/@version\s+(\d+\.\d+\.\d+)/', file_get_contents(__FILE__), $_vm)) {
-    $_appVersion = $_vm[1];
-}
+// 버전은 version.json에서 단일 소스로 관리
+$_versionFile = BASE_PATH . '/version.json';
+$_versionData = file_exists($_versionFile) ? json_decode(file_get_contents($_versionFile), true) : [];
+$_appVersion = $_versionData['version'] ?? '1.0.0';
 
 $config = [
     'app_name' => $_ENV['APP_NAME'] ?? 'RezlyX',
@@ -145,10 +145,7 @@ try {
 // 자동 DB 마이그레이션 체크 (플래그 파일로 매 요청 방지)
 if (isset($pdo)) {
     $migrationFlag = BASE_PATH . '/storage/.migration_checked';
-    $codeVersion = null;
-    if (preg_match('/@version\s+(\d+\.\d+\.\d+)/', file_get_contents(__FILE__), $_vm)) {
-        $codeVersion = $_vm[1];
-    }
+    $codeVersion = $_appVersion;
     $flagValid = file_exists($migrationFlag) && (filemtime($migrationFlag) > time() - 3600)
         && trim(file_get_contents($migrationFlag)) === ($codeVersion ?? '');
 

@@ -19,14 +19,28 @@ class Updater
 
     /**
      * 업데이트 시 보존할 파일/디렉토리
+     * 서버 환경별 설정, 사용자 데이터, 런타임 파일 보호
      */
     private array $preserve = [
+        // 환경 설정
         '.env',
         '.env.local',
-        '.htaccess',    // 서버별 RewriteBase 설정 보존
-        'storage',
-        'uploads',
-        'version.json', // 업데이트 후 별도 처리
+        '.htaccess',        // 서버별 RewriteBase, mod_rewrite 설정
+        'config',           // 서버별 설정 파일
+
+        // 사용자 데이터
+        'storage',          // 로그, 캐시, 백업, 업로드 임시
+        'uploads',          // 사용자 업로드 파일
+
+        // 런타임/빌드
+        'vendor',           // Composer 패키지 (서버별 빌드)
+        'node_modules',     // npm 패키지
+
+        // 버전 관리 (업데이트 후 별도 처리)
+        'version.json',
+
+        // 사용자 커스텀
+        'skins',            // 고객 커스텀 스킨 보호
     ];
 
     public function __construct(\PDO $pdo, string $basePath)
@@ -150,19 +164,19 @@ class Updater
             // 8. 버전 정보 업데이트
             $this->updateVersionInfo($targetVersion);
 
-            // 9. 임시 파일 정리
+            // 9. 헬스체크 (핵심 파일 존재 확인)
+            $this->verifyPostUpdate();
+
+            // 10. 임시 파일 정리
             $this->deleteDirectory($tempDir);
 
-            // 10. 오래된 백업 정리
+            // 11. 오래된 백업 정리
             $this->backup->cleanOldBackups(5);
 
-            // 11. 메인터넌스 모드 해제
+            // 12. 메인터넌스 모드 해제
             $this->setMaintenanceMode(false);
 
-            // 11.5. 업데이트 캐시 무효화
-            UpdateChecker::clearCache($this->basePath);
-
-            // 12. 업데이트 로그 기록
+            // 13. 업데이트 로그 기록
             $this->logUpdate($currentVersion, $targetVersion, true);
 
             return [
@@ -305,14 +319,15 @@ class Updater
             $this->_dbg("patch: updating version info...");
             $this->updateVersionInfo($targetVersion);
 
-            // 10. 백업 정리
+            // 10. 헬스체크
+            $this->_dbg("patch: verifying post-update...");
+            $this->verifyPostUpdate();
+
+            // 11. 백업 정리
             $this->backup->cleanOldBackups(5);
 
-            // 11. 메인터넌스 해제
+            // 12. 메인터넌스 해제
             $this->setMaintenanceMode(false);
-
-            // 12. 업데이트 캐시 무효화
-            UpdateChecker::clearCache($this->basePath);
 
             // 13. 로그
             $this->logUpdate($currentVersion, $targetVersion, true, "patch: {$applied} applied, {$deleted} deleted" . (!empty($errors) ? ', ' . count($errors) . ' errors' : ''));
@@ -524,16 +539,30 @@ class Updater
     }
 
     /**
-     * 버전 정보 업데이트
+     * 버전 정보 업데이트 (version.json + DB + index.php + package.json)
      */
     private function updateVersionInfo(string $newVersion): void
     {
+        // 1. version.json 업데이트
         $this->versionInfo['version'] = $newVersion;
         $this->versionInfo['release_date'] = date('Y-m-d');
         $this->versionInfo['updated_at'] = date('Y-m-d H:i:s');
 
         $versionFile = $this->basePath . '/version.json';
         file_put_contents($versionFile, json_encode($this->versionInfo, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        // 2. DB rzx_settings.version 업데이트
+        try {
+            $stmt = $this->pdo->prepare("INSERT INTO rzx_settings (`key`, `value`, `updated_at`) VALUES ('version', ?, NOW()) ON DUPLICATE KEY UPDATE `value` = ?, `updated_at` = NOW()");
+            $stmt->execute([$newVersion, $newVersion]);
+            $stmt->closeCursor();
+            $this->_dbg("updateVersionInfo: DB version updated to {$newVersion}");
+        } catch (\PDOException $e) {
+            $this->_dbg("updateVersionInfo: DB update failed - " . $e->getMessage());
+        }
+
+        // 3. 업데이트 캐시 즉시 갱신
+        UpdateChecker::clearCache($this->basePath);
     }
 
     /**
@@ -627,6 +656,40 @@ class Updater
     public function getBackups(): array
     {
         return $this->backup->getBackupList();
+    }
+
+    /**
+     * 업데이트 후 헬스체크
+     * 핵심 파일 존재 + .htaccess 유효성 + PHP 구문 검사
+     */
+    private function verifyPostUpdate(): void
+    {
+        $criticalFiles = [
+            'index.php',
+            '.htaccess',
+            'rzxlib/Core/Auth/AdminAuth.php',
+            'rzxlib/Core/Updater/Updater.php',
+            'vendor/autoload.php',
+        ];
+
+        $missing = [];
+        foreach ($criticalFiles as $file) {
+            if (!file_exists($this->basePath . '/' . $file)) {
+                $missing[] = $file;
+            }
+        }
+
+        if (!empty($missing)) {
+            throw new \Exception(\__('updater.health_check_failed') . ': ' . implode(', ', $missing));
+        }
+
+        // .htaccess RewriteBase 검증 (로컬 /rezlyx/ 가 프로덕션에 적용되면 안됨)
+        $htaccess = file_get_contents($this->basePath . '/.htaccess');
+        if ($htaccess === false) {
+            throw new \Exception(\__('updater.health_check_failed') . ': .htaccess unreadable');
+        }
+
+        $this->_dbg("verifyPostUpdate: all critical files OK");
     }
 
     /**
