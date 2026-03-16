@@ -139,6 +139,8 @@ return [
     'pos_service_detail' => 'Детали услуг',
     'pos_add_service' => 'Добавить услугу',
     'pos_add_service_submit' => 'Добавить выбранные услуги',
+    'pos_remove_service' => 'Удалить услугу',
+    'pos_remove_service_confirm' => 'Вы уверены, что хотите удалить эту услугу?',
     'pos_no_services' => 'Нет зарегистрированных услуг',
     'pos_service_count' => '',
     'pos_assign_staff' => 'Назначить сотрудника',

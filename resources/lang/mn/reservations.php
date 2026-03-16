@@ -135,6 +135,8 @@ return [
     'pos_service_detail' => 'Үйлчилгээний дэлгэрэнгүй',
     'pos_add_service' => 'Үйлчилгээ нэмэх',
     'pos_add_service_submit' => 'Сонгосон үйлчилгээг нэмэх',
+    'pos_remove_service' => 'Үйлчилгээ устгах',
+    'pos_remove_service_confirm' => 'Энэ үйлчилгээг устгах уу?',
     'pos_no_services' => 'Бүртгэлтэй үйлчилгээ байхгүй',
     'pos_service_count' => '',
     'pos_assign_staff' => 'Ажилтан томилох',

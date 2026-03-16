@@ -192,6 +192,7 @@ Object.assign(POS, {
     },
 
     renderServiceList(services) {
+        this._serviceData = services;
         const statusCls = {
             pending: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
             confirmed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -223,7 +224,7 @@ Object.assign(POS, {
             const startT = (s.start_time || '').substring(0, 5);
             const endT = (s.end_time || '').substring(0, 5);
 
-            return `<div class="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
+            return `<div class="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg group">
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 mb-1">
                         <span class="text-sm font-semibold text-zinc-900 dark:text-white truncate">${this.escHtml(s.service_name || '-')}</span>
@@ -231,7 +232,14 @@ Object.assign(POS, {
                     </div>
                     <div class="text-xs text-zinc-500">${startT}${endT ? ' ~ ' + endT : ''} · ${dur}<?= __('reservations.pos_min') ?>${s.staff_name ? ' · <span class="text-violet-600 dark:text-violet-400">' + this.escHtml(s.staff_name) + '</span>' : ''}</div>
                 </div>
-                <span class="text-sm font-bold text-zinc-900 dark:text-white flex-shrink-0 ml-2">${this.fmtCurrency(price)}</span>
+                <div class="flex items-center gap-2 flex-shrink-0 ml-2">
+                    <span class="text-sm font-bold text-zinc-900 dark:text-white">${this.fmtCurrency(price)}</span>
+                    <button type="button" onclick="POS.removeService('${this.escHtml(s.reservation_id)}','${this.escHtml(s.service_id)}')"
+                        class="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition"
+                        title="<?= __('reservations.pos_remove_service') ?>">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                </div>
             </div>`;
         }).join('');
 
@@ -441,6 +449,44 @@ Object.assign(POS, {
             }
         } catch (err) {
             console.error('[POS] Save memo error:', err);
+        }
+    },
+
+    // ─── 서비스 삭제 ───
+    _serviceData: [],
+
+    async removeService(reservationId, serviceId) {
+        if (!confirm('<?= __('reservations.pos_remove_service_confirm') ?>')) return;
+        console.log('[POS] Remove service:', serviceId, 'from reservation:', reservationId);
+
+        const body = new URLSearchParams();
+        body.append('_token', this.csrfToken);
+        body.append('reservation_id', reservationId);
+        body.append('service_id', serviceId);
+
+        try {
+            const resp = await fetch(`${this.adminUrl}/reservations/remove-service`, { method: 'POST', body });
+            const data = await resp.json();
+            console.log('[POS] Remove service result:', data);
+            if (data.success) {
+                // 클라이언트 데이터에서 해당 서비스 제거
+                this._serviceData = this._serviceData.filter(s =>
+                    !(String(s.reservation_id) === String(reservationId) && String(s.service_id) === String(serviceId))
+                );
+                console.log('[POS] Remaining services in client:', this._serviceData.length);
+
+                if (this._serviceData.length === 0) {
+                    location.reload();
+                    return;
+                }
+                // DOM 직접 갱신
+                this.renderServiceList(this._serviceData);
+            } else {
+                alert(data.message || '삭제 실패');
+            }
+        } catch (err) {
+            console.error('[POS] Remove service error:', err);
+            alert('오류가 발생했습니다: ' + err.message);
         }
     },
 

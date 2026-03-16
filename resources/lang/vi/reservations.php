@@ -139,6 +139,8 @@ return [
     'pos_service_detail' => 'Chi tiết dịch vụ',
     'pos_add_service' => 'Thêm dịch vụ',
     'pos_add_service_submit' => 'Thêm dịch vụ đã chọn',
+    'pos_remove_service' => 'Xóa dịch vụ',
+    'pos_remove_service_confirm' => 'Bạn có chắc chắn muốn xóa dịch vụ này không?',
     'pos_no_services' => 'Không có dịch vụ nào được đăng ký',
     'pos_service_count' => '',
     'pos_assign_staff' => 'Phân công nhân viên',

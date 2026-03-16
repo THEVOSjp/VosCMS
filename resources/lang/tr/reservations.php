@@ -135,6 +135,8 @@ return [
     'pos_service_detail' => 'Hizmet Detayları',
     'pos_add_service' => 'Hizmet Ekle',
     'pos_add_service_submit' => 'Seçili Hizmetleri Ekle',
+    'pos_remove_service' => 'Hizmeti kaldır',
+    'pos_remove_service_confirm' => 'Bu hizmeti kaldırmak istediğinizden emin misiniz?',
     'pos_no_services' => 'Kayıtlı hizmet yok',
     'pos_service_count' => '',
     'pos_assign_staff' => 'Personel Ata',

@@ -139,6 +139,8 @@ return [
     'pos_service_detail' => 'Servicedetails',
     'pos_add_service' => 'Service hinzufügen',
     'pos_add_service_submit' => 'Ausgewählte Services hinzufügen',
+    'pos_remove_service' => 'Service entfernen',
+    'pos_remove_service_confirm' => 'Möchten Sie diesen Service wirklich entfernen?',
     'pos_no_services' => 'Keine Services registriert',
     'pos_service_count' => '',
     'pos_assign_staff' => 'Mitarbeiter zuweisen',

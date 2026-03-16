@@ -302,6 +302,9 @@ if (empty($path) || $path === 'index.php') {
     } elseif ($adminRoute === 'reservations/assign-staff' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $apiAction = 'assign-staff'; $apiId = null;
         include BASE_PATH . '/resources/views/admin/reservations/_api.php';
+    } elseif ($adminRoute === 'reservations/remove-service' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $apiAction = 'remove-service'; $apiId = null;
+        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
     } elseif ($adminRoute === 'reservations/save-memo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $apiAction = 'save-memo'; $apiId = null;
         include BASE_PATH . '/resources/views/admin/reservations/_api.php';

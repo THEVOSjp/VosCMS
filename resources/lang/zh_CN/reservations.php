@@ -139,6 +139,8 @@ return [
     'pos_service_detail' => '服务明细',
     'pos_add_service' => '添加服务',
     'pos_add_service_submit' => '添加所选服务',
+    'pos_remove_service' => '删除服务',
+    'pos_remove_service_confirm' => '确定要删除此服务吗？',
     'pos_no_services' => '没有注册的服务',
     'pos_service_count' => '项',
     'pos_assign_staff' => '分配员工',

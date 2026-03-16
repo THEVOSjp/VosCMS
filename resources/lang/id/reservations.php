@@ -139,6 +139,8 @@ return [
     'pos_service_detail' => 'Detail Layanan',
     'pos_add_service' => 'Tambah Layanan',
     'pos_add_service_submit' => 'Tambah Layanan Terpilih',
+    'pos_remove_service' => 'Hapus layanan',
+    'pos_remove_service_confirm' => 'Apakah Anda yakin ingin menghapus layanan ini?',
     'pos_no_services' => 'Tidak ada layanan terdaftar',
     'pos_service_count' => '',
     'pos_assign_staff' => 'Tetapkan Staf',

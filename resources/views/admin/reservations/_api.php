@@ -561,6 +561,69 @@ try {
         exit;
     }
 
+    // ─── 서비스 삭제 (POS) ───
+    if ($apiAction === 'remove-service') {
+        $reservationId = trim($_POST['reservation_id'] ?? '');
+        $serviceId = trim($_POST['service_id'] ?? '');
+
+        if (!$reservationId || !$serviceId) {
+            echo json_encode(['error' => true, 'message' => '필수 항목이 누락되었습니다.']);
+            exit;
+        }
+
+        // 해당 예약-서비스 존재 확인
+        $check = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}reservation_services WHERE reservation_id = ? AND service_id = ?");
+        $check->execute([$reservationId, $serviceId]);
+        if ($check->fetchColumn() == 0) {
+            echo json_encode(['error' => true, 'message' => '해당 서비스를 찾을 수 없습니다.']);
+            exit;
+        }
+
+        $pdo->beginTransaction();
+
+        // reservation_services에서 삭제
+        $del = $pdo->prepare("DELETE FROM {$prefix}reservation_services WHERE reservation_id = ? AND service_id = ?");
+        $del->execute([$reservationId, $serviceId]);
+
+        // 남은 서비스 수 확인
+        $remain = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}reservation_services WHERE reservation_id = ?");
+        $remain->execute([$reservationId]);
+        $remainCount = (int)$remain->fetchColumn();
+
+        if ($remainCount === 0) {
+            // 서비스가 모두 삭제되면 예약 자체도 삭제
+            $pdo->prepare("DELETE FROM {$prefix}reservations WHERE id = ?")->execute([$reservationId]);
+            console_log("[POS API] Reservation {$reservationId} deleted (no services left)");
+        } else {
+            // 남은 서비스 기준으로 금액/시간 재계산
+            $recalc = $pdo->prepare("SELECT SUM(price) as total, SUM(duration) as dur FROM {$prefix}reservation_services WHERE reservation_id = ?");
+            $recalc->execute([$reservationId]);
+            $sums = $recalc->fetch(PDO::FETCH_ASSOC);
+            $newTotal = (float)($sums['total'] ?? 0);
+            $newDur = (int)($sums['dur'] ?? 0);
+
+            // start_time 기준으로 end_time 재계산
+            $stStmt = $pdo->prepare("SELECT start_time FROM {$prefix}reservations WHERE id = ?");
+            $stStmt->execute([$reservationId]);
+            $startTime = $stStmt->fetchColumn();
+            if ($startTime) {
+                $parts = explode(':', $startTime);
+                $endMin = ((int)$parts[0]) * 60 + ((int)$parts[1]) + $newDur;
+                $newEndTime = sprintf('%02d:%02d:00', floor($endMin / 60) % 24, $endMin % 60);
+            } else {
+                $newEndTime = null;
+            }
+
+            $upd = $pdo->prepare("UPDATE {$prefix}reservations SET total_amount = ?, final_amount = ?, end_time = ?, updated_at = NOW() WHERE id = ?");
+            $upd->execute([$newTotal, $newTotal, $newEndTime, $reservationId]);
+            console_log("[POS API] Service {$serviceId} removed from reservation {$reservationId}, {$remainCount} services remain");
+        }
+
+        $pdo->commit();
+        echo json_encode(['success' => true, 'remaining' => $remainCount]);
+        exit;
+    }
+
     // ─── 관리자 메모 저장 ───
     if ($apiAction === 'save-memo') {
         $userId = trim($_POST['user_id'] ?? '');

@@ -130,6 +130,8 @@ return [
     'pos_service_detail' => '서비스 내역',
     'pos_add_service' => '서비스 추가',
     'pos_add_service_submit' => '선택한 서비스 추가',
+    'pos_remove_service' => '서비스 삭제',
+    'pos_remove_service_confirm' => '이 서비스를 삭제하시겠습니까?',
     'pos_no_services' => '등록된 서비스가 없습니다',
     'pos_service_count' => '건',
     'pos_assign_staff' => '스태프 배정',

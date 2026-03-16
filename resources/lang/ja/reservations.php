@@ -139,6 +139,8 @@ return [
     'pos_service_detail' => 'サービス内訳',
     'pos_add_service' => 'サービス追加',
     'pos_add_service_submit' => '選択したサービスを追加',
+    'pos_remove_service' => 'サービス削除',
+    'pos_remove_service_confirm' => 'このサービスを削除しますか？',
     'pos_no_services' => '登録されたサービスがありません',
     'pos_service_count' => '件',
     'pos_assign_staff' => 'スタッフ配置',
