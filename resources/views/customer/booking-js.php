@@ -2,23 +2,17 @@
 (function() {
     'use strict';
 
-    const STAFF_ENABLED = <?= $staffEnabled ? 'true' : 'false' ?>;
-    const TOTAL_STEPS = <?= $totalSteps ?>;
     const CURRENCY_SYMBOL = '<?= $currencySymbol ?>';
     const PRICE_DISPLAY = '<?= $priceDisplay ?>';
     const BASE_URL = '<?= $baseUrl ?>';
     const SCHEDULE_ENABLED = <?= ($scheduleEnabled ?? false) ? 'true' : 'false' ?>;
-    const DESIGNATION_FEE_ENABLED = <?= ($designationFeeEnabled ?? false) ? 'true' : 'false' ?>;
     const SLOT_INTERVAL = <?= $slotInterval ?? 30 ?>;
 
-    // 스텝 순서 정의
-    const stepOrder = ['stepService'];
-    if (STAFF_ENABLED) stepOrder.push('stepStaff');
-    stepOrder.push('stepDatetime', 'stepInfo', 'stepConfirm');
+    // 스텝 순서: 서비스 → 날짜/시간 → 고객정보 → 확인
+    const stepOrder = ['stepService', 'stepDatetime', 'stepInfo', 'stepConfirm'];
 
     const stepLabels = [
         '<?= __('booking.select_service') ?>',
-        <?php if ($staffEnabled): ?>'<?= __('booking.select_staff') ?>',<?php endif; ?>
         '<?= __('booking.select_datetime') ?>',
         '<?= __('booking.enter_info') ?>',
         '<?= __('booking.confirm_info') ?>'
@@ -29,8 +23,6 @@
     // 선택된 값 저장 (다중 서비스)
     const selected = {
         services: [],  // [{id, name, price, duration}, ...]
-        staffId: null, staffName: '',
-        designationFee: 0,
         date: '', time: '',
         name: '', phone: '', email: '', notes: ''
     };
@@ -76,10 +68,6 @@
 
         // 유효성 검사
         if (stepOrder[currentStep] === 'stepService' && selected.services.length === 0) return;
-        if (stepOrder[currentStep] === 'stepStaff') {
-            const staffRadio = document.querySelector('input[name="staff"]:checked');
-            if (!staffRadio) return;
-        }
         if (stepOrder[currentStep] === 'stepDatetime' && (!selected.date || !selected.time)) return;
 
         // 고객정보 스텝에서 다음 → 확인 페이지 업데이트
@@ -99,10 +87,6 @@
         if (currentStep < stepOrder.length - 1) {
             showStep(currentStep + 1);
 
-            // 스태프 스텝 진입 시 서비스 기반 필터링
-            if (stepOrder[currentStep] === 'stepStaff') {
-                filterStaffByService();
-            }
             // 날짜/시간 스텝 진입 시 이미 날짜 선택된 경우 슬롯 리로드
             if (stepOrder[currentStep] === 'stepDatetime' && selected.date) {
                 selected.time = '';
@@ -200,64 +184,6 @@
         });
     }
 
-    // === 스태프 선택 ===
-    document.querySelectorAll('.staff-card input[name="staff"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            console.log('[Booking] Staff selected:', this.value || '(no preference)');
-
-            document.querySelectorAll('.staff-card > div').forEach(d => {
-                d.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/20');
-                d.classList.add('border-gray-200', 'dark:border-zinc-700');
-            });
-            this.closest('.staff-card').querySelector('div').classList.remove('border-gray-200', 'dark:border-zinc-700');
-            this.closest('.staff-card').querySelector('div').classList.add('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/20');
-
-            selected.staffId = this.value || null;
-            selected.staffName = this.dataset.name || '';
-            selected.designationFee = DESIGNATION_FEE_ENABLED ? (parseFloat(this.dataset.fee) || 0) : 0;
-            console.log('[Booking] Designation fee:', selected.designationFee);
-
-            const btn = document.getElementById('btnStaffNext');
-            if (btn) btn.disabled = false;
-        });
-    });
-
-    // === 서비스 기반 스태프 필터링 (선택된 모든 서비스를 담당하는 스태프만 표시) ===
-    function filterStaffByService() {
-        if (!STAFF_ENABLED || selected.services.length === 0) return;
-        const selectedIds = selected.services.map(s => s.id);
-        console.log('[Booking] Filtering staff by services:', selectedIds);
-
-        document.querySelectorAll('.staff-card').forEach(card => {
-            const servicesAttr = card.getAttribute('data-services');
-            if (!servicesAttr) {
-                // "지정 안함" 옵션은 항상 표시
-                card.style.display = '';
-                return;
-            }
-            try {
-                const staffServices = JSON.parse(servicesAttr);
-                // 선택된 서비스 중 하나라도 담당하면 표시
-                const hasAny = selectedIds.some(id => staffServices.includes(id));
-                card.style.display = hasAny ? '' : 'none';
-            } catch (e) {
-                card.style.display = '';
-            }
-        });
-
-        // 스태프 선택 리셋
-        document.querySelectorAll('.staff-card input[name="staff"]').forEach(r => r.checked = false);
-        document.querySelectorAll('.staff-card > div').forEach(d => {
-            d.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/20');
-            d.classList.add('border-gray-200', 'dark:border-zinc-700');
-        });
-        selected.staffId = null;
-        selected.staffName = '';
-        selected.designationFee = 0;
-        const btn = document.getElementById('btnStaffNext');
-        if (btn) btn.disabled = true;
-    }
-
     // === 날짜 선택 → 시간 슬롯 로드 ===
     const dateInput = document.getElementById('bookingDate');
     if (dateInput) {
@@ -279,7 +205,7 @@
         const payload = {
             action: 'get_available_slots',
             date: selected.date,
-            staff_id: selected.staffId,
+            staff_id: null,
             total_duration: totalDur
         };
 
@@ -333,7 +259,7 @@
         return selected.services.reduce((sum, s) => sum + s.price, 0);
     }
     function getTotalPrice() {
-        return getServicePrice() + selected.designationFee;
+        return getServicePrice();
     }
     function getTotalDuration() {
         return selected.services.reduce((sum, s) => sum + s.duration, 0);
@@ -357,11 +283,6 @@
             cs.innerHTML = html;
         }
 
-        if (STAFF_ENABLED) {
-            const cst = document.getElementById('confirmStaff');
-            if (cst) cst.textContent = selected.staffName || '<?= __('booking.no_preference') ?>';
-        }
-
         const cd = document.getElementById('confirmDate');
         if (cd) cd.textContent = selected.date;
 
@@ -376,20 +297,6 @@
 
         const cp = document.getElementById('confirmPhone');
         if (cp) cp.textContent = selected.phone;
-
-        // 지명비 표시
-        const dfRow = document.getElementById('confirmDesignationFeeRow');
-        const dfVal = document.getElementById('confirmDesignationFee');
-        if (dfRow && dfVal) {
-            if (DESIGNATION_FEE_ENABLED && selected.designationFee > 0 && PRICE_DISPLAY === 'show') {
-                dfRow.classList.remove('hidden');
-                dfRow.classList.add('flex');
-                dfVal.textContent = CURRENCY_SYMBOL + Number(selected.designationFee).toLocaleString();
-            } else {
-                dfRow.classList.add('hidden');
-                dfRow.classList.remove('flex');
-            }
-        }
 
         const cprice = document.getElementById('confirmPrice');
         if (cprice) {
@@ -414,8 +321,6 @@
 
         const payload = {
             service_ids: selected.services.map(s => s.id),
-            staff_id: selected.staffId,
-            designation_fee: selected.designationFee,
             date: selected.date,
             time: selected.time,
             customer_name: selected.name,
@@ -463,13 +368,12 @@
     // === URL 파라미터 기반 사전 선택 ===
     function handleUrlPreselection() {
         const params = new URLSearchParams(window.location.search);
-        const preStaff = params.get('staff');
         const preService = params.get('service');
         const preDate = params.get('date');
         const preTime = params.get('time');
 
-        if (!preStaff && !preService && !preDate) return;
-        console.log('[Booking] URL preselection - staff:', preStaff, 'service:', preService);
+        if (!preService && !preDate) return;
+        console.log('[Booking] URL preselection - service:', preService);
 
         // 1) 서비스 사전 선택
         if (preService) {
@@ -481,45 +385,12 @@
             }
         }
 
-        // 2) 스태프 사전 선택
-        if (preStaff && STAFF_ENABLED) {
-            const radio = document.querySelector('.staff-card input[name="staff"][value="' + preStaff + '"]');
-            if (radio) {
-                radio.checked = true;
-                radio.dispatchEvent(new Event('change'));
-                console.log('[Booking] Pre-selected staff:', preStaff);
-            }
-        }
-
-        // 3) 자동 스텝 이동
+        // 2) 자동 스텝 이동
         if (selected.services.length > 0) {
-            if (STAFF_ENABLED && selected.staffId) {
-                // 서비스 + 스태프 모두 선택됨 → 날짜/시간 스텝으로
-                filterStaffByService();
-                // 필터 후 스태프 다시 선택 (필터가 리셋하므로)
-                const radio = document.querySelector('.staff-card input[name="staff"][value="' + preStaff + '"]');
-                if (radio && radio.closest('.staff-card').style.display !== 'none') {
-                    radio.checked = true;
-                    radio.dispatchEvent(new Event('change'));
-                    showStep(stepOrder.indexOf('stepDatetime'));
-                } else {
-                    // 스태프가 해당 서비스 미담당이면 스태프 선택 스텝으로
-                    showStep(stepOrder.indexOf('stepStaff'));
-                }
-            } else if (STAFF_ENABLED) {
-                // 서비스만 선택됨 → 스태프 선택 스텝으로
-                filterStaffByService();
-                showStep(stepOrder.indexOf('stepStaff'));
-            } else {
-                // 스태프 비활성 → 날짜/시간 스텝으로
-                showStep(stepOrder.indexOf('stepDatetime'));
-            }
-        } else if (preStaff && STAFF_ENABLED) {
-            // 서비스 미선택, 스태프만 → 서비스 선택 스텝 (기본)
-            showStep(0);
+            showStep(stepOrder.indexOf('stepDatetime'));
         }
 
-        // 4) 날짜/시간 사전 선택 (date/time URL 파라미터)
+        // 3) 날짜/시간 사전 선택
         if (preDate) {
             setTimeout(function() {
                 const di = document.getElementById('bookingDate');
@@ -530,7 +401,6 @@
                     fetchAvailableSlots();
 
                     if (preTime) {
-                        // 슬롯 로드 후 시간 자동 선택
                         setTimeout(function() {
                             const slots = document.querySelectorAll('.time-slot');
                             slots.forEach(function(btn) {
@@ -550,7 +420,7 @@
     renderProgressBar();
     showStep(0);
     handleUrlPreselection();
-    console.log('[Booking] Initialized. Staff enabled:', STAFF_ENABLED, 'Total steps:', TOTAL_STEPS);
+    console.log('[Booking] Initialized. Steps:', stepOrder.length);
 
 })();
 </script>

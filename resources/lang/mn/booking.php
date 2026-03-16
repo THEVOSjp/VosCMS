@@ -16,6 +16,8 @@ return [
     'confirm_info' => 'Захиалгын мэдээллээ шалгана уу',
     'complete_booking' => 'Захиалга дуусгах',
     'select_service_datetime' => 'Үйлчилгээ болон хүссэн огноо/цагаа сонгоно уу',
+    'staff_designation_guide' => 'Ажилтан сонгох захиалгыг ажилтны хуудаснаас хийнэ үү',
+    'go_staff_booking' => 'Ажилтан сонгох захиалга',
     'select_datetime' => 'Огноо болон цаг сонгоно уу',
     'no_services' => 'Одоогоор боломжтой үйлчилгээ байхгүй байна.',
     'contact_admin' => 'Админтай холбоо барина уу.',
@@ -178,4 +180,12 @@ return [
         'required_fields' => 'Нэр болон холбоо барих мэдээллээ оруулна уу.',
         'invalid_service' => 'Буруу үйлчилгээ.',
     ],
+
+    'member_discount' => 'Гишүүний хөнгөлөлт',
+    'use_points' => 'Оноо ашиглах',
+    'points_balance' => 'Үлдэгдэл',
+    'use_all' => 'Бүгдийг ашиглах',
+    'points_default_name' => 'Оноо',
+    'deposit_pay_now' => 'Урьдчилгаа (Одоо төлөх)',
+    'deposit_remaining_later' => 'Үлдэгдэл үйлчилгээний үед төлөгдөнө',
 ];

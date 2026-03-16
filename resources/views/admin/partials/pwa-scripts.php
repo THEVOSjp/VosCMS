@@ -3,13 +3,19 @@
  * Admin PWA Scripts
  * Include this before </body> in all admin pages
  */
+$baseUrl = $config['app_url'] ?? '';
+$_pwaSettings = $siteSettings ?? $settings ?? [];
+$pwaAdminEnabled = ($_pwaSettings['pwa_admin_enabled'] ?? '1') === '1';
+if (!$pwaAdminEnabled) return;
 ?>
 <!-- PWA Admin Service Worker Registration -->
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', async () => {
             try {
-                const registration = await navigator.serviceWorker.register('/admin-sw.js', { scope: '/admin' });
+                const basePath = '<?php echo rtrim($baseUrl, "/"); ?>';
+                const adminPath = '<?php echo $config["admin_path"] ?? "admin"; ?>';
+                const registration = await navigator.serviceWorker.register(basePath + '/admin-sw.js', { scope: basePath + '/' + adminPath });
                 console.log('[Admin PWA] Service Worker registered:', registration.scope);
 
                 registration.addEventListener('updatefound', () => {

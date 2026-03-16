@@ -16,6 +16,8 @@ return [
     'confirm_info' => '請確認您的預約資訊',
     'complete_booking' => '完成預約',
     'select_service_datetime' => '請選擇服務和首選日期/時間',
+    'staff_designation_guide' => '指定員工預約請前往員工頁面',
+    'go_staff_booking' => '指定員工預約',
     'select_datetime' => '請選擇日期和時間',
     'no_services' => '目前沒有可用服務。',
     'contact_admin' => '請聯繫管理員。',
@@ -178,4 +180,12 @@ return [
         'required_fields' => '請輸入姓名和聯繫方式。',
         'invalid_service' => '無效的服務。',
     ],
+
+    'member_discount' => '會員折扣',
+    'use_points' => '使用積分',
+    'points_balance' => '餘額',
+    'use_all' => '全部使用',
+    'points_default_name' => '積分',
+    'deposit_pay_now' => '預約金（支付金額）',
+    'deposit_remaining_later' => '餘額將在服務時收取',
 ];

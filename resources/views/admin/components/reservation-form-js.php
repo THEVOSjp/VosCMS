@@ -162,12 +162,15 @@
     const nameDropdown = document.getElementById(fId + '_nameDropdown');
     const phoneInput = document.getElementById(fId + '_phone');
     const emailInput = form.querySelector('input[name="customer_email"]');
+    const userIdInput = document.getElementById(fId + '_userId');
     let searchTimer = null;
     const SEARCH_URL = '<?= $resForm['adminUrl'] ?>/reservations/search-customers';
 
     if (nameInput && nameDropdown) {
         nameInput.addEventListener('input', function() {
             clearTimeout(searchTimer);
+            // 수동 입력 시 user_id 초기화 (검색 선택 시에만 설정됨)
+            if (userIdInput) userIdInput.value = '';
             const q = this.value.trim();
             if (q.length < 1) { nameDropdown.classList.add('hidden'); return; }
             searchTimer = setTimeout(async () => {
@@ -182,7 +185,8 @@
                     nameDropdown.innerHTML = data.customers.map(c => {
                         const ph = c.phone || '';
                         const em = c.email || '';
-                        return `<div class="rf-ac-item px-3 py-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition text-sm" data-name="${escAttr(c.name)}" data-phone="${escAttr(ph)}" data-email="${escAttr(em)}">
+                        const uid = c.id || '';
+                        return `<div class="rf-ac-item px-3 py-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition text-sm" data-name="${escAttr(c.name)}" data-phone="${escAttr(ph)}" data-email="${escAttr(em)}" data-uid="${escAttr(uid)}">
                             <span class="font-medium text-zinc-900 dark:text-white">${escHtml(c.name)}</span>
                             ${ph ? '<span class="ml-2 text-zinc-400 text-xs">' + escHtml(ph) + '</span>' : ''}
                             ${em ? '<span class="ml-2 text-zinc-400 text-xs">' + escHtml(em) + '</span>' : ''}
@@ -195,8 +199,9 @@
                             nameInput.value = this.dataset.name || '';
                             if (phoneInput) phoneInput.value = this.dataset.phone || '';
                             if (emailInput) emailInput.value = this.dataset.email || '';
+                            if (userIdInput) userIdInput.value = this.dataset.uid || '';
                             nameDropdown.classList.add('hidden');
-                            console.log('[ResForm] Customer selected:', this.dataset.name);
+                            console.log('[ResForm] Customer selected:', this.dataset.name, 'userId:', this.dataset.uid);
                         });
                     });
                 } catch (e) {
@@ -232,6 +237,7 @@
         const phoneInput = document.getElementById(fId + '_phone');
         if (nameInput) nameInput.value = '';
         if (phoneInput) phoneInput.value = '';
+        if (userIdInput) userIdInput.value = '';
         startInput.value = '09:00';
         endInput.value = '10:00';
         form.querySelectorAll('textarea').forEach(t => t.value = '');
@@ -248,5 +254,12 @@
         recalc();
         console.log('[ResForm] Reset:', fId, 'date:', date);
     };
+    // 폼 리셋 시 스태프도 초기화
+    const origReset = window['resetResForm_' + fId];
+    window['resetResForm_' + fId] = function(date) {
+        origReset(date);
+        if (window.ResFormStaff) ResFormStaff.clear(fId);
+    };
 })();
 </script>
+<?php include __DIR__ . '/reservation-form-staff-js.php'; ?>

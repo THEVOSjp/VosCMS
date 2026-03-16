@@ -14,15 +14,22 @@ $nowTime = date('H:i:s');
 // 서비스 목록 (접수 컴포넌트용)
 $calServices = $pdo->query("SELECT s.id, s.name, s.description, s.duration, s.price, s.image, s.category_id, c.name as category_name FROM {$prefix}services s LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id WHERE s.is_active = 1 ORDER BY s.sort_order ASC, s.name ASC")->fetchAll(PDO::FETCH_ASSOC);
 
-// 오늘 전체 예약 (junction table 기반 + 서비스 이미지 + 회원 프로필)
+// 오늘 전체 예약 (junction table 기반 + 서비스 이미지 + 회원 프로필 + 회원 등급)
 $stmtToday = $pdo->prepare("
     SELECT r.*,
         (SELECT GROUP_CONCAT(rs.service_name ORDER BY rs.sort_order SEPARATOR ', ') FROM {$prefix}reservation_services rs WHERE rs.reservation_id = r.id) as service_name,
         (SELECT SUM(rs2.duration) FROM {$prefix}reservation_services rs2 WHERE rs2.reservation_id = r.id) as service_duration,
         (SELECT s.image FROM {$prefix}reservation_services rs3 JOIN {$prefix}services s ON rs3.service_id = s.id WHERE rs3.reservation_id = r.id AND s.image IS NOT NULL AND s.image != '' ORDER BY rs3.sort_order ASC LIMIT 1) as service_image,
-        u.profile_image as user_profile_image
+        u.profile_image as user_profile_image,
+        u.grade_id as user_grade_id,
+        u.points_balance as user_points_balance,
+        mg.name as grade_name,
+        mg.discount_rate as grade_discount_rate,
+        mg.point_rate as grade_point_rate,
+        mg.color as grade_color
     FROM {$prefix}reservations r
     LEFT JOIN {$prefix}users u ON r.user_id = u.id
+    LEFT JOIN {$prefix}member_grades mg ON u.grade_id = mg.id
     WHERE r.reservation_date = ?
     ORDER BY r.start_time ASC
 ");
@@ -202,6 +209,10 @@ include __DIR__ . '/_head.php';
 // POS 모드 및 전체 서비스 목록
 const posMode = '<?= $posMode ?>';
 const posAllServices = <?= json_encode($calServices, JSON_UNESCAPED_UNICODE) ?>;
+const posAllStaff = <?= json_encode(
+    $pdo->query("SELECT id, name, avatar, designation_fee FROM {$prefix}staff WHERE is_active = 1 ORDER BY sort_order ASC, name ASC")->fetchAll(PDO::FETCH_ASSOC),
+    JSON_UNESCAPED_UNICODE
+) ?>;
 </script>
 
 <?php include BASE_PATH . '/resources/views/admin/components/reservation-form-js.php'; ?>

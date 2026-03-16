@@ -16,6 +16,8 @@ return [
     'confirm_info' => 'Vui lòng xác nhận thông tin đặt chỗ của bạn',
     'complete_booking' => 'Hoàn tất đặt chỗ',
     'select_service_datetime' => 'Vui lòng chọn dịch vụ và ngày giờ mong muốn',
+    'staff_designation_guide' => 'Để đặt lịch với nhân viên chỉ định, vui lòng truy cập trang nhân viên',
+    'go_staff_booking' => 'Đặt lịch nhân viên chỉ định',
     'select_datetime' => 'Vui lòng chọn ngày và giờ',
     'no_services' => 'Hiện không có dịch vụ nào.',
     'contact_admin' => 'Vui lòng liên hệ quản trị viên.',
@@ -178,4 +180,12 @@ return [
         'required_fields' => 'Vui lòng nhập họ tên và thông tin liên hệ.',
         'invalid_service' => 'Dịch vụ không hợp lệ.',
     ],
+
+    'member_discount' => 'Giảm giá thành viên',
+    'use_points' => 'Sử dụng điểm',
+    'points_balance' => 'Số dư',
+    'use_all' => 'Dùng tất cả',
+    'points_default_name' => 'Điểm',
+    'deposit_pay_now' => 'Đặt cọc (Thanh toán ngay)',
+    'deposit_remaining_later' => 'Số dư còn lại sẽ được thu khi sử dụng dịch vụ',
 ];

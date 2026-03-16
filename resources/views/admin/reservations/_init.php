@@ -68,6 +68,27 @@ function getServiceName(\PDO $pdo, string $prefix, ?string $reservationId): stri
     return $name ?: '-';
 }
 
+// 전화번호로 회원 찾기 (암호화된 전화번호 복호화 후 비교)
+function findUserByPhone(\PDO $pdo, string $prefix, string $phone): ?string {
+    if (empty($phone)) return null;
+    require_once BASE_PATH . '/rzxlib/Core/Helpers/Encryption.php';
+    $normalPhone = preg_replace('/[^0-9+]/', '', $phone);
+    if (empty($normalPhone)) return null;
+
+    $users = $pdo->query("SELECT id, phone FROM {$prefix}users WHERE phone IS NOT NULL AND phone != ''")->fetchAll(\PDO::FETCH_ASSOC);
+    foreach ($users as $u) {
+        $uPhone = $u['phone'];
+        if (str_starts_with($uPhone, 'enc:')) {
+            $uPhone = \RzxLib\Core\Helpers\Encryption::decrypt($uPhone);
+        }
+        $normalUPhone = preg_replace('/[^0-9+]/', '', $uPhone ?? '');
+        if ($normalUPhone === $normalPhone) {
+            return $u['id'];
+        }
+    }
+    return null;
+}
+
 function getBundleName(\PDO $pdo, string $prefix, ?string $reservationId): ?string {
     if (!$reservationId) return null;
     $stmt = $pdo->prepare("SELECT DISTINCT b.name FROM {$prefix}reservation_services rs JOIN {$prefix}service_bundles b ON rs.bundle_id = b.id WHERE rs.reservation_id = ? AND rs.bundle_id IS NOT NULL LIMIT 1");

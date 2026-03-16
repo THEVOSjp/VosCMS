@@ -2,6 +2,10 @@
     RewriteEngine On
     RewriteBase /rezlyx/
 
+    # PWA: dynamic manifest (DB settings → JSON)
+    RewriteRule ^manifest\.json$ manifest.php [L]
+    RewriteRule ^admin-manifest\.json$ admin-manifest.php [L]
+
     # Force admin/ routes through index.php (admin/ directory exists but should be routed)
     RewriteRule ^admin(/.*)?$ index.php [L,QSA]
 

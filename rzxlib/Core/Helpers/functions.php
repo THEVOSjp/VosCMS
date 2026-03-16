@@ -652,6 +652,37 @@ if (!function_exists('get_site_tagline')) {
     }
 }
 
+if (!function_exists('get_points_name')) {
+    /**
+     * 현재 로케일에 맞는 적립금 명칭 가져오기
+     *
+     * 우선순위:
+     * 1. rzx_translations 테이블에서 현재 로케일의 번역 (다국어 모달에서 입력한 값)
+     * 2. rzx_settings 테이블의 service_points_name (입력창에 직접 입력한 값)
+     * 3. 번역 파일의 기본값 (__('booking.points_default_name'))
+     *
+     * @param string|null $locale 언어 코드 (null이면 현재 로케일 사용)
+     * @return string
+     */
+    function get_points_name(?string $locale = null): string
+    {
+        // 먼저 다국어 번역 확인
+        $translated = db_trans('services.settings.general.points_name', $locale, '');
+        if (!empty($translated)) {
+            return $translated;
+        }
+
+        // 번역이 없으면 기본 설정값(모든 언어 공통) 반환
+        $settingVal = get_setting('service_points_name', '');
+        if (!empty($settingVal)) {
+            return $settingVal;
+        }
+
+        // 설정도 없으면 번역 파일 기본값
+        return __('booking.points_default_name');
+    }
+}
+
 if (!function_exists('get_setting')) {
     /**
      * rzx_settings 테이블에서 설정값 가져오기

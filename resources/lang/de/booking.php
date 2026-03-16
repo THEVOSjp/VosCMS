@@ -16,6 +16,8 @@ return [
     'confirm_info' => 'Bitte ueberpruefen Sie Ihre Buchungsinformationen',
     'complete_booking' => 'Buchung abschliessen',
     'select_service_datetime' => 'Bitte waehlen Sie Ihre Dienstleistung und bevorzugte Datum/Uhrzeit',
+    'staff_designation_guide' => 'Für Buchungen mit bestimmtem Mitarbeiter gehen Sie bitte zur Mitarbeiterseite',
+    'go_staff_booking' => 'Mitarbeiter-Buchung',
     'select_datetime' => 'Bitte waehlen Sie ein Datum und eine Uhrzeit',
     'no_services' => 'Derzeit keine Dienstleistungen verfuegbar.',
     'contact_admin' => 'Bitte kontaktieren Sie den Administrator.',
@@ -178,4 +180,12 @@ return [
         'required_fields' => 'Bitte geben Sie Ihren Namen und Kontaktdaten ein.',
         'invalid_service' => 'Ungültiger Service.',
     ],
+
+    'member_discount' => 'Mitgliederrabatt',
+    'use_points' => 'Punkte verwenden',
+    'points_balance' => 'Guthaben',
+    'use_all' => 'Alles verwenden',
+    'points_default_name' => 'Punkte',
+    'deposit_pay_now' => 'Anzahlung (Jetzt zahlen)',
+    'deposit_remaining_later' => 'Der Restbetrag wird bei der Dienstleistung berechnet',
 ];

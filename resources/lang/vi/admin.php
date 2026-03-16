@@ -75,7 +75,7 @@ return [
         'close' => 'Đóng',
         'apply' => 'Áp dụng',
     ],
-    'messages' => ['confirm_delete' => 'Bạn có chắc chắn muốn xóa?', 'no_data' => 'Không có dữ liệu.', 'loading' => 'Đang tải...', 'processing' => 'Đang xử lý...'],
+    'messages' => ['confirm_delete' => 'Bạn có chắc chắn muốn xóa?', 'no_data' => 'Không có dữ liệu.', 'loading' => 'Đang tải...', 'processing' => 'Đang xử lý...', 'save' => 'Lưu', 'saved' => 'Đã lưu thành công.'],
     'common' => [
         'yes' => 'Có',
         'no' => 'Không',

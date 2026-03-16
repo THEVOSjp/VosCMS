@@ -16,6 +16,8 @@ return [
     'confirm_info' => 'Lütfen rezervasyon bilgilerinizi onaylayın',
     'complete_booking' => 'Rezervasyonu Tamamla',
     'select_service_datetime' => 'Lütfen hizmet ve tercih ettiğiniz tarih/saati seçin',
+    'staff_designation_guide' => 'Belirli personel ile randevu için lütfen personel sayfasına gidin',
+    'go_staff_booking' => 'Personel Randevusu',
     'select_datetime' => 'Lütfen tarih ve saat seçin',
     'no_services' => 'Şu anda mevcut hizmet bulunmamaktadır.',
     'contact_admin' => 'Lütfen yönetici ile iletişime geçin.',
@@ -178,4 +180,12 @@ return [
         'required_fields' => 'Lütfen adınızı ve iletişim bilgilerinizi girin.',
         'invalid_service' => 'Geçersiz hizmet.',
     ],
+
+    'member_discount' => 'Üye İndirimi',
+    'use_points' => 'Puan Kullan',
+    'points_balance' => 'Bakiye',
+    'use_all' => 'Tümünü Kullan',
+    'points_default_name' => 'Puan',
+    'deposit_pay_now' => 'Depozito (Şimdi Öde)',
+    'deposit_remaining_later' => 'Kalan bakiye hizmet sırasında tahsil edilecektir',
 ];

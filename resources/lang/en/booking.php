@@ -16,6 +16,8 @@ return [
     'confirm_info' => 'Please confirm your booking information',
     'complete_booking' => 'Complete Booking',
     'select_service_datetime' => 'Please select your service and preferred date/time',
+    'staff_designation_guide' => 'For staff-designated bookings, please proceed from the staff page',
+    'go_staff_booking' => 'Staff Designated Booking',
     'select_datetime' => 'Please select a date and time',
     'no_services' => 'No services currently available.',
     'contact_admin' => 'Please contact the administrator.',
@@ -178,4 +180,12 @@ return [
         'required_fields' => 'Please enter your name and contact information.',
         'invalid_service' => 'Invalid service.',
     ],
+
+    'member_discount' => 'Member Discount',
+    'use_points' => 'Use Points',
+    'points_balance' => 'Balance',
+    'use_all' => 'Use All',
+    'points_default_name' => 'Points',
+    'deposit_pay_now' => 'Deposit (Pay Now)',
+    'deposit_remaining_later' => 'Remaining balance will be charged at service time',
 ];

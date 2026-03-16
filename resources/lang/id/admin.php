@@ -75,7 +75,7 @@ return [
         'close' => 'Tutup',
         'apply' => 'Terapkan',
     ],
-    'messages' => ['confirm_delete' => 'Apakah Anda yakin ingin menghapus?', 'no_data' => 'Tidak ada data tersedia.', 'loading' => 'Memuat...', 'processing' => 'Memproses...'],
+    'messages' => ['confirm_delete' => 'Apakah Anda yakin ingin menghapus?', 'no_data' => 'Tidak ada data tersedia.', 'loading' => 'Memuat...', 'processing' => 'Memproses...', 'save' => 'Simpan', 'saved' => 'Berhasil disimpan.'],
     'common' => [
         'yes' => 'Ya',
         'no' => 'Tidak',

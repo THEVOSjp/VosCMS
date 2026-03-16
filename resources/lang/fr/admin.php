@@ -75,7 +75,7 @@ return [
         'close' => 'Fermer',
         'apply' => 'Appliquer',
     ],
-    'messages' => ['confirm_delete' => 'Etes-vous sur de vouloir supprimer ?', 'no_data' => 'Aucune donnee disponible.', 'loading' => 'Chargement...', 'processing' => 'Traitement en cours...'],
+    'messages' => ['confirm_delete' => 'Etes-vous sur de vouloir supprimer ?', 'no_data' => 'Aucune donnee disponible.', 'loading' => 'Chargement...', 'processing' => 'Traitement en cours...', 'save' => 'Enregistrer', 'saved' => 'Enregistré avec succès.'],
     'common' => [
         'yes' => 'Oui',
         'no' => 'Non',

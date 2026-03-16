@@ -143,7 +143,7 @@ const POS = {
 
     // ─── 그룹(고객) 단위 일괄 시작 ───
     async startAllServices(group) {
-        const ids = group.service_ids || [];
+        const ids = group.reservation_ids || [];
         console.log('[POS] Start all services:', ids);
         for (const id of ids) {
             try {
@@ -160,7 +160,7 @@ const POS = {
     // ─── 그룹 단위 일괄 취소 ───
     async cancelAllServices(group) {
         if (!confirm('<?= __('reservations.cancel_msg') ?>')) return;
-        const ids = group.service_ids || [];
+        const ids = group.reservation_ids || [];
         const reason = prompt('<?= __('reservations.cancel_reason') ?>:', '') || '';
         for (const id of ids) {
             try {
@@ -177,7 +177,7 @@ const POS = {
     // ─── 그룹 단위 일괄 완료 ───
     async completeAllServices(group) {
         if (!confirm('<?= __('reservations.complete_msg') ?>')) return;
-        const ids = group.service_ids || [];
+        const ids = group.reservation_ids || [];
         for (const id of ids) {
             try {
                 await fetch(`${this.adminUrl}/reservations/${id}/complete`, {
@@ -190,23 +190,64 @@ const POS = {
         location.reload();
     },
 
-    // ─── 그룹 단위 결제 (첫 번째 미결제 건에 전액 적용) ───
-    async openGroupPayment(group, totalAmount, paidAmount) {
-        // 그룹 내 미결제 서비스 ID 목록 저장
-        this._payGroupIds = group.service_ids || [];
-        this.openPayment(this._payGroupIds[0], totalAmount, paidAmount);
+    // ─── 그룹 단위 결제 ───
+    _payBaseRemaining: 0,
+    _payPointsBalance: 0,
+    _payUserId: null,
+
+    async openGroupPayment(group) {
+        console.log('[POS] Open group payment:', group);
+        this._payGroupIds = group.reservation_ids || [];
+        const firstId = this._payGroupIds[0];
+        const totalAmount = parseFloat(group.total_amount || 0);
+        const designationFee = parseFloat(group.designation_fee || 0);
+        const discountRate = parseFloat(group.discount_rate || 0);
+        const discountAmount = parseFloat(group.discount_amount || 0);
+        const finalAmount = parseFloat(group.final_amount || 0);
+        const paidAmount = parseFloat(group.paid_amount || 0);
+        const remaining = finalAmount - paidAmount;
+
+        this._payBaseRemaining = remaining;
+        this._payUserId = group.user_id || null;
+
+        document.getElementById('payReservationId').value = firstId;
+        document.getElementById('payRemaining').textContent = this.fmtCurrency(remaining);
+        document.getElementById('payAmount').value = remaining;
+        document.getElementById('payAmount').max = remaining;
+
+        // 적립금 UI 초기화
+        this._initPayPoints(group.user_id, remaining);
 
         // 서비스 상세 내역 로드
         const detailEl = document.getElementById('payServiceDetails');
         detailEl.innerHTML = '<p class="text-xs text-zinc-400 text-center py-1"><?= __('admin.messages.processing') ?></p>';
+
+        // 금액 내역 렌더링
+        let breakdownHtml = `<div class="flex justify-between"><span class="text-zinc-500"><?= __('reservations.pos_pay_subtotal') ?></span><span class="font-semibold text-zinc-900 dark:text-white">${this.fmtCurrency(totalAmount)}</span></div>`;
+        if (designationFee > 0) {
+            breakdownHtml += `<div class="flex justify-between"><span class="text-zinc-500"><?= __('reservations.pos_pay_designation') ?></span><span class="font-medium text-zinc-900 dark:text-white">${this.fmtCurrency(designationFee)}</span></div>`;
+        }
+        if (discountAmount > 0) {
+            breakdownHtml += `<div class="flex justify-between"><span class="text-zinc-500"><?= __('reservations.pos_pay_discount') ?> (${discountRate}%)</span><span class="font-medium text-red-500">-${this.fmtCurrency(discountAmount)}</span></div>`;
+        }
+        if (paidAmount > 0) {
+            breakdownHtml += `<div class="flex justify-between"><span class="text-zinc-500"><?= __('reservations.pos_pay_deposit') ?></span><span class="font-medium text-red-500">-${this.fmtCurrency(paidAmount)}</span></div>`;
+        }
+        document.getElementById('payBreakdown').innerHTML = breakdownHtml;
+
+        document.getElementById('posPaymentModal').classList.remove('hidden');
+
+        // 서비스 목록 비동기 로드
         try {
-            const resp = await fetch(`${this.adminUrl}/reservations/customer-services?name=${encodeURIComponent(group.customer_name)}&phone=${encodeURIComponent(group.customer_phone)}&date=${encodeURIComponent(group.reservation_date)}`);
+            const ids = (group.reservation_ids || []).join(',');
+            const resp = await fetch(`${this.adminUrl}/reservations/customer-services?ids=${encodeURIComponent(ids)}`);
             const data = await resp.json();
+            console.log('[POS] Payment services:', data);
             if (data.success && data.data.length > 0) {
                 detailEl.innerHTML = data.data.map(s => `
                     <div class="flex items-center justify-between py-1.5 px-2 bg-zinc-50 dark:bg-zinc-900 rounded text-sm">
                         <span class="text-zinc-700 dark:text-zinc-300 truncate mr-2">${this.escHtml(s.service_name || '-')}</span>
-                        <span class="font-medium text-zinc-900 dark:text-white whitespace-nowrap">${this.fmtCurrency(s.final_amount || 0)}</span>
+                        <span class="font-medium text-zinc-900 dark:text-white whitespace-nowrap">${this.fmtCurrency(parseFloat(s.price || 0))}</span>
                     </div>`).join('');
             } else {
                 detailEl.innerHTML = '';
@@ -219,17 +260,70 @@ const POS = {
 
     _payGroupIds: [],
 
-    // ─── 결제 모달 ───
+    // ─── 적립금 헬퍼 ───
+    async _initPayPoints(userId, remaining) {
+        const row = document.getElementById('payPointsRow');
+        const input = document.getElementById('payPointsInput');
+        if (!row || !input) return;
+        input.value = 0;
+        this._payPointsBalance = 0;
+
+        if (!userId) { row.classList.add('hidden'); return; }
+
+        try {
+            const resp = await fetch(`${this.adminUrl}/reservations/user-points?user_id=${encodeURIComponent(userId)}`);
+            const data = await resp.json();
+            console.log('[POS] User points:', data);
+            if (data.success && data.points_balance > 0) {
+                this._payPointsBalance = parseFloat(data.points_balance);
+                const maxPts = Math.min(this._payPointsBalance, remaining);
+                input.max = maxPts;
+                document.getElementById('payPointsBalance').textContent = '<?= get_points_name() ?> <?= __('booking.points_balance') ?>: ' + this.fmtCurrency(this._payPointsBalance);
+                row.classList.remove('hidden');
+            } else {
+                row.classList.add('hidden');
+            }
+        } catch (e) {
+            console.error('[POS] Load points error:', e);
+            row.classList.add('hidden');
+        }
+    },
+
+    recalcPayment() {
+        const input = document.getElementById('payPointsInput');
+        const pts = Math.max(0, parseInt(input ? input.value : 0) || 0);
+        const maxPts = parseInt(input ? input.max : 0) || 0;
+        const used = Math.min(pts, maxPts);
+        if (input && pts !== used) input.value = used;
+
+        const newRemaining = this._payBaseRemaining - used;
+        document.getElementById('payRemaining').textContent = this.fmtCurrency(newRemaining);
+        document.getElementById('payAmount').value = newRemaining;
+        document.getElementById('payAmount').max = newRemaining;
+        console.log('[POS] Recalc payment: points=' + used + ', remaining=' + newRemaining);
+    },
+
+    useAllPoints() {
+        const input = document.getElementById('payPointsInput');
+        if (input) { input.value = input.max; this.recalcPayment(); }
+    },
+
+    // ─── 개별 결제 모달 (단건) ───
     openPayment(id, totalAmount, paidAmount) {
         console.log('[POS] Open payment:', id, totalAmount, paidAmount);
         const remaining = totalAmount - paidAmount;
+        this._payBaseRemaining = remaining;
         document.getElementById('payReservationId').value = id;
         document.getElementById('payServiceDetails').innerHTML = '';
-        document.getElementById('payTotalAmount').textContent = this.fmtCurrency(totalAmount);
-        document.getElementById('payPaidAmount').textContent = this.fmtCurrency(paidAmount);
+        document.getElementById('payBreakdown').innerHTML = `
+            <div class="flex justify-between"><span class="text-zinc-500"><?= __('reservations.pos_pay_total') ?></span><span class="font-semibold text-zinc-900 dark:text-white">${this.fmtCurrency(totalAmount)}</span></div>
+            ${paidAmount > 0 ? `<div class="flex justify-between"><span class="text-zinc-500"><?= __('reservations.pos_pay_paid') ?></span><span class="font-medium text-emerald-600">${this.fmtCurrency(paidAmount)}</span></div>` : ''}`;
         document.getElementById('payRemaining').textContent = this.fmtCurrency(remaining);
         document.getElementById('payAmount').value = remaining;
         document.getElementById('payAmount').max = remaining;
+        // 적립금 숨김 (단건은 user_id 없음)
+        const ptsRow = document.getElementById('payPointsRow');
+        if (ptsRow) ptsRow.classList.add('hidden');
         document.getElementById('posPaymentModal').classList.remove('hidden');
     },
 
@@ -247,7 +341,7 @@ const POS = {
             const resp = await fetch(`${this.adminUrl}/reservations/${id}/payment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
-                body: `_token=${encodeURIComponent(this.csrfToken)}&amount=${encodeURIComponent(amount)}&method=${encodeURIComponent(method)}`
+                body: `_token=${encodeURIComponent(this.csrfToken)}&amount=${encodeURIComponent(amount)}&method=${encodeURIComponent(method)}&points_used=${encodeURIComponent(document.getElementById('payPointsInput')?.value || 0)}&user_id=${encodeURIComponent(this._payUserId || '')}`
             });
             const data = await resp.json();
             console.log('[POS] Payment result:', data);

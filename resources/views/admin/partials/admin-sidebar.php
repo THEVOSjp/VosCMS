@@ -19,9 +19,15 @@ if (!function_exists('isActiveMenu')) {
     }
 }
 
-// 예약 관리 서브페이지 여부
-$isReservationsPage = strpos($currentPath, '/reservations') !== false;
-$isReservationsPosPage = strpos($currentPath, '/reservations/pos') !== false;
+// POS 페이지 여부 (독립 메뉴)
+$isPosPage = strpos($currentPath, '/reservations/pos') !== false;
+$isPosMainPage = $isPosPage;
+$isKioskPage = (bool)preg_match('#/kiosk(?:/|$)#', $currentPath) && strpos($currentPath, '/reservations/') === false;
+$isKioskSettingsPage = strpos($currentPath, '/kiosk/settings') !== false;
+$isKioskMainPage = $isKioskPage && !$isKioskSettingsPage;
+
+// 예약 관리 서브페이지 여부 (POS 제외)
+$isReservationsPage = strpos($currentPath, '/reservations') !== false && !$isPosPage;
 $isReservationsCalendarPage = strpos($currentPath, '/reservations/calendar') !== false;
 $isReservationsStatsPage = strpos($currentPath, '/reservations/statistics') !== false;
 $isReservationsCreatePage = strpos($currentPath, '/reservations/create') !== false;
@@ -68,6 +74,14 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
     /* 페이지 로드 시 깜빡임 방지: html 클래스 기반 즉시 적용 */
     .sidebar-is-collapsed #adminSidebar { width: 4rem !important; }
     .sidebar-is-collapsed main.flex-1 { margin-left: 4rem !important; }
+    /* date/time input: 브라우저 네이티브 아이콘([] 포함) 숨김 → JS로 대체 */
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+        display: none !important;
+    }
+    input[type="date"], input[type="time"] {
+        -webkit-appearance: none;
+    }
 </style>
 <aside id="adminSidebar" class="w-64 bg-zinc-950 min-h-screen fixed transition-all duration-300 z-40 overflow-hidden">
     <div class="p-6 flex items-center justify-between">
@@ -80,12 +94,52 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
         </button>
     </div>
     <nav class="mt-6">
-        <a href="<?php echo $adminUrl; ?>" class="flex items-center px-6 py-3 <?php echo !isActiveMenu('/settings', $currentPath) && !isActiveMenu('/reservations', $currentPath) && !isActiveMenu('/services', $currentPath) && !isActiveMenu('/staff', $currentPath) && !isActiveMenu('/members', $currentPath) && !isActiveMenu('/points', $currentPath) && !$isSitePage ? 'text-white bg-blue-600' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="<?= __('admin.nav.dashboard') ?>">
+        <a href="<?php echo $adminUrl; ?>" class="flex items-center px-6 py-3 <?php echo !isActiveMenu('/settings', $currentPath) && !isActiveMenu('/reservations', $currentPath) && !isActiveMenu('/services', $currentPath) && !isActiveMenu('/staff', $currentPath) && !isActiveMenu('/members', $currentPath) && !isActiveMenu('/points', $currentPath) && !$isSitePage && !$isPosPage && !$isKioskPage ? 'text-white bg-blue-600' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="<?= __('admin.nav.dashboard') ?>">
             <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
             </svg>
             <span class="sidebar-text"><?= __('admin.nav.dashboard') ?></span>
         </a>
+        <!-- POS 독립 메뉴 -->
+        <?php if (\RzxLib\Core\Auth\AdminAuth::can('reservations')): ?>
+        <a href="<?php echo $adminUrl; ?>/reservations/pos" class="flex items-center px-6 py-3 <?php echo $isPosMainPage ? 'text-white bg-blue-600' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="POS">
+            <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+            </svg>
+            <span class="sidebar-text">POS</span>
+        </a>
+        <?php endif; ?>
+        <!-- Kiosk 메뉴 (서브메뉴 포함) -->
+        <?php if (\RzxLib\Core\Auth\AdminAuth::can('reservations')): ?>
+        <div class="kiosk-menu has-submenu" data-submenu="kioskSubMenu">
+            <button onclick="toggleKioskMenu()" class="flex items-center justify-between w-full px-6 py-3 <?php echo $isKioskPage ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="<?= __('reservations.kiosk') ?>">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="sidebar-text"><?= __('reservations.kiosk') ?></span>
+                </div>
+                <svg id="kioskMenuArrow" class="w-4 h-4 transition-transform sidebar-text <?php echo $isKioskPage ? 'rotate-180' : ''; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div id="kioskSubMenu" class="<?php echo $isKioskPage ? '' : 'hidden'; ?> bg-zinc-900">
+                <a href="<?php echo $adminUrl; ?>/kiosk" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isKioskMainPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="sidebar-text"><?= __('reservations.kiosk') ?></span>
+                </a>
+                <a href="<?php echo $adminUrl; ?>/kiosk/settings" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isKioskSettingsPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <span class="sidebar-text"><?= __('reservations.kiosk_settings') ?></span>
+                </a>
+            </div>
+        </div>
+        <?php endif; ?>
         <?php if (\RzxLib\Core\Auth\AdminAuth::can('reservations')): ?>
         <div class="reservations-management-menu has-submenu" data-submenu="reservationsSubMenu">
             <button onclick="toggleReservationsMenu()" class="flex items-center justify-between w-full px-6 py-3 <?php echo $isReservationsPage ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="<?= __('admin.nav.reservations') ?>">
@@ -100,13 +154,7 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
                 </svg>
             </button>
             <div id="reservationsSubMenu" class="<?php echo $isReservationsPage ? '' : 'hidden'; ?> bg-zinc-900">
-                <a href="<?php echo $adminUrl; ?>/reservations/pos" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isReservationsPosPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                    </svg>
-                    <?= __('reservations.pos') ?>
-                </a>
-                <a href="<?php echo $adminUrl; ?>/reservations" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isReservationsPage && !$isReservationsPosPage && !$isReservationsCalendarPage && !$isReservationsStatsPage && !$isReservationsCreatePage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                <a href="<?php echo $adminUrl; ?>/reservations" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isReservationsPage && !$isReservationsCalendarPage && !$isReservationsStatsPage && !$isReservationsCreatePage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
@@ -483,6 +531,11 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
         var s = document.getElementById('reservationsSubMenu'), a = document.getElementById('reservationsMenuArrow');
         if (s && a) { s.classList.toggle('hidden'); a.classList.toggle('rotate-180'); }
     }
+    function toggleKioskMenu() {
+        if (isCollapsed()) return;
+        var s = document.getElementById('kioskSubMenu'), a = document.getElementById('kioskMenuArrow');
+        if (s && a) { s.classList.toggle('hidden'); a.classList.toggle('rotate-180'); }
+    }
     function toggleServicesMenu() {
         if (isCollapsed()) return;
         var s = document.getElementById('servicesSubMenu'), a = document.getElementById('servicesMenuArrow');
@@ -508,4 +561,67 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
         var s = document.getElementById('settingsSubMenu'), a = document.getElementById('settingsMenuArrow');
         if (s && a) { s.classList.toggle('hidden'); a.classList.toggle('rotate-180'); }
     }
+
+    // ===== 전역: date/time input 캘린더/시계 아이콘 + 요일 표시 =====
+    (function() {
+        var DAYS = ['일','월','화','수','목','금','토'];
+        var calSvg = '<svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>';
+        var timeSvg = '<svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+
+        function enhance(input) {
+            if (input.dataset.dayInit) return;
+            input.dataset.dayInit = '1';
+            var isDate = input.type === 'date';
+
+            // input을 relative wrapper로 감싸기
+            var wrap = document.createElement('div');
+            wrap.style.cssText = 'position:relative;display:inline-flex;align-items:center;width:100%;';
+            input.parentNode.insertBefore(wrap, input);
+            wrap.appendChild(input);
+
+            // 아이콘 버튼
+            var iconBtn = document.createElement('span');
+            iconBtn.innerHTML = isDate ? calSvg : timeSvg;
+            iconBtn.style.cssText = 'position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;opacity:0.5;';
+            iconBtn.className = 'text-zinc-500 dark:text-zinc-400 hover:opacity-100';
+            wrap.appendChild(iconBtn);
+            input.style.paddingRight = '32px';
+
+            iconBtn.addEventListener('click', function() {
+                try { input.showPicker(); } catch(e) { input.focus(); }
+            });
+
+            // date input만 요일 라벨 추가
+            if (isDate) {
+                var lbl = document.createElement('span');
+                lbl.style.cssText = 'margin-left:6px;font-size:12px;font-weight:600;white-space:nowrap;';
+                wrap.insertAdjacentElement('afterend', lbl);
+                function update() {
+                    var v = input.value;
+                    if (!v) { lbl.textContent = ''; return; }
+                    var d = new Date(v + 'T00:00:00');
+                    if (isNaN(d.getTime())) { lbl.textContent = ''; return; }
+                    var day = d.getDay();
+                    lbl.textContent = '[' + DAYS[day] + ']';
+                    lbl.style.color = day === 0 ? '#ef4444' : day === 6 ? '#3b82f6' : '#71717a';
+                }
+                input.addEventListener('change', update);
+                update();
+            }
+            console.log('[DateDay] Enhanced:', input.type, input.name || input.id);
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('input[type="date"], input[type="time"]').forEach(enhance);
+            console.log('[DateDay] Init complete');
+        });
+        new MutationObserver(function(muts) {
+            muts.forEach(function(m) {
+                m.addedNodes.forEach(function(n) {
+                    if (n.nodeType !== 1) return;
+                    if (n.matches && (n.matches('input[type="date"]') || n.matches('input[type="time"]'))) enhance(n);
+                    if (n.querySelectorAll) n.querySelectorAll('input[type="date"], input[type="time"]').forEach(enhance);
+                });
+            });
+        }).observe(document.body, { childList: true, subtree: true });
+    })();
 </script>

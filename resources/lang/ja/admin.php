@@ -75,7 +75,7 @@ return [
         'close' => '閉じる',
         'apply' => '適用',
     ],
-    'messages' => ['confirm_delete' => '本当に削除しますか？', 'no_data' => 'データがありません。', 'loading' => '読み込み中...', 'processing' => '処理中...'],
+    'messages' => ['confirm_delete' => '本当に削除しますか？', 'no_data' => 'データがありません。', 'loading' => '読み込み中...', 'processing' => '処理中...', 'save' => '保存', 'saved' => '保存されました。'],
     'common' => [
         'yes' => 'はい',
         'no' => 'いいえ',

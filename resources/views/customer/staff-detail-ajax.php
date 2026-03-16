@@ -196,7 +196,51 @@ if ($action === 'create_reservation') {
     $feeStmt = $pdo->prepare("SELECT designation_fee FROM {$prefix}staff WHERE id = ?");
     $feeStmt->execute([$staffId]);
     $designationFee = (float)($feeStmt->fetchColumn() ?: 0);
-    $finalAmount = $totalPrice + $designationFee;
+
+    // 회원 등급 할인
+    $discountAmount = 0;
+    $discountEnabled = ($config['service_discount_enabled'] ?? '0') === '1';
+    if ($isLoggedIn && $discountEnabled && !empty($currentUser['id'])) {
+        $grStmt = $pdo->prepare("SELECT g.discount_rate FROM {$prefix}users u JOIN {$prefix}member_grades g ON u.grade_id = g.id WHERE u.id = ?");
+        $grStmt->execute([$currentUser['id']]);
+        $discountRate = (float)($grStmt->fetchColumn() ?: 0);
+        if ($discountRate > 0) {
+            $discountAmount = floor($totalPrice * $discountRate / 100);
+        }
+    }
+
+    // 적립금 사용
+    $pointsUsed = 0;
+    $pointsEnabled = ($config['service_points_enabled'] ?? '0') === '1';
+    $reqPoints = max(0, (int)($input['points_used'] ?? 0));
+    if ($isLoggedIn && $pointsEnabled && $reqPoints > 0 && !empty($currentUser['id'])) {
+        // 보유 잔액 확인
+        $balStmt = $pdo->prepare("SELECT points_balance FROM {$prefix}users WHERE id = ?");
+        $balStmt->execute([$currentUser['id']]);
+        $balance = (float)($balStmt->fetchColumn() ?: 0);
+        // 사용 가능 한도: 잔액 vs (소계 - 할인)
+        $maxUsable = min($balance, $totalPrice + $designationFee - $discountAmount);
+        $pointsUsed = min($reqPoints, $maxUsable);
+        if ($pointsUsed < 0) $pointsUsed = 0;
+    }
+
+    $finalAmount = $totalPrice + $designationFee - $discountAmount - $pointsUsed;
+
+    // 예약금 설정에 따른 결제 금액 결정
+    $depositEnabled = ($config['service_deposit_enabled'] ?? '0') === '1';
+    if ($depositEnabled) {
+        $depositType = $config['service_deposit_type'] ?? 'fixed';
+        if ($depositType === 'percent') {
+            $paidAmount = ceil($finalAmount * (float)($config['service_deposit_percent'] ?? 0) / 100);
+        } else {
+            $paidAmount = min((float)($config['service_deposit_amount'] ?? 0), $finalAmount);
+        }
+        $paymentStatus = ($paidAmount >= $finalAmount) ? 'paid' : 'partial';
+    } else {
+        // 예약금 미사용: 전액 결제
+        $paidAmount = $finalAmount;
+        $paymentStatus = 'paid';
+    }
 
     // 예약번호
     $reservationNumber = 'RZX' . date('ymd') . strtoupper(bin2hex(random_bytes(3)));
@@ -211,16 +255,27 @@ if ($action === 'create_reservation') {
 
     $sql = "INSERT INTO {$prefix}reservations
         (id, reservation_number, user_id, staff_id, customer_name, customer_phone, customer_email,
-         reservation_date, start_time, end_time, total_amount, final_amount, designation_fee, status, source, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'designation', ?)";
+         reservation_date, start_time, end_time, total_amount, final_amount, designation_fee, discount_amount, points_used,
+         paid_amount, payment_status, status, source, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'designation', ?)";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
         $id, $reservationNumber, $userId,
         $staffId,
         $name, $phone, $email ?: null,
         $date, $time . ':00', $endDt->format('H:i:s'),
-        $totalPrice, $finalAmount, $designationFee, $notes ?: null,
+        $totalPrice, $finalAmount, $designationFee, $discountAmount, $pointsUsed,
+        $paidAmount, $paymentStatus, $notes ?: null,
     ]);
+
+    // 적립금 차감 + 트랜잭션 기록
+    if ($pointsUsed > 0 && !empty($currentUser['id'])) {
+        $pdo->prepare("UPDATE {$prefix}users SET points_balance = points_balance - ? WHERE id = ? AND points_balance >= ?")->execute([$pointsUsed, $currentUser['id'], $pointsUsed]);
+        $newBal = (float)$pdo->query("SELECT points_balance FROM {$prefix}users WHERE id = " . $pdo->quote($currentUser['id']))->fetchColumn();
+        $txId = sprintf('%s-%s-%s-%s-%s', bin2hex(random_bytes(4)), bin2hex(random_bytes(2)), bin2hex(random_bytes(2)), bin2hex(random_bytes(2)), bin2hex(random_bytes(6)));
+        $pdo->prepare("INSERT INTO {$prefix}point_transactions (id, user_id, type, amount, balance_after, source, source_id, description) VALUES (?, ?, 'use', ?, ?, 'reservation', ?, ?)")
+            ->execute([$txId, $currentUser['id'], $pointsUsed, $newBal, $id, '예약 적립금 사용 (' . $reservationNumber . ')']);
+    }
 
     // 번들 ID (있는 경우)
     $bundleId = !empty($input['bundle_id']) ? $input['bundle_id'] : null;
@@ -253,10 +308,27 @@ if ($action === 'create_reservation') {
                 $totalPrice += (float)$s['price'];
             }
         }
-        $finalAmount = $totalPrice + $designationFee;
+        // 할인 재계산 (번들 가격 기준)
+        if ($discountAmount > 0) {
+            $discountAmount = floor($totalPrice * ($discountEnabled ? ($discountRate ?? 0) : 0) / 100);
+        }
+        $finalAmount = $totalPrice + $designationFee - $discountAmount - $pointsUsed;
+
+        // 예약금 재계산 (번들 가격 기준)
+        if ($depositEnabled) {
+            if (($config['service_deposit_type'] ?? 'fixed') === 'percent') {
+                $paidAmount = ceil($finalAmount * (float)($config['service_deposit_percent'] ?? 0) / 100);
+            } else {
+                $paidAmount = min((float)($config['service_deposit_amount'] ?? 0), $finalAmount);
+            }
+            $paymentStatus = ($paidAmount >= $finalAmount) ? 'paid' : 'partial';
+        } else {
+            $paidAmount = $finalAmount;
+            $paymentStatus = 'paid';
+        }
 
         // UPDATE reservations with recalculated amounts
-        $pdo->prepare("UPDATE {$prefix}reservations SET total_amount = ?, final_amount = ? WHERE id = ?")->execute([$totalPrice, $finalAmount, $id]);
+        $pdo->prepare("UPDATE {$prefix}reservations SET total_amount = ?, final_amount = ?, discount_amount = ?, paid_amount = ?, payment_status = ? WHERE id = ?")->execute([$totalPrice, $finalAmount, $discountAmount, $paidAmount, $paymentStatus, $id]);
 
         foreach ($selectedServices as $s) {
             $isBundled = in_array($s['id'], $bundleServiceIds);

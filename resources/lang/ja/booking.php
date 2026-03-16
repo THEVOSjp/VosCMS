@@ -16,6 +16,8 @@ return [
     'confirm_info' => '予約情報をご確認ください',
     'complete_booking' => '予約を完了する',
     'select_service_datetime' => 'ご希望のサービスと日時を選択してください',
+    'staff_designation_guide' => 'スタッフ指名予約はスタッフページからお進みください',
+    'go_staff_booking' => 'スタッフ指名予約',
     'select_datetime' => '日時を選択してください',
     'no_services' => '現在登録されているサービスがありません。',
     'contact_admin' => '管理者にお問い合わせください。',
@@ -178,4 +180,12 @@ return [
         'required_fields' => 'お名前と連絡先を入力してください。',
         'invalid_service' => '無効なサービスです。',
     ],
+
+    'member_discount' => '会員割引',
+    'use_points' => 'ポイント使用',
+    'points_balance' => '残高',
+    'use_all' => '全額使用',
+    'points_default_name' => 'ポイント',
+    'deposit_pay_now' => '予約金（お支払い金額）',
+    'deposit_remaining_later' => '残額はサービス利用時にお支払いいただきます',
 ];

@@ -75,7 +75,7 @@ return [
         'close' => 'Schliessen',
         'apply' => 'Anwenden',
     ],
-    'messages' => ['confirm_delete' => 'Moechten Sie wirklich loeschen?', 'no_data' => 'Keine Daten verfuegbar.', 'loading' => 'Laden...', 'processing' => 'Verarbeitung...'],
+    'messages' => ['confirm_delete' => 'Moechten Sie wirklich loeschen?', 'no_data' => 'Keine Daten verfuegbar.', 'loading' => 'Laden...', 'processing' => 'Verarbeitung...', 'save' => 'Speichern', 'saved' => 'Erfolgreich gespeichert.'],
     'common' => [
         'yes' => 'Ja',
         'no' => 'Nein',

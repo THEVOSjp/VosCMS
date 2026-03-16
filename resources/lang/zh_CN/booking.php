@@ -16,6 +16,8 @@ return [
     'confirm_info' => '请确认您的预约信息',
     'complete_booking' => '完成预约',
     'select_service_datetime' => '请选择服务和首选日期/时间',
+    'staff_designation_guide' => '指定员工预约请前往员工页面',
+    'go_staff_booking' => '指定员工预约',
     'select_datetime' => '请选择日期和时间',
     'no_services' => '目前没有可用服务。',
     'contact_admin' => '请联系管理员。',
@@ -178,4 +180,12 @@ return [
         'required_fields' => '请输入姓名和联系方式。',
         'invalid_service' => '无效的服务。',
     ],
+
+    'member_discount' => '会员折扣',
+    'use_points' => '使用积分',
+    'points_balance' => '余额',
+    'use_all' => '全部使用',
+    'points_default_name' => '积分',
+    'deposit_pay_now' => '预约金（支付金额）',
+    'deposit_remaining_later' => '余额将在服务时收取',
 ];

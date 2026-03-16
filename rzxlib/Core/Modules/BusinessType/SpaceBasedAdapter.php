@@ -208,7 +208,7 @@ class SpaceBasedAdapter implements PosAdapterInterface
             'customer_email'   => $firstR['customer_email'] ?? '',
             'reservation_date' => $firstR['reservation_date'] ?? date('Y-m-d'),
             'source'           => $firstR['source'] ?? 'walk_in',
-            'service_ids'      => array_column($card['services'], 'id'),
+            'reservation_ids'  => array_values(array_unique(array_column($card['services'], 'id'))),
         ], JSON_UNESCAPED_UNICODE));
 
         return [

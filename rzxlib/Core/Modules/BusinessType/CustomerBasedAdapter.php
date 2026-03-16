@@ -57,6 +57,7 @@ class CustomerBasedAdapter implements PosAdapterInterface
                     'source'           => $src,
                     'services'         => [],
                     'total_amount'     => 0,
+                    'designation_fee'  => 0,
                     'paid_amount'      => 0,
                     'has_in_service'   => false,
                     'has_pending'      => false,
@@ -65,6 +66,11 @@ class CustomerBasedAdapter implements PosAdapterInterface
                     'service_image'      => null,
                     'user_id'            => null,
                     'user_profile_image' => null,
+                    'grade_name'         => null,
+                    'grade_discount_rate'=> 0,
+                    'grade_point_rate'   => 0,
+                    'grade_color'        => null,
+                    'points_balance'     => 0,
                 ];
             }
             // 첫 번째 서비스 이미지 / 회원 정보 설정
@@ -77,9 +83,18 @@ class CustomerBasedAdapter implements PosAdapterInterface
             if (empty($customerGroups[$key]['user_profile_image']) && !empty($r['user_profile_image'])) {
                 $customerGroups[$key]['user_profile_image'] = $r['user_profile_image'];
             }
+            // 회원 등급 정보 전파
+            if (empty($customerGroups[$key]['grade_name']) && !empty($r['grade_name'])) {
+                $customerGroups[$key]['grade_name'] = $r['grade_name'];
+                $customerGroups[$key]['grade_discount_rate'] = (float)($r['grade_discount_rate'] ?? 0);
+                $customerGroups[$key]['grade_point_rate'] = (float)($r['grade_point_rate'] ?? 0);
+                $customerGroups[$key]['grade_color'] = $r['grade_color'] ?? null;
+                $customerGroups[$key]['points_balance'] = (float)($r['user_points_balance'] ?? 0);
+            }
             $g = &$customerGroups[$key];
             $g['services'][] = $r;
             $g['total_amount'] += (float)($r['final_amount'] ?? $r['total_amount'] ?? 0);
+            $g['designation_fee'] += (float)($r['designation_fee'] ?? 0);
             $g['paid_amount']  += (float)($r['paid_amount'] ?? 0);
 
             $isInSvc = ($st === 'confirmed'
@@ -88,7 +103,10 @@ class CustomerBasedAdapter implements PosAdapterInterface
             if ($isInSvc) { $g['has_in_service'] = true; $inServiceCount++; }
             if ($st === 'pending' || ($st === 'confirmed' && !$isInSvc)) {
                 $g['has_pending'] = true;
-                $waitingCount++;
+                // 대기자 카운트는 워크인(현장접수)만 집계 (예약자는 별도 탭)
+                if ($src === 'walk_in') {
+                    $waitingCount++;
+                }
             }
 
             $sTime = substr($r['start_time'] ?? '23:59', 0, 5);
@@ -98,11 +116,25 @@ class CustomerBasedAdapter implements PosAdapterInterface
             unset($g);
         }
 
-        // 그룹 상태 결정 및 정렬
+        // 그룹 상태 결정, 할인 적용, 정렬
         $allCards = [];
         foreach ($customerGroups as $g) {
             $g['group_status'] = $g['has_in_service'] ? 'in_service' : 'waiting';
-            $g['payment_status'] = ($g['paid_amount'] >= $g['total_amount'] && $g['total_amount'] > 0)
+            // 회원 등급 할인율 적용
+            $discountRate = $g['grade_discount_rate'] ?? 0;
+            if ($discountRate > 0 && $g['total_amount'] > 0) {
+                $g['discount_amount'] = round($g['total_amount'] * $discountRate / 100);
+                $g['final_amount'] = $g['total_amount'] - $g['discount_amount'];
+            } else {
+                $g['discount_amount'] = 0;
+                $g['final_amount'] = $g['total_amount'];
+            }
+            // 적립 예정 포인트
+            $pointRate = $g['grade_point_rate'] ?? 0;
+            $g['expected_points'] = ($pointRate > 0 && $g['final_amount'] > 0)
+                ? round($g['final_amount'] * $pointRate / 100)
+                : 0;
+            $g['payment_status'] = ($g['paid_amount'] >= $g['final_amount'] && $g['final_amount'] > 0)
                 ? 'paid'
                 : (($g['paid_amount'] > 0) ? 'partial' : 'unpaid');
             $allCards[] = $g;
@@ -180,7 +212,15 @@ class CustomerBasedAdapter implements PosAdapterInterface
             'customer_email'   => $card['customer_email'],
             'reservation_date' => $card['reservation_date'],
             'source'           => $card['source'],
-            'service_ids'      => array_column($card['services'], 'id'),
+            'user_id'          => $card['user_id'] ?? null,
+            'reservation_ids'  => array_values(array_unique(array_column($card['services'], 'id'))),
+            // 결제 내역용
+            'total_amount'     => $card['total_amount'],
+            'designation_fee'  => $card['designation_fee'],
+            'discount_rate'    => $card['grade_discount_rate'] ?? 0,
+            'discount_amount'  => $card['discount_amount'] ?? 0,
+            'final_amount'     => $card['final_amount'],
+            'paid_amount'      => $card['paid_amount'],
         ], JSON_UNESCAPED_UNICODE));
 
         return [

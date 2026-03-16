@@ -8,6 +8,13 @@
         ajaxUrl: '<?= $baseUrl ?>/staff/<?= $staffId ?>',
         locale: '<?= $currentLocale ?>',
         designationFee: <?= (float)($staff['designation_fee'] ?? 0) ?>,
+        isLoggedIn: <?= $isLoggedIn ? 'true' : 'false' ?>,
+        discountRate: <?= ($isLoggedIn && $discountEnabled && $userGrade) ? $userGrade['discount_rate'] : 0 ?>,
+        pointsBalance: <?= ($isLoggedIn && $pointsEnabled) ? (int)$userPointsBalance : 0 ?>,
+        depositEnabled: <?= $depositEnabled ? 'true' : 'false' ?>,
+        depositType: '<?= $depositType ?>',
+        depositAmount: <?= $depositAmount ?>,
+        depositPercent: <?= $depositPercent ?>,
         dayLabels: <?= json_encode($days) ?>,
         monthNames: {
             ko: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
@@ -380,9 +387,52 @@
             }
         }
 
-        // 합계 (서비스/번들 + 지명비)
-        var total = totalPrice + CONFIG.designationFee;
+        // 할인 계산
+        var subtotal = totalPrice + CONFIG.designationFee;
+        var discountAmount = 0;
+        var discountRow = document.getElementById('sdDiscountRow');
+        var discountAmountEl = document.getElementById('sdDiscountAmount');
+        if (CONFIG.discountRate > 0 && totalPrice > 0) {
+            discountAmount = Math.floor(totalPrice * CONFIG.discountRate / 100);
+            if (discountRow) { discountRow.classList.remove('hidden'); }
+            if (discountAmountEl) discountAmountEl.textContent = '-¥' + Number(discountAmount).toLocaleString();
+        } else {
+            if (discountRow) discountRow.classList.add('hidden');
+        }
+
+        // 적립금 입력 표시
+        var pointsRow = document.getElementById('sdPointsRow');
+        var pointsInput = document.getElementById('sdPointsInput');
+        var afterDiscount = subtotal - discountAmount;
+        if (pointsRow && CONFIG.pointsBalance > 0 && totalPrice > 0) {
+            pointsRow.classList.remove('hidden');
+            // max 제한: 할인 후 금액 vs 보유 잔액 중 작은 값
+            var maxPoints = Math.min(CONFIG.pointsBalance, afterDiscount);
+            if (pointsInput) pointsInput.max = maxPoints;
+            var usedPoints = parseInt(pointsInput ? pointsInput.value : 0) || 0;
+            if (usedPoints > maxPoints) { usedPoints = maxPoints; if (pointsInput) pointsInput.value = usedPoints; }
+        } else {
+            if (pointsRow) pointsRow.classList.add('hidden');
+        }
+
+        var usedPts = parseInt(pointsInput ? pointsInput.value : 0) || 0;
+        var total = afterDiscount - usedPts;
+        if (total < 0) total = 0;
         if (grandTotal) grandTotal.textContent = '¥' + Number(total).toLocaleString();
+
+        // 예약금 표시
+        var depositRow = document.getElementById('sdDepositRow');
+        var depositAmountEl = document.getElementById('sdDepositAmount');
+        if (CONFIG.depositEnabled && total > 0 && depositRow) {
+            var deposit = CONFIG.depositType === 'percent'
+                ? Math.ceil(total * CONFIG.depositPercent / 100)
+                : Math.min(CONFIG.depositAmount, total);
+            depositRow.classList.remove('hidden');
+            if (depositAmountEl) depositAmountEl.textContent = '¥' + Number(deposit).toLocaleString();
+            console.log('[StaffDetail] Deposit:', deposit, 'of total:', total);
+        } else if (depositRow) {
+            depositRow.classList.add('hidden');
+        }
 
         // 버튼 상태
         updateBookBtn();
@@ -423,6 +473,9 @@
             bookBtn.disabled = true;
             bookBtn.textContent = CONFIG.labels.submitting;
 
+            var pointsVal = parseInt((document.getElementById('sdPointsInput') || {}).value || 0) || 0;
+            console.log('[StaffDetail] Submitting with discount_rate:', CONFIG.discountRate, 'points_used:', pointsVal);
+
             fetch(CONFIG.ajaxUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -435,7 +488,8 @@
                     customer_name: name.trim(),
                     customer_phone: phone.trim(),
                     customer_email: email.trim(),
-                    notes: notes.trim()
+                    notes: notes.trim(),
+                    points_used: pointsVal
                 })
             })
             .then(function(res) { return res.json(); })
@@ -556,6 +610,23 @@
             if (circle) { circle.classList.add('border-gray-300', 'dark:border-zinc-600'); circle.classList.remove('border-blue-500', 'bg-blue-500'); }
             if (icon) icon.classList.add('hidden');
         }
+    }
+
+    // ---- Points Input Events ----
+    var pointsInput = document.getElementById('sdPointsInput');
+    var pointsAllBtn = document.getElementById('sdPointsAllBtn');
+    if (pointsInput) {
+        pointsInput.addEventListener('input', function() {
+            console.log('[StaffDetail] Points input changed:', this.value);
+            updateSummary();
+        });
+    }
+    if (pointsAllBtn && pointsInput) {
+        pointsAllBtn.addEventListener('click', function() {
+            pointsInput.value = pointsInput.max;
+            console.log('[StaffDetail] Use all points:', pointsInput.max);
+            updateSummary();
+        });
     }
 
     // ---- Init ----

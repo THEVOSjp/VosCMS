@@ -20,14 +20,7 @@
     <title><?php echo htmlspecialchars($pageTitle); ?></title>
 
     <!-- PWA Admin -->
-    <link rel="manifest" href="<?php echo $baseUrl; ?>/admin-manifest.json">
-    <meta name="theme-color" content="#18181b">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="RezlyX Admin">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="RezlyX Admin">
-    <link rel="apple-touch-icon" href="<?php echo $baseUrl; ?>/assets/icons/admin-icon-192x192.png">
+    <?php include __DIR__ . '/../partials/pwa-head.php'; ?>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -115,17 +108,6 @@
     </script>
 
     <!-- PWA Admin Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', async () => {
-                try {
-                    const registration = await navigator.serviceWorker.register('/admin-sw.js', { scope: '/admin' });
-                    console.log('[Admin PWA] Service Worker registered:', registration.scope);
-                } catch (error) {
-                    console.error('[Admin PWA] Service Worker registration failed:', error);
-                }
-            });
-        }
-    </script>
+    <?php include __DIR__ . '/../partials/pwa-scripts.php'; ?>
 </body>
 </html>

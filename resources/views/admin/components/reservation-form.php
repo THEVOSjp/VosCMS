@@ -34,6 +34,7 @@ if (!function_exists('resFormFormatPrice')) {
 
 <form method="POST" action="<?= $resForm['adminUrl'] ?>/reservations" id="<?= $fId ?>">
     <input type="hidden" name="_token" value="<?= $resForm['csrfToken'] ?>">
+    <input type="hidden" name="user_id" id="<?= $fId ?>_userId" value="">
     <?php if (!empty($resForm['source'])): ?>
     <input type="hidden" name="source" value="<?= htmlspecialchars($resForm['source']) ?>">
     <?php endif; ?>
@@ -192,6 +193,8 @@ if (!function_exists('resFormFormatPrice')) {
                 </div>
             </div>
 
+            <?php include __DIR__ . '/reservation-form-staff.php'; ?>
+
             <!-- 버튼 -->
             <div class="flex gap-3">
                 <?php if ($fMode === 'page'): ?>
@@ -206,3 +209,12 @@ if (!function_exists('resFormFormatPrice')) {
         </div>
     </div>
 </form>
+
+<?php
+// 스태프 데이터 (활성 스태프 목록)
+$rfStaff = $pdo->query("SELECT id, name, avatar, designation_fee FROM {$prefix}staff WHERE is_active = 1 ORDER BY sort_order ASC, name ASC")->fetchAll(PDO::FETCH_ASSOC);
+?>
+<script>
+window._rfStaff = window._rfStaff || {};
+window._rfStaff['<?= $fId ?>'] = <?= json_encode($rfStaff, JSON_UNESCAPED_UNICODE) ?>;
+</script>

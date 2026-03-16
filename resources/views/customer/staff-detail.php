@@ -124,6 +124,33 @@ $designationFee = (float)($staff['designation_fee'] ?? 0);
 $avatarUrl = $staff['avatar'] ?? '';
 $bannerUrl = $staff['banner'] ?? '';
 
+// 로그인 회원: 등급 할인/적립금 조회
+$userGrade = null;
+$userPointsBalance = 0;
+$discountEnabled = ($siteSettings['service_discount_enabled'] ?? '0') === '1';
+$pointsEnabled = ($siteSettings['service_points_enabled'] ?? '0') === '1';
+$depositEnabled = ($siteSettings['service_deposit_enabled'] ?? '0') === '1';
+$depositType = $siteSettings['service_deposit_type'] ?? 'fixed';
+$depositAmount = (float)($siteSettings['service_deposit_amount'] ?? 0);
+$depositPercent = (float)($siteSettings['service_deposit_percent'] ?? 0);
+if ($isLoggedIn && $currentUser) {
+    $ugStmt = $pdo->prepare("SELECT u.points_balance, g.name as grade_name, g.discount_rate, g.point_rate, g.color as grade_color
+        FROM {$prefix}users u LEFT JOIN {$prefix}member_grades g ON u.grade_id = g.id WHERE u.id = ?");
+    $ugStmt->execute([$currentUser['id']]);
+    $ugRow = $ugStmt->fetch(PDO::FETCH_ASSOC);
+    if ($ugRow) {
+        $userPointsBalance = (float)($ugRow['points_balance'] ?? 0);
+        if (!empty($ugRow['grade_name'])) {
+            $userGrade = [
+                'name' => $ugRow['grade_name'],
+                'discount_rate' => (float)($ugRow['discount_rate'] ?? 0),
+                'point_rate' => (float)($ugRow['point_rate'] ?? 0),
+                'color' => $ugRow['grade_color'] ?? '#6B7280',
+            ];
+        }
+    }
+}
+
 $pageTitle = $staffName . ' - ' . ($config['app_name'] ?? 'RezlyX');
 
 // 요일명
@@ -419,6 +446,37 @@ include BASE_PATH . '/resources/views/partials/header.php';
                         <span id="sdDateTimeLabel" class="text-blue-600 dark:text-blue-400 font-medium"></span>
                     </div>
 
+                    <!-- 회원 할인 -->
+                    <?php if ($isLoggedIn && $discountEnabled && $userGrade && $userGrade['discount_rate'] > 0): ?>
+                    <div id="sdDiscountRow" class="flex justify-between text-sm hidden">
+                        <span class="text-red-500 dark:text-red-400">
+                            <?= __('booking.member_discount') ?>
+                            <span class="text-xs">(<?= htmlspecialchars($userGrade['name']) ?> <?= $userGrade['discount_rate'] ?>%)</span>
+                        </span>
+                        <span id="sdDiscountAmount" class="text-red-500 dark:text-red-400 font-medium"></span>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- 적립금 사용 -->
+                    <?php if ($isLoggedIn && $pointsEnabled && $userPointsBalance > 0): ?>
+                    <div id="sdPointsRow" class="hidden">
+                        <div class="flex items-center justify-between text-sm mb-1">
+                            <label for="sdPointsInput" class="text-gray-500 dark:text-zinc-400">
+                                <?= get_points_name() ?> <?= __('reservations.used') ?>
+                                <span class="text-xs text-blue-500">(<?= __('booking.points_balance') ?>: &yen;<?= number_format($userPointsBalance) ?>)</span>
+                            </label>
+                            <button type="button" id="sdPointsAllBtn" class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 font-medium">
+                                <?= __('booking.use_all') ?>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-gray-400">&yen;</span>
+                            <input type="number" id="sdPointsInput" min="0" max="<?= (int)$userPointsBalance ?>" step="1" value="0"
+                                   class="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     <!-- 합계 -->
                     <div class="border-t border-gray-200 dark:border-zinc-700 pt-3 mt-2">
                         <div class="flex justify-between items-center">
@@ -426,6 +484,17 @@ include BASE_PATH . '/resources/views/partials/header.php';
                             <span id="sdGrandTotal" class="text-xl font-bold text-blue-600 dark:text-blue-400"></span>
                         </div>
                     </div>
+
+                    <!-- 예약금 안내 -->
+                    <?php if ($depositEnabled): ?>
+                    <div id="sdDepositRow" class="hidden mt-2 p-2.5 bg-violet-50 dark:bg-violet-900/20 rounded-lg border border-violet-200 dark:border-violet-800">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-violet-700 dark:text-violet-300 font-medium"><?= __('booking.deposit_pay_now') ?></span>
+                            <span id="sdDepositAmount" class="text-base font-bold text-violet-600 dark:text-violet-400"></span>
+                        </div>
+                        <p class="text-xs text-violet-500 dark:text-violet-400/70 mt-0.5"><?= __('booking.deposit_remaining_later') ?></p>
+                    </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- 고객 정보 입력 -->

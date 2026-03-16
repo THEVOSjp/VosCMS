@@ -14,6 +14,17 @@ $isMember = !empty($g['user_id']);
 $hasServiceBg = !empty($svcImg);
 $hasProfile = $isMember && !empty($profileImg);
 $appUrl = $config['app_url'] ?? '';
+$gradeName = $g['grade_name'] ?? '';
+$gradeColor = $g['grade_color'] ?? '#6B7280';
+// 설정에 따른 할인/적립 적용
+$discountEnabled = ($siteSettings['service_discount_enabled'] ?? '0') === '1';
+$pointsEnabled = ($siteSettings['service_points_enabled'] ?? '0') === '1';
+$discountRate = $discountEnabled ? ($g['grade_discount_rate'] ?? 0) : 0;
+$pointRate = $pointsEnabled ? ($g['grade_point_rate'] ?? 0) : 0;
+$discountAmt = $discountEnabled ? ($g['discount_amount'] ?? 0) : 0;
+$finalAmt = $discountEnabled ? ($g['final_amount'] ?? $g['total_amount']) : $g['total_amount'];
+$expectedPts = $pointsEnabled ? ($g['expected_points'] ?? 0) : 0;
+$pointsBalance = $pointsEnabled ? ($g['points_balance'] ?? 0) : 0;
 ?>
 <div class="pos-card rounded-xl border-2 <?= $borderCls ?> shadow-sm relative overflow-hidden hover:shadow-md transition flex flex-col"
      style="min-height:200px;<?php if ($hasServiceBg): ?>background-image:url('<?= htmlspecialchars($appUrl . '/storage/' . $svcImg) ?>');background-size:cover;background-position:center<?php endif; ?>">
@@ -34,7 +45,13 @@ $appUrl = $config['app_url'] ?? '';
             <div class="flex items-center gap-2.5">
                 <?php if ($isMember): ?>
                     <?php if ($hasProfile): ?>
-                    <img src="<?= htmlspecialchars($appUrl . '/storage/' . $profileImg) ?>" alt=""
+                    <?php
+                    // profile_image는 이미 /storage/ 포함, service image는 미포함 → 분기 처리
+                    $profileSrc = (str_starts_with($profileImg, '/storage/') || str_starts_with($profileImg, 'http'))
+                        ? $appUrl . $profileImg
+                        : $appUrl . '/storage/' . $profileImg;
+                    ?>
+                    <img src="<?= htmlspecialchars($profileSrc) ?>" alt=""
                          class="w-11 h-11 rounded-full object-cover border-2 border-blue-400/80 shadow-md flex-shrink-0">
                     <?php else: ?>
                     <div class="w-11 h-11 rounded-full bg-blue-500 flex items-center justify-center border-2 border-blue-400/50 shadow flex-shrink-0">
@@ -43,7 +60,12 @@ $appUrl = $config['app_url'] ?? '';
                     <?php endif; ?>
                 <?php endif; ?>
                 <div class="min-w-0">
-                    <p class="text-lg font-bold <?= $hasServiceBg ? 'text-white drop-shadow-sm' : 'text-zinc-900 dark:text-white' ?> truncate"><?= htmlspecialchars($g['customer_name']) ?></p>
+                    <div class="flex items-center gap-1.5">
+                        <p class="text-lg font-bold <?= $hasServiceBg ? 'text-white drop-shadow-sm' : 'text-zinc-900 dark:text-white' ?> truncate"><?= htmlspecialchars($g['customer_name']) ?></p>
+                        <?php if ($isMember && $gradeName): ?>
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-white flex-shrink-0" style="background-color:<?= htmlspecialchars($gradeColor) ?>"><?= htmlspecialchars($gradeName) ?></span>
+                        <?php endif; ?>
+                    </div>
                     <p class="text-xs <?= $hasServiceBg ? 'text-white/70' : 'text-zinc-400 dark:text-zinc-500' ?>"><?= htmlspecialchars($g['customer_phone']) ?></p>
                 </div>
             </div>
@@ -73,6 +95,27 @@ $appUrl = $config['app_url'] ?? '';
             <?php endif; ?>
         </div>
 
+        <!-- 할인/적립 정보 -->
+        <?php if ($isMember && ($discountRate > 0 || $pointsBalance > 0)): ?>
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+            <?php if ($discountRate > 0): ?>
+            <span class="text-[10px] <?= $hasServiceBg ? 'text-orange-300' : 'text-orange-500 dark:text-orange-400' ?>">
+                <?= __('reservations.pos_discount') ?> <?= $discountRate ?>% (-<?= formatPrice($discountAmt) ?>)
+            </span>
+            <?php endif; ?>
+            <?php if ($expectedPts > 0): ?>
+            <span class="text-[10px] <?= $hasServiceBg ? 'text-yellow-300' : 'text-yellow-600 dark:text-yellow-400' ?>">
+                <?= __('reservations.pos_points_earn') ?> +<?= number_format($expectedPts) ?>P
+            </span>
+            <?php endif; ?>
+            <?php if ($pointsBalance > 0): ?>
+            <span class="text-[10px] <?= $hasServiceBg ? 'text-cyan-300' : 'text-cyan-600 dark:text-cyan-400' ?>">
+                <?= get_points_name() ?> <?= number_format($pointsBalance) ?>P
+            </span>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
         <div class="flex items-center justify-between mt-auto">
             <?php if ($gStatus === 'in_service'): ?>
             <div class="flex items-center gap-1">
@@ -84,7 +127,12 @@ $appUrl = $config['app_url'] ?? '';
             <?php else: ?>
             <span class="text-xs <?= $hasServiceBg ? 'text-amber-300' : 'text-amber-600 dark:text-amber-400' ?>"><?= $g['earliest_start'] ?> <?= __('reservations.pos_scheduled') ?></span>
             <?php endif; ?>
-            <span class="text-sm font-bold <?= $hasServiceBg ? 'text-white drop-shadow-sm' : 'text-zinc-900 dark:text-white' ?>"><?= formatPrice($g['total_amount']) ?></span>
+            <div class="text-right">
+                <?php if ($discountAmt > 0): ?>
+                <span class="text-[10px] line-through <?= $hasServiceBg ? 'text-white/50' : 'text-zinc-400' ?>"><?= formatPrice($g['total_amount']) ?></span>
+                <?php endif; ?>
+                <span class="text-sm font-bold <?= $hasServiceBg ? 'text-white drop-shadow-sm' : 'text-zinc-900 dark:text-white' ?>"><?= formatPrice($finalAmt) ?></span>
+            </div>
         </div>
     </div>
 
@@ -102,7 +150,7 @@ $appUrl = $config['app_url'] ?? '';
             </button>
         <?php else: ?>
             <?php if ($pSt !== 'paid'): ?>
-            <button onclick="event.stopPropagation();POS.openGroupPayment(<?= $cardJson ?>, <?= $g['total_amount'] ?>, <?= $g['paid_amount'] ?>)"
+            <button onclick="event.stopPropagation();POS.openGroupPayment(<?= $cardJson ?>)"
                     class="flex-1 h-11 flex items-center justify-center gap-1.5 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white rounded-lg text-sm font-bold transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                 <?= __('reservations.pos_btn_payment') ?>

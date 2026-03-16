@@ -39,6 +39,32 @@ class ReservationController extends Controller
     }
 
     /**
+     * 키오스크 메인
+     */
+    public function kiosk(Request $request): Response
+    {
+        return $this->view('admin.reservations.kiosk');
+    }
+
+    /**
+     * 키오스크 설정
+     */
+    public function kioskSettings(Request $request): Response
+    {
+        return $this->view('admin.reservations.kiosk-settings');
+    }
+
+    /**
+     * 키오스크 설정 저장
+     */
+    public function kioskSettingsSave(Request $request): Response
+    {
+        return $this->view('admin.reservations.kiosk-settings', [
+            'saved' => true,
+        ]);
+    }
+
+    /**
      * 예약 목록
      */
     public function index(Request $request): Response

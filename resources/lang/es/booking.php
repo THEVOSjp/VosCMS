@@ -16,6 +16,8 @@ return [
     'confirm_info' => 'Por favor, confirme su informacion de reserva',
     'complete_booking' => 'Completar reserva',
     'select_service_datetime' => 'Por favor, seleccione su servicio y fecha/hora preferida',
+    'staff_designation_guide' => 'Para reservas con personal designado, por favor vaya a la página de personal',
+    'go_staff_booking' => 'Reserva con personal designado',
     'select_datetime' => 'Por favor, seleccione una fecha y hora',
     'no_services' => 'No hay servicios disponibles actualmente.',
     'contact_admin' => 'Por favor, contacte al administrador.',
@@ -178,4 +180,12 @@ return [
         'required_fields' => 'Por favor, ingrese su nombre e informacion de contacto.',
         'invalid_service' => 'Servicio no válido.',
     ],
+
+    'member_discount' => 'Descuento de miembro',
+    'use_points' => 'Usar puntos',
+    'points_balance' => 'Saldo',
+    'use_all' => 'Usar todo',
+    'points_default_name' => 'Puntos',
+    'deposit_pay_now' => 'Depósito (Pagar ahora)',
+    'deposit_remaining_later' => 'El saldo restante se cobrará en el servicio',
 ];

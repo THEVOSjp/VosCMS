@@ -29,7 +29,7 @@ Object.assign(POS, {
                 customer_email: spaceData.customer_email || '',
                 reservation_date: spaceData.reservation_date || new Date().toISOString().slice(0, 10),
                 source: spaceData.source || 'walk_in',
-                service_ids: spaceData.service_ids || [],
+                reservation_ids: spaceData.reservation_ids || [],
             });
         }
     },
@@ -38,7 +38,7 @@ Object.assign(POS, {
     async clearSpace(spaceData) {
         if (!confirm('<?= __('reservations.pos_space_clear_confirm') ?>')) return;
         console.log('[POS:Space] Clear space:', spaceData.space_name);
-        const ids = spaceData.service_ids || [];
+        const ids = spaceData.reservation_ids || [];
         for (const id of ids) {
             try {
                 await fetch(`${this.adminUrl}/reservations/${id}/complete`, {

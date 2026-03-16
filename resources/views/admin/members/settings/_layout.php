@@ -21,11 +21,7 @@
     <title><?php echo htmlspecialchars($pageTitle); ?></title>
 
     <!-- PWA Admin -->
-    <link rel="manifest" href="<?php echo $baseUrl; ?>/admin-manifest.json">
-    <meta name="theme-color" content="#18181b">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="RezlyX Admin">
+    <?php include __DIR__ . '/../../partials/pwa-head.php'; ?>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>

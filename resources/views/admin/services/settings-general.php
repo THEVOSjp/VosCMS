@@ -3,6 +3,7 @@
  * 서비스 설정 - 기본설정 탭
  * 예약 관련 기본 옵션 설정
  */
+include_once dirname(__DIR__) . '/components/multilang-button.php';
 
 // POST 처리
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_general') {
@@ -15,6 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             'service_min_notice_hours' => trim($_POST['service_min_notice_hours'] ?? '1'),
             'service_max_capacity' => trim($_POST['service_max_capacity'] ?? '1'),
             'service_price_display' => trim($_POST['service_price_display'] ?? 'show'),
+            'service_discount_enabled' => trim($_POST['service_discount_enabled'] ?? '0'),
+            'service_points_enabled' => trim($_POST['service_points_enabled'] ?? '0'),
+            'service_points_name' => trim($_POST['service_points_name'] ?? ''),
             'service_deposit_enabled' => trim($_POST['service_deposit_enabled'] ?? '0'),
             'service_deposit_type' => trim($_POST['service_deposit_type'] ?? 'fixed'),
             'service_deposit_amount' => trim($_POST['service_deposit_amount'] ?? '0'),
@@ -145,6 +149,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         <option value="hide" <?= $priceDisplay === 'hide' ? 'selected' : '' ?>><?= __('services.settings.general.price_hide') ?></option>
                         <option value="contact" <?= $priceDisplay === 'contact' ? 'selected' : '' ?>><?= __('services.settings.general.price_contact') ?></option>
                     </select>
+                </div>
+            </div>
+
+            <!-- 회원 할인/적립 설정 구분선 -->
+            <hr class="border-zinc-200 dark:border-zinc-700">
+
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white flex items-center">
+                <svg class="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                <?= __('services.settings.general.member_benefits_title') ?>
+            </h3>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 -mt-4">
+                <?= __('services.settings.general.member_benefits_description') ?>
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 회원 등급별 할인율 적용 -->
+                <div>
+                    <?php $discountEnabled = ($settings['service_discount_enabled'] ?? '0') === '1'; ?>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="hidden" name="service_discount_enabled" value="0">
+                        <input type="checkbox" name="service_discount_enabled" value="1"
+                               <?= $discountEnabled ? 'checked' : '' ?>
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-zinc-200 peer-focus:ring-2 peer-focus:ring-blue-500 dark:peer-focus:ring-blue-600 rounded-full peer dark:bg-zinc-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:after:border-zinc-500 peer-checked:bg-blue-600"></div>
+                        <span class="ml-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            <?= __('services.settings.general.discount_enabled') ?>
+                        </span>
+                    </label>
+                    <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1"><?= __('services.settings.general.discount_enabled_hint') ?></p>
+                </div>
+
+                <!-- 회원 등급별 적립금 적용 -->
+                <div>
+                    <?php $pointsEnabled = ($settings['service_points_enabled'] ?? '0') === '1'; ?>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="hidden" name="service_points_enabled" value="0">
+                        <input type="checkbox" name="service_points_enabled" value="1"
+                               <?= $pointsEnabled ? 'checked' : '' ?>
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-zinc-200 peer-focus:ring-2 peer-focus:ring-blue-500 dark:peer-focus:ring-blue-600 rounded-full peer dark:bg-zinc-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:after:border-zinc-500 peer-checked:bg-blue-600"></div>
+                        <span class="ml-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            <?= __('services.settings.general.points_enabled') ?>
+                        </span>
+                    </label>
+                    <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1"><?= __('services.settings.general.points_enabled_hint') ?></p>
+                </div>
+
+                <!-- 적립금 명칭 -->
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('services.settings.general.points_name') ?></label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" name="service_points_name" id="service_points_name" value="<?= htmlspecialchars($settings['service_points_name'] ?? '') ?>"
+                               placeholder="<?= __('services.settings.general.points_name_placeholder') ?>"
+                               class="flex-1 md:max-w-64 px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <?= rzx_multilang_btn("openMultilangModal('services.settings.general.points_name', 'service_points_name')") ?>
+                    </div>
+                    <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1"><?= __('services.settings.general.points_name_hint') ?></p>
                 </div>
             </div>
 

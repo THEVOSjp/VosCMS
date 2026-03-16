@@ -3,7 +3,7 @@
  * RezlyX - Modern Reservation System
  *
  * @package RezlyX
- * @version 1.4.0
+ * @version 1.5.0
  */
 
 define('REZLYX_START', microtime(true));
@@ -296,8 +296,17 @@ if (empty($path) || $path === 'index.php') {
     } elseif ($adminRoute === 'reservations/search-customers' && $_SERVER['REQUEST_METHOD'] === 'GET') {
         $apiAction = 'search-customers'; $apiId = null;
         include BASE_PATH . '/resources/views/admin/reservations/_api.php';
+    } elseif ($adminRoute === 'reservations/available-staff' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $apiAction = 'available-staff'; $apiId = null;
+        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
     } elseif ($adminRoute === 'reservations/add-service' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $apiAction = 'add-service'; $apiId = null;
+        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
+    } elseif ($adminRoute === 'reservations/assign-staff' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $apiAction = 'assign-staff'; $apiId = null;
+        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
+    } elseif ($adminRoute === 'reservations/save-memo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $apiAction = 'save-memo'; $apiId = null;
         include BASE_PATH . '/resources/views/admin/reservations/_api.php';
     } elseif (preg_match('#^reservations/([\w-]+)/(confirm|cancel|complete|no-show|start-service|payment)$#', $adminRoute, $m) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $apiId = $m[1]; $apiAction = $m[2];
@@ -306,6 +315,23 @@ if (empty($path) || $path === 'index.php') {
         $apiId = $m[1]; $apiAction = 'update';
         include BASE_PATH . '/resources/views/admin/reservations/_api.php';
     // 예약 관리 — GET 페이지
+    // 키오스크 관리
+    } elseif ($adminRoute === 'kiosk') {
+        include BASE_PATH . '/resources/views/admin/reservations/kiosk.php';
+    } elseif ($adminRoute === 'kiosk/settings') {
+        include BASE_PATH . '/resources/views/admin/reservations/kiosk-settings.php';
+    } elseif ($adminRoute === 'kiosk/run') {
+        include BASE_PATH . '/resources/views/customer/kiosk/index.php';
+    } elseif ($adminRoute === 'kiosk/run/choose') {
+        include BASE_PATH . '/resources/views/customer/kiosk/choose.php';
+    } elseif ($adminRoute === 'kiosk/run/staff') {
+        include BASE_PATH . '/resources/views/customer/kiosk/staff.php';
+    } elseif ($adminRoute === 'kiosk/run/service') {
+        include BASE_PATH . '/resources/views/customer/kiosk/service.php';
+    } elseif ($adminRoute === 'kiosk/run/confirm') {
+        include BASE_PATH . '/resources/views/customer/kiosk/confirm.php';
+    } elseif ($adminRoute === 'kiosk/upload' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        include BASE_PATH . '/resources/views/admin/reservations/kiosk-upload.php';
     } elseif ($adminRoute === 'reservations/pos') {
         include BASE_PATH . '/resources/views/admin/reservations/pos.php';
     } elseif ($adminRoute === 'reservations') {

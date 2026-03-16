@@ -67,20 +67,23 @@ $baseUrl = $baseUrl ?? $config['app_url'] ?? '';
 
     <title><?php echo htmlspecialchars($pageTitle); ?></title>
 
-    <!-- Favicon -->
+    <!-- Favicon & PWA -->
+    <?php
+    $_pwaS = $siteSettings ?? [];
+    $pwaFrontIcon = $_pwaS['pwa_front_icon'] ?? '';
+    $pwaFrontTheme = $_pwaS['pwa_front_theme_color'] ?? '#3b82f6';
+    ?>
     <link rel="icon" href="<?php echo $baseUrl; ?>/assets/images/favicon.ico">
-    <link rel="apple-touch-icon" href="<?php echo $baseUrl; ?>/assets/images/apple-touch-icon.png">
-
-    <!-- PWA -->
+    <?php if ($pwaFrontIcon): ?>
+    <link rel="apple-touch-icon" href="<?php echo $baseUrl . htmlspecialchars($pwaFrontIcon); ?>">
+    <?php endif; ?>
     <link rel="manifest" href="<?php echo $baseUrl; ?>/manifest.json">
-    <meta name="theme-color" content="#3b82f6">
+    <meta name="theme-color" content="<?php echo htmlspecialchars($pwaFrontTheme); ?>">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="<?php echo htmlspecialchars($siteName); ?>">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="<?php echo htmlspecialchars($siteName); ?>">
-    <meta name="msapplication-TileColor" content="#3b82f6">
-    <meta name="msapplication-config" content="<?php echo $baseUrl; ?>/browserconfig.xml">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -119,10 +122,6 @@ $baseUrl = $baseUrl ?? $config['app_url'] ?? '';
             document.documentElement.classList.add('dark');
         }
     </script>
-
-    <!-- PWA -->
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#3b82f6">
 
     <?php if (isset($headScripts)): ?>
         <?php echo $headScripts; ?>
@@ -186,7 +185,8 @@ $baseUrl = $baseUrl ?? $config['app_url'] ?? '';
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', async () => {
                 try {
-                    const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+                    const basePath = '<?php echo rtrim($baseUrl, "/"); ?>';
+                    const registration = await navigator.serviceWorker.register(basePath + '/sw.js', { scope: basePath + '/' });
                     console.log('[PWA] Service Worker registered:', registration.scope);
 
                     // Check for updates

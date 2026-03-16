@@ -184,6 +184,13 @@ $router->group(['prefix' => '/admin', 'middleware' => ['auth', 'admin']], functi
     // 예약 관리
     $router->get('/reservations/pos', 'Admin\\ReservationController@pos')
         ->name('admin.reservations.pos');
+    $router->get('/kiosk', 'Admin\\ReservationController@kiosk')
+        ->name('admin.kiosk');
+    $router->get('/kiosk/settings', 'Admin\\ReservationController@kioskSettings')
+        ->name('admin.kiosk.settings');
+    $router->post('/kiosk/settings', 'Admin\\ReservationController@kioskSettingsSave')
+        ->middleware('csrf')
+        ->name('admin.kiosk.settings.save');
     $router->get('/reservations', 'Admin\\ReservationController@index')
         ->name('admin.reservations.index');
     $router->get('/reservations/calendar', 'Admin\\ReservationController@calendar')

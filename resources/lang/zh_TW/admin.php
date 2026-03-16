@@ -75,7 +75,7 @@ return [
         'close' => '關閉',
         'apply' => '套用',
     ],
-    'messages' => ['confirm_delete' => '確定要刪除嗎？', 'no_data' => '暫無資料。', 'loading' => '載入中...', 'processing' => '處理中...'],
+    'messages' => ['confirm_delete' => '確定要刪除嗎？', 'no_data' => '暫無資料。', 'loading' => '載入中...', 'processing' => '處理中...', 'save' => '儲存', 'saved' => '儲存成功。'],
     'common' => [
         'yes' => '是',
         'no' => '否',

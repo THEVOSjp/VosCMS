@@ -75,7 +75,7 @@ return [
         'close' => 'Cerrar',
         'apply' => 'Aplicar',
     ],
-    'messages' => ['confirm_delete' => 'Esta seguro de que desea eliminar?', 'no_data' => 'No hay datos disponibles.', 'loading' => 'Cargando...', 'processing' => 'Procesando...'],
+    'messages' => ['confirm_delete' => 'Esta seguro de que desea eliminar?', 'no_data' => 'No hay datos disponibles.', 'loading' => 'Cargando...', 'processing' => 'Procesando...', 'save' => 'Guardar', 'saved' => 'Guardado correctamente.'],
     'common' => [
         'yes' => 'Si',
         'no' => 'No',

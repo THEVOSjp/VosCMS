@@ -3,39 +3,42 @@
  * Progressive Web App support for admin panel
  */
 
-const CACHE_NAME = 'rezlyx-admin-v1';
-const OFFLINE_URL = '/admin/offline.html';
+// Auto-detect base path from SW file location
+const BASE_PATH = self.location.pathname.replace('/admin-sw.js', '');
+const CACHE_NAME = 'rezlyx-admin-v2';
+const OFFLINE_URL = BASE_PATH + '/admin/offline.html';
 
 // Admin assets to cache
 const PRECACHE_ASSETS = [
-  '/admin/offline.html',
-  '/assets/css/admin.css',
-  '/assets/icons/admin-icon-192x192.png',
-  '/assets/icons/admin-icon-512x512.png',
+  BASE_PATH + '/admin/offline.html',
   'https://cdn.tailwindcss.com',
   'https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css'
 ];
 
 // Install event
 self.addEventListener('install', (event) => {
-  console.log('[SW Admin] Installing service worker...');
+  console.log('[SW Admin] Installing, basePath:', BASE_PATH);
 
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('[SW Admin] Caching admin assets');
-        return cache.addAll(PRECACHE_ASSETS);
+        return Promise.allSettled(
+          PRECACHE_ASSETS.map(url => cache.add(url).catch(err => {
+            console.warn('[SW Admin] Failed to cache:', url, err.message);
+          }))
+        );
       })
       .then(() => self.skipWaiting())
       .catch((error) => {
-        console.error('[SW Admin] Cache failed:', error);
+        console.error('[SW Admin] Install failed:', error);
       })
   );
 });
 
 // Activate event
 self.addEventListener('activate', (event) => {
-  console.log('[SW Admin] Activating service worker...');
+  console.log('[SW Admin] Activating...');
 
   event.waitUntil(
     caches.keys()
@@ -59,7 +62,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   // Only handle admin routes
-  if (!url.pathname.startsWith('/admin')) {
+  if (!url.pathname.startsWith(BASE_PATH + '/admin') && !url.pathname.startsWith(BASE_PATH + '/theadmin')) {
     return;
   }
 
@@ -89,7 +92,6 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Cache successful responses
           if (response && response.status === 200) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME)
@@ -98,7 +100,6 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Try cache first, then offline page
           return caches.match(request)
             .then((cachedResponse) => {
               return cachedResponse || caches.match(OFFLINE_URL);
@@ -134,8 +135,7 @@ self.addEventListener('push', (event) => {
 
   let data = {
     title: 'RezlyX Admin',
-    body: 'New notification',
-    icon: '/assets/icons/admin-icon-192x192.png'
+    body: 'New notification'
   };
 
   if (event.data) {
@@ -148,13 +148,12 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body,
-    icon: data.icon || '/assets/icons/admin-icon-192x192.png',
-    badge: '/assets/icons/admin-icon-72x72.png',
+    icon: data.icon || BASE_PATH + '/storage/pwa/pwa_admin_icon.png',
     vibrate: [200, 100, 200],
     tag: 'admin-notification',
     renotify: true,
     data: {
-      url: data.url || '/admin/dashboard'
+      url: data.url || BASE_PATH + '/admin'
     },
     actions: [
       { action: 'view', title: 'View' },
@@ -176,7 +175,7 @@ self.addEventListener('notificationclick', (event) => {
     return;
   }
 
-  const urlToOpen = event.notification.data?.url || '/admin/dashboard';
+  const urlToOpen = event.notification.data?.url || BASE_PATH + '/admin';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
@@ -196,24 +195,3 @@ self.addEventListener('notificationclick', (event) => {
       })
   );
 });
-
-// Periodic background sync for dashboard stats (if supported)
-self.addEventListener('periodicsync', (event) => {
-  console.log('[SW Admin] Periodic sync:', event.tag);
-
-  if (event.tag === 'update-dashboard') {
-    event.waitUntil(updateDashboardCache());
-  }
-});
-
-async function updateDashboardCache() {
-  try {
-    const response = await fetch('/admin/api/dashboard-stats');
-    if (response.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      await cache.put('/admin/api/dashboard-stats', response);
-    }
-  } catch (error) {
-    console.error('[SW Admin] Dashboard update failed:', error);
-  }
-}

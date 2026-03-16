@@ -60,11 +60,27 @@
             <input type="hidden" id="payReservationId">
             <!-- 서비스 상세 내역 -->
             <div id="payServiceDetails" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
-            <!-- 금액 요약 -->
-            <div class="space-y-2 text-sm">
-                <div class="flex justify-between"><span class="text-zinc-500"><?= __('reservations.pos_pay_total') ?></span><span id="payTotalAmount" class="font-bold text-zinc-900 dark:text-white"></span></div>
-                <div class="flex justify-between"><span class="text-zinc-500"><?= __('reservations.pos_pay_paid') ?></span><span id="payPaidAmount" class="font-medium text-emerald-600"></span></div>
-                <div class="flex justify-between border-t border-zinc-200 dark:border-zinc-700 pt-2"><span class="font-bold text-zinc-900 dark:text-white"><?= __('reservations.pos_pay_remaining') ?></span><span id="payRemaining" class="font-bold text-lg text-violet-600"></span></div>
+            <!-- 금액 내역 -->
+            <div id="payBreakdown" class="space-y-1.5 text-sm border-t border-zinc-200 dark:border-zinc-700 pt-3"></div>
+            <!-- 적립금 사용 -->
+            <div id="payPointsRow" class="hidden border-t border-zinc-200 dark:border-zinc-700 pt-3">
+                <div class="flex items-center justify-between text-sm mb-1.5">
+                    <span class="text-zinc-500 dark:text-zinc-400"><?= get_points_name() ?> <?= __('reservations.used') ?></span>
+                    <span id="payPointsBalance" class="text-xs text-blue-500"></span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="number" id="payPointsInput" min="0" step="1" value="0"
+                           class="flex-1 h-9 px-3 text-sm border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-violet-500"
+                           onchange="POS.recalcPayment()" oninput="POS.recalcPayment()">
+                    <button type="button" onclick="POS.useAllPoints()" class="px-3 h-9 text-xs font-medium text-violet-600 border border-violet-300 dark:border-violet-700 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-900/20 transition">
+                        <?= __('reservations.pos_pay_use_all') ?>
+                    </button>
+                </div>
+            </div>
+            <!-- 결제 총 금액 -->
+            <div class="flex justify-between items-center border-t-2 border-zinc-300 dark:border-zinc-600 pt-3">
+                <span class="font-bold text-zinc-900 dark:text-white"><?= __('reservations.pos_pay_remaining') ?></span>
+                <span id="payRemaining" class="font-bold text-lg text-violet-600"></span>
             </div>
             <!-- 결제 금액 -->
             <div>
@@ -110,35 +126,66 @@
 
 <!-- 서비스 상세 모달 (POS 현장 기준) -->
 <div id="posServiceModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4" onclick="POS.closeServiceModal(event)">
-    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden" onclick="event.stopPropagation()">
-        <div class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-700">
+    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
+        <!-- 헤더: 닫기 버튼 -->
+        <div class="flex items-center justify-between px-5 py-3 border-b border-zinc-200 dark:border-zinc-700 flex-shrink-0">
             <h3 id="posServiceTitle" class="text-base font-bold text-zinc-900 dark:text-white flex items-center">
-                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                 <?= __('reservations.pos_service_detail') ?>
             </h3>
             <button onclick="POS.closeServiceModal()" class="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg">
                 <svg class="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
-        <!-- 고객 정보 -->
-        <div id="posServiceCustomer" class="px-4 pt-3 pb-2 border-b border-zinc-100 dark:border-zinc-700"></div>
-        <!-- 서비스 목록 -->
-        <div id="posServiceList" class="p-4 max-h-60 overflow-y-auto"></div>
-        <!-- 합계 -->
-        <div id="posServiceTotal" class="px-4 pb-3 border-b border-zinc-200 dark:border-zinc-700"></div>
-        <!-- 서비스 추가 영역 -->
-        <div class="p-4">
-            <button onclick="POS.toggleAddService()" id="posAddServiceToggle"
-                    class="w-full py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg border border-dashed border-blue-300 dark:border-blue-700 transition flex items-center justify-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <?= __('reservations.pos_add_service') ?>
-            </button>
-            <div id="posAddServiceArea" class="hidden mt-3">
-                <div id="posAddServiceList" class="space-y-2 max-h-48 overflow-y-auto mb-3"></div>
-                <button onclick="POS.submitAddService()" id="posAddServiceBtn"
-                        class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition disabled:opacity-50" disabled>
-                    <?= __('reservations.pos_add_service_submit') ?>
-                </button>
+        <!-- 고객 프로필 헤더 (동적) -->
+        <div id="posServiceCustomer" class="flex-shrink-0"></div>
+        <!-- 스크롤 영역: 2단 레이아웃 -->
+        <div class="overflow-y-auto flex-1 min-h-0">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-0 md:gap-0">
+                <!-- 왼쪽: 서비스 + 합계 + 액션 (3/5) -->
+                <div class="md:col-span-3 md:border-r border-zinc-200 dark:border-zinc-700">
+                    <div id="posServiceList" class="p-4 space-y-2"></div>
+                    <div id="posServiceTotal" class="px-4 pb-3 border-b border-zinc-200 dark:border-zinc-700"></div>
+                    <div class="p-4 space-y-2">
+                        <button onclick="POS.toggleAddService()" id="posAddServiceToggle"
+                                class="w-full py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg border border-dashed border-blue-300 dark:border-blue-700 transition flex items-center justify-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <?= __('reservations.pos_add_service') ?>
+                        </button>
+                        <div id="posAddServiceArea" class="hidden mt-2">
+                            <div id="posAddServiceList" class="space-y-2 max-h-48 overflow-y-auto mb-3"></div>
+                            <button onclick="POS.submitAddService()" id="posAddServiceBtn"
+                                    class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition disabled:opacity-50" disabled>
+                                <?= __('reservations.pos_add_service_submit') ?>
+                            </button>
+                        </div>
+                        <button onclick="POS.toggleAssignStaff()" id="posAssignStaffToggle"
+                                class="w-full py-2 text-sm font-medium text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/20 rounded-lg border border-dashed border-violet-300 dark:border-violet-700 transition flex items-center justify-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            <?= __('reservations.pos_assign_staff') ?>
+                        </button>
+                        <div id="posAssignStaffArea" class="hidden mt-2">
+                            <div id="posAssignStaffList" class="space-y-2 max-h-48 overflow-y-auto mb-3"></div>
+                            <button onclick="POS.submitAssignStaff()" id="posAssignStaffBtn"
+                                    class="w-full py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-bold transition disabled:opacity-50" disabled>
+                                <?= __('reservations.pos_assign_staff_submit') ?>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- 오른쪽: 고객 상세 + 요구사항 + 메모 (2/5) -->
+                <div class="md:col-span-2 border-t md:border-t-0 border-zinc-200 dark:border-zinc-700">
+                    <div id="posCustomerDetail" class="p-4 space-y-3"></div>
+                    <!-- 메모 입력 -->
+                    <div id="posMemoArea" class="px-4 pb-4 hidden">
+                        <div class="flex gap-2">
+                            <input type="text" id="posMemoInput" placeholder="메모 입력..."
+                                   class="flex-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg text-xs text-zinc-900 dark:text-zinc-100"
+                                   onkeydown="if(event.key==='Enter'){POS.submitMemo();event.preventDefault();}">
+                            <button onclick="POS.submitMemo()" class="px-3 py-2 bg-zinc-800 dark:bg-zinc-600 text-white rounded-lg text-xs hover:bg-zinc-700 transition flex-shrink-0">저장</button>
+                        </div>
+                        <div id="posMemoList" class="mt-3 space-y-2 max-h-40 overflow-y-auto"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

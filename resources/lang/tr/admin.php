@@ -75,7 +75,7 @@ return [
         'close' => 'Kapat',
         'apply' => 'Uygula',
     ],
-    'messages' => ['confirm_delete' => 'Silmek istediğinizden emin misiniz?', 'no_data' => 'Veri bulunamadı.', 'loading' => 'Yükleniyor...', 'processing' => 'İşleniyor...'],
+    'messages' => ['confirm_delete' => 'Silmek istediğinizden emin misiniz?', 'no_data' => 'Veri bulunamadı.', 'loading' => 'Yükleniyor...', 'processing' => 'İşleniyor...', 'save' => 'Kaydet', 'saved' => 'Başarıyla kaydedildi.'],
     'common' => [
         'yes' => 'Evet',
         'no' => 'Hayır',

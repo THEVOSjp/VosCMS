@@ -16,6 +16,8 @@ return [
     'confirm_info' => '예약 정보를 확인해주세요',
     'complete_booking' => '예약 완료하기',
     'select_service_datetime' => '원하시는 서비스와 일시를 선택해주세요',
+    'staff_designation_guide' => '스태프 지명 예약은 스태프 페이지에서 진행해주세요',
+    'go_staff_booking' => '스태프 지명 예약',
     'select_datetime' => '날짜와 시간을 선택해주세요',
     'no_services' => '현재 등록된 서비스가 없습니다.',
     'contact_admin' => '관리자에게 문의해주세요.',
@@ -178,4 +180,13 @@ return [
         'required_fields' => '이름과 연락처를 입력해주세요.',
         'invalid_service' => '유효하지 않은 서비스입니다.',
     ],
+
+    // 적립금/할인
+    'member_discount' => '회원 할인',
+    'use_points' => '적립금 사용',
+    'points_balance' => '보유',
+    'use_all' => '전액 사용',
+    'points_default_name' => '적립금',
+    'deposit_pay_now' => '예약금 (결제 금액)',
+    'deposit_remaining_later' => '잔액은 서비스 이용 시 결제됩니다',
 ];

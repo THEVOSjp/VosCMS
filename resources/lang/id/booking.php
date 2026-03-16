@@ -16,6 +16,8 @@ return [
     'confirm_info' => 'Silakan konfirmasi informasi pemesanan Anda',
     'complete_booking' => 'Selesaikan Pemesanan',
     'select_service_datetime' => 'Silakan pilih layanan dan tanggal/waktu yang diinginkan',
+    'staff_designation_guide' => 'Untuk pemesanan dengan staf tertentu, silakan lanjutkan dari halaman staf',
+    'go_staff_booking' => 'Pemesanan Staf Tertentu',
     'select_datetime' => 'Silakan pilih tanggal dan waktu',
     'no_services' => 'Tidak ada layanan tersedia saat ini.',
     'contact_admin' => 'Silakan hubungi administrator.',
@@ -178,4 +180,12 @@ return [
         'required_fields' => 'Silakan masukkan nama dan informasi kontak Anda.',
         'invalid_service' => 'Layanan tidak valid.',
     ],
+
+    'member_discount' => 'Diskon Anggota',
+    'use_points' => 'Gunakan Poin',
+    'points_balance' => 'Saldo',
+    'use_all' => 'Gunakan Semua',
+    'points_default_name' => 'Poin',
+    'deposit_pay_now' => 'Deposit (Bayar Sekarang)',
+    'deposit_remaining_later' => 'Sisa saldo akan ditagih saat layanan',
 ];

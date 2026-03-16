@@ -3,44 +3,47 @@
  * Progressive Web App support for customer-facing pages
  */
 
-const CACHE_NAME = 'rezlyx-front-v1';
-const OFFLINE_URL = '/offline.html';
+// Auto-detect base path from SW file location
+const BASE_PATH = self.location.pathname.replace('/sw.js', '');
+const CACHE_NAME = 'rezlyx-front-v2';
+const OFFLINE_URL = BASE_PATH + '/offline.html';
 
-// Assets to cache on install
+// Assets to cache on install (using dynamic base path)
 const PRECACHE_ASSETS = [
-  '/',
-  '/offline.html',
-  '/assets/css/app.css',
-  '/assets/js/app.js',
-  '/assets/icons/icon-192x192.png',
-  '/assets/icons/icon-512x512.png',
+  BASE_PATH + '/',
+  BASE_PATH + '/offline.html',
   'https://cdn.tailwindcss.com',
   'https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css'
 ];
 
 // Install event - cache essential assets
 self.addEventListener('install', (event) => {
-  console.log('[SW Front] Installing service worker...');
+  console.log('[SW Front] Installing, basePath:', BASE_PATH);
 
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('[SW Front] Caching app shell');
-        return cache.addAll(PRECACHE_ASSETS);
+        // Use addAll with individual catch to avoid failing on missing assets
+        return Promise.allSettled(
+          PRECACHE_ASSETS.map(url => cache.add(url).catch(err => {
+            console.warn('[SW Front] Failed to cache:', url, err.message);
+          }))
+        );
       })
       .then(() => {
         console.log('[SW Front] Skip waiting');
         return self.skipWaiting();
       })
       .catch((error) => {
-        console.error('[SW Front] Cache failed:', error);
+        console.error('[SW Front] Install failed:', error);
       })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW Front] Activating service worker...');
+  console.log('[SW Front] Activating...');
 
   event.waitUntil(
     caches.keys()
@@ -67,7 +70,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   // Skip admin pages
-  if (url.pathname.startsWith('/admin')) {
+  if (url.pathname.includes('/admin') || url.pathname.includes('/theadmin')) {
     return;
   }
 
@@ -77,7 +80,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Skip API calls - always fetch from network
-  if (url.pathname.startsWith('/api/')) {
+  if (url.pathname.includes('/api/')) {
     event.respondWith(
       fetch(request)
         .catch(() => {
@@ -126,18 +129,14 @@ self.addEventListener('fetch', (event) => {
             if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
-
-            // Cache the fetched resource
             const responseToCache = response.clone();
             caches.open(CACHE_NAME)
               .then((cache) => cache.put(request, responseToCache));
-
             return response;
           })
           .catch(() => {
-            // Return offline fallback for images
             if (request.destination === 'image') {
-              return caches.match('/assets/icons/icon-192x192.png');
+              return new Response('', { status: 404 });
             }
           });
       })
@@ -148,7 +147,7 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('push', (event) => {
   console.log('[SW Front] Push received');
 
-  let data = { title: 'RezlyX', body: 'New notification', icon: '/assets/icons/icon-192x192.png' };
+  let data = { title: 'RezlyX', body: 'New notification' };
 
   if (event.data) {
     try {
@@ -160,11 +159,10 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body,
-    icon: data.icon || '/assets/icons/icon-192x192.png',
-    badge: '/assets/icons/icon-72x72.png',
+    icon: data.icon || BASE_PATH + '/storage/pwa/pwa_front_icon.png',
     vibrate: [100, 50, 100],
     data: {
-      url: data.url || '/'
+      url: data.url || BASE_PATH + '/'
     },
     actions: data.actions || []
   };
@@ -179,72 +177,19 @@ self.addEventListener('notificationclick', (event) => {
   console.log('[SW Front] Notification clicked');
   event.notification.close();
 
-  const urlToOpen = event.notification.data?.url || '/';
+  const urlToOpen = event.notification.data?.url || BASE_PATH + '/';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
-        // Focus existing window if available
         for (const client of clientList) {
           if (client.url === urlToOpen && 'focus' in client) {
             return client.focus();
           }
         }
-        // Open new window
         if (clients.openWindow) {
           return clients.openWindow(urlToOpen);
         }
       })
   );
 });
-
-// Background sync for offline reservations
-self.addEventListener('sync', (event) => {
-  console.log('[SW Front] Sync event:', event.tag);
-
-  if (event.tag === 'sync-reservations') {
-    event.waitUntil(syncReservations());
-  }
-});
-
-async function syncReservations() {
-  try {
-    // Get pending reservations from IndexedDB
-    const db = await openDB();
-    const pendingReservations = await db.getAll('pending-reservations');
-
-    for (const reservation of pendingReservations) {
-      try {
-        const response = await fetch('/api/reservations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(reservation)
-        });
-
-        if (response.ok) {
-          await db.delete('pending-reservations', reservation.id);
-        }
-      } catch (error) {
-        console.error('[SW Front] Failed to sync reservation:', error);
-      }
-    }
-  } catch (error) {
-    console.error('[SW Front] Sync failed:', error);
-  }
-}
-
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('rezlyx-offline', 1);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      if (!db.objectStoreNames.contains('pending-reservations')) {
-        db.createObjectStore('pending-reservations', { keyPath: 'id', autoIncrement: true });
-      }
-    };
-  });
-}

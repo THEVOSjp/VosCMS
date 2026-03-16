@@ -60,8 +60,7 @@ $pageContent = ob_get_clean();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($pageTitle); ?></title>
 
-    <link rel="manifest" href="<?php echo $baseUrl; ?>/admin-manifest.json">
-    <meta name="theme-color" content="#18181b">
+    <?php include __DIR__ . '/../partials/pwa-head.php'; ?>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>

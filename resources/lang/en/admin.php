@@ -75,7 +75,7 @@ return [
         'close' => 'Close',
         'apply' => 'Apply',
     ],
-    'messages' => ['confirm_delete' => 'Are you sure you want to delete?', 'no_data' => 'No data available.', 'loading' => 'Loading...', 'processing' => 'Processing...'],
+    'messages' => ['confirm_delete' => 'Are you sure you want to delete?', 'no_data' => 'No data available.', 'loading' => 'Loading...', 'processing' => 'Processing...', 'save' => 'Save', 'saved' => 'Saved successfully.'],
     'common' => [
         'yes' => 'Yes',
         'no' => 'No',

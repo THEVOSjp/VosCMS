@@ -182,6 +182,7 @@ class AdminAuth
         if ($adminRoute === '' || $adminRoute === '/') return null;
 
         $map = [
+            'kiosk'              => 'reservations',
             'reservations'       => 'reservations',
             'counter'            => 'counter',
             'services'           => 'services',

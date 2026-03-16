@@ -15,9 +15,6 @@ $isLoggedIn = Auth::check();
 $currentUser = $isLoggedIn ? Auth::user() : null;
 
 $services = [];
-$staffList = [];
-$staffServiceMap = []; // staff_id => [service_id, ...]
-$staffEnabled = false;
 
 try {
     $pdo = new PDO(
@@ -44,21 +41,10 @@ try {
         $svcTranslations[$tr['lang_key']][$tr['locale']] = $tr['content'];
     }
 
-    // 스태프 선택 설정 확인
-    $staffEnabled = ($siteSettings['staff_selection_required'] ?? '0') === '1';
+    // 슬롯 설정
     $scheduleEnabled = ($siteSettings['staff_schedule_enabled'] ?? '0') === '1';
-    $designationFeeEnabled = ($siteSettings['staff_designation_fee_enabled'] ?? '0') === '1';
     $slotInterval = (int)($siteSettings['booking_slot_interval'] ?? 30);
     if (!in_array($slotInterval, [15, 30, 60])) $slotInterval = 30;
-
-    if ($staffEnabled) {
-        $staffList = $pdo->query("SELECT id, name, name_i18n, avatar, bio, position_id, designation_fee FROM {$prefix}staff WHERE is_active = 1 ORDER BY sort_order, name")->fetchAll(PDO::FETCH_ASSOC);
-        // 스태프-서비스 매핑
-        $ssRows = $pdo->query("SELECT staff_id, service_id FROM {$prefix}staff_services")->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($ssRows as $r) {
-            $staffServiceMap[$r['staff_id']][] = $r['service_id'];
-        }
-    }
 
     // 기본 영업시간 로드 (폴백용)
     $businessHours = [];
@@ -198,7 +184,7 @@ try {
             echo json_encode(['success' => false, 'message' => __('booking.error.required_fields')]);
             exit;
         }
-        $staffId = $input['staff_id'] ?? null;
+        $staffId = null; // 스태프 지명은 스태프 페이지에서만 가능
         $date = $input['date'] ?? '';
         $time = $input['time'] ?? '';
         $name = trim($input['customer_name'] ?? '');
@@ -229,14 +215,9 @@ try {
             $totalDuration += (int)$s['duration'];
         }
 
-        // 지명비 처리
+        // 이 페이지에서는 지명 예약 없음 (스태프 페이지에서 진행)
         $designationFee = 0;
-        if ($designationFeeEnabled && $staffId) {
-            $feeStmt = $pdo->prepare("SELECT designation_fee FROM {$prefix}staff WHERE id = ?");
-            $feeStmt->execute([$staffId]);
-            $designationFee = (float)($feeStmt->fetchColumn() ?: 0);
-        }
-        $finalAmount = $totalPrice + $designationFee;
+        $finalAmount = $totalPrice;
 
         // 예약번호 생성
         $reservationNumber = 'RZX' . date('ymd') . strtoupper(bin2hex(random_bytes(3)));
@@ -302,8 +283,8 @@ function getBookingSvcTranslated($svcId, $field, $default) {
     return $default;
 }
 
-// 스텝 정의: 스태프 활성화 시 5단계, 아니면 4단계
-$totalSteps = $staffEnabled ? 5 : 4;
+// 스텝 정의: 서비스 → 날짜/시간 → 고객정보 → 확인 (4단계)
+$totalSteps = 4;
 
 include BASE_PATH . '/resources/views/partials/header.php';
 ?>
@@ -319,6 +300,11 @@ include BASE_PATH . '/resources/views/partials/header.php';
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2"><?= __('common.nav.booking') ?></h1>
             <p class="text-gray-600 dark:text-zinc-400"><?= __('booking.select_service_datetime') ?></p>
+            <p class="text-sm text-gray-500 dark:text-zinc-500 mt-1"><?= __('booking.staff_designation_guide') ?></p>
+            <a href="<?= $baseUrl ?>/staff" class="inline-flex items-center gap-2 mt-3 px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <?= __('booking.go_staff_booking') ?>
+            </a>
         </div>
 
         <!-- Progress Steps (동적) -->
@@ -426,50 +412,6 @@ include BASE_PATH . '/resources/views/partials/header.php';
             <?php endif; ?>
         </div>
 
-        <?php if ($staffEnabled): ?>
-        <!-- Step: 스태프 선택 -->
-        <div id="stepStaff" class="step-panel bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6 md:p-8 hidden">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6"><?= __('booking.select_staff') ?></h2>
-            <div id="staffGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <!-- "지정 안함" 옵션 -->
-                <label class="staff-card cursor-pointer">
-                    <input type="radio" name="staff" value="" class="hidden" data-name="<?= __('booking.no_preference') ?>">
-                    <div class="border-2 border-gray-200 dark:border-zinc-700 rounded-xl p-4 hover:border-blue-500 transition-all text-center">
-                        <div class="w-14 h-14 rounded-full bg-gray-100 dark:bg-zinc-700 flex items-center justify-center mx-auto mb-2">
-                            <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        </div>
-                        <p class="text-sm font-medium text-gray-700 dark:text-zinc-300"><?= __('booking.no_preference') ?></p>
-                    </div>
-                </label>
-                <?php foreach ($staffList as $st): ?>
-                <label class="staff-card cursor-pointer" data-services="<?= htmlspecialchars(json_encode($staffServiceMap[$st['id']] ?? [])) ?>" data-fee="<?= (float)($st['designation_fee'] ?? 0) ?>">
-                    <input type="radio" name="staff" value="<?= $st['id'] ?>" class="hidden" data-name="<?= htmlspecialchars($st['name']) ?>" data-fee="<?= (float)($st['designation_fee'] ?? 0) ?>">
-                    <div class="border-2 border-gray-200 dark:border-zinc-700 rounded-xl p-4 hover:border-blue-500 transition-all text-center">
-                        <div class="w-14 h-14 rounded-full bg-gray-100 dark:bg-zinc-700 flex items-center justify-center mx-auto mb-2 overflow-hidden">
-                            <?php if ($st['avatar']): ?>
-                            <img src="<?= htmlspecialchars($st['avatar']) ?>" class="w-full h-full object-cover" alt="">
-                            <?php else: ?>
-                            <span class="text-lg font-bold text-gray-500"><?= mb_substr($st['name'], 0, 1) ?></span>
-                            <?php endif; ?>
-                        </div>
-                        <p class="text-sm font-medium text-gray-900 dark:text-white"><?= htmlspecialchars($st['name']) ?></p>
-                        <?php if ($designationFeeEnabled && (float)($st['designation_fee'] ?? 0) > 0): ?>
-                        <p class="text-xs text-amber-600 dark:text-amber-400 mt-1"><?= __('booking.designation_fee') ?>: <?= $currencySymbol . number_format((float)$st['designation_fee']) ?></p>
-                        <?php endif; ?>
-                    </div>
-                </label>
-                <?php endforeach; ?>
-            </div>
-            <div class="flex justify-between mt-6">
-                <button type="button" onclick="prevStep()" class="px-6 py-3 border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-zinc-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-700 transition">
-                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> <?= __('common.buttons.previous') ?>
-                </button>
-                <button type="button" onclick="nextStep()" id="btnStaffNext" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                    <?= __('common.buttons.next') ?> <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </button>
-            </div>
-        </div>
-        <?php endif; ?>
 
         <!-- Step: 날짜 & 시간 -->
         <div id="stepDatetime" class="step-panel bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6 md:p-8 hidden">
@@ -544,12 +486,6 @@ include BASE_PATH . '/resources/views/partials/header.php';
                     <span class="text-gray-600 dark:text-zinc-400"><?= __('booking.service.title') ?></span>
                     <div id="confirmService" class="mt-2 space-y-1"></div>
                 </div>
-                <?php if ($staffEnabled): ?>
-                <div class="flex justify-between items-center pb-4 border-b dark:border-zinc-600" id="confirmStaffRow">
-                    <span class="text-gray-600 dark:text-zinc-400"><?= __('booking.staff') ?></span>
-                    <span id="confirmStaff" class="font-semibold text-gray-900 dark:text-white">-</span>
-                </div>
-                <?php endif; ?>
                 <div class="flex justify-between items-center pb-4 border-b dark:border-zinc-600">
                     <span class="text-gray-600 dark:text-zinc-400"><?= __('booking.date_label') ?></span>
                     <span id="confirmDate" class="font-semibold text-gray-900 dark:text-white">-</span>
@@ -565,10 +501,6 @@ include BASE_PATH . '/resources/views/partials/header.php';
                 <div class="flex justify-between items-center pb-4 border-b dark:border-zinc-600">
                     <span class="text-gray-600 dark:text-zinc-400"><?= __('booking.phone') ?></span>
                     <span id="confirmPhone" class="font-semibold text-gray-900 dark:text-white">-</span>
-                </div>
-                <div id="confirmDesignationFeeRow" class="hidden flex justify-between items-center">
-                    <span class="text-gray-600 dark:text-zinc-400"><?= __('booking.designation_fee') ?></span>
-                    <span id="confirmDesignationFee" class="font-semibold text-amber-600 dark:text-amber-400">-</span>
                 </div>
                 <div class="flex justify-between items-center pt-2">
                     <span class="text-lg font-semibold text-gray-900 dark:text-white"><?= __('booking.total_price') ?></span>

@@ -75,6 +75,23 @@ if (!isset($siteSettings)) $siteSettings = [];
             document.documentElement.classList.add('dark');
         }
     </script>
+    <?php
+    // PWA
+    $pwaFrontEnabled = ($siteSettings['pwa_front_enabled'] ?? '1') === '1';
+    $pwaFrontIcon = $siteSettings['pwa_front_icon'] ?? '';
+    $pwaFrontTheme = $siteSettings['pwa_front_theme_color'] ?? '#3b82f6';
+    if ($pwaFrontEnabled):
+    ?>
+    <link rel="manifest" href="<?php echo $baseUrl; ?>/manifest.json">
+    <meta name="theme-color" content="<?php echo htmlspecialchars($pwaFrontTheme); ?>">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="<?php echo htmlspecialchars($siteName); ?>">
+    <meta name="mobile-web-app-capable" content="yes">
+    <?php if ($pwaFrontIcon): ?>
+    <link rel="apple-touch-icon" href="<?php echo $baseUrl . htmlspecialchars($pwaFrontIcon); ?>">
+    <?php endif; ?>
+    <?php endif; ?>
 </head>
 <body class="bg-gray-50 dark:bg-zinc-900 min-h-screen transition-colors duration-200">
     <!-- Header -->
@@ -311,5 +328,21 @@ if (!isset($siteSettings)) $siteSettings = [];
             console.log('[Home] 다크 모드 토글:', isDark);
         });
     </script>
+    <?php if (($siteSettings['pwa_front_enabled'] ?? '1') === '1'): ?>
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const basePath = '<?php echo rtrim($baseUrl, "/"); ?>';
+                    const registration = await navigator.serviceWorker.register(basePath + '/sw.js', { scope: basePath + '/' });
+                    console.log('[PWA] Service Worker registered:', registration.scope);
+                } catch (error) {
+                    console.error('[PWA] Service Worker registration failed:', error);
+                }
+            });
+        }
+    </script>
+    <?php endif; ?>
 </body>
 </html>
