@@ -83,7 +83,11 @@ try {
         if ($checkStmt->rowCount() > 0) {
             $migTableExists = true;
             $appliedStmt = $pdo->query("SELECT migration FROM {$prefix}migrations");
-            $appliedMigs = $appliedStmt->fetchAll(PDO::FETCH_COLUMN);
+            $appliedMigsRaw = $appliedStmt->fetchAll(PDO::FETCH_COLUMN);
+            // patch_ 접두사 제거하여 비교 (recordMigration이 'patch_' 접두사로 저장)
+            $appliedMigs = array_map(function($m) {
+                return preg_replace('/^patch_/', '', $m);
+            }, $appliedMigsRaw);
         } else {
             $appliedMigs = [];
         }
