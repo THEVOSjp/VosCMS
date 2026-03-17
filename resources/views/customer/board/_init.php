@@ -52,3 +52,18 @@ function boardCheckPerm($board, $permName, $currentUser) {
 
 // list_columns 파싱
 $listColumns = json_decode($board['list_columns'] ?? '[]', true) ?: ['no', 'title', 'nick_name', 'created_at', 'view_count'];
+
+// 다국어 폴백 적용 (db_trans 내장 폴백: 설정언어 → 영어 → 기본언어)
+$helpersPath = BASE_PATH . '/rzxlib/Core/Helpers/functions.php';
+if (file_exists($helpersPath) && !function_exists('db_trans')) {
+    require_once $helpersPath;
+}
+if (function_exists('db_trans')) {
+    $multilangFields = ['title', 'description', 'seo_keywords', 'seo_description', 'header_content', 'footer_content'];
+    foreach ($multilangFields as $field) {
+        $translated = db_trans('board.' . $boardId . '.' . $field, null, '');
+        if (!empty($translated)) {
+            $board[$field] = $translated;
+        }
+    }
+}

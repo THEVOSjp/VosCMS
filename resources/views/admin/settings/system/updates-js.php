@@ -6,7 +6,14 @@ const currentVersion = '<?= htmlspecialchars($currentVersion) ?>';
 const currentPath = window.location.pathname;
 // 독립 엔드포인트 사용 (index.php PDO 충돌 회피)
 // app_url 기반으로 경로 결정 (서브디렉토리 대응)
-const ajaxUrl = '<?= rtrim($config['app_url'] ?? '', '/') ?>/update-api.php';
+// Mixed Content 방지: 현재 페이지 프로토콜에 맞게 URL 프로토콜 자동 보정
+const ajaxUrl = (() => {
+    let url = '<?= rtrim($config['app_url'] ?? '', '/') ?>/update-api.php';
+    if (window.location.protocol === 'https:' && url.startsWith('http://')) {
+        url = url.replace('http://', 'https://');
+    }
+    return url;
+})();
 let latestVersion = null;
 
 // 번역 문자열

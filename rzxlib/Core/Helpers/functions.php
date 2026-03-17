@@ -448,7 +448,9 @@ if (!function_exists('decrypt_fields')) {
 
 if (!function_exists('db_trans')) {
     /**
-     * DB에서 다국어 번역 가져오기
+     * DB에서 다국어 번역 가져오기 (폴백 체인 내장)
+     *
+     * 폴백 순서: 현재 로케일 → 영어(en) → 기본언어 → source_locale → $default
      *
      * @param string $langKey 번역 키 (예: 'site.tagline')
      * @param string|null $locale 언어 코드 (null이면 현재 로케일 사용)
@@ -488,36 +490,55 @@ if (!function_exists('db_trans')) {
                 );
             }
 
-            // 번역 조회 (source_locale도 함께 조회)
+            $defaultLocale = $_ENV['DEFAULT_LOCALE'] ?? 'ko';
+
+            // 폴백 체인 구성: 현재 로케일 → 영어 → 기본언어 (중복 제거)
+            $chain = [$locale];
+            if ($locale !== 'en') $chain[] = 'en';
+            if ($locale !== $defaultLocale && $defaultLocale !== 'en') $chain[] = $defaultLocale;
+
             $stmt = $pdo->prepare("SELECT content, source_locale FROM rzx_translations WHERE lang_key = ? AND locale = ?");
-            $stmt->execute([$langKey, $locale]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $content = '';
+            $sourceLocale = null;
 
-            $content = $result ? $result['content'] : '';
-            $sourceLocale = $result ? $result['source_locale'] : null;
-
-            // 현재 로케일에 번역이 없는 경우, source_locale(원본 언어)로 fallback
-            if (empty($content) && $sourceLocale) {
-                $stmt->execute([$langKey, $sourceLocale]);
-                $fallbackResult = $stmt->fetch(PDO::FETCH_ASSOC);
-                $content = $fallbackResult ? $fallbackResult['content'] : '';
-            } elseif (empty($content)) {
-                // source_locale이 없는 경우 (레거시 데이터), 원본 찾기
-                $sourceStmt = $pdo->prepare("SELECT source_locale FROM rzx_translations WHERE lang_key = ? AND source_locale IS NOT NULL LIMIT 1");
-                $sourceStmt->execute([$langKey]);
-                $sourceResult = $sourceStmt->fetch(PDO::FETCH_ASSOC);
-                if ($sourceResult && $sourceResult['source_locale'] !== $locale) {
-                    $stmt->execute([$langKey, $sourceResult['source_locale']]);
-                    $fallbackResult = $stmt->fetch(PDO::FETCH_ASSOC);
-                    $content = $fallbackResult ? $fallbackResult['content'] : '';
+            // 폴백 체인 순서대로 조회
+            foreach ($chain as $tryLocale) {
+                $tryCacheKey = $langKey . ':' . $tryLocale;
+                if (isset($cache[$tryCacheKey]) && !empty($cache[$tryCacheKey])) {
+                    $content = $cache[$tryCacheKey];
+                    break;
                 }
+                $stmt->execute([$langKey, $tryLocale]);
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($result) {
+                    $cache[$tryCacheKey] = $result['content'];
+                    if (!$sourceLocale) $sourceLocale = $result['source_locale'];
+                    if (!empty($result['content'])) {
+                        $content = $result['content'];
+                        break;
+                    }
+                }
+            }
+
+            // 폴백 체인에서 못 찾으면 source_locale로 최종 시도
+            if (empty($content) && $sourceLocale && !in_array($sourceLocale, $chain)) {
+                $stmt->execute([$langKey, $sourceLocale]);
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                $content = $result ? $result['content'] : '';
+            }
+
+            // source_locale이 없는 레거시 데이터: 아무 번역이나 찾기
+            if (empty($content)) {
+                $anyStmt = $pdo->prepare("SELECT content FROM rzx_translations WHERE lang_key = ? AND content != '' LIMIT 1");
+                $anyStmt->execute([$langKey]);
+                $anyResult = $anyStmt->fetch(PDO::FETCH_ASSOC);
+                $content = $anyResult ? $anyResult['content'] : '';
             }
 
             $cache[$cacheKey] = $content;
 
             return $content ?: $default;
         } catch (\PDOException $e) {
-            // DB 오류 시 기본값 반환
             error_log("db_trans error: " . $e->getMessage());
             return $default;
         }

@@ -115,4 +115,11 @@ return [
         'tr' => ['native' => 'Türkçe', 'label' => 'Türkçe'],
         'vi' => ['native' => 'Tiếng Việt', 'label' => 'Vietnamca'],
     ],
+
+    // PWA
+    'pwa' => [
+        'update_available' => 'Yeni bir sürüm mevcut',
+        'update' => 'Güncelle',
+        'later' => 'Sonra',
+    ],
 ];

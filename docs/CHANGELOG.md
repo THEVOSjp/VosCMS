@@ -4,6 +4,21 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [1.6.0] - 2026-03-17
+
+### Added
+- **다국어 폴백 시스템**: `db_trans()` 함수에 내장 폴백 체인 (설정언어 → en → 기본언어 → source_locale → 아무 번역)
+- **게시판 설정 다국어 버튼**: 기본 설정 탭 6개 필드에 다국어(지구본) 버튼 추가
+- **게시판 프론트 뷰 다국어 폴백**: `_init.php`에서 title, description, SEO, header/footer 다국어 적용
+- **위젯 다국어 폴백**: `WidgetRenderer::t()`, `tBtn()` 빈 문자열 처리 개선
+- PWA 번역 키 추가 (13개 언어: `admin.pwa.update_available`, `update`, `later`)
+
+### Fixed
+- **Features 위젯 빈 카드 문제**: `??` 연산자가 빈 문자열 `""`을 유효값으로 처리 → `!empty()` 기반 폴백으로 수정
+- **프로덕션 Mixed Content 오류**: `APP_URL` http→https 수정 + JS 프로토콜 자동 보정
+
+---
+
 ## [1.5.2] - 2026-03-17
 
 ### Added

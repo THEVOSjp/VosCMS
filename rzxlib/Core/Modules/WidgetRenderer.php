@@ -97,6 +97,7 @@ class WidgetRenderer
     public function render(array $widget): string
     {
         $config = $this->mergeConfig($widget);
+        $config['_widget_id'] = $widget['id'] ?? null;
         $slug = $widget['widget_slug'];
 
         // 1순위: 파일 기반 위젯 (widgets/{slug}/render.php)
@@ -127,12 +128,30 @@ class WidgetRenderer
 
     /**
      * 다국어 텍스트 가져오기
+     * 폴백 체인: db_trans(설정언어→영어→기본언어) → config[locale] → config[en] → config[기본언어] → config 문자열 → $fallback
      */
-    public function t(array $config, string $key, string $fallback = ''): string
+    public function t(array $config, string $key, string $fallback = '', ?int $widgetId = null): string
     {
+        // 1. db_trans 폴백 체인 (위젯 ID가 있으면)
+        $wid = $widgetId ?? ($config['_widget_id'] ?? null);
+        if ($wid && function_exists('db_trans')) {
+            $dbValue = db_trans('widget.' . $wid . '.' . $key);
+            if (!empty($dbValue)) return $dbValue;
+        }
+
+        // 2. config 배열 (빈 문자열도 스킵하여 폴백)
         if (isset($config[$key])) {
             if (is_array($config[$key])) {
-                return $config[$key][$this->locale] ?? $config[$key]['ko'] ?? $config[$key]['en'] ?? $fallback;
+                $arr = $config[$key];
+                $defaultLocale = $_ENV['DEFAULT_LOCALE'] ?? 'ko';
+                // 폴백 체인: 현재 로케일 → 영어 → 기본언어
+                $chain = [$this->locale];
+                if ($this->locale !== 'en') $chain[] = 'en';
+                if ($this->locale !== $defaultLocale && $defaultLocale !== 'en') $chain[] = $defaultLocale;
+                foreach ($chain as $loc) {
+                    if (!empty($arr[$loc])) return $arr[$loc];
+                }
+                return $fallback;
             }
             return $config[$key];
         }
@@ -333,7 +352,15 @@ class WidgetRenderer
     {
         if (isset($btn[$key])) {
             if (is_array($btn[$key])) {
-                return $btn[$key][$this->locale] ?? $btn[$key]['ko'] ?? $btn[$key]['en'] ?? $fallback;
+                $arr = $btn[$key];
+                $defaultLocale = $_ENV['DEFAULT_LOCALE'] ?? 'ko';
+                $chain = [$this->locale];
+                if ($this->locale !== 'en') $chain[] = 'en';
+                if ($this->locale !== $defaultLocale && $defaultLocale !== 'en') $chain[] = $defaultLocale;
+                foreach ($chain as $loc) {
+                    if (!empty($arr[$loc])) return $arr[$loc];
+                }
+                return $fallback;
             }
             return $btn[$key];
         }

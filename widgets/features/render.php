@@ -31,16 +31,34 @@ $featureItems = $config['feature_items'] ?? [];
 $columns = $config['columns'] ?? '3';
 $bgColor = $config['bg_color'] ?? '#ffffff';
 
-// i18n 헬퍼
-$loc = function($val) use ($locale) {
+// i18n 헬퍼 (다국어 폴백: 설정언어 → en → 기본언어 → 아무 값)
+$defaultLocale = $_ENV['DEFAULT_LOCALE'] ?? 'ko';
+$loc = function($val) use ($locale, $defaultLocale) {
     if (is_string($val)) return $val;
-    if (is_array($val)) return $val[$locale] ?? $val['en'] ?? $val['ko'] ?? reset($val) ?: '';
+    if (is_array($val)) {
+        $chain = [$locale];
+        if ($locale !== 'en') $chain[] = 'en';
+        if ($locale !== $defaultLocale && $defaultLocale !== 'en') $chain[] = $defaultLocale;
+        foreach ($chain as $loc) {
+            if (!empty($val[$loc])) return $val[$loc];
+        }
+        // 아무 번역이라도 반환
+        foreach ($val as $v) {
+            if (!empty($v)) return $v;
+        }
+        return '';
+    }
     return '';
 };
 
-// 섹션 제목
-$sTitle = htmlspecialchars($loc($config['title'] ?? '') ?: __('home.features.title'));
-$sSub   = htmlspecialchars($loc($config['subtitle'] ?? '') ?: __('home.features.subtitle'));
+// 섹션 제목 - config에 현재 로케일 값이 있으면 사용, 없으면 __() 언어파일 폴백
+$locOnly = function($val) use ($locale) {
+    if (is_string($val) && $val !== '') return $val;
+    if (is_array($val) && !empty($val[$locale])) return $val[$locale];
+    return '';
+};
+$sTitle = htmlspecialchars($locOnly($config['title'] ?? '') ?: __('home.features.title'));
+$sSub   = htmlspecialchars($locOnly($config['subtitle'] ?? '') ?: __('home.features.subtitle'));
 
 // feature_items가 비어있으면 기본 카드 3개 사용
 if (empty($featureItems)) {

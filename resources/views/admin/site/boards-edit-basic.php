@@ -27,7 +27,10 @@
 
         <!-- 브라우저 제목 -->
         <div class="mb-4">
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.boards.field_title') ?> <span class="text-red-500">*</span></label>
+            <div class="flex items-center gap-1 mb-1">
+                <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('site.boards.field_title') ?> <span class="text-red-500">*</span></label>
+                <?= rzx_multilang_btn("openMultilangModal('board.{$boardId}.title', 'title')") ?>
+            </div>
             <input type="text" name="title" id="title" required
                    value="<?= htmlspecialchars($board['title'] ?? '') ?>"
                    class="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200 placeholder-zinc-400">
@@ -48,8 +51,11 @@
 
         <!-- 설명 -->
         <div class="mb-4">
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.boards.field_description') ?></label>
-            <textarea name="description" rows="2"
+            <div class="flex items-center gap-1 mb-1">
+                <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('site.boards.field_description') ?></label>
+                <?= rzx_multilang_btn("openMultilangModal('board.{$boardId}.description', 'description')") ?>
+            </div>
+            <textarea name="description" id="description" rows="2"
                       class="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200 placeholder-zinc-400"
                       placeholder="<?= __('site.boards.field_description_placeholder') ?>"><?= htmlspecialchars($board['description'] ?? '') ?></textarea>
         </div>
@@ -81,16 +87,22 @@
         </div>
 
         <div class="mb-4">
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.boards.field_seo_keywords') ?></label>
-            <input type="text" name="seo_keywords"
+            <div class="flex items-center gap-1 mb-1">
+                <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('site.boards.field_seo_keywords') ?></label>
+                <?= rzx_multilang_btn("openMultilangModal('board.{$boardId}.seo_keywords', 'seo_keywords')") ?>
+            </div>
+            <input type="text" name="seo_keywords" id="seo_keywords"
                    value="<?= htmlspecialchars($board['seo_keywords'] ?? '') ?>"
                    class="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200 placeholder-zinc-400"
                    placeholder="keyword1, keyword2">
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.boards.field_seo_desc') ?></label>
-            <input type="text" name="seo_description"
+            <div class="flex items-center gap-1 mb-1">
+                <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('site.boards.field_seo_desc') ?></label>
+                <?= rzx_multilang_btn("openMultilangModal('board.{$boardId}.seo_description', 'seo_description')") ?>
+            </div>
+            <input type="text" name="seo_description" id="seo_description"
                    value="<?= htmlspecialchars($board['seo_description'] ?? '') ?>"
                    class="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200 placeholder-zinc-400">
         </div>
@@ -119,16 +131,22 @@
         </div>
 
         <div class="mb-4">
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.boards.field_header') ?></label>
-            <textarea name="header_content" rows="3"
+            <div class="flex items-center gap-1 mb-1">
+                <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('site.boards.field_header') ?></label>
+                <?= rzx_multilang_btn("openMultilangModal('board.{$boardId}.header_content', 'header_content', 'editor')") ?>
+            </div>
+            <textarea name="header_content" id="header_content" rows="3"
                       class="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200 font-mono"
                       placeholder="HTML"><?= htmlspecialchars($board['header_content'] ?? '') ?></textarea>
             <p class="mt-1 text-xs text-zinc-500"><?= __('site.boards.field_header_help') ?></p>
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.boards.field_footer') ?></label>
-            <textarea name="footer_content" rows="3"
+            <div class="flex items-center gap-1 mb-1">
+                <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('site.boards.field_footer') ?></label>
+                <?= rzx_multilang_btn("openMultilangModal('board.{$boardId}.footer_content', 'footer_content', 'editor')") ?>
+            </div>
+            <textarea name="footer_content" id="footer_content" rows="3"
                       class="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200 font-mono"
                       placeholder="HTML"><?= htmlspecialchars($board['footer_content'] ?? '') ?></textarea>
         </div>

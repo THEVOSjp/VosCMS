@@ -117,4 +117,11 @@ return [
         'tr' => ['native' => 'Türkçe', 'label' => '터키어'],
         'vi' => ['native' => 'Tiếng Việt', 'label' => '베트남어'],
     ],
+
+    // PWA
+    'pwa' => [
+        'update_available' => '새 버전이 있습니다',
+        'update' => '업데이트',
+        'later' => '나중에',
+    ],
 ];

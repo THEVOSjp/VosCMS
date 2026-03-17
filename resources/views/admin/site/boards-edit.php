@@ -5,6 +5,9 @@
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
+// 다국어 버튼 함수 로드 (탭 콘텐츠보다 먼저)
+include_once dirname(__DIR__) . '/components/multilang-button.php';
+
 // 게시판 ID
 $boardId = (int)($_GET['id'] ?? 0);
 if (!$boardId) {
@@ -159,5 +162,6 @@ $headerActions .= '<a href="' . $adminUrl . '/site/boards" class="px-4 py-2 text
             </div>
         </main>
     </div>
+    <?php include __DIR__ . '/../components/multilang-modal.php'; ?>
 </body>
 </html>

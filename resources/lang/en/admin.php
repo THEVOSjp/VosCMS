@@ -118,4 +118,11 @@ return [
         'tr' => ['native' => 'Türkçe', 'label' => 'Turkish'],
         'vi' => ['native' => 'Tiếng Việt', 'label' => 'Vietnamese'],
     ],
+
+    // PWA
+    'pwa' => [
+        'update_available' => 'A new version is available',
+        'update' => 'Update',
+        'later' => 'Later',
+    ],
 ];
