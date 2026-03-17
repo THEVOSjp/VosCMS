@@ -97,7 +97,11 @@ function findUserByPhone(\PDO $pdo, string $prefix, string $phone): ?string {
 
 function getBundleName(\PDO $pdo, string $prefix, ?string $reservationId): ?string {
     if (!$reservationId) return null;
-    $stmt = $pdo->prepare("SELECT DISTINCT b.name FROM {$prefix}reservation_services rs JOIN {$prefix}service_bundles b ON rs.bundle_id = b.id WHERE rs.reservation_id = ? AND rs.bundle_id IS NOT NULL LIMIT 1");
-    $stmt->execute([$reservationId]);
-    return $stmt->fetchColumn() ?: null;
+    try {
+        $stmt = $pdo->prepare("SELECT DISTINCT b.name FROM {$prefix}reservation_services rs JOIN {$prefix}service_bundles b ON rs.bundle_id = b.id WHERE rs.reservation_id = ? AND rs.bundle_id IS NOT NULL LIMIT 1");
+        $stmt->execute([$reservationId]);
+        return $stmt->fetchColumn() ?: null;
+    } catch (\PDOException $e) {
+        return null;
+    }
 }

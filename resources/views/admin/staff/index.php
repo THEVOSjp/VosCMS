@@ -313,13 +313,16 @@ try {
     }
 
     // 번들 목록
-    $allBundles = $pdo->query("SELECT id, name, bundle_price, is_active FROM {$prefix}service_bundles WHERE is_active = 1 ORDER BY display_order, name")->fetchAll(PDO::FETCH_ASSOC);
-
-    // 스태프별 담당 번들 매핑
+    $allBundles = [];
     $staffBundlesMap = [];
-    $sbRows = $pdo->query("SELECT staff_id, bundle_id FROM {$prefix}staff_bundles")->fetchAll(PDO::FETCH_ASSOC);
-    foreach ($sbRows as $row) {
-        $staffBundlesMap[$row['staff_id']][] = $row['bundle_id'];
+    try {
+        $allBundles = $pdo->query("SELECT id, name, bundle_price, is_active FROM {$prefix}service_bundles WHERE is_active = 1 ORDER BY display_order, name")->fetchAll(PDO::FETCH_ASSOC);
+        $sbRows = $pdo->query("SELECT staff_id, bundle_id FROM {$prefix}staff_bundles")->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($sbRows as $row) {
+            $staffBundlesMap[$row['staff_id']][] = $row['bundle_id'];
+        }
+    } catch (PDOException $e) {
+        // service_bundles/staff_bundles 테이블 미존재 시 무시
     }
 
     $dbConnected = true;

@@ -16,12 +16,16 @@ $serviceName = getServiceName($pdo, $prefix, $r['id']);
 
 // 번들 정보 조회
 $bundleInfo = null;
-$bdlStmt = $pdo->prepare("SELECT DISTINCT b.name, b.bundle_price
-    FROM {$prefix}reservation_services rs
-    JOIN {$prefix}service_bundles b ON rs.bundle_id = b.id
-    WHERE rs.reservation_id = ? AND rs.bundle_id IS NOT NULL LIMIT 1");
-$bdlStmt->execute([$r['id']]);
-$bundleInfo = $bdlStmt->fetch(PDO::FETCH_ASSOC);
+try {
+    $bdlStmt = $pdo->prepare("SELECT DISTINCT b.name, b.bundle_price
+        FROM {$prefix}reservation_services rs
+        JOIN {$prefix}service_bundles b ON rs.bundle_id = b.id
+        WHERE rs.reservation_id = ? AND rs.bundle_id IS NOT NULL LIMIT 1");
+    $bdlStmt->execute([$r['id']]);
+    $bundleInfo = $bdlStmt->fetch(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // service_bundles 테이블 미존재 시 무시
+}
 
 // 예약 서비스 상세 조회
 try {
