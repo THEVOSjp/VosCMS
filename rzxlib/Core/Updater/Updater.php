@@ -469,10 +469,24 @@ class Updater
 
         $this->_dbg("migration: fresh PDO created");
         $migrator = new DatabaseMigrator($migPdo, $this->basePath);
-        $result = $migrator->migrate($targetVersion);
-        $this->_dbg("migration: result=" . json_encode($result));
+
+        // 1. 버전 기반 패치 실행 (database/patches/)
+        $patchResult = $migrator->migrate($targetVersion);
+        $this->_dbg("migration: patches result=" . json_encode($patchResult));
+
+        // 2. 순차 마이그레이션 실행 (database/migrations/)
+        $migResult = $migrator->runMigrations();
+        $this->_dbg("migration: migrations result=" . json_encode($migResult));
+
         $migPdo = null;
-        return $result;
+
+        // 결과 병합
+        $allErrors = array_merge($patchResult['errors'] ?? [], $migResult['errors'] ?? []);
+        return [
+            'success' => empty($allErrors),
+            'applied' => ($patchResult['applied'] ?? 0) + ($migResult['applied'] ?? 0),
+            'errors' => $allErrors,
+        ];
     }
 
     /**
