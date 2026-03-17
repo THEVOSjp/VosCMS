@@ -358,6 +358,30 @@ try {
             echo json_encode(['success' => true, 'data' => $versionInfo]);
             break;
 
+        case 'run_migrations':
+            // 업데이트 후 별도 요청으로 마이그레이션 실행
+            // (업데이트 중에는 이전 코드가 메모리에 로드되어 새 마이그레이션 로직 미실행)
+            dbg("run_migrations: start");
+            try {
+                $dsn = 'mysql:host=' . ($_ENV['DB_HOST'] ?? '127.0.0.1')
+                     . ';port=' . ($_ENV['DB_PORT'] ?? '3306')
+                     . ';dbname=' . ($_ENV['DB_DATABASE'] ?? 'rezlyx')
+                     . ';charset=utf8mb4';
+                $migPdo = new \PDO($dsn, $_ENV['DB_USERNAME'] ?? 'root', $_ENV['DB_PASSWORD'] ?? '', [
+                    \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                    \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
+                ]);
+                $migrator = new \RzxLib\Core\Updater\DatabaseMigrator($migPdo, BASE_PATH);
+                $result = $migrator->runMigrations();
+                dbg("run_migrations: result=" . json_encode($result));
+                $migPdo = null;
+                echo json_encode(['success' => $result['success'] ?? true, 'data' => $result]);
+            } catch (\Throwable $e) {
+                dbg("run_migrations: ERROR " . $e->getMessage());
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            }
+            break;
+
         default:
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Invalid action']);

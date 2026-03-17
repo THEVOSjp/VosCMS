@@ -410,6 +410,8 @@ async function performFullUpdate() {
         const data = await ajaxPost('perform', '&version=' + encodeURIComponent(latestVersion));
         closeModal();
         if (data.success) {
+            // 파일 업데이트 후 새 코드로 마이그레이션 실행 (별도 요청)
+            await runPostUpdateMigrations();
             showUpdateSuccess(data.data.message);
         } else {
             throw new Error(data.error || data.data?.error || i18n.updateFailed);
@@ -430,6 +432,8 @@ async function performPatchUpdate() {
         const data = await ajaxPost('patch', '&version=' + encodeURIComponent(latestVersion));
         closeModal();
         if (data.success) {
+            // 파일 업데이트 후 새 코드로 마이그레이션 실행 (별도 요청)
+            await runPostUpdateMigrations();
             showUpdateSuccess(data.data.message || i18n.patchUpdate + ' 완료');
         } else {
             throw new Error(data.error || data.data?.error || i18n.updateFailed);
@@ -437,6 +441,23 @@ async function performPatchUpdate() {
     } catch (error) {
         closeModal();
         document.getElementById('updateStatus').innerHTML = errorBox(error.message);
+    }
+}
+
+// ===== 업데이트 후 DB 마이그레이션 (별도 요청) =====
+// 업데이트 중에는 이전 PHP 코드가 메모리에 로드되어 있으므로
+// 새로 다운로드된 마이그레이션 코드를 실행하려면 별도 HTTP 요청 필요
+async function runPostUpdateMigrations() {
+    console.log('[Updates] Running post-update migrations...');
+    try {
+        const data = await ajaxPost('run_migrations');
+        console.log('[Updates] Migration result:', data);
+        if (data.data?.applied > 0) {
+            console.log('[Updates] Migrations applied:', data.data.applied);
+        }
+    } catch (e) {
+        console.warn('[Updates] Post-update migration failed:', e.message);
+        // 마이그레이션 실패해도 업데이트 자체는 성공으로 처리
     }
 }
 
