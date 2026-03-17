@@ -486,7 +486,7 @@ include __DIR__ . '/_head.php';
         <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">서비스 상세</h3>
-                <span class="text-sm text-zinc-500 dark:text-zinc-400"><?= count($reservationServices) ?>건 · <?= $totalDuration ?>분</span>
+                <span id="showSvcSummary" class="text-sm text-zinc-500 dark:text-zinc-400"><?= count($reservationServices) ?>건 · <?= $totalDuration ?>분</span>
             </div>
             <?php if (empty($reservationServices)): ?>
             <p class="text-sm text-zinc-400 text-center py-4">등록된 서비스가 없습니다.</p>
@@ -497,7 +497,7 @@ include __DIR__ . '/_head.php';
                     $hasImg = !empty($svcImg);
                     $isBundled = !empty($rs['bundle_id']);
                 ?>
-                <div class="flex items-start gap-3 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
+                <div class="flex items-start gap-3 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg" data-svc-row data-svc-id="<?= htmlspecialchars($rs['service_id']) ?>" data-svc-price="<?= (float)$rs['price'] ?>" data-svc-duration="<?= (int)$rs['duration'] ?>">
                     <?php if ($hasImg): ?>
                     <img src="<?= htmlspecialchars($appUrl . '/storage/' . $svcImg) ?>" alt=""
                          class="w-14 h-14 rounded-lg object-cover flex-shrink-0 border border-zinc-200 dark:border-zinc-700">
@@ -527,6 +527,12 @@ include __DIR__ . '/_head.php';
                             <span class="font-semibold text-zinc-900 dark:text-white"><?= formatPrice((float)$rs['price']) ?></span>
                         </div>
                     </div>
+                    <?php if (in_array($r['status'], ['pending', 'confirmed'])): ?>
+                    <button type="button" onclick="removeShowService('<?= htmlspecialchars($r['id']) ?>', '<?= htmlspecialchars($rs['service_id']) ?>', this)"
+                            class="flex-shrink-0 p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition" title="<?= __('reservations.pos_remove_service') ?>">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                    <?php endif; ?>
                 </div>
                 <?php endforeach; ?>
                 <?php $designFee = (float)($r['designation_fee'] ?? 0); ?>
@@ -575,6 +581,27 @@ include __DIR__ . '/_head.php';
                     <span class="font-bold text-zinc-900 dark:text-white"><?= formatPrice($totalServicePrice) ?></span>
                 </div>
                 <?php endif; ?>
+            </div>
+            <?php endif; ?>
+
+            <!-- 서비스 추가 버튼 + 영역 -->
+            <?php if (in_array($r['status'], ['pending', 'confirmed'])): ?>
+            <button type="button" id="showAddServiceToggleBtn" onclick="toggleShowAddService()" class="mt-3 w-full py-2 flex items-center justify-center gap-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-dashed border-blue-300 dark:border-blue-700 rounded-lg transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                서비스 추가
+            </button>
+            <div id="showAddServiceArea" class="hidden mt-3 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-200 dark:border-blue-800/30">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-sm font-semibold text-blue-700 dark:text-blue-400">서비스 추가</p>
+                    <button type="button" onclick="toggleShowAddService()" class="p-1 text-zinc-400 hover:text-zinc-600 rounded transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div id="showAddServiceList" class="space-y-1.5 max-h-48 overflow-y-auto mb-3">
+                    <div class="text-center py-3 text-zinc-400 text-xs">로딩 중...</div>
+                </div>
+                <button type="button" id="showAddServiceBtn" onclick="submitShowAddService()" disabled
+                        class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition disabled:opacity-50">추가</button>
             </div>
             <?php endif; ?>
         </div>

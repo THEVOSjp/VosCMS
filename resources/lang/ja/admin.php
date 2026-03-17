@@ -34,6 +34,7 @@ return [
         'menu_management' => 'メニュー管理',
         'design_management' => 'デザイン管理',
         'page_management' => 'ページ管理',
+        'board_management' => '掲示板管理',
         'widget_management' => 'ウィジェット管理',
     ],
     'stats' => [

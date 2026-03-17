@@ -287,6 +287,15 @@ if (empty($path) || $path === 'index.php') {
     } elseif ($adminRoute === 'reservations' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $apiAction = 'store'; $apiId = null;
         include BASE_PATH . '/resources/views/admin/reservations/_api.php';
+    } elseif ($adminRoute === 'services/list-json' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        // 활성 서비스 목록 JSON
+        header('Content-Type: application/json; charset=utf-8');
+        $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+        $stmt = $pdo->query("SELECT s.id, s.name, s.price, s.duration, c.name as category_name FROM {$prefix}services s LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id WHERE s.is_active = 1 ORDER BY s.sort_order ASC, s.name ASC");
+        $services = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($services as &$sv) { $sv['price_formatted'] = number_format((float)$sv['price']); }
+        echo json_encode(['services' => $services]);
+        exit;
     } elseif ($adminRoute === 'reservations/customer-services' && $_SERVER['REQUEST_METHOD'] === 'GET') {
         $apiAction = 'customer-services'; $apiId = null;
         include BASE_PATH . '/resources/views/admin/reservations/_api.php';
@@ -298,6 +307,9 @@ if (empty($path) || $path === 'index.php') {
         include BASE_PATH . '/resources/views/admin/reservations/_api.php';
     } elseif ($adminRoute === 'reservations/add-service' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $apiAction = 'add-service'; $apiId = null;
+        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
+    } elseif ($adminRoute === 'reservations/append-service' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $apiAction = 'append-service'; $apiId = null;
         include BASE_PATH . '/resources/views/admin/reservations/_api.php';
     } elseif ($adminRoute === 'reservations/assign-staff' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $apiAction = 'assign-staff'; $apiId = null;
@@ -348,6 +360,17 @@ if (empty($path) || $path === 'index.php') {
     } elseif (preg_match('#^reservations/([\w-]+)$#', $adminRoute, $m)) {
         $reservationId = $m[1];
         include BASE_PATH . '/resources/views/admin/reservations/show.php';
+    // 게시판 관리
+    } elseif ($adminRoute === 'site/boards') {
+        include BASE_PATH . '/resources/views/admin/site/boards.php';
+    } elseif ($adminRoute === 'site/boards/create') {
+        include BASE_PATH . '/resources/views/admin/site/boards-create.php';
+    } elseif ($adminRoute === 'site/boards/edit') {
+        include BASE_PATH . '/resources/views/admin/site/boards-edit.php';
+    } elseif ($adminRoute === 'site/boards/api') {
+        include BASE_PATH . '/resources/views/admin/site/boards-api.php';
+    } elseif ($adminRoute === 'site/boards/trash') {
+        include BASE_PATH . '/resources/views/admin/site/boards-trash.php';
     // 위젯 관리
     } elseif ($adminRoute === 'site/widgets') {
         include BASE_PATH . '/resources/views/admin/site/widgets.php';
@@ -367,8 +390,29 @@ if (empty($path) || $path === 'index.php') {
     // 하위 경로 처리 (예: booking/lookup)
     $pathParts = explode('/', $path);
 
+    // 동적 라우트: board/{slug}
+    if (preg_match('#^board/([a-z0-9_-]+)$#', $path, $m)) {
+        $boardSlug = $m[1];
+        include BASE_PATH . '/resources/views/customer/board/list.php';
+    } elseif (preg_match('#^board/([a-z0-9_-]+)/write$#', $path, $m)) {
+        $boardSlug = $m[1];
+        include BASE_PATH . '/resources/views/customer/board/write.php';
+    } elseif (preg_match('#^board/([a-z0-9_-]+)/(\d+)$#', $path, $m)) {
+        $boardSlug = $m[1];
+        $postId = (int)$m[2];
+        include BASE_PATH . '/resources/views/customer/board/read.php';
+    } elseif (preg_match('#^board/([a-z0-9_-]+)/(\d+)/edit$#', $path, $m)) {
+        $boardSlug = $m[1];
+        $postId = (int)$m[2];
+        include BASE_PATH . '/resources/views/customer/board/write.php';
+    } elseif ($path === 'board/api/posts') {
+        include BASE_PATH . '/resources/views/customer/board/api-posts.php';
+    } elseif ($path === 'board/api/comments') {
+        include BASE_PATH . '/resources/views/customer/board/api-comments.php';
+    } elseif ($path === 'board/api/files') {
+        include BASE_PATH . '/resources/views/customer/board/api-files.php';
     // 동적 라우트: staff/{id}
-    if (preg_match('#^staff/(\d+)$#', $path, $m)) {
+    } elseif (preg_match('#^staff/(\d+)$#', $path, $m)) {
         $routeParams = ['id' => $m[1]];
         include BASE_PATH . '/resources/views/customer/staff-detail.php';
     } else {

@@ -34,6 +34,7 @@ return [
         'menu_management' => 'Manajemen Menu',
         'design_management' => 'Manajemen Desain',
         'page_management' => 'Manajemen Halaman',
+        'board_management' => 'Manajemen Forum',
         'widget_management' => 'Manajemen Widget',
     ],
     'stats' => [

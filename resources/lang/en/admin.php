@@ -34,6 +34,7 @@ return [
         'menu_management' => 'Menu Management',
         'design_management' => 'Design Management',
         'page_management' => 'Page Management',
+        'board_management' => 'Board Management',
         'widget_management' => 'Widget Management',
     ],
     'stats' => [

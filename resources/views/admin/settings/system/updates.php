@@ -79,7 +79,7 @@ ob_start();
         </div>
 
         <!-- 최신 안정 버전 -->
-        <div class="flex items-center p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
+        <div id="latestVersionCard" class="flex items-center p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
             <div class="w-12 h-12 <?= !empty($updateInfo['has_update']) ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-green-100 dark:bg-green-900/30' ?> rounded-lg flex items-center justify-center mr-4 shrink-0">
                 <?php if (!empty($updateInfo['has_update'])): ?>
                 <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

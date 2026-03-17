@@ -34,6 +34,7 @@ return [
         'menu_management' => 'Menü Yönetimi',
         'design_management' => 'Tasarım Yönetimi',
         'page_management' => 'Sayfa Yönetimi',
+        'board_management' => 'Forum Yönetimi',
         'widget_management' => 'Widget Yönetimi',
     ],
     'stats' => [

@@ -105,7 +105,7 @@ return [
         'update_now' => '지금 업데이트',
         'confirm_update' => '업데이트를 진행하시겠습니까? 업데이트 전 자동으로 백업이 생성됩니다.',
         'update_failed' => '업데이트에 실패했습니다.', 'reload_page' => '잠시 후 페이지가 새로고침됩니다.',
-        'available_short' => '업데이트 가능',
+        'available_short' => '새로운 업데이트가 있습니다. 업데이트 해주시기 바랍니다.',
         'update_recommend' => '최신 기능과 보안 패치를 위해 업데이트를 권장합니다.',
         // 패치 업데이트 관련
         'full_update' => '전체 업데이트',

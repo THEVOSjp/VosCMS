@@ -34,6 +34,7 @@ return [
         'menu_management' => 'Управление меню',
         'design_management' => 'Управление дизайном',
         'page_management' => 'Управление страницами',
+        'board_management' => 'Управление форумами',
         'widget_management' => 'Управление виджетами',
     ],
     'stats' => [

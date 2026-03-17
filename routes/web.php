@@ -430,6 +430,13 @@ $router->group(['prefix' => '/admin', 'middleware' => ['auth', 'admin']], functi
         include BASE_PATH . '/resources/views/admin/site/pages.php';
     })->name('admin.site.pages');
 
+    // 사이트 관리 - 게시판
+    $router->get('/site/boards', function () {
+        global $config, $siteSettings;
+        $pageHeaderTitle = __('site.boards.title');
+        include BASE_PATH . '/resources/views/admin/site/boards.php';
+    })->name('admin.site.boards');
+
     // 설정 (서브페이지)
     $router->get('/settings', function () {
         // 기본 설정 페이지로 리다이렉트

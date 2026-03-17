@@ -34,6 +34,7 @@ return [
         'menu_management' => 'Menuverwaltung',
         'design_management' => 'Designverwaltung',
         'page_management' => 'Seitenverwaltung',
+        'board_management' => 'Forum-Verwaltung',
         'widget_management' => 'Widget-Verwaltung',
     ],
     'stats' => [

@@ -561,6 +561,72 @@ try {
         exit;
     }
 
+    // ─── 기존 예약에 서비스 추가 ───
+    if ($apiAction === 'append-service') {
+        $reservationId = trim($_POST['reservation_id'] ?? '');
+        $serviceIds = $_POST['service_ids'] ?? [];
+
+        if (!$reservationId || empty($serviceIds)) {
+            echo json_encode(['error' => true, 'message' => '필수 항목이 누락되었습니다.']);
+            exit;
+        }
+
+        // 예약 존재 확인
+        $resCheck = $pdo->prepare("SELECT id, start_time FROM {$prefix}reservations WHERE id = ?");
+        $resCheck->execute([$reservationId]);
+        $resRow = $resCheck->fetch(PDO::FETCH_ASSOC);
+        if (!$resRow) {
+            echo json_encode(['error' => true, 'message' => '예약을 찾을 수 없습니다.']);
+            exit;
+        }
+
+        // 서비스 조회
+        $ph = implode(',', array_fill(0, count($serviceIds), '?'));
+        $svcStmt = $pdo->prepare("SELECT id, name, price, duration FROM {$prefix}services WHERE id IN ({$ph})");
+        $svcStmt->execute(array_values($serviceIds));
+        $services = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
+        if (empty($services)) {
+            echo json_encode(['error' => true, 'message' => '유효한 서비스가 없습니다.']);
+            exit;
+        }
+
+        // 현재 최대 sort_order
+        $maxSort = $pdo->prepare("SELECT COALESCE(MAX(sort_order), -1) FROM {$prefix}reservation_services WHERE reservation_id = ?");
+        $maxSort->execute([$reservationId]);
+        $sortIdx = (int)$maxSort->fetchColumn() + 1;
+
+        $pdo->beginTransaction();
+
+        $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
+        foreach ($services as $s) {
+            $rsStmt->execute([$reservationId, $s['id'], $s['name'], $s['price'], $s['duration'], $sortIdx++]);
+        }
+
+        // 금액/시간 재계산
+        $recalc = $pdo->prepare("SELECT SUM(price) as total, SUM(duration) as dur FROM {$prefix}reservation_services WHERE reservation_id = ?");
+        $recalc->execute([$reservationId]);
+        $sums = $recalc->fetch(PDO::FETCH_ASSOC);
+        $newTotal = (float)($sums['total'] ?? 0);
+        $newDur = (int)($sums['dur'] ?? 0);
+
+        $startTime = $resRow['start_time'];
+        if ($startTime) {
+            $parts = explode(':', $startTime);
+            $endMin = ((int)$parts[0]) * 60 + ((int)$parts[1]) + $newDur;
+            $newEndTime = sprintf('%02d:%02d:00', floor($endMin / 60) % 24, $endMin % 60);
+        } else {
+            $newEndTime = null;
+        }
+
+        $upd = $pdo->prepare("UPDATE {$prefix}reservations SET total_amount = ?, final_amount = ?, end_time = ?, updated_at = NOW() WHERE id = ?");
+        $upd->execute([$newTotal, $newTotal, $newEndTime, $reservationId]);
+
+        $pdo->commit();
+        console_log("[API] Appended " . count($services) . " services to reservation {$reservationId}");
+        echo json_encode(['success' => true, 'message' => '서비스가 추가되었습니다.']);
+        exit;
+    }
+
     // ─── 서비스 삭제 (POS) ───
     if ($apiAction === 'remove-service') {
         $reservationId = trim($_POST['reservation_id'] ?? '');

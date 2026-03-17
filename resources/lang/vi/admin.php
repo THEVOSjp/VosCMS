@@ -34,6 +34,7 @@ return [
         'menu_management' => 'Quản lý menu',
         'design_management' => 'Quản lý thiết kế',
         'page_management' => 'Quản lý trang',
+        'board_management' => 'Quản lý Diễn đàn',
         'widget_management' => 'Quản lý widget',
     ],
     'stats' => [

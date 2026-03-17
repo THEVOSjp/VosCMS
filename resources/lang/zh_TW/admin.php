@@ -34,6 +34,7 @@ return [
         'menu_management' => '選單管理',
         'design_management' => '設計管理',
         'page_management' => '頁面管理',
+        'board_management' => '論壇管理',
         'widget_management' => '小工具管理',
     ],
     'stats' => [

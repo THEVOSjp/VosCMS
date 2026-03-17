@@ -321,7 +321,25 @@ Object.assign(POS, {
             const data = await resp.json();
             console.log('[POS] Add service result:', data);
             if (data.success) {
-                location.reload();
+                // 새 예약 ID를 목록에 추가
+                if (data.ids && data.ids.length > 0) {
+                    const c = this._svcCustomer;
+                    c.reservation_ids = [...(c.reservation_ids || []), ...data.ids];
+                }
+                // 서비스 추가 영역 닫기
+                document.getElementById('posAddServiceArea').classList.add('hidden');
+                // 서비스 목록 다시 로드
+                const c = this._svcCustomer;
+                const ids = (c.reservation_ids || []).join(',');
+                const r2 = await fetch(`${this.adminUrl}/reservations/customer-services?ids=${encodeURIComponent(ids)}&_t=${Date.now()}`, { cache: 'no-store' });
+                const d2 = await r2.json();
+                console.log('[POS] Refreshed services after add:', d2);
+                if (d2.success) {
+                    this.renderStaffHeader(d2.data, d2.customer || {});
+                    this.renderServiceList(d2.data);
+                }
+                btn.disabled = false;
+                btn.textContent = '<?= __('reservations.pos_add_service_submit') ?>';
             } else {
                 alert(data.message || '서비스 추가 실패');
                 btn.disabled = false;

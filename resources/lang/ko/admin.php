@@ -43,6 +43,7 @@ return [
         'menu_management' => '메뉴 관리',
         'design_management' => '디자인 관리',
         'page_management' => '페이지 관리',
+        'board_management' => '게시판 관리',
         'widget_management' => '위젯 관리',
     ],
 

@@ -34,6 +34,7 @@ return [
         'menu_management' => 'Цэсийн удирдлага',
         'design_management' => 'Дизайны удирдлага',
         'page_management' => 'Хуудасны удирдлага',
+        'board_management' => 'Форумын удирдлага',
         'widget_management' => 'Виджет удирдлага',
     ],
     'stats' => [

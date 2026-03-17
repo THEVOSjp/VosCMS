@@ -49,6 +49,7 @@ console.log('[Updates] AJAX URL:', ajaxUrl);
 
 document.addEventListener('DOMContentLoaded', function() {
     loadBackups();
+    checkForUpdates();
 });
 
 // ===== AJAX 헬퍼 =====
@@ -78,8 +79,10 @@ async function checkForUpdates() {
         } else if (result.has_update) {
             latestVersion = result.latest_version;
             statusDiv.innerHTML = renderUpdateAvailable(result);
+            updateLatestVersionCard(result.latest_version, true);
         } else {
             statusDiv.innerHTML = successBox(i18n.upToDate);
+            updateLatestVersionCard(result.latest_version || currentVersion, false);
         }
         statusDiv.classList.remove('hidden');
     } catch (error) {
@@ -89,6 +92,30 @@ async function checkForUpdates() {
         btn.disabled = false;
         btn.innerHTML = refreshIcon() + i18n.checkUpdate;
     }
+}
+
+// 상단 최신 버전 카드 갱신
+function updateLatestVersionCard(version, hasUpdate) {
+    const card = document.getElementById('latestVersionCard');
+    if (!card) return;
+    const iconDiv = card.querySelector('.w-12');
+    const textDiv = iconDiv ? iconDiv.nextElementSibling : null;
+    if (!iconDiv || !textDiv) return;
+
+    if (hasUpdate) {
+        iconDiv.className = 'w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center mr-4 shrink-0';
+        iconDiv.innerHTML = '<svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>';
+        textDiv.innerHTML = `<p class="text-xs text-zinc-500 dark:text-zinc-400 mb-0.5">${i18n.latestVersion}</p>
+            <p class="text-lg font-bold text-orange-600 dark:text-orange-400">RezlyX v${escapeHtml(version)}</p>
+            <p class="text-sm text-orange-500 dark:text-orange-400"><?= __('system.updates.available_short') ?></p>`;
+    } else {
+        iconDiv.className = 'w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-4 shrink-0';
+        iconDiv.innerHTML = '<svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+        textDiv.innerHTML = `<p class="text-xs text-zinc-500 dark:text-zinc-400 mb-0.5">${i18n.latestVersion}</p>
+            <p class="text-lg font-bold text-green-600 dark:text-green-400">RezlyX v${escapeHtml(version)}</p>
+            <p class="text-sm text-green-500 dark:text-green-400">${i18n.upToDate}</p>`;
+    }
+    console.log('[Updates] Latest version card updated:', version, hasUpdate ? '(update available)' : '(up to date)');
 }
 
 // 업데이트 가능 UI 렌더링
