@@ -15,11 +15,17 @@ $nowTime = date('H:i:s');
 $calServices = $pdo->query("SELECT s.id, s.name, s.description, s.duration, s.price, s.image, s.category_id, c.name as category_name FROM {$prefix}services s LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id WHERE s.is_active = 1 ORDER BY s.sort_order ASC, s.name ASC")->fetchAll(PDO::FETCH_ASSOC);
 
 // 오늘 전체 예약 (junction table 기반 + 서비스 이미지 + 회원 프로필 + 회원 등급)
+try {
+    $posServiceNameExpr = "(SELECT GROUP_CONCAT(rs.service_name ORDER BY rs.sort_order SEPARATOR ', ') FROM {$prefix}reservation_services rs WHERE rs.reservation_id = r.id)";
+    $pdo->query("SELECT service_name FROM {$prefix}reservation_services LIMIT 0");
+} catch (PDOException $e) {
+    $posServiceNameExpr = "(SELECT GROUP_CONCAT(s.name SEPARATOR ', ') FROM {$prefix}reservation_services rs JOIN {$prefix}services s ON rs.service_id = s.id WHERE rs.reservation_id = r.id)";
+}
 $stmtToday = $pdo->prepare("
     SELECT r.*,
-        (SELECT GROUP_CONCAT(rs.service_name ORDER BY rs.sort_order SEPARATOR ', ') FROM {$prefix}reservation_services rs WHERE rs.reservation_id = r.id) as service_name,
+        {$posServiceNameExpr} as service_name,
         (SELECT SUM(rs2.duration) FROM {$prefix}reservation_services rs2 WHERE rs2.reservation_id = r.id) as service_duration,
-        (SELECT s.image FROM {$prefix}reservation_services rs3 JOIN {$prefix}services s ON rs3.service_id = s.id WHERE rs3.reservation_id = r.id AND s.image IS NOT NULL AND s.image != '' ORDER BY rs3.sort_order ASC LIMIT 1) as service_image,
+        (SELECT s.image FROM {$prefix}reservation_services rs3 JOIN {$prefix}services s ON rs3.service_id = s.id WHERE rs3.reservation_id = r.id AND s.image IS NOT NULL AND s.image != '' LIMIT 1) as service_image,
         u.profile_image as user_profile_image,
         u.grade_id as user_grade_id,
         u.points_balance as user_points_balance,

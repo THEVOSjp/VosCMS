@@ -23,9 +23,15 @@ $nextMonth = $month == 12 ? 1 : $month + 1;
 $dateFrom = sprintf('%04d-%02d-01', $year, $month);
 $dateTo = sprintf('%04d-%02d-%02d', $year, $month, $daysInMonth);
 
-$stmt = $pdo->prepare("SELECT r.*, (SELECT GROUP_CONCAT(rs.service_name ORDER BY rs.sort_order SEPARATOR ', ') FROM {$prefix}reservation_services rs WHERE rs.reservation_id = r.id) as service_name FROM {$prefix}reservations r WHERE r.reservation_date BETWEEN ? AND ? ORDER BY r.start_time ASC");
-$stmt->execute([$dateFrom, $dateTo]);
-$reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $stmt = $pdo->prepare("SELECT r.*, (SELECT GROUP_CONCAT(rs.service_name ORDER BY rs.sort_order SEPARATOR ', ') FROM {$prefix}reservation_services rs WHERE rs.reservation_id = r.id) as service_name FROM {$prefix}reservations r WHERE r.reservation_date BETWEEN ? AND ? ORDER BY r.start_time ASC");
+    $stmt->execute([$dateFrom, $dateTo]);
+    $reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $stmt = $pdo->prepare("SELECT r.* FROM {$prefix}reservations r WHERE r.reservation_date BETWEEN ? AND ? ORDER BY r.start_time ASC");
+    $stmt->execute([$dateFrom, $dateTo]);
+    $reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 $byDate = [];
 foreach ($reservations as $r) {

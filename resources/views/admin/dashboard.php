@@ -46,9 +46,16 @@ try {
     $calFirstDay = sprintf('%04d-%02d-01', $calYear, $calMonth);
     $calLastDay = date('Y-m-t', strtotime($calFirstDay));
 
-    $calStmt = $pdo->prepare("SELECT r.*, (SELECT GROUP_CONCAT(rs.service_name ORDER BY rs.sort_order SEPARATOR ', ') FROM {$prefix}reservation_services rs WHERE rs.reservation_id = r.id) as service_name FROM {$prefix}reservations r WHERE r.reservation_date BETWEEN ? AND ? ORDER BY r.start_time ASC");
-    $calStmt->execute([$calFirstDay, $calLastDay]);
-    $calReservations = $calStmt->fetchAll(PDO::FETCH_ASSOC);
+    try {
+        $calStmt = $pdo->prepare("SELECT r.*, (SELECT GROUP_CONCAT(rs.service_name ORDER BY rs.sort_order SEPARATOR ', ') FROM {$prefix}reservation_services rs WHERE rs.reservation_id = r.id) as service_name FROM {$prefix}reservations r WHERE r.reservation_date BETWEEN ? AND ? ORDER BY r.start_time ASC");
+        $calStmt->execute([$calFirstDay, $calLastDay]);
+        $calReservations = $calStmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        // service_name 컬럼 미존재 시 폴백 (마이그레이션 미적용 환경)
+        $calStmt = $pdo->prepare("SELECT r.* FROM {$prefix}reservations r WHERE r.reservation_date BETWEEN ? AND ? ORDER BY r.start_time ASC");
+        $calStmt->execute([$calFirstDay, $calLastDay]);
+        $calReservations = $calStmt->fetchAll(PDO::FETCH_ASSOC);
+    }
     $calByDate = [];
     foreach ($calReservations as $cr) {
         $calByDate[$cr['reservation_date']][] = $cr;
@@ -66,6 +73,35 @@ try {
 
     // 서비스 목록 (빠른 예약 추가용)
     $dashServices = $pdo->query("SELECT id, name, duration, price FROM {$prefix}services WHERE is_active = 1 ORDER BY sort_order ASC, name ASC")->fetchAll(PDO::FETCH_ASSOC);
+
+        // 미적용 마이그레이션 확인
+    $pendingMigrations = [];
+    try {
+        // migrations 테이블 존재 여부 확인
+        $migTableExists = false;
+        $checkStmt = $pdo->query("SHOW TABLES LIKE '{$prefix}migrations'");
+        if ($checkStmt->rowCount() > 0) {
+            $migTableExists = true;
+            $appliedStmt = $pdo->query("SELECT migration FROM {$prefix}migrations");
+            $appliedMigs = $appliedStmt->fetchAll(PDO::FETCH_COLUMN);
+        } else {
+            $appliedMigs = [];
+        }
+
+        $migDir = BASE_PATH . '/database/migrations';
+        if (is_dir($migDir)) {
+            $migFiles = glob($migDir . '/*.sql');
+            sort($migFiles);
+            foreach ($migFiles as $mf) {
+                $migName = basename($mf, '.sql');
+                if (!in_array($migName, $appliedMigs)) {
+                    $pendingMigrations[] = $migName;
+                }
+            }
+        }
+    } catch (Exception $e) {
+        // 무시 — migrations 테이블 없으면 전부 pending
+    }
 
     $dbConnected = true;
 } catch (Exception $e) {
@@ -144,6 +180,84 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                         </a>
                     </div>
                 </div>
+                <?php endif; ?>
+
+                <!-- Pending Migrations Banner -->
+                <?php if (!empty($pendingMigrations)): ?>
+                <div class="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4" id="migrationBanner">
+                    <div class="flex items-start">
+                        <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/40 rounded-lg flex items-center justify-center mr-4 shrink-0 mt-0.5">
+                            <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-semibold text-amber-800 dark:text-amber-300 text-base"><?= __('admin.dashboard.migration_required') ?></p>
+                            <p class="text-amber-700 dark:text-amber-400 text-sm mt-1"><?= __('admin.dashboard.migration_desc') ?></p>
+                            <ul class="mt-2 space-y-1">
+                                <?php foreach ($pendingMigrations as $pm): ?>
+                                <li class="flex items-center text-sm text-amber-700 dark:text-amber-400">
+                                    <svg class="w-4 h-4 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                    <span class="font-mono text-xs"><?= htmlspecialchars($pm) ?></span>
+                                </li>
+                                <?php endforeach; ?>
+                            </ul>
+                            <button onclick="runMigrations(this)" class="mt-3 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition inline-flex items-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                <?= __('admin.dashboard.run_migration') ?>
+                            </button>
+                            <span id="migrationResult" class="ml-3 text-sm hidden"></span>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                async function runMigrations(btn) {
+                    console.log('[Dashboard] Running migrations...');
+                    btn.disabled = true;
+                    btn.innerHTML = '<svg class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><?= __('admin.messages.processing') ?>';
+                    const resultSpan = document.getElementById('migrationResult');
+
+                    try {
+                        const resp = await fetch(window.location.origin + '/update-api.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: 'action=run_migrations'
+                        });
+                        const data = await resp.json();
+                        console.log('[Dashboard] Migration result:', data);
+
+                        if (data.success) {
+                            const applied = data.data?.applied || 0;
+                            resultSpan.textContent = '✓ ' + applied + '<?= __('admin.dashboard.migration_applied') ?>';
+                            resultSpan.className = 'ml-3 text-sm text-green-700 dark:text-green-400 font-medium';
+                            // 성공 시 배너 교체
+                            setTimeout(() => {
+                                document.getElementById('migrationBanner').innerHTML = `
+                                    <div class="flex items-center p-2">
+                                        <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-sm font-medium text-green-800 dark:text-green-400"><?= __('admin.dashboard.migration_complete') ?></span>
+                                    </div>`;
+                                document.getElementById('migrationBanner').className = 'mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4';
+                                setTimeout(() => document.getElementById('migrationBanner')?.remove(), 5000);
+                            }, 1500);
+                        } else {
+                            throw new Error(data.error || 'Migration failed');
+                        }
+                    } catch (e) {
+                        console.error('[Dashboard] Migration error:', e);
+                        resultSpan.textContent = '✗ ' + e.message;
+                        resultSpan.className = 'ml-3 text-sm text-red-600 dark:text-red-400 font-medium';
+                        btn.disabled = false;
+                        btn.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><?= __('admin.dashboard.retry_migration') ?>';
+                    }
+                }
+                </script>
                 <?php endif; ?>
 
                 <!-- Status Banner -->

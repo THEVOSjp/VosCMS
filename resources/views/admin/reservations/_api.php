@@ -97,10 +97,21 @@ try {
         ]);
 
         // 서비스 관계 저장
-        $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
         $idx = 0;
-        foreach ($services as $s) {
-            $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $idx++]);
+        try {
+            $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
+            foreach ($services as $s) {
+                $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $idx++]);
+            }
+        } catch (PDOException $e) {
+            if (stripos($e->getMessage(), 'Unknown column') !== false) {
+                $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, price, duration) VALUES (?, ?, ?, ?)");
+                foreach ($services as $s) {
+                    $rsStmt->execute([$id, $s['id'], $s['price'], $s['duration']]);
+                }
+            } else {
+                throw $e;
+            }
         }
 
         $pdo->commit();
@@ -401,21 +412,41 @@ try {
             exit;
         }
         $ph = implode(',', array_fill(0, count($ids), '?'));
-        $stmt = $pdo->prepare("
-            SELECT r.id as reservation_id, r.status, r.start_time, r.end_time,
-                   r.paid_amount as reservation_paid, r.payment_status, r.source,
-                   r.designation_fee, r.staff_id,
-                   st.name as staff_name, st.avatar as staff_avatar,
-                   rs.service_id, rs.service_name, rs.price, rs.duration as service_duration,
-                   rs.sort_order
-            FROM {$prefix}reservations r
-            JOIN {$prefix}reservation_services rs ON r.id = rs.reservation_id
-            LEFT JOIN {$prefix}staff st ON r.staff_id = st.id
-            WHERE r.id IN ({$ph})
-            ORDER BY r.start_time ASC, rs.sort_order ASC
-        ");
-        $stmt->execute(array_values($ids));
-        $services = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $pdo->prepare("
+                SELECT r.id as reservation_id, r.status, r.start_time, r.end_time,
+                       r.paid_amount as reservation_paid, r.payment_status, r.source,
+                       r.designation_fee, r.staff_id,
+                       st.name as staff_name, st.avatar as staff_avatar,
+                       rs.service_id, COALESCE(rs.service_name, s2.name) as service_name, rs.price, rs.duration as service_duration,
+                       rs.sort_order
+                FROM {$prefix}reservations r
+                JOIN {$prefix}reservation_services rs ON r.id = rs.reservation_id
+                LEFT JOIN {$prefix}services s2 ON rs.service_id = s2.id
+                LEFT JOIN {$prefix}staff st ON r.staff_id = st.id
+                WHERE r.id IN ({$ph})
+                ORDER BY r.start_time ASC, rs.sort_order ASC
+            ");
+            $stmt->execute(array_values($ids));
+            $services = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            $stmt = $pdo->prepare("
+                SELECT r.id as reservation_id, r.status, r.start_time, r.end_time,
+                       r.paid_amount as reservation_paid, r.payment_status, r.source,
+                       r.designation_fee, r.staff_id,
+                       st.name as staff_name, st.avatar as staff_avatar,
+                       rs.service_id, s2.name as service_name, rs.price, rs.duration as service_duration,
+                       0 as sort_order
+                FROM {$prefix}reservations r
+                JOIN {$prefix}reservation_services rs ON r.id = rs.reservation_id
+                LEFT JOIN {$prefix}services s2 ON rs.service_id = s2.id
+                LEFT JOIN {$prefix}staff st ON r.staff_id = st.id
+                WHERE r.id IN ({$ph})
+                ORDER BY r.start_time ASC
+            ");
+            $stmt->execute(array_values($ids));
+            $services = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
 
         // 고객 상세 정보 (첫 번째 예약 기준)
         $firstR = $pdo->prepare("SELECT r.notes, r.admin_notes, r.source, r.user_id, r.designation_fee,
@@ -549,10 +580,21 @@ try {
             $reservationDate, $nowTime, $endTime, $totalAmount, $totalAmount, $source
         ]);
 
-        $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
         $idx = 0;
-        foreach ($services as $s) {
-            $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $idx++]);
+        try {
+            $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
+            foreach ($services as $s) {
+                $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $idx++]);
+            }
+        } catch (PDOException $e) {
+            if (stripos($e->getMessage(), 'Unknown column') !== false) {
+                $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, price, duration) VALUES (?, ?, ?, ?)");
+                foreach ($services as $s) {
+                    $rsStmt->execute([$id, $s['id'], $s['price'], $s['duration']]);
+                }
+            } else {
+                throw $e;
+            }
         }
 
         $pdo->commit();
@@ -591,15 +633,31 @@ try {
         }
 
         // 현재 최대 sort_order
-        $maxSort = $pdo->prepare("SELECT COALESCE(MAX(sort_order), -1) FROM {$prefix}reservation_services WHERE reservation_id = ?");
-        $maxSort->execute([$reservationId]);
-        $sortIdx = (int)$maxSort->fetchColumn() + 1;
+        $sortIdx = 0;
+        try {
+            $maxSort = $pdo->prepare("SELECT COALESCE(MAX(sort_order), -1) FROM {$prefix}reservation_services WHERE reservation_id = ?");
+            $maxSort->execute([$reservationId]);
+            $sortIdx = (int)$maxSort->fetchColumn() + 1;
+        } catch (PDOException $e) {
+            // sort_order 컬럼 미존재 시 무시
+        }
 
         $pdo->beginTransaction();
 
-        $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
-        foreach ($services as $s) {
-            $rsStmt->execute([$reservationId, $s['id'], $s['name'], $s['price'], $s['duration'], $sortIdx++]);
+        try {
+            $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
+            foreach ($services as $s) {
+                $rsStmt->execute([$reservationId, $s['id'], $s['name'], $s['price'], $s['duration'], $sortIdx++]);
+            }
+        } catch (PDOException $e) {
+            if (stripos($e->getMessage(), 'Unknown column') !== false) {
+                $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, price, duration) VALUES (?, ?, ?, ?)");
+                foreach ($services as $s) {
+                    $rsStmt->execute([$reservationId, $s['id'], $s['price'], $s['duration']]);
+                }
+            } else {
+                throw $e;
+            }
         }
 
         // 금액/시간 재계산

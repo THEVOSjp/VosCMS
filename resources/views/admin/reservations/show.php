@@ -24,18 +24,32 @@ $bdlStmt->execute([$r['id']]);
 $bundleInfo = $bdlStmt->fetch(PDO::FETCH_ASSOC);
 
 // 예약 서비스 상세 조회
-$rsSvcStmt = $pdo->prepare("
-    SELECT rs.service_id, rs.service_name, rs.price, rs.duration, rs.bundle_id,
-           s.image as service_image, s.description as service_description,
-           c.name as category_name
-    FROM {$prefix}reservation_services rs
-    LEFT JOIN {$prefix}services s ON rs.service_id = s.id
-    LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id
-    WHERE rs.reservation_id = ?
-    ORDER BY rs.sort_order ASC
-");
-$rsSvcStmt->execute([$r['id']]);
-$reservationServices = $rsSvcStmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $rsSvcStmt = $pdo->prepare("
+        SELECT rs.service_id, COALESCE(rs.service_name, s.name) as service_name, rs.price, rs.duration, rs.bundle_id,
+               s.image as service_image, s.description as service_description,
+               c.name as category_name
+        FROM {$prefix}reservation_services rs
+        LEFT JOIN {$prefix}services s ON rs.service_id = s.id
+        LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id
+        WHERE rs.reservation_id = ?
+        ORDER BY rs.sort_order ASC
+    ");
+    $rsSvcStmt->execute([$r['id']]);
+    $reservationServices = $rsSvcStmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $rsSvcStmt = $pdo->prepare("
+        SELECT rs.service_id, s.name as service_name, rs.price, rs.duration, NULL as bundle_id,
+               s.image as service_image, s.description as service_description,
+               c.name as category_name
+        FROM {$prefix}reservation_services rs
+        LEFT JOIN {$prefix}services s ON rs.service_id = s.id
+        LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id
+        WHERE rs.reservation_id = ?
+    ");
+    $rsSvcStmt->execute([$r['id']]);
+    $reservationServices = $rsSvcStmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 $totalDuration = 0;
 $totalServicePrice = 0;

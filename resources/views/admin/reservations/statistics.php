@@ -43,34 +43,54 @@ $stmt->execute([$dateFrom, $dateTo]);
 $stats = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // 서비스별 통계 (junction table 기반)
-$stmt = $pdo->prepare("SELECT
-    rs.service_id, rs.service_name,
-    COUNT(DISTINCT rs.reservation_id) as count,
-    COALESCE(SUM(rs.price), 0) as revenue
-    FROM {$prefix}reservation_services rs
-    JOIN {$prefix}reservations r ON rs.reservation_id = r.id
-    WHERE r.reservation_date BETWEEN ? AND ?
-    AND r.status NOT IN ('cancelled','no_show')
-    GROUP BY rs.service_id, rs.service_name
-    ORDER BY revenue DESC");
-$stmt->execute([$dateFrom, $dateTo]);
-$serviceStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $stmt = $pdo->prepare("SELECT
+        rs.service_id, rs.service_name,
+        COUNT(DISTINCT rs.reservation_id) as count,
+        COALESCE(SUM(rs.price), 0) as revenue
+        FROM {$prefix}reservation_services rs
+        JOIN {$prefix}reservations r ON rs.reservation_id = r.id
+        WHERE r.reservation_date BETWEEN ? AND ?
+        AND r.status NOT IN ('cancelled','no_show')
+        GROUP BY rs.service_id, rs.service_name
+        ORDER BY revenue DESC");
+    $stmt->execute([$dateFrom, $dateTo]);
+    $serviceStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $stmt = $pdo->prepare("SELECT
+        rs.service_id, s.name as service_name,
+        COUNT(DISTINCT rs.reservation_id) as count,
+        COALESCE(SUM(rs.price), 0) as revenue
+        FROM {$prefix}reservation_services rs
+        JOIN {$prefix}reservations r ON rs.reservation_id = r.id
+        LEFT JOIN {$prefix}services s ON rs.service_id = s.id
+        WHERE r.reservation_date BETWEEN ? AND ?
+        AND r.status NOT IN ('cancelled','no_show')
+        GROUP BY rs.service_id, s.name
+        ORDER BY revenue DESC");
+    $stmt->execute([$dateFrom, $dateTo]);
+    $serviceStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // 번들별 통계
-$stmt = $pdo->prepare("SELECT
-    rs.bundle_id, b.name as bundle_name, b.bundle_price,
-    COUNT(DISTINCT rs.reservation_id) as count,
-    COUNT(DISTINCT rs.reservation_id) * b.bundle_price as revenue
-    FROM {$prefix}reservation_services rs
-    JOIN {$prefix}reservations r ON rs.reservation_id = r.id
-    JOIN {$prefix}service_bundles b ON rs.bundle_id = b.id
-    WHERE r.reservation_date BETWEEN ? AND ?
-    AND r.status NOT IN ('cancelled','no_show')
-    AND rs.bundle_id IS NOT NULL
-    GROUP BY rs.bundle_id, b.name, b.bundle_price
-    ORDER BY count DESC");
-$stmt->execute([$dateFrom, $dateTo]);
-$bundleStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $stmt = $pdo->prepare("SELECT
+        rs.bundle_id, b.name as bundle_name, b.bundle_price,
+        COUNT(DISTINCT rs.reservation_id) as count,
+        COUNT(DISTINCT rs.reservation_id) * b.bundle_price as revenue
+        FROM {$prefix}reservation_services rs
+        JOIN {$prefix}reservations r ON rs.reservation_id = r.id
+        JOIN {$prefix}service_bundles b ON rs.bundle_id = b.id
+        WHERE r.reservation_date BETWEEN ? AND ?
+        AND r.status NOT IN ('cancelled','no_show')
+        AND rs.bundle_id IS NOT NULL
+        GROUP BY rs.bundle_id, b.name, b.bundle_price
+        ORDER BY count DESC");
+    $stmt->execute([$dateFrom, $dateTo]);
+    $bundleStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $bundleStats = [];
+}
 
 // 일별 추이 (최근 30일 또는 기간 내)
 $stmt = $pdo->prepare("SELECT

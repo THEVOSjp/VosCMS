@@ -59,12 +59,18 @@ function formatPrice(float $amount): string {
         : $currencySymbol . $formatted;
 }
 
-// 서비스 이름 가져오기 (junction table 기반)
+// 서비스 이름 가져오기 (junction table 기반, service_name 컬럼 미존재 시 폴백)
 function getServiceName(\PDO $pdo, string $prefix, ?string $reservationId): string {
     if (!$reservationId) return '-';
-    $stmt = $pdo->prepare("SELECT GROUP_CONCAT(service_name ORDER BY sort_order SEPARATOR ', ') FROM {$prefix}reservation_services WHERE reservation_id = ?");
-    $stmt->execute([$reservationId]);
-    $name = $stmt->fetchColumn();
+    try {
+        $stmt = $pdo->prepare("SELECT GROUP_CONCAT(service_name ORDER BY sort_order SEPARATOR ', ') FROM {$prefix}reservation_services WHERE reservation_id = ?");
+        $stmt->execute([$reservationId]);
+        $name = $stmt->fetchColumn();
+    } catch (\PDOException $e) {
+        $stmt = $pdo->prepare("SELECT GROUP_CONCAT(s.name SEPARATOR ', ') FROM {$prefix}reservation_services rs JOIN {$prefix}services s ON rs.service_id = s.id WHERE rs.reservation_id = ?");
+        $stmt->execute([$reservationId]);
+        $name = $stmt->fetchColumn();
+    }
     return $name ?: '-';
 }
 
