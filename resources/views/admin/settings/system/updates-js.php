@@ -59,7 +59,13 @@ async function ajaxPost(action, extraParams = '') {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': csrfToken },
         body: '_token=' + encodeURIComponent(csrfToken) + '&action=' + action + extraParams
     });
-    return response.json();
+    const text = await response.text();
+    try {
+        return JSON.parse(text);
+    } catch (e) {
+        console.error('[Updates] Invalid JSON response:', text.substring(0, 200));
+        throw new Error('서버 응답 오류: ' + text.substring(0, 100));
+    }
 }
 
 // ===== 업데이트 확인 =====
