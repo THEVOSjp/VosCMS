@@ -328,6 +328,7 @@ class DatabaseMigrator
 
     /**
      * 마이그레이션 파일 실행
+     * 각 SQL문을 개별 실행하여 무시 가능한 에러는 건너뛰고 계속 진행
      */
     private function executeMigrationFile(string $file): array
     {
@@ -342,22 +343,35 @@ class DatabaseMigrator
         }
 
         $statements = $this->splitSql($sql);
+        $lastError = null;
 
-        try {
-            foreach ($statements as $stmt) {
-                $stmt = trim($stmt);
-                if (empty($stmt) || str_starts_with($stmt, '--') || str_starts_with($stmt, '#')) {
-                    continue;
-                }
+        foreach ($statements as $stmt) {
+            $stmt = trim($stmt);
+            if (empty($stmt) || str_starts_with($stmt, '--') || str_starts_with($stmt, '#')) {
+                continue;
+            }
+            try {
                 $result = $this->pdo->query($stmt);
                 if ($result !== false) {
                     $result->closeCursor();
                 }
+            } catch (\PDOException $e) {
+                $errMsg = $e->getMessage();
+                // 무시 가능한 에러(컬럼/테이블 이미 존재 등)는 건너뛰고 계속
+                if ($this->isIgnorableError($errMsg)) {
+                    $this->log("  STMT IGNORED: " . substr($stmt, 0, 80) . " — {$errMsg}");
+                    continue;
+                }
+                // 심각한 에러면 중단
+                $lastError = $errMsg;
+                break;
             }
-            return ['success' => true];
-        } catch (\PDOException $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
         }
+
+        if ($lastError !== null) {
+            return ['success' => false, 'error' => $lastError];
+        }
+        return ['success' => true];
     }
 
     /**
