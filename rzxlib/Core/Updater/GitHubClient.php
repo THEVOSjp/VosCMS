@@ -27,26 +27,65 @@ class GitHubClient
     }
 
     /**
-     * 최신 릴리스 정보 가져오기
+     * 최신 버전 정보 가져오기 (Release 우선 → 태그 폴백)
      */
     public function getLatestRelease(): ?array
     {
+        // 1차: Release API
         $url = "{$this->apiBase}/repos/{$this->owner}/{$this->repo}/releases/latest";
         $response = $this->request($url);
 
-        if ($response === null) {
-            return null;
+        if ($response !== null) {
+            return [
+                'version' => ltrim($response['tag_name'] ?? '', 'v'),
+                'name' => $response['name'] ?? '',
+                'body' => $response['body'] ?? '',
+                'published_at' => $response['published_at'] ?? '',
+                'html_url' => $response['html_url'] ?? '',
+                'zipball_url' => $response['zipball_url'] ?? '',
+                'tarball_url' => $response['tarball_url'] ?? '',
+                'assets' => $response['assets'] ?? [],
+            ];
         }
 
+        // 2차: 태그 API 폴백
+        return $this->getLatestFromTags();
+    }
+
+    /**
+     * 태그 기반 최신 버전 조회
+     */
+    private function getLatestFromTags(): ?array
+    {
+        $url = "{$this->apiBase}/repos/{$this->owner}/{$this->repo}/tags?per_page=10";
+        $tags = $this->request($url);
+
+        if ($tags === null || empty($tags)) return null;
+
+        $latest = null;
+        $latestVersion = '0.0.0';
+        foreach ($tags as $tag) {
+            $name = $tag['name'] ?? '';
+            if (!preg_match('/^v?\d+\.\d+\.\d+/', $name)) continue;
+            $ver = ltrim($name, 'v');
+            if (version_compare($ver, $latestVersion, '>')) {
+                $latestVersion = $ver;
+                $latest = $tag;
+            }
+        }
+
+        if (!$latest) return null;
+
+        $tagName = $latest['name'];
         return [
-            'version' => ltrim($response['tag_name'] ?? '', 'v'),
-            'name' => $response['name'] ?? '',
-            'body' => $response['body'] ?? '',
-            'published_at' => $response['published_at'] ?? '',
-            'html_url' => $response['html_url'] ?? '',
-            'zipball_url' => $response['zipball_url'] ?? '',
-            'tarball_url' => $response['tarball_url'] ?? '',
-            'assets' => $response['assets'] ?? [],
+            'version' => ltrim($tagName, 'v'),
+            'name' => $tagName,
+            'body' => '',
+            'published_at' => '',
+            'html_url' => "https://github.com/{$this->owner}/{$this->repo}/releases/tag/{$tagName}",
+            'zipball_url' => "{$this->apiBase}/repos/{$this->owner}/{$this->repo}/zipball/{$tagName}",
+            'tarball_url' => "{$this->apiBase}/repos/{$this->owner}/{$this->repo}/tarball/{$tagName}",
+            'assets' => [],
         ];
     }
 

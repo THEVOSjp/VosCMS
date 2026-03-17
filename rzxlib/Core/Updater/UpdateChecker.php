@@ -66,20 +66,20 @@ class UpdateChecker
             // 토큰 없이 진행 (public repo만 가능)
         }
 
-        // 4. GitHub API 호출
-        $result = self::fetchLatestRelease($owner, $repo, $token);
+        // 4. GitHub API 호출 (태그 기반)
+        $result = self::fetchLatestTag($owner, $repo, $token);
 
         // 5. 결과 구성
         $data = null;
         if ($result !== null) {
-            $latestVersion = ltrim($result['tag_name'] ?? '', 'v');
+            $latestVersion = ltrim($result['tag_name'], 'v');
             $hasUpdate = version_compare($latestVersion, $currentVersion, '>');
             $data = [
                 'has_update' => $hasUpdate,
                 'current' => $currentVersion,
                 'latest' => $latestVersion,
-                'name' => $result['name'] ?? '',
-                'url' => $result['html_url'] ?? '',
+                'name' => $result['tag_name'],
+                'url' => "https://github.com/{$owner}/{$repo}/releases/tag/{$result['tag_name']}",
             ];
         } else {
             $data = [
@@ -116,11 +116,11 @@ class UpdateChecker
     }
 
     /**
-     * GitHub 최신 릴리스 조회
+     * GitHub 최신 태그 조회 (semver 기준 최신)
      */
-    private static function fetchLatestRelease(string $owner, string $repo, ?string $token): ?array
+    private static function fetchLatestTag(string $owner, string $repo, ?string $token): ?array
     {
-        $url = "https://api.github.com/repos/{$owner}/{$repo}/releases/latest";
+        $url = "https://api.github.com/repos/{$owner}/{$repo}/tags?per_page=10";
 
         $headers = ['Accept: application/vnd.github.v3+json'];
         if ($token) {
@@ -146,7 +146,29 @@ class UpdateChecker
             return null;
         }
 
-        $data = json_decode($response, true);
-        return (json_last_error() === JSON_ERROR_NONE) ? $data : null;
+        $tags = json_decode($response, true);
+        if (json_last_error() !== JSON_ERROR_NONE || empty($tags)) {
+            return null;
+        }
+
+        // semver 태그만 필터링하여 최신 찾기
+        $latest = null;
+        $latestVersion = '0.0.0';
+        foreach ($tags as $tag) {
+            $name = $tag['name'] ?? '';
+            if (!preg_match('/^v?\d+\.\d+\.\d+/', $name)) continue;
+            $ver = ltrim($name, 'v');
+            if (version_compare($ver, $latestVersion, '>')) {
+                $latestVersion = $ver;
+                $latest = $tag;
+            }
+        }
+
+        if (!$latest) return null;
+
+        return [
+            'tag_name' => $latest['name'],
+            'sha' => $latest['commit']['sha'] ?? '',
+        ];
     }
 }
