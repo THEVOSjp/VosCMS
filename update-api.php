@@ -200,6 +200,71 @@ require_once BASE_PATH . '/rzxlib/Core/Helpers/Encryption.php';
 
 use RzxLib\Core\Updater\Updater;
 
+/**
+ * 태그 기반 최신 버전 확인 (Release가 없을 때 폴백)
+ */
+function checkLatestTag(\PDO $pdo): ?array
+{
+    $vf = BASE_PATH . '/version.json';
+    $vi = file_exists($vf) ? json_decode(file_get_contents($vf), true) : null;
+    if (!$vi) return null;
+
+    $currentVersion = $vi['version'] ?? '0.0.0';
+    $owner = $vi['github']['owner'] ?? '';
+    $repo = $vi['github']['repo'] ?? '';
+    if (!$owner || !$repo) return null;
+
+    // 토큰
+    $token = null;
+    try {
+        $stmt = $pdo->prepare("SELECT `value` FROM rzx_settings WHERE `key` = 'github_token'");
+        $stmt->execute();
+        $enc = $stmt->fetchColumn();
+        $stmt->closeCursor();
+        if ($enc) $token = \RzxLib\Core\Helpers\Encryption::decrypt($enc);
+    } catch (\Throwable $e) {}
+
+    $headers = ['Accept: application/vnd.github.v3+json'];
+    if ($token) $headers[] = "Authorization: Bearer {$token}";
+
+    $ch = curl_init("https://api.github.com/repos/{$owner}/{$repo}/tags?per_page=10");
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_TIMEOUT => 10, CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_USERAGENT => 'RezlyX-UpdateChecker/1.0', CURLOPT_HTTPHEADER => $headers,
+    ]);
+    $resp = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($resp === false || $code !== 200) return null;
+    $tags = json_decode($resp, true);
+    if (!is_array($tags) || empty($tags)) return null;
+
+    $latestTag = null;
+    $latestVer = '0.0.0';
+    foreach ($tags as $t) {
+        $name = $t['name'] ?? '';
+        if (!preg_match('/^v?\d+\.\d+\.\d+/', $name)) continue;
+        $ver = ltrim($name, 'v');
+        if (version_compare($ver, $latestVer, '>')) {
+            $latestVer = $ver;
+            $latestTag = $name;
+        }
+    }
+    if (!$latestTag) return null;
+
+    return [
+        'has_update' => version_compare($latestVer, $currentVersion, '>'),
+        'current_version' => $currentVersion,
+        'latest_version' => $latestVer,
+        'release_name' => $latestTag,
+        'release_notes' => '',
+        'published_at' => '',
+        'download_url' => "https://api.github.com/repos/{$owner}/{$repo}/zipball/{$latestTag}",
+    ];
+}
+
 // 파일 기반 디버그 로그
 function dbg(string $msg): void {
     @file_put_contents(BASE_PATH . '/storage/logs/update-debug.log',
@@ -224,6 +289,11 @@ try {
     switch ($action) {
         case 'check':
             $result = $updater->checkForUpdates();
+            // Release 없을 때 태그 폴백
+            if ((!$result['has_update'] && !empty($result['error'])) || empty($result['latest_version'])) {
+                $tagResult = checkLatestTag($pdo);
+                if ($tagResult) $result = $tagResult;
+            }
             echo json_encode(['success' => true, 'data' => $result]);
             break;
 
