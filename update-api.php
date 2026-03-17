@@ -289,10 +289,14 @@ try {
     switch ($action) {
         case 'check':
             $result = $updater->checkForUpdates();
-            // Release 없을 때 태그 폴백
-            if ((!$result['has_update'] && !empty($result['error'])) || empty($result['latest_version'])) {
-                $tagResult = checkLatestTag($pdo);
-                if ($tagResult) $result = $tagResult;
+            // 항상 태그도 확인하여 더 높은 버전이 있으면 사용
+            $tagResult = checkLatestTag($pdo);
+            if ($tagResult) {
+                $releaseVer = $result['latest_version'] ?? '0.0.0';
+                $tagVer = $tagResult['latest_version'] ?? '0.0.0';
+                if (version_compare($tagVer, $releaseVer, '>')) {
+                    $result = $tagResult;
+                }
             }
             echo json_encode(['success' => true, 'data' => $result]);
             break;
