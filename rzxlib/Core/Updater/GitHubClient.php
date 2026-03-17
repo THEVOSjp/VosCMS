@@ -57,7 +57,7 @@ class GitHubClient
      */
     private function getLatestFromTags(): ?array
     {
-        $url = "{$this->apiBase}/repos/{$this->owner}/{$this->repo}/tags?per_page=10";
+        $url = "{$this->apiBase}/repos/{$this->owner}/{$this->repo}/tags?per_page=50";
         $tags = $this->request($url);
 
         if ($tags === null || empty($tags)) return null;

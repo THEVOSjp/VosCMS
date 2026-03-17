@@ -120,7 +120,7 @@ class UpdateChecker
      */
     private static function fetchLatestTag(string $owner, string $repo, ?string $token): ?array
     {
-        $url = "https://api.github.com/repos/{$owner}/{$repo}/tags?per_page=10";
+        $url = "https://api.github.com/repos/{$owner}/{$repo}/tags?per_page=50";
 
         $headers = ['Accept: application/vnd.github.v3+json'];
         if ($token) {
