@@ -10,7 +10,15 @@
 
 return [
     'title' => '管理',
-    'dashboard' => '儀表板',
+    'dashboard' => [
+        'title' => '儀表板',
+        'migration_required' => '需要資料庫遷移',
+        'migration_desc' => '存在未套用的資料庫補丁。請點擊下方按鈕執行。',
+        'run_migration' => '執行遷移',
+        'migration_applied' => '個補丁已套用',
+        'migration_complete' => '所有遷移已完成。',
+        'retry_migration' => '重試',
+    ],
     'back_to_site' => '返回網站',
     'dark_mode' => '切換深色模式',
     'nav' => [

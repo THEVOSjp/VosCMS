@@ -10,7 +10,15 @@
 
 return [
     'title' => '管理者',
-    'dashboard' => 'ダッシュボード',
+    'dashboard' => [
+        'title' => 'ダッシュボード',
+        'migration_required' => 'DBマイグレーションが必要',
+        'migration_desc' => '適用されていないデータベースパッチがあります。下のボタンをクリックして実行してください。',
+        'run_migration' => 'マイグレーション実行',
+        'migration_applied' => '件のパッチ適用完了',
+        'migration_complete' => 'すべてのマイグレーションが完了しました。',
+        'retry_migration' => '再試行',
+    ],
     'back_to_site' => 'サイトに戻る',
     'dark_mode' => 'ダークモード切替',
     'nav' => [

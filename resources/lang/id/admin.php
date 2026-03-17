@@ -10,7 +10,15 @@
 
 return [
     'title' => 'Admin',
-    'dashboard' => 'Dasbor',
+    'dashboard' => [
+        'title' => 'Dasbor',
+        'migration_required' => 'Migrasi database diperlukan',
+        'migration_desc' => 'Ada patch database yang belum diterapkan. Klik tombol di bawah untuk menjalankannya.',
+        'run_migration' => 'Jalankan migrasi',
+        'migration_applied' => ' patch diterapkan',
+        'migration_complete' => 'Semua migrasi selesai.',
+        'retry_migration' => 'Coba lagi',
+    ],
     'back_to_site' => 'Kembali ke Situs',
     'dark_mode' => 'Ubah Mode Gelap',
     'nav' => [

@@ -10,7 +10,15 @@
 
 return [
     'title' => 'Yönetim',
-    'dashboard' => 'Kontrol Paneli',
+    'dashboard' => [
+        'title' => 'Kontrol Paneli',
+        'migration_required' => 'Veritabanı taşıma gerekli',
+        'migration_desc' => 'Uygulanmamış veritabanı yamaları var. Uygulamak için aşağıdaki düğmeye tıklayın.',
+        'run_migration' => 'Taşımayı çalıştır',
+        'migration_applied' => ' yama uygulandı',
+        'migration_complete' => 'Tüm taşımalar tamamlandı.',
+        'retry_migration' => 'Tekrar dene',
+    ],
     'back_to_site' => 'Siteye Dön',
     'dark_mode' => 'Karanlık Mod',
     'nav' => [

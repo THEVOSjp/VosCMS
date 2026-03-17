@@ -10,7 +10,15 @@
 
 return [
     'title' => 'Administration',
-    'dashboard' => 'Tableau de bord',
+    'dashboard' => [
+        'title' => 'Tableau de bord',
+        'migration_required' => 'Migration de base de données requise',
+        'migration_desc' => 'Des correctifs de base de données non appliqués existent. Cliquez sur le bouton ci-dessous pour les appliquer.',
+        'run_migration' => 'Exécuter la migration',
+        'migration_applied' => ' correctif(s) appliqué(s)',
+        'migration_complete' => 'Toutes les migrations terminées.',
+        'retry_migration' => 'Réessayer',
+    ],
     'back_to_site' => 'Retour au site',
     'dark_mode' => 'Basculer le mode sombre',
     'nav' => [

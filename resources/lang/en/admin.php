@@ -10,7 +10,15 @@
 
 return [
     'title' => 'Admin',
-    'dashboard' => 'Dashboard',
+    'dashboard' => [
+        'title' => 'Dashboard',
+        'migration_required' => 'Database Migration Required',
+        'migration_desc' => 'There are unapplied database patches. Please click the button below to apply them.',
+        'run_migration' => 'Run Migration',
+        'migration_applied' => ' patch(es) applied',
+        'migration_complete' => 'All migrations completed successfully.',
+        'retry_migration' => 'Retry',
+    ],
     'back_to_site' => 'Back to Site',
     'dark_mode' => 'Toggle Dark Mode',
     'nav' => [

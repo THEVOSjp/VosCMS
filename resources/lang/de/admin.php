@@ -10,7 +10,15 @@
 
 return [
     'title' => 'Admin',
-    'dashboard' => 'Dashboard',
+    'dashboard' => [
+        'title' => 'Dashboard',
+        'migration_required' => 'Datenbankmigration erforderlich',
+        'migration_desc' => 'Es gibt nicht angewendete Datenbank-Patches. Bitte klicken Sie auf die Schaltfläche unten.',
+        'run_migration' => 'Migration ausführen',
+        'migration_applied' => ' Patch(es) angewendet',
+        'migration_complete' => 'Alle Migrationen erfolgreich abgeschlossen.',
+        'retry_migration' => 'Wiederholen',
+    ],
     'back_to_site' => 'Zurueck zur Seite',
     'dark_mode' => 'Dunkelmodus umschalten',
     'nav' => [

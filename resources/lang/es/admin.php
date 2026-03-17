@@ -10,7 +10,15 @@
 
 return [
     'title' => 'Admin',
-    'dashboard' => 'Panel de control',
+    'dashboard' => [
+        'title' => 'Panel',
+        'migration_required' => 'Migración de base de datos requerida',
+        'migration_desc' => 'Hay parches de base de datos sin aplicar. Haga clic en el botón de abajo para aplicarlos.',
+        'run_migration' => 'Ejecutar migración',
+        'migration_applied' => ' parche(s) aplicado(s)',
+        'migration_complete' => 'Todas las migraciones completadas.',
+        'retry_migration' => 'Reintentar',
+    ],
     'back_to_site' => 'Volver al sitio',
     'dark_mode' => 'Alternar modo oscuro',
     'nav' => [

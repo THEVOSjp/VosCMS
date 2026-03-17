@@ -17,7 +17,15 @@
 return [
     // 공통
     'title' => '관리자',
-    'dashboard' => '대시보드',
+    'dashboard' => [
+        'title' => '대시보드',
+        'migration_required' => 'DB 마이그레이션 필요',
+        'migration_desc' => '적용되지 않은 데이터베이스 패치가 있습니다. 아래 버튼을 클릭하여 실행해주세요.',
+        'run_migration' => '마이그레이션 실행',
+        'migration_applied' => '개 패치 적용 완료',
+        'migration_complete' => '모든 마이그레이션이 완료되었습니다.',
+        'retry_migration' => '재시도',
+    ],
     'back_to_site' => '사이트로 돌아가기',
     'dark_mode' => '다크 모드 전환',
 

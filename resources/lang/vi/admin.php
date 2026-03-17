@@ -10,7 +10,15 @@
 
 return [
     'title' => 'Quản trị',
-    'dashboard' => 'Bảng điều khiển',
+    'dashboard' => [
+        'title' => 'Bảng điều khiển',
+        'migration_required' => 'Cần di chuyển cơ sở dữ liệu',
+        'migration_desc' => 'Có các bản vá cơ sở dữ liệu chưa được áp dụng. Vui lòng nhấn nút bên dưới để thực hiện.',
+        'run_migration' => 'Chạy di chuyển',
+        'migration_applied' => ' bản vá đã áp dụng',
+        'migration_complete' => 'Tất cả di chuyển đã hoàn tất.',
+        'retry_migration' => 'Thử lại',
+    ],
     'back_to_site' => 'Quay lại trang web',
     'dark_mode' => 'Chuyển đổi chế độ tối',
     'nav' => [

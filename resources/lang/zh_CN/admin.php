@@ -10,7 +10,15 @@
 
 return [
     'title' => '管理',
-    'dashboard' => '仪表板',
+    'dashboard' => [
+        'title' => '仪表盘',
+        'migration_required' => '需要数据库迁移',
+        'migration_desc' => '存在未应用的数据库补丁。请点击下方按钮执行。',
+        'run_migration' => '执行迁移',
+        'migration_applied' => '个补丁已应用',
+        'migration_complete' => '所有迁移已完成。',
+        'retry_migration' => '重试',
+    ],
     'back_to_site' => '返回网站',
     'dark_mode' => '切换深色模式',
     'nav' => [
