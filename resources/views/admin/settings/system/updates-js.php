@@ -5,7 +5,8 @@ const csrfToken = '<?= htmlspecialchars($csrfToken) ?>';
 const currentVersion = '<?= htmlspecialchars($currentVersion) ?>';
 const currentPath = window.location.pathname;
 // 독립 엔드포인트 사용 (index.php PDO 충돌 회피)
-const ajaxUrl = window.location.origin + '/update-api.php';
+// app_url 기반으로 경로 결정 (서브디렉토리 대응)
+const ajaxUrl = '<?= rtrim($config['app_url'] ?? '', '/') ?>/update-api.php';
 let latestVersion = null;
 
 // 번역 문자열
