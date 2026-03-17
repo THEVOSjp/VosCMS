@@ -22,51 +22,64 @@ $messageType = '';
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
-// POST 처리 (삭제)
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
-    $boardId = (int)($_POST['board_id'] ?? 0);
-
-    if ($action === 'delete' && $boardId > 0) {
-        $stmt = $pdo->prepare("DELETE FROM {$prefix}boards WHERE id = ?");
-        $stmt->execute([$boardId]);
-        $message = __('site.boards.deleted');
-        $messageType = 'success';
-    }
-}
-
-// 검색/필터
+$boardsTableMissing = false;
+$boards = [];
+$totalCount = 0;
+$totalPages = 1;
 $search = trim($_GET['search'] ?? '');
 $searchField = $_GET['search_field'] ?? 'title';
 $page = max(1, (int)($_GET['page'] ?? 1));
 $perPage = 20;
 $offset = ($page - 1) * $perPage;
 
-// 쿼리 빌드
-$where = '';
-$params = [];
-if ($search !== '') {
-    if ($searchField === 'slug') {
-        $where = "WHERE slug LIKE ?";
-        $params[] = "%{$search}%";
+try {
+    // POST 처리 (삭제)
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $action = $_POST['action'] ?? '';
+        $boardId = (int)($_POST['board_id'] ?? 0);
+
+        if ($action === 'delete' && $boardId > 0) {
+            $stmt = $pdo->prepare("DELETE FROM {$prefix}boards WHERE id = ?");
+            $stmt->execute([$boardId]);
+            $message = __('site.boards.deleted');
+            $messageType = 'success';
+        }
+    }
+
+    // 쿼리 빌드
+    $where = '';
+    $params = [];
+    if ($search !== '') {
+        if ($searchField === 'slug') {
+            $where = "WHERE slug LIKE ?";
+            $params[] = "%{$search}%";
+        } else {
+            $where = "WHERE title LIKE ?";
+            $params[] = "%{$search}%";
+        }
+    }
+
+    // 총 개수
+    $countSql = "SELECT COUNT(*) FROM {$prefix}boards {$where}";
+    $countStmt = $pdo->prepare($countSql);
+    $countStmt->execute($params);
+    $totalCount = (int)$countStmt->fetchColumn();
+    $totalPages = max(1, ceil($totalCount / $perPage));
+
+    // 목록 조회
+    $sql = "SELECT * FROM {$prefix}boards {$where} ORDER BY sort_order ASC, id DESC LIMIT {$perPage} OFFSET {$offset}";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $boards = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    if (stripos($e->getMessage(), 'doesn\'t exist') !== false || stripos($e->getMessage(), 'not found') !== false) {
+        $boardsTableMissing = true;
+        $message = __('admin.dashboard.migration_required');
+        $messageType = 'warning';
     } else {
-        $where = "WHERE title LIKE ?";
-        $params[] = "%{$search}%";
+        throw $e;
     }
 }
-
-// 총 개수
-$countSql = "SELECT COUNT(*) FROM {$prefix}boards {$where}";
-$countStmt = $pdo->prepare($countSql);
-$countStmt->execute($params);
-$totalCount = (int)$countStmt->fetchColumn();
-$totalPages = max(1, ceil($totalCount / $perPage));
-
-// 목록 조회
-$sql = "SELECT * FROM {$prefix}boards {$where} ORDER BY sort_order ASC, id DESC LIMIT {$perPage} OFFSET {$offset}";
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$boards = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $config['locale'] ?? 'ko'; ?>">
