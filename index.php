@@ -360,6 +360,9 @@ if (empty($path) || $path === 'index.php') {
     } elseif (preg_match('#^reservations/([\w-]+)$#', $adminRoute, $m)) {
         $reservationId = $m[1];
         include BASE_PATH . '/resources/views/admin/reservations/show.php';
+    // 묶음서비스(번들) 관리
+    } elseif ($adminRoute === 'bundles') {
+        include BASE_PATH . '/resources/views/admin/bundles/index.php';
     // 게시판 관리
     } elseif ($adminRoute === 'site/boards') {
         include BASE_PATH . '/resources/views/admin/site/boards.php';
