@@ -384,6 +384,8 @@ class DatabaseMigrator
             'Duplicate column',     // ALTER ADD 중복
             'Duplicate key name',   // 인덱스 중복
             'check that column',    // AFTER 절 컬럼 없음
+            "doesn't exist",        // 테이블 없음 (ALTER 시 무시)
+            'does not exist',       // 테이블 없음 변형
         ];
         foreach ($ignorable as $pattern) {
             if (stripos($error, $pattern) !== false) {
