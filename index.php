@@ -220,6 +220,13 @@ if (empty($path) || $path === 'index.php') {
         exit;
     }
 
+    // 관리자 로그아웃
+    if ($adminRoute === 'logout') {
+        \RzxLib\Core\Auth\AdminAuth::logout();
+        header('Location: ' . $basePath . '/' . $config['admin_path'] . '/login');
+        exit;
+    }
+
     // 관리자 로그인 확인
     if (!\RzxLib\Core\Auth\AdminAuth::check()) {
         header('Location: ' . $basePath . '/' . $config['admin_path'] . '/login');
