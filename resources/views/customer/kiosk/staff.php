@@ -61,7 +61,12 @@ $lang = $_GET['lang'] ?? $currentLocale;
 <html lang="<?= $currentLocale ?>">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
+    <link rel="manifest" href="/manifest-kiosk.json">
     <title><?= htmlspecialchars($siteName) ?> - Kiosk</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
