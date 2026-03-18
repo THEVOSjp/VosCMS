@@ -1,0 +1,189 @@
+<?php
+namespace RzxLib\Core\Skin;
+
+/**
+ * SkinConfigRenderer - skin.json을 읽어 설정 폼을 자동 생성
+ *
+ * 사용법:
+ *   $renderer = new SkinConfigRenderer($skinJsonPath, $savedConfig, $locale);
+ *   $meta = $renderer->getMeta();        // 스킨 메타 정보
+ *   $renderer->renderForm();             // 설정 폼 HTML 출력
+ *   $renderer->getDefaults();            // 기본값 배열
+ *
+ * 지원 타입: text, textarea, checkbox, select, color, image, number
+ */
+class SkinConfigRenderer
+{
+    private array $schema = [];
+    private array $vars = [];
+    private array $saved = [];
+    private string $locale;
+
+    public function __construct(string $jsonPath, array $savedConfig = [], string $locale = 'ko')
+    {
+        $this->locale = $locale;
+        $this->saved = $savedConfig;
+
+        if (file_exists($jsonPath)) {
+            $this->schema = json_decode(file_get_contents($jsonPath), true) ?: [];
+            $this->vars = $this->schema['vars'] ?? [];
+        }
+    }
+
+    /** 다국어 값 추출 */
+    private function t($value, string $fallback = ''): string
+    {
+        if (is_string($value)) return $value;
+        if (is_array($value)) {
+            return $value[$this->locale] ?? $value['en'] ?? $value['ko'] ?? reset($value) ?: $fallback;
+        }
+        return $fallback;
+    }
+
+    /** 스킨 메타 정보 */
+    public function getMeta(): array
+    {
+        return [
+            'title'       => $this->t($this->schema['title'] ?? ''),
+            'description' => $this->t($this->schema['description'] ?? ''),
+            'version'     => $this->schema['version'] ?? '',
+            'author'      => $this->schema['author'] ?? [],
+        ];
+    }
+
+    /** 기본값 배열 */
+    public function getDefaults(): array
+    {
+        $defaults = [];
+        foreach ($this->vars as $var) {
+            $defaults[$var['name']] = $var['default'] ?? '';
+        }
+        return $defaults;
+    }
+
+    /** vars 정의가 있는지 */
+    public function hasVars(): bool
+    {
+        return !empty($this->vars);
+    }
+
+    /** 저장된 값 또는 기본값 가져오기 */
+    private function getValue(array $var)
+    {
+        $name = $var['name'];
+        if (array_key_exists($name, $this->saved)) {
+            return $this->saved[$name];
+        }
+        return $var['default'] ?? '';
+    }
+
+    /** 다국어 버튼 HTML */
+    private function multilangBtn(string $name, string $inputId, string $modalType = ''): string
+    {
+        if (!defined('RZX_MULTILANG_SVG')) return '';
+        $modalArg = $modalType ? ", '{$modalType}'" : '';
+        return '<button type="button" onclick="openMultilangModal(\'skin_config.' . $name . '\', \'' . $inputId . '\'' . $modalArg . ')" class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition">' . RZX_MULTILANG_SVG . '</button>';
+    }
+
+    private function multilangBtnTextarea(string $name, string $inputId): string
+    {
+        if (!defined('RZX_MULTILANG_SVG')) return '';
+        return '<button type="button" onclick="openMultilangModal(\'skin_config.' . $name . '\', \'' . $inputId . '\', \'editor\')" class="absolute right-2 top-2 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition">' . RZX_MULTILANG_SVG . '</button>';
+    }
+
+    /** 설정 폼 HTML 출력 */
+    public function renderForm(): void
+    {
+        $inp = 'w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200';
+
+        foreach ($this->vars as $var) {
+            $name  = $var['name'];
+            $type  = $var['type'] ?? 'text';
+            $title = $this->t($var['title'] ?? $name);
+            $desc  = $this->t($var['description'] ?? '');
+            $value = $this->getValue($var);
+            $multilang = !empty($var['multilang']);
+            $inputId = 'skin_cfg_' . $name;
+
+            echo '<div class="mb-4">';
+
+            switch ($type) {
+                case 'checkbox':
+                    $checked = $value ? 'checked' : '';
+                    echo '<label class="flex items-center justify-between">';
+                    echo '<span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">' . htmlspecialchars($title) . '</span>';
+                    echo '<label class="relative inline-flex items-center cursor-pointer">';
+                    echo '<input type="hidden" name="skin_config[' . $name . ']" value="0">';
+                    echo '<input type="checkbox" name="skin_config[' . $name . ']" value="1" ' . $checked . ' class="sr-only peer">';
+                    echo '<div class="w-9 h-5 bg-zinc-300 dark:bg-zinc-600 peer-checked:bg-blue-600 rounded-full peer after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>';
+                    echo '</label></label>';
+                    break;
+
+                case 'select':
+                    echo '<label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">' . htmlspecialchars($title) . '</label>';
+                    echo '<select name="skin_config[' . $name . ']" class="' . $inp . '">';
+                    foreach ($var['options'] ?? [] as $opt) {
+                        $optVal = $opt['value'] ?? '';
+                        $optLabel = $this->t($opt['label'] ?? $optVal);
+                        $sel = ($value == $optVal) ? 'selected' : '';
+                        echo '<option value="' . htmlspecialchars($optVal) . '" ' . $sel . '>' . htmlspecialchars($optLabel) . '</option>';
+                    }
+                    echo '</select>';
+                    break;
+
+                case 'color':
+                    echo '<label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">' . htmlspecialchars($title) . '</label>';
+                    echo '<div class="flex items-center gap-3">';
+                    echo '<input type="color" name="skin_config[' . $name . ']" value="' . htmlspecialchars($value ?: '#000000') . '" class="w-10 h-9 rounded border border-zinc-300 dark:border-zinc-600 cursor-pointer">';
+                    echo '<span class="text-sm text-zinc-500">' . htmlspecialchars($value ?: '') . '</span>';
+                    echo '</div>';
+                    break;
+
+                case 'image':
+                    echo '<label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">' . htmlspecialchars($title) . '</label>';
+                    if ($value) {
+                        echo '<div class="mb-2"><img src="' . htmlspecialchars($value) . '" class="max-h-20 rounded border border-zinc-300 dark:border-zinc-600"></div>';
+                    }
+                    echo '<input type="file" name="skin_file_' . $name . '" accept="image/*" class="text-sm text-zinc-600 dark:text-zinc-400">';
+                    echo '<input type="hidden" name="skin_config[' . $name . ']" value="' . htmlspecialchars($value) . '">';
+                    break;
+
+                case 'number':
+                    echo '<label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">' . htmlspecialchars($title) . '</label>';
+                    $min = isset($var['min']) ? ' min="' . (int)$var['min'] . '"' : '';
+                    $max = isset($var['max']) ? ' max="' . (int)$var['max'] . '"' : '';
+                    echo '<input type="number" name="skin_config[' . $name . ']" value="' . htmlspecialchars($value) . '"' . $min . $max . ' class="w-32 ' . $inp . '">';
+                    break;
+
+                case 'textarea':
+                    echo '<label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">' . htmlspecialchars($title) . '</label>';
+                    if ($multilang) {
+                        echo '<div class="relative">';
+                        echo '<textarea name="skin_config[' . $name . ']" id="' . $inputId . '" rows="4" class="' . $inp . ' pr-8 font-mono">' . htmlspecialchars($value) . '</textarea>';
+                        echo $this->multilangBtnTextarea($name, $inputId);
+                        echo '</div>';
+                    } else {
+                        echo '<textarea name="skin_config[' . $name . ']" rows="4" class="' . $inp . ' font-mono">' . htmlspecialchars($value) . '</textarea>';
+                    }
+                    break;
+
+                default: // text
+                    echo '<label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">' . htmlspecialchars($title) . '</label>';
+                    if ($multilang) {
+                        echo '<div class="relative">';
+                        echo '<input type="text" name="skin_config[' . $name . ']" id="' . $inputId . '" value="' . htmlspecialchars($value) . '" class="' . $inp . ' pr-8">';
+                        echo $this->multilangBtn($name, $inputId);
+                        echo '</div>';
+                    } else {
+                        echo '<input type="text" name="skin_config[' . $name . ']" value="' . htmlspecialchars($value) . '" class="' . $inp . '">';
+                    }
+                    break;
+            }
+
+            if ($desc) {
+                echo '<p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">' . htmlspecialchars($desc) . '</p>';
+            }
+            echo '</div>';
+        }
+    }
+}

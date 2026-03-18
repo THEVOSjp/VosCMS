@@ -8,15 +8,13 @@
  * - openMultilangModal(langKey, inputId, type) : 모달 열기
  * - closeMultilangModal() : 모달 닫기
  *
- * PHP API (통합 버튼):
+ * PHP API (통합 버튼 — rzxlib/Core/Helpers/multilang.php에서 자동 로드):
  * - rzx_multilang_btn($onclick, $title) : 통합 다국어 버튼 HTML 반환
+ * - rzx_multilang_input($name, $value, $langKey, $opts) : input + 지구본 조합
  *
  * JS API (동적 생성):
  * - RZX_MULTILANG_BTN(onclick, title) : 통합 다국어 버튼 HTML 문자열 반환
  */
-
-// 통합 다국어 버튼 컴포넌트 로드
-include_once __DIR__ . '/multilang-button.php';
 
 // API URL 설정
 $multilangApiUrl = $adminUrl ?? '';
@@ -53,10 +51,14 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center">
         <div class="fixed inset-0 transition-opacity bg-zinc-900/75" onclick="closeMultilangModal()"></div>
 
-        <div id="multilangModalContent" class="relative z-50 w-full max-w-lg p-6 bg-white dark:bg-zinc-800 rounded-xl shadow-xl transform transition-all">
-            <div class="flex items-center justify-between mb-4">
+        <div id="multilangModalContent"
+             class="relative z-50 w-full max-w-2xl p-6 bg-white dark:bg-zinc-800 rounded-xl shadow-xl transform transition-all"
+             style="min-width:400px; min-height:250px;">
+
+            <!-- 헤더 (드래그 핸들) -->
+            <div id="multilangDragHandle" class="flex items-center justify-between mb-4 cursor-move select-none">
                 <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('settings.multilang.modal_title') ?></h3>
-                <button type="button" onclick="closeMultilangModal()" class="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded">
+                <button type="button" onclick="closeMultilangModal()" class="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded cursor-pointer">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
@@ -65,7 +67,7 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
 
             <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4"><?= __('settings.multilang.modal_description') ?></p>
 
-            <!-- 탭 네비게이션 (동적 생성) -->
+            <!-- 탭 네비게이션 -->
             <div id="multilangTabNav" class="flex flex-wrap border-b border-zinc-200 dark:border-zinc-700 mb-4 gap-0 overflow-x-auto">
 <?php foreach ($_mlLocales as $i => $_mlCode): ?>
                 <button type="button" onclick="switchMultilangTab('<?= $_mlCode ?>')" id="multilang-tab-<?= $_mlCode ?>"
@@ -80,7 +82,7 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
 <?php foreach ($_mlLocales as $i => $_mlCode): ?>
                 <div id="multilang-text-tabContent-<?= $_mlCode ?>" class="multilang-tab-content <?= $i > 0 ? 'hidden' : '' ?>">
                     <input type="text" id="multilang-text-input-<?= $_mlCode ?>"
-                           class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           class="w-full px-4 py-3 text-base border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                            placeholder="<?= htmlspecialchars($_mlLangNames[$_mlCode]) ?>">
                 </div>
 <?php endforeach; ?>
@@ -106,6 +108,12 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
                     <?= __('settings.multilang.save') ?>
                 </button>
             </div>
+
+            <!-- 리사이즈 핸들 (우측 하단) -->
+            <div id="multilangResizeHandle"
+                 class="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize flex items-end justify-end pr-1 pb-1 text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 6 6"><path d="M6 6H4.5v-1.5H6V6zm0-3H4.5V1.5H6V3zM3 6H1.5V4.5H3V6z"/></svg>
+            </div>
         </div>
     </div>
 </div>
@@ -115,8 +123,14 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
     <div class="px-4 py-3 rounded-lg shadow-lg text-white text-sm flex items-center"></div>
 </div>
 
-<!-- Summernote for Multilang Modal -->
+<!-- jQuery + Summernote for Multilang Modal -->
+<?php if (empty($GLOBALS['_rzx_jquery_loaded'])): $GLOBALS['_rzx_jquery_loaded'] = true; ?>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<?php endif; ?>
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+<?php if (empty($GLOBALS['_rzx_summernote_loaded'])): $GLOBALS['_rzx_summernote_loaded'] = true; ?>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+<?php endif; ?>
 <style>
     #multilang-editor-mode .note-editor { border-radius: 0.5rem; overflow: hidden; }
     #multilang-editor-mode .note-editor .note-toolbar { background: #f4f4f5; border-color: #d4d4d8; }
@@ -149,7 +163,96 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
     let multilangCurrentType = 'text';
     let multilangEditorsInitialized = false;
 
-    // Summernote 에디터 초기화
+    // ── 드래그 이동 ──
+    (function initDrag() {
+        const handle = document.getElementById('multilangDragHandle');
+        const modal = document.getElementById('multilangModalContent');
+        if (!handle || !modal) return;
+
+        let isDragging = false, startX, startY, origLeft, origTop;
+
+        handle.addEventListener('mousedown', (e) => {
+            if (e.target.closest('button')) return; // 닫기 버튼 제외
+            isDragging = true;
+            const rect = modal.getBoundingClientRect();
+            // 첫 드래그 시 position 고정
+            if (!modal.style.position || modal.style.position === '') {
+                modal.style.position = 'fixed';
+                modal.style.left = rect.left + 'px';
+                modal.style.top = rect.top + 'px';
+                modal.style.margin = '0';
+                modal.style.transform = 'none';
+            }
+            startX = e.clientX;
+            startY = e.clientY;
+            origLeft = parseInt(modal.style.left, 10);
+            origTop = parseInt(modal.style.top, 10);
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            modal.style.left = (origLeft + e.clientX - startX) + 'px';
+            modal.style.top = (origTop + e.clientY - startY) + 'px';
+        });
+
+        document.addEventListener('mouseup', () => { isDragging = false; });
+    })();
+
+    // ── 리사이즈 ──
+    (function initResize() {
+        const handle = document.getElementById('multilangResizeHandle');
+        const modal = document.getElementById('multilangModalContent');
+        if (!handle || !modal) return;
+
+        let isResizing = false, startX, startY, origW, origH;
+
+        handle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            const rect = modal.getBoundingClientRect();
+            // 첫 리사이즈 시 position 고정
+            if (!modal.style.position || modal.style.position === '') {
+                modal.style.position = 'fixed';
+                modal.style.left = rect.left + 'px';
+                modal.style.top = rect.top + 'px';
+                modal.style.margin = '0';
+                modal.style.transform = 'none';
+            }
+            startX = e.clientX;
+            startY = e.clientY;
+            origW = rect.width;
+            origH = rect.height;
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            const newW = Math.max(400, origW + e.clientX - startX);
+            const newH = Math.max(250, origH + e.clientY - startY);
+            modal.style.width = newW + 'px';
+            modal.style.height = newH + 'px';
+            modal.style.maxWidth = 'none';
+        });
+
+        document.addEventListener('mouseup', () => { isResizing = false; });
+    })();
+
+    // ── 모달 위치/크기 리셋 ──
+    function resetModalPosition() {
+        const modal = document.getElementById('multilangModalContent');
+        if (!modal) return;
+        modal.style.position = '';
+        modal.style.left = '';
+        modal.style.top = '';
+        modal.style.width = '';
+        modal.style.height = '';
+        modal.style.maxWidth = '';
+        modal.style.margin = '';
+        modal.style.transform = '';
+    }
+
+    // ── Summernote 에디터 초기화 ──
     function initMultilangEditors() {
         if (typeof $ === 'undefined' || typeof $.fn.summernote === 'undefined') {
             console.log('[Multilang] Waiting for Summernote...');
@@ -206,11 +309,14 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
         if (el) el.value = value || '';
     }
 
-    // 모달 열기
+    // ── 모달 열기 ──
     window.openMultilangModal = async function(langKey, inputId, type = 'text') {
         multilangCurrentKey = langKey;
         multilangCurrentInputId = inputId;
         multilangCurrentType = type;
+
+        // 위치/크기 리셋 (매번 중앙 정렬)
+        resetModalPosition();
 
         const modalContent = document.getElementById('multilangModalContent');
         const textMode = document.getElementById('multilang-text-mode');
@@ -219,16 +325,13 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
         if (type === 'editor') {
             textMode.classList.add('hidden');
             editorMode.classList.remove('hidden');
-            modalContent.classList.remove('max-w-lg');
-            modalContent.classList.add('max-w-3xl');
-            if (!multilangEditorsInitialized) {
-                initMultilangEditors();
-            }
+            modalContent.classList.remove('max-w-2xl');
+            modalContent.classList.add('max-w-4xl');
         } else {
             textMode.classList.remove('hidden');
             editorMode.classList.add('hidden');
-            modalContent.classList.remove('max-w-3xl');
-            modalContent.classList.add('max-w-lg');
+            modalContent.classList.remove('max-w-4xl');
+            modalContent.classList.add('max-w-2xl');
         }
 
         // 현재 입력 필드 값 가져오기
@@ -280,10 +383,16 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
 
         document.getElementById('multilangModal').classList.remove('hidden');
         switchMultilangTab(MULTILANG_DEFAULT_LOCALE);
+
+        // Summernote는 모달이 보인 후 초기화해야 정상 렌더링됨
+        if (type === 'editor' && !multilangEditorsInitialized) {
+            setTimeout(() => initMultilangEditors(), 50);
+        }
+
         console.log('[Multilang] Modal opened for:', langKey, 'type:', type, 'locales:', MULTILANG_LOCALES.length);
     };
 
-    // 모달 닫기
+    // ── 모달 닫기 ──
     window.closeMultilangModal = function() {
         document.getElementById('multilangModal').classList.add('hidden');
         multilangCurrentKey = '';
@@ -292,7 +401,7 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
         console.log('[Multilang] Modal closed');
     };
 
-    // 탭 전환
+    // ── 탭 전환 ──
     window.switchMultilangTab = function(locale) {
         const type = multilangCurrentType;
 
@@ -317,7 +426,7 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
         });
     };
 
-    // 다국어 데이터 저장
+    // ── 다국어 데이터 저장 ──
     window.saveMultilangData = async function() {
         const type = multilangCurrentType;
         const translations = {};
@@ -367,7 +476,7 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
         }
     };
 
-    // 토스트 알림
+    // ── 토스트 알림 ──
     window.showMultilangToast = function(message, type = 'success') {
         const toast = document.getElementById('multilang-toast');
         const toastContent = toast.querySelector('div');

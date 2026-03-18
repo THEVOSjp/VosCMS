@@ -13,6 +13,7 @@ if (!empty($config['app_url'])) {
     $baseUrl = '';
 }
 $isEmbed = isset($_GET['embed']) && $_GET['embed'] === '1';
+if ($isEmbed) $__layout = false; // embed 모드: 레이아웃 미적용
 $currentLocale = current_locale();
 
 // DB에서 커스텀 콘텐츠 로드

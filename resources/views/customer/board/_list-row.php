@@ -11,9 +11,9 @@ $postUrl = $boardUrl . '/' . $post['id'];
     <?php foreach ($listColumns as $col): ?>
 
     <?php if ($col === 'no'): ?>
-    <td class="py-3 px-4 text-center text-zinc-500 dark:text-zinc-400">
+    <td class="py-3 px-1 text-center text-zinc-500 dark:text-zinc-400">
         <?php if ($isNotice): ?>
-        <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded"><?= __('board.notice') ?></span>
+        <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded whitespace-nowrap"><?= __('board.notice') ?></span>
         <?php else: ?>
         <?= $post['_row_no'] ?? '' ?>
         <?php endif; ?>
@@ -27,6 +27,9 @@ $postUrl = $boardUrl . '/' . $post['id'];
             <?php endif; ?>
             <?= htmlspecialchars($post['title']) ?>
         </a>
+        <?php if (!empty($post['source_locale']) && ($post['source_locale'] ?? '') !== ($currentLocale ?? 'ko')): ?>
+        <span class="ml-1 px-1 py-0.5 text-[10px] font-medium bg-zinc-200 dark:bg-zinc-600 text-zinc-500 dark:text-zinc-400 rounded uppercase"><?= $post['source_locale'] ?></span>
+        <?php endif; ?>
         <?php if (($post['comment_count'] ?? 0) > 0 && !in_array('comment_count', $listColumns)): ?>
         <span class="ml-1 text-xs text-blue-500">[<?= $post['comment_count'] ?>]</span>
         <?php endif; ?>

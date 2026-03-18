@@ -5,8 +5,6 @@
  */
 
 require_once __DIR__ . '/_init.php';
-include_once __DIR__ . '/../../components/multilang-button.php';
-
 $pageTitle = __('members.settings.tabs.terms') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentMemberSettingsPage = 'terms';
 

@@ -3,8 +3,6 @@
  * 카테고리 추가/수정 모달
  * settings-categories.php에서 include
  */
-include_once dirname(__DIR__) . '/components/multilang-button.php';
-
 ?>
 <div id="categoryModal" class="fixed inset-0 z-50 hidden">
     <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="closeCategoryModal()"></div>

@@ -3,7 +3,6 @@
  * RezlyX Admin - 메뉴 관리 페이지
  * 4단 캐스케이딩 패널: 트리 | 컨텍스트 | 메뉴타입 | 상세폼
  */
-include_once __DIR__ . '/../components/multilang-button.php';
 $pageTitle = __('site.menus.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $baseUrl = '';
 if (!empty($config['app_url'])) {

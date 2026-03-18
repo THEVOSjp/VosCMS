@@ -30,7 +30,12 @@ return [
     'file_attach' => '파일 첨부', 'remove' => '삭제',
     'cancel' => '취소', 'submit' => '등록', 'update' => '수정',
     'char_limit' => '최대 :limit자까지 입력 가능합니다.',
+    'drop_files' => '파일을 드래그하여 놓거나 클릭하세요',
+    'drop_files_hint' => '이미지는 에디터에 직접 드래그하여 본문에 삽입할 수 있습니다',
     // 추천/비추천
+    'source_locale_notice' => '이 글은 :locale 언어로 작성되었습니다.',
+    'edit_locale_warning' => '현재 :to 언어로 수정 중입니다. 저장하면 콘텐츠 언어가 변경됩니다.',
+    'edit_locale_notice' => '이 글은 :from 언어로 작성되었습니다. 현재 :to 언어로 수정하여 저장하면 콘텐츠 언어가 변경됩니다.',
     'dislike' => '비추천', 'already_voted' => '이미 투표하셨습니다.',
     'cannot_vote_own' => '본인의 글에는 투표할 수 없습니다.',
 ];

@@ -89,7 +89,6 @@ function getSubName($nameI18n, $locale) {
     return '';
 }
 
-include BASE_PATH . '/resources/views/partials/header.php';
 ?>
 
     <main class="max-w-7xl mx-auto px-4 py-8">
@@ -222,5 +221,4 @@ include BASE_PATH . '/resources/views/partials/header.php';
     </script>
 
 <?php
-include BASE_PATH . '/resources/views/partials/footer.php';
 ?>

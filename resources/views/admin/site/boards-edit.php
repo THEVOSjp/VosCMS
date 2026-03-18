@@ -5,9 +5,6 @@
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
-// 다국어 버튼 함수 로드 (탭 콘텐츠보다 먼저)
-include_once dirname(__DIR__) . '/components/multilang-button.php';
-
 // 게시판 ID
 $boardId = (int)($_GET['id'] ?? 0);
 if (!$boardId) {
@@ -46,7 +43,7 @@ $categories = $catStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 현재 탭
 $currentTab = $_GET['tab'] ?? 'basic';
-$validTabs = ['basic', 'categories', 'permissions', 'list', 'advanced'];
+$validTabs = ['basic', 'categories', 'extra_vars', 'permissions', 'addition', 'skin'];
 if (!in_array($currentTab, $validTabs)) $currentTab = 'basic';
 
 $pageTitle = htmlspecialchars($board['title']) . ' ' . __('site.boards.settings') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
@@ -62,17 +59,21 @@ $tabs = [
         'icon' => 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z',
         'label' => __('site.boards.tab_categories'),
     ],
+    'extra_vars' => [
+        'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
+        'label' => __('site.boards.tab_extra_vars'),
+    ],
     'permissions' => [
         'icon' => 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z',
         'label' => __('site.boards.tab_permissions'),
     ],
-    'list' => [
-        'icon' => 'M4 6h16M4 10h16M4 14h16M4 18h16',
-        'label' => __('site.boards.tab_list'),
-    ],
-    'advanced' => [
+    'addition' => [
         'icon' => 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4',
-        'label' => __('site.boards.tab_advanced'),
+        'label' => __('site.boards.tab_addition'),
+    ],
+    'skin' => [
+        'icon' => 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01',
+        'label' => __('site.boards.tab_skin'),
     ],
 ];
 ?>
@@ -90,6 +91,14 @@ $tabs = [
         if (localStorage.getItem('darkMode') === 'true' ||
             (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
+        }
+        // 섹션 접기/펼치기 (인라인 onclick에서 사용, 먼저 정의)
+        function toggleSection(btn) {
+            var section = btn.closest('[data-section]');
+            var body = section.querySelector('.section-body');
+            var chevron = btn.querySelector('.section-chevron');
+            body.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
         }
     </script>
 </head>

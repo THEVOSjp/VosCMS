@@ -71,6 +71,9 @@ use RzxLib\Core\I18n\Translator;
 $langPath = BASE_PATH . '/resources/lang';
 Translator::init($langPath);
 
+// 다국어 UI 헬퍼 (rzx_multilang_btn, rzx_multilang_input 등)
+require_once BASE_PATH . '/rzxlib/Core/Helpers/multilang.php';
+
 // URL 파라미터로 언어 변경 처리
 if (isset($_GET['lang'])) {
     $newLang = $_GET['lang'];
@@ -187,9 +190,22 @@ if ($config['debug']) {
     error_log("RezlyX Debug - Path: '$path', AdminPath: '{$config['admin_path']}'");
 }
 
+// 레이아웃 자동 적용 (고객 페이지)
+// 페이지에서 $__layout = false 설정 시 레이아웃 미적용
+$__pageFile = null;
+$__noLayout = false; // API, 로그인 등 자체 레이아웃 페이지
+
 // Route to appropriate handler
 if (empty($path) || $path === 'index.php') {
-    include BASE_PATH . '/resources/views/customer/home.php';
+    $__pageFile = BASE_PATH . '/resources/views/customer/home.php';
+} elseif ($path === 'lookup') {
+    $__pageFile = BASE_PATH . '/resources/views/customer/booking/lookup.php';
+} elseif (preg_match('#^booking/detail/([A-Za-z0-9]+)$#', $path, $m)) {
+    $reservationNumber = $m[1];
+    $__pageFile = BASE_PATH . '/resources/views/customer/booking/detail.php';
+} elseif (preg_match('#^booking/cancel/([A-Za-z0-9]+)$#', $path, $m)) {
+    $reservationNumber = $m[1];
+    $__pageFile = BASE_PATH . '/resources/views/customer/booking/cancel.php';
 } elseif ($path === $config['admin_path'] || str_starts_with($path, $config['admin_path'] . '/')) {
     $adminRoute = substr($path, strlen($config['admin_path']));
     $adminRoute = trim($adminRoute, '/') ?: 'dashboard';
@@ -396,36 +412,110 @@ if (empty($path) || $path === 'index.php') {
     // 동적 라우트: board/{slug}
     if (preg_match('#^board/([a-z0-9_-]+)$#', $path, $m)) {
         $boardSlug = $m[1];
-        include BASE_PATH . '/resources/views/customer/board/list.php';
+        $__pageFile = BASE_PATH . '/resources/views/customer/board/list.php';
     } elseif (preg_match('#^board/([a-z0-9_-]+)/write$#', $path, $m)) {
         $boardSlug = $m[1];
-        include BASE_PATH . '/resources/views/customer/board/write.php';
+        $__pageFile = BASE_PATH . '/resources/views/customer/board/write.php';
     } elseif (preg_match('#^board/([a-z0-9_-]+)/(\d+)$#', $path, $m)) {
         $boardSlug = $m[1];
         $postId = (int)$m[2];
-        include BASE_PATH . '/resources/views/customer/board/read.php';
+        $__pageFile = BASE_PATH . '/resources/views/customer/board/read.php';
     } elseif (preg_match('#^board/([a-z0-9_-]+)/(\d+)/edit$#', $path, $m)) {
         $boardSlug = $m[1];
         $postId = (int)$m[2];
-        include BASE_PATH . '/resources/views/customer/board/write.php';
+        $__pageFile = BASE_PATH . '/resources/views/customer/board/write.php';
     } elseif ($path === 'board/api/posts') {
+        $__noLayout = true;
         include BASE_PATH . '/resources/views/customer/board/api-posts.php';
     } elseif ($path === 'board/api/comments') {
+        $__noLayout = true;
         include BASE_PATH . '/resources/views/customer/board/api-comments.php';
     } elseif ($path === 'board/api/files') {
+        $__noLayout = true;
         include BASE_PATH . '/resources/views/customer/board/api-files.php';
+    // 동적 라우트: mypage/reservations/{id}
+    } elseif (preg_match('#^mypage/reservations/([a-zA-Z0-9_-]+)$#', $path, $m)) {
+        $reservationId = $m[1];
+        $__pageFile = BASE_PATH . '/resources/views/customer/mypage/reservation-detail.php';
     // 동적 라우트: staff/{id}
     } elseif (preg_match('#^staff/(\d+)$#', $path, $m)) {
         $routeParams = ['id' => $m[1]];
-        include BASE_PATH . '/resources/views/customer/staff-detail.php';
+        $__pageFile = BASE_PATH . '/resources/views/customer/staff-detail.php';
     } else {
         $customerView = BASE_PATH . '/resources/views/customer/' . $path . '.php';
 
         if (file_exists($customerView)) {
-            include $customerView;
+            // 자체 레이아웃 페이지 (로그인, 회원가입 등)
+            $_selfLayoutPages = ['login', 'register', 'forgot-password', 'reset-password', 'logout'];
+            if (in_array($path, $_selfLayoutPages) || str_starts_with($path, 'kiosk/')) {
+                $__noLayout = true;
+                include $customerView;
+            } else {
+                $__pageFile = $customerView;
+            }
         } else {
-            http_response_code(404);
-            include BASE_PATH . '/resources/views/customer/404.php';
+            // 게시판 slug 확인 (/free → board/free, /notice/3 → board/notice/3)
+            $_boardMatch = false;
+            $_pathParts = explode('/', $path);
+            $_slugCandidate = $_pathParts[0] ?? '';
+            if ($_slugCandidate && preg_match('/^[a-z0-9_-]+$/', $_slugCandidate)) {
+                $_bChk = $pdo->prepare("SELECT id FROM {$_ENV['DB_PREFIX']}boards WHERE slug = ? AND is_active = 1 LIMIT 1");
+                $_bChk->execute([$_slugCandidate]);
+                if ($_bChk->fetch()) {
+                    $_boardMatch = true;
+                    $boardSlug = $_slugCandidate;
+                    if (count($_pathParts) === 1) {
+                        // /free → 목록
+                        $__pageFile = BASE_PATH . '/resources/views/customer/board/list.php';
+                    } elseif ($_pathParts[1] === 'write') {
+                        // /free/write → 글쓰기
+                        $__pageFile = BASE_PATH . '/resources/views/customer/board/write.php';
+                    } elseif (is_numeric($_pathParts[1]) && !isset($_pathParts[2])) {
+                        // /free/3 → 글 읽기
+                        $postId = (int)$_pathParts[1];
+                        $__pageFile = BASE_PATH . '/resources/views/customer/board/read.php';
+                    } elseif (is_numeric($_pathParts[1]) && ($_pathParts[2] ?? '') === 'edit') {
+                        // /free/3/edit → 글 수정
+                        $postId = (int)$_pathParts[1];
+                        $__pageFile = BASE_PATH . '/resources/views/customer/board/write.php';
+                    }
+                }
+            }
+            if (!$_boardMatch) {
+                http_response_code(404);
+                $__noLayout = true;
+                include BASE_PATH . '/resources/views/customer/404.php';
+            }
         }
+    }
+}
+
+// === 레이아웃 자동 적용 ===
+if ($__pageFile && !$__noLayout) {
+    $__layout = 'default'; // 페이지에서 $__layout = false 로 오버라이드 가능
+
+    // 페이지에서 사용할 공통 변수 미리 설정
+    require_once BASE_PATH . '/rzxlib/Core/I18n/Translator.php';
+    \RzxLib\Core\I18n\Translator::init(BASE_PATH . '/resources/lang');
+    if (!isset($currentLocale)) $currentLocale = current_locale();
+    if (!isset($baseUrl)) $baseUrl = rtrim($config['app_url'] ?? '', '/');
+    if (!isset($siteSettings)) $siteSettings = [];
+
+    require_once BASE_PATH . '/rzxlib/Core/Auth/Auth.php';
+    $isLoggedIn = \RzxLib\Core\Auth\Auth::check();
+    if (!isset($currentUser)) $currentUser = $isLoggedIn ? \RzxLib\Core\Auth\Auth::user() : null;
+    $isAdmin = !empty($_SESSION['admin_id']);
+
+    ob_start();
+    include $__pageFile;
+    $__content = ob_get_clean();
+
+    // 페이지에서 $__layout = false 설정 시 콘텐츠만 출력
+    if ($__layout === false) {
+        echo $__content;
+    } else {
+        include BASE_PATH . '/resources/views/layouts/base-header.php';
+        echo $__content;
+        include BASE_PATH . '/resources/views/layouts/base-footer.php';
     }
 }

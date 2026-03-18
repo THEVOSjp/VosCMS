@@ -2,7 +2,6 @@
 /**
  * RezlyX Admin - 스태프 관리 모달 + JS (index.php에서 include)
  */
-include_once __DIR__ . '/../components/multilang-button.php';
 ?>
 <!-- 사진 편집 모달 (Cropper.js) -->
 <div id="cropperModal" class="fixed inset-0 z-[60] hidden">
@@ -215,6 +214,46 @@ include_once __DIR__ . '/../components/multilang-button.php';
                             <div class="flex items-center gap-2">
                                 <span class="w-14 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 shrink-0"><?= $langNativeNames[$code] ?? $code ?></span>
                                 <input type="text" data-i18n="bio" data-lang="<?= $code ?>" placeholder="<?= $langNativeNames[$code] ?? $code ?>"
+                                       class="flex-1 px-2 py-1 border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-xs">
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <!-- 시술 전 인사말 -->
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('staff.fields.greeting_before') ?></label>
+                            <?= rzx_multilang_btn("toggleI18n('greeting_before')") ?>
+                        </div>
+                        <input type="hidden" name="greeting_before_i18n" id="formGreetingBeforeI18n">
+                        <textarea name="greeting_before" id="formGreetingBefore" rows="2" placeholder="<?= __('staff.placeholder.greeting_before') ?>"
+                                  class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm resize-none"></textarea>
+                        <div id="greeting_beforeI18nFields" class="hidden mt-2 space-y-1.5 pl-3 border-l-2 border-purple-300 dark:border-purple-700">
+                            <?php foreach ($supportedLangs as $code): ?>
+                            <div class="flex items-center gap-2">
+                                <span class="w-14 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 shrink-0"><?= $langNativeNames[$code] ?? $code ?></span>
+                                <input type="text" data-i18n="greeting_before" data-lang="<?= $code ?>" placeholder="<?= $langNativeNames[$code] ?? $code ?>"
+                                       class="flex-1 px-2 py-1 border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-xs">
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <!-- 시술 후 인사말 -->
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('staff.fields.greeting_after') ?></label>
+                            <?= rzx_multilang_btn("toggleI18n('greeting_after')") ?>
+                        </div>
+                        <input type="hidden" name="greeting_after_i18n" id="formGreetingAfterI18n">
+                        <textarea name="greeting_after" id="formGreetingAfter" rows="2" placeholder="<?= __('staff.placeholder.greeting_after') ?>"
+                                  class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm resize-none"></textarea>
+                        <div id="greeting_afterI18nFields" class="hidden mt-2 space-y-1.5 pl-3 border-l-2 border-purple-300 dark:border-purple-700">
+                            <?php foreach ($supportedLangs as $code): ?>
+                            <div class="flex items-center gap-2">
+                                <span class="w-14 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 shrink-0"><?= $langNativeNames[$code] ?? $code ?></span>
+                                <input type="text" data-i18n="greeting_after" data-lang="<?= $code ?>" placeholder="<?= $langNativeNames[$code] ?? $code ?>"
                                        class="flex-1 px-2 py-1 border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-xs">
                             </div>
                             <?php endforeach; ?>
@@ -466,6 +505,8 @@ include_once __DIR__ . '/../components/multilang-button.php';
         document.getElementById('formEmail').value = isEdit ? (data.email || '') : '';
         document.getElementById('formPhone').value = isEdit ? (data.phone || '') : '';
         document.getElementById('formBio').value = isEdit ? (data.bio || '') : '';
+        document.getElementById('formGreetingBefore').value = isEdit ? (data.greeting_before || '') : '';
+        document.getElementById('formGreetingAfter').value = isEdit ? (data.greeting_after || '') : '';
         document.getElementById('formRemoveAvatar').value = '0';
         document.getElementById('formMemberAvatarUrl').value = '';
         croppedBlob = null; // 크롭 초기화
@@ -541,8 +582,12 @@ include_once __DIR__ . '/../components/multilang-button.php';
         // 다국어 필드 초기화
         fillI18nFields('name', isEdit ? (data.name_i18n || {}) : {});
         fillI18nFields('bio', isEdit ? (data.bio_i18n || {}) : {});
+        fillI18nFields('greeting_before', isEdit ? (data.greeting_before_i18n || {}) : {});
+        fillI18nFields('greeting_after', isEdit ? (data.greeting_after_i18n || {}) : {});
         document.getElementById('nameI18nFields').classList.add('hidden');
         document.getElementById('bioI18nFields').classList.add('hidden');
+        document.getElementById('greeting_beforeI18nFields').classList.add('hidden');
+        document.getElementById('greeting_afterI18nFields').classList.add('hidden');
 
         document.getElementById('staffModal').classList.remove('hidden');
         document.getElementById('formName').focus();
@@ -742,6 +787,8 @@ include_once __DIR__ . '/../components/multilang-button.php';
         // i18n JSON 세팅
         document.getElementById('formNameI18n').value = collectI18n('name');
         document.getElementById('formBioI18n').value = collectI18n('bio');
+        document.getElementById('formGreetingBeforeI18n').value = collectI18n('greeting_before');
+        document.getElementById('formGreetingAfterI18n').value = collectI18n('greeting_after');
 
         // 담당 서비스 수집
         var selectedServices = [];

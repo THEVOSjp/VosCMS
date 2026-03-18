@@ -37,6 +37,42 @@ if ($action === 'download' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     exit;
 }
 
+// === UPLOAD IMAGE (에디터 본문 이미지 삽입) ===
+if ($action === 'upload_image' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+
+    if (empty($_FILES['file'])) {
+        echo json_encode(['success' => false, 'message' => '파일이 없습니다.']);
+        exit;
+    }
+
+    $file = $_FILES['file'];
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    if (!in_array($file['type'], $allowedTypes)) {
+        echo json_encode(['success' => false, 'message' => '이미지 파일만 업로드 가능합니다.']);
+        exit;
+    }
+
+    // 업로드 디렉토리
+    $uploadDir = '/storage/board/images/' . date('Y/m');
+    $uploadPath = BASE_PATH . $uploadDir;
+    if (!is_dir($uploadPath)) mkdir($uploadPath, 0755, true);
+
+    // 파일명 생성
+    $ext = pathinfo($file['name'], PATHINFO_EXTENSION) ?: 'jpg';
+    $newName = 'img_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+    $destPath = $uploadPath . '/' . $newName;
+
+    if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+        echo json_encode(['success' => false, 'message' => '파일 저장에 실패했습니다.']);
+        exit;
+    }
+
+    $url = ($config['app_url'] ?? '') . $uploadDir . '/' . $newName;
+    echo json_encode(['success' => true, 'url' => $url]);
+    exit;
+}
+
 // === DELETE ===
 if ($action === 'delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json; charset=utf-8');

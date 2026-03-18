@@ -18,6 +18,7 @@ return [
     'no_member_found' => '검색 결과가 없습니다',
     'fields' => [
         'name' => '이름', 'email' => '이메일', 'phone' => '전화번호', 'bio' => '소개',
+        'greeting_before' => '시술 전 인사말', 'greeting_after' => '시술 후 인사말',
         'services' => '담당 서비스', 'contact' => '연락처', 'is_active' => '활성 상태',
         'linked_member' => '회원 연동', 'card_number' => '카드번호 (RFID/NFC)',
         'avatar' => '사진', 'upload_photo' => '사진 선택', 'remove_photo' => '사진 삭제',
@@ -28,6 +29,7 @@ return [
     'placeholder' => [
         'name' => '스태프 이름을 입력하세요', 'email' => 'email@example.com',
         'phone' => '010-0000-0000', 'bio' => '스태프에 대한 간단한 소개',
+        'greeting_before' => '예: VIP로 모시겠습니다!', 'greeting_after' => '예: 방문해 주셔서 감사합니다!',
         'card_number' => '카드를 리더기에 태그하세요',
     ],
     'success' => [

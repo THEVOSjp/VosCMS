@@ -2,155 +2,22 @@
 /**
  * RezlyX Admin - 게시판 설정: 기본 설정 탭
  * boards-edit.php에서 include됨 ($board, $pdo, $prefix, $adminUrl, $boardId 사용 가능)
+ *
+ * 공통 컴포넌트 사용: resources/views/admin/components/board/section-*.php
  */
+$_componentDir = dirname(__DIR__) . '/components/board';
 ?>
 <form id="boardEditForm" class="space-y-6">
     <input type="hidden" name="board_id" value="<?= $boardId ?>">
     <input type="hidden" name="action" value="update">
 
-    <!-- 기본 정보 -->
-    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
-        <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-4"><?= __('site.boards.section_basic') ?></h3>
-
-        <!-- URL (slug) -->
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.boards.field_url') ?> <span class="text-red-500">*</span></label>
-            <div class="flex items-center gap-2">
-                <span class="text-sm text-zinc-500 dark:text-zinc-400">/board/</span>
-                <input type="text" name="slug" id="slug" required
-                       pattern="[a-z0-9_-]+"
-                       value="<?= htmlspecialchars($board['slug'] ?? '') ?>"
-                       class="flex-1 px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200 placeholder-zinc-400">
-            </div>
-            <p class="mt-1 text-xs text-zinc-500"><?= __('site.boards.field_url_help') ?></p>
-        </div>
-
-        <!-- 브라우저 제목 -->
-        <div class="mb-4">
-            <div class="flex items-center gap-1 mb-1">
-                <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('site.boards.field_title') ?> <span class="text-red-500">*</span></label>
-                <?= rzx_multilang_btn("openMultilangModal('board.{$boardId}.title', 'title')") ?>
-            </div>
-            <input type="text" name="title" id="title" required
-                   value="<?= htmlspecialchars($board['title'] ?? '') ?>"
-                   class="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200 placeholder-zinc-400">
-        </div>
-
-        <!-- 모듈 분류 -->
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.boards.field_category') ?></label>
-            <select name="category" class="px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200">
-                <?php
-                $cats = ['board', 'notice', 'qna', 'faq', 'gallery'];
-                foreach ($cats as $c):
-                ?>
-                <option value="<?= $c ?>" <?= ($board['category'] ?? '') === $c ? 'selected' : '' ?>><?= __('site.boards.cat_' . $c) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
-        <!-- 설명 -->
-        <div class="mb-4">
-            <div class="flex items-center gap-1 mb-1">
-                <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('site.boards.field_description') ?></label>
-                <?= rzx_multilang_btn("openMultilangModal('board.{$boardId}.description', 'description')") ?>
-            </div>
-            <textarea name="description" id="description" rows="2"
-                      class="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200 placeholder-zinc-400"
-                      placeholder="<?= __('site.boards.field_description_placeholder') ?>"><?= htmlspecialchars($board['description'] ?? '') ?></textarea>
-        </div>
-
-        <!-- 활성 상태 -->
-        <div>
-            <label class="flex items-center gap-2">
-                <input type="checkbox" name="is_active" value="1" <?= ($board['is_active'] ?? 1) ? 'checked' : '' ?>
-                       class="w-4 h-4 text-blue-600 rounded border-zinc-300 dark:border-zinc-600">
-                <span class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('site.boards.field_is_active') ?></span>
-            </label>
-        </div>
-    </div>
-
-    <!-- SEO -->
-    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
-        <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-4"><?= __('site.boards.section_seo') ?></h3>
-
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.boards.field_robots') ?></label>
-            <div class="flex gap-4">
-                <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-                    <input type="radio" name="robots_tag" value="all" <?= ($board['robots_tag'] ?? 'all') === 'all' ? 'checked' : '' ?> class="text-blue-600"> <?= __('admin.common.yes') ?>
-                </label>
-                <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-                    <input type="radio" name="robots_tag" value="noindex" <?= ($board['robots_tag'] ?? '') === 'noindex' ? 'checked' : '' ?> class="text-blue-600"> <?= __('admin.common.no') ?>
-                </label>
-            </div>
-        </div>
-
-        <div class="mb-4">
-            <div class="flex items-center gap-1 mb-1">
-                <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('site.boards.field_seo_keywords') ?></label>
-                <?= rzx_multilang_btn("openMultilangModal('board.{$boardId}.seo_keywords', 'seo_keywords')") ?>
-            </div>
-            <input type="text" name="seo_keywords" id="seo_keywords"
-                   value="<?= htmlspecialchars($board['seo_keywords'] ?? '') ?>"
-                   class="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200 placeholder-zinc-400"
-                   placeholder="keyword1, keyword2">
-        </div>
-
-        <div>
-            <div class="flex items-center gap-1 mb-1">
-                <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('site.boards.field_seo_desc') ?></label>
-                <?= rzx_multilang_btn("openMultilangModal('board.{$boardId}.seo_description', 'seo_description')") ?>
-            </div>
-            <input type="text" name="seo_description" id="seo_description"
-                   value="<?= htmlspecialchars($board['seo_description'] ?? '') ?>"
-                   class="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200 placeholder-zinc-400">
-        </div>
-    </div>
-
-    <!-- 표시 설정 -->
-    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
-        <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-4"><?= __('site.boards.section_display') ?></h3>
-
-        <div class="grid grid-cols-3 gap-4 mb-4">
-            <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.boards.field_per_page') ?></label>
-                <input type="number" name="per_page" value="<?= (int)($board['per_page'] ?? 20) ?>" min="1" max="100"
-                       class="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.boards.field_search_per_page') ?></label>
-                <input type="number" name="search_per_page" value="<?= (int)($board['search_per_page'] ?? 20) ?>" min="1" max="100"
-                       class="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.boards.field_page_count') ?></label>
-                <input type="number" name="page_count" value="<?= (int)($board['page_count'] ?? 10) ?>" min="1" max="20"
-                       class="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200">
-            </div>
-        </div>
-
-        <div class="mb-4">
-            <div class="flex items-center gap-1 mb-1">
-                <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('site.boards.field_header') ?></label>
-                <?= rzx_multilang_btn("openMultilangModal('board.{$boardId}.header_content', 'header_content', 'editor')") ?>
-            </div>
-            <textarea name="header_content" id="header_content" rows="3"
-                      class="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200 font-mono"
-                      placeholder="HTML"><?= htmlspecialchars($board['header_content'] ?? '') ?></textarea>
-            <p class="mt-1 text-xs text-zinc-500"><?= __('site.boards.field_header_help') ?></p>
-        </div>
-
-        <div>
-            <div class="flex items-center gap-1 mb-1">
-                <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('site.boards.field_footer') ?></label>
-                <?= rzx_multilang_btn("openMultilangModal('board.{$boardId}.footer_content', 'footer_content', 'editor')") ?>
-            </div>
-            <textarea name="footer_content" id="footer_content" rows="3"
-                      class="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200 font-mono"
-                      placeholder="HTML"><?= htmlspecialchars($board['footer_content'] ?? '') ?></textarea>
-        </div>
-    </div>
+    <?php $_collapsed = false; include "{$_componentDir}/section-basic.php"; ?>
+    <?php $_collapsed = false; include "{$_componentDir}/section-seo.php"; ?>
+    <?php $_collapsed = false; include "{$_componentDir}/section-layout-select.php"; ?>
+    <?php $_collapsed = false; include "{$_componentDir}/section-skin-select.php"; ?>
+    <?php $_collapsed = false; include "{$_componentDir}/section-display.php"; ?>
+    <?php $_collapsed = true;  include "{$_componentDir}/section-list.php"; ?>
+    <?php $_collapsed = true;  include "{$_componentDir}/section-advanced.php"; ?>
 
     <!-- 버튼 -->
     <div class="flex items-center justify-between">
@@ -167,5 +34,11 @@
         </div>
     </div>
 </form>
+
+<?php include "{$_componentDir}/section-js.php"; ?>
+
+<script>
+console.log('[BoardEdit] 게시판 설정 JS 로드됨, boardId=<?= $boardId ?>');
+</script>
 
 <?php include __DIR__ . '/boards-edit-js.php'; ?>

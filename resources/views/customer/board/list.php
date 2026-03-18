@@ -83,20 +83,12 @@ $sortDir = ($board['sort_direction'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
 $allowedSort = ['created_at', 'updated_at', 'view_count', 'vote_count'];
 if (!in_array($sortField, $allowedSort)) $sortField = 'created_at';
 
-$listStmt = $pdo->prepare("SELECT * FROM {$prefix}board_posts WHERE {$where} ORDER BY {$sortField} {$sortDir} LIMIT ? OFFSET ?");
-$params[] = $perPage;
-$params[] = $offset;
+$listStmt = $pdo->prepare("SELECT * FROM {$prefix}board_posts WHERE {$where} ORDER BY {$sortField} {$sortDir} LIMIT " . (int)$perPage . " OFFSET " . (int)$offset);
 $listStmt->execute($params);
 $posts = $listStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 글 번호 계산
 $startNo = $totalCount - $offset;
-
-// 카테고리 맵
-$catMap = [];
-foreach ($categories as $cat) $catMap[$cat['id']] = $cat;
-
-include __DIR__ . '/_header.php';
 ?>
     <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         <!-- 게시판 제목 -->
@@ -112,7 +104,7 @@ include __DIR__ . '/_header.php';
         <?php endif; ?>
 
         <!-- 카테고리 필터 -->
-        <?php if (($board['show_category'] ?? 0) && !empty($categories)): ?>
+        <?php if (!($board['hide_categories'] ?? 0) && !empty($categories)): ?>
         <div class="flex flex-wrap gap-2 mb-4">
             <a href="<?= $boardUrl ?>" class="px-3 py-1.5 text-sm rounded-full <?= !$categoryFilter ? 'bg-blue-600 text-white' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-300 dark:hover:bg-zinc-600' ?> transition"><?= __('board.all') ?></a>
             <?php foreach ($categories as $cat): ?>
@@ -130,7 +122,7 @@ include __DIR__ . '/_header.php';
                 <thead>
                     <tr class="bg-zinc-50 dark:bg-zinc-700/50 border-b border-zinc-200 dark:border-zinc-700">
                         <?php foreach ($listColumns as $col): ?>
-                        <?php if ($col === 'no'): ?><th class="w-16 py-3 px-4 text-center font-medium text-zinc-600 dark:text-zinc-400"><?= __('board.col_no') ?></th>
+                        <?php if ($col === 'no'): ?><th class="w-20 py-3 px-2 text-center font-medium text-zinc-600 dark:text-zinc-400"><?= __('board.col_no') ?></th>
                         <?php elseif ($col === 'title'): ?><th class="py-3 px-4 text-left font-medium text-zinc-600 dark:text-zinc-400"><?= __('board.col_title') ?></th>
                         <?php elseif ($col === 'category'): ?><th class="w-24 py-3 px-4 text-center font-medium text-zinc-600 dark:text-zinc-400"><?= __('board.col_category') ?></th>
                         <?php elseif ($col === 'nick_name'): ?><th class="w-28 py-3 px-4 text-center font-medium text-zinc-600 dark:text-zinc-400"><?= __('board.col_author') ?></th>
@@ -208,4 +200,3 @@ include __DIR__ . '/_header.php';
         <?php endif; ?>
     </div>
 
-<?php include __DIR__ . '/_footer.php'; ?>

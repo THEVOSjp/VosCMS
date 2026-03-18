@@ -69,8 +69,8 @@ $cntStmt->execute([$boardId]);
 $totalCount = (int)$cntStmt->fetchColumn();
 $totalPages = max(1, ceil($totalCount / $perPage));
 
-$listStmt = $pdo->prepare("SELECT * FROM {$prefix}board_posts WHERE board_id = ? AND status = 'trash' ORDER BY updated_at DESC LIMIT ? OFFSET ?");
-$listStmt->execute([$boardId, $perPage, $offset]);
+$listStmt = $pdo->prepare("SELECT * FROM {$prefix}board_posts WHERE board_id = ? AND status = 'trash' ORDER BY updated_at DESC LIMIT " . (int)$perPage . " OFFSET " . (int)$offset);
+$listStmt->execute([$boardId]);
 $posts = $listStmt->fetchAll(PDO::FETCH_ASSOC);
 
 $pageTitle = __('site.boards.trash') . ' - ' . htmlspecialchars($board['title']);

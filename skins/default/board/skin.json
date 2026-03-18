@@ -1,0 +1,60 @@
+{
+  "title": { "ko": "기본 게시판 스킨", "en": "Default Board Skin", "ja": "デフォルト掲示板スキン" },
+  "description": { "ko": "RezlyX 기본 게시판 스킨입니다.", "en": "RezlyX default board skin.", "ja": "RezlyXデフォルト掲示板スキンです。" },
+  "version": "1.0.0",
+  "author": { "name": "RezlyX", "url": "https://rezlyx.com" },
+  "vars": [
+    {
+      "name": "show_category",
+      "type": "checkbox",
+      "title": { "ko": "목록에 분류 표시", "en": "Show category in list", "ja": "リストにカテゴリ表示" },
+      "description": { "ko": "게시판 목록에 분류 컬럼을 표시합니다.", "en": "Show category column in board list.", "ja": "掲示板リストにカテゴリカラムを表示します。" },
+      "default": false
+    },
+    {
+      "name": "list_style",
+      "type": "select",
+      "title": { "ko": "목록 스타일", "en": "List style", "ja": "リストスタイル" },
+      "options": [
+        { "value": "table", "label": { "ko": "테이블형", "en": "Table", "ja": "テーブル型" } },
+        { "value": "card", "label": { "ko": "카드형", "en": "Card", "ja": "カード型" } },
+        { "value": "gallery", "label": { "ko": "갤러리형", "en": "Gallery", "ja": "ギャラリー型" } }
+      ],
+      "default": "table"
+    },
+    {
+      "name": "title_image",
+      "type": "image",
+      "title": { "ko": "게시판 제목 이미지", "en": "Board title image", "ja": "掲示板タイトル画像" },
+      "description": { "ko": "게시판 상단에 표시할 이미지를 업로드합니다.", "en": "Upload an image to display at the top of the board.", "ja": "掲示板上部に表示する画像をアップロードします。" }
+    },
+    {
+      "name": "title_image_alt",
+      "type": "text",
+      "multilang": true,
+      "title": { "ko": "제목 이미지 대체 텍스트", "en": "Title image alt text", "ja": "タイトル画像の代替テキスト" }
+    },
+    {
+      "name": "primary_color",
+      "type": "color",
+      "title": { "ko": "메인 색상", "en": "Primary color", "ja": "メインカラー" },
+      "description": { "ko": "스킨의 메인 색상을 지정합니다.", "en": "Set the primary color of the skin.", "ja": "スキンのメインカラーを指定します。" },
+      "default": "#3B82F6"
+    },
+    {
+      "name": "posts_per_row",
+      "type": "number",
+      "title": { "ko": "카드형 한 줄 게시물 수", "en": "Cards per row", "ja": "カード型1行あたりの投稿数" },
+      "description": { "ko": "카드형/갤러리형에서 한 줄에 표시할 게시물 수", "en": "Number of posts per row in card/gallery mode", "ja": "カード型/ギャラリー型での1行あたりの投稿数" },
+      "default": 3,
+      "min": 1,
+      "max": 6
+    },
+    {
+      "name": "custom_css",
+      "type": "textarea",
+      "title": { "ko": "사용자 정의 CSS", "en": "Custom CSS", "ja": "カスタムCSS" },
+      "description": { "ko": "이 게시판에만 적용되는 CSS를 입력합니다.", "en": "Enter CSS that applies only to this board.", "ja": "この掲示板にのみ適用されるCSSを入力します。" }
+    }
+  ]
+}

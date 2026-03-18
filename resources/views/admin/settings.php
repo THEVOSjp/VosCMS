@@ -3,8 +3,6 @@
  * RezlyX Admin Settings Page
  */
 $pageTitle = '설정 - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
-include_once __DIR__ . '/components/multilang-button.php';
-
 // Database connection
 try {
     $pdo = new PDO(

@@ -58,12 +58,11 @@ $priceDisplay = $siteSettings['service_price_display'] ?? 'show';
 $_currencySymbols = ['KRW' => '₩', 'USD' => '$', 'JPY' => '¥', 'EUR' => '€', 'CNY' => '¥'];
 $currencySymbol = $_currencySymbols[$serviceCurrency] ?? $serviceCurrency;
 
-// 헤더 포함
-include BASE_PATH . '/resources/views/partials/header.php';
+// 기본 레이아웃 헤더
 ?>
 
     <!-- Main Content -->
-    <main class="max-w-6xl mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto px-4 py-8">
         <!-- Page Title -->
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2"><?= __('services.title') ?></h1>
@@ -181,13 +180,12 @@ include BASE_PATH . '/resources/views/partials/header.php';
                 </svg>
             </a>
         </div>
-    </main>
+    </div>
 
     <script>
         console.log('[Services] 서비스 목록 페이지 로드 완료');
     </script>
 
 <?php
-// 푸터 포함
-include BASE_PATH . '/resources/views/partials/footer.php';
+// 기본 레이아웃 푸터
 ?>

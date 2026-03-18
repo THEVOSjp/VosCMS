@@ -5,9 +5,18 @@
  */
 header('Content-Type: application/json; charset=utf-8');
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'GET') {
     echo json_encode(['success' => false, 'message' => 'Method not allowed']);
     exit;
+}
+
+// GET 요청은 조회 액션만 허용
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $action = $_GET['action'] ?? '';
+    if (!in_array($action, ['category_get', 'extra_var_get', 'search_users'])) {
+        echo json_encode(['success' => false, 'message' => 'GET not allowed for this action']);
+        exit;
+    }
 }
 
 try {
@@ -23,7 +32,15 @@ try {
 }
 
 $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
-$action = $boardApiAction ?? ($_POST['action'] ?? '');
+
+// JSON body 지원
+$_jsonBody = null;
+$contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+if (strpos($contentType, 'application/json') !== false) {
+    $_jsonBody = json_decode(file_get_contents('php://input'), true) ?: [];
+}
+
+$action = $boardApiAction ?? ($_POST['action'] ?? $_GET['action'] ?? $_jsonBody['action'] ?? '');
 
 // === CREATE ===
 if ($action === 'create') {
@@ -240,6 +257,62 @@ if ($action === 'copy') {
     exit;
 }
 
+// === SEARCH USERS (회원 + 스태프 검색) ===
+if ($action === 'search_users') {
+    $q = trim($_GET['q'] ?? '');
+    if (strlen($q) < 2) {
+        echo json_encode(['success' => false, 'users' => []]);
+        exit;
+    }
+    $like = '%' . $q . '%';
+    $stmt = $pdo->prepare("SELECT id, email, name FROM {$prefix}users WHERE email LIKE ? OR name LIKE ? ORDER BY name ASC LIMIT 10");
+    $stmt->execute([$like, $like]);
+    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // 스태프도 검색 (nick_name 없음)
+    try {
+        $staffStmt = $pdo->prepare("SELECT id, email, name FROM {$prefix}staff WHERE email LIKE ? OR name LIKE ? ORDER BY name ASC LIMIT 10");
+        $staffStmt->execute([$like, $like]);
+        $staffUsers = $staffStmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (\Exception $e) {
+        $staffUsers = [];
+    }
+
+    // 중복 제거 (id 기준)
+    $ids = array_column($users, 'id');
+    foreach ($staffUsers as $s) {
+        if (!in_array($s['id'], $ids)) {
+            $s['nick_name'] = '';
+            $users[] = $s;
+        }
+    }
+
+    $result = array_map(function($u) {
+        return [
+            'id' => $u['id'],
+            'email' => $u['email'] ?? '',
+            'display_name' => $u['name'] ?? $u['email'] ?? '',
+        ];
+    }, $users);
+
+    echo json_encode(['success' => true, 'users' => $result]);
+    exit;
+}
+
+// === CATEGORY GET ===
+if ($action === 'category_get') {
+    $catId = (int)($_GET['category_id'] ?? $_POST['category_id'] ?? 0);
+    if (!$catId) {
+        echo json_encode(['success' => false, 'message' => '분류 ID가 필요합니다.']);
+        exit;
+    }
+    $stmt = $pdo->prepare("SELECT * FROM {$prefix}board_categories WHERE id = ?");
+    $stmt->execute([$catId]);
+    $cat = $stmt->fetch(PDO::FETCH_ASSOC);
+    echo json_encode(['success' => (bool)$cat, 'category' => $cat ?: null]);
+    exit;
+}
+
 // === CATEGORY ADD ===
 if ($action === 'category_add') {
     $boardId = (int)($_POST['board_id'] ?? 0);
@@ -248,19 +321,45 @@ if ($action === 'category_add') {
         echo json_encode(['success' => false, 'message' => '게시판 ID와 분류명은 필수입니다.']);
         exit;
     }
+    $parentId = (int)($_POST['parent_id'] ?? 0);
     $slug = trim($_POST['slug'] ?? '');
     if (!$slug) $slug = preg_replace('/[^a-z0-9_-]/', '', strtolower(str_replace(' ', '-', $name)));
     $color = $_POST['color'] ?? '#3B82F6';
+    $fontColor = trim($_POST['font_color'] ?? '');
+    $description = trim($_POST['description'] ?? '');
+    $allowedGroups = trim($_POST['allowed_groups'] ?? '');
+    $isExpanded = (int)($_POST['is_expanded'] ?? 0);
+    $isDefault = (int)($_POST['is_default'] ?? 0);
 
-    // 정렬 순서
     $maxSort = $pdo->prepare("SELECT MAX(sort_order) FROM {$prefix}board_categories WHERE board_id = ?");
     $maxSort->execute([$boardId]);
     $nextSort = ((int)$maxSort->fetchColumn()) + 1;
 
-    $stmt = $pdo->prepare("INSERT INTO {$prefix}board_categories (board_id, name, slug, color, sort_order, is_active) VALUES (?,?,?,?,?,1)");
-    $stmt->execute([$boardId, $name, $slug, $color, $nextSort]);
+    $stmt = $pdo->prepare("INSERT INTO {$prefix}board_categories (board_id, parent_id, name, slug, description, color, font_color, allowed_groups, is_expanded, is_default, sort_order, is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,1)");
+    $stmt->execute([$boardId, $parentId, $name, $slug, $description, $color, $fontColor, $allowedGroups, $isExpanded, $isDefault, $nextSort]);
 
     echo json_encode(['success' => true, 'message' => '분류가 추가되었습니다.', 'category_id' => $pdo->lastInsertId()]);
+    exit;
+}
+
+// === CATEGORY UPDATE ===
+if ($action === 'category_update') {
+    $catId = (int)($_POST['category_id'] ?? 0);
+    $name = trim($_POST['name'] ?? '');
+    if (!$catId || !$name) {
+        echo json_encode(['success' => false, 'message' => '분류 ID와 분류명은 필수입니다.']);
+        exit;
+    }
+    $fontColor = trim($_POST['font_color'] ?? '');
+    $description = trim($_POST['description'] ?? '');
+    $allowedGroups = trim($_POST['allowed_groups'] ?? '');
+    $isExpanded = (int)($_POST['is_expanded'] ?? 0);
+    $isDefault = (int)($_POST['is_default'] ?? 0);
+
+    $stmt = $pdo->prepare("UPDATE {$prefix}board_categories SET name=?, description=?, font_color=?, allowed_groups=?, is_expanded=?, is_default=? WHERE id=?");
+    $stmt->execute([$name, $description, $fontColor, $allowedGroups, $isExpanded, $isDefault, $catId]);
+
+    echo json_encode(['success' => true, 'message' => '분류가 수정되었습니다.']);
     exit;
 }
 
@@ -271,8 +370,153 @@ if ($action === 'category_delete') {
         echo json_encode(['success' => false, 'message' => '분류 ID가 필요합니다.']);
         exit;
     }
+    // 하위 분류도 삭제
+    $pdo->prepare("DELETE FROM {$prefix}board_categories WHERE parent_id = ?")->execute([$catId]);
     $pdo->prepare("DELETE FROM {$prefix}board_categories WHERE id = ?")->execute([$catId]);
     echo json_encode(['success' => true, 'message' => '분류가 삭제되었습니다.']);
+    exit;
+}
+
+// === CATEGORY REORDER (JSON body) ===
+if ($action === 'category_reorder') {
+    $order = $_jsonBody['order'] ?? [];
+    if (empty($order)) {
+        echo json_encode(['success' => false, 'message' => '순서 데이터가 없습니다.']);
+        exit;
+    }
+    $stmt = $pdo->prepare("UPDATE {$prefix}board_categories SET parent_id = ?, sort_order = ? WHERE id = ?");
+    foreach ($order as $item) {
+        $stmt->execute([(int)$item['parent_id'], (int)$item['sort_order'], (int)$item['id']]);
+    }
+    echo json_encode(['success' => true, 'message' => '순서가 저장되었습니다.']);
+    exit;
+}
+
+// === EXTRA VAR GET ===
+if ($action === 'extra_var_get') {
+    $evId = (int)($_GET['ev_id'] ?? $_POST['ev_id'] ?? 0);
+    $stmt = $pdo->prepare("SELECT * FROM {$prefix}board_extra_vars WHERE id = ?");
+    $stmt->execute([$evId]);
+    $ev = $stmt->fetch(PDO::FETCH_ASSOC);
+    echo json_encode(['success' => (bool)$ev, 'extra_var' => $ev ?: null]);
+    exit;
+}
+
+// === EXTRA VAR ADD ===
+if ($action === 'extra_var_add') {
+    $boardId = (int)($_POST['board_id'] ?? 0);
+    $varName = trim($_POST['var_name'] ?? '');
+    $title = trim($_POST['title'] ?? '');
+    if (!$boardId || !$varName || !$title) {
+        echo json_encode(['success' => false, 'message' => '필수 항목을 입력해주세요.']);
+        exit;
+    }
+    $maxSort = $pdo->prepare("SELECT MAX(sort_order) FROM {$prefix}board_extra_vars WHERE board_id = ?");
+    $maxSort->execute([$boardId]);
+    $nextSort = ((int)$maxSort->fetchColumn()) + 1;
+
+    $stmt = $pdo->prepare("INSERT INTO {$prefix}board_extra_vars (board_id, var_name, var_type, title, description, options, default_value, is_required, is_searchable, is_shown_in_list, sort_order) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+    $stmt->execute([
+        $boardId, $varName, $_POST['var_type'] ?? 'text', $title,
+        $_POST['description'] ?? '', $_POST['options'] ?? '', $_POST['default_value'] ?? '',
+        (int)($_POST['is_required'] ?? 0), (int)($_POST['is_searchable'] ?? 0), (int)($_POST['is_shown_in_list'] ?? 0),
+        $nextSort
+    ]);
+    echo json_encode(['success' => true, 'message' => '확장 변수가 추가되었습니다.', 'ev_id' => $pdo->lastInsertId()]);
+    exit;
+}
+
+// === EXTRA VAR UPDATE ===
+if ($action === 'extra_var_update') {
+    $evId = (int)($_POST['ev_id'] ?? 0);
+    $title = trim($_POST['title'] ?? '');
+    if (!$evId || !$title) {
+        echo json_encode(['success' => false, 'message' => '필수 항목을 입력해주세요.']);
+        exit;
+    }
+    $stmt = $pdo->prepare("UPDATE {$prefix}board_extra_vars SET var_type=?, title=?, description=?, options=?, default_value=?, is_required=?, is_searchable=?, is_shown_in_list=? WHERE id=?");
+    $stmt->execute([
+        $_POST['var_type'] ?? 'text', $title,
+        $_POST['description'] ?? '', $_POST['options'] ?? '', $_POST['default_value'] ?? '',
+        (int)($_POST['is_required'] ?? 0), (int)($_POST['is_searchable'] ?? 0), (int)($_POST['is_shown_in_list'] ?? 0),
+        $evId
+    ]);
+    echo json_encode(['success' => true, 'message' => '확장 변수가 수정되었습니다.']);
+    exit;
+}
+
+// === EXTRA VAR DELETE ===
+if ($action === 'extra_var_delete') {
+    $evId = (int)($_POST['ev_id'] ?? 0);
+    if (!$evId) { echo json_encode(['success' => false, 'message' => 'ID가 필요합니다.']); exit; }
+    $pdo->prepare("DELETE FROM {$prefix}board_extra_vars WHERE id = ?")->execute([$evId]);
+    echo json_encode(['success' => true, 'message' => '확장 변수가 삭제되었습니다.']);
+    exit;
+}
+
+// === EXTRA VAR REORDER ===
+if ($action === 'extra_var_reorder') {
+    $order = $_jsonBody['order'] ?? [];
+    if (empty($order)) { echo json_encode(['success' => false, 'message' => '순서 데이터가 없습니다.']); exit; }
+    $stmt = $pdo->prepare("UPDATE {$prefix}board_extra_vars SET sort_order = ? WHERE id = ?");
+    foreach ($order as $item) {
+        $stmt->execute([(int)$item['sort_order'], (int)$item['id']]);
+    }
+    echo json_encode(['success' => true, 'message' => '순서가 저장되었습니다.']);
+    exit;
+}
+
+// === BOARD ADMIN ADD ===
+if ($action === 'board_admin_add') {
+    $boardId = (int)($_POST['board_id'] ?? 0);
+    $identifier = trim($_POST['identifier'] ?? '');
+    if (!$boardId || !$identifier) {
+        echo json_encode(['success' => false, 'message' => '필수 항목을 입력해주세요.']);
+        exit;
+    }
+    // 검색에서 직접 선택한 경우 user_id로 바로 조회
+    $directId = trim($_POST['user_id_direct'] ?? '');
+    if ($directId) {
+        $userStmt = $pdo->prepare("SELECT id, email, name FROM {$prefix}users WHERE id = ? LIMIT 1");
+        $userStmt->execute([$directId]);
+    } else {
+        $userStmt = $pdo->prepare("SELECT id, email, name FROM {$prefix}users WHERE email = ? OR name = ? LIMIT 1");
+        $userStmt->execute([$identifier, $identifier]);
+    }
+    $user = $userStmt->fetch(PDO::FETCH_ASSOC);
+    if (!$user) {
+        echo json_encode(['success' => false, 'message' => __('site.boards.adv_module_admin_not_found')]);
+        exit;
+    }
+    // 중복 체크
+    $dupStmt = $pdo->prepare("SELECT id FROM {$prefix}board_admins WHERE board_id = ? AND user_id = ?");
+    $dupStmt->execute([$boardId, $user['id']]);
+    if ($dupStmt->fetch()) {
+        echo json_encode(['success' => false, 'message' => __('site.boards.adv_module_admin_already')]);
+        exit;
+    }
+    $stmt = $pdo->prepare("INSERT INTO {$prefix}board_admins (board_id, user_id, perm_document, perm_comment, perm_settings) VALUES (?,?,?,?,?)");
+    $stmt->execute([$boardId, $user['id'], (int)($_POST['perm_document'] ?? 1), (int)($_POST['perm_comment'] ?? 1), (int)($_POST['perm_settings'] ?? 0)]);
+    require_once BASE_PATH . '/rzxlib/Core/Helpers/Encryption.php';
+    $decName = \RzxLib\Core\Helpers\Encryption::decrypt($user['name']);
+    echo json_encode([
+        'success' => true,
+        'user_id' => $user['id'],
+        'display_name' => $decName ?: $user['email'],
+    ]);
+    exit;
+}
+
+// === BOARD ADMIN DELETE ===
+if ($action === 'board_admin_delete') {
+    $boardId = (int)($_POST['board_id'] ?? 0);
+    $userId = trim($_POST['user_id'] ?? '');
+    if (!$boardId || !$userId) {
+        echo json_encode(['success' => false, 'message' => '필수 항목이 누락되었습니다.']);
+        exit;
+    }
+    $pdo->prepare("DELETE FROM {$prefix}board_admins WHERE board_id = ? AND user_id = ?")->execute([$boardId, $userId]);
+    echo json_encode(['success' => true]);
     exit;
 }
 

@@ -131,7 +131,7 @@ class Service
         $service->duration = (int) ($data['duration'] ?? 60);
         $service->price = (float) ($data['price'] ?? 0);
         $service->currency = $data['currency'] ?? 'KRW';
-        $service->category_id = $data['category_id'] ?? null;
+        $service->category_id = isset($data['category_id']) ? (string)$data['category_id'] : null;
         $service->image = $data['image'] ?? null;
         $service->is_active = (bool) ($data['is_active'] ?? true);
         $service->max_capacity = (int) ($data['max_capacity'] ?? 1);

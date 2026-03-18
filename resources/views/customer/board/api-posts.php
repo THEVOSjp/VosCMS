@@ -85,13 +85,16 @@ if ($action === 'create') {
     $now = date('Y-m-d H:i:s');
     $listOrder = time();
 
+    // 현재 로케일
+    $currentLocale = function_exists('current_locale') ? current_locale() : ($config['locale'] ?? 'ko');
+
     $stmt = $pdo->prepare("INSERT INTO {$prefix}board_posts
-        (board_id, category_id, user_id, title, content, password, is_notice, is_secret, is_anonymous, nick_name, list_order, update_order, status, ip_address, created_at, updated_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        (board_id, category_id, user_id, title, content, password, is_notice, is_secret, is_anonymous, nick_name, list_order, update_order, status, original_locale, source_locale, ip_address, created_at, updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     $stmt->execute([
         $boardId, $categoryId, $userId, $title, $content, $password,
         $isNotice, $isSecret, $isAnonymous, $nickName,
-        $listOrder, $listOrder, 'published', $_SERVER['REMOTE_ADDR'] ?? '', $now, $now
+        $listOrder, $listOrder, 'published', $currentLocale, $currentLocale, $_SERVER['REMOTE_ADDR'] ?? '', $now, $now
     ]);
     $newId = $pdo->lastInsertId();
 
@@ -144,8 +147,11 @@ if ($action === 'update') {
     $isSecret = (int)($_POST['is_secret'] ?? 0);
     $categoryId = (int)($_POST['category_id'] ?? 0) ?: null;
 
-    $pdo->prepare("UPDATE {$prefix}board_posts SET title=?, content=?, is_notice=?, is_secret=?, category_id=?, updated_at=NOW() WHERE id=?")
-        ->execute([$title, $content, $isNotice, $isSecret, $categoryId, $postId]);
+    // 현재 로케일로 source_locale 업데이트
+    $currentLocale = function_exists('current_locale') ? current_locale() : ($config['locale'] ?? 'ko');
+
+    $pdo->prepare("UPDATE {$prefix}board_posts SET title=?, content=?, is_notice=?, is_secret=?, category_id=?, source_locale=?, updated_at=NOW() WHERE id=?")
+        ->execute([$title, $content, $isNotice, $isSecret, $categoryId, $currentLocale, $postId]);
 
     // 새 파일 업로드
     if (!empty($_FILES['files']['name'][0])) {

@@ -22,7 +22,7 @@ if (!$post) {
 }
 
 // 비밀글 접근 제한
-if ($post['is_secret'] && (!$currentUser || ($currentUser['id'] != $post['user_id'] && ($currentUser['role'] ?? '') !== 'admin'))) {
+if ($post['is_secret'] && (!$currentUser || ($currentUser['id'] != $post['user_id'] && !$isAdmin))) {
     // 비밀번호 확인 폼
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
         if (!password_verify($_POST['password'], $post['password'] ?? '')) {
@@ -33,7 +33,6 @@ if ($post['is_secret'] && (!$currentUser || ($currentUser['id'] != $post['user_i
     }
     if (!isset($secretVerified)) {
         $pageTitle = __('board.secret_post') . ' - ' . $board['title'];
-        include __DIR__ . '/_header.php';
         ?>
         <div class="max-w-5xl mx-auto px-4 sm:px-6 py-12 text-center">
             <svg class="w-16 h-16 mx-auto mb-4 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
@@ -45,12 +44,12 @@ if ($post['is_secret'] && (!$currentUser || ($currentUser['id'] != $post['user_i
                 <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg"><?= __('board.confirm') ?></button>
             </form>
         </div>
-        <?php include __DIR__ . '/_footer.php'; exit;
+        <?php return; // 레이아웃 내에서 여기서 종료
     }
 }
 
 // 상담 모드 접근 제한
-if (($board['consultation'] ?? 0) && $currentUser && $currentUser['id'] != $post['user_id'] && ($currentUser['role'] ?? '') !== 'admin') {
+if (($board['consultation'] ?? 0) && $currentUser && $currentUser['id'] != $post['user_id'] && !$isAdmin) {
     http_response_code(403);
     echo '<p>본인이 작성한 글만 볼 수 있습니다.</p>';
     exit;
@@ -60,9 +59,18 @@ if (($board['consultation'] ?? 0) && $currentUser && $currentUser['id'] != $post
 $pdo->prepare("UPDATE {$prefix}board_posts SET view_count = view_count + 1 WHERE id = ?")->execute([$postId]);
 $post['view_count']++;
 
+// 다국어 폴백: source_locale → en → original_locale
+$postSourceLocale = $post['source_locale'] ?? $currentLocale;
+$postOriginalLocale = $post['original_locale'] ?? $postSourceLocale;
+
+if ($currentLocale !== $postSourceLocale) {
+    // 현재 언어 != source_locale → 폴백 체인으로 콘텐츠 검색
+    // 1. source_locale의 콘텐츠 (현재 DB에 저장된 값) → 기본 사용
+    // 2. 추후 rzx_translations에 번역이 있으면 우선 표시 가능
+    // 현재는 source_locale 콘텐츠를 그대로 표시
+}
+
 // 카테고리 정보
-$catMap = [];
-foreach ($categories as $cat) $catMap[$cat['id']] = $cat;
 $postCategory = $catMap[$post['category_id'] ?? 0] ?? null;
 
 // 댓글 로드
@@ -85,11 +93,11 @@ $nextStmt->execute([$boardId, $postId]);
 $nextPost = $nextStmt->fetch(PDO::FETCH_ASSOC);
 
 // 수정/삭제 권한
-$canEdit = $currentUser && ($currentUser['id'] == $post['user_id'] || ($currentUser['role'] ?? '') === 'admin');
+$canEdit = $currentUser && ($currentUser['id'] == $post['user_id'] || $isAdmin);
 $canDelete = $canEdit;
 
 // 보호 로직
-if ($canEdit && ($currentUser['role'] ?? '') !== 'admin') {
+if ($canEdit && !$isAdmin) {
     if (($board['protect_content_by_comment'] ?? 0) && ($post['comment_count'] ?? 0) > 0) {
         $canEdit = false; $canDelete = false;
     }
@@ -100,7 +108,6 @@ if ($canEdit && ($currentUser['role'] ?? '') !== 'admin') {
 }
 
 $pageTitle = htmlspecialchars($post['title']) . ' - ' . $board['title'];
-include __DIR__ . '/_header.php';
 ?>
     <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         <!-- 글 헤더 -->
@@ -125,6 +132,14 @@ include __DIR__ . '/_header.php';
                     <?php endif; ?>
                 </div>
             </div>
+
+            <!-- 원문 언어 안내 -->
+            <?php if ($currentLocale !== $postSourceLocale): ?>
+            <div class="mx-6 mt-4 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+                <?= __('board.source_locale_notice', ['locale' => $postSourceLocale]) ?>
+            </div>
+            <?php endif; ?>
 
             <!-- 본문 -->
             <div class="p-6 prose dark:prose-invert max-w-none text-zinc-800 dark:text-zinc-200 leading-relaxed">
@@ -205,7 +220,7 @@ include __DIR__ . '/_header.php';
                             <span class="font-medium text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars($comment['nick_name']) ?></span>
                             <span class="text-zinc-400 dark:text-zinc-500"><?= date('Y.m.d H:i', strtotime($comment['created_at'])) ?></span>
                         </div>
-                        <?php if ($currentUser && ($currentUser['id'] == $comment['user_id'] || ($currentUser['role'] ?? '') === 'admin')): ?>
+                        <?php if ($currentUser && ($currentUser['id'] == $comment['user_id'] || $isAdmin)): ?>
                         <button type="button" class="btn-comment-delete text-xs text-red-500 hover:underline" data-id="<?= $comment['id'] ?>"><?= __('board.delete') ?></button>
                         <?php endif; ?>
                     </div>
@@ -326,4 +341,3 @@ document.querySelectorAll('.btn-comment-delete').forEach(btn => {
     });
 });
 </script>
-<?php include __DIR__ . '/_footer.php'; ?>

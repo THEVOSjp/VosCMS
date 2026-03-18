@@ -3,8 +3,6 @@
  * 서비스 설정 - 기본설정 탭
  * 예약 관련 기본 옵션 설정
  */
-include_once dirname(__DIR__) . '/components/multilang-button.php';
-
 // POST 처리
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_general') {
     try {

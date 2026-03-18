@@ -4,7 +4,6 @@
  * 실시간 미리보기 + 드래그앤드롭 + 설정 편집
  */
 $pageTitle = __('site.widget_builder.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
-include_once __DIR__ . '/../components/multilang-button.php';
 
 try {
     $pdo = new PDO(

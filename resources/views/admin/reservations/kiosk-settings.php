@@ -4,7 +4,6 @@
  */
 include __DIR__ . '/_init.php';
 
-include_once BASE_PATH . '/resources/views/admin/components/multilang-button.php';
 require_once BASE_PATH . '/rzxlib/Core/Modules/LanguageModule.php';
 use RzxLib\Core\Modules\LanguageModule;
 

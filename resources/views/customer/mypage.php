@@ -15,7 +15,6 @@ if (!Auth::check()) {
 
 $user = Auth::user();
 $pageTitle = ($config['app_name'] ?? 'RezlyX') . ' - ' . __('auth.mypage.title');
-$baseUrl = $config['app_url'] ?? '';
 
 // 헤더에서 사용할 변수
 $isLoggedIn = true;
@@ -32,11 +31,10 @@ $stats = [
 // 최근 예약 (더미 데이터)
 $recentReservations = [];
 
-// 헤더 포함
-include BASE_PATH . '/resources/views/partials/header.php';
+// 기본 레이아웃 헤더
 ?>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="lg:flex lg:gap-8">
             <!-- 사이드바 -->
             <?php
@@ -200,9 +198,8 @@ include BASE_PATH . '/resources/views/partials/header.php';
                 </div>
             </div>
         </div>
-    </main>
+    </div>
 
 <?php
-// 푸터 포함
-include BASE_PATH . '/resources/views/partials/footer.php';
+// 기본 레이아웃 푸터
 ?>

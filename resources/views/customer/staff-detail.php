@@ -161,7 +161,6 @@ $dayLabels = [
 ];
 $days = $dayLabels[$currentLocale] ?? $dayLabels['en'];
 
-include BASE_PATH . '/resources/views/partials/header.php';
 ?>
 
     <main class="max-w-4xl mx-auto px-4 py-6">
@@ -554,5 +553,4 @@ include BASE_PATH . '/resources/views/partials/header.php';
 <?php include BASE_PATH . '/resources/views/customer/staff-detail-js.php'; ?>
 
 <?php
-include BASE_PATH . '/resources/views/partials/footer.php';
 ?>

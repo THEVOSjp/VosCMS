@@ -127,10 +127,9 @@ if (!empty($user['profile_image'])) {
         : $baseUrl . $user['profile_image'];
 }
 
-include BASE_PATH . '/resources/views/partials/header.php';
 ?>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="lg:flex lg:gap-8">
             <!-- 사이드바 -->
             <?php
@@ -203,8 +202,7 @@ include BASE_PATH . '/resources/views/partials/header.php';
                 </div>
             </div>
         </div>
-    </main>
+    </div>
 
 <?php
-include BASE_PATH . '/resources/views/partials/footer.php';
 ?>

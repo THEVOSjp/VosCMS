@@ -6,7 +6,6 @@
 
 // Initialize database and settings
 require_once __DIR__ . '/_init.php';
-include_once __DIR__ . '/../components/multilang-button.php';
 
 $pageTitle = __('settings.site.page_title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentSettingsPage = 'site';

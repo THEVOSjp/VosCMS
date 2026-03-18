@@ -38,15 +38,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if (!empty($email)) {
-                // 이메일은 암호화되어 저장됨
-                $encryptedEmail = Encryption::encrypt($email);
-                $query->where('customer_email', $encryptedEmail);
+                $query->where('customer_email', $email);
             }
 
             if (!empty($phone)) {
-                // 전화번호도 암호화되어 저장됨
-                $encryptedPhone = Encryption::encrypt($phone);
-                $query->where('customer_phone', $encryptedPhone);
+                // 전화번호: 숫자만 추출하여 LIKE 검색 (형식 차이 대응)
+                $phoneDigits = preg_replace('/[^0-9]/', '', $phone);
+                if (strlen($phoneDigits) >= 4) {
+                    $query->where('customer_phone', 'LIKE', '%' . $phoneDigits . '%');
+                }
             }
 
             $results = $query->orderBy('reservation_date', 'desc')->limit(20)->get();
@@ -76,11 +76,10 @@ function getStatusBadgeClass($status) {
     return $classes[$status] ?? $classes['pending'];
 }
 
-// 헤더 포함
-include BASE_PATH . '/resources/views/partials/header.php';
+// 기본 레이아웃 헤더
 ?>
 
-    <main class="min-h-screen py-12">
+    <div class="min-h-screen py-12">
         <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
             <!-- 페이지 제목 -->
             <div class="text-center mb-8">
@@ -257,12 +256,11 @@ include BASE_PATH . '/resources/views/partials/header.php';
                 </p>
             </div>
         </div>
-    </main>
+    </div>
 
 <!-- 전화번호 입력 컴포넌트 JS -->
 <script src="<?php echo $baseUrl; ?>/assets/js/phone-input.js"></script>
 
 <?php
-// 푸터 포함
-include BASE_PATH . '/resources/views/partials/footer.php';
+// 기본 레이아웃 푸터
 ?>

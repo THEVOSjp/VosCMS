@@ -4,6 +4,72 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [1.7.0] - 2026-03-18
+
+### Added
+- **기본 레이아웃 시스템** — `layouts/base-header.php` + `base-footer.php`, index.php에서 ob_start 자동 적용, 모든 고객 페이지 공통 헤더/푸터
+- **게시판 프론트 구현** — 목록(list), 상세(read), 글쓰기/수정(write) 페이지, Summernote 에디터, 드래그&드롭 파일 첨부
+- **게시판 단축 URL** — `/free`, `/notice/3` 등 `/board/` 없이 접근 가능, DB slug 자동 매칭
+- **예약 조회 페이지** — `/lookup` 단축 URL, 예약번호/이메일/전화번호 검색
+- **예약 상세 페이지** — `/booking/detail/{번호}`, 스태프 인사말 말풍선, 서비스/결제/취소 정보
+- **예약 취소 페이지** — `/booking/cancel/{번호}`, 취소 사유 입력
+- **마이페이지 예약 상세** — `/mypage/reservations/{id}`, 사이드바 + 상세 정보
+- **게시글 다국어** — `original_locale` (최초 작성 언어) + `source_locale` (현재 콘텐츠 언어), 폴백 체인 (source → en → original)
+- **스태프 인사말** — `greeting_before` (시술 전) + `greeting_after` (시술 후), 다국어 지원, 예약 상태별 표시
+- **관리자 프로필 드롭다운** — 프로필 사진/이니셜 + 이름 + 홈페이지/마이페이지/로그아웃 메뉴
+- **고객 헤더 관리자 링크** — 관리자 세션 시 드롭다운에 관리자 페이지 링크 표시
+
+### Changed
+- 모든 고객 페이지 레이아웃 통합 (자체 HTML 구조 제거, LayoutManager 자동 적용)
+- 게시판 분류 표시 조건 `show_category` → `hide_categories` 로 변경
+- 게시판 URL `/board/free` → `/free` 단축 URL 기본 사용
+- 관리자 topbar "Admin" → 실제 로그인 이름 + 프로필 사진
+
+### Fixed
+- `rzx_users.role` 컬럼 없음 → `$_SESSION['admin_id']` 기반 관리자 판별
+- `rzx_users.nick_name` 컬럼 없음 → `name` 사용 + Encryption 복호화
+- `rzx_staff.profile_image` → `avatar` 컬럼명 수정
+- Service 모델 `category_id` int→string 타입 캐스팅
+- 예약 조회 이메일/전화번호 평문 검색 (암호화 미적용 데이터)
+
+---
+
+## [1.6.1] - 2026-03-18
+
+### Added
+- **게시판 관리자 탭 6개** — 기본 설정, 분류 관리, 확장 변수, 권한 설정, 추가 설정, 스킨
+- **기본 설정 탭 통합** — 기본정보 + SEO + 레이아웃 선택 + 스킨 선택 + 표시 + 목록 + 고급 (접기/펼치기)
+- **공통 컴포넌트** — `components/board/section-*.php` 8개 (basic, seo, layout-select, skin-select, display, list, advanced, js), 수정/생성 페이지 재사용
+- **다국어 입력 컴포넌트** — `rzx_multilang_input()` 함수, text/editor 모드, 인라인 지구본 버튼
+- **분류 관리 강화** — 트리 구조(parent_id), 편집 모달(이름/폰트색/설명/허용그룹/펼침/기본분류), SortableJS 드래그 정렬, 회원등급 DB 동적 로드
+- **확장 변수 탭** — `rzx_board_extra_vars` 테이블, 15개 입력 타입 (text_multilang, textarea_multilang, textarea_editor 포함), 다국어 지원, 드래그 정렬
+- **권한 설정 탭** — 접근 권한 (all/member/grade:*/admin_staff/admin), 모듈 관리자 (공용 사용자 검색, 프로필 사진, 권한 범위), 알림 메일 안내
+- **추가 설정 탭** — 통합 게시판, 문서(히스토리/추천/신고), 댓글(수/깊이/승인/추천/신고), 위지윅 에디터(권한 매트릭스), 파일(다운로드 그룹), 피드(RSS 공개/저작권)
+- **스킨 시스템** — `skin.json` 포맷, `SkinConfigRenderer`, `"multilang": true` 지원, 스킨 정보 카드
+- **레이아웃 시스템** — `layout.json` 포맷, 기본 설정에서 카드형 선택
+- **공용 사용자 검색** — `user-search.php` 컴포넌트, 암호화 복호화, 프로필 사진, 어디서든 재사용
+- **모듈 관리자** — `rzx_board_admins` 테이블, 문서/댓글/설정 권한, 알림 수신
+- **고급 설정 확장** — 관리자 익명 제외, Data URL 제한, 유니코드 오남용, 글/댓글 보호(댓글수/대댓글수/기간), 최고관리자 보호, 발신 메일 주소
+- **토글 스위치 UI** — 모든 예/아니오 항목 토글 변환 (기본 + 추가 설정)
+- **번역 키** — 약 300개 키, 13개 언어
+
+### Fixed
+- **휴지통 SQL 오류** — `LIMIT ?` 바인딩 문자열 → 정수 리터럴
+- **Summernote 미렌더링** — jQuery/Summernote JS 로드 + 모달 표시 후 초기화
+- **콜레이션 오류** — board_admins JOIN 시 COLLATE utf8mb4_unicode_ci 명시
+- **접기/펼치기 미동작** — `toggleSection` 함수를 `<head>`에서 먼저 정의
+
+### Changed
+- 독립 탭(목록/고급) → 기본 설정 탭에 접기/펼치기 통합
+- 스킨 선택 → 기본 설정 탭으로 이동, 스킨 탭은 설정만 표시
+- 관리자 메일 → 고급 설정의 "발신 메일 주소"로 변경
+- 모듈 관리자 → 권한 설정 탭으로 이동
+- "목록에 분류 표시" → 분류 설정에서 제거, 스킨별 설정으로 이관
+- "목록에 분류 표시" → 분류 설정에서 제거, 스킨별 설정으로 이관
+- 작성 허용 그룹 → 하드코딩 대신 `rzx_member_grades` 테이블에서 동적 로드
+
+---
+
 ## [1.6.0] - 2026-03-17
 
 ### Added

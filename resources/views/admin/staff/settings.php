@@ -6,7 +6,6 @@
 if (!function_exists('__')) {
     require_once BASE_PATH . '/rzxlib/Core/Helpers/lang.php';
 }
-include_once __DIR__ . '/../components/multilang-button.php';
 
 $pageTitle = __('staff.settings.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $baseUrl = $config['app_url'] ?? '';

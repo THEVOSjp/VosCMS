@@ -3,7 +3,6 @@
  * RezlyX Admin - 서비스 관리 모달 폼
  * services.php에서 include
  */
-include_once __DIR__ . '/components/multilang-button.php';
 ?>
 
 <!-- ═══ 서비스 추가/수정 모달 ═══ -->

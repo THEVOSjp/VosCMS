@@ -147,15 +147,17 @@ $notSet = '<span class="text-zinc-400 dark:text-zinc-500">' . __('auth.profile.n
 $inputClass = 'w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm';
 $labelClass = 'block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1';
 
-include BASE_PATH . '/resources/views/partials/header.php';
-?>
-    <?php if ($editMode && in_array('profile_photo', $registerFields)): ?>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-    <style>.cropper-view-box, .cropper-face { border-radius: 50%; }</style>
-    <?php endif; ?>
+// headExtra에 cropper 추가
+if ($editMode && in_array('profile_photo', $registerFields)) {
+    $headExtra = '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">'
+        . '<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>'
+        . '<style>.cropper-view-box, .cropper-face { border-radius: 50%; }</style>';
+}
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+// 기본 레이아웃 헤더
+?>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="lg:flex lg:gap-8">
             <!-- 사이드바 -->
             <?php $sidebarActive = 'profile'; include BASE_PATH . '/resources/views/components/mypage-sidebar.php'; ?>
@@ -380,7 +382,7 @@ include BASE_PATH . '/resources/views/partials/header.php';
                 </div>
             </div>
         </div>
-    </main>
+    </div>
 
     <?php if ($editMode): ?>
     <!-- Cropper 모달 -->
@@ -562,5 +564,4 @@ include BASE_PATH . '/resources/views/partials/header.php';
     <?php endif; ?>
 
 <?php
-include BASE_PATH . '/resources/views/partials/footer.php';
 ?>

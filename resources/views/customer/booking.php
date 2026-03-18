@@ -286,17 +286,17 @@ function getBookingSvcTranslated($svcId, $field, $default) {
 // 스텝 정의: 서비스 → 날짜/시간 → 고객정보 → 확인 (4단계)
 $totalSteps = 4;
 
-include BASE_PATH . '/resources/views/partials/header.php';
+// headExtra에 booking 고유 스타일 추가
+$headExtra = '<style>
+    .step-active { background-color: #2563eb; color: white; }
+    .step-completed { background-color: #22c55e; color: white; }
+    .step-inactive { background-color: #e5e7eb; color: #6b7280; }
+    .dark .step-inactive { background-color: #3f3f46; color: #a1a1aa; }
+</style>';
+
 ?>
 
-    <style>
-        .step-active { background-color: #2563eb; color: white; }
-        .step-completed { background-color: #22c55e; color: white; }
-        .step-inactive { background-color: #e5e7eb; color: #6b7280; }
-        .dark .step-inactive { background-color: #3f3f46; color: #a1a1aa; }
-    </style>
-
-    <main class="max-w-4xl mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto px-4 py-8">
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2"><?= __('common.nav.booking') ?></h1>
             <p class="text-gray-600 dark:text-zinc-400"><?= __('booking.select_service_datetime') ?></p>
@@ -533,8 +533,7 @@ include BASE_PATH . '/resources/views/partials/header.php';
             <p class="text-lg font-mono font-bold text-blue-600 dark:text-blue-400 mb-6" id="doneBookingCode"></p>
             <a href="<?= $baseUrl ?>/" class="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"><?= __('common.nav.home') ?></a>
         </div>
-    </main>
+    </div>
 
 <?php include BASE_PATH . '/resources/views/customer/booking-js.php'; ?>
 
-<?php include BASE_PATH . '/resources/views/partials/footer.php'; ?>

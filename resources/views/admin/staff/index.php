@@ -89,8 +89,8 @@ try {
                 $banner = uploadStaffAvatar($_FILES['banner'], $uploadPath, $baseUrl, $uploadDir);
             }
 
-            $sql = "INSERT INTO {$prefix}staff (user_id, name, name_i18n, email, phone, avatar, banner, bio, bio_i18n, designation_fee, position_id, is_active, sort_order)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)";
+            $sql = "INSERT INTO {$prefix}staff (user_id, name, name_i18n, email, phone, avatar, banner, bio, bio_i18n, greeting_before, greeting_after, designation_fee, position_id, is_active, sort_order)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
                 $userId,
@@ -102,6 +102,8 @@ try {
                 $banner,
                 trim($_POST['bio'] ?? '') ?: null,
                 $bioI18n ? json_encode(json_decode($bioI18n, true), JSON_UNESCAPED_UNICODE) : null,
+                trim($_POST['greeting_before'] ?? '') ?: null,
+                trim($_POST['greeting_after'] ?? '') ?: null,
                 $designationFee,
                 $positionId,
                 $maxSort + 1,
@@ -162,6 +164,14 @@ try {
             $params[] = $nameI18n ? json_encode(json_decode($nameI18n, true), JSON_UNESCAPED_UNICODE) : null;
             $fields[] = 'bio_i18n = ?';
             $params[] = $bioI18n ? json_encode(json_decode($bioI18n, true), JSON_UNESCAPED_UNICODE) : null;
+
+            // 인사말
+            $fields[] = 'greeting_before = ?';
+            $params[] = trim($_POST['greeting_before'] ?? '') ?: null;
+            $fields[] = 'greeting_after = ?';
+            $params[] = trim($_POST['greeting_after'] ?? '') ?: null;
+            $greetBeforeI18n = $_POST['greeting_before_i18n'] ?? null;
+            $greetAfterI18n = $_POST['greeting_after_i18n'] ?? null;
 
             // 사진 업로드
             if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
@@ -440,6 +450,10 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                             <button type="button" onclick='openStaffModal(<?= htmlspecialchars(json_encode([
                                 "id" => $s["id"], "user_id" => $s["user_id"], "name" => $s["name"], "email" => $s["email"],
                                 "phone" => $s["phone"], "bio" => $s["bio"], "avatar" => $s["avatar"],
+                                "banner" => $s["banner"] ?? null,
+                                "greeting_before" => $s["greeting_before"] ?? "",
+                                "greeting_after" => $s["greeting_after"] ?? "",
+                                "card_number" => $s["card_number"] ?? "",
                                 "position_id" => $s["position_id"], "is_active" => $s["is_active"],
                                 "name_i18n" => $nameI18n, "bio_i18n" => $bioI18n,
                                 "designation_fee" => (float)($s["designation_fee"] ?? 0),
