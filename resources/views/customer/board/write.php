@@ -36,16 +36,39 @@ if ($editMode) {
     $fileStmt = $pdo->prepare("SELECT * FROM {$prefix}board_files WHERE post_id = ?");
     $fileStmt->execute([$postId]);
     $existingFiles = $fileStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // 현재 로케일이 원본 언어가 아니면 번역 데이터 로드
+    $postOriginalLocale = $post['original_locale'] ?? 'ko';
+    if ($currentLocale !== $postOriginalLocale) {
+        $trStmt = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = ? AND locale = ?");
+        $trStmt->execute(["board_post.{$postId}.title", $currentLocale]);
+        $trTitle = $trStmt->fetchColumn();
+        $trStmt->execute(["board_post.{$postId}.content", $currentLocale]);
+        $trContent = $trStmt->fetchColumn();
+        if ($trTitle !== false) $post['title'] = $trTitle;
+        if ($trContent !== false) $post['content'] = $trContent;
+
+        // 확장 변수 번역 로드
+        $trStmt->execute(["board_post.{$postId}.extra_vars", $currentLocale]);
+        $trEv = $trStmt->fetchColumn();
+        if ($trEv !== false) {
+            $trEvData = json_decode($trEv, true);
+            if ($trEvData) {
+                $origEv = !empty($post['extra_vars']) ? (json_decode($post['extra_vars'], true) ?: []) : [];
+                $post['extra_vars'] = json_encode(array_merge($origEv, $trEvData), JSON_UNESCAPED_UNICODE);
+            }
+        }
+    }
 }
 
 ?>
     <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mb-4"><?= htmlspecialchars($board['title']) ?></h1>
 
-        <?php if ($editMode && ($post['source_locale'] ?? '') !== ($currentLocale ?? 'ko')): ?>
-        <div class="px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300 mb-4">
+        <?php if ($editMode && ($post['original_locale'] ?? 'ko') !== ($currentLocale ?? 'ko')): ?>
+        <div class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300 mb-4">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-            <?= __('board.edit_locale_notice', ['from' => $post['source_locale'] ?? '?', 'to' => $currentLocale]) ?>
+            <?= __('board.edit_translation_notice', ['locale' => $currentLocale, 'original' => $post['original_locale'] ?? 'ko']) ?>
         </div>
         <?php endif; ?>
 
@@ -118,6 +141,21 @@ if ($editMode) {
                 </label>
             </div>
             <?php endif; ?>
+
+            <!-- 확장 변수 -->
+            <?php
+            $evStmt = $pdo->prepare("SELECT * FROM {$prefix}board_extra_vars WHERE board_id = ? AND is_active = 1 ORDER BY sort_order");
+            $evStmt->execute([$boardId]);
+            $extraVarDefs = $evStmt->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($extraVarDefs)) {
+                require_once BASE_PATH . '/rzxlib/Core/Modules/ExtraVarRenderer.php';
+                $evValues = [];
+                if ($editMode && !empty($post['extra_vars'])) {
+                    $evValues = json_decode($post['extra_vars'], true) ?: [];
+                }
+                \RzxLib\Core\Modules\ExtraVarRenderer::renderAll($extraVarDefs, $evValues, 'input');
+            }
+            ?>
 
             <!-- 본문 (Summernote 에디터) -->
             <div>

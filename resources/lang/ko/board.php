@@ -36,6 +36,11 @@ return [
     'source_locale_notice' => '이 글은 :locale 언어로 작성되었습니다.',
     'edit_locale_warning' => '현재 :to 언어로 수정 중입니다. 저장하면 콘텐츠 언어가 변경됩니다.',
     'edit_locale_notice' => '이 글은 :from 언어로 작성되었습니다. 현재 :to 언어로 수정하여 저장하면 콘텐츠 언어가 변경됩니다.',
+    'edit_translation_notice' => '현재 :locale 언어로 번역을 편집합니다. 원본(:original)은 유지됩니다.',
+    'reply' => '답글',
+    'submit_reply' => '등록',
+    'reply_placeholder' => '답글을 입력하세요...',
+    'board_settings' => '게시판 설정',
     'dislike' => '비추천', 'already_voted' => '이미 투표하셨습니다.',
     'cannot_vote_own' => '본인의 글에는 투표할 수 없습니다.',
 ];

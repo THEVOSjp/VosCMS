@@ -78,7 +78,7 @@ if ($action === 'create') {
         $password = password_hash($pw, PASSWORD_DEFAULT);
     }
 
-    $isNotice = ($currentUser && ($currentUser['role'] ?? '') === 'admin') ? (int)($_POST['is_notice'] ?? 0) : 0;
+    $isNotice = ($currentUser && !empty($_SESSION['admin_id'])) ? (int)($_POST['is_notice'] ?? 0) : 0;
     $isSecret = (int)($_POST['is_secret'] ?? 0);
     $categoryId = (int)($_POST['category_id'] ?? 0) ?: null;
 
@@ -88,13 +88,24 @@ if ($action === 'create') {
     // 현재 로케일
     $currentLocale = function_exists('current_locale') ? current_locale() : ($config['locale'] ?? 'ko');
 
+    // 확장 변수 수집
+    $extraVarsJson = null;
+    $evData = [];
+    foreach ($_POST as $k => $v) {
+        if (strpos($k, 'extra_') === 0) {
+            $evKey = substr($k, 6);
+            $evData[$evKey] = is_array($v) ? implode(',', $v) : $v;
+        }
+    }
+    if (!empty($evData)) $extraVarsJson = json_encode($evData, JSON_UNESCAPED_UNICODE);
+
     $stmt = $pdo->prepare("INSERT INTO {$prefix}board_posts
-        (board_id, category_id, user_id, title, content, password, is_notice, is_secret, is_anonymous, nick_name, list_order, update_order, status, original_locale, source_locale, ip_address, created_at, updated_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        (board_id, category_id, user_id, title, content, password, is_notice, is_secret, is_anonymous, nick_name, list_order, update_order, status, original_locale, source_locale, extra_vars, ip_address, created_at, updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     $stmt->execute([
         $boardId, $categoryId, $userId, $title, $content, $password,
         $isNotice, $isSecret, $isAnonymous, $nickName,
-        $listOrder, $listOrder, 'published', $currentLocale, $currentLocale, $_SERVER['REMOTE_ADDR'] ?? '', $now, $now
+        $listOrder, $listOrder, 'published', $currentLocale, $currentLocale, $extraVarsJson, $_SERVER['REMOTE_ADDR'] ?? '', $now, $now
     ]);
     $newId = $pdo->lastInsertId();
 
@@ -136,22 +147,55 @@ if ($action === 'update') {
     if (!$post) { echo json_encode(['success' => false, 'message' => '게시글을 찾을 수 없습니다.']); exit; }
 
     // 권한
-    if (!$currentUser || ($currentUser['id'] != $post['user_id'] && ($currentUser['role'] ?? '') !== 'admin')) {
+    if (!$currentUser || ($currentUser['id'] != $post['user_id'] && empty($_SESSION['admin_id']))) {
         echo json_encode(['success' => false, 'message' => '수정 권한이 없습니다.']);
         exit;
     }
 
     $title = trim($_POST['title'] ?? $post['title']);
     $content = $_POST['content'] ?? $post['content'];
-    $isNotice = ($currentUser['role'] ?? '') === 'admin' ? (int)($_POST['is_notice'] ?? 0) : $post['is_notice'];
+    $isNotice = !empty($_SESSION['admin_id']) ? (int)($_POST['is_notice'] ?? 0) : $post['is_notice'];
     $isSecret = (int)($_POST['is_secret'] ?? 0);
     $categoryId = (int)($_POST['category_id'] ?? 0) ?: null;
 
-    // 현재 로케일로 source_locale 업데이트
-    $currentLocale = function_exists('current_locale') ? current_locale() : ($config['locale'] ?? 'ko');
+    // 확장 변수 수집
+    $evData = [];
+    foreach ($_POST as $k => $v) {
+        if (strpos($k, 'extra_') === 0) {
+            $evKey = substr($k, 6);
+            $evData[$evKey] = is_array($v) ? implode(',', $v) : $v;
+        }
+    }
+    $extraVarsJson = !empty($evData) ? json_encode($evData, JSON_UNESCAPED_UNICODE) : $post['extra_vars'];
 
-    $pdo->prepare("UPDATE {$prefix}board_posts SET title=?, content=?, is_notice=?, is_secret=?, category_id=?, source_locale=?, updated_at=NOW() WHERE id=?")
-        ->execute([$title, $content, $isNotice, $isSecret, $categoryId, $currentLocale, $postId]);
+    $currentLocale = function_exists('current_locale') ? current_locale() : ($config['locale'] ?? 'ko');
+    $originalLocale = $post['original_locale'] ?? 'ko';
+
+    if ($currentLocale === $originalLocale) {
+        // 원본 언어로 수정 → board_posts 직접 수정
+        $pdo->prepare("UPDATE {$prefix}board_posts SET title=?, content=?, is_notice=?, is_secret=?, category_id=?, extra_vars=?, updated_at=NOW() WHERE id=?")
+            ->execute([$title, $content, $isNotice, $isSecret, $categoryId, $extraVarsJson, $postId]);
+    } else {
+        // 다른 언어로 수정 → rzx_translations에 저장 (원본 유지)
+        $trStmt = $pdo->prepare("INSERT INTO {$prefix}translations (lang_key, locale, source_locale, content) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE content = VALUES(content), source_locale = VALUES(source_locale)");
+        $trStmt->execute(["board_post.{$postId}.title", $currentLocale, $originalLocale, $title]);
+        $trStmt->execute(["board_post.{$postId}.content", $currentLocale, $originalLocale, $content]);
+
+        // 확장 변수도 해당 언어로 저장
+        if (!empty($evData)) {
+            $trStmt->execute(["board_post.{$postId}.extra_vars", $currentLocale, $originalLocale, json_encode($evData, JSON_UNESCAPED_UNICODE)]);
+        }
+
+        // 원본에 확장변수가 없으면 원본에도 저장 (최초 입력)
+        if (!empty($evData) && empty($post['extra_vars'])) {
+            $pdo->prepare("UPDATE {$prefix}board_posts SET extra_vars=?, is_notice=?, is_secret=?, category_id=?, updated_at=NOW() WHERE id=?")
+                ->execute([$extraVarsJson, $isNotice, $isSecret, $categoryId, $postId]);
+        } else {
+            // is_notice, is_secret, category 등 메타 필드는 언어 무관하므로 원본에 반영
+            $pdo->prepare("UPDATE {$prefix}board_posts SET is_notice=?, is_secret=?, category_id=?, updated_at=NOW() WHERE id=?")
+                ->execute([$isNotice, $isSecret, $categoryId, $postId]);
+        }
+    }
 
     // 새 파일 업로드
     if (!empty($_FILES['files']['name'][0])) {
@@ -188,7 +232,7 @@ if ($action === 'delete') {
     $post = $post->fetch(PDO::FETCH_ASSOC);
     if (!$post) { echo json_encode(['success' => false, 'message' => '게시글을 찾을 수 없습니다.']); exit; }
 
-    if (!$currentUser || ($currentUser['id'] != $post['user_id'] && ($currentUser['role'] ?? '') !== 'admin')) {
+    if (!$currentUser || ($currentUser['id'] != $post['user_id'] && empty($_SESSION['admin_id']))) {
         echo json_encode(['success' => false, 'message' => '삭제 권한이 없습니다.']);
         exit;
     }

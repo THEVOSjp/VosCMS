@@ -180,7 +180,9 @@ try {
                                     <td class="px-4 py-3">
                                         <code class="text-xs bg-zinc-100 dark:bg-zinc-700 px-2 py-1 rounded text-zinc-700 dark:text-zinc-300">/<?= htmlspecialchars($board['slug']) ?></code>
                                     </td>
-                                    <td class="px-4 py-3 font-medium text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($board['title']) ?></td>
+                                    <td class="px-4 py-3 font-medium">
+                                        <a href="<?= $baseUrl ?>/<?= htmlspecialchars($board['slug']) ?>" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline"><?= htmlspecialchars($board['title']) ?></a>
+                                    </td>
                                     <td class="px-4 py-3 text-zinc-500 dark:text-zinc-400 text-xs">
                                         <?php if (!$board['is_active']): ?>
                                         <span class="text-red-500"><?= __('site.boards.inactive') ?></span>

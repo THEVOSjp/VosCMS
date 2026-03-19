@@ -85,7 +85,7 @@ if ($action === 'delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $file = $file->fetch(PDO::FETCH_ASSOC);
     if (!$file) { echo json_encode(['success' => false, 'message' => '파일을 찾을 수 없습니다.']); exit; }
 
-    if (!$currentUser || ($currentUser['id'] != $file['post_user_id'] && ($currentUser['role'] ?? '') !== 'admin')) {
+    if (!$currentUser || ($currentUser['id'] != $file['post_user_id'] && empty($_SESSION['admin_id']))) {
         echo json_encode(['success' => false, 'message' => '삭제 권한이 없습니다.']);
         exit;
     }

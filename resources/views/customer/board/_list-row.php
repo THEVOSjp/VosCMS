@@ -27,8 +27,8 @@ $postUrl = $boardUrl . '/' . $post['id'];
             <?php endif; ?>
             <?= htmlspecialchars($post['title']) ?>
         </a>
-        <?php if (!empty($post['source_locale']) && ($post['source_locale'] ?? '') !== ($currentLocale ?? 'ko')): ?>
-        <span class="ml-1 px-1 py-0.5 text-[10px] font-medium bg-zinc-200 dark:bg-zinc-600 text-zinc-500 dark:text-zinc-400 rounded uppercase"><?= $post['source_locale'] ?></span>
+        <?php if (!empty($post['original_locale']) && ($post['original_locale'] ?? 'ko') !== ($currentLocale ?? 'ko') && !isset($postTitleTranslations[$post['id']])): ?>
+        <span class="ml-1 px-1 py-0.5 text-[10px] font-medium bg-zinc-200 dark:bg-zinc-600 text-zinc-500 dark:text-zinc-400 rounded uppercase"><?= $post['original_locale'] ?></span>
         <?php endif; ?>
         <?php if (($post['comment_count'] ?? 0) > 0 && !in_array('comment_count', $listColumns)): ?>
         <span class="ml-1 text-xs text-blue-500">[<?= $post['comment_count'] ?>]</span>

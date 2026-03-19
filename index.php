@@ -443,6 +443,9 @@ if (empty($path) || $path === 'index.php') {
     if (preg_match('#^board/([a-z0-9_-]+)$#', $path, $m)) {
         $boardSlug = $m[1];
         $__pageFile = BASE_PATH . '/resources/views/customer/board/list.php';
+    } elseif (preg_match('#^board/([a-z0-9_-]+)/settings$#', $path, $m)) {
+        $boardSlug = $m[1];
+        $__pageFile = BASE_PATH . '/resources/views/customer/board/settings.php';
     } elseif (preg_match('#^board/([a-z0-9_-]+)/write$#', $path, $m)) {
         $boardSlug = $m[1];
         $__pageFile = BASE_PATH . '/resources/views/customer/board/write.php';

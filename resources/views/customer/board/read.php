@@ -59,24 +59,71 @@ if (($board['consultation'] ?? 0) && $currentUser && $currentUser['id'] != $post
 $pdo->prepare("UPDATE {$prefix}board_posts SET view_count = view_count + 1 WHERE id = ?")->execute([$postId]);
 $post['view_count']++;
 
-// 다국어 폴백: source_locale → en → original_locale
-$postSourceLocale = $post['source_locale'] ?? $currentLocale;
-$postOriginalLocale = $post['original_locale'] ?? $postSourceLocale;
+// 다국어 폴백: 현재 로케일 → en → 원본(board_posts)
+$postOriginalLocale = $post['original_locale'] ?? 'ko';
+$postDisplayLocale = $postOriginalLocale; // 실제 표시되는 언어
 
-if ($currentLocale !== $postSourceLocale) {
-    // 현재 언어 != source_locale → 폴백 체인으로 콘텐츠 검색
-    // 1. source_locale의 콘텐츠 (현재 DB에 저장된 값) → 기본 사용
-    // 2. 추후 rzx_translations에 번역이 있으면 우선 표시 가능
-    // 현재는 source_locale 콘텐츠를 그대로 표시
+if ($currentLocale !== $postOriginalLocale) {
+    // 현재 로케일 번역 조회
+    $trStmt = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = ? AND locale = ?");
+
+    $trStmt->execute(["board_post.{$postId}.title", $currentLocale]);
+    $trTitle = $trStmt->fetchColumn();
+    $trStmt->execute(["board_post.{$postId}.content", $currentLocale]);
+    $trContent = $trStmt->fetchColumn();
+
+    if ($trTitle !== false && $trContent !== false) {
+        // 현재 로케일 번역 있음
+        $post['title'] = $trTitle;
+        $post['content'] = $trContent;
+        $postDisplayLocale = $currentLocale;
+    } elseif ($currentLocale !== 'en') {
+        // 영어 폴백 시도
+        $trStmt->execute(["board_post.{$postId}.title", 'en']);
+        $enTitle = $trStmt->fetchColumn();
+        $trStmt->execute(["board_post.{$postId}.content", 'en']);
+        $enContent = $trStmt->fetchColumn();
+
+        if ($enTitle !== false && $enContent !== false) {
+            $post['title'] = $enTitle;
+            $post['content'] = $enContent;
+            $postDisplayLocale = 'en';
+        }
+        // 영어도 없으면 → 원본(board_posts) 그대로 표시
+    }
 }
 
 // 카테고리 정보
 $postCategory = $catMap[$post['category_id'] ?? 0] ?? null;
 
-// 댓글 로드
-$commentStmt = $pdo->prepare("SELECT * FROM {$prefix}board_comments WHERE post_id = ? AND status = 'published' ORDER BY created_at ASC");
+// 댓글 로드 (트리 구조 정렬: 부모 → 자식 순)
+$commentStmt = $pdo->prepare("SELECT * FROM {$prefix}board_comments WHERE post_id = ? AND status IN ('published','deleted') ORDER BY id ASC");
 $commentStmt->execute([$postId]);
-$comments = $commentStmt->fetchAll(PDO::FETCH_ASSOC);
+$allComments = $commentStmt->fetchAll(PDO::FETCH_ASSOC);
+
+// 트리 정렬: 재귀적으로 모든 깊이의 자식 댓글 배치
+$rootComments = [];
+$childMap = [];
+foreach ($allComments as $c) {
+    if (empty($c['parent_id'])) {
+        $rootComments[] = $c;
+    } else {
+        $childMap[(int)$c['parent_id']][] = $c;
+    }
+}
+$comments = [];
+function _appendCommentTree($parent, &$result, &$childMap) {
+    $result[] = $parent;
+    $pid = (int)$parent['id'];
+    if (isset($childMap[$pid])) {
+        foreach ($childMap[$pid] as $child) {
+            _appendCommentTree($child, $result, $childMap);
+        }
+    }
+}
+foreach ($rootComments as $c) {
+    _appendCommentTree($c, $comments, $childMap);
+}
 
 // 첨부파일 로드
 $fileStmt = $pdo->prepare("SELECT * FROM {$prefix}board_files WHERE post_id = ? ORDER BY id ASC");
@@ -133,11 +180,49 @@ $pageTitle = htmlspecialchars($post['title']) . ' - ' . $board['title'];
                 </div>
             </div>
 
+            <!-- 확장 변수 표시 (다국어 폴백: 현재 로케일 → en → 원본) -->
+            <?php
+            $evStmt = $pdo->prepare("SELECT * FROM {$prefix}board_extra_vars WHERE board_id = ? AND is_active = 1 ORDER BY sort_order");
+            $evStmt->execute([$boardId]);
+            $extraVarDefs = $evStmt->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($extraVarDefs)) {
+                // 원본 확장 변수
+                $evValues = !empty($post['extra_vars']) ? (json_decode($post['extra_vars'], true) ?: []) : [];
+
+                // 다국어 폴백: 현재 로케일 → en → 원본
+                if ($currentLocale !== $postOriginalLocale) {
+                    $trEvStmt = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = ? AND locale = ?");
+                    $trEvStmt->execute(["board_post.{$postId}.extra_vars", $currentLocale]);
+                    $trEv = $trEvStmt->fetchColumn();
+                    if ($trEv !== false) {
+                        $trEvData = json_decode($trEv, true);
+                        if ($trEvData) $evValues = array_merge($evValues, $trEvData); // 언어별 값으로 덮어쓰기
+                    } elseif ($currentLocale !== 'en') {
+                        $trEvStmt->execute(["board_post.{$postId}.extra_vars", 'en']);
+                        $enEv = $trEvStmt->fetchColumn();
+                        if ($enEv !== false) {
+                            $enEvData = json_decode($enEv, true);
+                            if ($enEvData) $evValues = array_merge($evValues, $enEvData);
+                        }
+                    }
+                }
+
+                $hasValues = false;
+                foreach ($evValues as $v) { if ($v !== '' && $v !== null) { $hasValues = true; break; } }
+                if ($hasValues) {
+                    require_once BASE_PATH . '/rzxlib/Core/Modules/ExtraVarRenderer.php';
+                    echo '<div class="px-6 py-3 border-b border-zinc-100 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-700/20">';
+                    \RzxLib\Core\Modules\ExtraVarRenderer::renderAll($extraVarDefs, $evValues, 'display');
+                    echo '</div>';
+                }
+            }
+            ?>
+
             <!-- 원문 언어 안내 -->
-            <?php if ($currentLocale !== $postSourceLocale): ?>
+            <?php if ($postDisplayLocale !== $postOriginalLocale && $currentUser && ($currentUser['id'] == $post['user_id'] || !empty($_SESSION['admin_id']))): ?>
             <div class="mx-6 mt-4 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-                <?= __('board.source_locale_notice', ['locale' => $postSourceLocale]) ?>
+                <?= __('board.source_locale_notice', ['locale' => $postDisplayLocale]) ?>
             </div>
             <?php endif; ?>
 
@@ -211,20 +296,62 @@ $pageTitle = htmlspecialchars($post['title']) . ' - ' . $board['title'];
             <!-- 댓글 목록 -->
             <div class="space-y-3" id="commentList">
                 <?php foreach ($comments as $comment): ?>
-                <div class="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-4 <?= ($comment['depth'] ?? 0) > 0 ? 'ml-8' : '' ?>" data-id="<?= $comment['id'] ?>">
+                <?php
+                $commentDepth = (int)($comment['depth'] ?? 0);
+                $maxDepth = (int)($board['comment_max_depth'] ?? 3);
+                if ($maxDepth < 1) $maxDepth = 1; // 최소 1단계 대댓글 허용
+                $mlClass = $commentDepth > 0 ? 'ml-' . min($commentDepth * 8, 16) : '';
+                ?>
+                <div class="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-4 <?= $mlClass ?>" data-id="<?= $comment['id'] ?>" data-depth="<?= $commentDepth ?>">
+                    <?php if ($commentDepth > 0): ?>
+                    <div class="flex items-center gap-1 mb-1">
+                        <svg class="w-3 h-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                    </div>
+                    <?php endif; ?>
                     <?php if ($comment['status'] === 'deleted'): ?>
                     <p class="text-sm text-zinc-400 italic"><?= htmlspecialchars($board['comment_delete_message'] ?? __('board.comment_deleted')) ?></p>
                     <?php else: ?>
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="flex items-center gap-2 text-sm">
-                            <span class="font-medium text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars($comment['nick_name']) ?></span>
-                            <span class="text-zinc-400 dark:text-zinc-500"><?= date('Y.m.d H:i', strtotime($comment['created_at'])) ?></span>
-                        </div>
-                        <?php if ($currentUser && ($currentUser['id'] == $comment['user_id'] || $isAdmin)): ?>
-                        <button type="button" class="btn-comment-delete text-xs text-red-500 hover:underline" data-id="<?= $comment['id'] ?>"><?= __('board.delete') ?></button>
-                        <?php endif; ?>
+                    <div class="flex items-center gap-2 text-sm mb-2">
+                        <span class="font-medium text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars($comment['nick_name']) ?></span>
+                        <span class="text-zinc-400 dark:text-zinc-500"><?= date('Y.m.d H:i', strtotime($comment['created_at'])) ?></span>
                     </div>
                     <div class="text-sm text-zinc-700 dark:text-zinc-300"><?= nl2br(htmlspecialchars($comment['content'])) ?></div>
+                    <!-- 댓글 액션: 추천/비추천/답글 -->
+                    <div class="flex items-center gap-3 mt-2 pt-2 border-t border-zinc-50 dark:border-zinc-700/50">
+                        <?php if ($board['comment_vote'] ?? 'use' !== 'none'): ?>
+                        <button type="button" class="btn-comment-like flex items-center gap-1 text-xs text-zinc-400 hover:text-blue-500 transition" data-id="<?= $comment['id'] ?>">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>
+                            <span class="cmt-like-count"><?= $comment['like_count'] ?? 0 ?></span>
+                        </button>
+                        <?php endif; ?>
+                        <?php if ($board['comment_downvote'] ?? 'use' !== 'none'): ?>
+                        <button type="button" class="btn-comment-dislike flex items-center gap-1 text-xs text-zinc-400 hover:text-red-500 transition" data-id="<?= $comment['id'] ?>">
+                            <svg class="w-3.5 h-3.5 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>
+                        </button>
+                        <?php endif; ?>
+                        <?php if ($commentDepth < $maxDepth && ($board['allow_comment'] ?? 1)): ?>
+                        <button type="button" class="btn-reply flex items-center gap-1 text-xs text-zinc-400 hover:text-blue-500 transition" data-id="<?= $comment['id'] ?>">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                            <?= __('board.reply') ?>
+                        </button>
+                        <?php endif; ?>
+                        <?php if ($currentUser && ($currentUser['id'] == $comment['user_id'] || $isAdmin)): ?>
+                        <button type="button" class="btn-comment-delete flex items-center gap-1 text-xs text-zinc-400 hover:text-red-500 transition ml-auto" data-id="<?= $comment['id'] ?>">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                        <?php endif; ?>
+                    </div>
+                    <!-- 대댓글 입력 폼 (숨김) -->
+                    <div class="reply-form hidden mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-700" id="replyForm-<?= $comment['id'] ?>">
+                        <div class="flex gap-2">
+                            <?php if (!$currentUser): ?>
+                            <input type="text" class="reply-nick w-24 px-2 py-1.5 text-xs bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg" placeholder="<?= __('board.nickname') ?>">
+                            <input type="password" class="reply-pw w-24 px-2 py-1.5 text-xs bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg" placeholder="<?= __('board.password') ?>">
+                            <?php endif; ?>
+                            <textarea class="reply-content flex-1 px-2 py-1.5 text-xs bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg resize-none" rows="2" placeholder="<?= __('board.reply_placeholder') ?>"></textarea>
+                            <button type="button" class="btn-reply-submit self-end px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg" data-parent="<?= $comment['id'] ?>"><?= __('board.submit_reply') ?></button>
+                        </div>
+                    </div>
                     <?php endif; ?>
                 </div>
                 <?php endforeach; ?>
@@ -338,6 +465,97 @@ document.querySelectorAll('.btn-comment-delete').forEach(btn => {
             if (data.success) location.reload();
             else alert(data.message || 'Error');
         } catch (err) { console.error(err); }
+    });
+});
+
+// 댓글 추천
+document.querySelectorAll('.btn-comment-like').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const cid = btn.dataset.id;
+        console.log('[BoardRead] 댓글 추천:', cid);
+        try {
+            const resp = await fetch(boardApiUrl + '/comments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                body: 'action=like&comment_id=' + cid + '&type=like'
+            });
+            const data = await resp.json();
+            if (data.success) {
+                btn.querySelector('.cmt-like-count').textContent = data.like_count ?? '';
+                btn.classList.add('text-blue-500');
+            } else alert(data.message || 'Error');
+        } catch (err) { console.error(err); }
+    });
+});
+
+// 댓글 비추천
+document.querySelectorAll('.btn-comment-dislike').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const cid = btn.dataset.id;
+        console.log('[BoardRead] 댓글 비추천:', cid);
+        try {
+            const resp = await fetch(boardApiUrl + '/comments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                body: 'action=like&comment_id=' + cid + '&type=dislike'
+            });
+            const data = await resp.json();
+            if (data.success) {
+                btn.classList.add('text-red-500');
+            } else alert(data.message || 'Error');
+        } catch (err) { console.error(err); }
+    });
+});
+
+// 답글 토글
+document.querySelectorAll('.btn-reply').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const cid = btn.dataset.id;
+        console.log('[BoardRead] 답글 토글:', cid);
+        // 다른 열린 폼 닫기
+        document.querySelectorAll('.reply-form').forEach(f => {
+            if (f.id !== 'replyForm-' + cid) f.classList.add('hidden');
+        });
+        const form = document.getElementById('replyForm-' + cid);
+        form.classList.toggle('hidden');
+        if (!form.classList.contains('hidden')) {
+            form.querySelector('.reply-content').focus();
+        }
+    });
+});
+
+// 대댓글 제출
+document.querySelectorAll('.btn-reply-submit').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const parentId = btn.dataset.parent;
+        const wrapper = document.getElementById('replyForm-' + parentId);
+        const content = wrapper.querySelector('.reply-content').value.trim();
+        if (!content) { wrapper.querySelector('.reply-content').focus(); return; }
+
+        const params = new URLSearchParams();
+        params.append('action', 'create');
+        params.append('post_id', postId);
+        params.append('board_id', boardId);
+        params.append('parent_id', parentId);
+        params.append('content', content);
+
+        // 비회원
+        const nickEl = wrapper.querySelector('.reply-nick');
+        const pwEl = wrapper.querySelector('.reply-pw');
+        if (nickEl) params.append('nick_name', nickEl.value);
+        if (pwEl) params.append('password', pwEl.value);
+
+        console.log('[BoardRead] 대댓글 작성, parent:', parentId);
+        try {
+            const resp = await fetch(boardApiUrl + '/comments', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: params
+            });
+            const data = await resp.json();
+            if (data.success) location.reload();
+            else alert(data.message || 'Error');
+        } catch (err) { console.error(err); alert('Error: ' + err.message); }
     });
 });
 </script>

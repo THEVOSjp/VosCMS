@@ -135,7 +135,7 @@ if ($action === 'delete') {
     $comment = $comment->fetch(PDO::FETCH_ASSOC);
     if (!$comment) { echo json_encode(['success' => false, 'message' => '댓글을 찾을 수 없습니다.']); exit; }
 
-    if (!$currentUser || ($currentUser['id'] != $comment['user_id'] && ($currentUser['role'] ?? '') !== 'admin')) {
+    if (!$currentUser || ($currentUser['id'] != $comment['user_id'] && empty($_SESSION['admin_id']))) {
         echo json_encode(['success' => false, 'message' => '삭제 권한이 없습니다.']);
         exit;
     }
@@ -155,6 +155,28 @@ if ($action === 'delete') {
     $pdo->prepare("UPDATE {$prefix}board_posts SET comment_count = ? WHERE id = ?")->execute([(int)$cc->fetchColumn(), $comment['post_id']]);
 
     echo json_encode(['success' => true, 'message' => '댓글이 삭제되었습니다.']);
+    exit;
+}
+
+// === LIKE / DISLIKE ===
+if ($action === 'like') {
+    $commentId = (int)($_POST['comment_id'] ?? 0);
+    $type = $_POST['type'] ?? 'like'; // like or dislike
+
+    if (!$commentId) {
+        echo json_encode(['success' => false, 'message' => '댓글 ID가 필요합니다.']);
+        exit;
+    }
+
+    if ($type === 'like') {
+        $pdo->prepare("UPDATE {$prefix}board_comments SET like_count = like_count + 1 WHERE id = ?")->execute([$commentId]);
+        $count = $pdo->prepare("SELECT like_count FROM {$prefix}board_comments WHERE id = ?");
+        $count->execute([$commentId]);
+        echo json_encode(['success' => true, 'like_count' => (int)$count->fetchColumn()]);
+    } else {
+        // dislike_count 컬럼이 없으면 like_count를 차감하지 않고 성공만 반환
+        echo json_encode(['success' => true]);
+    }
     exit;
 }
 

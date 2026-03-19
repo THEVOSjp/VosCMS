@@ -7,29 +7,34 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
 // 게시판 ID
 $boardId = (int)($_GET['id'] ?? 0);
+
+// embed 모드에서는 $pdo, $board가 이미 설정됨
+if (!isset($pdo)) {
+    try {
+        $pdo = new PDO(
+            'mysql:host=' . ($_ENV['DB_HOST'] ?? 'localhost') . ';dbname=' . ($_ENV['DB_DATABASE'] ?? 'rezlyx'),
+            $_ENV['DB_USERNAME'] ?? 'root',
+            $_ENV['DB_PASSWORD'] ?? '',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+        );
+    } catch (PDOException $e) {
+        die('DB connection error');
+    }
+}
+$prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+
+if (!$boardId && !empty($board['id'])) $boardId = (int)$board['id'];
 if (!$boardId) {
     header('Location: ' . $adminUrl . '/site/boards');
     exit;
 }
 
-// DB 연결
-try {
-    $pdo = new PDO(
-        'mysql:host=' . ($_ENV['DB_HOST'] ?? 'localhost') . ';dbname=' . ($_ENV['DB_DATABASE'] ?? 'rezlyx'),
-        $_ENV['DB_USERNAME'] ?? 'root',
-        $_ENV['DB_PASSWORD'] ?? '',
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-    );
-} catch (PDOException $e) {
-    die('DB connection error');
+// 게시판 데이터 로드 (embed 모드에서 이미 있으면 스킵)
+if (!isset($board) || empty($board)) {
+    $stmt = $pdo->prepare("SELECT * FROM {$prefix}boards WHERE id = ?");
+    $stmt->execute([$boardId]);
+    $board = $stmt->fetch(PDO::FETCH_ASSOC);
 }
-
-$prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
-
-// 게시판 데이터 로드
-$stmt = $pdo->prepare("SELECT * FROM {$prefix}boards WHERE id = ?");
-$stmt->execute([$boardId]);
-$board = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$board) {
     header('Location: ' . $adminUrl . '/site/boards');
@@ -102,7 +107,9 @@ $tabs = [
         }
     </script>
 </head>
+<?php $embedMode = !empty($_GET['embed']); ?>
 <body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
+    <?php if (!$embedMode): ?>
     <div class="flex">
         <?php include __DIR__ . '/../partials/admin-sidebar.php'; ?>
         <main class="flex-1 ml-64">
@@ -111,6 +118,9 @@ $tabs = [
             include __DIR__ . '/../partials/admin-topbar.php';
             ?>
             <div class="p-6">
+    <?php else: ?>
+    <div class="p-4">
+    <?php endif; ?>
                 <!-- Header -->
                 <div class="mb-6">
                 <?php
@@ -138,7 +148,12 @@ $headerActions .= '<a href="' . $adminUrl . '/site/boards" class="px-4 py-2 text
                     <div class="border-b border-zinc-200 dark:border-zinc-700">
                         <nav class="flex -mb-px overflow-x-auto">
                             <?php foreach ($tabs as $tabKey => $tab): ?>
-                            <a href="<?= $adminUrl ?>/site/boards/edit?id=<?= $boardId ?>&tab=<?= $tabKey ?>"
+                            <?php
+                            $tabUrl = $embedMode
+                                ? $baseUrl . '/board/' . htmlspecialchars($board['slug']) . '/settings?tab=' . $tabKey
+                                : $adminUrl . '/site/boards/edit?id=' . $boardId . '&tab=' . $tabKey;
+                            ?>
+                            <a href="<?= $tabUrl ?>"
                                class="px-5 py-3.5 text-sm font-medium border-b-2 whitespace-nowrap transition <?= $currentTab === $tabKey
                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                                    : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:border-zinc-300' ?>">
@@ -169,8 +184,14 @@ $headerActions .= '<a href="' . $adminUrl . '/site/boards" class="px-4 py-2 text
                 }
                 ?>
             </div>
+    <?php if (!$embedMode): ?>
         </main>
     </div>
+    <?php else: ?>
+    </div>
+    <?php endif; ?>
     <?php include __DIR__ . '/../components/multilang-modal.php'; ?>
+<?php if (!$embedMode): ?>
 </body>
 </html>
+<?php endif; ?>
