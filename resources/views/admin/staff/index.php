@@ -396,7 +396,7 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                         $nameI18n = $s['name_i18n'] ? json_decode($s['name_i18n'], true) : [];
                         $bioI18n = $s['bio_i18n'] ? json_decode($s['bio_i18n'], true) : [];
                     ?>
-                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm overflow-hidden group <?= !$s['is_active'] ? 'opacity-60' : '' ?>" id="staff-card-<?= $s['id'] ?>">
+                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm overflow-hidden group flex flex-col <?= !$s['is_active'] ? 'opacity-60' : '' ?>" id="staff-card-<?= $s['id'] ?>">
                         <!-- 배너 헤더 -->
                         <div class="relative h-20 bg-gradient-to-r from-blue-500 to-purple-500 overflow-hidden">
                             <?php if (!empty($s['banner'])): ?>
@@ -412,7 +412,7 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                                 <?php endif; ?>
                             </div>
                         </div>
-                        <div class="relative px-5 pb-4">
+                        <div class="relative px-5 pb-4 flex-1">
                             <!-- 아바타 (배너 아래 겹침) -->
                             <div class="absolute -top-7 left-5 w-14 h-14 rounded-full bg-white dark:bg-zinc-800 border-2 border-white dark:border-zinc-800 shadow overflow-hidden">
                                 <?php if ($s['avatar']): ?>
@@ -459,7 +459,7 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                             </div>
                         </div>
                         <!-- 액션 바 -->
-                        <div class="px-5 py-3 bg-zinc-50 dark:bg-zinc-700/30 border-t border-zinc-100 dark:border-zinc-700 flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="px-5 py-3 bg-zinc-50 dark:bg-zinc-700/30 border-t border-zinc-100 dark:border-zinc-700 flex justify-end gap-1 mt-auto">
                             <button type="button" onclick='openStaffModal(<?= htmlspecialchars(json_encode([
                                 "id" => $s["id"], "user_id" => $s["user_id"], "name" => $s["name"], "email" => $s["email"],
                                 "phone" => $s["phone"], "bio" => $s["bio"], "avatar" => $s["avatar"],
