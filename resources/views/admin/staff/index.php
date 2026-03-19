@@ -37,6 +37,7 @@ try {
     // POST 처리
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Content-Type: application/json; charset=utf-8');
+        try {
         $action = $_POST['action'] ?? '';
 
         // 사진 업로드 헬퍼
@@ -280,6 +281,10 @@ try {
 
         echo json_encode(['success' => false, 'message' => 'Unknown action']);
         exit;
+        } catch (\Throwable $e) {
+            echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
+            exit;
+        }
     }
 
     // 스태프 목록 로드
