@@ -258,3 +258,23 @@ ALTER TABLE `rzx_staff` ADD COLUMN `greeting_after` TEXT DEFAULT NULL;
 
 -- === rzx_reservations 컬럼 확장 ===
 ALTER TABLE `rzx_reservations` MODIFY COLUMN `reservation_number` VARCHAR(50) NOT NULL;
+
+-- === rzx_reservations 누락 컬럼 ===
+ALTER TABLE `rzx_reservations` ADD COLUMN `source` VARCHAR(20) NOT NULL DEFAULT 'online';
+ALTER TABLE `rzx_reservations` ADD COLUMN `payment_status` VARCHAR(20) NOT NULL DEFAULT 'unpaid';
+ALTER TABLE `rzx_reservations` ADD COLUMN `paid_amount` DECIMAL(12,2) NOT NULL DEFAULT 0.00;
+
+-- === rzx_admin_memos 테이블 ===
+CREATE TABLE IF NOT EXISTS `rzx_admin_memos` (
+  `id` char(36) NOT NULL,
+  `user_id` int(10) unsigned NOT NULL,
+  `reservation_id` int(10) unsigned DEFAULT NULL,
+  `reservation_number` varchar(50) DEFAULT NULL,
+  `admin_id` int(10) unsigned NOT NULL,
+  `content` text NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_reservation_id` (`reservation_id`),
+  KEY `idx_admin_id` (`admin_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
