@@ -285,3 +285,25 @@ ALTER TABLE `rzx_reservations` MODIFY COLUMN `service_id` CHAR(36) DEFAULT NULL;
 
 -- === rzx_staff 노출 설정 ===
 ALTER TABLE `rzx_staff` ADD COLUMN `is_visible` TINYINT(1) DEFAULT 1;
+
+-- === 번들 테이블 ===
+CREATE TABLE IF NOT EXISTS `rzx_service_bundles` (
+  `id` char(36) NOT NULL,
+  `name` varchar(200) NOT NULL,
+  `description` text DEFAULT NULL,
+  `bundle_price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `display_order` int unsigned NOT NULL DEFAULT 0,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `image` varchar(500) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `rzx_staff_bundles` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `staff_id` int unsigned NOT NULL,
+  `bundle_id` char(36) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_staff_bundle` (`staff_id`,`bundle_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

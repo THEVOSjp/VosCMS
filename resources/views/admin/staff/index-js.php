@@ -832,14 +832,23 @@
 
         try {
             var res = await fetch(STAFF_URL, { method: 'POST', body: formData });
-            var result = await res.json();
+            var text = await res.text();
+            console.log('[StaffManage] Raw response:', text.substring(0, 200));
+            var result;
+            try { result = JSON.parse(text); } catch(pe) {
+                console.error('[StaffManage] JSON parse failed, response:', text.substring(0, 500));
+                showAlert('서버 응답 오류', 'error');
+                btn.disabled = false;
+                btn.textContent = '<?= __('admin.common.save') ?>';
+                return;
+            }
             console.log('[StaffManage] Response:', result);
             if (result.success) {
                 showAlert(result.message, 'success');
                 closeStaffModal();
                 setTimeout(function() { location.reload(); }, 500);
             } else {
-                showAlert(result.message, 'error');
+                showAlert(result.message || 'Error', 'error');
             }
         } catch (err) {
             console.error('[StaffManage] Error:', err);
