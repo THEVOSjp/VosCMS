@@ -282,3 +282,6 @@ CREATE TABLE IF NOT EXISTS `rzx_admin_memos` (
 -- === rzx_reservations FK 제거 ===
 ALTER TABLE `rzx_reservations` DROP FOREIGN KEY `fk_reservation_service`;
 ALTER TABLE `rzx_reservations` MODIFY COLUMN `service_id` CHAR(36) DEFAULT NULL;
+
+-- === rzx_staff 노출 설정 ===
+ALTER TABLE `rzx_staff` ADD COLUMN `is_visible` TINYINT(1) DEFAULT 1;
