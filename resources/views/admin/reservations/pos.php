@@ -63,6 +63,11 @@ $reservationList = $posData['tab_data']['reservations'];
 $waitingList     = $posData['tab_data']['waiting'];
 $completedCount  = $posData['completed'];
 
+// 스태프 목록 (배정용)
+$posStaffList = $pdo->prepare("SELECT id, name, avatar FROM {$prefix}staff WHERE is_active = 1 ORDER BY sort_order");
+$posStaffList->execute();
+$posStaffList = $posStaffList->fetchAll(PDO::FETCH_ASSOC);
+
 include __DIR__ . '/_head.php';
 ?>
 
@@ -169,7 +174,12 @@ include __DIR__ . '/_head.php';
                             <span class="w-6 h-6 flex items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-bold flex-shrink-0"><?= $wIdx ?></span>
                             <div>
                                 <p class="text-xs font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($r['customer_name'] ?? '') ?></p>
-                                <p class="text-[10px] text-zinc-400"><?= substr($r['start_time'] ?? '', 0, 5) ?> · <?= htmlspecialchars($r['service_name'] ?? '') ?></p>
+                                <p class="text-[10px] text-zinc-400">
+                                    <?= substr($r['start_time'] ?? '', 0, 5) ?> · <?= htmlspecialchars($r['service_name'] ?? '') ?>
+                                    <?php if (empty($r['staff_id'])): ?>
+                                    <span class="ml-1 px-1 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded text-[9px] font-medium"><?= __('reservations.pos_unassigned') ?></span>
+                                    <?php endif; ?>
+                                </p>
                             </div>
                         </div>
                         <?= statusBadge($st) ?>

@@ -85,6 +85,18 @@ const POS = {
                     </div>
                 </div>
                 ${r.notes ? '<div class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900 p-2 rounded-lg">' + this.escHtml(r.notes) + '</div>' : ''}
+                ${!r.staff_id ? `<div class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                    <p class="text-xs font-medium text-amber-700 dark:text-amber-300 mb-2"><?= __('reservations.pos_assign_staff') ?></p>
+                    <div class="flex gap-2">
+                        <select id="assignStaffSelect" class="flex-1 px-2 py-1.5 text-xs bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200">
+                            <option value=""><?= __('reservations.pos_select_staff') ?></option>
+                            <?php foreach ($posStaffList as $_ps): ?>
+                            <option value="<?= $_ps['id'] ?>"><?= htmlspecialchars($_ps['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button onclick="POS.assignStaff('${r.id}')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs transition"><?= __('reservations.pos_assign') ?></button>
+                    </div>
+                </div>` : `<div class="text-xs text-zinc-500"><span class="text-zinc-400"><?= __('reservations.pos_staff') ?>:</span> ${this.escHtml(r.staff_name || '-')}</div>`}
             </div>`;
 
         this._detailData = r;
@@ -120,6 +132,27 @@ const POS = {
         if (typeof window['resetResForm_posCheckinForm'] === 'function') {
             window['resetResForm_posCheckinForm']();
         }
+    },
+
+    // ─── 스태프 배정 ───
+    async assignStaff(reservationId) {
+        const staffId = document.getElementById('assignStaffSelect')?.value;
+        if (!staffId) { alert('<?= __('reservations.pos_select_staff') ?>'); return; }
+        console.log('[POS] Assign staff:', reservationId, staffId);
+        try {
+            const fd = new FormData();
+            fd.append('action', 'assign-staff');
+            fd.append('reservation_id', reservationId);
+            fd.append('staff_id', staffId);
+            const resp = await fetch(POS_API_URL, { method: 'POST', body: fd });
+            const data = await resp.json();
+            if (data.success) {
+                this.closeDetail();
+                location.reload();
+            } else {
+                alert(data.message || 'Error');
+            }
+        } catch (err) { console.error('[POS] Assign error:', err); alert('Error'); }
     },
 
     // ─── 서비스 시작 (대기 → 이용중) ───
