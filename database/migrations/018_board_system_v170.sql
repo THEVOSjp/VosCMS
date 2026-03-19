@@ -278,3 +278,7 @@ CREATE TABLE IF NOT EXISTS `rzx_admin_memos` (
   KEY `idx_reservation_id` (`reservation_id`),
   KEY `idx_admin_id` (`admin_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- === rzx_reservations FK 제거 ===
+ALTER TABLE `rzx_reservations` DROP FOREIGN KEY `fk_reservation_service`;
+ALTER TABLE `rzx_reservations` MODIFY COLUMN `service_id` CHAR(36) DEFAULT NULL;
