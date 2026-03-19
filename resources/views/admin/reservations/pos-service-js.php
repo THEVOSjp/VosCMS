@@ -412,22 +412,8 @@ Object.assign(POS, {
             const data = await resp.json();
             console.log('[POS] Assign staff result:', data);
             if (data.success) {
-                console.log('[POS] Staff assigned, updating header directly...');
-                document.getElementById('posAssignStaffArea').classList.add('hidden');
-
-                // posAllStaff에서 선택된 스태프 찾아서 직접 헤더 갱신
-                const newStaffId = selected.value;
-                const staffInfo = posAllStaff.find(s => String(s.id) === String(newStaffId));
-                if (staffInfo) {
-                    // renderStaffHeader에 필요한 형식으로 가짜 services 배열 생성
-                    const fakeServices = [{ staff_id: staffInfo.id, staff_name: staffInfo.name, staff_avatar: staffInfo.avatar || staffInfo.profile_image || '' }];
-                    this.renderStaffHeader(fakeServices, { designation_fee: 0 });
-                    console.log('[POS] Header updated to:', staffInfo.name);
-                }
-                this._currentStaffId = newStaffId;
-
-                btn.textContent = '<?= __('reservations.pos_assign_staff_submit') ?>';
-                btn.disabled = false;
+                console.log('[POS] Staff assigned, reloading...');
+                location.reload();
             } else {
                 alert(data.message || '스태프 배정 실패');
                 btn.disabled = false;
