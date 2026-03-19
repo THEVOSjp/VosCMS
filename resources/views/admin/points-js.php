@@ -208,6 +208,14 @@ async function recalcPoints() {
     showMsg(data.success ? 'success' : 'error', data.message);
 }
 
+async function resetSettingsToDefault() {
+    if (!confirm('<?= __("points.reset_settings_confirm") ?>')) return;
+    console.log('[Points] resetting settings to default');
+    const data = await ptFetch({ action: 'reset_settings' });
+    showMsg(data.success ? 'success' : 'error', data.message);
+    if (data.success) setTimeout(() => location.reload(), 1500);
+}
+
 async function resetAllPoints() {
     if (!confirm('<?= __("points.reset_all_confirm") ?>')) return;
     console.log('[Points] resetting all');

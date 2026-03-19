@@ -264,6 +264,8 @@ return [
         'set_default' => 'Set as Default',
         'drag_to_reorder' => 'Drag to reorder',
         'multilang' => 'Multilingual input',
+        'reset_default' => 'Reset Groups',
+        'confirm_reset' => "Reset all groups to default data (Normal/Silver/Gold/Platinum/VIP/VVIP/Staff)?\n\nAll existing groups will be deleted and members will be reset to Normal.\nMultilingual translations will also be reset.",
         'member_count' => 'Members',
         'confirm_delete' => 'Delete this group? Members in this group will be moved to the default group.',
         'slug_desc' => 'Only lowercase letters, numbers, and underscores. Leave empty to auto-generate.',
@@ -278,7 +280,7 @@ return [
             'benefits' => 'Benefits',
         ],
         'placeholder' => ['name' => 'Enter group name', 'slug' => 'Slug (auto-generated)', 'benefits' => 'Enter benefits for this grade'],
-        'success' => ['created' => 'Group has been created.', 'updated' => 'Group has been updated.', 'deleted' => 'Group has been deleted.', 'default_changed' => 'Default group has been changed.', 'reordered' => 'Group order has been changed.'],
+        'success' => ['created' => 'Group has been created.', 'updated' => 'Group has been updated.', 'deleted' => 'Group has been deleted.', 'default_changed' => 'Default group has been changed.', 'reordered' => 'Group order has been changed.', 'reset' => 'Groups have been reset to default.'],
         'error' => [
             'name_required' => 'Please enter a group name.',
             'slug_duplicate' => 'This slug is already in use.',

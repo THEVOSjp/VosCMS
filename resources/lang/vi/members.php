@@ -264,6 +264,8 @@ return [
         'set_default' => 'Đặt làm mặc định',
         'drag_to_reorder' => 'Kéo để sắp xếp lại',
         'multilang' => 'Nhập đa ngôn ngữ',
+        'reset_default' => 'Đặt lại nhóm',
+        'confirm_reset' => "Đặt lại tất cả nhóm về dữ liệu mặc định?\n\nTất cả nhóm sẽ bị xóa và thành viên được đặt lại thành Thường.",
         'member_count' => 'Thành viên',
         'confirm_delete' => 'Xóa nhóm này? Thành viên sẽ được chuyển sang nhóm mặc định.',
         'slug_desc' => 'Chỉ chữ thường, số và dấu gạch dưới. Để trống sẽ tự động tạo.',
@@ -278,7 +280,7 @@ return [
             'benefits' => 'Quyền lợi',
         ],
         'placeholder' => ['name' => 'Nhập tên nhóm', 'slug' => 'Slug (tự động)', 'benefits' => 'Nhập quyền lợi'],
-        'success' => ['created' => 'Đã tạo nhóm.', 'updated' => 'Đã cập nhật nhóm.', 'deleted' => 'Đã xóa nhóm.', 'default_changed' => 'Đã thay đổi nhóm mặc định.', 'reordered' => 'Thứ tự nhóm đã được thay đổi.'],
+        'success' => ['created' => 'Đã tạo nhóm.', 'updated' => 'Đã cập nhật nhóm.', 'deleted' => 'Đã xóa nhóm.', 'default_changed' => 'Đã thay đổi nhóm mặc định.', 'reordered' => 'Thứ tự nhóm đã được thay đổi.', 'reset' => 'Nhóm đã được đặt lại về mặc định.'],
         'error' => [
             'name_required' => 'Vui lòng nhập tên nhóm.',
             'slug_duplicate' => 'Slug này đã được sử dụng.',

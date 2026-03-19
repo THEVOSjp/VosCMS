@@ -351,11 +351,17 @@ $exceptNotice = ['read_document', 'read_document_author'];
         <h2 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('points.point_reset') ?></h2>
         <svg class="w-5 h-5 text-zinc-400 sec-arrow transition-transform" data-section="secReset" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
     </div>
-    <div id="secReset" class="p-5 space-y-4">
-        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <p class="text-sm text-red-700 dark:text-red-300"><?= __('points.reset_warning') ?></p>
+    <div id="secReset" class="p-5 space-y-6">
+        <!-- 설정 초기화 -->
+        <div class="border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4">
+            <h4 class="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1"><?= __('points.reset_settings') ?></h4>
+            <p class="text-xs text-amber-700 dark:text-amber-400 mb-3"><?= __('points.reset_settings_desc') ?></p>
+            <button onclick="resetSettingsToDefault()" class="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 text-sm"><?= __('points.reset_settings_btn') ?></button>
         </div>
-        <div>
+        <!-- 회원 포인트 초기화 -->
+        <div class="border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
+            <h4 class="text-sm font-semibold text-red-800 dark:text-red-300 mb-1"><?= __('points.point_reset') ?></h4>
+            <p class="text-xs text-red-700 dark:text-red-400 mb-3"><?= __('points.reset_warning') ?></p>
             <button onclick="resetAllPoints()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"><?= __('points.reset_all') ?></button>
         </div>
     </div>

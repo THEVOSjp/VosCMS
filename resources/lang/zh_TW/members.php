@@ -264,6 +264,8 @@ return [
         'set_default' => '設為預設',
         'drag_to_reorder' => '拖曳以重新排序',
         'multilang' => '多語言輸入',
+        'reset_default' => '重置群組',
+        'confirm_reset' => "將所有群組重置為預設資料？\n\n所有群組將被刪除，會員將重置為一般。",
         'member_count' => '會員數',
         'confirm_delete' => '確定刪除此分組？該分組的會員將移至預設分組。',
         'slug_desc' => '僅限小寫字母、數字和底線。留空將自動產生。',
@@ -278,7 +280,7 @@ return [
             'benefits' => '權益說明',
         ],
         'placeholder' => ['name' => '請輸入分組名稱', 'slug' => '標識（自動產生）', 'benefits' => '請輸入該等級的權益'],
-        'success' => ['created' => '分組已建立。', 'updated' => '分組已更新。', 'deleted' => '分組已刪除。', 'default_changed' => '預設分組已變更。', 'reordered' => '群組順序已變更。'],
+        'success' => ['created' => '分組已建立。', 'updated' => '分組已更新。', 'deleted' => '分組已刪除。', 'default_changed' => '預設分組已變更。', 'reordered' => '群組順序已變更。', 'reset' => '群組已重置為預設值。'],
         'error' => [
             'name_required' => '請輸入分組名稱。',
             'slug_duplicate' => '此標識已被使用。',

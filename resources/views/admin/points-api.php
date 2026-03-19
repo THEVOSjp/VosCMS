@@ -125,6 +125,93 @@ if ($action === 'recalc') {
     exit;
 }
 
+// === 설정 초기화 (기본값 복원) ===
+if ($action === 'reset_settings') {
+    $pdo->beginTransaction();
+    try {
+        // 기본 설정값
+        $defaults = [
+            'point_module_enabled' => 'N',
+            'point_name' => 'point',
+            'point_max_level' => '50',
+            'point_level_icon' => 'default',
+            'point_disable_download' => 'N',
+            'point_disable_read' => 'N',
+            'point_exchange_enabled' => 'N',
+            'point_exchange_rate' => '1',
+            'point_exchange_unit' => '1000',
+            'point_exchange_min' => '1000',
+            'point_weight_payment' => '3',
+            'point_weight_activity' => '1',
+            'point_expression' => 'Math.pow(l, 2) * 250',
+            'point_group_reset' => 'replace',
+            'point_group_ratchet' => 'demote',
+            // 포인트 부여/차감
+            'point_signup' => '10',
+            'point_login' => '5',
+            'point_insert_document' => '10',
+            'point_insert_comment' => '5',
+            'point_upload_file' => '5',
+            'point_download_file' => '-5',
+            'point_read_document' => '0',
+            'point_voter' => '0',
+            'point_blamer' => '0',
+            'point_voter_comment' => '0',
+            'point_blamer_comment' => '0',
+            'point_download_file_author' => '0',
+            'point_read_document_author' => '0',
+            'point_voted' => '0',
+            'point_blamed' => '0',
+            'point_voted_comment' => '0',
+            'point_blamed_comment' => '0',
+            // 그룹 연동 (기본 그룹 ID 기준)
+            'point_group_c62bc9ff-13dc-11f1-8b4f-8447092025d9' => '1',
+            'point_group_c998e8e0b3805ed51bfb11c7bf68c145a987' => '11',
+            'point_group_0f4ed0fb2b6c6087c2a73c92ffc8c11e05ef' => '21',
+            'point_group_5b9ac4fb8281987c5994b3ec40ba1f912b31' => '31',
+            'point_group_b53dc7275b348c3526bc1921c84e0b2e9f88' => '41',
+            'point_group_6e3582138e58938eac9cb3d3e7845710bb1e' => '48',
+            'point_group_c3df1c9720a647c7d91c0c804e66ac044af9' => '0',
+        ];
+
+        $stmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+        foreach ($defaults as $k => $v) {
+            $stmt->execute([$k, $v]);
+        }
+
+        // 레벨 포인트 테이블 재생성
+        $pdo->exec("DELETE FROM {$prefix}point_levels");
+        $maxLevel = 50;
+        $lvlIns = $pdo->prepare("INSERT INTO {$prefix}point_levels (level, point, group_id) VALUES (?, ?, ?)");
+
+        // 그룹 매핑: 레벨 범위 → 그룹 ID
+        $groupMap = [
+            [1, 9, 'c62bc9ff-13dc-11f1-8b4f-8447092025d9'],    // 일반
+            [10, 20, 'c998e8e0b3805ed51bfb11c7bf68c145a987'],   // 실버
+            [21, 30, '0f4ed0fb2b6c6087c2a73c92ffc8c11e05ef'],   // 골드
+            [31, 40, '5b9ac4fb8281987c5994b3ec40ba1f912b31'],   // 플래티넘
+            [41, 47, 'b53dc7275b348c3526bc1921c84e0b2e9f88'],   // VIP
+            [48, 50, '6e3582138e58938eac9cb3d3e7845710bb1e'],   // VVIP
+        ];
+
+        for ($i = 1; $i <= $maxLevel; $i++) {
+            $pt = (int)(pow($i, 2) * 250);
+            $gid = null;
+            foreach ($groupMap as $gm) {
+                if ($i >= $gm[0] && $i <= $gm[1]) { $gid = $gm[2]; break; }
+            }
+            $lvlIns->execute([$i, $pt, $gid]);
+        }
+
+        $pdo->commit();
+        echo json_encode(['success' => true, 'message' => __('points.reset_settings_done')]);
+    } catch (\Exception $e) {
+        $pdo->rollBack();
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
 // === 전체 초기화 ===
 if ($action === 'reset_all') {
     $pdo->exec("UPDATE {$prefix}member_points SET point = 0, balance = 0, total_accumulated = 0, level = 1");

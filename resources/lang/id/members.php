@@ -264,6 +264,8 @@ return [
         'set_default' => 'Jadikan Default',
         'drag_to_reorder' => 'Seret untuk mengubah urutan',
         'multilang' => 'Input multibahasa',
+        'reset_default' => 'Reset Grup',
+        'confirm_reset' => "Reset semua grup ke data default?\n\nSemua grup akan dihapus dan anggota direset ke Normal.",
         'member_count' => 'Anggota',
         'confirm_delete' => 'Hapus grup ini? Anggota akan dipindahkan ke grup default.',
         'slug_desc' => 'Hanya huruf kecil, angka, dan garis bawah. Kosongkan untuk otomatis.',
@@ -278,7 +280,7 @@ return [
             'benefits' => 'Manfaat',
         ],
         'placeholder' => ['name' => 'Masukkan nama grup', 'slug' => 'Slug (otomatis)', 'benefits' => 'Masukkan manfaat'],
-        'success' => ['created' => 'Grup dibuat.', 'updated' => 'Grup diperbarui.', 'deleted' => 'Grup dihapus.', 'default_changed' => 'Grup default diubah.', 'reordered' => 'Urutan grup telah diubah.'],
+        'success' => ['created' => 'Grup dibuat.', 'updated' => 'Grup diperbarui.', 'deleted' => 'Grup dihapus.', 'default_changed' => 'Grup default diubah.', 'reordered' => 'Urutan grup telah diubah.', 'reset' => 'Grup telah direset ke default.'],
         'error' => [
             'name_required' => 'Masukkan nama grup.',
             'slug_duplicate' => 'Slug ini sudah digunakan.',

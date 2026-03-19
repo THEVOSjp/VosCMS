@@ -73,6 +73,8 @@ return [
         'set_default' => 'Varsayılan olarak ayarla',
         'drag_to_reorder' => 'Sıralamayı değiştirmek için sürükleyin',
         'multilang' => 'Çok dilli giriş',
+        'reset_default' => 'Grupları sıfırla',
+        'confirm_reset' => "Tüm gruplar varsayılan verilere sıfırlansın mı?\n\nTüm gruplar silinecek ve üyeler Normal'e sıfırlanacak.",
         'member_count' => 'Üyeler',
         'confirm_delete' => 'Bu grubu silmek istiyor musunuz? Üyeler varsayılan gruba taşınacaktır.',
         'slug_desc' => 'Sadece küçük harf, rakam ve alt çizgi. Boş bırakılırsa otomatik oluşturulur.',
@@ -87,7 +89,7 @@ return [
             'benefits' => 'Avantajlar',
         ],
         'placeholder' => ['name' => 'Grup adı girin', 'slug' => 'Slug (otomatik)', 'benefits' => 'Avantajları girin'],
-        'success' => ['created' => 'Grup oluşturuldu.', 'updated' => 'Grup güncellendi.', 'deleted' => 'Grup silindi.', 'default_changed' => 'Varsayılan grup değiştirildi.', 'reordered' => 'Grup sırası değiştirildi.'],
+        'success' => ['created' => 'Grup oluşturuldu.', 'updated' => 'Grup güncellendi.', 'deleted' => 'Grup silindi.', 'default_changed' => 'Varsayılan grup değiştirildi.', 'reordered' => 'Grup sırası değiştirildi.', 'reset' => 'Gruplar varsayılan değerlere sıfırlandı.'],
         'error' => [
             'name_required' => 'Lütfen grup adı girin.',
             'slug_duplicate' => 'Bu slug zaten kullanılıyor.',
