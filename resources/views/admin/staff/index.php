@@ -396,24 +396,35 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                         $nameI18n = $s['name_i18n'] ? json_decode($s['name_i18n'], true) : [];
                         $bioI18n = $s['bio_i18n'] ? json_decode($s['bio_i18n'], true) : [];
                     ?>
-                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm overflow-hidden group" id="staff-card-<?= $s['id'] ?>">
-                        <div class="p-5">
-                            <div class="flex items-start gap-4">
-                                <!-- 아바타 -->
-                                <div class="w-16 h-16 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-xl font-bold text-zinc-500 overflow-hidden shrink-0">
-                                    <?php if ($s['avatar']): ?>
-                                    <img src="<?= htmlspecialchars($s['avatar']) ?>" class="w-full h-full object-cover" alt="">
-                                    <?php else: ?>
-                                    <?= mb_substr($s['name'], 0, 1) ?>
-                                    <?php endif; ?>
+                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm overflow-hidden group <?= !$s['is_active'] ? 'opacity-60' : '' ?>" id="staff-card-<?= $s['id'] ?>">
+                        <!-- 배너 헤더 -->
+                        <div class="relative h-20 bg-gradient-to-r from-blue-500 to-purple-500 overflow-hidden">
+                            <?php if (!empty($s['banner'])): ?>
+                            <img src="<?= htmlspecialchars($s['banner']) ?>" class="w-full h-full object-cover" alt="">
+                            <?php endif; ?>
+                            <!-- 상태 배지 -->
+                            <div class="absolute top-2 right-2 flex gap-1">
+                                <?php if (!$s['is_active']): ?>
+                                <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-red-600 text-white shadow"><?= __('staff.badge_inactive') ?? '비활성' ?></span>
+                                <?php endif; ?>
+                                <?php if (!($s['is_visible'] ?? 1)): ?>
+                                <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-zinc-800/70 text-white shadow"><?= __('staff.badge_hidden') ?? '비노출' ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <!-- 아바타 (배너 위 겹침) -->
+                            <div class="absolute -bottom-6 left-4 w-14 h-14 rounded-full bg-white dark:bg-zinc-800 border-2 border-white dark:border-zinc-800 shadow overflow-hidden">
+                                <?php if ($s['avatar']): ?>
+                                <img src="<?= htmlspecialchars($s['avatar']) ?>" class="w-full h-full object-cover" alt="">
+                                <?php else: ?>
+                                <div class="w-full h-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-lg font-bold text-zinc-500"><?= mb_substr($s['name'], 0, 1) ?></div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="pt-8 px-5 pb-4">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-base font-semibold text-zinc-900 dark:text-white truncate"><?= htmlspecialchars($s['name']) ?></h3>
                                 </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="text-base font-semibold text-zinc-900 dark:text-white truncate"><?= htmlspecialchars($s['name']) ?></h3>
-                                        <?php if (!$s['is_active']): ?>
-                                        <span class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">비활성</span>
-                                        <?php endif; ?>
-                                    </div>
                                     <?php if ($s['position_name']): ?>
                                     <p class="text-xs text-blue-600 dark:text-blue-400 mt-0.5"><?= htmlspecialchars($s['position_name']) ?></p>
                                     <?php endif; ?>
@@ -444,7 +455,6 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                                     </span>
                                     <?php endif; ?>
                                 </div>
-                            </div>
                         </div>
                         <!-- 액션 바 -->
                         <div class="px-5 py-3 bg-zinc-50 dark:bg-zinc-700/30 border-t border-zinc-100 dark:border-zinc-700 flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
