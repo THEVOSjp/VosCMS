@@ -406,6 +406,9 @@ if (empty($path) || $path === 'index.php') {
     // 묶음서비스(번들) 관리
     } elseif ($adminRoute === 'bundles') {
         include BASE_PATH . '/resources/views/admin/bundles/index.php';
+    } elseif (preg_match('#^bundles/([\w-]+)$#', $adminRoute, $m)) {
+        $bundleId = $m[1];
+        include BASE_PATH . '/resources/views/admin/bundles/edit.php';
     // 게시판 관리
     } elseif ($adminRoute === 'site/boards') {
         include BASE_PATH . '/resources/views/admin/site/boards.php';

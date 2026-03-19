@@ -36,8 +36,8 @@ $currency = $config['currency'] ?? 'KRW';
             </div>
 
             <!-- 번들 목록 -->
-            <div id="bundleList" class="grid gap-4">
-                <div class="text-center py-12 text-zinc-400"><?= __('bundles.loading') ?>...</div>
+            <div id="bundleList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div class="text-center py-12 text-zinc-400 col-span-full"><?= __('bundles.loading') ?>...</div>
             </div>
 
             <!-- 빈 상태 -->

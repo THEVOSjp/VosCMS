@@ -35,7 +35,40 @@ return [
         'services_required' => 'サービスを1つ以上選択してください',
     ],
 
-    // 고객 페이지
+    // 詳細管理ページ
+    'edit_page' => 'セットサービス管理',
+    'edit_image' => '代表画像',
+    'click_upload' => 'クリックして画像をアップロード',
+    'change_image' => '画像変更',
+    'remove_image' => '画像削除',
+    'remove_image_confirm' => '代表画像を削除しますか？',
+    'image_uploaded' => '画像がアップロードされました',
+    'basic_info' => '基本情報',
+    'included_services' => '含まれるサービス',
+    'add_service' => 'サービス追加',
+    'add_selected' => '選択したサービスを追加',
+    'search_service' => 'サービス検索...',
+    'no_services' => '含まれるサービスはありません',
+    'linked_staff' => '担当スタッフ',
+    'linked_staff_desc' => 'このセットサービスを担当できるスタッフを選択してください',
+    'hidden' => '非表示',
+    'back_to_list' => '一覧に戻る',
+    'saving' => '保存中',
+    'confirm_delete_page' => 'このセットサービスを削除しますか？この操作は元に戻せません。',
+    'discount_label' => 'オフ',
+    'manage' => '管理',
+    'services_label' => 'サービス',
+
+    // イベント割引
+    'event_discount' => 'イベント割引',
+    'event_active' => '開催中',
+    'event_price' => 'イベント価格',
+    'event_label' => 'イベントラベル',
+    'event_label_placeholder' => '例：春のセール、オープン記念特価',
+    'event_start' => '開始日時',
+    'event_end' => '終了日時',
+
+    // カスタマーページ
     'customer' => [
         'title' => 'おすすめパッケージ',
     ],

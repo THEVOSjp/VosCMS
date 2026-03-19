@@ -34,9 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
     // ---- 번들 목록 ----
     if ($action === 'list') {
         $rows = $pdo->query("
-            SELECT b.*,
+            SELECT b.*, b.event_price, b.event_start, b.event_end, b.event_label,
                    COUNT(bi.id) as item_count,
                    COALESCE(SUM(s.price), 0) as original_total,
+                   COALESCE(SUM(s.duration), 0) as total_duration,
                    GROUP_CONCAT(s.name ORDER BY bi.sort_order SEPARATOR ', ') as service_names
             FROM {$prefix}service_bundles b
             LEFT JOIN {$prefix}service_bundle_items bi ON b.id = bi.bundle_id

@@ -35,6 +35,39 @@ return [
         'services_required' => '서비스를 1개 이상 선택해주세요',
     ],
 
+    // 상세 관리 페이지
+    'edit_page' => '세트 서비스 관리',
+    'edit_image' => '대표 이미지',
+    'click_upload' => '클릭하여 이미지 업로드',
+    'change_image' => '이미지 변경',
+    'remove_image' => '이미지 삭제',
+    'remove_image_confirm' => '대표 이미지를 삭제하시겠습니까?',
+    'image_uploaded' => '이미지가 업로드되었습니다',
+    'basic_info' => '기본 정보',
+    'included_services' => '포함 서비스',
+    'add_service' => '서비스 추가',
+    'add_selected' => '선택한 서비스 추가',
+    'search_service' => '서비스 검색...',
+    'no_services' => '포함된 서비스가 없습니다',
+    'linked_staff' => '담당 스태프',
+    'linked_staff_desc' => '이 세트 서비스를 수행할 수 있는 스태프를 선택하세요',
+    'hidden' => '비노출',
+    'back_to_list' => '목록으로',
+    'saving' => '저장 중',
+    'confirm_delete_page' => '이 세트 서비스를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+    'discount_label' => '할인',
+    'manage' => '관리',
+    'services_label' => '서비스',
+
+    // 이벤트 할인
+    'event_discount' => '이벤트 할인',
+    'event_active' => '진행중',
+    'event_price' => '이벤트 가격',
+    'event_label' => '이벤트 라벨',
+    'event_label_placeholder' => '예: 봄맞이 할인, 오픈 기념 특가',
+    'event_start' => '시작일시',
+    'event_end' => '종료일시',
+
     // 고객 페이지
     'customer' => [
         'title' => '추천 패키지',

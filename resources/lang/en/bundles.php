@@ -35,7 +35,40 @@ return [
         'services_required' => 'Please select at least one service',
     ],
 
-    // 고객 페이지
+    // Detail management page
+    'edit_page' => 'Set Service Management',
+    'edit_image' => 'Cover Image',
+    'click_upload' => 'Click to upload image',
+    'change_image' => 'Change Image',
+    'remove_image' => 'Remove Image',
+    'remove_image_confirm' => 'Remove the cover image?',
+    'image_uploaded' => 'Image uploaded',
+    'basic_info' => 'Basic Information',
+    'included_services' => 'Included Services',
+    'add_service' => 'Add Service',
+    'add_selected' => 'Add Selected',
+    'search_service' => 'Search services...',
+    'no_services' => 'No services included',
+    'linked_staff' => 'Assigned Staff',
+    'linked_staff_desc' => 'Select staff who can perform this set service',
+    'hidden' => 'Hidden',
+    'back_to_list' => 'Back to List',
+    'saving' => 'Saving',
+    'confirm_delete_page' => 'Delete this set service? This action cannot be undone.',
+    'discount_label' => 'off',
+    'manage' => 'Manage',
+    'services_label' => 'Services',
+
+    // Event discount
+    'event_discount' => 'Event Discount',
+    'event_active' => 'Active',
+    'event_price' => 'Event Price',
+    'event_label' => 'Event Label',
+    'event_label_placeholder' => 'e.g. Spring Sale, Grand Opening Special',
+    'event_start' => 'Start Date',
+    'event_end' => 'End Date',
+
+    // Customer page
     'customer' => [
         'title' => 'Recommended Packages',
     ],

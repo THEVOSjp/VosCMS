@@ -63,12 +63,17 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('services.fields.duration') ?></label>
-                        <select id="svcDuration" name="duration"
-                                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="svcDuration" name="duration" min="5" max="480" step="5" value="30"
+                                   class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                   list="durationPresets">
+                            <span class="text-sm text-zinc-500 dark:text-zinc-400 whitespace-nowrap"><?= __('services.minute') ?></span>
+                        </div>
+                        <datalist id="durationPresets">
                             <?php foreach ([10, 15, 20, 30, 40, 45, 60, 90, 120, 150, 180] as $min): ?>
-                            <option value="<?= $min ?>" <?= $min === 30 ? 'selected' : '' ?>><?= $min ?><?= __('services.minute') ?><?= $min >= 60 ? ' (' . floor($min/60) . 'h' . ($min%60 ? $min%60 . 'm' : '') . ')' : '' ?></option>
+                            <option value="<?= $min ?>">
                             <?php endforeach; ?>
-                        </select>
+                        </datalist>
                     </div>
                 </div>
 

@@ -1,14 +1,19 @@
 <script>
 const BUNDLE_URL = window.location.href;
 const CURRENCY = '<?= $currency ?>';
+const ADMIN_URL = '<?= $adminUrl ?>';
 const LABELS = {
     create: '<?= __("bundles.create") ?>',
     edit: '<?= __("bundles.edit") ?>',
+    manage: '<?= __("bundles.manage") ?>',
     confirmDelete: '<?= __("bundles.confirm_delete") ?>',
     discount: '<?= __("bundles.discount_info") ?>',
     services: '<?= __("bundles.services_count") ?>',
+    servicesLabel: '<?= __("bundles.services_label") ?>',
     active: '<?= __("bundles.active") ?>',
-    inactive: '<?= __("bundles.inactive") ?>'
+    inactive: '<?= __("bundles.inactive") ?>',
+    min: '<?= __("bundles.min") ?>',
+    eventActive: '<?= __("bundles.event_active") ?>'
 };
 
 // DOM
@@ -56,34 +61,70 @@ async function loadBundles() {
 function renderCard(b) {
     const origTotal = parseFloat(b.original_total) || 0;
     const bPrice = parseFloat(b.bundle_price) || 0;
+    const totalDur = parseInt(b.total_duration) || 0;
     const discount = origTotal > 0 && bPrice < origTotal ? Math.round((1 - bPrice/origTotal)*100) : 0;
     const statusCls = parseInt(b.is_active) ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400';
     const statusText = parseInt(b.is_active) ? LABELS.active : LABELS.inactive;
 
+    // 이벤트 할인 체크
+    const now = new Date();
+    const hasEvent = b.event_price && b.event_start && b.event_end;
+    const eventActive = hasEvent && new Date(b.event_start) <= now && new Date(b.event_end) >= now;
+    const eventPrice = parseFloat(b.event_price) || 0;
+    const displayPrice = eventActive ? eventPrice : bPrice;
+
+    // 서비스 이름 분리
+    const svcNames = (b.service_names || '').split(', ').filter(Boolean);
+
     return `
-    <div class="bg-white dark:bg-zinc-800 rounded-xl border dark:border-zinc-700 p-4 hover:shadow-md transition-shadow">
-        <div class="flex items-start justify-between">
-            <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                    <h3 class="font-semibold text-zinc-900 dark:text-white truncate">${escHtml(b.name)}</h3>
-                    <span class="px-2 py-0.5 rounded-full text-xs font-medium ${statusCls}">${statusText}</span>
-                    ${discount > 0 ? `<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">-${discount}%</span>` : ''}
-                </div>
-                ${b.description ? `<p class="text-sm text-zinc-500 dark:text-zinc-400 mb-2">${escHtml(b.description)}</p>` : ''}
-                <p class="text-xs text-zinc-400 dark:text-zinc-500">${b.service_names || '-'}</p>
+    <div class="bg-white dark:bg-zinc-800 rounded-xl border dark:border-zinc-700 overflow-hidden hover:shadow-lg transition-shadow group flex flex-col h-full">
+        <!-- 이미지 헤더 -->
+        <div class="relative h-36 bg-gradient-to-br from-blue-500 to-indigo-600 overflow-hidden">
+            ${b.image ? `<img src="${escHtml(b.image)}" class="w-full h-full object-cover">` : `
+            <div class="absolute inset-0 flex items-center justify-center">
+                <svg class="w-16 h-16 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>`}
+            <!-- 상태 배지 -->
+            <div class="absolute top-2 left-2 flex items-center gap-1.5">
+                <span class="px-2 py-0.5 rounded-full text-xs font-medium ${statusCls} backdrop-blur-sm">${statusText}</span>
+                ${eventActive ? `<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 backdrop-blur-sm">${escHtml(b.event_label || LABELS.eventActive)}</span>` : ''}
+                ${discount > 0 ? `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-red-500 text-white">-${discount}%</span>` : ''}
             </div>
-            <div class="text-right ml-4 flex-shrink-0">
-                <div class="text-lg font-bold text-blue-600 dark:text-blue-400">${numberFmt(bPrice)} ${CURRENCY}</div>
-                ${origTotal > bPrice ? `<div class="text-xs text-zinc-400 line-through">${numberFmt(origTotal)} ${CURRENCY}</div>` : ''}
-                <div class="text-xs text-zinc-400 mt-1">${b.item_count}${LABELS.services}</div>
+            <!-- 관리 버튼 (호버) -->
+            <a href="${ADMIN_URL}/bundles/${b.id}" class="absolute top-2 right-2 px-2.5 py-1 bg-white/90 dark:bg-zinc-800/90 text-xs font-medium text-blue-600 dark:text-blue-400 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm hover:bg-white">
+                ${LABELS.manage} →
+            </a>
+        </div>
+        <!-- 본문 -->
+        <div class="p-4 flex-1">
+            <h3 class="font-semibold text-zinc-900 dark:text-white mb-1 truncate">${escHtml(b.name)}</h3>
+            ${b.description ? `<p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3 line-clamp-2">${escHtml(b.description)}</p>` : '<div class="mb-3"></div>'}
+            <!-- 가격 -->
+            <div class="flex items-baseline gap-2 mb-3">
+                <span class="text-xl font-bold ${eventActive ? 'text-orange-600 dark:text-orange-400' : 'text-blue-600 dark:text-blue-400'}">${numberFmt(displayPrice)}</span>
+                <span class="text-sm text-zinc-400">${CURRENCY}</span>
+                ${(eventActive && eventPrice < bPrice) ? `<span class="text-sm text-zinc-400 line-through ml-1">${numberFmt(bPrice)}</span>` : ''}
+                ${(!eventActive && origTotal > bPrice) ? `<span class="text-sm text-zinc-400 line-through ml-1">${numberFmt(origTotal)}</span>` : ''}
+            </div>
+            <!-- 서비스 태그 -->
+            <div class="flex flex-wrap gap-1 mb-3">
+                ${svcNames.slice(0, 4).map(n => `<span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-xs text-zinc-600 dark:text-zinc-300 rounded">${escHtml(n)}</span>`).join('')}
+                ${svcNames.length > 4 ? `<span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-xs text-zinc-400 rounded">+${svcNames.length - 4}</span>` : ''}
+            </div>
+            <!-- 정보 -->
+            <div class="flex items-center text-xs text-zinc-400 gap-3">
+                <span>${b.item_count}${LABELS.services}</span>
+                <span>${totalDur}${LABELS.min}</span>
             </div>
         </div>
-        <div class="flex items-center gap-2 mt-3 pt-3 border-t dark:border-zinc-700">
-            <button onclick="editBundle('${b.id}')" class="px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg">${LABELS.edit}</button>
-            <button onclick="toggleBundle('${b.id}')" class="px-3 py-1.5 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg">
-                ${parseInt(b.is_active) ? '⏸ ' + LABELS.inactive : '▶ ' + LABELS.active}
+        <!-- 하단 액션 -->
+        <div class="flex items-center border-t dark:border-zinc-700 divide-x dark:divide-zinc-700">
+            <a href="${ADMIN_URL}/bundles/${b.id}" class="flex-1 py-2.5 text-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition">${LABELS.manage}</a>
+            <button onclick="event.preventDefault();editBundle('${b.id}')" class="flex-1 py-2.5 text-center text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition">${LABELS.edit}</button>
+            <button onclick="event.preventDefault();toggleBundle('${b.id}')" class="py-2.5 px-4 text-center text-sm text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition">
+                ${parseInt(b.is_active) ? '⏸' : '▶'}
             </button>
-            <button onclick="deleteBundle('${b.id}','${escHtml(b.name)}')" class="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg ml-auto">🗑</button>
+            <button onclick="event.preventDefault();deleteBundle('${b.id}','${escHtml(b.name)}')" class="py-2.5 px-4 text-center text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition">🗑</button>
         </div>
     </div>`;
 }

@@ -255,25 +255,33 @@ $days = $dayLabels[$currentLocale] ?? $dayLabels['en'];
                     $discPct = $origPrice > 0 && $bdlPrice < $origPrice ? round((1 - $bdlPrice / $origPrice) * 100) : 0;
                     $svcIdList = $bdl['service_id_list'] ?? '';
                 ?>
+                <?php $bdlImage = $bdl['image'] ?? ''; ?>
                 <div class="sd-bundle-card cursor-pointer" data-bundle-id="<?= htmlspecialchars($bdl['id']) ?>" data-services="<?= htmlspecialchars($svcIdList) ?>" data-price="<?= $bdlPrice ?>" data-duration="<?= (int)$bdl['total_duration'] ?>" data-name="<?= htmlspecialchars($bdl['name']) ?>">
-                    <div class="sd-bundle-inner relative rounded-xl border-2 border-gray-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-600 p-4 transition-all bg-white dark:bg-zinc-800 hover:shadow-md">
-                        <!-- 할인 뱃지 -->
-                        <?php if ($discPct > 0): ?>
-                        <div class="absolute -top-2 -right-2 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full shadow">-<?= $discPct ?>%</div>
-                        <?php endif; ?>
-                        <!-- 선택 체크 -->
-                        <div class="absolute top-3 left-3 w-5 h-5 rounded-full border-2 border-gray-300 dark:border-zinc-600 flex items-center justify-center sd-bundle-circle">
-                            <svg class="w-3 h-3 text-white hidden sd-bundle-check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                        </div>
-                        <div class="pl-7">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                                <h3 class="font-semibold text-gray-900 dark:text-white text-sm"><?= htmlspecialchars($bdl['name']) ?></h3>
+                    <div class="sd-bundle-inner relative rounded-xl border-2 border-gray-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-600 overflow-hidden transition-all bg-white dark:bg-zinc-800 hover:shadow-md">
+                        <?php if ($bdlImage): ?>
+                        <!-- 배경 이미지 헤더 -->
+                        <div class="relative h-28 overflow-hidden">
+                            <img src="<?= htmlspecialchars($bdlImage) ?>" class="w-full h-full object-cover" alt="">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                            <!-- 배경 위 제목 -->
+                            <div class="absolute bottom-2 left-3 right-3">
+                                <h3 class="font-semibold text-white text-sm drop-shadow"><?= htmlspecialchars($bdl['name']) ?></h3>
                             </div>
-                            <?php if (!empty($bdl['description'])): ?>
-                            <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1 line-clamp-2"><?= htmlspecialchars($bdl['description']) ?></p>
+                            <!-- 할인 뱃지 -->
+                            <?php if ($discPct > 0): ?>
+                            <div class="absolute top-2 right-2 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full shadow">-<?= $discPct ?>%</div>
                             <?php endif; ?>
-                            <div class="flex items-center justify-between mt-2">
+                            <!-- 선택 체크 -->
+                            <div class="absolute top-2 left-2 w-5 h-5 rounded-full border-2 border-white/70 flex items-center justify-center sd-bundle-circle bg-black/20">
+                                <svg class="w-3 h-3 text-white hidden sd-bundle-check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                        </div>
+                        <!-- 본문 -->
+                        <div class="p-3">
+                            <?php if (!empty($bdl['description'])): ?>
+                            <p class="text-xs text-gray-500 dark:text-zinc-400 mb-2 line-clamp-2"><?= htmlspecialchars($bdl['description']) ?></p>
+                            <?php endif; ?>
+                            <div class="flex items-center justify-between">
                                 <span class="text-xs text-gray-400 dark:text-zinc-500"><?= (int)$bdl['item_count'] ?><?= __('bundles.services_count') ?> · <?= (int)$bdl['total_duration'] ?><?= __('common.minutes') ?></span>
                                 <div class="text-right">
                                     <span class="text-base font-bold text-blue-600 dark:text-blue-400">&yen;<?= number_format($bdlPrice) ?></span>
@@ -283,6 +291,37 @@ $days = $dayLabels[$currentLocale] ?? $dayLabels['en'];
                                 </div>
                             </div>
                         </div>
+                        <?php else: ?>
+                        <!-- 이미지 없는 기본 카드 -->
+                        <div class="p-4">
+                            <!-- 할인 뱃지 -->
+                            <?php if ($discPct > 0): ?>
+                            <div class="absolute -top-2 -right-2 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full shadow">-<?= $discPct ?>%</div>
+                            <?php endif; ?>
+                            <!-- 선택 체크 -->
+                            <div class="absolute top-3 left-3 w-5 h-5 rounded-full border-2 border-gray-300 dark:border-zinc-600 flex items-center justify-center sd-bundle-circle">
+                                <svg class="w-3 h-3 text-white hidden sd-bundle-check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                            <div class="pl-7">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                    <h3 class="font-semibold text-gray-900 dark:text-white text-sm"><?= htmlspecialchars($bdl['name']) ?></h3>
+                                </div>
+                                <?php if (!empty($bdl['description'])): ?>
+                                <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1 line-clamp-2"><?= htmlspecialchars($bdl['description']) ?></p>
+                                <?php endif; ?>
+                                <div class="flex items-center justify-between mt-2">
+                                    <span class="text-xs text-gray-400 dark:text-zinc-500"><?= (int)$bdl['item_count'] ?><?= __('bundles.services_count') ?> · <?= (int)$bdl['total_duration'] ?><?= __('common.minutes') ?></span>
+                                    <div class="text-right">
+                                        <span class="text-base font-bold text-blue-600 dark:text-blue-400">&yen;<?= number_format($bdlPrice) ?></span>
+                                        <?php if ($discPct > 0): ?>
+                                        <span class="text-xs text-gray-400 line-through ml-1">&yen;<?= number_format($origPrice) ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <?php endforeach; ?>
