@@ -1,6 +1,6 @@
 # RezlyX 게시판 시스템
 
-> **버전**: 1.7.0 | **최종 업데이트**: 2026-03-19
+> **버전**: 1.10.0 | **최종 업데이트**: 2026-03-20
 
 ## 1. 시스템 개요
 
@@ -24,7 +24,8 @@ RezlyX 게시판은 커스텀 MVC 아키텍처 기반의 다기능 게시판 시
 | `index.php` | 라우팅 진입점 |
 | `resources/views/admin/site/boards*.php` | 관리자 페이지 (목록/생성/편집/API/휴지통) |
 | `resources/views/admin/components/board/section-*.php` | 관리자 공통 컴포넌트 8개 |
-| `resources/views/customer/board/*.php` | 프론트 페이지 (_init, list, read, write, api-*) |
+| `resources/views/customer/board/*.php` | 프론트 페이지 (_init, list, read, write, settings, api-*) |
+| `rzxlib/Core/Modules/ExtraVarRenderer.php` | 확장 변수 렌더링 모듈 (15종 타입별 input/display) |
 | `rzxlib/Core/Skin/SkinConfigRenderer.php` | skin.json 파싱 + 폼 생성 |
 | `rzxlib/Core/Layout/LayoutManager.php` | 레이아웃 자동 적용 |
 | `rzxlib/Core/Helpers/multilang.php` | rzx_multilang_input() |
@@ -54,6 +55,7 @@ RezlyX 게시판은 커스텀 MVC 아키텍처 기반의 다기능 게시판 시
 | `/board/{slug}/write` | `write.php` | 글쓰기 |
 | `/board/{slug}/{id}` | `read.php` | 글 상세 |
 | `/board/{slug}/{id}/edit` | `write.php` | 글 수정 |
+| `/board/{slug}/settings` | `settings.php` | 게시판 설정 (관리자, 프론트 레이아웃) |
 
 ### 프론트 라우트 — 단축 URL (`/{slug}...`)
 
@@ -139,7 +141,7 @@ RezlyX 게시판은 커스텀 MVC 아키텍처 기반의 다기능 게시판 시
 
 ### `rzx_board_posts`
 
-주요 컬럼: `id`(PK), `board_id`, `category_id`, `user_id`(NULL=비회원), `title`, `content`(LONGTEXT), `password`(bcrypt), `is_notice`, `is_secret`, `is_anonymous`, `nick_name`, `view_count`, `comment_count`, `like_count`, `dislike_count`, `file_count`, `list_order`(BIGINT, 정렬), `update_order`(BIGINT, 끌올), `status`(published/draft/trash), `original_locale`, `source_locale`, `ip_address`, `created_at`, `updated_at`
+주요 컬럼: `id`(PK), `board_id`, `category_id`, `user_id`(NULL=비회원), `title`, `content`(LONGTEXT), `password`(bcrypt), `is_notice`, `is_secret`, `is_anonymous`, `nick_name`, `view_count`, `comment_count`, `like_count`, `dislike_count`, `file_count`, `list_order`(BIGINT, 정렬), `update_order`(BIGINT, 끌올), `status`(published/draft/trash), `original_locale`, `source_locale`, `extra_vars`(JSON, 확장 변수 값), `ip_address`, `created_at`, `updated_at`
 
 인덱스: `idx_board`, `idx_category`, `idx_user`, `idx_list_order(board_id, list_order)`, `idx_status(board_id, status)`
 
@@ -196,6 +198,20 @@ RezlyX 게시판은 커스텀 MVC 아키텍처 기반의 다기능 게시판 시
 
 **var_type 15종**: `text`, `text_multilang`, `textarea`, `textarea_multilang`, `textarea_editor`, `number`, `select`, `checkbox`, `radio`, `date`, `email`, `url`, `tel`, `color`, `file`
 
+**확장 변수 값 저장**: `rzx_board_posts.extra_vars` JSON 컬럼 (`{var_name: value, ...}`)
+- 다국어: `rzx_translations`에 `board_post.{id}.extra_vars` JSON으로 언어별 저장
+
+**ExtraVarRenderer 모듈** (`rzxlib/Core/Modules/ExtraVarRenderer.php`):
+```php
+// 전체 렌더링
+ExtraVarRenderer::renderAll($extraVarDefs, $values, 'input');   // write 폼
+ExtraVarRenderer::renderAll($extraVarDefs, $values, 'display'); // read 표시
+
+// 개별 렌더링 (스킨 커스텀)
+ExtraVarRenderer::renderInput($var, $value);    // 입력 폼
+ExtraVarRenderer::renderDisplay($var, $value);  // 표시
+```
+
 ### `rzx_board_admins`
 
 | 컬럼 | 타입 | 설명 |
@@ -241,7 +257,7 @@ RezlyX 게시판은 커스텀 MVC 아키텍처 기반의 다기능 게시판 시
 | action | Method | 설명 |
 |--------|--------|------|
 | `create` | POST | 게시글 작성 (파일 업로드 포함, 익명번호 자동부여, original/source_locale) |
-| `update` | POST | 게시글 수정 (소유자/관리자만, source_locale 갱신) |
+| `update` | POST | 게시글 수정 (소유자/관리자만, 원본 언어→직접 수정, 다른 언어→rzx_translations에 번역 저장) |
 | `delete` | POST | 게시글 삭제 (use_trash시 soft delete) |
 | `like` | POST | 추천 (중복/자추 방지, like_count 증가) |
 | `dislike` | POST | 비추천 (중복/자추 방지, dislike_count 증가) |
@@ -252,6 +268,7 @@ RezlyX 게시판은 커스텀 MVC 아키텍처 기반의 다기능 게시판 시
 |--------|--------|------|
 | `create` | POST | 댓글 작성 (대댓글 depth 계산, 익명번호 자동부여, comment_count/update_order 갱신) |
 | `delete` | POST | 댓글 삭제 (대댓글 존재 시 status='deleted', 없으면 물리 삭제) |
+| `like` | POST | 댓글 추천/비추천 (comment_id, type=like/dislike) |
 
 ### 프론트 파일 API (`/board/api/files`)
 
@@ -265,12 +282,27 @@ RezlyX 게시판은 커스텀 MVC 아키텍처 기반의 다기능 게시판 시
 
 ## 5. 다국어 시스템
 
-### 게시글 다국어
+### 게시글 다국어 (v1.10.0)
 
 - `original_locale`: 최초 작성 언어 (변경 불가)
-- `source_locale`: 현재 콘텐츠가 작성된 언어 (수정 시 현재 로케일로 갱신)
-- 폴백 체인: `현재 언어 → source_locale → en → original_locale`
-- 수정 시 `source_locale != currentLocale`이면 경고 배너 표시
+- `board_posts` 테이블: 원본 언어의 title, content, extra_vars 저장
+- `rzx_translations` 테이블: 다른 언어의 번역 저장 (`board_post.{id}.title`, `board_post.{id}.content`, `board_post.{id}.extra_vars`)
+
+**저장 규칙:**
+- 원본 언어로 수정 → `board_posts` 직접 수정
+- 다른 언어로 수정 → `rzx_translations`에 번역 저장 (원본 유지)
+- 확장 변수도 동일 규칙 적용 (언어별 독립 값 가능)
+
+**읽기 폴백 체인:**
+1. 현재 로케일의 `rzx_translations` 번역 있으면 → 번역 표시
+2. 없으면 영어(en) 번역 시도
+3. 영어도 없으면 → 원본(`board_posts`) 표시
+4. 확장 변수도 동일 폴백 (현재 로케일 → en → 원본)
+
+**목록 폴백:** 게시글 목록에서도 제목을 현재 로케일 → en → 원본 순으로 표시
+
+**수정 폼:** 다른 언어로 수정 시 안내 배너 표시 ("현재 XX 언어로 번역을 편집합니다. 원본은 유지됩니다.")
+- 원문 언어 안내는 작성자/관리자에게만 표시
 
 ### 게시판 설정 다국어
 
