@@ -69,6 +69,7 @@ return [
     'kiosk_designation_fee' => '지명비',
     'kiosk_select_service' => '서비스를 선택해주세요',
     'kiosk_staff_selected' => '선택한 스태프',
+    'kiosk_staff_assigned' => '배정된 스태프',
     'kiosk_selected' => '개 선택',
     'kiosk_next' => '다음',
     'pos_in_service' => '이용중',
