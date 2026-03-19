@@ -157,6 +157,27 @@
         });
     };
 
+    // 그룹 초기화
+    window.resetGradesToDefault = function() {
+        if (!confirm('<?= __('members.groups.confirm_reset') ?>')) return;
+        console.log('[Groups] Resetting to default...');
+
+        var formData = new FormData();
+        formData.append('action', 'reset_to_default');
+
+        postData(formData).then(function(data) {
+            if (data.success) {
+                showAlert(data.message, 'success');
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                showAlert(data.message || 'Error', 'error');
+            }
+        }).catch(function(err) {
+            console.error('[Groups] Reset error:', err);
+            showAlert('<?= __('members.groups.error.server') ?>', 'error');
+        });
+    };
+
     // 다국어 버튼의 langKey 업데이트 (rzx_multilang_input의 onclick 속성 갱신)
     function updateGradeMultilangKeys(gradeId) {
         var modal = document.getElementById('gradeModal');

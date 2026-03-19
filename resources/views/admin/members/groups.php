@@ -139,6 +139,56 @@ try {
                     echo json_encode(['success' => true, 'message' => __('members.groups.success.reordered')]);
                     exit;
 
+                case 'reset_to_default':
+                    // 기본 제공 데이터로 초기화
+                    $pdo->beginTransaction();
+                    try {
+                        // 기존 그룹 전체 삭제
+                        $pdo->exec("DELETE FROM {$prefix}member_grades");
+                        // 다국어 데이터 삭제
+                        $pdo->exec("DELETE FROM {$prefix}translations WHERE lang_key LIKE 'member_grade.%'");
+
+                        // 기본 그룹 데이터
+                        $defaults = [
+                            ['c62bc9ff-13dc-11f1-8b4f-8447092025d9','일반','normal','#5c8dff',1.00,0.10,0,0.00,1,0],
+                            ['c998e8e0b3805ed51bfb11c7bf68c145a987','실버','silver','#bdbdbd',2.00,0.50,1,0.00,0,1],
+                            ['0f4ed0fb2b6c6087c2a73c92ffc8c11e05ef','골드','gold','#ffd500',3.00,1.00,1,0.00,0,2],
+                            ['5b9ac4fb8281987c5994b3ec40ba1f912b31','플래티넘','platinum','#662eff',4.00,2.00,1,0.00,0,3],
+                            ['b53dc7275b348c3526bc1921c84e0b2e9f88','VIP','vip','#ff528e',5.00,4.00,2,0.00,0,4],
+                            ['6e3582138e58938eac9cb3d3e7845710bb1e','VVIP','vvip','#ff0033',10.00,5.00,1,0.00,0,5],
+                            ['c3df1c9720a647c7d91c0c804e66ac044af9','스태프','staff','#00c203',10.00,5.00,2,0.00,0,6],
+                        ];
+                        $ins = $pdo->prepare("INSERT INTO {$prefix}member_grades (id,name,slug,color,discount_rate,point_rate,min_reservations,min_spent,is_default,sort_order) VALUES (?,?,?,?,?,?,?,?,?,?)");
+                        foreach ($defaults as $d) $ins->execute($d);
+
+                        // 회원 grade_id를 기본(일반)으로 리셋
+                        $pdo->exec("UPDATE {$prefix}users SET grade_id = 'c62bc9ff-13dc-11f1-8b4f-8447092025d9'");
+
+                        // 다국어 번역 데이터
+                        $trIns = $pdo->prepare("INSERT INTO {$prefix}translations (lang_key, locale, source_locale, content) VALUES (?, ?, 'ko', ?)");
+                        $translations = [
+                            'c62bc9ff-13dc-11f1-8b4f-8447092025d9' => ['ko'=>'일반','en'=>'Normal','ja'=>'一般','zh_CN'=>'普通','zh_TW'=>'一般','de'=>'Normal','es'=>'Normal','fr'=>'Normal','id'=>'Normal','mn'=>'Энгийн','ru'=>'Обычный','tr'=>'Normal','vi'=>'Thường'],
+                            'c998e8e0b3805ed51bfb11c7bf68c145a987' => ['ko'=>'실버','en'=>'Silver','ja'=>'シルバー','zh_CN'=>'银卡','zh_TW'=>'銀卡','de'=>'Silber','es'=>'Plata','fr'=>'Argent','id'=>'Silver','mn'=>'Мөнгөн','ru'=>'Серебро','tr'=>'Gümüş','vi'=>'Bạc'],
+                            '0f4ed0fb2b6c6087c2a73c92ffc8c11e05ef' => ['ko'=>'골드','en'=>'Gold','ja'=>'ゴールド','zh_CN'=>'金卡','zh_TW'=>'金卡','de'=>'Gold','es'=>'Oro','fr'=>'Or','id'=>'Gold','mn'=>'Алтан','ru'=>'Золото','tr'=>'Altın','vi'=>'Vàng'],
+                            '5b9ac4fb8281987c5994b3ec40ba1f912b31' => ['ko'=>'플래티넘','en'=>'Platinum','ja'=>'プラチナ','zh_CN'=>'铂金','zh_TW'=>'白金','de'=>'Platin','es'=>'Platino','fr'=>'Platine','id'=>'Platinum','mn'=>'Платинум','ru'=>'Платина','tr'=>'Platin','vi'=>'Bạch kim'],
+                            'b53dc7275b348c3526bc1921c84e0b2e9f88' => ['ko'=>'VIP','en'=>'VIP','ja'=>'VIP','zh_CN'=>'VIP','zh_TW'=>'VIP','de'=>'VIP','es'=>'VIP','fr'=>'VIP','id'=>'VIP','mn'=>'VIP','ru'=>'VIP','tr'=>'VIP','vi'=>'VIP'],
+                            '6e3582138e58938eac9cb3d3e7845710bb1e' => ['ko'=>'VVIP','en'=>'VVIP','ja'=>'VVIP','zh_CN'=>'VVIP','zh_TW'=>'VVIP','de'=>'VVIP','es'=>'VVIP','fr'=>'VVIP','id'=>'VVIP','mn'=>'VVIP','ru'=>'VVIP','tr'=>'VVIP','vi'=>'VVIP'],
+                            'c3df1c9720a647c7d91c0c804e66ac044af9' => ['ko'=>'스태프','en'=>'Staff','ja'=>'スタッフ','zh_CN'=>'员工','zh_TW'=>'員工','de'=>'Mitarbeiter','es'=>'Personal','fr'=>'Personnel','id'=>'Staf','mn'=>'Ажилтан','ru'=>'Персонал','tr'=>'Personel','vi'=>'Nhân viên'],
+                        ];
+                        foreach ($translations as $gid => $langs) {
+                            foreach ($langs as $locale => $content) {
+                                $trIns->execute(["member_grade.{$gid}.name", $locale, $content]);
+                            }
+                        }
+
+                        $pdo->commit();
+                        echo json_encode(['success' => true, 'message' => __('members.groups.success.reset')]);
+                    } catch (\Exception $e) {
+                        $pdo->rollBack();
+                        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+                    }
+                    exit;
+
                 case 'set_default':
                     $id = trim($_POST['id'] ?? '');
                     $pdo->exec("UPDATE {$prefix}member_grades SET is_default = 0");
@@ -226,11 +276,18 @@ try {
                         <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('members.groups.title') ?></h1>
                         <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('members.groups.description') ?></p>
                     </div>
-                    <button onclick="openGradeModal()"
-                            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <?= __('members.groups.create') ?>
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="resetGradesToDefault()"
+                                class="inline-flex items-center gap-2 px-4 py-2 border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-medium rounded-lg transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            <?= __('members.groups.reset_default') ?>
+                        </button>
+                        <button onclick="openGradeModal()"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <?= __('members.groups.create') ?>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- 등급 카드 목록 -->
