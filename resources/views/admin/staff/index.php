@@ -411,16 +411,17 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                                 <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-zinc-800/70 text-white shadow"><?= __('staff.badge_hidden') ?? '비노출' ?></span>
                                 <?php endif; ?>
                             </div>
-                            <!-- 아바타 (배너 위 겹침) -->
-                            <div class="absolute -bottom-6 left-4 w-14 h-14 rounded-full bg-white dark:bg-zinc-800 border-2 border-white dark:border-zinc-800 shadow overflow-hidden">
+                        </div>
+                        <div class="relative px-5 pb-4">
+                            <!-- 아바타 (배너 아래 겹침) -->
+                            <div class="absolute -top-7 left-5 w-14 h-14 rounded-full bg-white dark:bg-zinc-800 border-2 border-white dark:border-zinc-800 shadow overflow-hidden">
                                 <?php if ($s['avatar']): ?>
                                 <img src="<?= htmlspecialchars($s['avatar']) ?>" class="w-full h-full object-cover" alt="">
                                 <?php else: ?>
                                 <div class="w-full h-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-lg font-bold text-zinc-500"><?= mb_substr($s['name'], 0, 1) ?></div>
                                 <?php endif; ?>
                             </div>
-                        </div>
-                        <div class="pt-8 px-5 pb-4">
+                            <div class="pt-9">
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2">
                                     <h3 class="text-base font-semibold text-zinc-900 dark:text-white truncate"><?= htmlspecialchars($s['name']) ?></h3>
@@ -455,6 +456,7 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                                     </span>
                                     <?php endif; ?>
                                 </div>
+                            </div>
                         </div>
                         <!-- 액션 바 -->
                         <div class="px-5 py-3 bg-zinc-50 dark:bg-zinc-700/30 border-t border-zinc-100 dark:border-zinc-700 flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
