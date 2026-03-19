@@ -13,17 +13,19 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) $settings[$row['key']] = $row['val
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fields = [
-        'pos_auto_refresh' => $_POST['pos_auto_refresh'] ?? '0',
+        'pos_auto_refresh' => ($_POST['pos_auto_refresh'] ?? '0') === '1' ? '1' : '0',
         'pos_refresh_interval' => max(10, (int)($_POST['pos_refresh_interval'] ?? 30)),
         'pos_card_size' => $_POST['pos_card_size'] ?? 'medium',
-        'pos_show_service_image' => isset($_POST['pos_show_service_image']) ? '1' : '0',
+        'pos_show_service_image' => ($_POST['pos_show_service_image'] ?? '0') === '1' ? '1' : '0',
         'pos_image_opacity' => max(10, min(100, (int)($_POST['pos_image_opacity'] ?? 60))),
-        'pos_show_price' => isset($_POST['pos_show_price']) ? '1' : '0',
-        'pos_show_phone' => isset($_POST['pos_show_phone']) ? '1' : '0',
-        'pos_sound_notification' => isset($_POST['pos_sound_notification']) ? '1' : '0',
+        'pos_show_modal_image' => ($_POST['pos_show_modal_image'] ?? '0') === '1' ? '1' : '0',
+        'pos_modal_image_opacity' => max(10, min(100, (int)($_POST['pos_modal_image_opacity'] ?? 50))),
+        'pos_show_price' => ($_POST['pos_show_price'] ?? '0') === '1' ? '1' : '0',
+        'pos_show_phone' => ($_POST['pos_show_phone'] ?? '0') === '1' ? '1' : '0',
+        'pos_sound_notification' => ($_POST['pos_sound_notification'] ?? '0') === '1' ? '1' : '0',
         'pos_default_tab' => $_POST['pos_default_tab'] ?? 'cards',
-        'pos_require_staff' => isset($_POST['pos_require_staff']) ? '1' : '0',
-        'pos_auto_assign' => isset($_POST['pos_auto_assign']) ? '1' : '0',
+        'pos_require_staff' => ($_POST['pos_require_staff'] ?? '0') === '1' ? '1' : '0',
+        'pos_auto_assign' => ($_POST['pos_auto_assign'] ?? '0') === '1' ? '1' : '0',
     ];
     $upsertStmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
     foreach ($fields as $k => $v) { $upsertStmt->execute([$k, $v]); $settings[$k] = $v; }
@@ -104,6 +106,26 @@ $hint = 'text-xs text-zinc-500 dark:text-zinc-400 mt-0.5';
                                         <label class="text-xs text-zinc-500 shrink-0"><?= __('reservations.pos_settings_image_opacity') ?></label>
                                         <input type="range" name="pos_image_opacity" min="10" max="100" step="5" value="<?= (int)($settings['pos_image_opacity'] ?? 60) ?>" class="flex-1 h-1.5 accent-blue-600" oninput="document.getElementById('opacityVal').textContent=this.value+'%'">
                                         <span id="opacityVal" class="text-xs font-mono text-zinc-600 dark:text-zinc-400 w-10 text-right"><?= (int)($settings['pos_image_opacity'] ?? 60) ?>%</span>
+                                    </div>
+                                </div>
+
+                                <!-- 서비스 내역 모달 헤더 이미지 -->
+                                <div>
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('reservations.pos_settings_show_modal_image') ?></label>
+                                            <p class="<?= $hint ?>"><?= __('reservations.pos_settings_show_modal_image_help') ?></p>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer ml-4">
+                                            <input type="hidden" name="pos_show_modal_image" value="0">
+                                            <input type="checkbox" name="pos_show_modal_image" value="1" <?= ($settings['pos_show_modal_image'] ?? '1') === '1' ? 'checked' : '' ?> class="sr-only peer">
+                                            <div class="<?= $tgl ?>"></div>
+                                        </label>
+                                    </div>
+                                    <div class="mt-3 ml-2 flex items-center gap-3">
+                                        <label class="text-xs text-zinc-500 shrink-0"><?= __('reservations.pos_settings_image_opacity') ?></label>
+                                        <input type="range" name="pos_modal_image_opacity" min="10" max="100" step="5" value="<?= (int)($settings['pos_modal_image_opacity'] ?? 50) ?>" class="flex-1 h-1.5 accent-blue-600" oninput="document.getElementById('modalOpacityVal').textContent=this.value+'%'">
+                                        <span id="modalOpacityVal" class="text-xs font-mono text-zinc-600 dark:text-zinc-400 w-10 text-right"><?= (int)($settings['pos_modal_image_opacity'] ?? 50) ?>%</span>
                                     </div>
                                 </div>
 

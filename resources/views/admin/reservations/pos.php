@@ -257,6 +257,8 @@ const posConfig = {
     soundNotify: <?= $posSoundNotify ? 'true' : 'false' ?>,
     requireStaff: <?= $posRequireStaff ? 'true' : 'false' ?>,
     autoAssign: <?= $posAutoAssign ? 'true' : 'false' ?>,
+    showModalImage: <?= ($posSettings['pos_show_modal_image'] ?? '1') === '1' ? 'true' : 'false' ?>,
+    modalImageOpacity: <?= (int)($posSettings['pos_modal_image_opacity'] ?? 50) ?>,
     defaultTab: '<?= $posDefaultTab ?>'
 };
 

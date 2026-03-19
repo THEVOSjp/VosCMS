@@ -151,6 +151,8 @@ return [
     'pos_settings_show_image' => '서비스 이미지 표시',
     'pos_settings_show_image_help' => '고객 카드 배경에 대표 서비스 이미지를 표시합니다. 이미지가 등록된 서비스만 적용됩니다.',
     'pos_settings_image_opacity' => '이미지 투명도',
+    'pos_settings_show_modal_image' => '서비스 내역 헤더 이미지',
+    'pos_settings_show_modal_image_help' => '서비스 내역 모달의 제목과 고객 정보 영역에 대표 서비스 이미지를 배경으로 표시합니다.',
     'pos_settings_show_price' => '가격 표시',
     'pos_settings_show_price_help' => '고객 카드 하단에 서비스 합계 금액을 표시합니다. 비활성화하면 금액이 숨겨집니다.',
     'pos_settings_show_phone' => '전화번호 표시',

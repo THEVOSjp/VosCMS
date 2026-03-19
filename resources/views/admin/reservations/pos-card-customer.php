@@ -34,7 +34,14 @@ $pointsBalance = $pointsEnabled ? ($g['points_balance'] ?? 0) : 0;
      style="min-height:200px;<?php if ($hasServiceBg): ?>background-image:url('<?= htmlspecialchars($appUrl . '/storage/' . $svcImg) ?>');background-size:cover;background-position:center<?php endif; ?>">
 
     <?php if ($hasServiceBg): ?>
-    <?php $opFrom = $_posImageOpacity / 100; $opVia = max(0.2, $opFrom * 0.5); $opTo = max(0.1, $opFrom * 0.25); ?>
+    <?php
+    // 투명도: 100% = 이미지 원본, 10% = 이미지 거의 안보임
+    // 오버레이 opacity = 1 - (투명도/100)
+    $overlayOp = 1 - ($_posImageOpacity / 100);
+    $opFrom = min(0.9, $overlayOp + 0.2); // 하단 더 진하게 (텍스트 가독성)
+    $opVia = $overlayOp;
+    $opTo = max(0.05, $overlayOp - 0.15); // 상단 더 밝게
+    ?>
     <div class="absolute inset-0 z-[1]" style="background:linear-gradient(to top, rgba(0,0,0,<?= $opFrom ?>), rgba(0,0,0,<?= $opVia ?>), rgba(0,0,0,<?= $opTo ?>))"></div>
     <?php else: ?>
     <div class="absolute inset-0 bg-white dark:bg-zinc-800 z-[1]"></div>

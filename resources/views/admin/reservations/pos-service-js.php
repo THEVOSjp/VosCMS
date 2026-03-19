@@ -67,15 +67,19 @@ Object.assign(POS, {
                 const headerEl = document.getElementById('posServiceCustomer');
                 const heroEl = document.getElementById('posServiceHero');
                 const overlayEl = document.getElementById('posServiceHeroOverlay');
-                if (heroImg) {
+                const showModalImg = typeof posConfig !== 'undefined' ? posConfig.showModalImage : true;
+                const modalOpacity = typeof posConfig !== 'undefined' ? posConfig.modalImageOpacity : 50;
+                if (heroImg && showModalImg) {
                     const baseUrl = '<?= $config['app_url'] ?? '' ?>';
                     const path = heroImg.startsWith('storage/') ? heroImg : 'storage/' + heroImg;
                     const imgUrl = heroImg.startsWith('http') ? heroImg : (baseUrl + '/' + path);
                     heroEl.style.backgroundImage = `url('${imgUrl}')`;
                     const isDark = document.documentElement.classList.contains('dark');
+                    const overlayOp = 1 - (modalOpacity / 100);
+                    const opHigh = Math.min(0.95, overlayOp + 0.1);
                     overlayEl.style.background = isDark
-                        ? 'linear-gradient(to bottom, rgba(39,39,42,0.8), rgba(39,39,42,0.92))'
-                        : 'linear-gradient(to bottom, rgba(255,255,255,0.75), rgba(255,255,255,0.9))';
+                        ? `linear-gradient(to bottom, rgba(39,39,42,${opHigh}), rgba(39,39,42,${overlayOp + 0.15}))`
+                        : `linear-gradient(to bottom, rgba(255,255,255,${opHigh}), rgba(255,255,255,${overlayOp + 0.15}))`;
                     overlayEl.style.backdropFilter = 'blur(2px)';
                 } else {
                     heroEl.style.backgroundImage = '';
