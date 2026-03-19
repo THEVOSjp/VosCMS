@@ -69,6 +69,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
         document.documentElement.classList.add('dark');
     }
     </script>
+    <link rel="stylesheet" href="<?= $baseUrl ?>/resources/css/board-content.css">
     <?php if (isset($headExtra)) echo $headExtra; ?>
 </head>
 <body class="bg-gray-50 dark:bg-zinc-900 min-h-screen flex flex-col transition-colors duration-200">

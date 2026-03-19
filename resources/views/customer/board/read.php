@@ -227,7 +227,8 @@ $pageTitle = htmlspecialchars($post['title']) . ' - ' . $board['title'];
             <?php endif; ?>
 
             <!-- 본문 -->
-            <div class="p-6 prose dark:prose-invert max-w-none text-zinc-800 dark:text-zinc-200 leading-relaxed">
+            <link rel="stylesheet" href="<?= $config['app_url'] ?? '' ?>/resources/css/board-content.css">
+            <div class="board-content p-6 text-zinc-800 dark:text-zinc-200">
                 <?= $post['content'] ?>
             </div>
 

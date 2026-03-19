@@ -4,6 +4,20 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [1.10.2] - 2026-03-20
+
+### Fixed
+- **에디터/본문 이미지 정렬** — Tailwind preflight의 `img { display: block }` 덮어쓰기
+  - `board-content.css` 공통 CSS 생성 (에디터+본문 표시 통합)
+  - `base-header.php`에서 전역 로드 (프론트 모든 페이지)
+  - `multilang-modal.php`에 전역 에디터 스타일 추가 (관리자 모든 Summernote)
+- 게시판 본문 `prose` 클래스 제거, 에디터 인라인 스타일 100% 보존
+
+### Changed
+- CLAUDE.md에 게시판 본문 스타일 규칙 명시 (`board-content` 클래스 필수)
+
+---
+
 ## [1.10.1] - 2026-03-20
 
 ### Fixed

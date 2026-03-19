@@ -148,6 +148,12 @@ $_mlLangNamesJson = json_encode($_mlLangNames, JSON_UNESCAPED_UNICODE);
     .dark #multilang-editor-mode .note-dropdown-menu { background: #3f3f46; border-color: #52525b; }
     .dark #multilang-editor-mode .note-dropdown-menu .note-dropdown-item { color: #a1a1aa; }
     .dark #multilang-editor-mode .note-dropdown-menu .note-dropdown-item:hover { background: #52525b; color: #fff; }
+
+    /* Summernote 전역 — Tailwind preflight 덮어쓰기 (에디터 내부 정렬 보존) */
+    .note-editor .note-editable img, .note-editor .note-editable video,
+    .note-editor .note-editable iframe, .note-editor .note-editable embed {
+        display: inline !important; vertical-align: middle; max-width: 100%; height: auto;
+    }
 </style>
 
 <script>
