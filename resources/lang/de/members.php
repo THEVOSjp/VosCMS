@@ -262,6 +262,8 @@ return [
         'empty' => 'Keine Gruppen registriert.',
         'default' => 'Standard',
         'set_default' => 'Als Standard festlegen',
+        'drag_to_reorder' => 'Ziehen zum Neuordnen',
+        'multilang' => 'Mehrsprachige Eingabe',
         'member_count' => 'Mitglieder',
         'confirm_delete' => 'Diese Gruppe löschen? Mitglieder werden in die Standardgruppe verschoben.',
         'slug_desc' => 'Nur Kleinbuchstaben, Zahlen und Unterstriche. Leer lassen für automatische Generierung.',
@@ -276,7 +278,7 @@ return [
             'benefits' => 'Vorteile',
         ],
         'placeholder' => ['name' => 'Gruppenname eingeben', 'slug' => 'Slug (automatisch)', 'benefits' => 'Vorteile dieser Stufe eingeben'],
-        'success' => ['created' => 'Gruppe wurde erstellt.', 'updated' => 'Gruppe wurde aktualisiert.', 'deleted' => 'Gruppe wurde gelöscht.', 'default_changed' => 'Standardgruppe wurde geändert.'],
+        'success' => ['created' => 'Gruppe wurde erstellt.', 'updated' => 'Gruppe wurde aktualisiert.', 'deleted' => 'Gruppe wurde gelöscht.', 'default_changed' => 'Standardgruppe wurde geändert.', 'reordered' => 'Gruppenreihenfolge wurde geändert.'],
         'error' => [
             'name_required' => 'Bitte Gruppenname eingeben.',
             'slug_duplicate' => 'Dieser Slug wird bereits verwendet.',

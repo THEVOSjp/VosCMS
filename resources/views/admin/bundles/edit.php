@@ -13,7 +13,7 @@ if (!function_exists('__')) {
 
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
-$currency = $config['currency'] ?? 'KRW';
+$currency = $siteSettings['service_currency'] ?? $config['currency'] ?? 'JPY';
 $uploadDir = '/storage/uploads/bundles/';
 $uploadPath = BASE_PATH . $uploadDir;
 
@@ -109,7 +109,6 @@ $currentLocale = $config['locale'] ?? 'ko';
     <script>tailwind.config = { darkMode: 'class' }</script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <style>body { font-family: 'Pretendard', sans-serif; }</style>
-    <link rel="stylesheet" href="<?= $baseUrl ?>/resources/css/admin-common.css">
     <script>
         if (localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
@@ -117,11 +116,11 @@ $currentLocale = $config['locale'] ?? 'ko';
     </script>
 </head>
 <body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen">
-<div class="flex min-h-screen">
-    <?php include BASE_PATH . '/resources/views/admin/partials/admin-sidebar.php'; ?>
-    <div class="flex-1 flex flex-col min-h-screen sidebar-main-content">
-        <?php include BASE_PATH . '/resources/views/admin/partials/admin-topbar.php'; ?>
-        <main class="flex-1 p-6">
+    <div class="flex">
+        <?php include BASE_PATH . '/resources/views/admin/partials/admin-sidebar.php'; ?>
+        <main class="flex-1 ml-64">
+            <?php include BASE_PATH . '/resources/views/admin/partials/admin-topbar.php'; ?>
+            <div class="p-6">
             <!-- 브레드크럼 -->
             <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400 mb-4">
                 <a href="<?= $adminUrl ?>/bundles" class="hover:text-blue-600"><?= __('bundles.title') ?></a>
@@ -320,9 +319,9 @@ $currentLocale = $config['locale'] ?? 'ko';
                     </button>
                 </div>
             </div>
+            </div>
         </main>
     </div>
-</div>
 
 <!-- 서비스 추가 모달 -->
 <div id="svcPickerModal" class="fixed inset-0 z-50 hidden">

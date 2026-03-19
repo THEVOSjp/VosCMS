@@ -25,9 +25,10 @@
                 <div class="flex gap-3">
                     <div class="flex-1">
                         <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('members.groups.fields.name') ?> <span class="text-red-500">*</span></label>
-                        <input type="text" id="gradeName" name="name" required
-                               class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm"
-                               placeholder="<?= __('members.groups.placeholder.name') ?>">
+                        <?php rzx_multilang_input('gradeName', '', 'member_grade.new.name', [
+                            'required' => true,
+                            'placeholder' => __('members.groups.placeholder.name'),
+                        ]); ?>
                     </div>
                     <div class="w-20">
                         <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('members.groups.fields.color') ?></label>
@@ -76,9 +77,12 @@
                 <!-- 혜택 설명 -->
                 <div>
                     <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('members.groups.fields.benefits') ?></label>
-                    <textarea id="gradeBenefits" name="benefits" rows="3"
-                              class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-                              placeholder="<?= __('members.groups.placeholder.benefits') ?>"></textarea>
+                    <?php rzx_multilang_input('gradeBenefits', '', 'member_grade.new.benefits', [
+                        'type' => 'textarea',
+                        'rows' => 3,
+                        'placeholder' => __('members.groups.placeholder.benefits'),
+                        'modal_type' => 'editor',
+                    ]); ?>
                 </div>
             </form>
 

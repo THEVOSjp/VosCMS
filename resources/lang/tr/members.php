@@ -71,6 +71,8 @@ return [
         'empty' => 'Kayıtlı grup yok.',
         'default' => 'Varsayılan',
         'set_default' => 'Varsayılan olarak ayarla',
+        'drag_to_reorder' => 'Sıralamayı değiştirmek için sürükleyin',
+        'multilang' => 'Çok dilli giriş',
         'member_count' => 'Üyeler',
         'confirm_delete' => 'Bu grubu silmek istiyor musunuz? Üyeler varsayılan gruba taşınacaktır.',
         'slug_desc' => 'Sadece küçük harf, rakam ve alt çizgi. Boş bırakılırsa otomatik oluşturulur.',
@@ -85,7 +87,7 @@ return [
             'benefits' => 'Avantajlar',
         ],
         'placeholder' => ['name' => 'Grup adı girin', 'slug' => 'Slug (otomatik)', 'benefits' => 'Avantajları girin'],
-        'success' => ['created' => 'Grup oluşturuldu.', 'updated' => 'Grup güncellendi.', 'deleted' => 'Grup silindi.', 'default_changed' => 'Varsayılan grup değiştirildi.'],
+        'success' => ['created' => 'Grup oluşturuldu.', 'updated' => 'Grup güncellendi.', 'deleted' => 'Grup silindi.', 'default_changed' => 'Varsayılan grup değiştirildi.', 'reordered' => 'Grup sırası değiştirildi.'],
         'error' => [
             'name_required' => 'Lütfen grup adı girin.',
             'slug_duplicate' => 'Bu slug zaten kullanılıyor.',

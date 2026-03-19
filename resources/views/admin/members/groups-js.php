@@ -61,6 +61,7 @@
         document.getElementById('gradeMinSpent').value = '0';
         document.getElementById('gradeBenefits').value = '';
         slugManual = false;
+        updateGradeMultilangKeys('new');
         document.getElementById('gradeModal').classList.remove('hidden');
         console.log('[Groups] Modal opened (create)');
     };
@@ -69,17 +70,19 @@
         document.getElementById('gradeModalTitle').textContent = '<?= __('members.groups.edit') ?>';
         document.getElementById('gradeAction').value = 'update_grade';
         document.getElementById('gradeId').value = g.id;
-        document.getElementById('gradeName').value = g.name || '';
+        document.getElementById('gradeName').value = g._tr_name || g.name || '';
         document.getElementById('gradeSlug').value = g.slug || '';
         document.getElementById('gradeColor').value = g.color || '#6B7280';
         document.getElementById('gradeDiscount').value = g.discount_rate || '0';
         document.getElementById('gradePoint').value = g.point_rate || '0';
         document.getElementById('gradeMinRes').value = g.min_reservations || '0';
         document.getElementById('gradeMinSpent').value = g.min_spent || '0';
-        var ben = g.benefits || '';
+        var ben = g._tr_benefits || g.benefits || '';
         try { ben = JSON.parse(ben); } catch(e) {}
         document.getElementById('gradeBenefits').value = ben;
         slugManual = true;
+        // 다국어 버튼의 langKey를 실제 그룹 ID로 업데이트
+        updateGradeMultilangKeys(g.id);
         document.getElementById('gradeModal').classList.remove('hidden');
         console.log('[Groups] Modal opened (edit):', g.id);
     };
@@ -153,6 +156,52 @@
             console.error('[Groups] Set default error:', err);
         });
     };
+
+    // 다국어 버튼의 langKey 업데이트 (rzx_multilang_input의 onclick 속성 갱신)
+    function updateGradeMultilangKeys(gradeId) {
+        var modal = document.getElementById('gradeModal');
+        if (!modal) return;
+        modal.querySelectorAll('button[onclick*="openMultilangModal"]').forEach(function(btn) {
+            var onclick = btn.getAttribute('onclick');
+            // member_grade.xxx.field → member_grade.{gradeId}.field
+            var updated = onclick.replace(/member_grade\.[^.]+\./, 'member_grade.' + gradeId + '.');
+            btn.setAttribute('onclick', updated);
+        });
+        console.log('[Groups] Multilang keys updated to:', gradeId);
+    }
+
+    // SortableJS 드래그앤드롭 순서 변경
+    var grid = document.getElementById('gradeCardGrid');
+    if (grid && typeof Sortable !== 'undefined') {
+        Sortable.create(grid, {
+            handle: '.grade-drag-handle',
+            animation: 200,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            draggable: '.grade-card',
+            onEnd: function() {
+                var cards = grid.querySelectorAll('.grade-card');
+                var ids = [];
+                cards.forEach(function(card) { ids.push(card.dataset.id); });
+                console.log('[Groups] Reorder:', ids);
+
+                var formData = new FormData();
+                formData.append('action', 'reorder');
+                ids.forEach(function(id, i) { formData.append('ids[' + i + ']', id); });
+
+                postData(formData).then(function(data) {
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                    } else {
+                        showAlert(data.message || 'Error', 'error');
+                    }
+                }).catch(function(err) {
+                    console.error('[Groups] Reorder error:', err);
+                });
+            }
+        });
+        console.log('[Groups] Sortable initialized');
+    }
 
     console.log('[Groups] Page initialized');
 })();

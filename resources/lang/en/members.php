@@ -262,6 +262,8 @@ return [
         'empty' => 'No groups registered.',
         'default' => 'Default',
         'set_default' => 'Set as Default',
+        'drag_to_reorder' => 'Drag to reorder',
+        'multilang' => 'Multilingual input',
         'member_count' => 'Members',
         'confirm_delete' => 'Delete this group? Members in this group will be moved to the default group.',
         'slug_desc' => 'Only lowercase letters, numbers, and underscores. Leave empty to auto-generate.',
@@ -276,7 +278,7 @@ return [
             'benefits' => 'Benefits',
         ],
         'placeholder' => ['name' => 'Enter group name', 'slug' => 'Slug (auto-generated)', 'benefits' => 'Enter benefits for this grade'],
-        'success' => ['created' => 'Group has been created.', 'updated' => 'Group has been updated.', 'deleted' => 'Group has been deleted.', 'default_changed' => 'Default group has been changed.'],
+        'success' => ['created' => 'Group has been created.', 'updated' => 'Group has been updated.', 'deleted' => 'Group has been deleted.', 'default_changed' => 'Default group has been changed.', 'reordered' => 'Group order has been changed.'],
         'error' => [
             'name_required' => 'Please enter a group name.',
             'slug_duplicate' => 'This slug is already in use.',

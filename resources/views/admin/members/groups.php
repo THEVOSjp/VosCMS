@@ -128,6 +128,17 @@ try {
                     echo json_encode(['success' => true, 'message' => __('members.groups.success.deleted')]);
                     exit;
 
+                case 'reorder':
+                    $ids = $_POST['ids'] ?? [];
+                    if (is_array($ids) && count($ids) > 0) {
+                        $stmt = $pdo->prepare("UPDATE {$prefix}member_grades SET sort_order = ? WHERE id = ?");
+                        foreach ($ids as $order => $gid) {
+                            $stmt->execute([(int)$order, $gid]);
+                        }
+                    }
+                    echo json_encode(['success' => true, 'message' => __('members.groups.success.reordered')]);
+                    exit;
+
                 case 'set_default':
                     $id = trim($_POST['id'] ?? '');
                     $pdo->exec("UPDATE {$prefix}member_grades SET is_default = 0");
@@ -155,6 +166,19 @@ try {
         $gradeMemberCounts[$r['grade_id']] = (int)$r['cnt'];
     }
 
+    // 등급 다국어 번역 로드
+    $currentLocale = $config['locale'] ?? 'ko';
+    $gradeTranslations = [];
+    $trStmt = $pdo->prepare("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key LIKE 'member_grade.%' AND locale = ?");
+    $trStmt->execute([$currentLocale]);
+    while ($tr = $trStmt->fetch(PDO::FETCH_ASSOC)) {
+        // member_grade.{id}.{field} → $gradeTranslations[id][field]
+        $parts = explode('.', $tr['lang_key'], 3);
+        if (count($parts) === 3) {
+            $gradeTranslations[$parts[1]][$parts[2]] = $tr['content'];
+        }
+    }
+
     $dbConnected = true;
 } catch (PDOException $e) {
     $dbConnected = false;
@@ -172,7 +196,13 @@ try {
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+    <style>
+        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .sortable-ghost { opacity: 0.4; }
+        .sortable-chosen { box-shadow: 0 10px 25px rgba(0,0,0,0.15); transform: scale(1.02); }
+        .grade-drag-handle:hover { opacity: 1 !important; }
+    </style>
     <script>
         if (localStorage.getItem('darkMode') === 'true' ||
             (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -204,16 +234,21 @@ try {
                 </div>
 
                 <!-- 등급 카드 목록 -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div id="gradeCardGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <?php foreach ($grades as $g): ?>
-                    <div id="grade-<?= htmlspecialchars($g['id']) ?>" class="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                    <div id="grade-<?= htmlspecialchars($g['id']) ?>" class="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden grade-card" data-id="<?= htmlspecialchars($g['id']) ?>">
                         <!-- 상단 컬러 바 -->
                         <div class="h-1.5" style="background-color: <?= htmlspecialchars($g['color']) ?>"></div>
                         <div class="p-5">
                             <div class="flex items-center justify-between mb-3">
                                 <div class="flex items-center gap-2">
+                                    <!-- 드래그 핸들 -->
+                                    <div class="grade-drag-handle cursor-grab active:cursor-grabbing p-1 -ml-1 text-zinc-300 dark:text-zinc-600 hover:text-zinc-500 dark:hover:text-zinc-400 transition-colors" title="<?= __('members.groups.drag_to_reorder') ?>">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
+                                    </div>
                                     <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: <?= htmlspecialchars($g['color']) ?>"></span>
-                                    <h3 class="font-semibold text-zinc-900 dark:text-white"><?= htmlspecialchars($g['name']) ?></h3>
+                                    <?php $gradeName = $gradeTranslations[$g['id']]['name'] ?? $g['name']; ?>
+                                    <h3 class="font-semibold text-zinc-900 dark:text-white"><?= htmlspecialchars($gradeName) ?></h3>
                                     <?php if ($g['is_default']): ?>
                                     <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"><?= __('members.groups.default') ?></span>
                                     <?php endif; ?>
@@ -251,7 +286,12 @@ try {
 
                             <!-- 버튼 -->
                             <div class="flex items-center gap-2 pt-3 border-t border-zinc-100 dark:border-zinc-700">
-                                <button onclick='editGrade(<?= json_encode($g, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'
+                                <?php
+                                    $gData = $g;
+                                    $gData['_tr_name'] = $gradeTranslations[$g['id']]['name'] ?? $g['name'];
+                                    $gData['_tr_benefits'] = $gradeTranslations[$g['id']]['benefits'] ?? ($g['benefits'] ?? '');
+                                ?>
+                                <button onclick='editGrade(<?= json_encode($gData, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>)'
                                         class="flex-1 text-center py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors">
                                     <?= __('members.groups.edit') ?>
                                 </button>
@@ -282,6 +322,10 @@ try {
     </div>
 
     <?php include __DIR__ . '/groups-form.php'; ?>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <?php include BASE_PATH . '/resources/views/admin/components/multilang-modal.php'; ?>
+
     <?php include __DIR__ . '/groups-js.php'; ?>
 </body>
 </html>

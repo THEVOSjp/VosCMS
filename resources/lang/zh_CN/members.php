@@ -262,6 +262,8 @@ return [
         'empty' => '暂无分组。',
         'default' => '默认',
         'set_default' => '设为默认',
+        'drag_to_reorder' => '拖动以重新排序',
+        'multilang' => '多语言输入',
         'member_count' => '会员数',
         'confirm_delete' => '确定删除该分组？该分组的会员将移至默认分组。',
         'slug_desc' => '仅限小写字母、数字和下划线。留空将自动生成。',
@@ -276,7 +278,7 @@ return [
             'benefits' => '权益说明',
         ],
         'placeholder' => ['name' => '请输入分组名称', 'slug' => '标识（自动生成）', 'benefits' => '请输入该等级的权益'],
-        'success' => ['created' => '分组已创建。', 'updated' => '分组已更新。', 'deleted' => '分组已删除。', 'default_changed' => '默认分组已更改。'],
+        'success' => ['created' => '分组已创建。', 'updated' => '分组已更新。', 'deleted' => '分组已删除。', 'default_changed' => '默认分组已更改。', 'reordered' => '分组顺序已更改。'],
         'error' => [
             'name_required' => '请输入分组名称。',
             'slug_duplicate' => '该标识已被使用。',

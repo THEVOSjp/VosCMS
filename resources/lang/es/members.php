@@ -262,6 +262,8 @@ return [
         'empty' => 'No hay grupos registrados.',
         'default' => 'Predeterminado',
         'set_default' => 'Establecer como predeterminado',
+        'drag_to_reorder' => 'Arrastrar para reordenar',
+        'multilang' => 'Entrada multilingüe',
         'member_count' => 'Miembros',
         'confirm_delete' => '¿Eliminar este grupo? Los miembros se moverán al grupo predeterminado.',
         'slug_desc' => 'Solo letras minúsculas, números y guiones bajos. Dejar vacío para generar automáticamente.',
@@ -276,7 +278,7 @@ return [
             'benefits' => 'Beneficios',
         ],
         'placeholder' => ['name' => 'Ingrese nombre del grupo', 'slug' => 'Slug (automático)', 'benefits' => 'Ingrese los beneficios'],
-        'success' => ['created' => 'Grupo creado.', 'updated' => 'Grupo actualizado.', 'deleted' => 'Grupo eliminado.', 'default_changed' => 'Grupo predeterminado cambiado.'],
+        'success' => ['created' => 'Grupo creado.', 'updated' => 'Grupo actualizado.', 'deleted' => 'Grupo eliminado.', 'default_changed' => 'Grupo predeterminado cambiado.', 'reordered' => 'El orden del grupo ha sido cambiado.'],
         'error' => [
             'name_required' => 'Ingrese el nombre del grupo.',
             'slug_duplicate' => 'Este slug ya está en uso.',

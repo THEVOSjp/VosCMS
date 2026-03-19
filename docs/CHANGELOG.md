@@ -4,6 +4,33 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [1.9.0] - 2026-03-20
+
+### Added
+- **적립금(포인트) 관리 시스템** — 3탭 구조 (기본 설정 / 모듈별 설정 / 회원 포인트 목록)
+- **적립금 3필드 구조** — point(활동 포인트), balance(결제 적립금), total_accumulated(누적 포인트, 레벨 기준)
+- **누적 포인트 가중치** — 결제 가중치 / 활동 가중치 분리, 결제 고객 우대 레벨업
+- **적립금 환전** — 포인트 → 적립금 변환 (비율, 단위, 최소 포인트 설정)
+- **포인트 부여/차감 17개 항목** — Rhymix 동일 구조 (삭제시 회수, 기간 제한, 공지 제외)
+- **모듈별 설정** — 게시판별 15개 포인트 항목 개별 설정
+- **회원 포인트 목록** — 포인트/적립금/누적포인트/레벨 4컬럼, 검색, 개별 수정
+- **레벨 포인트** — 수식 계산, 최고 레벨 동적 조정, 그룹 연동
+- **포인트 시스템 문서** — POINT_SYSTEM.md 상세 설계 문서
+- **회원 그룹 드래그앤드롭** — SortableJS로 카드 순서 변경 + 자동 저장
+- **회원 그룹 다국어** — 그룹명/혜택 설명에 rzx_multilang_input() 공통 컴포넌트 적용
+- **회원 그룹 기본 데이터** — 7개 그룹 × 13개 언어 다국어 번역 데이터
+
+### Changed
+- DB `rzx_member_points`에 `balance`, `total_accumulated` 컬럼 추가
+- DB `rzx_point_levels.group_id` INT → CHAR(36) 수정 (UUID 호환)
+- DB `rzx_point_levels`, `rzx_member_points` collation utf8mb4_unicode_ci 통일
+- 번들 페이지 레이아웃 수정 (`sidebar-main-content` → `flex-1 ml-64` 대시보드 패턴)
+- 번들 페이지 화폐 단위 `$config['currency']` → `$siteSettings['service_currency']` 수정
+- 서비스 소요시간 select → input number + datalist 변경
+- CLAUDE.md에 다국어 입력 UI 규칙 명시 (rzx_multilang_input 필수 사용)
+
+---
+
 ## [1.8.3] - 2026-03-20
 
 ### Added

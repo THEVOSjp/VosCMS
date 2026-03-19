@@ -161,6 +161,8 @@ return [
         'title' => '회원 그룹 관리', 'description' => '회원 등급을 관리하고 혜택을 설정합니다.',
         'list' => '그룹 목록', 'create' => '그룹 추가', 'edit' => '그룹 수정',
         'empty' => '등록된 그룹이 없습니다.', 'default' => '기본', 'set_default' => '기본으로 설정',
+        'drag_to_reorder' => '드래그하여 순서 변경',
+        'multilang' => '다국어 입력',
         'member_count' => '회원 수',
         'confirm_delete' => '이 그룹을 삭제하시겠습니까? 해당 그룹의 회원은 기본 그룹으로 이동됩니다.',
         'slug_desc' => '영문 소문자, 숫자, 언더스코어만 사용. 비워두면 자동 생성됩니다.',
@@ -176,6 +178,7 @@ return [
         'success' => [
             'created' => '그룹이 생성되었습니다.', 'updated' => '그룹이 수정되었습니다.',
             'deleted' => '그룹이 삭제되었습니다.', 'default_changed' => '기본 그룹이 변경되었습니다.',
+            'reordered' => '그룹 순서가 변경되었습니다.',
         ],
         'error' => [
             'name_required' => '그룹 이름을 입력해주세요.', 'slug_duplicate' => '이미 사용 중인 슬러그입니다.',

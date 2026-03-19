@@ -6,7 +6,7 @@ include __DIR__ . '/_init.php';
 
 $pageTitle = __('bundles.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $currentLocale = $config['locale'] ?? 'ko';
-$currency = $config['currency'] ?? 'KRW';
+$currency = $siteSettings['service_currency'] ?? $config['currency'] ?? 'JPY';
 ?>
 <!DOCTYPE html>
 <html lang="<?= $currentLocale ?>">
@@ -15,14 +15,13 @@ $currency = $config['currency'] ?? 'KRW';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="<?= $baseUrl ?>/resources/css/admin-common.css">
 </head>
 <body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen">
-<div class="flex min-h-screen">
-    <?php include BASE_PATH . '/resources/views/admin/partials/admin-sidebar.php'; ?>
-    <div class="flex-1 flex flex-col min-h-screen sidebar-main-content">
-        <?php include BASE_PATH . '/resources/views/admin/partials/admin-topbar.php'; ?>
-        <main class="flex-1 p-6">
+    <div class="flex">
+        <?php include BASE_PATH . '/resources/views/admin/partials/admin-sidebar.php'; ?>
+        <main class="flex-1 ml-64">
+            <?php include BASE_PATH . '/resources/views/admin/partials/admin-topbar.php'; ?>
+            <div class="p-6">
             <!-- 헤더 -->
             <div class="flex items-center justify-between mb-4">
                 <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('bundles.title') ?></h1>
@@ -48,9 +47,9 @@ $currency = $config['currency'] ?? 'KRW';
                 <p class="text-zinc-500 dark:text-zinc-400 mb-4"><?= __('bundles.empty') ?></p>
                 <button onclick="openForm()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"><?= __('bundles.create_first') ?></button>
             </div>
+            </div>
         </main>
     </div>
-</div>
 
 <!-- 번들 생성/수정 모달 -->
 <div id="bundleModal" class="fixed inset-0 z-50 hidden">

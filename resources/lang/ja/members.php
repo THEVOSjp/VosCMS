@@ -262,6 +262,8 @@ return [
         'empty' => '登録されたグループがありません。',
         'default' => 'デフォルト',
         'set_default' => 'デフォルトに設定',
+        'drag_to_reorder' => 'ドラッグして順序変更',
+        'multilang' => '多言語入力',
         'member_count' => '会員数',
         'confirm_delete' => 'このグループを削除しますか？このグループの会員はデフォルトグループに移動されます。',
         'slug_desc' => '英小文字、数字、アンダースコアのみ使用可能。空欄の場合は自動生成されます。',
@@ -276,7 +278,7 @@ return [
             'benefits' => '特典説明',
         ],
         'placeholder' => ['name' => 'グループ名を入力', 'slug' => 'スラッグ（自動生成）', 'benefits' => 'このグレードの特典を入力'],
-        'success' => ['created' => 'グループが作成されました。', 'updated' => 'グループが更新されました。', 'deleted' => 'グループが削除されました。', 'default_changed' => 'デフォルトグループが変更されました。'],
+        'success' => ['created' => 'グループが作成されました。', 'updated' => 'グループが更新されました。', 'deleted' => 'グループが削除されました。', 'default_changed' => 'デフォルトグループが変更されました。', 'reordered' => 'グループの順序が変更されました。'],
         'error' => [
             'name_required' => 'グループ名を入力してください。',
             'slug_duplicate' => 'このスラッグは既に使用されています。',
