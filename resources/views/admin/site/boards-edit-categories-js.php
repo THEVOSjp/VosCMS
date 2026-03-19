@@ -19,15 +19,22 @@ document.getElementById('catEditFontColorText')?.addEventListener('input', funct
     if (/^#[0-9a-fA-F]{6}$/.test(v)) document.getElementById('catEditFontColor').value = v;
 });
 
-// 다국어 키 생성
+// 다국어 키 생성 (새 분류는 고유 임시 키)
+var _catTempKey = '';
 function getCatLangKey(field) {
     const catId = document.getElementById('catEditId').value;
-    return 'board_category.' + (catId || 'new') + '.' + field;
+    if (catId && catId !== '0') {
+        return 'board_category.' + catId + '.' + field;
+    }
+    // 새 분류: 모달 열 때마다 고유 키 생성
+    if (!_catTempKey) _catTempKey = 'new_' + Date.now();
+    return 'board_category.' + _catTempKey + '.' + field;
 }
 
 // 모달 열기 (catId=0이면 새 분류, parentId로 부모 지정)
 async function openCatModal(catId, parentId) {
     console.log('[BoardCategories] openCatModal:', catId, 'parent:', parentId);
+    _catTempKey = ''; // 새 분류 시 임시 키 리셋
     document.getElementById('catEditId').value = catId;
     document.getElementById('catEditParent').value = parentId;
     document.getElementById('catModalTitle').textContent = catId
