@@ -47,11 +47,11 @@ $defaultPhoneCode = $countryPhoneCodes[$siteCountry] ?? '+82';
                     <p class="<?= $subTextColor ?> text-sm mt-1"><?= __('reservations.kiosk_confirm_desc') ?></p>
                 </div>
 
-                <!-- 스태프 정보 -->
-                <?php if ($staffName): ?>
+                <!-- 스태프 정보 (지명일 때만 표시) -->
+                <?php if ($staffName && $type === 'designation'): ?>
                 <div class="p-4 rounded-2xl backdrop-blur-sm border <?= $btnBg ?>">
                     <div class="flex items-center justify-between">
-                        <span class="<?= $subTextColor ?> text-sm"><?= $type === 'assignment' ? __('reservations.kiosk_staff_assigned') : __('reservations.kiosk_staff_selected') ?></span>
+                        <span class="<?= $subTextColor ?> text-sm"><?= __('reservations.kiosk_staff_selected') ?></span>
                         <span class="<?= $textColor ?> font-bold"><?= htmlspecialchars($staffName) ?></span>
                     </div>
                     <?php if ($designationFee > 0): ?>
