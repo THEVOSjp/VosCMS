@@ -140,12 +140,12 @@ const POS = {
         if (!staffId) { alert('<?= __('reservations.pos_select_staff') ?>'); return; }
         console.log('[POS] Assign staff:', reservationId, staffId);
         try {
-            const fd = new FormData();
-            fd.append('action', 'assign-staff');
-            fd.append('reservation_id', reservationId);
-            fd.append('staff_id', staffId);
-            const resp = await fetch(POS_API_URL, { method: 'POST', body: fd });
+            const body = new URLSearchParams();
+            body.append('reservation_ids[]', reservationId);
+            body.append('staff_id', staffId);
+            const resp = await fetch(`${this.adminUrl}/reservations/assign-staff`, { method: 'POST', body });
             const data = await resp.json();
+            console.log('[POS] Assign result:', data);
             if (data.success) {
                 this.closeDetail();
                 location.reload();
