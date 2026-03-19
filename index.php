@@ -227,6 +227,24 @@ if (empty($path) || $path === 'index.php') {
         exit;
     }
 
+    // 키오스크 실행 (인증 불필요)
+    if (str_starts_with($adminRoute, 'kiosk/run')) {
+        $kioskPages = [
+            'kiosk/run' => 'customer/kiosk/index.php',
+            'kiosk/run/choose' => 'customer/kiosk/choose.php',
+            'kiosk/run/staff' => 'customer/kiosk/staff.php',
+            'kiosk/run/service' => 'customer/kiosk/service.php',
+            'kiosk/run/confirm' => 'customer/kiosk/confirm.php',
+            'kiosk/run/confirm-form' => 'customer/kiosk/confirm-form.php',
+            'kiosk/run/confirm-done' => 'customer/kiosk/confirm-done.php',
+        ];
+        $kioskFile = $kioskPages[$adminRoute] ?? null;
+        if ($kioskFile) {
+            include BASE_PATH . '/resources/views/' . $kioskFile;
+            exit;
+        }
+    }
+
     // 관리자 로그인 확인
     if (!\RzxLib\Core\Auth\AdminAuth::check()) {
         header('Location: ' . $basePath . '/' . $config['admin_path'] . '/login');
