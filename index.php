@@ -387,6 +387,8 @@ if (empty($path) || $path === 'index.php') {
         include BASE_PATH . '/resources/views/admin/reservations/kiosk-upload.php';
     } elseif ($adminRoute === 'reservations/pos') {
         include BASE_PATH . '/resources/views/admin/reservations/pos.php';
+    } elseif ($adminRoute === 'pos/settings') {
+        include BASE_PATH . '/resources/views/admin/reservations/pos-settings.php';
     } elseif ($adminRoute === 'reservations') {
         include BASE_PATH . '/resources/views/admin/reservations/index.php';
     } elseif ($adminRoute === 'reservations/calendar') {
