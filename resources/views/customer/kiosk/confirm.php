@@ -136,6 +136,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'check
     } catch (Exception $e) {
         $pdo->rollBack();
         error_log('[Kiosk Confirm] Error: ' . $e->getMessage());
+        // 디버그: 에러를 JS 콘솔에 출력
+        echo '<script>console.error("[Kiosk] DB Error:", ' . json_encode($e->getMessage()) . ');</script>';
     }
 }
 ?>

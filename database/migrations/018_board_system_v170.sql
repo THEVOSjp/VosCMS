@@ -255,3 +255,6 @@ ALTER TABLE `rzx_board_posts` ADD COLUMN `source_locale` VARCHAR(5) DEFAULT 'ko'
 ALTER TABLE `rzx_staff` ADD COLUMN `banner` VARCHAR(255) DEFAULT NULL;
 ALTER TABLE `rzx_staff` ADD COLUMN `greeting_before` TEXT DEFAULT NULL;
 ALTER TABLE `rzx_staff` ADD COLUMN `greeting_after` TEXT DEFAULT NULL;
+
+-- === rzx_reservations 컬럼 확장 ===
+ALTER TABLE `rzx_reservations` MODIFY COLUMN `reservation_number` VARCHAR(50) NOT NULL;
