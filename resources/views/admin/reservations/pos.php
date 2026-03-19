@@ -11,6 +11,29 @@ $pageTitle = __('reservations.pos') . ' - ' . ($config['app_name'] ?? 'RezlyX') 
 $today = date('Y-m-d');
 $nowTime = date('H:i:s');
 
+// POS 설정 로드
+$posSettings = [];
+$psStmt = $pdo->query("SELECT `key`, `value` FROM {$prefix}settings WHERE `key` LIKE 'pos_%'");
+while ($psRow = $psStmt->fetch(PDO::FETCH_ASSOC)) $posSettings[$psRow['key']] = $psRow['value'];
+$posCardSize = $posSettings['pos_card_size'] ?? 'medium';
+$posShowImage = ($posSettings['pos_show_service_image'] ?? '1') === '1';
+$posImageOpacity = (int)($posSettings['pos_image_opacity'] ?? 60);
+$posShowPrice = ($posSettings['pos_show_price'] ?? '1') === '1';
+$posShowPhone = ($posSettings['pos_show_phone'] ?? '1') === '1';
+$posDefaultTab = $posSettings['pos_default_tab'] ?? 'cards';
+$posAutoRefresh = ($posSettings['pos_auto_refresh'] ?? '0') === '1';
+$posRefreshInterval = (int)($posSettings['pos_refresh_interval'] ?? 30);
+$posSoundNotify = ($posSettings['pos_sound_notification'] ?? '0') === '1';
+$posRequireStaff = ($posSettings['pos_require_staff'] ?? '1') === '1';
+$posAutoAssign = ($posSettings['pos_auto_assign'] ?? '0') === '1';
+
+// 카드 크기별 그리드
+$posGridClass = match($posCardSize) {
+    'small' => 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
+    'large' => 'grid-cols-1 md:grid-cols-2',
+    default => 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
+};
+
 // 서비스 목록 (접수 컴포넌트용)
 $calServices = $pdo->query("SELECT s.id, s.name, s.description, s.duration, s.price, s.image, s.category_id, c.name as category_name FROM {$prefix}services s LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id WHERE s.is_active = 1 ORDER BY s.sort_order ASC, s.name ASC")->fetchAll(PDO::FETCH_ASSOC);
 
@@ -118,7 +141,7 @@ include __DIR__ . '/_head.php';
         </div>
         <?php else: ?>
         <div class="flex-1 overflow-y-auto pr-1">
-            <div class="grid grid-cols-3 gap-3">
+            <div class="grid <?= $posGridClass ?> gap-3">
                 <?php foreach ($allCards as $g):
                     // 어댑터를 통한 카드 데이터 준비 + 모드별 카드 뷰 include
                     $cd = $posAdapter->prepareCardData($g, $nowTime);
@@ -227,6 +250,29 @@ include __DIR__ . '/_head.php';
 <?php include __DIR__ . '/pos-modals.php'; ?>
 
 <script>
+// POS 설정
+const posConfig = {
+    autoRefresh: <?= $posAutoRefresh ? 'true' : 'false' ?>,
+    refreshInterval: <?= $posRefreshInterval ?>,
+    soundNotify: <?= $posSoundNotify ? 'true' : 'false' ?>,
+    requireStaff: <?= $posRequireStaff ? 'true' : 'false' ?>,
+    autoAssign: <?= $posAutoAssign ? 'true' : 'false' ?>,
+    defaultTab: '<?= $posDefaultTab ?>'
+};
+
+// 자동 새로고침
+if (posConfig.autoRefresh && posConfig.refreshInterval > 0) {
+    console.log('[POS] Auto-refresh enabled:', posConfig.refreshInterval, 'seconds');
+    setInterval(() => {
+        // 모달이 열려있지 않을 때만 새로고침
+        const modals = document.querySelectorAll('.fixed.z-50:not(.hidden)');
+        if (modals.length === 0) {
+            console.log('[POS] Auto-refreshing...');
+            location.reload();
+        }
+    }, posConfig.refreshInterval * 1000);
+}
+
 // POS 모드 및 전체 서비스 목록
 const posMode = '<?= $posMode ?>';
 const posAllServices = <?= json_encode($calServices, JSON_UNESCAPED_UNICODE) ?>;

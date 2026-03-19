@@ -169,6 +169,8 @@ return [
     'pos_settings_operation' => '운영 설정',
     'pos_settings_require_staff' => '스태프 배정 필수',
     'pos_settings_require_staff_help' => '활성화하면 스태프가 배정되지 않은 예약은 서비스를 진행할 수 없습니다. 진행 버튼이 비활성화됩니다.',
+    'pos_settings_auto_assign' => '스태프 자동 배정',
+    'pos_settings_auto_assign_help' => '키오스크 또는 온라인에서 접수된 예약에 스태프를 자동으로 배정합니다. 선택된 서비스를 수행할 수 있는 스태프 중 당일 예약이 가장 적은 스태프에게 배정됩니다.',
     'pos_current_staff' => '현재 배정',
     'pos_designation_fee' => '지명료',
     'pos_designation' => '지명',

@@ -11,7 +11,11 @@ $g = $card;
 $svcImg = $g['service_image'] ?? '';
 $profileImg = $g['user_profile_image'] ?? '';
 $isMember = !empty($g['user_id']);
-$hasServiceBg = !empty($svcImg);
+$hasServiceBg = !empty($svcImg) && ($posShowImage ?? true);
+$_posShowPhone = $posShowPhone ?? true;
+$_posShowPrice = $posShowPrice ?? true;
+$_posRequireStaff = $posRequireStaff ?? true;
+$_posImageOpacity = $posImageOpacity ?? 60;
 $hasProfile = $isMember && !empty($profileImg);
 $appUrl = $config['app_url'] ?? '';
 $gradeName = $g['grade_name'] ?? '';
@@ -30,7 +34,8 @@ $pointsBalance = $pointsEnabled ? ($g['points_balance'] ?? 0) : 0;
      style="min-height:200px;<?php if ($hasServiceBg): ?>background-image:url('<?= htmlspecialchars($appUrl . '/storage/' . $svcImg) ?>');background-size:cover;background-position:center<?php endif; ?>">
 
     <?php if ($hasServiceBg): ?>
-    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 z-[1]"></div>
+    <?php $opFrom = $_posImageOpacity / 100; $opVia = max(0.2, $opFrom * 0.5); $opTo = max(0.1, $opFrom * 0.25); ?>
+    <div class="absolute inset-0 z-[1]" style="background:linear-gradient(to top, rgba(0,0,0,<?= $opFrom ?>), rgba(0,0,0,<?= $opVia ?>), rgba(0,0,0,<?= $opTo ?>))"></div>
     <?php else: ?>
     <div class="absolute inset-0 bg-white dark:bg-zinc-800 z-[1]"></div>
     <?php endif; ?>
@@ -66,7 +71,9 @@ $pointsBalance = $pointsEnabled ? ($g['points_balance'] ?? 0) : 0;
                         <span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-white flex-shrink-0" style="background-color:<?= htmlspecialchars($gradeColor) ?>"><?= htmlspecialchars($gradeName) ?></span>
                         <?php endif; ?>
                     </div>
+                    <?php if ($_posShowPhone): ?>
                     <p class="text-xs <?= $hasServiceBg ? 'text-white/70' : 'text-zinc-400 dark:text-zinc-500' ?>"><?= htmlspecialchars($g['customer_phone']) ?></p>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="flex flex-col items-end gap-1 flex-shrink-0">
@@ -132,19 +139,21 @@ $pointsBalance = $pointsEnabled ? ($g['points_balance'] ?? 0) : 0;
             <?php else: ?>
             <span class="text-xs <?= $hasServiceBg ? 'text-amber-300' : 'text-amber-600 dark:text-amber-400' ?>"><?= $g['earliest_start'] ?> <?= __('reservations.pos_scheduled') ?></span>
             <?php endif; ?>
+            <?php if ($_posShowPrice): ?>
             <div class="text-right">
                 <?php if ($discountAmt > 0): ?>
                 <span class="text-[10px] line-through <?= $hasServiceBg ? 'text-white/50' : 'text-zinc-400' ?>"><?= formatPrice($g['total_amount']) ?></span>
                 <?php endif; ?>
                 <span class="text-sm font-bold <?= $hasServiceBg ? 'text-white drop-shadow-sm' : 'text-zinc-900 dark:text-white' ?>"><?= formatPrice($finalAmt) ?></span>
             </div>
+            <?php endif; ?>
         </div>
     </div>
 
     <!-- 카드 하단: 액션 버튼 -->
     <div class="relative z-10 px-3 pb-3 pt-1 flex gap-2 <?= $hasServiceBg ? 'bg-black/30 backdrop-blur-sm' : '' ?>">
         <?php if ($g['has_pending'] && !$g['has_in_service']): ?>
-            <?php if (empty($g['staff_id'])): ?>
+            <?php if (empty($g['staff_id']) && $_posRequireStaff): ?>
             <button disabled
                     class="flex-1 h-11 flex items-center justify-center gap-1.5 bg-zinc-300 dark:bg-zinc-600 text-zinc-500 dark:text-zinc-400 rounded-lg text-sm font-bold cursor-not-allowed">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>

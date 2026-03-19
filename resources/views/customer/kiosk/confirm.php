@@ -63,8 +63,37 @@ $staffName = '';
 $designationFee = 0;
 
 if ($type === 'assignment') {
-    // 자동 배정: 스태프 없이 접수, 관리자가 나중에 배정
-    $staffId = null;
+    // POS 설정에서 자동 배정 여부 확인
+    $_aaStmt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'pos_auto_assign'");
+    $_aaStmt->execute();
+    $autoAssignEnabled = ($_aaStmt->fetchColumn() ?: '0') === '1';
+    if ($autoAssignEnabled && !empty($serviceIds)) {
+        // 자동 배정: 서비스 수행 가능한 스태프 중 당일 예약 최소
+        $today = date('Y-m-d');
+        $svcPh = implode(',', array_fill(0, count($serviceIds), '?'));
+        try {
+            $candidateStmt = $pdo->prepare("
+                SELECT DISTINCT s.id, s.name FROM {$prefix}staff s
+                INNER JOIN {$prefix}staff_services ss ON s.id = ss.staff_id
+                WHERE s.is_active = 1 AND (s.is_visible = 1 OR s.is_visible IS NULL) AND ss.service_id IN ({$svcPh})
+                GROUP BY s.id HAVING COUNT(DISTINCT ss.service_id) = ?
+            ");
+            $candidateStmt->execute([...array_values($serviceIds), count($serviceIds)]);
+            $candidates = $candidateStmt->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($candidates)) {
+                $bestStaff = null; $minCount = PHP_INT_MAX;
+                foreach ($candidates as $c) {
+                    $cntStmt = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}reservations WHERE staff_id = ? AND reservation_date = ? AND status NOT IN ('cancelled')");
+                    $cntStmt->execute([$c['id'], $today]);
+                    $cnt = (int)$cntStmt->fetchColumn();
+                    if ($cnt < $minCount) { $minCount = $cnt; $bestStaff = $c; }
+                }
+                if ($bestStaff) { $staffId = $bestStaff['id']; }
+            }
+        } catch (Exception $e) { /* 자동 배정 실패 시 미배정으로 진행 */ }
+    } else {
+        $staffId = null;
+    }
     $staffName = '';
     $designationFee = 0;
 } elseif ($type === 'designation' && $staffId) {

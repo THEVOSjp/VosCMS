@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'pos_sound_notification' => isset($_POST['pos_sound_notification']) ? '1' : '0',
         'pos_default_tab' => $_POST['pos_default_tab'] ?? 'cards',
         'pos_require_staff' => isset($_POST['pos_require_staff']) ? '1' : '0',
+        'pos_auto_assign' => isset($_POST['pos_auto_assign']) ? '1' : '0',
     ];
     $upsertStmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
     foreach ($fields as $k => $v) { $upsertStmt->execute([$k, $v]); $settings[$k] = $v; }
@@ -206,6 +207,19 @@ $hint = 'text-xs text-zinc-500 dark:text-zinc-400 mt-0.5';
                                     <label class="relative inline-flex items-center cursor-pointer ml-4">
                                         <input type="hidden" name="pos_require_staff" value="0">
                                         <input type="checkbox" name="pos_require_staff" value="1" <?= ($settings['pos_require_staff'] ?? '1') === '1' ? 'checked' : '' ?> class="sr-only peer">
+                                        <div class="<?= $tgl ?>"></div>
+                                    </label>
+                                </div>
+
+                                <!-- 스태프 자동 배정 -->
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('reservations.pos_settings_auto_assign') ?></label>
+                                        <p class="<?= $hint ?>"><?= __('reservations.pos_settings_auto_assign_help') ?></p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer ml-4">
+                                        <input type="hidden" name="pos_auto_assign" value="0">
+                                        <input type="checkbox" name="pos_auto_assign" value="1" <?= ($settings['pos_auto_assign'] ?? '0') === '1' ? 'checked' : '' ?> class="sr-only peer">
                                         <div class="<?= $tgl ?>"></div>
                                     </label>
                                 </div>

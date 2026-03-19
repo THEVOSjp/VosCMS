@@ -1,5 +1,12 @@
 <script>
 console.log('[POS] Page loaded');
+// 기본 탭 설정 적용
+if (typeof posConfig !== 'undefined' && posConfig.defaultTab && posConfig.defaultTab !== 'cards') {
+    const tabMap = { 'waiting': 'waiting', 'reservations': 'reservations' };
+    if (tabMap[posConfig.defaultTab]) {
+        setTimeout(() => POS.switchTab(posConfig.defaultTab), 100);
+    }
+}
 
 const POS = {
     adminUrl: '<?= $adminUrl ?>',
