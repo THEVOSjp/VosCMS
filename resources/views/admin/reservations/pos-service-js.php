@@ -205,6 +205,7 @@ Object.assign(POS, {
         };
 
         let totalAmount = 0, totalDuration = 0;
+        let totalDesignationFee = 0;
         const seenReservations = {};
         let totalPaid = 0;
 
@@ -217,6 +218,7 @@ Object.assign(POS, {
             if (!seenReservations[s.reservation_id]) {
                 seenReservations[s.reservation_id] = true;
                 totalPaid += parseFloat(s.reservation_paid || 0);
+                totalDesignationFee += parseFloat(s.designation_fee || 0);
             }
 
             const badge = statusCls[s.status] || 'bg-zinc-100 text-zinc-700';
@@ -245,12 +247,17 @@ Object.assign(POS, {
 
         document.getElementById('posServiceList').innerHTML = html || '<p class="text-center text-zinc-400 text-sm py-4"><?= __('reservations.pos_no_services') ?></p>';
 
-        const remaining = totalAmount - totalPaid;
+        const grandTotal = totalAmount + totalDesignationFee;
+        const remaining = grandTotal - totalPaid;
         document.getElementById('posServiceTotal').innerHTML = `
             <div class="flex items-center justify-between py-2 text-sm">
                 <span class="text-zinc-500"><?= __('reservations.pos_pay_total') ?> (${services.length}<?= __('reservations.pos_service_count') ?>) · ${totalDuration}<?= __('reservations.pos_min') ?></span>
                 <span class="font-bold text-zinc-900 dark:text-white">${this.fmtCurrency(totalAmount)}</span>
             </div>
+            ${totalDesignationFee > 0 ? `<div class="flex items-center justify-between pb-2 text-sm">
+                <span class="text-violet-600 dark:text-violet-400"><?= __('reservations.pos_pay_designation') ?></span>
+                <span class="font-medium text-violet-600 dark:text-violet-400">${this.fmtCurrency(totalDesignationFee)}</span>
+            </div>` : ''}
             ${totalPaid > 0 ? `<div class="flex items-center justify-between pb-2 text-sm">
                 <span class="text-zinc-500"><?= __('reservations.pos_pay_paid') ?></span>
                 <span class="text-emerald-600">${this.fmtCurrency(totalPaid)}</span>
