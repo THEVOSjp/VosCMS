@@ -34,7 +34,7 @@ try {
     $sql = "SELECT s.*, p.name as position_name, p.name_i18n as position_name_i18n
             FROM {$prefix}staff s
             LEFT JOIN {$prefix}staff_positions p ON s.position_id = p.id
-            WHERE s.is_active = 1";
+            WHERE s.is_active = 1 AND (s.is_visible = 1 OR s.is_visible IS NULL)";
 
     if ($selectedPosition !== 'all' && is_numeric($selectedPosition)) {
         $sql .= " AND s.position_id = :position_id";

@@ -19,6 +19,7 @@ return [
     'fields' => [
         'name' => '이름', 'email' => '이메일', 'phone' => '전화번호', 'bio' => '소개',
         'greeting_before' => '시술 전 인사말', 'greeting_after' => '시술 후 인사말',
+        'is_visible' => '목록 노출', 'is_visible_help' => '비활성화하면 고객 스태프 목록에 표시되지 않습니다.',
         'services' => '담당 서비스', 'contact' => '연락처', 'is_active' => '활성 상태',
         'linked_member' => '회원 연동', 'card_number' => '카드번호 (RFID/NFC)',
         'avatar' => '사진', 'upload_photo' => '사진 선택', 'remove_photo' => '사진 삭제',

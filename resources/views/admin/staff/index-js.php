@@ -324,6 +324,18 @@
                             <div class="w-11 h-6 bg-zinc-200 peer-focus:ring-2 peer-focus:ring-blue-500 dark:bg-zinc-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                         </label>
                     </div>
+
+                    <!-- 목록 노출 여부 -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('staff.fields.is_visible') ?></label>
+                            <p class="text-xs text-zinc-500"><?= __('staff.fields.is_visible_help') ?></p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="is_visible" id="formVisible" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-zinc-200 peer-focus:ring-2 peer-focus:ring-blue-500 dark:bg-zinc-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                        </label>
+                    </div>
                 </div>
 
                 <!-- 버튼 -->
@@ -517,12 +529,15 @@
         // 활성 상태
         var activeField = document.getElementById('activeField');
         var activeInput = document.getElementById('formActive');
+        var visibleInput = document.getElementById('formVisible');
         if (isEdit) {
             activeField.classList.remove('hidden');
             activeInput.checked = !!data.is_active;
+            visibleInput.checked = data.is_visible !== undefined ? !!data.is_visible : true;
         } else {
             activeField.classList.add('hidden');
             activeInput.checked = true;
+            visibleInput.checked = true;
         }
 
         // 아바타 미리보기

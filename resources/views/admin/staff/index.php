@@ -144,7 +144,7 @@ try {
 
             $userId = trim($_POST['user_id'] ?? '') ?: null;
             $designationFee = max(0, (float)($_POST['designation_fee'] ?? 0));
-            $fields = ['user_id = ?', 'name = ?', 'email = ?', 'phone = ?', 'bio = ?', 'designation_fee = ?', 'position_id = ?', 'is_active = ?'];
+            $fields = ['user_id = ?', 'name = ?', 'email = ?', 'phone = ?', 'bio = ?', 'designation_fee = ?', 'position_id = ?', 'is_active = ?', 'is_visible = ?'];
             $positionId = (int)($_POST['position_id'] ?? 0) ?: null;
             $params = [
                 $userId,
@@ -155,6 +155,7 @@ try {
                 $designationFee,
                 $positionId,
                 isset($_POST['is_active']) ? 1 : 0,
+                isset($_POST['is_visible']) ? 1 : 0,
             ];
 
             // 다국어
@@ -454,7 +455,7 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                                 "greeting_before" => $s["greeting_before"] ?? "",
                                 "greeting_after" => $s["greeting_after"] ?? "",
                                 "card_number" => $s["card_number"] ?? "",
-                                "position_id" => $s["position_id"], "is_active" => $s["is_active"],
+                                "position_id" => $s["position_id"], "is_active" => $s["is_active"], "is_visible" => $s["is_visible"] ?? 1,
                                 "name_i18n" => $nameI18n, "bio_i18n" => $bioI18n,
                                 "designation_fee" => (float)($s["designation_fee"] ?? 0),
                                 "service_ids" => $staffServices[$s["id"]] ?? [],
