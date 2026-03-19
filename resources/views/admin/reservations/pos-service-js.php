@@ -58,10 +58,30 @@ Object.assign(POS, {
 
         try {
             const ids = (r.reservation_ids || []).join(',');
-            const resp = await fetch(`${this.adminUrl}/reservations/customer-services?ids=${encodeURIComponent(ids)}`);
+            const resp = await fetch(`${this.adminUrl}/reservations/customer-services?ids=${encodeURIComponent(ids)}&_t=${Date.now()}`);
             const data = await resp.json();
             console.log('[POS] Customer services:', data);
             if (data.success) {
+                // 대표 서비스 이미지 배경 적용
+                const heroImg = (data.data || []).find(s => s.service_image)?.service_image;
+                const headerEl = document.getElementById('posServiceCustomer');
+                const heroEl = document.getElementById('posServiceHero');
+                const overlayEl = document.getElementById('posServiceHeroOverlay');
+                if (heroImg) {
+                    const baseUrl = '<?= $config['app_url'] ?? '' ?>';
+                    const path = heroImg.startsWith('storage/') ? heroImg : 'storage/' + heroImg;
+                    const imgUrl = heroImg.startsWith('http') ? heroImg : (baseUrl + '/' + path);
+                    heroEl.style.backgroundImage = `url('${imgUrl}')`;
+                    const isDark = document.documentElement.classList.contains('dark');
+                    overlayEl.style.background = isDark
+                        ? 'linear-gradient(to bottom, rgba(39,39,42,0.8), rgba(39,39,42,0.92))'
+                        : 'linear-gradient(to bottom, rgba(255,255,255,0.75), rgba(255,255,255,0.9))';
+                    overlayEl.style.backdropFilter = 'blur(2px)';
+                } else {
+                    heroEl.style.backgroundImage = '';
+                    overlayEl.style.background = '';
+                    overlayEl.style.backdropFilter = '';
+                }
                 this.renderCustomerProfile(data.customer || {}, data.memos || []);
                 this.renderStaffHeader(data.data, data.customer || {});
                 this.renderServiceList(data.data);
@@ -367,12 +387,17 @@ Object.assign(POS, {
         if (isHidden) {
             area.classList.remove('hidden');
             document.getElementById('posAddServiceArea').classList.add('hidden');
+            // 이미 목록이 있으면 재렌더링 안 함
+            if (document.getElementById('posAssignStaffList').children.length > 0) {
+                console.log('[POS] Staff list already rendered, skip');
+                return;
+            }
             const currentId = this._currentStaffId;
             const html = posAllStaff.map(s => {
                 const isCurrent = String(s.id) === currentId;
                 const fee = parseFloat(s.designation_fee || 0);
-                return `<label class="flex items-center p-2.5 rounded-lg border ${isCurrent ? 'border-violet-400 bg-violet-50 dark:bg-violet-900/20' : 'border-zinc-200 dark:border-zinc-700'} cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-900/10">
-                    <input type="radio" name="pos_assign_staff" value="${s.id}" class="pos-staff-radio mr-3 text-violet-600" ${isCurrent ? 'checked' : ''} onchange="POS.onStaffRadioChange()">
+                return `<label class="flex items-center p-2.5 rounded-lg border ${isCurrent ? 'border-violet-400 bg-violet-50 dark:bg-violet-900/20' : 'border-zinc-200 dark:border-zinc-700'} cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-900/10" onclick="event.stopPropagation()">
+                    <input type="radio" name="pos_assign_staff" value="${s.id}" class="pos-staff-radio mr-3 text-violet-600" ${isCurrent ? 'checked' : ''} onchange="event.stopPropagation();POS.onStaffRadioChange()" onclick="event.stopPropagation()">
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium text-zinc-900 dark:text-white">${this.escHtml(s.name)}${isCurrent ? ' <span class="text-xs text-violet-500">(<?= __('reservations.pos_current_staff') ?>)</span>' : ''}</p>
                         ${fee > 0 ? '<p class="text-xs text-zinc-500"><?= __('reservations.pos_designation_fee') ?> ' + this.fmtCurrency(fee) + '</p>' : ''}
@@ -390,7 +415,7 @@ Object.assign(POS, {
     onStaffRadioChange() {
         const selected = document.querySelector('.pos-staff-radio:checked');
         document.getElementById('posAssignStaffBtn').disabled = !selected;
-        console.log('[POS] Staff selected:', selected?.value);
+        console.log('[POS] Staff radio changed:', selected?.value, 'btn disabled:', !selected);
     },
 
     async submitAssignStaff() {
@@ -412,8 +437,11 @@ Object.assign(POS, {
             const data = await resp.json();
             console.log('[POS] Assign staff result:', data);
             if (data.success) {
-                console.log('[POS] Staff assigned, reloading...');
-                location.reload();
+                console.log('[POS] Staff assigned, refreshing services...');
+                document.getElementById('posAssignStaffArea').classList.add('hidden');
+                document.getElementById('posAssignStaffList').innerHTML = '';
+                // 서비스 목록 새로 불러오기
+                this.showServices(this._svcCustomer);
             } else {
                 alert(data.message || '스태프 배정 실패');
                 btn.disabled = false;

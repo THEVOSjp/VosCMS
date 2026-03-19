@@ -82,6 +82,11 @@ $pointsBalance = $pointsEnabled ? ($g['points_balance'] ?? 0) : 0;
                 <?php elseif ($pSt === 'partial'): ?>
                     <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100/90 text-blue-700 dark:bg-blue-900/60 dark:text-blue-400"><?= __('reservations.pos_partial_paid') ?></span>
                 <?php endif; ?>
+                <?php if (empty($g['staff_id'])): ?>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100/90 text-red-700 dark:bg-red-900/60 dark:text-red-400"><?= __('reservations.pos_unassigned') ?></span>
+                <?php else: ?>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-medium <?= $hasServiceBg ? 'bg-white/20 text-white/80' : 'bg-violet-100/90 text-violet-700 dark:bg-violet-900/60 dark:text-violet-400' ?>"><?= htmlspecialchars($g['staff_name'] ?? '') ?></span>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -139,11 +144,19 @@ $pointsBalance = $pointsEnabled ? ($g['points_balance'] ?? 0) : 0;
     <!-- 카드 하단: 액션 버튼 -->
     <div class="relative z-10 px-3 pb-3 pt-1 flex gap-2 <?= $hasServiceBg ? 'bg-black/30 backdrop-blur-sm' : '' ?>">
         <?php if ($g['has_pending'] && !$g['has_in_service']): ?>
+            <?php if (empty($g['staff_id'])): ?>
+            <button disabled
+                    class="flex-1 h-11 flex items-center justify-center gap-1.5 bg-zinc-300 dark:bg-zinc-600 text-zinc-500 dark:text-zinc-400 rounded-lg text-sm font-bold cursor-not-allowed">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <?= __('reservations.pos_assign_first') ?>
+            </button>
+            <?php else: ?>
             <button onclick="event.stopPropagation();POS.startAllServices(<?= $cardJson ?>)"
                     class="flex-1 h-11 flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg text-sm font-bold transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
                 <?= __('reservations.pos_btn_start') ?>
             </button>
+            <?php endif; ?>
             <button onclick="event.stopPropagation();POS.cancelAllServices(<?= $cardJson ?>)"
                     class="h-11 px-3 flex items-center justify-center bg-zinc-200/90 hover:bg-zinc-300 active:bg-zinc-400 dark:bg-zinc-700/90 dark:hover:bg-zinc-600 text-zinc-600 dark:text-zinc-300 rounded-lg text-sm transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>

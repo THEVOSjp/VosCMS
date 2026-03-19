@@ -127,17 +127,22 @@
 <!-- 서비스 상세 모달 (POS 현장 기준) -->
 <div id="posServiceModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4" onclick="POS.closeServiceModal(event)">
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
-        <!-- 헤더: 닫기 버튼 -->
-        <div class="flex items-center justify-between px-5 py-3 border-b border-zinc-200 dark:border-zinc-700 flex-shrink-0">
-            <h3 id="posServiceTitle" class="text-base font-bold text-zinc-900 dark:text-white flex items-center">
-                <?= __('reservations.pos_service_detail') ?>
-            </h3>
-            <button onclick="POS.closeServiceModal()" class="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg">
-                <svg class="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
+        <!-- 헤더 + 고객 프로필 (배경 이미지 영역) -->
+        <div id="posServiceHero" class="flex-shrink-0 bg-cover bg-center relative">
+            <div id="posServiceHeroOverlay" class="relative">
+                <!-- 헤더: 닫기 버튼 -->
+                <div class="flex items-center justify-between px-5 py-3 border-b border-white/20">
+                    <h3 id="posServiceTitle" class="text-base font-bold text-zinc-900 dark:text-white flex items-center">
+                        <?= __('reservations.pos_service_detail') ?>
+                    </h3>
+                    <button onclick="POS.closeServiceModal()" class="p-1 hover:bg-zinc-100/50 dark:hover:bg-zinc-700/50 rounded-lg">
+                        <svg class="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <!-- 고객 프로필 헤더 (동적) -->
+                <div id="posServiceCustomer"></div>
+            </div>
         </div>
-        <!-- 고객 프로필 헤더 (동적) -->
-        <div id="posServiceCustomer" class="flex-shrink-0"></div>
         <!-- 스크롤 영역: 2단 레이아웃 -->
         <div class="overflow-y-auto flex-1 min-h-0">
             <div class="grid grid-cols-1 md:grid-cols-5 gap-0 md:gap-0">

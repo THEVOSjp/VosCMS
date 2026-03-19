@@ -419,7 +419,7 @@ try {
                        r.designation_fee, r.staff_id,
                        st.name as staff_name, st.avatar as staff_avatar,
                        rs.service_id, COALESCE(rs.service_name, s2.name) as service_name, rs.price, rs.duration as service_duration,
-                       rs.sort_order
+                       rs.sort_order, s2.image as service_image
                 FROM {$prefix}reservations r
                 JOIN {$prefix}reservation_services rs ON r.id = rs.reservation_id
                 LEFT JOIN {$prefix}services s2 ON rs.service_id = s2.id
@@ -436,7 +436,7 @@ try {
                        r.designation_fee, r.staff_id,
                        st.name as staff_name, st.avatar as staff_avatar,
                        rs.service_id, s2.name as service_name, rs.price, rs.duration as service_duration,
-                       0 as sort_order
+                       0 as sort_order, s2.image as service_image
                 FROM {$prefix}reservations r
                 JOIN {$prefix}reservation_services rs ON r.id = rs.reservation_id
                 LEFT JOIN {$prefix}services s2 ON rs.service_id = s2.id

@@ -71,6 +71,8 @@ class CustomerBasedAdapter implements PosAdapterInterface
                     'grade_point_rate'   => 0,
                     'grade_color'        => null,
                     'points_balance'     => 0,
+                    'staff_id'           => null,
+                    'staff_name'         => null,
                 ];
             }
             // 첫 번째 서비스 이미지 / 회원 정보 설정
@@ -82,6 +84,11 @@ class CustomerBasedAdapter implements PosAdapterInterface
             }
             if (empty($customerGroups[$key]['user_profile_image']) && !empty($r['user_profile_image'])) {
                 $customerGroups[$key]['user_profile_image'] = $r['user_profile_image'];
+            }
+            // 스태프 정보 전파
+            if (empty($customerGroups[$key]['staff_id']) && !empty($r['staff_id'])) {
+                $customerGroups[$key]['staff_id'] = $r['staff_id'];
+                $customerGroups[$key]['staff_name'] = $r['staff_name'] ?? null;
             }
             // 회원 등급 정보 전파
             if (empty($customerGroups[$key]['grade_name']) && !empty($r['grade_name'])) {

@@ -32,10 +32,12 @@ $stmtToday = $pdo->prepare("
         mg.name as grade_name,
         mg.discount_rate as grade_discount_rate,
         mg.point_rate as grade_point_rate,
-        mg.color as grade_color
+        mg.color as grade_color,
+        st.name as staff_name
     FROM {$prefix}reservations r
     LEFT JOIN {$prefix}users u ON r.user_id = u.id
     LEFT JOIN {$prefix}member_grades mg ON u.grade_id = mg.id
+    LEFT JOIN {$prefix}staff st ON r.staff_id = st.id
     WHERE r.reservation_date = ?
     ORDER BY r.start_time ASC
 ");

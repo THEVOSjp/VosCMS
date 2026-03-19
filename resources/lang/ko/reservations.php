@@ -141,6 +141,7 @@ return [
     'pos_select_staff' => '스태프 선택',
     'pos_assign' => '배정',
     'pos_staff' => '담당',
+    'pos_assign_first' => '스태프 배정 필요',
     'pos_current_staff' => '현재 배정',
     'pos_designation_fee' => '지명료',
     'pos_designation' => '지명',
