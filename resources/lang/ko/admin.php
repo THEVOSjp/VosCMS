@@ -98,7 +98,7 @@ return [
         'enabled' => '활성화됨', 'disabled' => '비활성화됨',
         'active' => '활성', 'inactive' => '비활성', 'actions' => '작업',
         'showing' => '표시 중', 'of' => '/', 'prev' => '이전', 'next' => '다음',
-        'save' => '저장', 'add' => '추가', 'multilang' => '다국어',
+        'save' => '저장', 'saved' => '저장되었습니다.', 'add' => '추가', 'multilang' => '다국어',
     ],
 
     // 언어 목록 (현지어 + 관리자 언어로 번역된 이름)
