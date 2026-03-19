@@ -64,7 +64,7 @@ $waitingList     = $posData['tab_data']['waiting'];
 $completedCount  = $posData['completed'];
 
 // 스태프 목록 (배정용)
-$posStaffList = $pdo->prepare("SELECT id, name, avatar FROM {$prefix}staff WHERE is_active = 1 ORDER BY sort_order");
+$posStaffList = $pdo->prepare("SELECT id, name, avatar FROM {$prefix}staff WHERE is_active = 1 AND (is_visible = 1 OR is_visible IS NULL) ORDER BY sort_order");
 $posStaffList->execute();
 $posStaffList = $posStaffList->fetchAll(PDO::FETCH_ASSOC);
 
@@ -226,7 +226,7 @@ include __DIR__ . '/_head.php';
 const posMode = '<?= $posMode ?>';
 const posAllServices = <?= json_encode($calServices, JSON_UNESCAPED_UNICODE) ?>;
 const posAllStaff = <?= json_encode(
-    $pdo->query("SELECT id, name, avatar, designation_fee FROM {$prefix}staff WHERE is_active = 1 ORDER BY sort_order ASC, name ASC")->fetchAll(PDO::FETCH_ASSOC),
+    $pdo->query("SELECT id, name, avatar, designation_fee FROM ${prefix}staff WHERE is_active = 1 AND (is_visible = 1 OR is_visible IS NULL) ORDER BY sort_order ASC, name ASC")->fetchAll(PDO::FETCH_ASSOC),
     JSON_UNESCAPED_UNICODE
 ) ?>;
 </script>

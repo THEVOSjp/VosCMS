@@ -15,7 +15,7 @@ $staffList = $pdo->query("
     SELECT s.id, s.name, s.name_i18n, s.avatar, s.bio, s.bio_i18n, s.designation_fee, p.name as position_name, p.name_i18n as position_i18n
     FROM {$prefix}staff s
     LEFT JOIN {$prefix}staff_positions p ON s.position_id = p.id
-    WHERE s.is_active = 1
+    WHERE s.is_active = 1 AND (s.is_visible = 1 OR s.is_visible IS NULL)
     ORDER BY s.sort_order ASC, s.name ASC
 ")->fetchAll(PDO::FETCH_ASSOC);
 

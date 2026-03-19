@@ -376,7 +376,7 @@ try {
         }
 
         // 전체 활성 스태프
-        $allStaff = $pdo->query("SELECT id, name, avatar, designation_fee FROM {$prefix}staff WHERE is_active = 1 ORDER BY sort_order ASC, name ASC")->fetchAll(PDO::FETCH_ASSOC);
+        $allStaff = $pdo->query("SELECT id, name, avatar, designation_fee FROM ${prefix}staff WHERE is_active = 1 AND (is_visible = 1 OR is_visible IS NULL) ORDER BY sort_order ASC, name ASC")->fetchAll(PDO::FETCH_ASSOC);
 
         // 해당 일시에 예약이 겹치는 스태프 ID 조회
         $busyStmt = $pdo->prepare("
@@ -513,7 +513,7 @@ try {
         }
         $staffId = (int)$staffId;
         // 스태프 존재 확인
-        $stStaff = $pdo->prepare("SELECT id, name, designation_fee FROM {$prefix}staff WHERE id = ? AND is_active = 1");
+        $stStaff = $pdo->prepare("SELECT id, name, designation_fee FROM ${prefix}staff WHERE id = ? AND is_active = 1 AND (is_visible = 1 OR is_visible IS NULL)");
         $stStaff->execute([$staffId]);
         $staff = $stStaff->fetch(PDO::FETCH_ASSOC);
         if (!$staff) {
