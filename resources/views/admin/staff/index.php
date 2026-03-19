@@ -405,10 +405,10 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
                             <!-- 상태 배지 -->
                             <div class="absolute top-2 right-2 flex gap-1">
                                 <?php if (!$s['is_active']): ?>
-                                <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-red-600 text-white shadow"><?= __('staff.badge_inactive') ?? '비활성' ?></span>
+                                <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-red-600 text-white shadow"><?= __('staff.fields.badge_inactive') ?></span>
                                 <?php endif; ?>
                                 <?php if (!($s['is_visible'] ?? 1)): ?>
-                                <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-zinc-800/70 text-white shadow"><?= __('staff.badge_hidden') ?? '비노출' ?></span>
+                                <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-zinc-800/70 text-white shadow"><?= __('staff.fields.badge_hidden') ?></span>
                                 <?php endif; ?>
                             </div>
                         </div>
