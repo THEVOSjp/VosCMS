@@ -128,8 +128,7 @@ class SkinConfigRenderer
                     echo '<label class="flex items-center justify-between">';
                     echo '<span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">' . htmlspecialchars($title) . '</span>';
                     echo '<label class="relative inline-flex items-center cursor-pointer">';
-                    echo '<input type="hidden" name="skin_config[' . $name . ']" value="0">';
-                    echo '<input type="checkbox" name="skin_config[' . $name . ']" value="1" ' . $checked . ' class="sr-only peer">';
+                    echo '<input type="checkbox" name="skin_config[' . $name . ']" value="1" ' . $checked . ' class="sr-only peer skin-checkbox" data-name="' . $name . '">';
                     echo '<div class="w-9 h-5 bg-zinc-300 dark:bg-zinc-600 peer-checked:bg-blue-600 rounded-full peer after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>';
                     echo '</label></label>';
                     break;

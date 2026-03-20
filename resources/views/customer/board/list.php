@@ -395,7 +395,9 @@ function setViewStyle(style) {
 // 초기 스타일 복원
 (function() {
     var skinDefault = '<?= htmlspecialchars($skinConfig['list_style'] ?? 'table') ?>';
-    var saved = localStorage.getItem('board_view_' + _boardSlug) || skinDefault;
+    var allowSwitch = <?= $allowSwitch ? 'true' : 'false' ?>;
+    // 스타일 전환 비허용이면 스킨 설정만 사용, 허용이면 localStorage 우선
+    var saved = allowSwitch ? (localStorage.getItem('board_view_' + _boardSlug) || skinDefault) : skinDefault;
     setViewStyle(saved);
 })();
 </script>

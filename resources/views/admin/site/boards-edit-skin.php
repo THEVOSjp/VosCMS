@@ -117,6 +117,12 @@ document.getElementById('boardSkinForm')?.addEventListener('submit', async funct
     e.preventDefault();
     // FormData(multipart)로 전송 — 파일 업로드 지원
     const fd = new FormData(this);
+    // 체크되지 않은 checkbox → "0" 값 추가
+    this.querySelectorAll('.skin-checkbox').forEach(cb => {
+        if (!cb.checked) {
+            fd.set('skin_config[' + cb.dataset.name + ']', '0');
+        }
+    });
     fd.append('action', 'update_skin_config');
     fd.append('board_id', '<?= $boardId ?>');
     fd.append('skin', '<?= $currentSkin ?>');
