@@ -131,13 +131,32 @@ $fileStmt->execute([$postId]);
 $files = $fileStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 이전/다음 글
-$prevStmt = $pdo->prepare("SELECT id, title FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' AND id < ? ORDER BY id DESC LIMIT 1");
+$prevStmt = $pdo->prepare("SELECT id, title, original_locale FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' AND id < ? ORDER BY id DESC LIMIT 1");
 $prevStmt->execute([$boardId, $postId]);
 $prevPost = $prevStmt->fetch(PDO::FETCH_ASSOC);
 
-$nextStmt = $pdo->prepare("SELECT id, title FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' AND id > ? ORDER BY id ASC LIMIT 1");
+$nextStmt = $pdo->prepare("SELECT id, title, original_locale FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' AND id > ? ORDER BY id ASC LIMIT 1");
 $nextStmt->execute([$boardId, $postId]);
 $nextPost = $nextStmt->fetch(PDO::FETCH_ASSOC);
+
+// 이전/다음 글 제목 다국어 폴백 (현재 로케일 → en → 원본)
+$_navTrStmt = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = ? AND locale = ?");
+foreach ([&$prevPost, &$nextPost] as &$_navPost) {
+    if (!$_navPost) continue;
+    $origLoc = $_navPost['original_locale'] ?? 'ko';
+    if ($currentLocale !== $origLoc) {
+        $_navTrStmt->execute(["board_post.{$_navPost['id']}.title", $currentLocale]);
+        $tr = $_navTrStmt->fetchColumn();
+        if ($tr !== false) {
+            $_navPost['title'] = $tr;
+        } elseif ($currentLocale !== 'en') {
+            $_navTrStmt->execute(["board_post.{$_navPost['id']}.title", 'en']);
+            $enTr = $_navTrStmt->fetchColumn();
+            if ($enTr !== false) $_navPost['title'] = $enTr;
+        }
+    }
+}
+unset($_navPost);
 
 // 수정/삭제 권한
 $canEdit = $currentUser && ($currentUser['id'] == $post['user_id'] || $isAdmin);
