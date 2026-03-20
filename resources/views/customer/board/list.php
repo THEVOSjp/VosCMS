@@ -90,8 +90,81 @@ $posts = $listStmt->fetchAll(PDO::FETCH_ASSOC);
 // 글 번호 계산
 $startNo = $totalCount - $offset;
 ?>
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-        <!-- 게시판 제목 -->
+    <?php
+    // 스킨 설정 적용
+    $_skinPrimaryColor = $skinConfig['primary_color'] ?? '#3B82F6';
+    $_skinBgColor = $skinConfig['board_bg_color'] ?? '';
+    $_skinBorderRadius = ($skinConfig['border_radius'] ?? 'rounded') === 'square' ? 'rounded-none' : 'rounded-xl';
+    $_skinPostsPerRow = max(2, min(6, (int)($skinConfig['posts_per_row'] ?? 3)));
+    $_skinUseLinkBoard = ($skinConfig['use_link_board'] ?? 'none') !== 'none';
+    $_skinLinkTarget = $skinConfig['link_target'] ?? '_blank';
+    $_skinFontAwesome = ($skinConfig['font_awesome'] ?? 'internal') === 'internal';
+    $_skinCustomCss = trim($skinConfig['custom_css'] ?? '');
+    $_skinTitleBgImage = $skinConfig['title_bg_image'] ?? ($skinConfig['title_image'] ?? '');
+    $_skinTitleBgVideo = $skinConfig['title_bg_video'] ?? '';
+    $_skinTitleBgType = $skinConfig['title_bg_type'] ?? 'none';
+    // 자동 감지: 타입이 none이지만 이미지/동영상 URL이 있으면 자동 설정
+    if ($_skinTitleBgType === 'none' && $_skinTitleBgImage) $_skinTitleBgType = 'image';
+    if ($_skinTitleBgType === 'none' && $_skinTitleBgVideo) $_skinTitleBgType = 'video';
+    // 둘 다 있으면 설정된 타입 우선, 동영상 > 이미지 폴백
+    if ($_skinTitleBgType === 'video' && !$_skinTitleBgVideo && $_skinTitleBgImage) $_skinTitleBgType = 'image';
+    if ($_skinTitleBgType === 'image' && !$_skinTitleBgImage && $_skinTitleBgVideo) $_skinTitleBgType = 'video';
+    $_skinTitleBgHeight = max(100, min(600, (int)($skinConfig['title_bg_height'] ?? 200)));
+    $_skinTitleBgOverlay = max(0, min(100, (int)($skinConfig['title_bg_overlay'] ?? 40)));
+    $_skinTitleTextColor = $skinConfig['title_text_color'] ?? 'auto';
+    $_hasTitleBg = ($_skinTitleBgType === 'image' && $_skinTitleBgImage) || ($_skinTitleBgType === 'video' && $_skinTitleBgVideo);
+    $_skinCustomHeader = trim($skinConfig['custom_html_header'] ?? '');
+    $_skinCustomFooter = trim($skinConfig['custom_html_footer'] ?? '');
+    ?>
+    <?php if ($_skinFontAwesome): ?>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <?php endif; ?>
+    <?php if ($_skinCustomCss): ?>
+    <style><?= $_skinCustomCss ?></style>
+    <?php endif; ?>
+    <style>
+        .board-skin-wrap { --skin-primary: <?= htmlspecialchars($_skinPrimaryColor) ?>; }
+        .board-skin-wrap a:not(.vs-btn):not([class*="bg-"]):hover { color: var(--skin-primary); }
+        .board-skin-wrap .skin-primary-bg { background-color: var(--skin-primary); }
+        .board-skin-wrap .skin-primary-text { color: var(--skin-primary); }
+    </style>
+
+    <div class="board-skin-wrap max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        <!-- 게시판 제목 (배경 이미지/동영상 지원) -->
+        <?php if ($_hasTitleBg): ?>
+        <?php
+            $_txtColorClass = $_skinTitleTextColor === 'white' ? 'text-white' : ($_skinTitleTextColor === 'dark' ? 'text-zinc-800' : 'text-white');
+            $_descColorClass = $_skinTitleTextColor === 'dark' ? 'text-zinc-600' : 'text-white/70';
+            $_gearColorClass = $_skinTitleTextColor === 'dark' ? 'text-zinc-400 hover:text-zinc-600' : 'text-white/50 hover:text-white';
+        ?>
+        <div class="relative mb-6 <?= $_skinBorderRadius ?> overflow-hidden" style="height:<?= $_skinTitleBgHeight ?>px">
+            <!-- 배경 미디어 -->
+            <?php if ($_skinTitleBgType === 'video' && $_skinTitleBgVideo): ?>
+            <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover">
+                <source src="<?= htmlspecialchars($_skinTitleBgVideo) ?>" type="video/mp4">
+            </video>
+            <?php elseif ($_skinTitleBgType === 'image' && $_skinTitleBgImage): ?>
+            <img src="<?= htmlspecialchars($_skinTitleBgImage) ?>" alt="" class="absolute inset-0 w-full h-full object-cover">
+            <?php endif; ?>
+            <!-- 오버레이 -->
+            <div class="absolute inset-0 bg-black" style="opacity:<?= $_skinTitleBgOverlay / 100 ?>"></div>
+            <!-- 제목 콘텐츠 -->
+            <div class="relative z-10 flex flex-col justify-end h-full p-6">
+                <h1 class="text-2xl font-bold <?= $_txtColorClass ?> inline-flex items-center gap-2 drop-shadow-sm">
+                    <?= htmlspecialchars($board['title']) ?>
+                    <?php if (!empty($_SESSION['admin_id'])): ?>
+                    <a href="<?= $baseUrl ?>/board/<?= htmlspecialchars($board['slug']) ?>/settings" class="<?= $_gearColorClass ?> transition" title="<?= __('board.board_settings') ?>">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </a>
+                    <?php endif; ?>
+                </h1>
+                <?php if (!empty($board['description'])): ?>
+                <p class="mt-1 text-sm <?= $_descColorClass ?> drop-shadow-sm"><?= htmlspecialchars($board['description']) ?></p>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php else: ?>
+        <!-- 기본 제목 (배경 없음) -->
         <div class="mb-6">
             <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 inline-flex items-center gap-2">
                 <?= htmlspecialchars($board['title']) ?>
@@ -105,11 +178,20 @@ $startNo = $totalCount - $offset;
             <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars($board['description']) ?></p>
             <?php endif; ?>
         </div>
+        <?php endif; ?>
 
         <?php if (!empty($board['header_content'])): ?>
         <div class="mb-4"><?= $board['header_content'] ?></div>
         <?php endif; ?>
 
+        <!-- 스킨 커스텀 헤더 -->
+        <?php if ($_skinCustomHeader): ?>
+        <div class="mb-4"><?= $_skinCustomHeader ?></div>
+        <?php endif; ?>
+
+        <!-- 스타일 전환 + 카테고리 필터 -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex-1">
         <!-- 카테고리 필터 -->
         <?php if (!($board['hide_categories'] ?? 0) && !empty($categories)): ?>
         <div class="flex flex-wrap gap-2 mb-4">
@@ -122,9 +204,29 @@ $startNo = $totalCount - $offset;
             <?php endforeach; ?>
         </div>
         <?php endif; ?>
+            </div>
+            <!-- 스타일 전환 버튼 -->
+            <?php $allowSwitch = !empty($skinConfig['allow_style_switch']) && $skinConfig['allow_style_switch'] !== '0' && $skinConfig['allow_style_switch'] !== false; ?>
+            <?php if ($allowSwitch): ?>
+            <div class="flex items-center gap-1 ml-4 flex-shrink-0" id="viewStyleBtns">
+                <button onclick="setViewStyle('table')" class="vs-btn p-1.5 rounded-lg transition" data-style="table" title="<?= __('board.style_table') ?>">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                </button>
+                <button onclick="setViewStyle('webzine')" class="vs-btn p-1.5 rounded-lg transition" data-style="webzine" title="<?= __('board.style_webzine') ?>">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+                </button>
+                <button onclick="setViewStyle('gallery')" class="vs-btn p-1.5 rounded-lg transition" data-style="gallery" title="<?= __('board.style_gallery') ?>">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </button>
+                <button onclick="setViewStyle('card')" class="vs-btn p-1.5 rounded-lg transition" data-style="card" title="<?= __('board.style_card') ?>">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
+                </button>
+            </div>
+            <?php endif; ?>
+        </div>
 
         <!-- 글 목록 테이블 -->
-        <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+        <div id="viewTable" class="view-mode bg-white dark:bg-zinc-800 <?= $_skinBorderRadius ?> shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="bg-zinc-50 dark:bg-zinc-700/50 border-b border-zinc-200 dark:border-zinc-700">
@@ -203,6 +305,15 @@ $startNo = $totalCount - $offset;
             </table>
         </div>
 
+        <!-- 웹진형 (스킨 오버라이드 가능) -->
+        <?php include boardSkinFile('_list-webzine.php'); ?>
+
+        <!-- 갤러리형 (스킨 오버라이드 가능) -->
+        <?php include boardSkinFile('_list-gallery.php'); ?>
+
+        <!-- 카드형 (스킨 오버라이드 가능) -->
+        <?php include boardSkinFile('_list-card.php'); ?>
+
         <!-- 페이지네이션 + 버튼 -->
         <div class="flex items-center justify-between mt-4">
             <!-- 페이지네이션 -->
@@ -246,5 +357,37 @@ $startNo = $totalCount - $offset;
         <?php if (!empty($board['footer_content'])): ?>
         <div class="mt-4"><?= $board['footer_content'] ?></div>
         <?php endif; ?>
+
+        <!-- 스킨 커스텀 푸터 -->
+        <?php if ($_skinCustomFooter): ?>
+        <div class="mt-4"><?= $_skinCustomFooter ?></div>
+        <?php endif; ?>
     </div>
+
+<script>
+// 뷰 스타일 전환
+var _boardSlug = '<?= htmlspecialchars($board['slug']) ?>';
+function setViewStyle(style) {
+    document.querySelectorAll('.view-mode').forEach(function(el) { el.classList.add('hidden'); });
+    var target = document.getElementById('view' + style.charAt(0).toUpperCase() + style.slice(1));
+    if (target) target.classList.remove('hidden');
+
+    document.querySelectorAll('.vs-btn').forEach(function(btn) {
+        var isActive = btn.dataset.style === style;
+        btn.className = 'vs-btn p-1.5 rounded-lg transition ' + (isActive
+            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+            : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700');
+    });
+
+    localStorage.setItem('board_view_' + _boardSlug, style);
+    console.log('[BoardList] View style:', style);
+}
+
+// 초기 스타일 복원
+(function() {
+    var skinDefault = '<?= htmlspecialchars($skinConfig['list_style'] ?? 'table') ?>';
+    var saved = localStorage.getItem('board_view_' + _boardSlug) || skinDefault;
+    setViewStyle(saved);
+})();
+</script>
 

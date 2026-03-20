@@ -4,6 +4,30 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [1.12.0] - 2026-03-20
+
+### Added
+- **스킨 설정 시스템 완성** — skin.json 기반 동적 폼 생성 + 실제 게시판 적용
+  - 섹션 구분 (기본/목록/링크/디자인/제목배경/커스텀)
+  - radio, video 타입 추가
+  - 이미지/동영상 파일 업로드 (FormData multipart)
+  - 이미지/동영상 삭제 기능
+  - 스킨 기본정보 테이블 (제작자/URL/이메일/날짜/버전/썸네일)
+- **제목 배경 이미지/동영상** — 배경 타입, 높이, 오버레이 투명도, 텍스트 색상 설정
+- **목록 4가지 스타일** — 목록형/웹진형/갤러리형/카드형, 스킨 파일 분리 + 오버라이드
+  - 갤러리형: 풀 이미지 cover + 호버 슬라이드 애니메이션
+  - 웹진형: 썸네일+제목+미리보기+메타정보 카드
+  - 공지글 상단 목록형 분리 (_list-notices.php)
+- **스킨 설정 적용** — primary_color, border_radius, posts_per_row, allow_style_switch, show_category, 링크 게시판, Font Awesome, 커스텀 CSS/HTML
+- **skin.json 기본값 자동 병합** — DB 저장 없어도 skin.json default 적용
+
+### Fixed
+- skin_config DB 저장 누락 (boards-api.php update 액션에 skin_config 미포함)
+- 스킨 저장 URLSearchParams → FormData(multipart) 변경 (파일 업로드 지원)
+- $_POST['skin_config'] 배열 자동 파싱 대응
+
+---
+
 ## [1.11.3] - 2026-03-20
 
 ### Fixed

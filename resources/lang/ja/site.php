@@ -242,6 +242,8 @@ return [
         'layout_none' => '利用可能なレイアウトがありません。',
         'skin_select' => 'スキン選択', 'skin_select_help' => 'スキンを変更するとページが更新されます。スキンごとの詳細設定はスキンタブで行えます。',
         'skin_settings' => 'スキン設定',
+        'skin_info' => 'スキン基本情報', 'skin_name' => 'スキン', 'skin_author' => 'スキン制作者',
+        'skin_date' => '日付', 'skin_version' => 'バージョン', 'skin_desc' => '説明',
         'skin_none' => '利用可能なスキンがありません。', 'skin_no_settings' => 'このスキンには設定項目がありません。',
         'section_basic' => '基本情報', 'section_seo' => 'SEO設定', 'section_display' => '表示設定',
         'field_url' => 'URL', 'field_url_help' => '英小文字、数字、ハイフン、アンダースコアのみ',

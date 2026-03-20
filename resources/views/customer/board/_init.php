@@ -67,6 +67,38 @@ $listColumns = json_decode($board['list_columns'] ?? '[]', true) ?: ['no', 'titl
 // 스킨 설정 파싱
 $skinConfig = json_decode($board['skin_config'] ?? '{}', true) ?: [];
 
+// skin.json 기본값 병합 (DB에 저장된 값이 없으면 skin.json default 사용)
+$boardSkinName = $board['skin'] ?? 'default';
+$_skinJsonPath = BASE_PATH . '/skins/' . $boardSkinName . '/board/skin.json';
+if (file_exists($_skinJsonPath)) {
+    $_skinJson = json_decode(file_get_contents($_skinJsonPath), true) ?: [];
+    foreach ($_skinJson['vars'] ?? [] as $_sv) {
+        $k = $_sv['name'] ?? '';
+        if ($k && !array_key_exists($k, $skinConfig) && isset($_sv['default'])) {
+            $skinConfig[$k] = $_sv['default'];
+        }
+    }
+}
+
+// 스킨 파일 경로 (스킨 오버라이드 지원)
+$boardSkinPath = BASE_PATH . '/skins/' . $boardSkinName . '/board';
+$boardDefaultPath = __DIR__; // customer/board/
+
+/**
+ * 스킨 파일 로드 헬퍼
+ * 스킨 디렉토리에 파일이 있으면 스킨 파일, 없으면 기본 파일 사용
+ * @param string $filename 파일명 (예: '_list-webzine.php')
+ * @return string|null 파일 경로 또는 null
+ */
+function boardSkinFile(string $filename): ?string {
+    global $boardSkinPath, $boardDefaultPath;
+    $skinFile = $boardSkinPath . '/' . $filename;
+    if (file_exists($skinFile)) return $skinFile;
+    $defaultFile = $boardDefaultPath . '/' . $filename;
+    if (file_exists($defaultFile)) return $defaultFile;
+    return null;
+}
+
 // 추천/비추천 사용 여부
 $useVote = ($board['use_vote'] ?? 'use') !== 'none';
 $useDownvote = ($board['use_downvote'] ?? 'use') !== 'none';

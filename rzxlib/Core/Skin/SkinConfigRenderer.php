@@ -47,6 +47,8 @@ class SkinConfigRenderer
             'title'       => $this->t($this->schema['title'] ?? ''),
             'description' => $this->t($this->schema['description'] ?? ''),
             'version'     => $this->schema['version'] ?? '',
+            'date'        => $this->schema['date'] ?? '',
+            'thumbnail'   => $this->schema['thumbnail'] ?? '',
             'author'      => $this->schema['author'] ?? [],
         ];
     }
@@ -95,8 +97,21 @@ class SkinConfigRenderer
     public function renderForm(): void
     {
         $inp = 'w-full px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200';
+        $currentSection = null;
 
         foreach ($this->vars as $var) {
+            // 섹션 구분 (var에 section 속성이 있으면 새 섹션 헤더 출력)
+            $section = isset($var['section']) ? $this->t($var['section']) : null;
+            if ($section && $section !== $currentSection) {
+                if ($currentSection !== null) echo '</div>'; // 이전 섹션 닫기
+                echo '<div class="border-t border-zinc-200 dark:border-zinc-700 pt-5 mt-5">';
+                echo '<h4 class="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">' . htmlspecialchars($section) . '</h4>';
+                $currentSection = $section;
+            } elseif ($section === null && $currentSection !== null) {
+                echo '</div>';
+                $currentSection = null;
+            }
+
             $name  = $var['name'];
             $type  = $var['type'] ?? 'text';
             $title = $this->t($var['title'] ?? $name);
@@ -131,6 +146,20 @@ class SkinConfigRenderer
                     echo '</select>';
                     break;
 
+                case 'radio':
+                    echo '<label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">' . htmlspecialchars($title) . '</label>';
+                    echo '<div class="flex flex-wrap gap-4">';
+                    foreach ($var['options'] ?? [] as $opt) {
+                        $optVal = $opt['value'] ?? '';
+                        $optLabel = $this->t($opt['label'] ?? $optVal);
+                        $chk = ($value == $optVal) ? 'checked' : '';
+                        echo '<label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 cursor-pointer">';
+                        echo '<input type="radio" name="skin_config[' . $name . ']" value="' . htmlspecialchars($optVal) . '" ' . $chk . ' class="text-blue-600">';
+                        echo htmlspecialchars($optLabel) . '</label>';
+                    }
+                    echo '</div>';
+                    break;
+
                 case 'color':
                     echo '<label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">' . htmlspecialchars($title) . '</label>';
                     echo '<div class="flex items-center gap-3">';
@@ -142,10 +171,28 @@ class SkinConfigRenderer
                 case 'image':
                     echo '<label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">' . htmlspecialchars($title) . '</label>';
                     if ($value) {
-                        echo '<div class="mb-2"><img src="' . htmlspecialchars($value) . '" class="max-h-20 rounded border border-zinc-300 dark:border-zinc-600"></div>';
+                        echo '<div class="mb-2 flex items-start gap-3">';
+                        echo '<img src="' . htmlspecialchars($value) . '" class="max-h-20 rounded border border-zinc-300 dark:border-zinc-600">';
+                        echo '<button type="button" onclick="this.closest(\'.mb-2\').remove();document.querySelector(\'[name=\\\'skin_config[' . $name . ']\\\']]\').value=\'\';document.querySelector(\'[name=\\\'skin_delete[' . $name . ']\\\']]\').value=\'1\'" class="text-xs text-red-500 hover:text-red-700 shrink-0 mt-1">삭제</button>';
+                        echo '</div>';
                     }
                     echo '<input type="file" name="skin_file_' . $name . '" accept="image/*" class="text-sm text-zinc-600 dark:text-zinc-400">';
                     echo '<input type="hidden" name="skin_config[' . $name . ']" value="' . htmlspecialchars($value) . '">';
+                    echo '<input type="hidden" name="skin_delete[' . $name . ']" value="0">';
+                    break;
+
+                case 'video':
+                    echo '<label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">' . htmlspecialchars($title) . '</label>';
+                    if ($value) {
+                        echo '<div class="mb-2 flex items-start gap-3">';
+                        echo '<video src="' . htmlspecialchars($value) . '" class="max-h-24 rounded border border-zinc-300 dark:border-zinc-600" muted playsinline></video>';
+                        echo '<div class="flex-1 min-w-0"><p class="text-xs text-zinc-400 break-all">' . htmlspecialchars($value) . '</p>';
+                        echo '<button type="button" onclick="this.closest(\'.mb-2\').remove();document.querySelector(\'[name=\\\'skin_config[' . $name . ']\\\']]\').value=\'\';document.querySelector(\'[name=\\\'skin_delete[' . $name . ']\\\']]\').value=\'1\'" class="text-xs text-red-500 hover:text-red-700 mt-1">삭제</button>';
+                        echo '</div></div>';
+                    }
+                    echo '<input type="file" name="skin_file_' . $name . '" accept="video/mp4,video/webm" class="text-sm text-zinc-600 dark:text-zinc-400 mb-1">';
+                    echo '<input type="text" name="skin_config[' . $name . ']" value="' . htmlspecialchars($value) . '" placeholder="https://... (URL 직접 입력)" class="' . $inp . ' mt-1">';
+                    echo '<input type="hidden" name="skin_delete[' . $name . ']" value="0">';
                     break;
 
                 case 'number':
@@ -185,5 +232,6 @@ class SkinConfigRenderer
             }
             echo '</div>';
         }
+        if ($currentSection !== null) echo '</div>'; // 마지막 섹션 닫기
     }
 }

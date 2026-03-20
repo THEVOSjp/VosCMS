@@ -5,7 +5,15 @@
  */
 $isNotice = !empty($post['_is_notice_row']);
 $rowClass = $isNotice ? 'bg-blue-50/50 dark:bg-blue-900/10' : 'hover:bg-zinc-50 dark:hover:bg-zinc-700/30';
+// 링크 게시판: 확장변수 link_url이 있으면 해당 URL로 이동
 $postUrl = $boardUrl . '/' . $post['id'];
+if (!empty($_skinUseLinkBoard) && !empty($post['extra_vars'])) {
+    $_evData = is_string($post['extra_vars']) ? json_decode($post['extra_vars'], true) : $post['extra_vars'];
+    if (!empty($_evData['link_url'])) {
+        $postUrl = $_evData['link_url'];
+    }
+}
+$_linkTarget = (!empty($_skinUseLinkBoard) && $postUrl !== $boardUrl . '/' . $post['id']) ? ($_skinLinkTarget ?? '_blank') : '';
 ?>
 <tr class="border-b border-zinc-100 dark:border-zinc-700/50 <?= $rowClass ?> transition">
     <?php foreach ($listColumns as $col): ?>
@@ -21,7 +29,7 @@ $postUrl = $boardUrl . '/' . $post['id'];
 
     <?php elseif ($col === 'title'): ?>
     <td class="py-3 px-4">
-        <a href="<?= $postUrl ?>" class="text-zinc-800 dark:text-zinc-200 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
+        <a href="<?= $postUrl ?>" <?= $_linkTarget ? 'target="' . $_linkTarget . '"' : '' ?> class="text-zinc-800 dark:text-zinc-200 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
             <?php if ($post['is_secret'] ?? 0): ?>
             <svg class="w-3.5 h-3.5 inline mr-1 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
             <?php endif; ?>

@@ -242,6 +242,8 @@ return [
         'layout_none' => 'No layouts available.',
         'skin_select' => 'Select Skin', 'skin_select_help' => 'The page will refresh when the skin is changed. Detailed skin settings can be configured in the Skin tab.',
         'skin_settings' => 'Skin Settings',
+        'skin_info' => 'Skin Information', 'skin_name' => 'Skin', 'skin_author' => 'Author',
+        'skin_date' => 'Date', 'skin_version' => 'Version', 'skin_desc' => 'Description',
         'skin_none' => 'No skins available.', 'skin_no_settings' => 'This skin has no settings.',
         'section_basic' => 'Basic Info', 'section_seo' => 'SEO Settings', 'section_display' => 'Display Settings',
         'field_url' => 'URL', 'field_url_help' => 'Lowercase letters, numbers, hyphens, underscores only',

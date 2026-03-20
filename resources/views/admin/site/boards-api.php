@@ -149,6 +149,19 @@ if ($action === 'update') {
         }
     }
 
+    // skin_config (JSON)
+    if (isset($_POST['skin_config'])) {
+        $sc = $_POST['skin_config'];
+        if (is_string($sc)) {
+            // 유효한 JSON인지 확인
+            $decoded = json_decode($sc, true);
+            if ($decoded !== null || $sc === 'null') {
+                $sets[] = "skin_config = ?";
+                $vals[] = $sc;
+            }
+        }
+    }
+
     // list_columns (JSON)
     if (isset($_POST['list_columns'])) {
         $cols = $_POST['list_columns'];
@@ -517,6 +530,58 @@ if ($action === 'board_admin_delete') {
     }
     $pdo->prepare("DELETE FROM {$prefix}board_admins WHERE board_id = ? AND user_id = ?")->execute([$boardId, $userId]);
     echo json_encode(['success' => true]);
+    exit;
+}
+
+// === SKIN CONFIG 저장 (파일 업로드 지원) ===
+if ($action === 'update_skin_config') {
+    $boardId = (int)($_POST['board_id'] ?? 0);
+    $skin = $_POST['skin'] ?? 'default';
+    if (!$boardId) { echo json_encode(['success' => false, 'message' => 'Board ID required']); exit; }
+
+    // skin_config 값 수집 (PHP가 skin_config[key]를 배열로 자동 파싱)
+    $skinConfig = $_POST['skin_config'] ?? [];
+    if (is_string($skinConfig)) {
+        $skinConfig = json_decode($skinConfig, true) ?: [];
+    }
+
+    // 삭제 처리 (skin_delete[name]=1 → 파일 삭제 + 값 제거)
+    $skinDeletes = $_POST['skin_delete'] ?? [];
+    foreach ($skinDeletes as $delName => $delFlag) {
+        if ($delFlag === '1' && !empty($skinConfig[$delName])) {
+            // 로컬 파일이면 물리 삭제
+            $oldUrl = $skinConfig[$delName];
+            $localPath = str_replace($config['app_url'] ?? '', BASE_PATH, $oldUrl);
+            if (file_exists($localPath)) @unlink($localPath);
+            $skinConfig[$delName] = '';
+        }
+    }
+
+    // 파일 업로드 처리 (skin_file_{name} → skin_config[{name}])
+    $uploadDir = BASE_PATH . '/storage/uploads/skins/' . $boardId . '/';
+    if (!is_dir($uploadDir)) @mkdir($uploadDir, 0777, true);
+
+    foreach ($_FILES as $fileKey => $fileInfo) {
+        if (strpos($fileKey, 'skin_file_') !== 0) continue;
+        if ($fileInfo['error'] !== UPLOAD_ERR_OK || $fileInfo['size'] === 0) continue;
+
+        $varName = substr($fileKey, 10); // skin_file_title_bg_image → title_bg_image
+        $ext = strtolower(pathinfo($fileInfo['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'mp4', 'webm'])) continue;
+
+        $filename = $varName . '_' . time() . '.' . $ext;
+        $dest = $uploadDir . $filename;
+        if (move_uploaded_file($fileInfo['tmp_name'], $dest)) {
+            $baseUrl = $config['app_url'] ?? '';
+            $skinConfig[$varName] = $baseUrl . '/storage/uploads/skins/' . $boardId . '/' . $filename;
+        }
+    }
+
+    // DB 저장
+    $configJson = json_encode($skinConfig, JSON_UNESCAPED_UNICODE);
+    $pdo->prepare("UPDATE {$prefix}boards SET skin = ?, skin_config = ? WHERE id = ?")->execute([$skin, $configJson, $boardId]);
+
+    echo json_encode(['success' => true, 'message' => '스킨 설정이 저장되었습니다.']);
     exit;
 }
 

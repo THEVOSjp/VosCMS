@@ -19,27 +19,73 @@ $skinMeta = $skinRenderer->getMeta();
     <input type="hidden" name="board_id" value="<?= $boardId ?>">
     <input type="hidden" name="action" value="update_skin">
 
-    <!-- 스킨 정보 -->
-    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
-        <div class="flex items-start gap-4">
-            <div class="w-20 h-20 bg-zinc-100 dark:bg-zinc-700 rounded-lg flex items-center justify-center text-zinc-400 shrink-0">
-                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+    <!-- 스킨 기본정보 -->
+    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+        <div class="p-4 border-b border-zinc-200 dark:border-zinc-700">
+            <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-200"><?= __('site.boards.skin_info') ?></h3>
+        </div>
+        <?php
+            $skinThumbnail = $skinMeta['thumbnail'] ?? '';
+            $skinThumbnailUrl = '';
+            if ($skinThumbnail) {
+                $skinThumbnailUrl = $baseUrl . '/skins/' . $currentSkin . '/board/' . $skinThumbnail;
+            }
+        ?>
+        <div class="flex">
+        <div class="flex-1 divide-y divide-zinc-100 dark:divide-zinc-700">
+            <!-- 스킨 -->
+            <div class="flex px-6 py-3">
+                <span class="w-32 text-sm text-zinc-500 dark:text-zinc-400 shrink-0"><?= __('site.boards.skin_name') ?></span>
+                <span class="text-sm text-zinc-800 dark:text-zinc-200 font-medium"><?= htmlspecialchars($skinMeta['title'] ?: $currentSkin) ?>
+                    <span class="ml-2 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs rounded-full"><?= htmlspecialchars($currentSkin) ?></span>
+                </span>
             </div>
-            <div class="flex-1">
-                <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($skinMeta['title'] ?: $currentSkin) ?></h3>
-                <?php if ($skinMeta['description']): ?>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= htmlspecialchars($skinMeta['description']) ?></p>
-                <?php endif; ?>
-                <div class="flex items-center gap-4 mt-2 text-xs text-zinc-400">
-                    <?php if ($skinMeta['version']): ?>
-                    <span>v<?= htmlspecialchars($skinMeta['version']) ?></span>
+            <!-- 제작자 -->
+            <?php if (!empty($skinMeta['author']['name'])): ?>
+            <div class="flex px-6 py-3">
+                <span class="w-32 text-sm text-zinc-500 dark:text-zinc-400 shrink-0"><?= __('site.boards.skin_author') ?></span>
+                <span class="text-sm text-zinc-800 dark:text-zinc-200">
+                    <?php if (!empty($skinMeta['author']['url'])): ?>
+                    <a href="<?= htmlspecialchars($skinMeta['author']['url']) ?>" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline"><?= htmlspecialchars($skinMeta['author']['name']) ?></a>
+                    <svg class="w-3 h-3 inline ml-0.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    <span class="text-xs text-zinc-400 ml-2"><?= htmlspecialchars($skinMeta['author']['url']) ?></span>
+                    <?php else: ?>
+                    <?= htmlspecialchars($skinMeta['author']['name']) ?>
                     <?php endif; ?>
-                    <?php if (!empty($skinMeta['author']['name'])): ?>
-                    <span><?= htmlspecialchars($skinMeta['author']['name']) ?></span>
+                    <?php if (!empty($skinMeta['author']['email'])): ?>
+                    <span class="text-xs text-zinc-400 ml-2">, <?= htmlspecialchars($skinMeta['author']['email']) ?></span>
                     <?php endif; ?>
-                    <span class="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full"><?= htmlspecialchars($currentSkin) ?></span>
-                </div>
+                </span>
             </div>
+            <?php endif; ?>
+            <!-- 날짜 -->
+            <?php if (!empty($skinMeta['date'])): ?>
+            <div class="flex px-6 py-3">
+                <span class="w-32 text-sm text-zinc-500 dark:text-zinc-400 shrink-0"><?= __('site.boards.skin_date') ?></span>
+                <span class="text-sm text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($skinMeta['date']) ?></span>
+            </div>
+            <?php endif; ?>
+            <!-- 버전 -->
+            <?php if (!empty($skinMeta['version'])): ?>
+            <div class="flex px-6 py-3">
+                <span class="w-32 text-sm text-zinc-500 dark:text-zinc-400 shrink-0"><?= __('site.boards.skin_version') ?></span>
+                <span class="text-sm text-zinc-800 dark:text-zinc-200">v<?= htmlspecialchars($skinMeta['version']) ?></span>
+            </div>
+            <?php endif; ?>
+            <!-- 설명 -->
+            <?php if (!empty($skinMeta['description'])): ?>
+            <div class="flex px-6 py-3">
+                <span class="w-32 text-sm text-zinc-500 dark:text-zinc-400 shrink-0"><?= __('site.boards.skin_desc') ?></span>
+                <span class="text-sm text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars($skinMeta['description']) ?></span>
+            </div>
+            <?php endif; ?>
+        </div>
+        <!-- 썸네일 (오른쪽) -->
+        <?php if ($skinThumbnailUrl): ?>
+        <div class="w-52 shrink-0 border-l border-zinc-100 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-700/30 flex items-center justify-center p-4">
+            <img src="<?= htmlspecialchars($skinThumbnailUrl) ?>" alt="<?= htmlspecialchars($skinMeta['title'] ?? '') ?>" class="max-w-full max-h-48 rounded-lg shadow-sm object-contain" onerror="this.parentElement.innerHTML='<span class=\'text-zinc-400 text-xs\'>No preview</span>'">
+        </div>
+        <?php endif; ?>
         </div>
     </div>
 
@@ -69,25 +115,17 @@ console.log('[BoardSkin] 스킨 탭 로드됨, skin:', '<?= $currentSkin ?>');
 
 document.getElementById('boardSkinForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-    const formData = new FormData(this);
-    const skinConfig = {};
-    for (const [key, value] of formData.entries()) {
-        const match = key.match(/^skin_config\[(.+)\]$/);
-        if (match) skinConfig[match[1]] = value;
-    }
-
-    const params = new URLSearchParams({
-        action: 'update',
-        board_id: '<?= $boardId ?>',
-        skin: '<?= $currentSkin ?>',
-        skin_config: JSON.stringify(skinConfig)
-    });
+    // FormData(multipart)로 전송 — 파일 업로드 지원
+    const fd = new FormData(this);
+    fd.append('action', 'update_skin_config');
+    fd.append('board_id', '<?= $boardId ?>');
+    fd.append('skin', '<?= $currentSkin ?>');
 
     try {
         const resp = await fetch('<?= $adminUrl ?>/site/boards/api', {
             method: 'POST',
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            body: params
+            body: fd
         });
         const data = await resp.json();
         const status = document.getElementById('saveStatus');

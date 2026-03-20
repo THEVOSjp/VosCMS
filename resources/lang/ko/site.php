@@ -184,6 +184,8 @@ return [
         'layout_none' => '사용 가능한 레이아웃이 없습니다.',
         'skin_select' => '스킨 선택', 'skin_select_help' => '스킨을 변경하면 페이지가 새로고침됩니다. 스킨별 세부 설정은 스킨 탭에서 할 수 있습니다.',
         'skin_settings' => '스킨 설정',
+        'skin_info' => '스킨 기본정보', 'skin_name' => '스킨', 'skin_author' => '스킨 제작자',
+        'skin_date' => '날짜', 'skin_version' => '버전', 'skin_desc' => '설명',
         'skin_none' => '사용 가능한 스킨이 없습니다.', 'skin_no_settings' => '이 스킨에는 설정 항목이 없습니다.',
         'section_basic' => '기본 정보', 'section_seo' => 'SEO 설정', 'section_display' => '표시 설정',
         'field_url' => 'URL', 'field_url_help' => '영문 소문자, 숫자, 하이픈, 밑줄만 사용',
