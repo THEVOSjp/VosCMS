@@ -574,8 +574,8 @@ function selectShortcutMenu(menuId, menuTitle, menuUrl) {
     display.classList.remove('text-zinc-500', 'dark:text-zinc-400');
     display.classList.add('text-blue-600', 'dark:text-blue-400', 'font-medium');
 
-    // URL에 메뉴 링크 형식으로 설정
-    document.getElementById('formUrl').value = '#menu_' + menuId;
+    // 실제 메뉴 URL 설정
+    document.getElementById('formUrl').value = menuUrl || '/' + menuId;
 
     // 선택 하이라이트
     document.querySelectorAll('.shortcut-menu-item').forEach(function(el) {
