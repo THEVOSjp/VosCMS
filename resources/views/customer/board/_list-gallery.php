@@ -18,7 +18,8 @@
     <?php
         $_gpTitle = $postTitleTranslations[$_gp['id']] ?? $_gp['title'];
         $_gpImg = '';
-        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $_gp['content'] ?? '', $_gm)) $_gpImg = $_gm[1];
+        $_gpContent = $postContentTranslations[$_gp['id']] ?? $_gp['content'] ?? '';
+        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $_gpContent, $_gm)) $_gpImg = $_gm[1];
         $_gpCat = $catMap[$_gp['category_id'] ?? 0] ?? null;
         $_gpNew = (time() - strtotime($_gp['created_at'] ?? 'now')) < 86400;
     ?>

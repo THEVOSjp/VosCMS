@@ -12,9 +12,10 @@
     <?php foreach ($posts as $_cp): ?>
     <?php
         $_cpTitle = $postTitleTranslations[$_cp['id']] ?? $_cp['title'];
+        $_cpContent = $postContentTranslations[$_cp['id']] ?? $_cp['content'] ?? '';
         $_cpImg = '';
-        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $_cp['content'] ?? '', $_cm)) $_cpImg = $_cm[1];
-        $_cpExcerpt = mb_substr(strip_tags($_cp['content'] ?? ''), 0, 80);
+        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $_cpContent, $_cm)) $_cpImg = $_cm[1];
+        $_cpExcerpt = mb_substr(strip_tags($_cpContent), 0, 80);
     ?>
     <a href="<?= $boardUrl ?>/<?= $_cp['id'] ?>" class="block bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-md transition group">
         <div class="h-40 bg-zinc-100 dark:bg-zinc-700 overflow-hidden">

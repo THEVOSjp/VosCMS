@@ -16,11 +16,12 @@
     <?php
         $_wp['_is_notice'] = false;
         $_wpTitle = $postTitleTranslations[$_wp['id']] ?? $_wp['title'];
+        $_wpContent = $postContentTranslations[$_wp['id']] ?? $_wp['content'] ?? '';
         // 본문에서 첫 이미지 추출
         $_wpImg = '';
-        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $_wp['content'] ?? '', $_im)) $_wpImg = $_im[1];
+        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $_wpContent, $_im)) $_wpImg = $_im[1];
         // 본문 미리보기 (HTML 태그 제거, 150자)
-        $_wpText = strip_tags($_wp['content'] ?? '');
+        $_wpText = strip_tags($_wpContent);
         $_wpText = preg_replace('/\s+/', ' ', $_wpText);
         $_wpExcerpt = mb_substr(trim($_wpText), 0, 150);
         if (mb_strlen($_wpText) > 150) $_wpExcerpt .= '...';
