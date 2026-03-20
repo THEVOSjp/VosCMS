@@ -143,20 +143,34 @@ $startNo = $totalCount - $offset;
                 </thead>
                 <tbody>
                     <?php
-                    // 목록 게시글 제목 다국어 번역 일괄 로드
+                    // 목록 게시글 제목 다국어 번역 일괄 로드 (로케일 → en → 원본)
                     $allPostIds = array_merge(array_column($notices, 'id'), array_column($posts, 'id'));
                     $postTitleTranslations = [];
-                    if (!empty($allPostIds) && ($currentLocale ?? 'ko') !== 'ko') {
-                        // 현재 로케일 번역 조회
+                    $_cl = $currentLocale ?? 'ko';
+                    if (!empty($allPostIds)) {
                         $placeholders = implode(',', array_map(fn($id) => "'board_post.{$id}.title'", $allPostIds));
-                        $trRows = $pdo->query("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN ({$placeholders}) AND locale = '{$currentLocale}'")->fetchAll(PDO::FETCH_ASSOC);
+
+                        // 1. 현재 로케일 번역 조회
+                        $trRows = $pdo->query("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN ({$placeholders}) AND locale = '{$_cl}'")->fetchAll(PDO::FETCH_ASSOC);
                         foreach ($trRows as $tr) {
                             preg_match('/board_post\.(\d+)\.title/', $tr['lang_key'], $m);
                             if ($m) $postTitleTranslations[(int)$m[1]] = $tr['content'];
                         }
-                        // 현재 로케일에 없으면 영어 폴백
-                        if ($currentLocale !== 'en') {
-                            $missingIds = array_diff($allPostIds, array_keys($postTitleTranslations));
+
+                        // 2. 현재 로케일에 없고, 원본도 아닌 게시글 → 영어 폴백
+                        if ($_cl !== 'en') {
+                            // 원본 언어 맵 생성
+                            $origLocaleMap = [];
+                            foreach (array_merge($notices, $posts) as $_p) {
+                                $origLocaleMap[(int)$_p['id']] = $_p['original_locale'] ?? 'ko';
+                            }
+                            // 번역 없고, 원본 언어도 현재 로케일이 아닌 ID
+                            $missingIds = [];
+                            foreach ($allPostIds as $_pid) {
+                                if (!isset($postTitleTranslations[(int)$_pid]) && ($origLocaleMap[(int)$_pid] ?? 'ko') !== $_cl) {
+                                    $missingIds[] = $_pid;
+                                }
+                            }
                             if (!empty($missingIds)) {
                                 $placeholders2 = implode(',', array_map(fn($id) => "'board_post.{$id}.title'", $missingIds));
                                 $enRows = $pdo->query("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN ({$placeholders2}) AND locale = 'en'")->fetchAll(PDO::FETCH_ASSOC);
