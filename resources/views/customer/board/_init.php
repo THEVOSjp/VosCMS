@@ -45,6 +45,35 @@ $catStmt = $pdo->prepare("SELECT * FROM {$prefix}board_categories WHERE board_id
 $catStmt->execute([$boardId]);
 $categories = $catStmt->fetchAll(PDO::FETCH_ASSOC);
 
+// 카테고리 다국어 (로케일 → en → 원본)
+$_catLocale = $currentLocale ?? 'ko';
+if (!empty($categories)) {
+    $catIds = array_column($categories, 'id');
+    $catNameKeys = implode(',', array_map(fn($id) => "'board_category.{$id}.name'", $catIds));
+    $_catTr = [];
+    // 현재 로케일
+    $trRows = $pdo->query("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN ({$catNameKeys}) AND locale = '{$_catLocale}'")->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($trRows as $tr) {
+        if (preg_match('/board_category\.(\d+)\.name/', $tr['lang_key'], $m)) $_catTr[(int)$m[1]] = $tr['content'];
+    }
+    // 영어 폴백
+    if ($_catLocale !== 'en') {
+        $missCatIds = array_diff($catIds, array_keys($_catTr));
+        if (!empty($missCatIds)) {
+            $missKeys = implode(',', array_map(fn($id) => "'board_category.{$id}.name'", $missCatIds));
+            $enRows = $pdo->query("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN ({$missKeys}) AND locale = 'en'")->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($enRows as $tr) {
+                if (preg_match('/board_category\.(\d+)\.name/', $tr['lang_key'], $m) && !isset($_catTr[(int)$m[1]])) $_catTr[(int)$m[1]] = $tr['content'];
+            }
+        }
+    }
+    // 번역 적용
+    foreach ($categories as &$_cat) {
+        if (isset($_catTr[$_cat['id']])) $_cat['name'] = $_catTr[$_cat['id']];
+    }
+    unset($_cat);
+}
+
 // 권한 확인 함수
 function boardCheckPerm($board, $permName, $currentUser) {
     $level = $board[$permName] ?? 'all';

@@ -25,7 +25,25 @@ return [
     'file_attach' => 'ファイル添付', 'remove' => '削除',
     'cancel' => 'キャンセル', 'submit' => '登録', 'update' => '修正',
     'char_limit' => '最大:limit文字まで入力可能です。',
+    'drop_files' => 'ファイルをドラッグ＆ドロップまたはクリックしてアップロード',
+    'drop_files_hint' => '画像はエディターに直接ドラッグして本文に挿入できます',
     // 投票
     'dislike' => '非推奨', 'already_voted' => 'すでに投票済みです。',
     'cannot_vote_own' => '自分の投稿には投票できません。',
+    // 言語
+    'source_locale_notice' => 'この記事は:locale言語で書かれています。',
+    'edit_locale_warning' => '現在:to言語で編集中です。保存するとコンテンツ言語が変更されます。',
+    'edit_locale_notice' => 'この記事は:from言語で書かれています。:toで保存するとコンテンツ言語が変更されます。',
+    'edit_translation_notice' => ':locale言語の翻訳を編集中です。原文(:original)は保持されます。',
+    // 返信
+    'reply' => '返信',
+    'submit_reply' => '登録',
+    'reply_placeholder' => '返信を入力...',
+    // 表示スタイル
+    'style_table' => 'リスト型',
+    'style_webzine' => 'ウェブマガジン型',
+    'style_gallery' => 'ギャラリー型',
+    'style_card' => 'カード型',
+    // 設定
+    'board_settings' => '掲示板設定',
 ];

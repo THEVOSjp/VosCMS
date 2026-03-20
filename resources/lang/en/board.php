@@ -25,7 +25,25 @@ return [
     'file_attach' => 'Attach Files', 'remove' => 'Remove',
     'cancel' => 'Cancel', 'submit' => 'Submit', 'update' => 'Update',
     'char_limit' => 'Maximum :limit characters allowed.',
+    'drop_files' => 'Drag & drop files or click to upload',
+    'drop_files_hint' => 'Images can be inserted into the content by dragging directly into the editor',
     // Vote
     'dislike' => 'Dislike', 'already_voted' => 'You have already voted.',
     'cannot_vote_own' => 'You cannot vote on your own post.',
+    // Locale
+    'source_locale_notice' => 'This post was written in :locale.',
+    'edit_locale_warning' => 'You are editing in :to. Saving will change the content language.',
+    'edit_locale_notice' => 'This post was written in :from. Saving in :to will change the content language.',
+    'edit_translation_notice' => 'Editing :locale translation. The original (:original) will be preserved.',
+    // Reply
+    'reply' => 'Reply',
+    'submit_reply' => 'Submit',
+    'reply_placeholder' => 'Write a reply...',
+    // View styles
+    'style_table' => 'Table',
+    'style_webzine' => 'Webzine',
+    'style_gallery' => 'Gallery',
+    'style_card' => 'Card',
+    // Settings
+    'board_settings' => 'Board Settings',
 ];
