@@ -466,6 +466,9 @@ if (empty($path) || $path === 'index.php') {
     } elseif ($path === 'board/api/files') {
         $__noLayout = true;
         include BASE_PATH . '/resources/views/customer/board/api-files.php';
+    } elseif ($path === 'board/api/og') {
+        $__noLayout = true;
+        include BASE_PATH . '/resources/views/customer/board/api-og.php';
     // 키오스크 고객용 라우트
     } elseif ($path === 'kiosk' || $path === 'kiosk/index') {
         $__noLayout = true;

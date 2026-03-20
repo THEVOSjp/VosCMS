@@ -52,6 +52,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
     <?php if (!empty($metaKeywords)): ?><meta name="keywords" content="<?= htmlspecialchars($metaKeywords) ?>"><?php endif; ?>
     <?php if (!empty($metaDescription)): ?><meta name="description" content="<?= htmlspecialchars($metaDescription) ?>"><?php endif; ?>
     <?php if (!empty($metaRobots)): ?><meta name="robots" content="<?= $metaRobots ?>"><?php endif; ?>
+    <meta name="base-url" content="<?= $baseUrl ?>">
     <link rel="icon" href="<?= $baseUrl ?>/assets/images/favicon.ico">
     <?php if ($pwaFrontEnabled): ?>
     <link rel="manifest" href="<?= $baseUrl ?>/manifest.json">
@@ -70,6 +71,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
     }
     </script>
     <link rel="stylesheet" href="<?= $baseUrl ?>/resources/css/board-content.css">
+    <script src="<?= $baseUrl ?>/resources/js/board-autolink.js" defer></script>
     <?php if (isset($headExtra)) echo $headExtra; ?>
 </head>
 <body class="bg-gray-50 dark:bg-zinc-900 min-h-screen flex flex-col transition-colors duration-200">

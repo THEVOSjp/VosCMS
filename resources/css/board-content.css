@@ -22,8 +22,16 @@
     display: inline; vertical-align: middle; max-width: 100%; height: auto;
 }
 
+/* OG 링크 프리뷰 카드 */
+.rzx-og-card { transition: box-shadow 0.2s; }
+.rzx-og-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
 /* 다크모드 */
 .dark .board-content a { color: #60a5fa; }
 .dark .board-content blockquote { border-color: #52525b; color: #a1a1aa; }
 .dark .board-content pre, .dark .board-content code { background: #27272a; }
 .dark .board-content table td, .dark .board-content table th { border-color: #3f3f46; }
+.dark .rzx-og-card { border-color: #3f3f46 !important; }
+.dark .rzx-og-card div[style*="font-weight:600"] { color: #e4e4e7 !important; }
+.dark .rzx-og-card div[style*="color:#71717a"] { color: #a1a1aa !important; }
+.dark .rzx-og-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }

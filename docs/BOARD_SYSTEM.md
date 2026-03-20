@@ -75,6 +75,19 @@ RezlyX 게시판은 커스텀 MVC 아키텍처 기반의 다기능 게시판 시
 | `/board/api/posts` | `api-posts.php` | POST | 게시글 CRUD + 추천 |
 | `/board/api/comments` | `api-comments.php` | POST | 댓글 작성/삭제 |
 | `/board/api/files` | `api-files.php` | GET/POST | 파일 다운로드/업로드/삭제 |
+| `/board/api/og` | `api-og.php` | POST | URL → OG 메타데이터 (링크 프리뷰 카드용) |
+
+### URL 자동 링크 + OG 카드 프리뷰
+
+**공통 리소스:**
+- `resources/css/board-content.css` — 본문+에디터 공통 스타일 (Tailwind preflight 덮어쓰기)
+- `resources/js/board-autolink.js` — 자동 링크 + OG 카드 (base-header에서 전역 로드)
+- `rzxlib/Core/Modules/OgFetcher.php` — OG/Twitter Card 메타데이터 추출
+
+**동작:**
+- 에디터: URL 입력 후 엔터/붙여넣기 → OG API 호출 → 카드형 프리뷰 삽입
+- 본문: 단독 URL `<a>` → OG API 호출 → 카드로 교체, 문장 내 URL → `<a>` 링크 변환
+- OG 카드: 썸네일+제목+설명+도메인, 가운데 정렬, 다크모드 지원
 
 ### LayoutManager 동작
 

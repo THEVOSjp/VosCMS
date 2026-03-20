@@ -245,6 +245,40 @@ console.log('[BoardWrite] <?= $editMode ? '글 수정' : '글 작성' ?> 페이�
 const boardApiUrl = '<?= ($config['app_url'] ?? '') ?>/board/api';
 let pendingFiles = [];
 
+// 에디터용 OG 카드 fetch + 교체
+async function rzxFetchOgAndReplace(node, url) {
+    try {
+        var fd = new FormData();
+        fd.append('url', url);
+        var resp = await fetch(boardApiUrl + '/og', { method: 'POST', body: fd });
+        var data = await resp.json();
+        if (data.success && data.og && data.og.title) {
+            if (typeof rzxInsertOgCard === 'function') {
+                // buildOgCardHtml은 board-autolink.js에 정의됨
+                var og = data.og;
+                var esc = function(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; };
+                var img = og.image ? '<div style="flex-shrink:0;width:120px;min-height:80px;background:#f4f4f5;overflow:hidden;border-radius:8px 0 0 8px"><img src="' + esc(og.image) + '" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.style.display=\'none\'"></div>' : '';
+                var favicon = og.favicon ? '<img src="' + esc(og.favicon) + '" style="width:14px;height:14px;border-radius:2px;display:inline;vertical-align:middle" onerror="this.style.display=\'none\'">&nbsp;' : '';
+                node.outerHTML = '<div class="rzx-og-card" contenteditable="false" style="margin:12px auto;border:1px solid #d4d4d8;border-radius:8px;overflow:hidden;max-width:480px;cursor:pointer" onclick="window.open(\'' + esc(og.url) + '\',\'_blank\')">'
+                    + '<a href="' + esc(og.url) + '" target="_blank" rel="noopener noreferrer" style="display:flex;text-decoration:none;color:inherit">'
+                    + img
+                    + '<div style="flex:1;padding:12px;min-width:0">'
+                    + '<div style="font-size:14px;font-weight:600;color:#18181b;line-height:1.3;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(og.title) + '</div>'
+                    + (og.description ? '<div style="font-size:12px;color:#71717a;line-height:1.4;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + esc(og.description) + '</div>' : '')
+                    + '<div style="font-size:11px;color:#a1a1aa">' + favicon + esc(og.domain || og.site_name || '') + '</div>'
+                    + '</div></a></div>';
+                console.log('[OgCard] Editor card inserted:', og.title);
+            }
+        } else {
+            // OG 데이터 없으면 원래 URL 복원
+            node.innerHTML = '<a href="' + url + '" target="_blank">' + url + '</a>';
+        }
+    } catch (e) {
+        node.innerHTML = '<a href="' + url + '" target="_blank">' + url + '</a>';
+        console.error('[OgCard] Fetch error:', e);
+    }
+}
+
 // Summernote 초기화
 $(document).ready(function() {
     $('#boardContent').summernote({
@@ -265,6 +299,53 @@ $(document).ready(function() {
             onInit: function() { console.log('[BoardWrite] Summernote initialized'); },
             onImageUpload: function(files) {
                 for (const file of files) uploadImage(file);
+            },
+            onKeyup: function(e) {
+                // 스페이스 시 자동 링크 변환
+                if (e.keyCode === 32) {
+                    rzxAutoLinkInEditor(this);
+                }
+                // 엔터 시 직전 줄이 단독 URL이면 OG 카드 삽입
+                if (e.keyCode === 13) {
+                    rzxAutoLinkInEditor(this);
+                    var editable = this.querySelector('.note-editable');
+                    if (editable) {
+                        var nodes = editable.querySelectorAll('p, div');
+                        for (var i = nodes.length - 1; i >= Math.max(0, nodes.length - 3); i--) {
+                            var txt = (nodes[i].textContent || '').trim();
+                            if (/^(https?:\/\/|www\.)\S+$/.test(txt) && !nodes[i].querySelector('.rzx-og-card')) {
+                                var url = txt.startsWith('www.') ? 'https://' + txt : txt;
+                                nodes[i].innerHTML = '<span style="color:#a1a1aa;font-size:12px">🔗 loading preview...</span>';
+                                (function(node, u) {
+                                    rzxFetchOgAndReplace(node, u);
+                                })(nodes[i], url);
+                                break;
+                            }
+                        }
+                    }
+                }
+            },
+            onPaste: function(e) {
+                var self = this;
+                setTimeout(function() {
+                    rzxAutoLinkInEditor(self);
+                    // 붙여넣기된 단독 URL → OG 카드
+                    var editable = self.querySelector('.note-editable');
+                    if (editable) {
+                        var sel = window.getSelection();
+                        if (sel.focusNode) {
+                            var p = sel.focusNode.nodeType === 3 ? sel.focusNode.parentElement : sel.focusNode;
+                            if (p) {
+                                var txt = (p.textContent || '').trim();
+                                if (/^(https?:\/\/|www\.)\S+$/.test(txt) && !p.querySelector('.rzx-og-card')) {
+                                    var url = txt.startsWith('www.') ? 'https://' + txt : txt;
+                                    p.innerHTML = '<span style="color:#a1a1aa;font-size:12px">🔗 loading preview...</span>';
+                                    rzxFetchOgAndReplace(p, url);
+                                }
+                            }
+                        }
+                    }
+                }, 200);
             }
         }
     });
