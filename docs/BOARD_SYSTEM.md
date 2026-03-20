@@ -22,16 +22,21 @@ RezlyX 게시판은 커스텀 MVC 아키텍처 기반의 다기능 게시판 시
 | 경로 | 설명 |
 |------|------|
 | `index.php` | 라우팅 진입점 |
-| `resources/views/admin/site/boards*.php` | 관리자 페이지 (목록/생성/편집/API/휴지통) |
+| `resources/views/admin/site/boards*.php` | 관리자 (목록/생성/편집/API/휴지통/스킨) |
 | `resources/views/admin/components/board/section-*.php` | 관리자 공통 컴포넌트 8개 |
-| `resources/views/customer/board/*.php` | 프론트 페이지 (_init, list, read, write, settings, api-*) |
-| `rzxlib/Core/Modules/ExtraVarRenderer.php` | 확장 변수 렌더링 모듈 (15종 타입별 input/display) |
-| `rzxlib/Core/Skin/SkinConfigRenderer.php` | skin.json 파싱 + 폼 생성 |
+| `resources/views/customer/board/*.php` | 프론트 (list, read, write, settings, api-*) |
+| `resources/views/customer/board/_list-*.php` | 목록 스타일 (row, webzine, gallery, card, notices) |
+| `resources/views/customer/board/api-og.php` | OG 링크 프리뷰 API |
+| `resources/css/board-content.css` | 본문+에디터 공통 CSS |
+| `resources/js/board-autolink.js` | 자동 링크 + OG 카드 |
+| `rzxlib/Core/Modules/ExtraVarRenderer.php` | 확장 변수 렌더링 (15종 타입) |
+| `rzxlib/Core/Modules/OgFetcher.php` | OG 메타데이터 추출 |
+| `rzxlib/Core/Skin/SkinConfigRenderer.php` | skin.json 파싱 + 폼 생성 (섹션/radio/video/image 타입) |
 | `rzxlib/Core/Layout/LayoutManager.php` | 레이아웃 자동 적용 |
-| `rzxlib/Core/Helpers/multilang.php` | rzx_multilang_input() |
-| `skins/{name}/board/skin.json` | 스킨 메타 + 설정 변수 |
-| `skins/{name}/layouts/layout.json` | 레이아웃 메타 |
-| `database/migrations/017*.sql, 018*.sql` | DB 마이그레이션 |
+| `rzxlib/Core/Helpers/multilang.php` | rzx_multilang_input/btn |
+| `skins/{name}/board/skin.json` | 스킨 메타 + 설정 변수 + 섹션 |
+| `skins/{name}/board/_list-*.php` | 스킨 오버라이드 목록 파일 |
+| `database/migrations/017~021*.sql` | DB 마이그레이션 |
 
 ---
 
