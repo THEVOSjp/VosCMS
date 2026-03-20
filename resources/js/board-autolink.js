@@ -132,22 +132,29 @@
             node.parentNode.replaceChild(frag, node);
         });
 
-        // 3. 단독 <a> (부모가 <p> 또는 <div>이고, 형제 텍스트 없는 링크) → OG 카드로 변환
+        // 3. 단독 URL 링크 → OG 카드로 변환
+        // 블록 부모(p, div 등)를 찾아서, 그 안의 텍스트가 URL 하나뿐이면 단독 링크로 판단
         var standaloneLinks = container.querySelectorAll('a[href]');
         standaloneLinks.forEach(function(a) {
             if (a.closest('.rzx-og-card')) return;
-            var parent = a.parentElement;
-            if (!parent || (parent.tagName !== 'P' && parent.tagName !== 'DIV')) return;
-            // 형제 텍스트가 있으면 단독 링크가 아님
-            var sibText = (parent.textContent || '').trim();
-            var linkText = (a.textContent || '').trim();
-            if (sibText !== linkText) return;
-            // URL과 텍스트가 같으면 단독 URL
             var href = a.href;
-            if (linkText !== href && linkText !== href.replace(/\/$/, '')) return;
+            var linkText = (a.textContent || '').trim();
+            // URL과 텍스트가 같아야 단독 URL (사용자가 별도 텍스트를 넣은 링크는 제외)
+            if (linkText !== href && linkText !== href.replace(/\/$/, '') && !linkText.startsWith('http') && !linkText.startsWith('www.')) return;
 
-            // OG 카드로 변환
-            fetchAndReplaceWithCard(a, href, parent);
+            // 블록 부모를 찾기 (p, div, li, td 등)
+            var blockParent = a.parentElement;
+            while (blockParent && !['P','DIV','LI','TD','BLOCKQUOTE'].includes(blockParent.tagName)) {
+                blockParent = blockParent.parentElement;
+            }
+            if (!blockParent || blockParent === container) return;
+
+            // 블록 부모의 텍스트가 링크 텍스트와 같으면 단독 URL
+            var blockText = (blockParent.textContent || '').trim();
+            if (blockText !== linkText) return;
+
+            // OG 카드로 변환 (블록 부모를 교체)
+            fetchAndReplaceWithCard(a, href, blockParent);
         });
 
         console.log('[AutoLink] Applied to', textNodes.length, 'text nodes');
