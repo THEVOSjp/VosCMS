@@ -52,6 +52,8 @@ return [
         'privacy' => 'Kebijakan Privasi',
         'type_document' => 'Dokumen',
         'type_widget' => 'Widget',
+        'type_external' => 'Eksternal',
+        'custom_pages' => 'Halaman kustom',
         'refund_policy' => 'Kebijakan Pembatalan & Pengembalian Dana',
         'refund' => ['editor_title' => 'Editor Kebijakan Pembatalan & Pengembalian Dana', 'editor_desc' => 'Buat dan kelola kebijakan pembatalan dan pengembalian dana.'],
         'terms_edit' => ['editor_title' => 'Edit Syarat dan Ketentuan', 'editor_desc' => 'Buat dan kelola syarat dan ketentuan.'],

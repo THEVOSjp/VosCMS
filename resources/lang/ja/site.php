@@ -116,6 +116,8 @@ return [
         'privacy' => 'プライバシーポリシー',
         'type_document' => 'ドキュメント',
         'type_widget' => 'ウィジェット',
+        'type_external' => '外部',
+        'custom_pages' => 'カスタムページ',
         'refund_policy' => 'キャンセル・返金規定',
         'refund' => ['editor_title' => 'キャンセル・返金規定の編集', 'editor_desc' => 'キャンセルおよび返金に関する規定を作成・管理します。'],
         'terms_edit' => ['editor_title' => '利用規約の編集', 'editor_desc' => '利用規約を作成・管理します。'],

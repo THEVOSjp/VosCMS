@@ -13,39 +13,39 @@ if (!$pageSlug) {
 // 페이지 메타 정보
 $pageMetaMap = [
     'terms' => [
-        'title_key' => 'admin.site.pages.terms_edit.editor_title',
-        'desc_key' => 'admin.site.pages.terms_edit.editor_desc',
+        'title_key' => 'site.pages.terms_edit.editor_title',
+        'desc_key' => 'site.pages.terms_edit.editor_desc',
         'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
         'icon_color' => 'text-green-600',
         'customer_url' => '/terms',
-        'placeholder_key' => 'admin.site.pages.document.content_placeholder',
+        'placeholder_key' => 'site.pages.document.content_placeholder',
     ],
     'privacy' => [
-        'title_key' => 'admin.site.pages.privacy_edit.editor_title',
-        'desc_key' => 'admin.site.pages.privacy_edit.editor_desc',
+        'title_key' => 'site.pages.privacy_edit.editor_title',
+        'desc_key' => 'site.pages.privacy_edit.editor_desc',
         'icon' => 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z',
         'icon_color' => 'text-purple-600',
         'customer_url' => '/privacy',
-        'placeholder_key' => 'admin.site.pages.document.content_placeholder',
+        'placeholder_key' => 'site.pages.document.content_placeholder',
     ],
     'refund-policy' => [
-        'title_key' => 'admin.site.pages.refund.editor_title',
-        'desc_key' => 'admin.site.pages.refund.editor_desc',
+        'title_key' => 'site.pages.refund.editor_title',
+        'desc_key' => 'site.pages.refund.editor_desc',
         'icon' => 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
         'icon_color' => 'text-red-600',
         'customer_url' => '/refund-policy',
-        'placeholder_key' => 'admin.site.pages.document.content_placeholder',
+        'placeholder_key' => 'site.pages.document.content_placeholder',
         'default_data_class' => 'RefundPolicyData',
     ],
 ];
 
 $pageMeta = $pageMetaMap[$pageSlug] ?? [
-    'title_key' => 'admin.site.pages.document.title',
-    'desc_key' => 'admin.site.pages.document.desc',
+    'title_key' => 'site.pages.document.title',
+    'desc_key' => 'site.pages.document.desc',
     'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
     'icon_color' => 'text-blue-600',
     'customer_url' => '/' . $pageSlug,
-    'placeholder_key' => 'admin.site.pages.document.content_placeholder',
+    'placeholder_key' => 'site.pages.document.content_placeholder',
 ];
 
 $pageTitle = __($pageMeta['title_key']) . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';

@@ -116,6 +116,8 @@ return [
         'privacy' => 'Politica de privacidad',
         'type_document' => 'Documento',
         'type_widget' => 'Widget',
+        'type_external' => 'Externo',
+        'custom_pages' => 'Páginas personalizadas',
         'refund_policy' => 'Política de cancelación y reembolso',
         'refund' => ['editor_title' => 'Editor de política de cancelación y reembolso', 'editor_desc' => 'Cree y gestione las políticas de cancelación y reembolso.'],
         'terms_edit' => ['editor_title' => 'Editar Términos de Servicio', 'editor_desc' => 'Crear y gestionar los términos de servicio.'],

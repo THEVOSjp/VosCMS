@@ -116,6 +116,8 @@ return [
         'privacy' => 'Politique de confidentialite',
         'type_document' => 'Document',
         'type_widget' => 'Widget',
+        'type_external' => 'Externe',
+        'custom_pages' => 'Pages personnalisées',
         'refund_policy' => 'Politique d\'annulation et de remboursement',
         'refund' => ['editor_title' => 'Éditeur de politique d\'annulation et de remboursement', 'editor_desc' => 'Créez et gérez les politiques d\'annulation et de remboursement.'],
         'terms_edit' => ['editor_title' => 'Modifier les Conditions d\'Utilisation', 'editor_desc' => 'Créer et gérer les conditions d\'utilisation.'],

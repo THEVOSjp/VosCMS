@@ -116,6 +116,8 @@ return [
         'privacy' => 'Privacy Policy',
         'type_document' => 'Document',
         'type_widget' => 'Widget',
+        'type_external' => 'External',
+        'custom_pages' => 'Custom Pages',
         'refund_policy' => 'Cancellation & Refund Policy',
         'refund' => ['editor_title' => 'Cancellation & Refund Policy Editor', 'editor_desc' => 'Create and manage your cancellation and refund policies.'],
         'terms_edit' => ['editor_title' => 'Edit Terms of Service', 'editor_desc' => 'Create and manage your terms of service.'],

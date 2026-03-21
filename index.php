@@ -317,6 +317,12 @@ if (empty($path) || $path === 'index.php') {
     // 페이지 관리 - 데이터 관리 가이드 편집
     } elseif ($adminRoute === 'site/pages/compliance') {
         include BASE_PATH . '/resources/views/admin/site/pages-compliance.php';
+    // 페이지 관리 - 페이지 환경 설정
+    } elseif ($adminRoute === 'site/pages/settings') {
+        include BASE_PATH . '/resources/views/admin/site/pages-settings.php';
+    // 페이지 관리 - 페이지 콘텐츠 편집
+    } elseif ($adminRoute === 'site/pages/edit-content') {
+        include BASE_PATH . '/resources/views/admin/site/pages-edit-content.php';
     // 페이지 관리 - 범용 문서 페이지 에디터
     } elseif ($adminRoute === 'site/pages/edit') {
         include BASE_PATH . '/resources/views/admin/site/pages-document.php';
@@ -540,9 +546,18 @@ if (empty($path) || $path === 'index.php') {
                 }
             }
             if (!$_boardMatch) {
-                http_response_code(404);
-                $__noLayout = true;
-                include BASE_PATH . '/resources/views/customer/404.php';
+                // 동적 페이지 확인 (rzx_page_contents)
+                $_pfx = $_ENV['DB_PREFIX'] ?? 'rzx_';
+                $_pageCheck = $pdo->prepare("SELECT page_slug FROM {$_pfx}page_contents WHERE page_slug = ? LIMIT 1");
+                $_pageCheck->execute([$path]);
+                if ($_pageCheck->fetchColumn()) {
+                    $pageSlug = $path;
+                    $__pageFile = BASE_PATH . '/resources/views/customer/page.php';
+                } else {
+                    http_response_code(404);
+                    $__noLayout = true;
+                    include BASE_PATH . '/resources/views/customer/404.php';
+                }
             }
         }
     }

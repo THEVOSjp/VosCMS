@@ -105,6 +105,8 @@ return [
         'privacy' => 'Gizlilik Politikası',
         'type_document' => 'Belge',
         'type_widget' => 'Widget',
+        'type_external' => 'Harici',
+        'custom_pages' => 'Özel sayfalar',
         'refund_policy' => 'İptal ve İade Politikası',
         'refund' => ['editor_title' => 'İptal ve İade Politikası Düzenleyici', 'editor_desc' => 'İptal ve iade politikalarını oluşturun ve yönetin.'],
         'terms_edit' => ['editor_title' => 'Kullanım Koşullarını Düzenle', 'editor_desc' => 'Kullanım koşullarını oluşturun ve yönetin.'],

@@ -116,6 +116,8 @@ return [
         'privacy' => 'Datenschutzerklaerung',
         'type_document' => 'Dokument',
         'type_widget' => 'Widget',
+        'type_external' => 'Extern',
+        'custom_pages' => 'Benutzerdefinierte Seiten',
         'refund_policy' => 'Stornierungs- und Rückerstattungsrichtlinie',
         'refund' => ['editor_title' => 'Stornierungs- und Rückerstattungsrichtlinie bearbeiten', 'editor_desc' => 'Erstellen und verwalten Sie Stornierungs- und Rückerstattungsrichtlinien.'],
         'terms_edit' => ['editor_title' => 'AGB bearbeiten', 'editor_desc' => 'Allgemeine Geschäftsbedingungen erstellen und verwalten.'],

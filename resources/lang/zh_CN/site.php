@@ -116,6 +116,8 @@ return [
         'privacy' => '隐私政策',
         'type_document' => '文档',
         'type_widget' => '小组件',
+        'type_external' => '外部',
+        'custom_pages' => '自定义页面',
         'refund_policy' => '取消退款政策',
         'refund' => ['editor_title' => '取消退款政策编辑', 'editor_desc' => '创建和管理取消及退款相关政策。'],
         'terms_edit' => ['editor_title' => '编辑服务条款', 'editor_desc' => '创建和管理服务条款。'],

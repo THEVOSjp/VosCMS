@@ -96,7 +96,45 @@ try {
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)"
             );
             $stmt->execute([$sitemapId, $parentId, $title, $url, $target, $icon, $cssClass, $desc, $menuType, $maxOrder + 1, $isShortcut, $openWindow, $expand, $groupSrls]);
-            echo json_encode(['success' => true, 'id' => $pdo->lastInsertId()]);
+            $newMenuId = $pdo->lastInsertId();
+
+            // 페이지 자동 생성
+            $defaultLocale = $config['locale'] ?? 'ko';
+            if ($menuType === 'page') {
+                // 문서 페이지
+                $chk = $pdo->prepare("SELECT COUNT(*) FROM rzx_page_contents WHERE page_slug = ? AND locale = ?");
+                $chk->execute([$url, $defaultLocale]);
+                if ((int)$chk->fetchColumn() === 0) {
+                    $pdo->prepare("INSERT INTO rzx_page_contents (page_slug, page_type, locale, title, content, is_system, is_active) VALUES (?, 'document', ?, ?, '', 0, 1)")
+                        ->execute([$url, $defaultLocale, $title]);
+                }
+            } elseif ($menuType === 'widget') {
+                // 위젯 페이지
+                $chk = $pdo->prepare("SELECT COUNT(*) FROM rzx_page_contents WHERE page_slug = ? AND locale = ?");
+                $chk->execute([$url, $defaultLocale]);
+                if ((int)$chk->fetchColumn() === 0) {
+                    $pdo->prepare("INSERT INTO rzx_page_contents (page_slug, page_type, locale, title, content, is_system, is_active) VALUES (?, 'widget', ?, ?, '', 0, 1)")
+                        ->execute([$url, $defaultLocale, $title]);
+                }
+                // 위젯 목록 테이블에도 빈 항목
+                $chk2 = $pdo->prepare("SELECT COUNT(*) FROM rzx_page_widgets WHERE page_slug = ?");
+                $chk2->execute([$url]);
+                if ((int)$chk2->fetchColumn() === 0) {
+                    $pdo->prepare("INSERT INTO rzx_page_widgets (page_slug, widget_id, sort_order, config, is_active) VALUES (?, 0, 0, '{}', 1)")
+                        ->execute([$url]);
+                }
+            } elseif ($menuType === 'external') {
+                // 외부 페이지: URL 또는 파일 경로를 content에 저장
+                $externalUrl = $url; // 입력된 URL이 외부 주소 또는 파일 경로
+                $slug = makeSlug($title) ?: 'ext-' . time();
+                // 메뉴 URL을 slug로 변경 (프론트에서 접근 가능하도록)
+                $pdo->prepare("UPDATE rzx_menu_items SET url = ? WHERE id = ?")->execute([$slug, $newMenuId]);
+                // 페이지 생성
+                $pdo->prepare("INSERT INTO rzx_page_contents (page_slug, page_type, locale, title, content, is_system, is_active) VALUES (?, 'external', ?, ?, ?, 0, 1)")
+                    ->execute([$slug, $defaultLocale, $title, $externalUrl]);
+            }
+
+            echo json_encode(['success' => true, 'id' => $newMenuId, 'page_created' => in_array($menuType, ['page', 'widget'])]);
             break;
 
         case 'update_menu_item':
@@ -260,10 +298,26 @@ function copyChildrenRecursive(PDO $pdo, int $origParentId, int $newParentId, in
 }
 
 function deleteMenuItemRecursive(PDO $pdo, int $id): void {
+    // 하위 메뉴 재귀 삭제
     $stmt = $pdo->prepare("SELECT id FROM rzx_menu_items WHERE parent_id=?");
     $stmt->execute([$id]);
     foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $childId) {
         deleteMenuItemRecursive($pdo, (int)$childId);
+    }
+    // 연결된 페이지 삭제
+    $item = $pdo->prepare("SELECT url, menu_type FROM rzx_menu_items WHERE id=?");
+    $item->execute([$id]);
+    $menuItem = $item->fetch(PDO::FETCH_ASSOC);
+    if ($menuItem) {
+        $slug = $menuItem['url'] ?? '';
+        $type = $menuItem['menu_type'] ?? '';
+        if ($slug && $type === 'page') {
+            $pdo->prepare("DELETE FROM rzx_page_contents WHERE page_slug = ?")->execute([$slug]);
+        } elseif ($slug && $type === 'widget') {
+            $pdo->prepare("DELETE FROM rzx_page_widgets WHERE page_slug = ?")->execute([$slug]);
+        }
+        // 번역 데이터 삭제
+        $pdo->prepare("DELETE FROM rzx_translations WHERE lang_key LIKE ?")->execute(["menu_item.{$id}.%"]);
     }
     $pdo->prepare("DELETE FROM rzx_menu_items WHERE id=?")->execute([$id]);
 }

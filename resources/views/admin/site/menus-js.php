@@ -358,17 +358,37 @@ function editMenuItem() {
     var formExpand = document.getElementById('formExpand');
     if (formExpand) formExpand.checked = (el.dataset.expand === '1');
 
-    // 편집 모드: 메뉴 ID 표시, 바로가기 탭 숨기기
-    document.getElementById('formMenuIdWrap').style.display = '';
-    document.getElementById('formShortcutWrap').classList.add('hidden');
-    document.getElementById('formTargetWrap').style.display = '';
+    // 편집 모드: 메뉴 타입에 따라 바로가기 UI 표시
+    var menuUrl = el.dataset.url || '';
+    var menuType = el.dataset.menuType || '';
+    var isShortcut = (menuType === 'shortcut') || menuUrl.startsWith('/');
+    var isExt = (menuType === 'external') || menuUrl.startsWith('http');
+
+    // 바로가기 타입이면 생성 시와 동일한 구조 표시
+    if (isShortcut || (!isExt && menuUrl && !menuUrl.startsWith('#'))) {
+        document.getElementById('formMenuIdWrap').style.display = 'none';
+        document.getElementById('formShortcutWrap').classList.remove('hidden');
+        document.getElementById('formTargetWrap').style.display = '';
+        // 현재 URL을 바로가기 URL 필드에 설정
+        var shortcutUrlField = document.getElementById('formShortcutUrl');
+        if (shortcutUrlField) shortcutUrlField.value = menuUrl;
+        switchShortcutTab('url');
+    } else if (isExt) {
+        document.getElementById('formMenuIdWrap').style.display = 'none';
+        document.getElementById('formShortcutWrap').classList.add('hidden');
+        document.getElementById('formTargetWrap').style.display = '';
+    } else {
+        document.getElementById('formMenuIdWrap').style.display = '';
+        document.getElementById('formShortcutWrap').classList.add('hidden');
+        document.getElementById('formTargetWrap').style.display = '';
+    }
     document.getElementById('formExpandWrap').style.display = '';
 
     document.querySelectorAll('.field-help').forEach(function(el) { el.classList.add('hidden'); });
 
     closePanel(3);
     showPanel(4);
-    console.log('[Menu] Edit menu item:', selectedId);
+    console.log('[Menu] Edit menu item:', selectedId, 'type:', menuType, 'url:', menuUrl);
 }
 
 // ─── 메뉴 항목 기타 액션 ───
@@ -411,9 +431,11 @@ function saveForm() {
     }
     // 바로가기 URL 탭인 경우 formShortcutUrl 값을 formUrl에 반영
     var menuType = document.getElementById('formMenuType').value;
-    if (menuType === 'shortcut' && currentShortcutTab === 'url') {
+    var shortcutWrap = document.getElementById('formShortcutWrap');
+    var shortcutVisible = shortcutWrap && !shortcutWrap.classList.contains('hidden');
+    if (shortcutVisible && currentShortcutTab === 'url') {
         var shortcutUrl = document.getElementById('formShortcutUrl').value.trim();
-        document.getElementById('formUrl').value = shortcutUrl;
+        if (shortcutUrl) document.getElementById('formUrl').value = shortcutUrl;
     }
 
     var formExpand = document.getElementById('formExpand');

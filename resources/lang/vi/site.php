@@ -116,6 +116,8 @@ return [
         'privacy' => 'Chính sách bảo mật',
         'type_document' => 'Tài liệu',
         'type_widget' => 'Widget',
+        'type_external' => 'Bên ngoài',
+        'custom_pages' => 'Trang tùy chỉnh',
         'refund_policy' => 'Chính sách hủy và hoàn tiền',
         'refund' => ['editor_title' => 'Chỉnh sửa chính sách hủy và hoàn tiền', 'editor_desc' => 'Tạo và quản lý chính sách hủy và hoàn tiền.'],
         'terms_edit' => ['editor_title' => 'Chỉnh sửa Điều khoản Dịch vụ', 'editor_desc' => 'Tạo và quản lý điều khoản dịch vụ.'],
