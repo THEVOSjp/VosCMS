@@ -5,6 +5,17 @@
  */
 
 return [
+    'back' => '돌아가기',
+    'yes' => '예',
+    'no' => '아니오',
+    'edit' => '편집',
+    'settings' => '설정',
+    'inactive' => '비활성',
+    'preview' => '미리보기',
+    'page_settings' => '페이지 설정',
+    'no_permission' => '권한이 없습니다.',
+    'open_new_window' => '새 창에서 열기',
+    'page_empty' => '페이지 내용이 아직 작성되지 않았습니다.',
     // 이용약관 및 개인정보 (최상위 레벨)
     'terms' => '이용약관',
     'privacy' => '개인정보처리방침',
@@ -111,6 +122,7 @@ return [
         'delete' => '삭제',
         'edit' => '수정',
         'create' => '생성',
+        'add' => '추가',
         'back' => '뒤로',
         'next' => '다음 단계',
         'previous' => '이전',

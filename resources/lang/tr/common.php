@@ -5,6 +5,18 @@
  */
 
 return [
+    'back' => 'Geri Don',
+    'yes' => 'Evet',
+    'no' => 'Hayir',
+    'edit' => 'Duzenle',
+    'settings' => 'Ayarlar',
+    'inactive' => 'Pasif',
+    'preview' => 'Onizleme',
+    'page_settings' => 'Sayfa Ayarlari',
+    'no_permission' => 'Izin gerekli.',
+    'open_new_window' => 'Yeni pencerede ac',
+    'page_empty' => 'Bu sayfada henuz icerik bulunmuyor.',
+
     // Terms and Privacy (top level)
     'terms' => 'Hizmet Şartları',
     'privacy' => 'Gizlilik Politikası',

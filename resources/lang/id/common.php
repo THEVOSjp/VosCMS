@@ -5,6 +5,18 @@
  */
 
 return [
+    'back' => 'Kembali',
+    'yes' => 'Ya',
+    'no' => 'Tidak',
+    'edit' => 'Edit',
+    'settings' => 'Pengaturan',
+    'inactive' => 'Tidak Aktif',
+    'preview' => 'Pratinjau',
+    'page_settings' => 'Pengaturan Halaman',
+    'no_permission' => 'Izin diperlukan.',
+    'open_new_window' => 'Buka di jendela baru',
+    'page_empty' => 'Halaman ini belum memiliki konten.',
+
     // Terms and Privacy (top level)
     'terms' => 'Syarat Layanan',
     'privacy' => 'Kebijakan Privasi',

@@ -403,6 +403,40 @@ return [
             'gtm_placeholder' => 'GTM-XXXXXXX',
         ],
         'success' => 'SEO 설정이 저장되었습니다.',
+        // 페이지 제목 패턴
+        'title_pattern' => [
+            'title' => '페이지 제목 패턴',
+            'main' => '메인화면 제목',
+            'main_hint' => '사이트 메인 화면에 표시되는 제목 형태입니다.',
+            'sub' => '서브페이지 제목',
+            'sub_hint' => '문서 목록, 페이지 등 주요 메뉴를 방문하면 표시되는 제목 형태입니다.',
+            'document' => '개별 문서 페이지 제목',
+            'document_hint' => '게시물을 읽는 화면에서 표시되는 제목 형태입니다.',
+            'vars' => '$SITE_TITLE (사이트 제목), $SITE_SUBTITLE (사이트 부제목), $SUBPAGE_TITLE (서브페이지 제목)',
+            'vars_sub' => '위의 변수들과 함께 $PAGE (페이지)도 사용할 수 있습니다.',
+            'vars_doc' => '위에 변수들과 함께 $CATEGORY (카테고리명), $DOCUMENT_TITLE (문서 제목)도 사용할 수 있습니다.',
+        ],
+        // 소셜/메타 옵션
+        'social' => [
+            'title' => '소셜 메타 태그 옵션',
+            'og_tag' => 'OpenGraph 태그 사용',
+            'twitter_tag' => '트위터 메타 태그 사용',
+        ],
+        // 콘텐츠 추출 옵션
+        'extract' => [
+            'title' => '콘텐츠 자동 추출',
+            'description' => '본문에서 설명 추출',
+            'description_no' => '아니오 (모듈 또는 사이트 전체 설명만 사용)',
+            'image' => '본문에서 이미지 추출',
+            'image_no' => '아니오 (사이트 대표 이미지 사용)',
+            'hashtag' => '본문에서 해시태그 추출',
+        ],
+        // 문서 표시 옵션
+        'display' => [
+            'title' => '문서 메타 표시',
+            'author' => '글 작성자 이름 표시',
+            'datetime' => '글 작성/수정 시각 표시',
+        ],
     ],
 
     // PWA 설정

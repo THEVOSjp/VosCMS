@@ -302,7 +302,7 @@ include __DIR__ . '/_head.php';
                 $isDesignation = !empty($r['staff_id']) && (float)($r['designation_fee'] ?? 0) > 0;
                 $hasStaff = !empty($r['staff_id']) && $staffName !== '-';
             ?>
-            <?php $canChangeStaff = !$isDesignation && in_array($r['status'], ['pending', 'confirmed']); ?>
+            <?php $canChangeStaff = in_array($r['status'], ['pending', 'confirmed', 'completed']); ?>
             <div id="staffCard" class="mt-4 p-3 rounded-lg flex items-center gap-3 <?= $hasStaff ? ($isDesignation ? 'bg-violet-50 dark:bg-violet-900/10 border border-violet-200 dark:border-violet-800/30' : 'bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/30') : 'bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700' ?>">
                 <?php if ($hasStaff): ?>
                 <?php if (!empty($staffAvatar)):
@@ -328,7 +328,10 @@ include __DIR__ . '/_head.php';
                     <p class="text-xs text-zinc-500 dark:text-zinc-400">담당 스태프</p>
                 </div>
                 <?php if ($canChangeStaff): ?>
-                <button type="button" onclick="openStaffChangePanel()" class="px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/20 rounded-lg border border-emerald-300 dark:border-emerald-700 transition">변경</button>
+                <div class="flex gap-1.5 flex-shrink-0">
+                    <button type="button" onclick="openStaffChangePanel('assign')" class="px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/20 rounded-lg border border-emerald-300 dark:border-emerald-700 transition">배정</button>
+                    <button type="button" onclick="openStaffChangePanel('designate')" class="px-2.5 py-1.5 text-xs font-medium text-violet-600 hover:bg-violet-100 dark:hover:bg-violet-900/20 rounded-lg border border-violet-300 dark:border-violet-700 transition">지명</button>
+                </div>
                 <?php endif; ?>
                 <?php else: ?>
                 <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center border-2 bg-zinc-200 dark:bg-zinc-700 border-zinc-300 dark:border-zinc-600">
@@ -342,7 +345,10 @@ include __DIR__ . '/_head.php';
                     <p class="text-xs text-zinc-500 dark:text-zinc-400">담당 스태프</p>
                 </div>
                 <?php if ($canChangeStaff): ?>
-                <button type="button" onclick="openStaffChangePanel()" class="px-2.5 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-lg border border-blue-300 dark:border-blue-700 transition">배정</button>
+                <div class="flex gap-1.5 flex-shrink-0">
+                    <button type="button" onclick="openStaffChangePanel('assign')" class="px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/20 rounded-lg border border-emerald-300 dark:border-emerald-700 transition">배정</button>
+                    <button type="button" onclick="openStaffChangePanel('designate')" class="px-2.5 py-1.5 text-xs font-medium text-violet-600 hover:bg-violet-100 dark:hover:bg-violet-900/20 rounded-lg border border-violet-300 dark:border-violet-700 transition">지명</button>
+                </div>
                 <?php endif; ?>
                 <?php endif; ?>
             </div>
@@ -350,7 +356,7 @@ include __DIR__ . '/_head.php';
             <?php if ($canChangeStaff): ?>
             <div id="staffChangePanel" class="hidden mt-2 p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg">
                 <div class="flex items-center justify-between mb-2">
-                    <p class="text-xs font-semibold text-zinc-700 dark:text-zinc-300">스태프 선택</p>
+                    <p id="staffPanelTitle" class="text-xs font-semibold text-zinc-700 dark:text-zinc-300">스태프 배정</p>
                     <button type="button" onclick="closeStaffChangePanel()" class="p-1 text-zinc-400 hover:text-zinc-600 rounded transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>

@@ -203,4 +203,11 @@ return [
     'kiosk_auto_return' => '자동으로 처음 화면으로 돌아갑니다 ',
     'kiosk_seconds' => '초',
     'kiosk_available' => '가능',
+
+    // 예약 경로
+    'source_label' => '예약 경로',
+    'source_phone' => '전화예약',
+    'source_walkin' => '현장접수',
+    'source_online' => '온라인',
+    'customer_info' => '고객 정보',
 ];

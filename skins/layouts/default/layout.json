@@ -1,0 +1,6 @@
+{
+  "title": { "ko": "기본 레이아웃", "en": "Default Layout", "ja": "デフォルトレイアウト" },
+  "description": { "ko": "헤더 + 콘텐츠 + 푸터 기본 구조", "en": "Header + Content + Footer basic structure", "ja": "ヘッダー＋コンテンツ＋フッター基本構造" },
+  "version": "1.0.0",
+  "author": { "name": "RezlyX" }
+}

@@ -5,6 +5,17 @@
  */
 
 return [
+    'back' => 'Volver',
+    'yes' => 'Si',
+    'no' => 'No',
+    'edit' => 'Editar',
+    'settings' => 'Configuracion',
+    'inactive' => 'Inactivo',
+    'preview' => 'Vista previa',
+    'page_settings' => 'Configuracion de pagina',
+    'no_permission' => 'Se requiere permiso.',
+    'open_new_window' => 'Abrir en nueva ventana',
+    'page_empty' => 'Esta pagina aun no tiene contenido.',
     // Terms and Privacy (top level)
     'terms' => 'Terminos de servicio',
     'privacy' => 'Politica de privacidad',

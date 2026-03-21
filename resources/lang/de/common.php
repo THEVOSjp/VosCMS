@@ -5,6 +5,17 @@
  */
 
 return [
+    'back' => 'Zurueck',
+    'yes' => 'Ja',
+    'no' => 'Nein',
+    'edit' => 'Bearbeiten',
+    'settings' => 'Einstellungen',
+    'inactive' => 'Inaktiv',
+    'preview' => 'Vorschau',
+    'page_settings' => 'Seiteneinstellungen',
+    'no_permission' => 'Berechtigung erforderlich.',
+    'open_new_window' => 'In neuem Fenster oeffnen',
+    'page_empty' => 'Diese Seite hat noch keinen Inhalt.',
     // Terms and Privacy (top level)
     'terms' => 'Nutzungsbedingungen',
     'privacy' => 'Datenschutzerklaerung',

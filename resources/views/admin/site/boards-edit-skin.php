@@ -11,7 +11,7 @@ $savedConfig = json_decode($board['skin_config'] ?? '{}', true) ?: [];
 $locale = $config['locale'] ?? 'ko';
 
 $skinsDir = BASE_PATH . '/skins';
-$currentSkinJson = $skinsDir . '/' . $currentSkin . '/board/skin.json';
+$currentSkinJson = $skinsDir . '/board/' . $currentSkin . '/skin.json';
 $skinRenderer = new SkinConfigRenderer($currentSkinJson, $savedConfig, $locale);
 $skinMeta = $skinRenderer->getMeta();
 ?>
@@ -28,7 +28,7 @@ $skinMeta = $skinRenderer->getMeta();
             $skinThumbnail = $skinMeta['thumbnail'] ?? '';
             $skinThumbnailUrl = '';
             if ($skinThumbnail) {
-                $skinThumbnailUrl = $baseUrl . '/skins/' . $currentSkin . '/board/' . $skinThumbnail;
+                $skinThumbnailUrl = $baseUrl . '/skins/board/' . $currentSkin . '/' . $skinThumbnail;
             }
         ?>
         <div class="flex">

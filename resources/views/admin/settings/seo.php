@@ -22,6 +22,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $naverVerification = trim($_POST['naver_verification'] ?? '');
         $gaTrackingId = trim($_POST['ga_tracking_id'] ?? '');
         $gtmId = trim($_POST['gtm_id'] ?? '');
+        // 새 필드들
+        $seoTitleMain = trim($_POST['seo_title_main'] ?? '$SITE_TITLE - $SITE_SUBTITLE');
+        $seoTitleSub = trim($_POST['seo_title_sub'] ?? '$SITE_TITLE - $SUBPAGE_TITLE');
+        $seoTitleDocument = trim($_POST['seo_title_document'] ?? '$SITE_TITLE - $DOCUMENT_TITLE');
+        $seoOgTag = $_POST['seo_og_tag'] ?? 'N';
+        $seoTwitterTag = $_POST['seo_twitter_tag'] ?? 'N';
+        $seoExtractDesc = $_POST['seo_extract_desc'] ?? 'N';
+        $seoExtractImage = $_POST['seo_extract_image'] ?? 'N';
+        $seoExtractHashtag = $_POST['seo_extract_hashtag'] ?? 'N';
+        $seoShowAuthor = $_POST['seo_show_author'] ?? 'N';
+        $seoShowDatetime = $_POST['seo_show_datetime'] ?? 'N';
 
         // OG Image upload
         $ogImage = null;
@@ -62,6 +73,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute(['naver_verification', $naverVerification]);
                 $stmt->execute(['ga_tracking_id', $gaTrackingId]);
                 $stmt->execute(['gtm_id', $gtmId]);
+                $stmt->execute(['seo_title_main', $seoTitleMain]);
+                $stmt->execute(['seo_title_sub', $seoTitleSub]);
+                $stmt->execute(['seo_title_document', $seoTitleDocument]);
+                $stmt->execute(['seo_og_tag', $seoOgTag]);
+                $stmt->execute(['seo_twitter_tag', $seoTwitterTag]);
+                $stmt->execute(['seo_extract_desc', $seoExtractDesc]);
+                $stmt->execute(['seo_extract_image', $seoExtractImage]);
+                $stmt->execute(['seo_extract_hashtag', $seoExtractHashtag]);
+                $stmt->execute(['seo_show_author', $seoShowAuthor]);
+                $stmt->execute(['seo_show_datetime', $seoShowDatetime]);
 
                 if ($ogImage) {
                     $stmt->execute(['og_image', $ogImage]);
@@ -75,6 +96,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $settings['naver_verification'] = $naverVerification;
                 $settings['ga_tracking_id'] = $gaTrackingId;
                 $settings['gtm_id'] = $gtmId;
+                $settings['seo_title_main'] = $seoTitleMain;
+                $settings['seo_title_sub'] = $seoTitleSub;
+                $settings['seo_title_document'] = $seoTitleDocument;
+                $settings['seo_og_tag'] = $seoOgTag;
+                $settings['seo_twitter_tag'] = $seoTwitterTag;
+                $settings['seo_extract_desc'] = $seoExtractDesc;
+                $settings['seo_extract_image'] = $seoExtractImage;
+                $settings['seo_extract_hashtag'] = $seoExtractHashtag;
+                $settings['seo_show_author'] = $seoShowAuthor;
+                $settings['seo_show_datetime'] = $seoShowDatetime;
 
                 $message = __('settings.seo.success');
                 $messageType = 'success';
@@ -119,26 +150,67 @@ ob_start();
     <form method="POST" enctype="multipart/form-data" class="space-y-6">
         <input type="hidden" name="action" value="update_seo_settings">
 
+        <?php
+        $_inp = 'w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500';
+        $_lbl = 'w-48 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300 pt-2';
+        $_hint = 'text-xs text-zinc-500 dark:text-zinc-400 mt-1';
+        $_radio = 'w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500';
+        $_yes = __('common.yes') ?? '예';
+        $_no = __('common.no') ?? '아니오';
+        ?>
+
+        <!-- 페이지 제목 패턴 -->
+        <div class="border-b dark:border-zinc-700 pb-6">
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.title_pattern.title') ?? '페이지 제목 패턴' ?></h3>
+            <div class="space-y-4">
+                <div class="flex items-start gap-4">
+                    <label class="<?= $_lbl ?>"><?= __('settings.seo.title_pattern.main') ?? '메인화면 제목' ?></label>
+                    <div class="flex-1">
+                        <?php rzx_multilang_input('seo_title_main', $settings['seo_title_main'] ?? '$SITE_TITLE - $SITE_SUBTITLE', 'settings.seo_title_main'); ?>
+                        <p class="<?= $_hint ?>"><?= __('settings.seo.title_pattern.main_hint') ?? '사이트 메인 화면에 표시되는 제목 형태입니다.' ?><br><?= __('settings.seo.title_pattern.vars') ?? '$SITE_TITLE (사이트 제목), $SITE_SUBTITLE (사이트 부제목), $SUBPAGE_TITLE (서브페이지 제목)' ?></p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <label class="<?= $_lbl ?>"><?= __('settings.seo.title_pattern.sub') ?? '서브페이지 제목' ?></label>
+                    <div class="flex-1">
+                        <?php rzx_multilang_input('seo_title_sub', $settings['seo_title_sub'] ?? '$SITE_TITLE - $SUBPAGE_TITLE', 'settings.seo_title_sub'); ?>
+                        <p class="<?= $_hint ?>"><?= __('settings.seo.title_pattern.sub_hint') ?? '문서 목록, 페이지 등 주요 메뉴를 방문하면 표시되는 제목 형태입니다.' ?> <?= __('settings.seo.title_pattern.vars_sub') ?? '위의 변수들과 함께 $PAGE (페이지)도 사용할 수 있습니다.' ?></p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <label class="<?= $_lbl ?>"><?= __('settings.seo.title_pattern.document') ?? '개별 문서 페이지 제목' ?></label>
+                    <div class="flex-1">
+                        <?php rzx_multilang_input('seo_title_document', $settings['seo_title_document'] ?? '$SITE_TITLE - $DOCUMENT_TITLE', 'settings.seo_title_document'); ?>
+                        <p class="<?= $_hint ?>"><?= __('settings.seo.title_pattern.document_hint') ?? '게시물을 읽는 화면에서 표시되는 제목 형태입니다.' ?> <?= __('settings.seo.title_pattern.vars_doc') ?? '위에 변수들과 함께 $CATEGORY (카테고리명), $DOCUMENT_TITLE (문서 제목)도 사용할 수 있습니다.' ?></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Meta Tags Section -->
         <div class="border-b dark:border-zinc-700 pb-6">
             <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.meta.title') ?></h3>
 
-            <div class="mb-4">
-                <label for="seo_description" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.seo.meta.description_label') ?></label>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.meta.description_hint') ?></p>
-                <textarea name="seo_description" id="seo_description" rows="3"
-                          class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          maxlength="200"><?= htmlspecialchars($settings['seo_description'] ?? ''); ?></textarea>
-                <div class="text-xs text-zinc-400 mt-1"><span id="descCharCount">0</span>/200</div>
-            </div>
-
-            <div>
-                <label for="seo_keywords" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.seo.meta.keywords_label') ?></label>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.seo.meta.keywords_hint') ?></p>
-                <input type="text" name="seo_keywords" id="seo_keywords"
-                       value="<?= htmlspecialchars($settings['seo_keywords'] ?? ''); ?>"
-                       class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                       placeholder="<?= __('settings.seo.meta.keywords_placeholder') ?>">
+            <div class="space-y-4">
+                <div class="flex items-start gap-4">
+                    <label class="<?= $_lbl ?>"><?= __('settings.seo.meta.keywords_label') ?></label>
+                    <div class="flex-1">
+                        <?php rzx_multilang_input('seo_keywords', $settings['seo_keywords'] ?? '', 'settings.seo_keywords', [
+                            'placeholder' => __('settings.seo.meta.keywords_placeholder'),
+                        ]); ?>
+                        <p class="<?= $_hint ?>"><?= __('settings.seo.meta.keywords_hint') ?></p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <label class="<?= $_lbl ?>"><?= __('settings.seo.meta.description_label') ?></label>
+                    <div class="flex-1">
+                        <?php rzx_multilang_input('seo_description', $settings['seo_description'] ?? '', 'settings.seo_description', [
+                            'type' => 'textarea',
+                            'rows' => 2,
+                        ]); ?>
+                        <p class="<?= $_hint ?>"><?= __('settings.seo.meta.description_hint') ?></p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -181,6 +253,113 @@ ob_start();
                         <img id="ogImagePreviewImg" src="" alt="Preview" class="max-h-32 object-contain rounded">
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- 소셜 메타 태그 옵션 -->
+        <div class="border-b dark:border-zinc-700 pb-6">
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.social.title') ?? '소셜 메타 태그 옵션' ?></h3>
+            <div class="space-y-3">
+                <?php
+                $socialOpts = [
+                    ['name' => 'seo_og_tag', 'label' => __('settings.seo.social.og_tag') ?? 'OpenGraph 태그 사용'],
+                    ['name' => 'seo_twitter_tag', 'label' => __('settings.seo.social.twitter_tag') ?? '트위터 메타 태그 사용'],
+                ];
+                foreach ($socialOpts as $opt):
+                    $val = $settings[$opt['name']] ?? 'N';
+                ?>
+                <div class="flex items-center gap-4">
+                    <label class="<?= $_lbl ?>"><?= $opt['label'] ?></label>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="<?= $opt['name'] ?>" value="Y" <?= $val === 'Y' ? 'checked' : '' ?> class="<?= $_radio ?>">
+                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= $_yes ?></span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="<?= $opt['name'] ?>" value="N" <?= $val !== 'Y' ? 'checked' : '' ?> class="<?= $_radio ?>">
+                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= $_no ?></span>
+                        </label>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <!-- 콘텐츠 자동 추출 -->
+        <div class="border-b dark:border-zinc-700 pb-6">
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.extract.title') ?? '콘텐츠 자동 추출' ?></h3>
+            <div class="space-y-3">
+                <!-- 본문에서 설명 추출 -->
+                <div class="flex items-center gap-4">
+                    <label class="<?= $_lbl ?>"><?= __('settings.seo.extract.description') ?? '본문에서 설명 추출' ?></label>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="seo_extract_desc" value="Y" <?= ($settings['seo_extract_desc'] ?? 'N') === 'Y' ? 'checked' : '' ?> class="<?= $_radio ?>">
+                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= $_yes ?></span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="seo_extract_desc" value="N" <?= ($settings['seo_extract_desc'] ?? 'N') !== 'Y' ? 'checked' : '' ?> class="<?= $_radio ?>">
+                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.seo.extract.description_no') ?? '아니오 (모듈 또는 사이트 전체 설명만 사용)' ?></span>
+                        </label>
+                    </div>
+                </div>
+                <!-- 본문에서 이미지 추출 -->
+                <div class="flex items-center gap-4">
+                    <label class="<?= $_lbl ?>"><?= __('settings.seo.extract.image') ?? '본문에서 이미지 추출' ?></label>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="seo_extract_image" value="Y" <?= ($settings['seo_extract_image'] ?? 'N') === 'Y' ? 'checked' : '' ?> class="<?= $_radio ?>">
+                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= $_yes ?></span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="seo_extract_image" value="N" <?= ($settings['seo_extract_image'] ?? 'N') !== 'Y' ? 'checked' : '' ?> class="<?= $_radio ?>">
+                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.seo.extract.image_no') ?? '아니오 (사이트 대표 이미지 사용)' ?></span>
+                        </label>
+                    </div>
+                </div>
+                <!-- 본문에서 해시태그 추출 -->
+                <div class="flex items-center gap-4">
+                    <label class="<?= $_lbl ?>"><?= __('settings.seo.extract.hashtag') ?? '본문에서 해시태그 추출' ?></label>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="seo_extract_hashtag" value="Y" <?= ($settings['seo_extract_hashtag'] ?? 'N') === 'Y' ? 'checked' : '' ?> class="<?= $_radio ?>">
+                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= $_yes ?></span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="seo_extract_hashtag" value="N" <?= ($settings['seo_extract_hashtag'] ?? 'N') !== 'Y' ? 'checked' : '' ?> class="<?= $_radio ?>">
+                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= $_no ?></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 문서 메타 표시 -->
+        <div class="border-b dark:border-zinc-700 pb-6">
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.display.title') ?? '문서 메타 표시' ?></h3>
+            <div class="space-y-3">
+                <?php
+                $displayOpts = [
+                    ['name' => 'seo_show_author', 'label' => __('settings.seo.display.author') ?? '글 작성자 이름 표시'],
+                    ['name' => 'seo_show_datetime', 'label' => __('settings.seo.display.datetime') ?? '글 작성/수정 시각 표시'],
+                ];
+                foreach ($displayOpts as $opt):
+                    $val = $settings[$opt['name']] ?? 'N';
+                ?>
+                <div class="flex items-center gap-4">
+                    <label class="<?= $_lbl ?>"><?= $opt['label'] ?></label>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="<?= $opt['name'] ?>" value="Y" <?= $val === 'Y' ? 'checked' : '' ?> class="<?= $_radio ?>">
+                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= $_yes ?></span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="<?= $opt['name'] ?>" value="N" <?= $val !== 'Y' ? 'checked' : '' ?> class="<?= $_radio ?>">
+                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= $_no ?></span>
+                        </label>
+                    </div>
+                </div>
+                <?php endforeach; ?>
             </div>
         </div>
 
@@ -308,6 +487,9 @@ ob_start();
         });
     }
 </script>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<?php include __DIR__ . '/../components/multilang-modal.php'; ?>
 
 <?php
 $pageContent = ob_get_clean();

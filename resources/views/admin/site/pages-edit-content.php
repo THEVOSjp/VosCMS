@@ -142,13 +142,18 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
             document.documentElement.classList.add('dark');
         }
     </script>
+<?php $embedMode = !empty($_GET['embed']); ?>
 </head>
+<?php if (!$embedMode): ?>
 <body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
     <div class="flex">
         <?php include BASE_PATH . '/resources/views/admin/partials/admin-sidebar.php'; ?>
         <main class="flex-1 ml-64">
             <?php include BASE_PATH . '/resources/views/admin/partials/admin-topbar.php'; ?>
             <div class="p-6">
+<?php else: ?>
+<div class="p-2">
+<?php endif; ?>
                 <!-- 브레드크럼 -->
                 <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400 mb-4">
                     <a href="<?= $adminUrl ?>/site/pages" class="hover:text-blue-600"><?= __('site.pages.title') ?></a>
@@ -314,5 +319,9 @@ async function switchLocale(locale) {
     console.log('[PageSettings] locale:', locale);
 }
 </script>
+<?php if (!$embedMode): ?>
 </body>
 </html>
+<?php else: ?>
+</div>
+<?php endif; ?>

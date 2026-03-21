@@ -213,4 +213,11 @@ return [
     'pos_assign' => 'Assign',
     'pos_staff' => 'Staff',
     'pos_assign_first' => 'Staff assignment required',
+
+    // Reservation source
+    'source_label' => 'Reservation Source',
+    'source_phone' => 'Phone',
+    'source_walkin' => 'Walk-in',
+    'source_online' => 'Online',
+    'customer_info' => 'Customer Info',
 ];

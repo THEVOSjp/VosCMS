@@ -1,0 +1,65 @@
+{
+  "title": { "ko": "기본 페이지 스킨", "en": "Default Page Skin", "ja": "デフォルトページスキン" },
+  "description": { "ko": "RezlyX 기본 페이지 스킨입니다.", "en": "RezlyX default page skin.", "ja": "RezlyXデフォルトページスキンです。" },
+  "version": "1.0.0",
+  "date": "2026-03-21",
+  "thumbnail": "thumbnail.png",
+  "author": { "name": "RezlyX", "url": "https://rezlyx.com", "email": "info@rezlyx.com" },
+  "vars": [
+    {
+      "section": { "ko": "기본 설정", "en": "Basic Settings", "ja": "基本設定" },
+      "name": "content_width",
+      "type": "select",
+      "title": { "ko": "콘텐츠 너비", "en": "Content width", "ja": "コンテンツ幅" },
+      "options": [
+        { "value": "max-w-3xl", "label": { "ko": "좁게 (768px)", "en": "Narrow (768px)", "ja": "狭い (768px)" } },
+        { "value": "max-w-5xl", "label": { "ko": "기본 (1024px)", "en": "Default (1024px)", "ja": "標準 (1024px)" } },
+        { "value": "max-w-7xl", "label": { "ko": "넓게 (1280px)", "en": "Wide (1280px)", "ja": "広い (1280px)" } },
+        { "value": "max-w-full", "label": { "ko": "전체 너비", "en": "Full width", "ja": "全幅" } }
+      ],
+      "default": "max-w-5xl"
+    },
+    {
+      "name": "show_breadcrumb",
+      "type": "checkbox",
+      "title": { "ko": "브레드크럼 표시", "en": "Show breadcrumb", "ja": "パンくずリスト表示" },
+      "description": { "ko": "페이지 상단에 경로 탐색을 표시합니다.", "en": "Show path navigation at the top of the page.", "ja": "ページ上部にパス案内を表示します。" },
+      "default": false
+    },
+    {
+      "section": { "ko": "디자인", "en": "Design", "ja": "デザイン" },
+      "name": "primary_color",
+      "type": "color",
+      "title": { "ko": "메인 색상", "en": "Primary color", "ja": "メインカラー" },
+      "default": "#3B82F6"
+    },
+    {
+      "name": "content_bg",
+      "type": "radio",
+      "title": { "ko": "콘텐츠 배경", "en": "Content background", "ja": "コンテンツ背景" },
+      "options": [
+        { "value": "transparent", "label": { "ko": "투명 (기본)", "en": "Transparent (default)", "ja": "透明（デフォルト）" } },
+        { "value": "white", "label": { "ko": "흰색 카드", "en": "White card", "ja": "白カード" } }
+      ],
+      "default": "transparent"
+    },
+    {
+      "section": { "ko": "사용자 정의", "en": "Custom", "ja": "カスタム" },
+      "name": "custom_css",
+      "type": "textarea",
+      "title": { "ko": "커스텀 CSS", "en": "Custom CSS", "ja": "カスタムCSS" }
+    },
+    {
+      "name": "custom_header_html",
+      "type": "textarea",
+      "multilang": true,
+      "title": { "ko": "커스텀 헤더 HTML", "en": "Custom header HTML", "ja": "カスタムヘッダーHTML" }
+    },
+    {
+      "name": "custom_footer_html",
+      "type": "textarea",
+      "multilang": true,
+      "title": { "ko": "커스텀 푸터 HTML", "en": "Custom footer HTML", "ja": "カスタムフッターHTML" }
+    }
+  ]
+}

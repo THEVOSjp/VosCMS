@@ -119,5 +119,6 @@
     <?php include __DIR__ . '/../../components/multilang-modal.php'; ?>
 
     <!-- TopBar scripts are included in admin-topbar.php -->
+    <?php include __DIR__ . '/../../partials/result-modal.php'; ?>
 </body>
 </html>

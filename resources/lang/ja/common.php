@@ -5,6 +5,17 @@
  */
 
 return [
+    'back' => '戻る',
+    'yes' => 'はい',
+    'no' => 'いいえ',
+    'edit' => '編集',
+    'settings' => '設定',
+    'inactive' => '無効',
+    'preview' => 'プレビュー',
+    'page_settings' => 'ページ設定',
+    'no_permission' => '権限が必要です。',
+    'open_new_window' => '新しいウィンドウで開く',
+    'page_empty' => 'このページにはまだコンテンツがありません。',
     // 利用規約とプライバシー（トップレベル）
     'terms' => '利用規約',
     'privacy' => 'プライバシーポリシー',

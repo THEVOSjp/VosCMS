@@ -43,7 +43,7 @@
             </svg>
         </button>
 
-        <span class="text-sm text-zinc-500 dark:text-zinc-400"><?= date('Y-m-d H:i') ?></span>
+        <span id="topbarClock" class="text-sm font-mono text-blue-600 dark:text-blue-400"><?= date('Y-m-d H:i:s') ?></span>
         <?php
         $_adminName = $_SESSION['admin_name'] ?? 'Admin';
         $_adminEmail = $_SESSION['admin_email'] ?? '';
@@ -108,6 +108,21 @@
     // Dark mode toggle
     var darkModeBtn = document.getElementById('darkModeBtn');
     if (darkModeBtn) {
+    // 시계 업데이트
+    var clockEl = document.getElementById('topbarClock');
+    if (clockEl) {
+        setInterval(function() {
+            var d = new Date();
+            var y = d.getFullYear();
+            var m = String(d.getMonth() + 1).padStart(2, '0');
+            var day = String(d.getDate()).padStart(2, '0');
+            var h = String(d.getHours()).padStart(2, '0');
+            var min = String(d.getMinutes()).padStart(2, '0');
+            var s = String(d.getSeconds()).padStart(2, '0');
+            clockEl.textContent = y + '-' + m + '-' + day + ' ' + h + ':' + min + ':' + s;
+        }, 1000);
+    }
+
         darkModeBtn.addEventListener('click', function() {
             var isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem('darkMode', isDark);

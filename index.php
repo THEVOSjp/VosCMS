@@ -546,17 +546,38 @@ if (empty($path) || $path === 'index.php') {
                 }
             }
             if (!$_boardMatch) {
-                // 동적 페이지 확인 (rzx_page_contents)
                 $_pfx = $_ENV['DB_PREFIX'] ?? 'rzx_';
-                $_pageCheck = $pdo->prepare("SELECT page_slug FROM {$_pfx}page_contents WHERE page_slug = ? LIMIT 1");
-                $_pageCheck->execute([$path]);
-                if ($_pageCheck->fetchColumn()) {
-                    $pageSlug = $path;
-                    $__pageFile = BASE_PATH . '/resources/views/customer/page.php';
-                } else {
-                    http_response_code(404);
-                    $__noLayout = true;
-                    include BASE_PATH . '/resources/views/customer/404.php';
+
+                // 페이지 설정/편집 프론트 라우트: {slug}/settings, {slug}/edit
+                $_pageRouteMatch = false;
+                if (preg_match('#^([a-z0-9_-]+)/(settings|edit)$#', $path, $_prm)) {
+                    $_prSlug = $_prm[1];
+                    $_prAction = $_prm[2];
+                    $_prCheck = $pdo->prepare("SELECT page_slug FROM {$_pfx}page_contents WHERE page_slug = ? LIMIT 1");
+                    $_prCheck->execute([$_prSlug]);
+                    if ($_prCheck->fetchColumn()) {
+                        $pageSlug = $_prSlug;
+                        if ($_prAction === 'settings') {
+                            $__pageFile = BASE_PATH . '/resources/views/customer/page-settings.php';
+                        } else {
+                            $__pageFile = BASE_PATH . '/resources/views/customer/page-edit.php';
+                        }
+                        $_pageRouteMatch = true;
+                    }
+                }
+
+                if (!$_pageRouteMatch) {
+                    // 동적 페이지 확인 (rzx_page_contents)
+                    $_pageCheck = $pdo->prepare("SELECT page_slug FROM {$_pfx}page_contents WHERE page_slug = ? LIMIT 1");
+                    $_pageCheck->execute([$path]);
+                    if ($_pageCheck->fetchColumn()) {
+                        $pageSlug = $path;
+                        $__pageFile = BASE_PATH . '/resources/views/customer/page.php';
+                    } else {
+                        http_response_code(404);
+                        $__noLayout = true;
+                        include BASE_PATH . '/resources/views/customer/404.php';
+                    }
                 }
             }
         }

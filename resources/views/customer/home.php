@@ -17,6 +17,7 @@ if (!empty($siteTagline)) {
 } else {
     $pageTitle = $_siteName . ' - ' . __('common.nav.home');
 }
+$seoContext = ['type' => 'main'];
 
 // === 위젯 기반 동적 렌더링 (WidgetRenderer 공통 모듈 사용) ===
     require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetRenderer.php';

@@ -15,6 +15,7 @@ $pageTitle = $board['title'] . ' - ' . ($config['app_name'] ?? 'RezlyX');
 
 // 페이지네이션
 $page = max(1, (int)($_GET['page'] ?? 1));
+$seoContext = ['type' => 'sub', 'subpage_title' => $board['title'], 'page' => $page];
 $perPage = (int)($board['per_page'] ?? 20);
 $offset = ($page - 1) * $perPage;
 

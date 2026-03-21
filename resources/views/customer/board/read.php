@@ -174,6 +174,16 @@ if ($canEdit && !$isAdmin) {
 }
 
 $pageTitle = htmlspecialchars($post['title']) . ' - ' . $board['title'];
+$seoContext = [
+    'type' => 'document',
+    'document_title' => $post['title'],
+    'subpage_title' => $board['title'],
+    'category' => $board['title'],
+    'content' => $post['content'] ?? '',
+    'author' => $post['author_name'] ?? '',
+    'published_at' => $post['created_at'] ?? '',
+    'modified_at' => $post['updated_at'] ?? '',
+];
 ?>
     <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         <!-- 글 헤더 -->

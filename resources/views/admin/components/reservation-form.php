@@ -35,9 +35,7 @@ if (!function_exists('resFormFormatPrice')) {
 <form method="POST" action="<?= $resForm['adminUrl'] ?>/reservations" id="<?= $fId ?>">
     <input type="hidden" name="_token" value="<?= $resForm['csrfToken'] ?>">
     <input type="hidden" name="user_id" id="<?= $fId ?>_userId" value="">
-    <?php if (!empty($resForm['source'])): ?>
-    <input type="hidden" name="source" value="<?= htmlspecialchars($resForm['source']) ?>">
-    <?php endif; ?>
+    <input type="hidden" name="source" id="<?= $fId ?>_source" value="<?= htmlspecialchars($resForm['source'] ?? $fOld['source'] ?? 'phone') ?>">
 
     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <!-- 좌측: 서비스 선택 (3/5) -->
@@ -164,9 +162,39 @@ if (!function_exists('resFormFormatPrice')) {
                 </div>
             </div>
 
+            <!-- 예약 경로 -->
+            <div class="<?= $fMode === 'page' ? 'bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6' : '' ?>">
+                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-3"><?= __('reservations.source_label') ?? '예약 경로' ?></h3>
+                <?php
+                $_phoneEnabled = ($siteSettings['booking_phone_enabled'] ?? $settings['booking_phone_enabled'] ?? '0') === '1';
+                $_srcVal = $resForm['source'] ?? $fOld['source'] ?? ($_phoneEnabled ? 'phone' : 'walk_in');
+                $_sources = [];
+                if ($_phoneEnabled) {
+                    $_sources['phone'] = ['label' => __('reservations.source_phone') ?? '전화예약', 'icon' => 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z', 'color' => 'blue'];
+                }
+                $_sources['walk_in'] = ['label' => __('reservations.source_walkin') ?? '현장접수', 'icon' => 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z', 'color' => 'emerald'];
+                $_sources['online'] = ['label' => __('reservations.source_online') ?? '온라인', 'icon' => 'M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9', 'color' => 'violet'];
+                // 전화예약 비활성인데 기존 값이 phone이면 walk_in으로 변경
+                if (!$_phoneEnabled && $_srcVal === 'phone') $_srcVal = 'walk_in';
+                ?>
+                <div class="grid grid-cols-<?= count($_sources) ?> gap-2">
+                    <?php foreach ($_sources as $sKey => $s): ?>
+                    <button type="button" onclick="ResFormSource('<?= $fId ?>', '<?= $sKey ?>')"
+                            id="<?= $fId ?>_src_<?= $sKey ?>"
+                            class="py-2.5 text-sm font-medium rounded-lg border-2 transition flex flex-col items-center gap-1
+                            <?= $_srcVal === $sKey
+                                ? 'border-' . $s['color'] . '-500 bg-' . $s['color'] . '-50 text-' . $s['color'] . '-700 dark:bg-' . $s['color'] . '-900/20 dark:text-' . $s['color'] . '-400'
+                                : 'border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-600' ?>">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $s['icon'] ?>"/></svg>
+                        <?= $s['label'] ?>
+                    </button>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
             <!-- 고객 정보 -->
             <div class="<?= $fMode === 'page' ? 'bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6' : '' ?>">
-                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">고객 정보</h3>
+                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('reservations.customer_info') ?? '고객 정보' ?></h3>
                 <div class="space-y-3">
                     <div class="relative">
                         <label class="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">이름 <span class="text-red-500">*</span></label>

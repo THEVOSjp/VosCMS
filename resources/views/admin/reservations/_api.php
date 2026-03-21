@@ -503,15 +503,24 @@ try {
         exit;
     }
 
-    // ─── 스태프 배정 (POS) ───
+    // ─── 스태프 배정/변경/해제 ───
     if ($apiAction === 'assign-staff' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $reservationIds = $_POST['reservation_ids'] ?? [];
-        $staffId = $_POST['staff_id'] ?? null;
-        if (empty($reservationIds) || !$staffId) {
+        $staffId = $_POST['staff_id'] ?? '';
+        if (empty($reservationIds)) {
             echo json_encode(['success' => false, 'message' => '필수 값 누락']);
             exit;
         }
-        $staffId = (int)$staffId;
+
+        // 미배정 처리 (staff_id 비어있으면)
+        if ($staffId === '' || $staffId === null) {
+            $ph = implode(',', array_fill(0, count($reservationIds), '?'));
+            $pdo->prepare("UPDATE {$prefix}reservations SET staff_id = NULL, designation_fee = 0 WHERE id IN ({$ph})")
+                ->execute(array_values($reservationIds));
+            echo json_encode(['success' => true, 'staff_name' => null, 'unassigned' => true]);
+            exit;
+        }
+
         // 스태프 존재 확인
         $stStaff = $pdo->prepare("SELECT id, name, designation_fee FROM ${prefix}staff WHERE id = ? AND is_active = 1 AND (is_visible = 1 OR is_visible IS NULL)");
         $stStaff->execute([$staffId]);
@@ -520,10 +529,13 @@ try {
             echo json_encode(['success' => false, 'message' => '유효하지 않은 스태프']);
             exit;
         }
+        $isDesignation = !empty($_POST['designation']);
+        $designationFee = $isDesignation ? (float)($staff['designation_fee'] ?? 0) : 0;
+
         $ph = implode(',', array_fill(0, count($reservationIds), '?'));
-        $pdo->prepare("UPDATE {$prefix}reservations SET staff_id = ? WHERE id IN ({$ph})")
-            ->execute(array_merge([$staffId], array_values($reservationIds)));
-        echo json_encode(['success' => true, 'staff_name' => $staff['name']]);
+        $pdo->prepare("UPDATE {$prefix}reservations SET staff_id = ?, designation_fee = ? WHERE id IN ({$ph})")
+            ->execute(array_merge([$staffId, $designationFee], array_values($reservationIds)));
+        echo json_encode(['success' => true, 'staff_name' => $staff['name'], 'designation' => $isDesignation, 'designation_fee' => $designationFee]);
         exit;
     }
 

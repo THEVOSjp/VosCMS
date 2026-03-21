@@ -43,6 +43,8 @@ return [
             'title' => '서비스 기본설정', 'description' => '서비스 예약의 기본 옵션을 설정합니다.',
             'saved' => '설정이 저장되었습니다.', 'default_duration' => '기본 소요시간',
             'default_buffer' => '기본 버퍼 시간', 'advance_booking_days' => '예약 가능 기간',
+            'phone_booking' => '전화 예약',
+            'phone_booking_hint' => '활성화 시 관리자 예약 생성에서 전화예약 경로를 사용할 수 있습니다.',
             'same_day_booking' => '당일 예약 허용',
             'same_day_booking_hint' => '고객이 당일 온라인 예약을 할 수 있도록 허용합니다.',
             'min_notice_hours' => '최소 사전 예약 마감',

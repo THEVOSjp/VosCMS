@@ -139,6 +139,22 @@ $memberGrades = $gradeStmt->fetchAll(PDO::FETCH_ASSOC);
 
 <?php include __DIR__ . '/boards-edit-addition-part2.php'; ?>
 
+<!-- 위지윅 에디터 권한 -->
+<?php
+    $editorConfig = [
+        'editor_use_default' => $board['editor_use_default'] ?? 1,
+        'editor_html_perm' => $board['editor_html_perm'] ?? '',
+        'editor_file_perm' => $board['editor_file_perm'] ?? '',
+        'editor_component_perm' => $board['editor_component_perm'] ?? '',
+        'editor_ext_component_perm' => $board['editor_ext_component_perm'] ?? '',
+        'comment_editor_html_perm' => $board['comment_editor_html_perm'] ?? '',
+        'comment_editor_file_perm' => $board['comment_editor_file_perm'] ?? '',
+        'comment_editor_component_perm' => $board['comment_editor_component_perm'] ?? '',
+        'comment_editor_ext_component_perm' => $board['comment_editor_ext_component_perm'] ?? '',
+    ];
+    include BASE_PATH . '/resources/views/admin/components/editor-permissions.php';
+?>
+
 </div>
 
 <?php include __DIR__ . '/boards-edit-addition-js.php'; ?>

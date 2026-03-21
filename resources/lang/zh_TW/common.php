@@ -5,6 +5,18 @@
  */
 
 return [
+    'back' => '返回',
+    'yes' => '是',
+    'no' => '否',
+    'edit' => '編輯',
+    'settings' => '設定',
+    'inactive' => '未啟用',
+    'preview' => '預覽',
+    'page_settings' => '頁面設定',
+    'no_permission' => '需要權限。',
+    'open_new_window' => '在新視窗中開啟',
+    'page_empty' => '此頁面尚無內容。',
+
     // Terms and Privacy
     'terms' => '服務條款',
     'privacy' => '隱私權政策',

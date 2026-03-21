@@ -93,13 +93,21 @@ const resDate = '<?= $r['reservation_date'] ?? '' ?>';
 const resStart = '<?= $r['start_time'] ?? '' ?>';
 const resEnd = '<?= $r['end_time'] ?? '' ?>';
 const currentStaffId = '<?= $r['staff_id'] ?? '' ?>';
+let staffChangeMode = 'assign'; // 'assign' or 'designate'
 
-async function openStaffChangePanel() {
-    console.log('[Show] Opening staff change panel');
+async function openStaffChangePanel(mode) {
+    staffChangeMode = mode || 'assign';
+    const isDesignate = staffChangeMode === 'designate';
+    const modeLabel = isDesignate ? '지명' : '배정';
+    const modeColor = isDesignate ? 'violet' : 'emerald';
+
+    console.log('[Show] Opening staff change panel, mode:', staffChangeMode);
     const panel = document.getElementById('staffChangePanel');
     const list = document.getElementById('staffChangeList');
+    const panelTitle = document.getElementById('staffPanelTitle');
     if (!panel) return;
     panel.classList.remove('hidden');
+    if (panelTitle) panelTitle.textContent = '스태프 ' + modeLabel;
     list.innerHTML = '<div class="text-center py-3 text-zinc-400 text-xs"><svg class="w-4 h-4 animate-spin mx-auto mb-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg></div>';
 
     try {
@@ -109,7 +117,7 @@ async function openStaffChangePanel() {
         console.log('[Show] Available staff:', data);
 
         if (!data.success || !data.staff || !data.staff.length) {
-            list.innerHTML = '<p class="text-center text-zinc-400 text-xs py-3">배정 가능한 스태프가 없습니다.</p>';
+            list.innerHTML = '<p class="text-center text-zinc-400 text-xs py-3">' + modeLabel + ' 가능한 스태프가 없습니다.</p>';
             return;
         }
 
@@ -120,24 +128,43 @@ async function openStaffChangePanel() {
             return path.startsWith('/') ? appUrl + path : appUrl + '/storage/' + path;
         }
 
-        list.innerHTML = data.staff.map(s => {
+        // 미배정 옵션 (배정 모드에서만)
+        let html = '';
+        if (!isDesignate) {
+            html += `<label class="flex items-center p-2 rounded-lg border transition cursor-pointer
+                ${!currentStaffId ? 'border-zinc-400 bg-zinc-100 dark:bg-zinc-700/50' : 'border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700/50'}">
+                <input type="radio" name="changeStaff" value="" class="mr-2.5 text-zinc-500" ${!currentStaffId ? 'checked' : ''} onchange="onStaffRadioChange()">
+                <div class="w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center flex-shrink-0 mr-2">
+                    <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                </div>
+                <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">미배정${!currentStaffId ? ' <span class="text-xs text-zinc-400">(현재)</span>' : ''}</p>
+            </label>`;
+        }
+
+        const accentCls = isDesignate ? 'text-violet-600' : 'text-emerald-600';
+        const activeBorder = isDesignate ? 'border-violet-400 bg-violet-50 dark:bg-violet-900/20' : 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20';
+        const currentLabel = isDesignate ? '<span class="text-xs text-violet-500">(현재)</span>' : '<span class="text-xs text-emerald-500">(현재)</span>';
+
+        html += data.staff.map(s => {
             const isCurrent = String(s.id) === String(currentStaffId);
             const busy = !s.available;
             const avatarUrl = resolveImg(s.avatar);
+            const feeHtml = isDesignate && s.designation_fee > 0 ? ' <span class="text-xs text-violet-500">+' + Number(s.designation_fee).toLocaleString() + '</span>' : '';
             return `<label class="flex items-center p-2 rounded-lg border transition cursor-pointer
-                ${busy ? 'border-zinc-200 dark:border-zinc-700 opacity-40 cursor-not-allowed' : isCurrent ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700/50'}">
-                <input type="radio" name="changeStaff" value="${s.id}" class="mr-2.5 text-emerald-600" ${isCurrent ? 'checked' : ''} ${busy ? 'disabled' : ''} onchange="onStaffRadioChange()">
+                ${busy ? 'border-zinc-200 dark:border-zinc-700 opacity-40 cursor-not-allowed' : isCurrent ? activeBorder : 'border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700/50'}">
+                <input type="radio" name="changeStaff" value="${s.id}" class="mr-2.5 ${accentCls}" ${isCurrent ? 'checked' : ''} ${busy ? 'disabled' : ''} onchange="onStaffRadioChange()">
                 <div class="w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center flex-shrink-0 mr-2 overflow-hidden">
                     ${avatarUrl ? '<img src="' + escapeHtml(avatarUrl) + '" class="w-7 h-7 rounded-full object-cover">' : '<svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>'}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-zinc-900 dark:text-white">${escapeHtml(s.name)}${busy ? ' <span class="text-xs text-red-400">(예약있음)</span>' : ''}${isCurrent ? ' <span class="text-xs text-emerald-500">(현재)</span>' : ''}</p>
+                    <p class="text-sm font-medium text-zinc-900 dark:text-white">${escapeHtml(s.name)}${feeHtml}${busy ? ' <span class="text-xs text-red-400">(예약있음)</span>' : ''}${isCurrent ? ' ' + currentLabel : ''}</p>
                 </div>
             </label>`;
         }).join('');
 
-        // 확인 버튼
-        list.innerHTML += `<button type="button" id="staffChangeConfirmBtn" onclick="confirmStaffChange()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold transition mt-2 disabled:opacity-50" ${currentStaffId ? '' : 'disabled'}>배정 확인</button>`;
+        list.innerHTML = html;
+        const btnColor = isDesignate ? 'bg-violet-600 hover:bg-violet-700' : 'bg-emerald-600 hover:bg-emerald-700';
+        list.innerHTML += `<button type="button" id="staffChangeConfirmBtn" onclick="confirmStaffChange()" class="w-full py-2 ${btnColor} text-white rounded-lg text-sm font-bold transition mt-2 disabled:opacity-50" ${currentStaffId ? '' : 'disabled'}>${modeLabel} 확인</button>`;
     } catch (err) {
         console.error('[Show] Staff fetch error:', err);
         list.innerHTML = '<p class="text-center text-red-400 text-xs py-3">스태프 조회 실패</p>';
@@ -159,17 +186,22 @@ async function confirmStaffChange() {
     const radio = document.querySelector('input[name="changeStaff"]:checked');
     if (!radio) return;
     const staffId = radio.value;
-    console.log('[Show] Changing staff to:', staffId);
+    const isDesignate = staffChangeMode === 'designate';
+    console.log('[Show] Changing staff to:', staffId, 'mode:', staffChangeMode);
 
     const btn = document.getElementById('staffChangeConfirmBtn');
     btn.textContent = '변경 중...';
     btn.disabled = true;
 
     try {
+        let body = '_token=' + csrfToken + '&staff_id=' + staffId + '&reservation_ids[]=' + resId;
+        if (isDesignate && staffId) {
+            body += '&designation=1';
+        }
         const resp = await fetch(adminUrl + '/reservations/assign-staff', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
-            body: '_token=' + csrfToken + '&staff_id=' + staffId + '&reservation_ids[]=' + resId
+            body: body
         });
         const data = await resp.json();
         console.log('[Show] Staff change result:', data);

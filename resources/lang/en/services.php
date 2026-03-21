@@ -60,6 +60,8 @@ return [
             'default_duration' => 'Default Duration',
             'default_buffer' => 'Default Buffer Time',
             'advance_booking_days' => 'Advance Booking Period',
+            'phone_booking' => 'Phone Reservation',
+            'phone_booking_hint' => 'When enabled, phone reservation source is available in admin reservation creation.',
             'same_day_booking' => 'Same-day Booking',
             'same_day_booking_hint' => 'Allow customers to make online reservations for the same day.',
             'min_notice_hours' => 'Minimum Advance Notice',

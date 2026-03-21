@@ -5,6 +5,18 @@
  */
 
 return [
+    'back' => 'Quay lai',
+    'yes' => 'Co',
+    'no' => 'Khong',
+    'edit' => 'Chinh sua',
+    'settings' => 'Cai dat',
+    'inactive' => 'Khong hoat dong',
+    'preview' => 'Xem truoc',
+    'page_settings' => 'Cai dat trang',
+    'no_permission' => 'Can co quyen truy cap.',
+    'open_new_window' => 'Mo trong cua so moi',
+    'page_empty' => 'Trang nay chua co noi dung.',
+
     // Terms and Privacy (top level)
     'terms' => 'Điều khoản dịch vụ',
     'privacy' => 'Chính sách bảo mật',

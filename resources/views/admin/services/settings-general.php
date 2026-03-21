@@ -9,6 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $fields = [
             'service_default_duration' => trim($_POST['service_default_duration'] ?? '60'),
             'service_default_buffer' => trim($_POST['service_default_buffer'] ?? '0'),
+            'booking_phone_enabled' => trim($_POST['booking_phone_enabled'] ?? '0'),
             'booking_same_day' => trim($_POST['booking_same_day'] ?? '1'),
             'service_advance_booking_days' => trim($_POST['service_advance_booking_days'] ?? '30'),
             'service_min_notice_hours' => trim($_POST['service_min_notice_hours'] ?? '1'),
@@ -80,6 +81,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                                class="w-32 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <span class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('services.minute') ?></span>
                     </div>
+                </div>
+
+                <!-- 전화 예약 -->
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                        <?= __('services.settings.general.phone_booking') ?? '전화 예약' ?>
+                    </label>
+                    <?php $phoneBookingEnabled = ($settings['booking_phone_enabled'] ?? '0') === '1'; ?>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="hidden" name="booking_phone_enabled" value="0">
+                        <input type="checkbox" name="booking_phone_enabled" value="1"
+                               <?= $phoneBookingEnabled ? 'checked' : '' ?>
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-zinc-200 peer-focus:ring-2 peer-focus:ring-blue-500 dark:peer-focus:ring-blue-600 rounded-full peer dark:bg-zinc-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:after:border-zinc-500 peer-checked:bg-blue-600"></div>
+                        <span class="ml-3 text-sm text-zinc-500 dark:text-zinc-400"><?= __('services.settings.general.phone_booking_hint') ?? '활성화 시 관리자 예약 생성에서 전화예약 경로를 사용할 수 있습니다.' ?></span>
+                    </label>
                 </div>
 
                 <!-- 당일 예약 허용 -->

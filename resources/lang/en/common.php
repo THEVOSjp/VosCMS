@@ -5,6 +5,17 @@
  */
 
 return [
+    'back' => 'Go Back',
+    'yes' => 'Yes',
+    'no' => 'No',
+    'edit' => 'Edit',
+    'settings' => 'Settings',
+    'inactive' => 'Inactive',
+    'preview' => 'Preview',
+    'page_settings' => 'Page Settings',
+    'no_permission' => 'Permission required.',
+    'open_new_window' => 'Open in new window',
+    'page_empty' => 'This page has no content yet.',
     // Terms and Privacy (top level)
     'terms' => 'Terms of Service',
     'privacy' => 'Privacy Policy',
@@ -111,6 +122,7 @@ return [
         'delete' => 'Delete',
         'edit' => 'Edit',
         'create' => 'Create',
+        'add' => 'Add',
         'back' => 'Back',
         'next' => 'Next',
         'previous' => 'Previous',

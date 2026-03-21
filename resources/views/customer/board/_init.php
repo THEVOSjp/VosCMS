@@ -98,7 +98,7 @@ $skinConfig = json_decode($board['skin_config'] ?? '{}', true) ?: [];
 
 // skin.json 기본값 병합 (DB에 저장된 값이 없으면 skin.json default 사용)
 $boardSkinName = $board['skin'] ?? 'default';
-$_skinJsonPath = BASE_PATH . '/skins/' . $boardSkinName . '/board/skin.json';
+$_skinJsonPath = BASE_PATH . '/skins/board/' . $boardSkinName . '/skin.json';
 if (file_exists($_skinJsonPath)) {
     $_skinJson = json_decode(file_get_contents($_skinJsonPath), true) ?: [];
     foreach ($_skinJson['vars'] ?? [] as $_sv) {
@@ -110,7 +110,7 @@ if (file_exists($_skinJsonPath)) {
 }
 
 // 스킨 파일 경로 (스킨 오버라이드 지원)
-$boardSkinPath = BASE_PATH . '/skins/' . $boardSkinName . '/board';
+$boardSkinPath = BASE_PATH . '/skins/board/' . $boardSkinName;
 $boardDefaultPath = __DIR__; // customer/board/
 
 /**

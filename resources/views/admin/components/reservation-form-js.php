@@ -261,5 +261,25 @@
         if (window.ResFormStaff) ResFormStaff.clear(fId);
     };
 })();
+
+// 예약 경로 선택
+function ResFormSource(formId, source) {
+    document.getElementById(formId + '_source').value = source;
+    var colors = { phone: 'blue', walk_in: 'emerald', online: 'violet' };
+    ['phone', 'walk_in', 'online'].forEach(function(k) {
+        var btn = document.getElementById(formId + '_src_' + k);
+        if (!btn) return;
+        var c = colors[k];
+        if (k === source) {
+            btn.className = btn.className.replace(/border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-600/, '');
+            btn.classList.add('border-' + c + '-500', 'bg-' + c + '-50', 'text-' + c + '-700', 'dark:bg-' + c + '-900/20', 'dark:text-' + c + '-400');
+            btn.classList.remove('border-zinc-200', 'dark:border-zinc-700', 'text-zinc-500', 'dark:text-zinc-400', 'hover:border-zinc-300', 'dark:hover:border-zinc-600');
+        } else {
+            btn.classList.remove('border-' + c + '-500', 'bg-' + c + '-50', 'text-' + c + '-700', 'dark:bg-' + c + '-900/20', 'dark:text-' + c + '-400');
+            btn.classList.add('border-zinc-200', 'dark:border-zinc-700', 'text-zinc-500', 'dark:text-zinc-400', 'hover:border-zinc-300', 'dark:hover:border-zinc-600');
+        }
+    });
+    console.log('[ResForm] source changed:', source);
+}
 </script>
 <?php include __DIR__ . '/reservation-form-staff-js.php'; ?>

@@ -33,6 +33,35 @@ $logoType = $siteSettings['logo_type'] ?? 'text';
 $logoImage = $siteSettings['logo_image'] ?? '';
 $pageTitle = $pageTitle ?? $siteName;
 
+// SEO 헬퍼 로드
+require_once BASE_PATH . '/rzxlib/Core/Helpers/seo.php';
+$_seoCtx = $seoContext ?? [];
+if (!isset($_seoCtx['type'])) {
+    // 자동 타입 판별: pageTitle이 siteName과 같으면 main
+    $_seoCtx['type'] = ($pageTitle === $siteName) ? 'main' : 'sub';
+}
+if (empty($_seoCtx['subpage_title']) && $pageTitle !== $siteName) {
+    $_seoCtx['subpage_title'] = $pageTitle;
+}
+$_seo = rzx_seo_meta($siteSettings, $baseUrl, $siteName, $_seoCtx);
+// 제목 패턴 적용 (seoContext가 있는 경우만, 없으면 기존 $pageTitle 유지)
+if (isset($seoContext)) {
+    $pageTitle = $_seo['title'];
+}
+// 메타 설명/키워드 fallback
+if (empty($metaDescription) && $_seo['description']) {
+    $metaDescription = $_seo['description'];
+}
+if (empty($metaKeywords)) {
+    $metaKeywords = function_exists('db_trans') ? db_trans('settings.seo_keywords', null, '') : '';
+    if (!$metaKeywords) $metaKeywords = $siteSettings['seo_keywords'] ?? '';
+}
+if ($_seo['keywords_extra'] && !empty($metaKeywords)) {
+    $metaKeywords .= ', ' . $_seo['keywords_extra'];
+} elseif ($_seo['keywords_extra']) {
+    $metaKeywords = $_seo['keywords_extra'];
+}
+
 $_pwaS = $siteSettings;
 $pwaFrontEnabled = ($_pwaS['pwa_front_enabled'] ?? '1') === '1';
 $pwaFrontIcon = $_pwaS['pwa_front_icon'] ?? '';
@@ -72,7 +101,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
     </script>
     <link rel="stylesheet" href="<?= $baseUrl ?>/resources/css/board-content.css">
     <script src="<?= $baseUrl ?>/resources/js/board-autolink.js" defer></script>
-    <?php if (isset($headExtra)) echo $headExtra; ?>
+<?= $_seo['meta_tags'] ?>    <?php if (isset($headExtra)) echo $headExtra; ?>
 </head>
 <body class="bg-gray-50 dark:bg-zinc-900 min-h-screen flex flex-col transition-colors duration-200">
     <!-- Header -->
