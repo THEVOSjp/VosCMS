@@ -261,7 +261,7 @@ $currency = $currencySymbols[$serviceCurrency] ?? $serviceCurrency;
                             $svcName = htmlspecialchars(getServiceTranslated($svc['id'], 'name', $svc['name']));
                             $svcDesc = htmlspecialchars(mb_substr(getServiceTranslated($svc['id'], 'description', $svc['description'] ?? ''), 0, 80));
                             $catName = $svc['category_name'] ? htmlspecialchars(getCategoryTranslated($svc['category_id'], 'name', $svc['category_name'])) : '';
-                            $imgUrl = !empty($svc['image']) ? $baseUrl . '/storage/' . htmlspecialchars($svc['image']) : '';
+                            $imgUrl = !empty($svc['image']) ? $baseUrl . '/' . htmlspecialchars($svc['image']) : '';
                         ?>
                         <div data-id="<?= htmlspecialchars($svc['id']) ?>" class="rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-lg transition-all group relative h-56 cursor-grab active:cursor-grabbing <?= $imgUrl ? '' : 'bg-zinc-100 dark:bg-zinc-800' ?>"
                              <?php if ($imgUrl): ?>style="background-image:url('<?= $imgUrl ?>');background-size:cover;background-position:center"<?php endif; ?>>

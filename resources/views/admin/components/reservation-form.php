@@ -86,7 +86,7 @@ if (!function_exists('resFormFormatPrice')) {
                         data-name="<?= htmlspecialchars(strtolower($svc['name'])) ?>"
                         data-cat="<?= htmlspecialchars($svcCatId) ?>"
                         data-price="<?= $price ?>" data-duration="<?= $duration ?>"
-                        style="min-height:140px;<?php if ($hasImage): ?>background-image:url('<?= htmlspecialchars($fBaseUrl . '/storage/' . $svcImage) ?>');background-size:cover;background-position:center<?php endif; ?>">
+                        style="min-height:140px;<?php if ($hasImage): ?>background-image:url('<?= htmlspecialchars($fBaseUrl . '/' . $svcImage) ?>');background-size:cover;background-position:center<?php endif; ?>">
                         <input type="checkbox" name="service_ids[]" value="<?= $svc['id'] ?>"
                                class="sr-only rf-check" <?= $isSelected ? 'checked' : '' ?>
                                data-price="<?= $price ?>" data-duration="<?= $duration ?>">

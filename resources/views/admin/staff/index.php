@@ -50,7 +50,7 @@ try {
             $filename = 'staff_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
             $dest = $uploadPath . $filename;
             if (move_uploaded_file($file['tmp_name'], $dest)) {
-                return $baseUrl . $uploadDir . $filename;
+                return ltrim($uploadDir, '/') . $filename;
             }
             return null;
         }

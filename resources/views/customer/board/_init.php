@@ -97,7 +97,8 @@ $listColumns = json_decode($board['list_columns'] ?? '[]', true) ?: ['no', 'titl
 $skinConfig = json_decode($board['skin_config'] ?? '{}', true) ?: [];
 
 // skin.json 기본값 병합 (DB에 저장된 값이 없으면 skin.json default 사용)
-$boardSkinName = $board['skin'] ?? 'default';
+// 스킨 우선순위: 개별 게시판 설정 > 전체 설정 (site_board_skin) > default
+$boardSkinName = !empty($board['skin']) ? $board['skin'] : ($__siteBoardSkin ?? ($siteSettings['site_board_skin'] ?? 'default'));
 $_skinJsonPath = BASE_PATH . '/skins/board/' . $boardSkinName . '/skin.json';
 if (file_exists($_skinJsonPath)) {
     $_skinJson = json_decode(file_get_contents($_skinJsonPath), true) ?: [];

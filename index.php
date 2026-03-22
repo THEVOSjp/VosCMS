@@ -506,10 +506,22 @@ if (empty($path) || $path === 'index.php') {
     } elseif (preg_match('#^kiosk/confirm-done$#', $path)) {
         $__noLayout = true;
         include BASE_PATH . '/resources/views/customer/kiosk/confirm-done.php';
-    // 동적 라우트: mypage/reservations/{id}
+    // 마이페이지 라우트
+    } elseif ($path === 'mypage') {
+        $__pageFile = BASE_PATH . '/resources/views/customer/mypage/profile.php';
+    } elseif ($path === 'mypage/reservations') {
+        $__pageFile = BASE_PATH . '/resources/views/customer/mypage/reservations.php';
     } elseif (preg_match('#^mypage/reservations/([a-zA-Z0-9_-]+)$#', $path, $m)) {
         $reservationId = $m[1];
         $__pageFile = BASE_PATH . '/resources/views/customer/mypage/reservation-detail.php';
+    } elseif ($path === 'mypage/password') {
+        $__pageFile = BASE_PATH . '/resources/views/customer/mypage/password.php';
+    } elseif ($path === 'mypage/settings') {
+        $__pageFile = BASE_PATH . '/resources/views/customer/mypage/settings.php';
+    } elseif ($path === 'mypage/withdraw') {
+        $__pageFile = BASE_PATH . '/resources/views/customer/mypage/withdraw.php';
+    } elseif ($path === 'mypage/messages') {
+        $__pageFile = BASE_PATH . '/resources/views/customer/mypage/messages.php';
     // 동적 라우트: staff/{id}
     } elseif (preg_match('#^staff/(\d+)$#', $path, $m)) {
         $routeParams = ['id' => $m[1]];

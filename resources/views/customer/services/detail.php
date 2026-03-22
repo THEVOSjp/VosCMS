@@ -96,7 +96,7 @@ $currencySymbol = $_currencySymbols[$serviceCurrency] ?? $serviceCurrency;
             <!-- Service Image -->
             <?php if (!empty($service['image'])): ?>
             <div class="aspect-video md:aspect-[21/9] overflow-hidden">
-                <img src="<?= $baseUrl ?>/uploads/services/<?= htmlspecialchars($service['image']) ?>"
+                <img src="<?= $baseUrl ?>/<?= htmlspecialchars($service['image']) ?>"
                      alt="<?= htmlspecialchars($service['name']) ?>"
                      class="w-full h-full object-cover">
             </div>
@@ -195,7 +195,7 @@ $currencySymbol = $_currencySymbols[$serviceCurrency] ?? $serviceCurrency;
                    class="bg-white dark:bg-zinc-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow group">
                     <?php if (!empty($related['image'])): ?>
                     <div class="aspect-video overflow-hidden">
-                        <img src="<?= $baseUrl ?>/uploads/services/<?= htmlspecialchars($related['image']) ?>"
+                        <img src="<?= $baseUrl ?>/<?= htmlspecialchars($related['image']) ?>"
                              alt="<?= htmlspecialchars($related['name']) ?>"
                              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                     </div>

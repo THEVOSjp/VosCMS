@@ -78,7 +78,7 @@ function rzx_upload_image($fieldName, $subDir, $filePrefix, $targetW = 800, $tar
         move_uploaded_file($tmpFile, $destPath);
     }
 
-    return 'uploads/' . $subDir . '/' . $filename;
+    return 'storage/uploads/' . $subDir . '/' . $filename;
 }
 
 /**
@@ -86,6 +86,6 @@ function rzx_upload_image($fieldName, $subDir, $filePrefix, $targetW = 800, $tar
  */
 function rzx_delete_image($relativePath) {
     if (empty($relativePath)) return;
-    $fullPath = BASE_PATH . '/storage/' . $relativePath;
+    $fullPath = BASE_PATH . '/' . $relativePath;
     if (file_exists($fullPath)) unlink($fullPath);
 }

@@ -48,10 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['bundle_image'])) {
         $filename = 'bundle_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
         $dest = $uploadPath . $filename;
         if (!move_uploaded_file($file['tmp_name'], $dest)) throw new \Exception('Move failed');
-        $imageUrl = $baseUrl . $uploadDir . $filename;
+        $imageUrl = ltrim($uploadDir, '/') . $filename;
         // DB 업데이트
         $pdo->prepare("UPDATE {$prefix}service_bundles SET image = ?, updated_at = NOW() WHERE id = ?")->execute([$imageUrl, $bundleId]);
-        echo json_encode(['success' => true, 'url' => $imageUrl]);
+        echo json_encode(['success' => true, 'url' => $baseUrl . '/' . $imageUrl]);
     } catch (\Exception $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }

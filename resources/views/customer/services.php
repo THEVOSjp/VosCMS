@@ -101,7 +101,7 @@ $currencySymbol = $_currencySymbols[$serviceCurrency] ?? $serviceCurrency;
                 <!-- Service Image -->
                 <?php if (!empty($service['image'])): ?>
                 <div class="aspect-video overflow-hidden">
-                    <img src="<?= $baseUrl ?>/uploads/services/<?= htmlspecialchars($service['image']) ?>"
+                    <img src="<?= $baseUrl ?>/<?= htmlspecialchars($service['image']) ?>"
                          alt="<?= htmlspecialchars($service['name']) ?>"
                          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                 </div>

@@ -49,7 +49,16 @@ $_pgCfgKey = 'page_config_' . $pageSlug;
 $_pgCfgStmt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = ?");
 $_pgCfgStmt->execute([$_pgCfgKey]);
 $_pgCfg = json_decode($_pgCfgStmt->fetchColumn() ?: '{}', true) ?: [];
+// 스킨 우선순위: 개별 페이지 설정 > 전체 설정 (site_page_skin) > default
+$_pageSkinName = !empty($_pgCfg['skin']) ? $_pgCfg['skin'] : ($__sitePageSkin ?? ($siteSettings['site_page_skin'] ?? 'default'));
 $_skinCfg = $_pgCfg['skin_config'] ?? [];
+// 전체 스킨 설정 폴백 (개별 skin_config가 비어있으면 전체 스킨 설정 사용)
+if (empty($_skinCfg)) {
+    $_globalSkinKey = 'skin_detail_page_' . $_pageSkinName;
+    if (isset($siteSettings[$_globalSkinKey])) {
+        $_skinCfg = json_decode($siteSettings[$_globalSkinKey], true) ?: [];
+    }
+}
 $_showTitle = ($_skinCfg['show_title'] ?? '1') !== '0';
 $_contentWidth = $_skinCfg['content_width'] ?? 'max-w-5xl';
 $_contentBg = $_skinCfg['content_bg'] ?? 'transparent';
