@@ -92,8 +92,8 @@ return [
         'access_placeholder' => 'vd: 1,2,3 (trống = công khai)',
     ],
     'design' => [
-        'title' => 'Quản lý thiết kế',
-        'description' => 'Quản lý thiết kế và giao diện trang web.',
+        'title' => 'Quản lý bố cục',
+        'description' => 'Quản lý bố cục và giao diện trang web.',
         'theme_title' => 'Cài đặt giao diện',
         'theme_desc' => 'Thay đổi màu sắc và phong cách giao diện.',
         'layout_title' => 'Cài đặt bố cục',

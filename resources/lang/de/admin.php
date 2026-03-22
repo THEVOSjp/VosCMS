@@ -40,7 +40,7 @@ return [
         'settings' => 'Einstellungen',
         'site_management' => 'Seitenverwaltung',
         'menu_management' => 'Menuverwaltung',
-        'design_management' => 'Designverwaltung',
+        'design_management' => 'Layout-Verwaltung',
         'page_management' => 'Seitenverwaltung',
         'board_management' => 'Forum-Verwaltung',
         'widget_management' => 'Widget-Verwaltung',

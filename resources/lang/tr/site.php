@@ -91,6 +91,14 @@ return [
         'help_access' => 'Görünürlüğü belirli üye gruplarıyla sınırlayın. Herkese açık erişim için boş bırakın. Grup kimliklerini virgülle ayırarak girin.',
         'access_placeholder' => 'örn: 1,2,3 (boş = herkese açık)',
     ],
+    'design' => [
+        'title' => 'Düzen Yönetimi',
+        'description' => 'Site düzenlerini ve temaları yönetin.',
+        'theme_title' => 'Tema Ayarları', 'theme_desc' => 'Sitenin renk temasını ve stilini değiştirin.',
+        'layout_title' => 'Düzen Ayarları', 'layout_desc' => 'Sayfa düzenini ve yapısını değiştirin.',
+        'header_footer_title' => 'Üstbilgi/Altbilgi', 'header_footer_desc' => 'Üstbilgi ve altbilgi tasarımını değiştirin.',
+        'coming_soon' => 'Yakında',
+    ],
     'pages' => [
         'title' => 'Sayfa Yönetimi',
         'description' => 'Özel sayfalar oluşturun ve yönetin.',

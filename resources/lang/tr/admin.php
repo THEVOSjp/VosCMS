@@ -40,7 +40,7 @@ return [
         'settings' => 'Ayarlar',
         'site_management' => 'Site Yönetimi',
         'menu_management' => 'Menü Yönetimi',
-        'design_management' => 'Tasarım Yönetimi',
+        'design_management' => 'Düzen Yönetimi',
         'page_management' => 'Sayfa Yönetimi',
         'board_management' => 'Forum Yönetimi',
         'widget_management' => 'Widget Yönetimi',

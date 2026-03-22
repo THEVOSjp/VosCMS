@@ -40,7 +40,7 @@ return [
         'settings' => 'Тохиргоо',
         'site_management' => 'Сайтын удирдлага',
         'menu_management' => 'Цэсийн удирдлага',
-        'design_management' => 'Дизайны удирдлага',
+        'design_management' => 'Загварын удирдлага',
         'page_management' => 'Хуудасны удирдлага',
         'board_management' => 'Форумын удирдлага',
         'widget_management' => 'Виджет удирдлага',

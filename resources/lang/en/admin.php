@@ -40,7 +40,7 @@ return [
         'settings' => 'Settings',
         'site_management' => 'Site Management',
         'menu_management' => 'Menu Management',
-        'design_management' => 'Design Management',
+        'design_management' => 'Layout Management',
         'page_management' => 'Page Management',
         'board_management' => 'Board Management',
         'widget_management' => 'Widget Management',

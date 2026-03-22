@@ -92,8 +92,8 @@ return [
         'access_placeholder' => '例: 1,2,3（留空则全部公开）',
     ],
     'design' => [
-        'title' => '设计管理',
-        'description' => '管理网站设计和主题。',
+        'title' => '布局管理',
+        'description' => '管理网站布局和主题。',
         'theme_title' => '主题设置',
         'theme_desc' => '更改网站颜色主题和样式。',
         'layout_title' => '布局设置',

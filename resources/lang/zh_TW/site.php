@@ -92,8 +92,8 @@ return [
         'access_placeholder' => '例: 1,2,3（留空則全部公開）',
     ],
     'design' => [
-        'title' => '設計管理',
-        'description' => '管理網站設計和主題。',
+        'title' => '版面管理',
+        'description' => '管理網站版面和主題。',
         'theme_title' => '主題設定',
         'theme_desc' => '變更網站顏色主題和樣式。',
         'layout_title' => '版面設定',

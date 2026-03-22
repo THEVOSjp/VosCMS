@@ -40,7 +40,7 @@ return [
         'settings' => 'Настройки',
         'site_management' => 'Управление сайтом',
         'menu_management' => 'Управление меню',
-        'design_management' => 'Управление дизайном',
+        'design_management' => 'Управление макетом',
         'page_management' => 'Управление страницами',
         'board_management' => 'Управление форумами',
         'widget_management' => 'Управление виджетами',

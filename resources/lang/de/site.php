@@ -92,8 +92,8 @@ return [
         'access_placeholder' => 'z.B.: 1,2,3 (leer für öffentlich)',
     ],
     'design' => [
-        'title' => 'Designverwaltung',
-        'description' => 'Verwalten Sie Seitendesign und Themen.',
+        'title' => 'Layout-Verwaltung',
+        'description' => 'Seitenlayouts und Themes verwalten.',
         'theme_title' => 'Themeneinstellungen',
         'theme_desc' => 'Aendern Sie das Farbthema und den Stil der Seite.',
         'layout_title' => 'Layout-Einstellungen',

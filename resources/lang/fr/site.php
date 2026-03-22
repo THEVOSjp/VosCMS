@@ -92,8 +92,8 @@ return [
         'access_placeholder' => 'ex: 1,2,3 (vide pour public)',
     ],
     'design' => [
-        'title' => 'Gestion du design',
-        'description' => 'Gerez le design et les themes du site.',
+        'title' => 'Gestion des mises en page',
+        'description' => 'Gérer les mises en page et thèmes du site.',
         'theme_title' => 'Parametres du theme',
         'theme_desc' => 'Changez le theme de couleur et le style du site.',
         'layout_title' => 'Parametres de mise en page',

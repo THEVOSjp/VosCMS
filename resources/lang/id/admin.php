@@ -40,7 +40,7 @@ return [
         'settings' => 'Pengaturan',
         'site_management' => 'Manajemen Situs',
         'menu_management' => 'Manajemen Menu',
-        'design_management' => 'Manajemen Desain',
+        'design_management' => 'Manajemen Tata Letak',
         'page_management' => 'Manajemen Halaman',
         'board_management' => 'Manajemen Forum',
         'widget_management' => 'Manajemen Widget',

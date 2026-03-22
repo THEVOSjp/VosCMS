@@ -92,8 +92,8 @@ return [
         'access_placeholder' => 'e.g.: 1,2,3 (empty for public)',
     ],
     'design' => [
-        'title' => 'Design Management',
-        'description' => 'Manage site design and themes.',
+        'title' => 'Layout Management',
+        'description' => 'Manage site layouts and themes.',
         'theme_title' => 'Theme Settings',
         'theme_desc' => 'Change the site color theme and style.',
         'layout_title' => 'Layout Settings',

@@ -92,8 +92,8 @@ return [
         'access_placeholder' => '例: 1,2,3（空欄で全体公開）',
     ],
     'design' => [
-        'title' => 'デザイン管理',
-        'description' => 'サイトのデザインとテーマを管理します。',
+        'title' => 'レイアウト管理',
+        'description' => 'サイトレイアウトとテーマを管理します。',
         'theme_title' => 'テーマ設定',
         'theme_desc' => 'サイトの色テーマとスタイルを変更します。',
         'layout_title' => 'レイアウト設定',

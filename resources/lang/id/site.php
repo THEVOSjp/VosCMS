@@ -28,8 +28,8 @@ return [
         'access_placeholder' => 'cth: 1,2,3 (kosong = publik)',
     ],
     'design' => [
-        'title' => 'Manajemen Desain',
-        'description' => 'Kelola desain dan tema situs.',
+        'title' => 'Manajemen Tata Letak',
+        'description' => 'Kelola tata letak dan tema situs.',
         'theme_title' => 'Pengaturan Tema',
         'theme_desc' => 'Ubah tema warna dan gaya situs.',
         'layout_title' => 'Pengaturan Tata Letak',

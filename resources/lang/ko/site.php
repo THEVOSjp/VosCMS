@@ -57,13 +57,18 @@ return [
         'access_placeholder' => '예: 1,2,3 (비워두면 전체 공개)',
     ],
 
-    // 디자인 관리
+    // 레이아웃 관리
     'design' => [
-        'title' => '디자인 관리', 'description' => '사이트 디자인 및 테마를 관리합니다.',
-        'theme_title' => '테마 설정', 'theme_desc' => '사이트 색상 테마와 스타일을 변경합니다.',
-        'layout_title' => '레이아웃 설정', 'layout_desc' => '페이지 레이아웃과 구조를 변경합니다.',
-        'header_footer_title' => '헤더/푸터', 'header_footer_desc' => '헤더와 푸터 디자인을 변경합니다.',
-        'coming_soon' => '준비 중',
+        'title' => '레이아웃 관리', 'description' => '사이트 레이아웃 및 테마를 관리합니다.',
+        'layout_title' => '레이아웃', 'page_skin' => '페이지',
+        'board_skin' => '게시판', 'member_skin' => '회원',
+        'save_layout' => '레이아웃 저장',
+        'detail_settings' => '상세 설정', 'no_skins' => '사용 가능한 스킨이 없습니다.',
+        'not_use' => '사용 안 함', 'install_other' => '다른 스킨 설치', 'coming_soon' => '준비 중',
+        'duplicate' => '복사본 생성', 'delete' => '삭제', 'open_settings' => '설정 페이지로 이동',
+        'confirm_duplicate' => '이 스킨의 복사본을 생성하시겠습니까?',
+        'confirm_delete' => '이 스킨을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+        'duplicated' => '복사본이 생성되었습니다.', 'deleted' => '삭제되었습니다.',
     ],
 
     // 페이지 관리

@@ -92,8 +92,8 @@ return [
         'access_placeholder' => 'ej.: 1,2,3 (vacío para público)',
     ],
     'design' => [
-        'title' => 'Gestion de diseno',
-        'description' => 'Gestione el diseno y los temas del sitio.',
+        'title' => 'Gestión de diseño',
+        'description' => 'Gestionar diseños y temas del sitio.',
         'theme_title' => 'Configuracion del tema',
         'theme_desc' => 'Cambie el tema de color y el estilo del sitio.',
         'layout_title' => 'Configuracion del diseno',
