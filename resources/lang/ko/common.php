@@ -102,6 +102,8 @@ return [
         'logout' => '로그아웃',
         'register' => '회원가입',
         'admin' => '관리자',
+        'staff' => '스태프',
+        'more' => '더보기',
         'faq' => '자주 묻는 질문',
         'terms' => '이용약관',
         'privacy' => '개인정보처리방침',

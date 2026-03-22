@@ -4,6 +4,29 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [1.16.0] - 2026-03-23
+
+### Added
+- **모바일 하단 메뉴바** — 스태프/예약/홈/로그인(또는 마이)/회원가입/더보기, 현재 페이지 하이라이트
+- **모바일 더보기 패널** — 메인 메뉴 + 마이페이지/로그아웃
+- **레이아웃/스킨 설정 실제 적용** — site_layout, site_page_skin, site_board_skin, site_member_skin → 렌더링 반영
+- **no_layout 파라미터** — 레이아웃 없이 콘텐츠만 (미리보기용)
+- **다국어 추가** — common.nav.staff, common.nav.more (13개 언어)
+
+### Fixed
+- 회원 페이지(login/register/forgot/reset) 레이아웃 적용: 스킨 `<main>` 추출로 중복 헤더 제거
+- 회원 스킨 ImageCropper/ProfilePhotoCropper 중복 선언 에러 수정
+- 메뉴 로더 include_once 문제: 스킨 클로저에서 먼저 로드 시 base-header 메뉴 누락 수정
+- `apple-mobile-web-app-capable` deprecated → `mobile-web-app-capable` (8개 파일)
+- 헤더 로그인/회원가입 버튼 모바일에서 숨김 (하단 메뉴바로 대체)
+- iOS safe-area 대응 (하단 메뉴바)
+
+### Changed
+- 회원 페이지를 자체 레이아웃에서 기본 레이아웃으로 통합 (login/register/forgot/reset)
+- 푸터 하단 여백 제거 (모바일 메뉴바 fixed 방식)
+
+---
+
 ## [1.15.3] - 2026-03-22
 
 ### Added

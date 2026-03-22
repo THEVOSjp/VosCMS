@@ -107,6 +107,8 @@ return [
         'logout' => 'Keluar',
         'register' => 'Daftar',
         'admin' => 'Admin',
+        'staff' => 'Staf',
+        'more' => 'Lainnya',
         'faq' => 'FAQ',
         'terms' => 'Syarat Layanan',
         'privacy' => 'Kebijakan Privasi',

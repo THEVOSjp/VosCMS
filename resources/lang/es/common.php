@@ -106,6 +106,8 @@ return [
         'logout' => 'Cerrar sesion',
         'register' => 'Registrarse',
         'admin' => 'Admin',
+        'staff' => 'Personal',
+        'more' => 'Más',
         'faq' => 'FAQ',
         'terms' => 'Terminos de servicio',
         'privacy' => 'Politica de privacidad',

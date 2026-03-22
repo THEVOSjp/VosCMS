@@ -58,6 +58,8 @@ return [
         'logout' => '注销',
         'register' => '注册',
         'admin' => '管理',
+        'staff' => '员工',
+        'more' => '更多',
         'faq' => '常见问题',
         'terms' => '服务条款',
         'privacy' => '隐私政策',

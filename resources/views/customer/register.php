@@ -33,7 +33,7 @@ $pageTitle = $siteName . ' - ' . __('auth.register.title');
 // ============================================================================
 // 스킨 시스템 적용
 // ============================================================================
-$memberSkin = $siteSettings['member_skin'] ?? 'default';
+$memberSkin = $siteSettings['site_member_skin'] ?? $siteSettings['member_skin'] ?? 'default';
 $skinBasePath = BASE_PATH . '/skins/member';
 $useSkin = false;
 
@@ -162,8 +162,13 @@ if ($useSkin) {
         'registerFields' => $registerFields,
     ]);
 
-    // 스킨은 body 내용만 포함하므로 전체 HTML 래퍼 필요
-    ?>
+    // 레이아웃이 적용되면 <main> 콘텐츠만 추출 (스크립트 포함)
+    if (isset($__layout) && $__layout !== false) {
+        if (preg_match('/<main[^>]*>(.*)<\/main>/is', $skinHtml, $__mm)) {
+            echo '<div class="py-12 px-4">' . $__mm[1] . '</div>';
+        }
+    } else {
+        ?>
 <!DOCTYPE html>
 <html lang="<?= $config['locale'] ?? 'ko' ?>">
 <head>
@@ -173,16 +178,15 @@ if ($useSkin) {
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>
-        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
-    </style>
+    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
 </head>
 <body>
 <?= $skinHtml ?>
 </body>
 </html>
-    <?php
-    exit;
+        <?php
+    }
+    return;
 }
 // ============================================================================
 // 스킨이 없는 경우: 기존 뷰 사용 (아래 코드 계속)
@@ -250,74 +254,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-<!DOCTYPE html>
-<html lang="<?php echo current_locale(); ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($pageTitle); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class'
-        }
-    </script>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>
-        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
-    </style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-gray-50 dark:bg-zinc-900 min-h-screen transition-colors duration-200">
-    <!-- Header -->
-    <header class="bg-white dark:bg-zinc-800 shadow-sm sticky top-0 z-50 transition-colors duration-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <a href="<?php echo $baseUrl; ?>/" class="flex items-center text-xl font-bold text-blue-600 dark:text-blue-400">
-                    <?php if ($logoType === 'image' && $logoImage): ?>
-                        <img src="<?php echo $baseUrl . htmlspecialchars($logoImage); ?>" alt="<?php echo htmlspecialchars($siteName); ?>" class="h-10 object-contain">
-                    <?php elseif ($logoType === 'image_text' && $logoImage): ?>
-                        <img src="<?php echo $baseUrl . htmlspecialchars($logoImage); ?>" alt="" class="h-10 object-contain mr-2">
-                        <span><?php echo htmlspecialchars($siteName); ?></span>
-                    <?php else: ?>
-                        <span><?php echo htmlspecialchars($siteName); ?></span>
-                    <?php endif; ?>
-                </a>
-                <div class="flex items-center space-x-3">
-                    <div class="relative">
-                        <button id="langBtn" class="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-gray-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-                            </svg>
-                            <span id="currentLang"><?php echo strtoupper(current_locale()); ?></span>
-                        </button>
-                        <div id="langDropdown" class="hidden absolute right-0 mt-2 w-32 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border dark:border-zinc-700 py-1 z-50">
-                            <a href="?lang=ko" class="block px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700">한국어</a>
-                            <a href="?lang=en" class="block px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700">English</a>
-                            <a href="?lang=ja" class="block px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700">日本語</a>
-                        </div>
-                    </div>
-                    <button id="darkModeBtn" class="p-2 text-gray-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700">
-                        <svg id="sunIcon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                        </svg>
-                        <svg id="moonIcon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="flex items-center justify-center min-h-[calc(100vh-4rem)] py-12 px-4">
+    <!-- Register Form Section -->
+    <div class="flex items-center justify-center py-12 px-4">
         <div class="w-full max-w-md">
             <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-xl dark:shadow-zinc-900/50 p-8 transition-colors duration-200">
                 <!-- Title -->
@@ -496,7 +435,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <a href="<?php echo $baseUrl; ?>/" class="hover:text-blue-600 dark:hover:text-blue-400"><?php echo __('auth.login.back_home'); ?></a>
             </p>
         </div>
-    </main>
+    </div>
 
     <!-- Terms Modal -->
     <div id="termsModal" class="fixed inset-0 z-[100] hidden">
@@ -546,22 +485,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script>
         console.log('[Register] 페이지 로드');
-
-        const langBtn = document.getElementById('langBtn');
-        const langDropdown = document.getElementById('langDropdown');
-        langBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            langDropdown.classList.toggle('hidden');
-            console.log('[Register] 언어 드롭다운 토글');
-        });
-        document.addEventListener('click', () => langDropdown.classList.add('hidden'));
-
-        const darkModeBtn = document.getElementById('darkModeBtn');
-        darkModeBtn.addEventListener('click', () => {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('darkMode', isDark);
-            console.log('[Register] 다크모드 토글:', isDark);
-        });
 
         // Password toggle
         const togglePassword = document.getElementById('togglePassword');
@@ -625,5 +548,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </script>
     <!-- 전화번호 입력 컴포넌트 JS -->
     <script src="<?php echo $baseUrl; ?>/assets/js/phone-input.js"></script>
-</body>
-</html>

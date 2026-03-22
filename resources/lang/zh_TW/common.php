@@ -58,6 +58,8 @@ return [
         'logout' => '登出',
         'register' => '註冊',
         'admin' => '管理',
+        'staff' => '員工',
+        'more' => '更多',
         'faq' => '常見問題',
         'terms' => '服務條款',
         'privacy' => '隱私權政策',

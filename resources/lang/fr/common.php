@@ -107,6 +107,8 @@ return [
         'logout' => 'Deconnexion',
         'register' => 'Inscription',
         'admin' => 'Administration',
+        'staff' => 'Personnel',
+        'more' => 'Plus',
         'faq' => 'FAQ',
         'terms' => 'Conditions d\'utilisation',
         'privacy' => 'Politique de confidentialite',

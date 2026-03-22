@@ -106,6 +106,8 @@ return [
         'logout' => 'Abmelden',
         'register' => 'Registrieren',
         'admin' => 'Admin',
+        'staff' => 'Mitarbeiter',
+        'more' => 'Mehr',
         'faq' => 'FAQ',
         'terms' => 'Nutzungsbedingungen',
         'privacy' => 'Datenschutzerklaerung',

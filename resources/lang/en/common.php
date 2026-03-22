@@ -106,6 +106,8 @@ return [
         'logout' => 'Logout',
         'register' => 'Register',
         'admin' => 'Admin',
+        'staff' => 'Staff',
+        'more' => 'More',
         'faq' => 'FAQ',
         'terms' => 'Terms of Service',
         'privacy' => 'Privacy Policy',

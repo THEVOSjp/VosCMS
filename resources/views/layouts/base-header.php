@@ -67,8 +67,10 @@ $pwaFrontEnabled = ($_pwaS['pwa_front_enabled'] ?? '1') === '1';
 $pwaFrontIcon = $_pwaS['pwa_front_icon'] ?? '';
 $pwaFrontTheme = $_pwaS['pwa_front_theme_color'] ?? '#3b82f6';
 
-// DB 메뉴 로드
-include_once BASE_PATH . '/resources/views/components/menu-loader.php';
+// DB 메뉴 로드 (include_once가 아닌 include — 스킨 클로저에서 먼저 로드되었을 수 있음)
+if (!isset($siteMenus) || empty($siteMenus)) {
+    include BASE_PATH . '/resources/views/components/menu-loader.php';
+}
 $mainMenu = $siteMenus['Main Menu'] ?? [];
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 ?>
@@ -86,7 +88,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
     <?php if ($pwaFrontEnabled): ?>
     <link rel="manifest" href="<?= $baseUrl ?>/manifest.json">
     <meta name="theme-color" content="<?= htmlspecialchars($pwaFrontTheme) ?>">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <?php if ($pwaFrontIcon): ?><link rel="apple-touch-icon" href="<?= $baseUrl . htmlspecialchars($pwaFrontIcon) ?>"><?php endif; ?>
     <?php endif; ?>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -178,8 +180,8 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
                         </div>
                     </div>
                     <?php else: ?>
-                    <a href="<?= $baseUrl ?>/login" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400"><?= __('common.buttons.login') ?></a>
-                    <a href="<?= $baseUrl ?>/register" class="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"><?= __('common.buttons.register') ?></a>
+                    <a href="<?= $baseUrl ?>/login" class="hidden md:inline-flex px-4 py-2 text-sm font-medium text-gray-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400"><?= __('common.buttons.login') ?></a>
+                    <a href="<?= $baseUrl ?>/register" class="hidden md:inline-flex px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"><?= __('common.buttons.register') ?></a>
                     <?php endif; ?>
                 </div>
             </div>

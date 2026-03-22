@@ -16,7 +16,7 @@ $_faviconPath = $_pwaSettings['favicon'] ?? '';
 <!-- PWA Admin -->
 <link rel="manifest" href="<?php echo $baseUrl; ?>/admin-manifest.json">
 <meta name="theme-color" content="<?php echo htmlspecialchars($pwaAdminTheme); ?>">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="<?php echo htmlspecialchars($pwaAdminName); ?>">
 <meta name="mobile-web-app-capable" content="yes">

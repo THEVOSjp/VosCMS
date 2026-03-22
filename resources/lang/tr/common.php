@@ -107,6 +107,8 @@ return [
         'logout' => 'Çıkış Yap',
         'register' => 'Kayıt Ol',
         'admin' => 'Yönetim',
+        'staff' => 'Personel',
+        'more' => 'Daha fazla',
         'faq' => 'SSS',
         'terms' => 'Hizmet Şartları',
         'privacy' => 'Gizlilik Politikası',

@@ -30,7 +30,7 @@ $token = $_GET['token'] ?? '';
 // ============================================================================
 // 스킨 시스템 적용
 // ============================================================================
-$memberSkin = $siteSettings['member_skin'] ?? 'default';
+$memberSkin = $siteSettings['site_member_skin'] ?? $siteSettings['member_skin'] ?? 'default';
 $skinBasePath = BASE_PATH . '/skins/member';
 $useSkin = false;
 
@@ -104,65 +104,42 @@ if ($useSkin) {
         'baseUrl' => $baseUrl,
     ]);
 
-    echo $skinHtml;
-    exit;
+    // 레이아웃이 적용되면 <main> 콘텐츠만 추출
+    if (isset($__layout) && $__layout !== false) {
+        $__out = '';
+        if (preg_match('/<main[^>]*>(.*)<\/main>/is', $skinHtml, $__mm)) {
+            $__out .= '<div class="py-12 px-4">' . $__mm[1] . '</div>';
+        }
+        echo $__out;
+    } else {
+        ?>
+<!DOCTYPE html>
+<html lang="<?= $config['locale'] ?? 'ko' ?>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= htmlspecialchars($pageTitle) ?></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
+</head>
+<body>
+<?= $skinHtml ?>
+</body>
+</html>
+        <?php
+    }
+    return;
 }
 
 // ============================================================================
 // 스킨이 없는 경우: 기본 뷰 사용
 // ============================================================================
 ?>
-<!DOCTYPE html>
-<html lang="<?php echo $config['locale'] ?? 'ko'; ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($pageTitle); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { darkMode: 'class' }
-    </script>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>
-        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
-    </style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-50 dark:bg-zinc-900 min-h-screen transition-colors duration-200">
-    <!-- Header -->
-    <header class="bg-white dark:bg-zinc-800 shadow-sm sticky top-0 z-50 transition-colors duration-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <a href="<?php echo $baseUrl; ?>/" class="flex items-center text-xl font-bold text-blue-600 dark:text-blue-400">
-                    <?php if ($logoType === 'image' && $logoImage): ?>
-                        <img src="<?php echo $baseUrl . htmlspecialchars($logoImage); ?>" alt="<?php echo htmlspecialchars($siteName); ?>" class="h-10 object-contain">
-                    <?php elseif ($logoType === 'image_text' && $logoImage): ?>
-                        <img src="<?php echo $baseUrl . htmlspecialchars($logoImage); ?>" alt="" class="h-10 object-contain mr-2">
-                        <span><?php echo htmlspecialchars($siteName); ?></span>
-                    <?php else: ?>
-                        <span><?php echo htmlspecialchars($siteName); ?></span>
-                    <?php endif; ?>
-                </a>
-                <button id="darkModeBtn" class="p-2 text-gray-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700">
-                    <svg id="sunIcon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                    </svg>
-                    <svg id="moonIcon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="flex items-center justify-center min-h-[calc(100vh-4rem)] py-12 px-4">
+    <!-- Reset Password Form Section -->
+    <div class="flex items-center justify-center py-12 px-4">
         <div class="w-full max-w-md">
             <?php if ($step === 'invalid'): ?>
             <!-- Invalid Token -->
@@ -255,14 +232,4 @@ if ($useSkin) {
                 <a href="<?php echo $baseUrl; ?>/" class="hover:text-blue-600 dark:hover:text-blue-400">&larr; 홈으로 돌아가기</a>
             </p>
         </div>
-    </main>
-
-    <script>
-        const darkModeBtn = document.getElementById('darkModeBtn');
-        darkModeBtn.addEventListener('click', () => {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('darkMode', isDark);
-        });
-    </script>
-</body>
-</html>
+    </div>

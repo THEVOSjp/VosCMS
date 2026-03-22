@@ -79,7 +79,7 @@ $baseUrl = $baseUrl ?? $config['app_url'] ?? '';
     <?php endif; ?>
     <link rel="manifest" href="<?php echo $baseUrl; ?>/manifest.json">
     <meta name="theme-color" content="<?php echo htmlspecialchars($pwaFrontTheme); ?>">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="<?php echo htmlspecialchars($siteName); ?>">
     <meta name="mobile-web-app-capable" content="yes">

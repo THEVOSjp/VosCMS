@@ -518,11 +518,15 @@ if (empty($path) || $path === 'index.php') {
         $customerView = BASE_PATH . '/resources/views/customer/' . $path . '.php';
 
         if (file_exists($customerView)) {
-            // 자체 레이아웃 페이지 (로그인, 회원가입 등)
-            $_selfLayoutPages = ['login', 'register', 'forgot-password', 'reset-password', 'logout'];
-            if (in_array($path, $_selfLayoutPages) || str_starts_with($path, 'kiosk/')) {
+            // 자체 레이아웃 페이지
+            $_noLayoutPages = ['logout'];
+            $_memberPages = ['login', 'register', 'forgot-password', 'reset-password'];
+            if (in_array($path, $_noLayoutPages) || str_starts_with($path, 'kiosk/')) {
                 $__noLayout = true;
                 include $customerView;
+            } elseif (in_array($path, $_memberPages)) {
+                // 회원 페이지: 기본 레이아웃 적용
+                $__pageFile = $customerView;
             } else {
                 $__pageFile = $customerView;
             }
@@ -595,7 +599,14 @@ if (empty($path) || $path === 'index.php') {
 
 // === 레이아웃 자동 적용 ===
 if ($__pageFile && !$__noLayout) {
-    $__layout = 'default'; // 페이지에서 $__layout = false 로 오버라이드 가능
+    // 전체 레이아웃/스킨 설정 (DB → 페이지 개별 설정 → 기본값)
+    $__layout = $siteSettings['site_layout'] ?? 'default';
+    $__sitePageSkin = $siteSettings['site_page_skin'] ?? 'default';
+    $__siteBoardSkin = $siteSettings['site_board_skin'] ?? 'default';
+    $__siteMemberSkin = $siteSettings['site_member_skin'] ?? 'default';
+
+    // none이면 레이아웃 미사용
+    if ($__layout === 'none') $__layout = false;
 
     // no_layout 파라미터: 레이아웃 없이 콘텐츠만 (레이아웃 관리 미리보기용)
     if (!empty($_GET['no_layout'])) $__layout = false;
@@ -620,8 +631,21 @@ if ($__pageFile && !$__noLayout) {
     if ($__layout === false) {
         echo $__content;
     } else {
-        include BASE_PATH . '/resources/views/layouts/base-header.php';
-        echo $__content;
-        include BASE_PATH . '/resources/views/layouts/base-footer.php';
+        // 스킨 레이아웃 파일 확인 (skins/layouts/{name}/main.php)
+        $__layoutFile = BASE_PATH . '/skins/layouts/' . $__layout . '/main.php';
+        if ($__layout !== 'default' && file_exists($__layoutFile)) {
+            // 스킨 레이아웃의 설정값 로드
+            $__layoutConfig = [];
+            $__lcKey = 'skin_detail_layout_' . $__layout;
+            if (isset($siteSettings[$__lcKey])) {
+                $__layoutConfig = json_decode($siteSettings[$__lcKey], true) ?: [];
+            }
+            include $__layoutFile;
+        } else {
+            // 기본 레이아웃 (base-header + content + base-footer)
+            include BASE_PATH . '/resources/views/layouts/base-header.php';
+            echo $__content;
+            include BASE_PATH . '/resources/views/layouts/base-footer.php';
+        }
     }
 }

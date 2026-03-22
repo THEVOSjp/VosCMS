@@ -107,6 +107,8 @@ return [
         'logout' => 'Đăng xuất',
         'register' => 'Đăng ký',
         'admin' => 'Quản trị',
+        'staff' => 'Nhân viên',
+        'more' => 'Thêm',
         'faq' => 'Câu hỏi thường gặp',
         'terms' => 'Điều khoản dịch vụ',
         'privacy' => 'Chính sách bảo mật',
