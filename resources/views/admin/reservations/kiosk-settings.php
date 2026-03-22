@@ -70,17 +70,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_token'] ?? '') === $csrfT
     $kioskBgOverlay = (int)$saveData['kiosk_bg_overlay'];
 }
 $pageHeaderTitle = __('reservations.kiosk_settings');
+$pageSubTitle = __('reservations.kiosk_settings');
+$pageSubDesc = __('reservations.kiosk_settings_desc');
 ?>
 <?php include __DIR__ . '/../reservations/_head.php'; ?>
 
-        <div class="max-w-3xl mx-auto">
+        <div>
 
-        <!-- 헤더 -->
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('reservations.kiosk_settings') ?></h1>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('reservations.kiosk_settings_desc') ?></p>
-            </div>
+        <!-- 액션 버튼 -->
+        <div class="flex justify-end mb-6">
             <a href="<?= $adminUrl ?>/kiosk/run" target="_blank"
                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
@@ -206,14 +204,14 @@ $pageHeaderTitle = __('reservations.kiosk_settings');
                 <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"><?= __('reservations.kiosk_lang_title') ?></h2>
                 <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4"><?= __('reservations.kiosk_lang_desc') ?></p>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div class="flex flex-wrap gap-2">
                     <?php foreach ($supportedCodes as $code):
                         $native = $allLanguages[$code]['native'] ?? strtoupper($code);
                         $checked = in_array($code, $kioskLanguages);
                     ?>
-                    <label class="flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition hover:bg-zinc-50 dark:hover:bg-zinc-800 <?= $checked ? 'border-blue-400 bg-blue-50/50 dark:bg-blue-900/10' : 'border-zinc-200 dark:border-zinc-700' ?>">
+                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition hover:bg-zinc-50 dark:hover:bg-zinc-800 <?= $checked ? 'border-blue-400 bg-blue-50/50 dark:bg-blue-900/10' : 'border-zinc-200 dark:border-zinc-700' ?>">
                         <input type="checkbox" name="kiosk_languages[]" value="<?= $code ?>" class="rounded text-blue-600" <?= $checked ? 'checked' : '' ?>>
-                        <span class="text-sm text-zinc-900 dark:text-white"><?= htmlspecialchars($native) ?></span>
+                        <span class="text-sm text-zinc-900 dark:text-white whitespace-nowrap"><?= htmlspecialchars($native) ?></span>
                         <span class="text-xs text-zinc-400">(<?= $code ?>)</span>
                     </label>
                     <?php endforeach; ?>

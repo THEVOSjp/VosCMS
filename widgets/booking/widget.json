@@ -1,0 +1,37 @@
+{
+    "slug": "booking",
+    "version": "1.0.0",
+    "author": "RezlyX",
+    "category": "system",
+    "icon": "calendar",
+    "thumbnail": "thumbnail.png",
+    "name": {
+        "ko": "예약하기", "en": "Booking Form", "ja": "予約フォーム",
+        "zh_CN": "预约表单", "zh_TW": "預約表單", "de": "Buchungsformular",
+        "es": "Formulario de reserva", "fr": "Formulaire de réservation",
+        "id": "Formulir Pemesanan", "mn": "Захиалгын маягт", "ru": "Форма бронирования",
+        "tr": "Rezervasyon Formu", "vi": "Biểu mẫu đặt lịch"
+    },
+    "description": {
+        "ko": "서비스/스태프 선택 → 날짜/시간 → 확인의 예약 단계를 표시합니다.",
+        "en": "Display the booking flow: service/staff selection → date/time → confirmation.",
+        "ja": "サービス/スタッフ選択→日時→確認の予約フローを表示します。",
+        "zh_CN": "显示预约流程：服务/员工选择→日期/时间→确认。",
+        "zh_TW": "顯示預約流程：服務/員工選擇→日期/時間→確認。",
+        "de": "Buchungsablauf anzeigen: Dienst/Mitarbeiter → Datum/Uhrzeit → Bestätigung.",
+        "es": "Mostrar el flujo de reserva: servicio/personal → fecha/hora → confirmación.",
+        "fr": "Afficher le flux de réservation: service/personnel → date/heure → confirmation.",
+        "id": "Menampilkan alur pemesanan: layanan/staf → tanggal/waktu → konfirmasi.",
+        "mn": "Захиалгын урсгал: үйлчилгээ/ажилтан → огноо/цаг → баталгаажуулалт.",
+        "ru": "Показать процесс бронирования: услуга/сотрудник → дата/время → подтверждение.",
+        "tr": "Rezervasyon akışını göster: hizmet/personel → tarih/saat → onay.",
+        "vi": "Hiển thị quy trình đặt lịch: dịch vụ/nhân viên → ngày/giờ → xác nhận."
+    },
+    "config_schema": {
+        "fields": [
+            {"key": "title", "type": "text", "label": "Section Title", "i18n": true},
+            {"key": "show_staff_select", "type": "toggle", "label": "Show Staff Selection", "default": true},
+            {"key": "show_service_select", "type": "toggle", "label": "Show Service Selection", "default": true}
+        ]
+    }
+}

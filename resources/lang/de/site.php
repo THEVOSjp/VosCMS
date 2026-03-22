@@ -439,6 +439,7 @@ return [
             'no_widgets' => 'Keine Widgets gefunden.',
             'categories' => [
                 'all' => 'Alle',
+                'system' => 'System',
                 'layout' => 'Layout',
                 'content' => 'Inhalt',
                 'marketing' => 'Marketing',
@@ -513,7 +514,7 @@ return [
             'loading' => 'Vorschau wird geladen...',
             'i18n_fields' => 'Mehrsprachiger Text',
             'multilang' => 'Mehrsprachige Eingabe',
-            'cat' => ['layout' => 'Layout', 'content' => 'Inhalt', 'marketing' => 'Marketing', 'general' => 'Allgemein'],
+            'cat' => ['system' => 'System', 'layout' => 'Layout', 'content' => 'Inhalt', 'marketing' => 'Marketing', 'general' => 'Allgemein'],
             'w' => [
                 'hero' => 'Hero-Banner',
                 'hero_desc' => 'Hauptbanner mit Titel, Untertitel, CTA',
@@ -531,6 +532,8 @@ return [
                 'text_desc' => 'Freier HTML-Inhalt',
                 'spacer' => 'Abstandhalter',
                 'spacer_desc' => 'Leerraum zwischen Abschnitten',
+                'staff' => 'Mitarbeiter',
+                'staff_desc' => 'Mitarbeiter als Karten anzeigen',
             ],
         ],
     ],

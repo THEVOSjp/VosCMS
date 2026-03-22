@@ -294,8 +294,19 @@ $headExtra = '<style>
     .dark .step-inactive { background-color: #3f3f46; color: #a1a1aa; }
 </style>';
 
+// === 위젯 기반 렌더링 ===
+require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetRenderer.php';
+$_bookingWidgetRenderer = null;
+try {
+    $_bookingWidgetRenderer = new \RzxLib\Core\Modules\WidgetRenderer($pdo, 'booking', $currentLocale, $baseUrl);
+} catch (\Throwable $e) {}
+
+$seoContext = ['type' => 'sub', 'subpage_title' => __('common.nav.booking')];
 ?>
 
+<?php if ($_bookingWidgetRenderer && $_bookingWidgetRenderer->hasWidgets()): ?>
+<?= $_bookingWidgetRenderer->renderAll() ?>
+<?php else: ?>
     <div class="max-w-4xl mx-auto px-4 py-8">
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2"><?= __('common.nav.booking') ?></h1>
@@ -536,4 +547,5 @@ $headExtra = '<style>
     </div>
 
 <?php include BASE_PATH . '/resources/views/customer/booking-js.php'; ?>
+<?php endif; ?>
 

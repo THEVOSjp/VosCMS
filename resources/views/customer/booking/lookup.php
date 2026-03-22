@@ -76,9 +76,19 @@ function getStatusBadgeClass($status) {
     return $classes[$status] ?? $classes['pending'];
 }
 
-// 기본 레이아웃 헤더
+// === 위젯 기반 렌더링 ===
+require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetRenderer.php';
+$_lookupWidgetRenderer = null;
+try {
+    $_lookupWidgetRenderer = new \RzxLib\Core\Modules\WidgetRenderer($pdo, 'lookup', $currentLocale ?? ($config['locale'] ?? 'ko'), $baseUrl);
+} catch (\Throwable $e) {}
+
+$seoContext = ['type' => 'sub', 'subpage_title' => __('booking.lookup.title')];
 ?>
 
+<?php if ($_lookupWidgetRenderer && $_lookupWidgetRenderer->hasWidgets()): ?>
+<?= $_lookupWidgetRenderer->renderAll() ?>
+<?php else: ?>
     <div class="min-h-screen py-12">
         <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
             <!-- 페이지 제목 -->
@@ -261,6 +271,7 @@ function getStatusBadgeClass($status) {
 <!-- 전화번호 입력 컴포넌트 JS -->
 <script src="<?php echo $baseUrl; ?>/assets/js/phone-input.js"></script>
 
+<?php endif; ?>
 <?php
 // 기본 레이아웃 푸터
 ?>

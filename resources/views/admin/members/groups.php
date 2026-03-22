@@ -237,45 +237,20 @@ try {
     $gradeMemberCounts = [];
 }
 ?>
-<!DOCTYPE html>
-<html lang="<?= $config['locale'] ?? 'ko' ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<?php $pageHeaderTitle = __('members.groups.title'); ?>
+<?php $pageSubTitle = __('members.groups.title'); ?>
+<?php $pageSubDesc = __('members.groups.description'); ?>
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
     <style>
-        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
         .sortable-ghost { opacity: 0.4; }
         .sortable-chosen { box-shadow: 0 10px 25px rgba(0,0,0,0.15); transform: scale(1.02); }
         .grade-drag-handle:hover { opacity: 1 !important; }
     </style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <?php include dirname(__DIR__) . '/partials/admin-sidebar.php'; ?>
-
-        <main class="flex-1 ml-64">
-            <?php include dirname(__DIR__) . '/partials/admin-topbar.php'; ?>
-
-            <div class="p-8">
                 <div id="alertBox" class="hidden mb-6 p-4 rounded-lg border"></div>
 
-                <!-- 헤더 -->
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('members.groups.title') ?></h1>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('members.groups.description') ?></p>
-                    </div>
+                <!-- 액션 버튼 -->
+                <div class="flex justify-end mb-6">
                     <div class="flex items-center gap-2">
                         <button onclick="resetGradesToDefault()"
                                 class="inline-flex items-center gap-2 px-4 py-2 border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-medium rounded-lg transition-colors">
@@ -384,5 +359,8 @@ try {
     <?php include BASE_PATH . '/resources/views/admin/components/multilang-modal.php'; ?>
 
     <?php include __DIR__ . '/groups-js.php'; ?>
+    </div>
+    </main>
+</div>
 </body>
 </html>

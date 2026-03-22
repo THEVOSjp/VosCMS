@@ -439,6 +439,7 @@ return [
         'no_widgets' => 'Không có widget nào.',
         'categories' => [
             'all' => 'Tất cả',
+            'system' => 'Hệ thống',
             'layout' => 'Bố cục',
             'content' => 'Nội dung',
             'marketing' => 'Tiếp thị',
@@ -513,7 +514,7 @@ return [
         'loading' => 'Đang tải bản xem trước...',
         'i18n_fields' => 'Văn bản đa ngôn ngữ',
         'multilang' => 'Nhập đa ngôn ngữ',
-        'cat' => ['layout' => 'Bố cục', 'content' => 'Nội dung', 'marketing' => 'Tiếp thị', 'general' => 'Chung'],
+        'cat' => ['system' => 'Hệ thống', 'layout' => 'Bố cục', 'content' => 'Nội dung', 'marketing' => 'Tiếp thị', 'general' => 'Chung'],
         'w' => [
             'hero' => 'Banner chính',
             'hero_desc' => 'Banner chính với tiêu đề, phụ đề, CTA',
@@ -531,6 +532,8 @@ return [
             'text_desc' => 'Nội dung HTML tự do',
             'spacer' => 'Khoảng cách',
             'spacer_desc' => 'Khoảng trống giữa các phần',
+            'staff' => 'Nhân viên',
+            'staff_desc' => 'Hiển thị nhân viên dưới dạng thẻ',
         ],
     ],
 

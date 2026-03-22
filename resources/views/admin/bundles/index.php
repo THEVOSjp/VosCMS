@@ -6,20 +6,18 @@ include __DIR__ . '/_init.php';
 
 $pageTitle = __('bundles.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $pageHeaderTitle = __('bundles.title');
+$pageSubTitle = __('bundles.title');
+$pageSubDesc = __('bundles.description');
 $currentLocale = $config['locale'] ?? 'ko';
 $currency = $siteSettings['service_currency'] ?? $config['currency'] ?? 'JPY';
 ?>
 <?php include __DIR__ . '/../../admin/reservations/_head.php'; ?>
-            <!-- 헤더 -->
-            <div class="flex items-center justify-between mb-4">
-                <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('bundles.title') ?></h1>
+            <!-- 액션 버튼 -->
+            <div class="flex justify-end mb-4">
                 <button onclick="openForm()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     <?= __('bundles.create') ?>
                 </button>
-            </div>
-            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6 text-center">
-                <p class="text-blue-700 dark:text-blue-300 text-sm"><?= __('bundles.description') ?></p>
             </div>
 
             <!-- 번들 목록 -->

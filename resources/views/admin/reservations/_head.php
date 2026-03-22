@@ -25,3 +25,11 @@
         include __DIR__ . '/../partials/admin-topbar.php';
         ?>
         <div class="p-6">
+<?php if (!empty($pageSubTitle)): ?>
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= htmlspecialchars($pageSubTitle) ?></h1>
+                <?php if (!empty($pageSubDesc)): ?>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= htmlspecialchars($pageSubDesc) ?></p>
+                <?php endif; ?>
+            </div>
+<?php endif; ?>

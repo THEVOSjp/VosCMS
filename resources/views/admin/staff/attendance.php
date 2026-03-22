@@ -244,56 +244,29 @@ try {
     $dbConnected = false;
     $dbError = $e->getMessage();
 }
+$pageHeaderTitle = __('staff.attendance.title');
+$pageSubTitle = __('staff.attendance.title');
+$pageSubDesc = __('staff.attendance.description');
 ?>
-<!DOCTYPE html>
-<html lang="<?= $config['locale'] ?? 'ko' ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <?php include dirname(__DIR__) . '/partials/admin-sidebar.php'; ?>
-
-        <main class="flex-1 ml-64">
-            <?php include dirname(__DIR__) . '/partials/admin-topbar.php'; ?>
-
-            <div class="p-8">
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
                 <!-- 알림 -->
                 <div id="alertBox" class="mb-6 p-4 rounded-lg border hidden"></div>
 
-                <!-- 헤더 + 탭 -->
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('staff.attendance.title') ?></h1>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('staff.attendance.description') ?> — <?= date('Y-m-d (D)') ?></p>
-                    </div>
-                    <div class="flex gap-2">
-                        <a href="<?= $adminUrl ?>/staff/attendance/history" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors">
-                            <?= __('staff.attendance.tab_history') ?>
-                        </a>
-                        <a href="<?= $adminUrl ?>/staff/attendance/dashboard" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors">
-                            <?= __('staff.attendance.tab_dashboard') ?>
-                        </a>
-                        <a href="<?= $adminUrl ?>/staff/attendance/report" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-1.5">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                            <?= __('staff.attendance.report_title') ?>
-                        </a>
-                        <a href="<?= $adminUrl ?>/staff/attendance/kiosk" target="_blank" class="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
-                            <?= __('staff.attendance.kiosk_mode') ?>
-                        </a>
-                    </div>
+                <!-- 탭 버튼 -->
+                <div class="flex justify-end gap-2 mb-6">
+                    <a href="<?= $adminUrl ?>/staff/attendance/history" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors">
+                        <?= __('staff.attendance.tab_history') ?>
+                    </a>
+                    <a href="<?= $adminUrl ?>/staff/attendance/dashboard" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors">
+                        <?= __('staff.attendance.tab_dashboard') ?>
+                    </a>
+                    <a href="<?= $adminUrl ?>/staff/attendance/report" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <?= __('staff.attendance.report_title') ?>
+                    </a>
+                    <a href="<?= $adminUrl ?>/staff/attendance/kiosk" target="_blank" class="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                        <?= __('staff.attendance.kiosk_mode') ?>
+                    </a>
                 </div>
 
                 <!-- 통계 카드 -->
@@ -440,9 +413,9 @@ try {
                     <?php endif; ?>
                 </div>
             </div>
-        </main>
-    </div>
 
     <?php include __DIR__ . '/attendance-js.php'; ?>
+</main>
+</div>
 </body>
 </html>

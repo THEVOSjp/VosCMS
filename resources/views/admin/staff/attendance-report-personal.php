@@ -104,47 +104,21 @@ try {
 }
 
 $pageTitle = __('staff.attendance.rpt_personal_title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageHeaderTitle = __('staff.attendance.rpt_personal_title');
+$pageSubTitle = __('staff.attendance.rpt_personal_title');
+$pageSubDesc = __('staff.attendance.rpt_personal_desc');
 ?>
-<!DOCTYPE html>
-<html lang="<?= $config['locale'] ?? 'ko' ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <?php include dirname(__DIR__) . '/partials/admin-sidebar.php'; ?>
-        <main class="flex-1 ml-64">
-            <?php include dirname(__DIR__) . '/partials/admin-topbar.php'; ?>
-
-            <div class="p-8">
-                <!-- 헤더 -->
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('staff.attendance.rpt_personal_title') ?></h1>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= $staffInfo ? htmlspecialchars($staffInfo['name']) . ' — ' : '' ?><?= $filterDateFrom ?> ~ <?= $filterDateTo ?></p>
-                    </div>
-                    <div class="flex gap-2">
-                        <a href="<?= $adminUrl ?>/staff/attendance/report?date_from=<?= $filterDateFrom ?>&date_to=<?= $filterDateTo ?>" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"><?= __('staff.attendance.report_title') ?></a>
-                        <?php if ($staffInfo): ?>
-                        <a href="?staff_id=<?= $staffId ?>&date_from=<?= $filterDateFrom ?>&date_to=<?= $filterDateTo ?>&export=csv" class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors flex items-center gap-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                            CSV
-                        </a>
-                        <?php endif; ?>
-                    </div>
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+                <!-- 탭/액션 버튼 -->
+                <div class="flex justify-end gap-2 mb-6">
+                    <a href="<?= $adminUrl ?>/staff/attendance/report?date_from=<?= $filterDateFrom ?>&date_to=<?= $filterDateTo ?>" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"><?= __('staff.attendance.report_title') ?></a>
+                    <?php if ($staffInfo): ?>
+                    <a href="?staff_id=<?= $staffId ?>&date_from=<?= $filterDateFrom ?>&date_to=<?= $filterDateTo ?>&export=csv" class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        CSV
+                    </a>
+                    <?php endif; ?>
                 </div>
 
                 <!-- 스태프/기간 선택 -->
@@ -251,8 +225,6 @@ $pageTitle = __('staff.attendance.rpt_personal_title') . ' - ' . ($config['app_n
                 </div>
                 <?php endif; ?>
             </div>
-        </main>
-    </div>
 
     <?php if ($staffInfo && !empty($dailySummary)): ?>
     <script>
@@ -283,5 +255,7 @@ $pageTitle = __('staff.attendance.rpt_personal_title') . ' - ' . ($config['app_n
     })();
     </script>
     <?php endif; ?>
+</main>
+</div>
 </body>
 </html>

@@ -151,32 +151,11 @@ try {
     $dbError = $e->getMessage();
     $memberGrades = [];
 }
+$pageHeaderTitle = __('staff.settings.title');
+$pageSubTitle = __('staff.settings.title');
+$pageSubDesc = __('staff.settings.description');
 ?>
-<!DOCTYPE html>
-<html lang="<?= $config['locale'] ?? 'ko' ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <?php include dirname(__DIR__) . '/partials/admin-sidebar.php'; ?>
-
-        <main class="flex-1 ml-64">
-            <?php include dirname(__DIR__) . '/partials/admin-topbar.php'; ?>
-
-            <div class="p-8">
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
                 <!-- 알림 -->
                 <?php if (!empty($message)): ?>
                 <div class="mb-6 p-4 rounded-lg border <?= $messageType === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800' ?>">
@@ -184,11 +163,6 @@ try {
                 </div>
                 <?php endif; ?>
 
-                <!-- 헤더 -->
-                <div class="mb-6">
-                    <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('staff.settings.title') ?></h1>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('staff.settings.description') ?></p>
-                </div>
 
                 <!-- 설정 폼 -->
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm">
@@ -445,8 +419,6 @@ try {
                 <input type="hidden" name="action" value="delete_position">
                 <input type="hidden" name="position_id" id="deletePosId">
             </form>
-        </main>
-    </div>
 
     <script>
     (function() {
@@ -525,5 +497,7 @@ try {
         console.log('[StaffPositions] Module initialized');
     })();
     </script>
+</main>
+</div>
 </body>
 </html>

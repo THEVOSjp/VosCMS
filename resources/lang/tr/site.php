@@ -428,6 +428,7 @@ return [
         'no_widgets' => 'Widget bulunamadı.',
         'categories' => [
             'all' => 'Tümü',
+            'system' => 'Sistem',
             'layout' => 'Düzen',
             'content' => 'İçerik',
             'marketing' => 'Pazarlama',
@@ -502,7 +503,7 @@ return [
         'loading' => 'Önizleme yükleniyor...',
         'i18n_fields' => 'Çok Dilli Metin',
         'multilang' => 'Çok Dilli Giriş',
-        'cat' => ['layout' => 'Düzen', 'content' => 'İçerik', 'marketing' => 'Pazarlama', 'general' => 'Genel'],
+        'cat' => ['system' => 'Sistem', 'layout' => 'Düzen', 'content' => 'İçerik', 'marketing' => 'Pazarlama', 'general' => 'Genel'],
         'w' => [
             'hero' => 'Ana Banner',
             'hero_desc' => 'Başlık, alt başlık, CTA içeren ana banner',
@@ -520,6 +521,8 @@ return [
             'text_desc' => 'Serbest HTML içerik',
             'spacer' => 'Boşluk',
             'spacer_desc' => 'Bölümler arası boş alan',
+            'staff' => 'Personel',
+            'staff_desc' => 'Personeli kart olarak göster',
         ],
     ],
 

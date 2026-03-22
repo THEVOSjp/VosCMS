@@ -443,6 +443,7 @@ return [
         'no_widgets' => '暂无小部件。',
         'categories' => [
             'all' => '全部',
+            'system' => '系统',
             'layout' => '布局',
             'content' => '内容',
             'marketing' => '营销',
@@ -517,7 +518,7 @@ return [
         'loading' => '预览加载中...',
         'i18n_fields' => '多语言文本',
         'multilang' => '多语言输入',
-        'cat' => ['layout' => '布局', 'content' => '内容', 'marketing' => '营销', 'general' => '通用'],
+        'cat' => ['system' => '系统', 'layout' => '布局', 'content' => '内容', 'marketing' => '营销', 'general' => '通用'],
         'w' => [
             'hero' => '主横幅',
             'hero_desc' => '主横幅（标题、副标题、CTA）',
@@ -535,6 +536,8 @@ return [
             'text_desc' => '自由HTML内容',
             'spacer' => '间距',
             'spacer_desc' => '区块间空白',
+            'staff' => '员工介绍',
+            'staff_desc' => '以卡片形式展示员工',
         ],
     ],
 

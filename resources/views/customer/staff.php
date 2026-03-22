@@ -89,8 +89,22 @@ function getSubName($nameI18n, $locale) {
     return '';
 }
 
+// === 위젯 기반 렌더링 ===
+require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetRenderer.php';
+$_staffWidgetRenderer = null;
+try {
+    $_staffWidgetRenderer = new \RzxLib\Core\Modules\WidgetRenderer($pdo, 'staff', $currentLocale, $baseUrl);
+} catch (\Throwable $e) {}
+
+$seoContext = ['type' => 'sub', 'subpage_title' => __('staff_page.title')];
 ?>
 
+<?php if ($_staffWidgetRenderer && $_staffWidgetRenderer->hasWidgets()): ?>
+<!-- 위젯 기반 스태프 페이지 -->
+<?= $_staffWidgetRenderer->renderAll() ?>
+
+<?php else: ?>
+<!-- 기본 스태프 페이지 (위젯 미배치 시 폴백) -->
     <main class="max-w-7xl mx-auto px-4 py-8">
         <!-- Page Title -->
         <div class="mb-8">
@@ -219,6 +233,4 @@ function getSubName($nameI18n, $locale) {
     <script>
         console.log('[Staff] 스태프 소개 페이지 로드 완료');
     </script>
-
-<?php
-?>
+<?php endif; ?>

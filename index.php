@@ -200,6 +200,13 @@ $__noLayout = false; // API, 로그인 등 자체 레이아웃 페이지
 // Route to appropriate handler
 if (empty($path) || $path === 'index.php') {
     $__pageFile = BASE_PATH . '/resources/views/customer/home.php';
+} elseif ($path === 'staff') {
+    $__pageFile = BASE_PATH . '/resources/views/customer/staff.php';
+} elseif (preg_match('#^staff/([^/]+)$#', $path, $m)) {
+    $staffSlug = $m[1];
+    $__pageFile = BASE_PATH . '/resources/views/customer/staff-detail.php';
+} elseif ($path === 'booking') {
+    $__pageFile = BASE_PATH . '/resources/views/customer/booking.php';
 } elseif ($path === 'lookup') {
     $__pageFile = BASE_PATH . '/resources/views/customer/booking/lookup.php';
 } elseif (preg_match('#^booking/detail/([A-Za-z0-9]+)$#', $path, $m)) {

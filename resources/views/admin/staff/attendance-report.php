@@ -122,41 +122,15 @@ try {
 }
 
 $pageTitle = __('staff.attendance.report_title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageHeaderTitle = __('staff.attendance.report_title');
+$pageSubTitle = __('staff.attendance.report_title');
+$pageSubDesc = __('staff.attendance.report_desc');
 ?>
-<!DOCTYPE html>
-<html lang="<?= $config['locale'] ?? 'ko' ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <?php include dirname(__DIR__) . '/partials/admin-sidebar.php'; ?>
-        <main class="flex-1 ml-64">
-            <?php include dirname(__DIR__) . '/partials/admin-topbar.php'; ?>
-
-            <div class="p-8">
-                <!-- 헤더 -->
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('staff.attendance.report_title') ?></h1>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('staff.attendance.report_desc') ?></p>
-                    </div>
-                    <div class="flex gap-2">
-                        <a href="<?= $adminUrl ?>/staff/attendance" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"><?= __('staff.attendance.tab_today') ?></a>
-                        <a href="<?= $adminUrl ?>/staff/attendance/report/stats" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"><?= __('staff.attendance.tab_stats') ?></a>
-                    </div>
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
+                <!-- 탭 버튼 -->
+                <div class="flex justify-end gap-2 mb-6">
+                    <a href="<?= $adminUrl ?>/staff/attendance" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"><?= __('staff.attendance.tab_today') ?></a>
+                    <a href="<?= $adminUrl ?>/staff/attendance/report/stats" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"><?= __('staff.attendance.tab_stats') ?></a>
                 </div>
 
                 <!-- 필터 -->
@@ -267,7 +241,7 @@ $pageTitle = __('staff.attendance.report_title') . ' - ' . ($config['app_name'] 
                     </table>
                 </div>
             </div>
-        </main>
-    </div>
+    </main>
+</div>
 </body>
 </html>

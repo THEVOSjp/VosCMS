@@ -301,44 +301,17 @@ try {
     $page = 1;
 }
 ?>
-<!DOCTYPE html>
-<html lang="<?= $config['locale'] ?? 'ko' ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <!-- Cropper.js for profile photo editing -->
+<?php $pageHeaderTitle = __('members.list.title'); ?>
+<?php $pageSubTitle = __('members.list.title'); ?>
+<?php $pageSubDesc = __('members.list.description'); ?>
+<?php include __DIR__ . '/reservations/_head.php'; ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
-    .cropper-view-box, .cropper-face { border-radius: 50%; }
-    </style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <?php include __DIR__ . '/partials/admin-sidebar.php'; ?>
-
-        <main class="flex-1 ml-64">
-            <?php include __DIR__ . '/partials/admin-topbar.php'; ?>
-
-            <div class="p-8">
+    <style>.cropper-view-box, .cropper-face { border-radius: 50%; }</style>
                 <div id="alertBox" class="hidden mb-6 p-4 rounded-lg border"></div>
 
-                <!-- 헤더 -->
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('members.list.title') ?></h1>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('members.list.description') ?></p>
-                    </div>
+                <!-- 액션 버튼 -->
+                <div class="flex justify-end mb-6">
                     <button type="button" onclick="openCreateMember()"
                             class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -501,5 +474,8 @@ try {
     <?php if (in_array('phone', $registerFields)): ?>
     <script src="<?= htmlspecialchars($baseUrl) ?>/assets/js/phone-input.js"></script>
     <?php endif; ?>
+    </div>
+    </main>
+</div>
 </body>
 </html>

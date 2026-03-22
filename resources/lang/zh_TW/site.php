@@ -439,6 +439,7 @@ return [
         'no_widgets' => '尚無小工具。',
         'categories' => [
             'all' => '全部',
+            'system' => '系統',
             'layout' => '版面',
             'content' => '內容',
             'marketing' => '行銷',
@@ -513,7 +514,7 @@ return [
         'loading' => '預覽載入中...',
         'i18n_fields' => '多語言文字',
         'multilang' => '多語言輸入',
-        'cat' => ['layout' => '版面', 'content' => '內容', 'marketing' => '行銷', 'general' => '一般'],
+        'cat' => ['system' => '系統', 'layout' => '版面', 'content' => '內容', 'marketing' => '行銷', 'general' => '一般'],
         'w' => [
             'hero' => '主橫幅',
             'hero_desc' => '主橫幅（標題、副標題、CTA）',
@@ -531,6 +532,8 @@ return [
             'text_desc' => '自由HTML內容',
             'spacer' => '間距',
             'spacer_desc' => '區塊間空白',
+            'staff' => '員工介紹',
+            'staff_desc' => '以卡片形式展示員工',
         ],
     ],
 

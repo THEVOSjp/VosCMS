@@ -6,11 +6,11 @@ include __DIR__ . '/_init.php';
 
 $pageTitle = __('reservations.kiosk') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $pageHeaderTitle = __('reservations.kiosk');
+$pageSubTitle = __('reservations.kiosk');
 ?>
 <?php include __DIR__ . '/../reservations/_head.php'; ?>
 
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('reservations.kiosk') ?></h1>
+        <div class="flex justify-end mb-6">
             <div class="flex gap-3">
                 <a href="<?= $adminUrl ?>/kiosk/settings"
                    class="inline-flex items-center gap-2 px-4 py-2 border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition">

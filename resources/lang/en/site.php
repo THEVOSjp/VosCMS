@@ -433,6 +433,7 @@ return [
         'no_widgets' => 'No widgets found.',
         'categories' => [
             'all' => 'All',
+            'system' => 'System',
             'layout' => 'Layout',
             'content' => 'Content',
             'marketing' => 'Marketing',
@@ -507,7 +508,7 @@ return [
         'loading' => 'Loading preview...',
         'i18n_fields' => 'Multilingual Text',
         'multilang' => 'Multilingual Input',
-        'cat' => ['layout' => 'Layout', 'content' => 'Content', 'marketing' => 'Marketing', 'general' => 'General'],
+        'cat' => ['system' => 'System', 'layout' => 'Layout', 'content' => 'Content', 'marketing' => 'Marketing', 'general' => 'General'],
         'w' => [
             'hero' => 'Hero Banner',
             'hero_desc' => 'Main banner with title, subtitle, CTA',
@@ -525,6 +526,8 @@ return [
             'text_desc' => 'Free HTML content block',
             'spacer' => 'Spacer',
             'spacer_desc' => 'Empty space between sections',
+            'staff' => 'Staff Introduction',
+            'staff_desc' => 'Display staff as cards',
         ],
     ],
 

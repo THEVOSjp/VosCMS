@@ -230,38 +230,21 @@ $roleColors = [
     'manager' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
     'staff' => 'bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400',
 ];
+$pageHeaderTitle = __('staff.title');
+$pageSubTitle = __('staff.admins.title');
+$pageSubDesc = __('staff.admins.description');
 ?>
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        body { font-family: 'Pretendard', sans-serif; }
-    </style>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen">
-    <?php include BASE_PATH . '/resources/views/admin/partials/admin-sidebar.php'; ?>
-    <?php include BASE_PATH . '/resources/views/admin/partials/admin-topbar.php'; ?>
-
-    <main class="flex-1 ml-64 transition-all duration-300">
-        <div class="p-6 max-w-6xl">
-            <!-- 헤더 -->
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">관리자 권한 관리</h1>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">스태프에게 관리자 권한을 부여하고 접근 범위를 설정합니다.</p>
-                </div>
-                <?php if ($isMaster): ?>
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
+        <div class="max-w-6xl">
+            <!-- 액션 버튼 -->
+            <?php if ($isMaster): ?>
+            <div class="flex justify-end mb-6">
                 <button onclick="openAddModal()" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     관리자 추가
                 </button>
-                <?php endif; ?>
             </div>
+            <?php endif; ?>
 
             <!-- 관리자 목록 -->
             <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm overflow-hidden">
@@ -373,7 +356,6 @@ $roleColors = [
                 </div>
             </div>
         </div>
-    </main>
 
     <!-- 관리자 추가 모달 -->
     <div id="addModal" class="fixed inset-0 z-50 hidden">
@@ -455,5 +437,8 @@ $roleColors = [
     </div>
 
     <?php include __DIR__ . '/admins-js.php'; ?>
+</div>
+</main>
+</div>
 </body>
 </html>

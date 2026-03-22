@@ -375,6 +375,7 @@ return [
         'no_widgets' => 'Tidak ada widget.',
         'categories' => [
             'all' => 'Semua',
+            'system' => 'Sistem',
             'layout' => 'Tata Letak',
             'content' => 'Konten',
             'marketing' => 'Pemasaran',
@@ -449,7 +450,7 @@ return [
         'loading' => 'Memuat pratinjau...',
         'i18n_fields' => 'Teks Multibahasa',
         'multilang' => 'Input Multibahasa',
-        'cat' => ['layout' => 'Tata Letak', 'content' => 'Konten', 'marketing' => 'Pemasaran', 'general' => 'Umum'],
+        'cat' => ['system' => 'Sistem', 'layout' => 'Tata Letak', 'content' => 'Konten', 'marketing' => 'Pemasaran', 'general' => 'Umum'],
         'w' => [
             'hero' => 'Banner Utama',
             'hero_desc' => 'Banner utama dengan judul, subjudul, CTA',
@@ -467,6 +468,8 @@ return [
             'text_desc' => 'Konten HTML bebas',
             'spacer' => 'Spasi',
             'spacer_desc' => 'Ruang kosong antar bagian',
+            'staff' => 'Staf',
+            'staff_desc' => 'Tampilkan staf dalam bentuk kartu',
         ],
     ],
 

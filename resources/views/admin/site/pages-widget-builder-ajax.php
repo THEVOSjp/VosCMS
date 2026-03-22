@@ -15,10 +15,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
     // 레이아웃 저장
     if ($action === 'save_layout') {
         $items = $input['items'] ?? [];
-        $pdo->prepare("DELETE FROM rzx_page_widgets WHERE page_slug = 'home'")->execute();
-        $stmt = $pdo->prepare("INSERT INTO rzx_page_widgets (page_slug, widget_id, sort_order, config, is_active) VALUES ('home', ?, ?, ?, 1)");
+        $pdo->prepare("DELETE FROM rzx_page_widgets WHERE page_slug = ?")->execute([$pageSlug]);
+        $stmt = $pdo->prepare("INSERT INTO rzx_page_widgets (page_slug, widget_id, sort_order, config, is_active) VALUES (?, ?, ?, ?, 1)");
         foreach ($items as $i => $item) {
             $stmt->execute([
+                $pageSlug,
                 (int)$item['widget_id'],
                 $i,
                 json_encode($item['config'] ?? new \stdClass())
@@ -30,8 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
 
     // 위젯 미리보기 렌더링
     if ($action === 'preview_widget') {
+        require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetLoader.php';
         require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetRenderer.php';
-        $renderer = new \RzxLib\Core\Modules\WidgetRenderer($pdo, 'home', $currentLocale, $baseUrl);
+        $renderer = new \RzxLib\Core\Modules\WidgetRenderer($pdo, $pageSlug, $currentLocale, $baseUrl);
         $widgetId = (int)($input['widget_id'] ?? 0);
         $widgetConfig = $input['config'] ?? [];
 
@@ -42,15 +44,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
         $html = '';
         if ($widget) {
             $fakeData = [
+                'id' => $widget['id'],
                 'widget_slug' => $widget['slug'],
                 'widget_name' => $widget['name'],
-                'template' => $widget['template'],
-                'css' => $widget['css'],
-                'js' => $widget['js'],
+                'template' => $widget['template'] ?? '',
+                'css' => $widget['css'] ?? '',
+                'js' => $widget['js'] ?? '',
                 'widget_type' => $widget['type'],
-                'default_config' => $widget['default_config'],
+                'default_config' => $widget['default_config'] ?? '{}',
                 'config' => json_encode($widgetConfig),
-                'config_schema' => $widget['config_schema'],
+                'config_schema' => $widget['config_schema'] ?? '{}',
             ];
             $html = $renderer->render($fakeData);
         }

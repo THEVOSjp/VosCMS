@@ -350,43 +350,19 @@ try {
 // 지원 언어 목록
 $supportedLangs = json_decode($settings['supported_languages'] ?? '["ko","en","ja"]', true) ?: ['ko', 'en', 'ja'];
 $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=>'简体中文','zh_TW'=>'繁體中文','de'=>'Deutsch','es'=>'Español','fr'=>'Français','vi'=>'Tiếng Việt','id'=>'Bahasa Indonesia','mn'=>'Монгол','ru'=>'Русский','tr'=>'Türkçe'];
+$pageHeaderTitle = __('staff.title');
+$pageSubTitle = __('staff.title');
+$pageSubDesc = __('staff.description');
 ?>
-<!DOCTYPE html>
-<html lang="<?= $config['locale'] ?? 'ko' ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <!-- Cropper.js for avatar editing -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <?php include dirname(__DIR__) . '/partials/admin-sidebar.php'; ?>
-        <main class="flex-1 ml-64">
-            <?php include dirname(__DIR__) . '/partials/admin-topbar.php'; ?>
-
-            <div class="p-8">
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
+<!-- Cropper.js for avatar editing -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
                 <!-- 알림 -->
                 <div id="alertBox" class="mb-6 p-4 rounded-lg border hidden"></div>
 
-                <!-- 헤더 -->
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('staff.title') ?></h1>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('staff.description') ?></p>
-                    </div>
+                <!-- 액션 버튼 -->
+                <div class="flex justify-end mb-6">
                     <button type="button" onclick="openStaffModal()"
                             class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -497,7 +473,7 @@ $langNativeNames = ['ko'=>'한국어','en'=>'English','ja'=>'日本語','zh_CN'=
             </div>
 
             <?php include __DIR__ . '/index-js.php'; ?>
-        </main>
-    </div>
+    </main>
+</div>
 </body>
 </html>

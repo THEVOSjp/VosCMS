@@ -98,45 +98,19 @@ $statusColorMap = [
 ];
 
 $pageTitle = __('staff.attendance.stats_title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageHeaderTitle = __('staff.attendance.stats_title');
+$pageSubTitle = __('staff.attendance.stats_title');
+$pageSubDesc = __('staff.attendance.stats_desc');
 ?>
-<!DOCTYPE html>
-<html lang="<?= $config['locale'] ?? 'ko' ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <?php include dirname(__DIR__) . '/partials/admin-sidebar.php'; ?>
-        <main class="flex-1 ml-64">
-            <?php include dirname(__DIR__) . '/partials/admin-topbar.php'; ?>
-
-            <div class="p-8">
-                <!-- 헤더 -->
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('staff.attendance.stats_title') ?></h1>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('staff.attendance.stats_desc') ?></p>
-                    </div>
-                    <div class="flex gap-2 items-center">
-                        <a href="<?= $adminUrl ?>/staff/attendance/report" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"><?= __('staff.attendance.report_title') ?></a>
-                        <form method="GET" class="flex gap-2">
-                            <input type="month" name="month" value="<?= $filterMonth ?>" class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
-                            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-zinc-700 hover:bg-zinc-800 dark:bg-zinc-600 dark:hover:bg-zinc-500 rounded-lg"><?= __('staff.attendance.search') ?></button>
-                        </form>
-                    </div>
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+                <!-- 탭/필터 -->
+                <div class="flex justify-end gap-2 items-center mb-6">
+                    <a href="<?= $adminUrl ?>/staff/attendance/report" class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"><?= __('staff.attendance.report_title') ?></a>
+                    <form method="GET" class="flex gap-2">
+                        <input type="month" name="month" value="<?= $filterMonth ?>" class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-zinc-700 hover:bg-zinc-800 dark:bg-zinc-600 dark:hover:bg-zinc-500 rounded-lg"><?= __('staff.attendance.search') ?></button>
+                    </form>
                 </div>
 
                 <!-- 차트 그리드 -->
@@ -166,8 +140,6 @@ $pageTitle = __('staff.attendance.stats_title') . ' - ' . ($config['app_name'] ?
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
 
     <script>
     (function() {
@@ -267,5 +239,7 @@ $pageTitle = __('staff.attendance.stats_title') . ' - ' . ($config['app_name'] ?
         console.log('[AttendanceStats] All charts rendered');
     })();
     </script>
+</main>
+</div>
 </body>
 </html>

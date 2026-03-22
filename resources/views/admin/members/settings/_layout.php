@@ -12,49 +12,9 @@
  * - $message: Flash message (optional)
  * - $messageType: Message type (success/error)
  */
+$pageHeaderTitle = __('members.settings.title');
 ?>
-<!DOCTYPE html>
-<html lang="<?php echo $config['locale'] ?? 'ko'; ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($pageTitle); ?></title>
-
-    <!-- PWA Admin -->
-    <?php include __DIR__ . '/../../partials/pwa-head.php'; ?>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class'
-        }
-    </script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>
-        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
-    </style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <!-- Sidebar -->
-        <?php include __DIR__ . '/../../partials/admin-sidebar.php'; ?>
-
-        <!-- Main Content -->
-        <main class="flex-1 ml-64">
-            <!-- Top Bar -->
-            <?php
-            $pageHeaderTitle = __('members.settings.title');
-            include __DIR__ . '/../../partials/admin-topbar.php';
-            ?>
-
-            <!-- Members Settings Content -->
-            <div class="p-6">
+<?php include __DIR__ . '/../../reservations/_head.php'; ?>
                 <?php if (!empty($message)): ?>
                 <div class="mb-6 p-4 rounded-lg <?php echo $messageType === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800'; ?>">
                     <div class="flex items-center">
@@ -120,5 +80,8 @@
 
     <!-- TopBar scripts are included in admin-topbar.php -->
     <?php include __DIR__ . '/../../partials/result-modal.php'; ?>
+    </div>
+    </main>
+</div>
 </body>
 </html>

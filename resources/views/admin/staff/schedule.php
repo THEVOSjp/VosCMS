@@ -171,41 +171,14 @@ $dayNames = [
     __('staff.schedule.day_fri'),
     __('staff.schedule.day_sat'),
 ];
+$pageHeaderTitle = __('staff.schedule.title');
+$pageSubTitle = __('staff.schedule.title');
+$pageSubDesc = __('staff.schedule.description');
 ?>
-<!DOCTYPE html>
-<html lang="<?= $config['locale'] ?? 'ko' ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <?php include dirname(__DIR__) . '/partials/admin-sidebar.php'; ?>
-        <main class="flex-1 ml-64">
-            <?php include dirname(__DIR__) . '/partials/admin-topbar.php'; ?>
-
-            <div class="p-8">
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
                 <!-- 알림 -->
                 <div id="alertBox" class="mb-6 p-4 rounded-lg border hidden"></div>
 
-                <!-- 헤더 -->
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('staff.schedule.title') ?></h1>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= __('staff.schedule.description') ?></p>
-                    </div>
-                </div>
 
                 <!-- 스태프 선택 -->
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6">
@@ -312,7 +285,7 @@ $dayNames = [
             </div>
 
             <?php include __DIR__ . '/schedule-js.php'; ?>
-        </main>
-    </div>
+    </main>
+</div>
 </body>
 </html>

@@ -4,6 +4,35 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [1.15.0] - 2026-03-22
+
+### Added
+- **시스템 위젯 모듈** — staff(스태프 소개), booking(예약하기), lookup(예약 조회), cta001(예약 유도 배너) 4개
+- **시스템 페이지** — staff, booking, lookup DB 등록 (is_system=1) + 라우팅 (`/staff`, `/booking`, `/lookup`)
+- **위젯 기반 페이지 렌더링** — staff/booking/lookup 페이지가 위젯 배치 시 위젯 렌더링, 미배치 시 기존 폴백
+- **위젯 자동 DB 등록** — `syncToDatabase()` 호출로 위젯 디렉토리 추가 시 자동 등록
+- **위젯 카테고리 `system`** — 13개 언어 번역 (widgets.categories + widget_builder.cat)
+- **페이지 목록 통합** — 시스템 페이지 루프 렌더링 + 기어/수정/미리보기 아이콘 통일
+- **관리자 페이지 헤더 통합** — `$pageSubTitle` + `$pageSubDesc` (_head.php 공통 출력)
+- **번역 키 추가** — staff.admins, staff.attendance.report/stats, points.description 등
+
+### Fixed
+- 위젯 빌더 `page_slug = 'home'` 하드코딩 → `$_GET['slug']` 동적 처리
+- 위젯 빌더 AJAX save/preview `home` 하드코딩 → `$pageSlug` 동적
+- 위젯 빌더 미리보기 URL → `$pageSlug` 동적 (홈 고정 → 각 페이지)
+- 위젯 preview_widget WidgetLoader require 누락 수정
+- 서비스 카드 뷰 이미지 경로 (`/storage/` 접두사)
+- 키오스크 설정 width `max-w-3xl` → 100% 통일
+- POS 헤더 "예약 관리" → "POS" 변경
+
+### Changed
+- 스태프 관리 10개 + 회원 관리 4개 페이지 → `_head.php` 공용 헤더 적용
+- 키오스크/번들 페이지 `_head.php` 적용 완료
+- 키오스크 언어 설정 grid → flex-wrap 반응형
+- 페이지 목록 시스템 페이지 데이터 기반 루프 렌더링
+
+---
+
 ## [1.14.1] - 2026-03-22
 
 ### Added

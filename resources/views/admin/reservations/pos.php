@@ -93,6 +93,7 @@ $posStaffList = $pdo->prepare("SELECT id, name, avatar FROM {$prefix}staff WHERE
 $posStaffList->execute();
 $posStaffList = $posStaffList->fetchAll(PDO::FETCH_ASSOC);
 
+$pageHeaderTitle = 'POS';
 include __DIR__ . '/_head.php';
 ?>
 

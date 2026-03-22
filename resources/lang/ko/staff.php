@@ -71,6 +71,9 @@ return [
         'booking_slot_interval' => '예약 슬롯 간격', 'booking_slot_interval_desc' => '예약 가능한 시간 슬롯의 간격을 설정합니다.',
     ],
     'card_number_desc' => 'RFID/NFC 카드리더 출퇴근 기록에 사용됩니다.',
+    'admins' => [
+        'title' => '관리자 관리', 'description' => '시스템 관리자 계정을 관리합니다.',
+    ],
     'schedule' => [
         'title' => '스케줄 관리', 'description' => '스태프별 근무 시간과 휴무일을 설정합니다.',
         'select_staff' => '스태프 선택', 'weekly_title' => '주간 근무 스케줄', 'override_title' => '날짜별 특별 설정',
@@ -87,7 +90,10 @@ return [
     'attendance' => [
         'title' => '근태 현황', 'description' => '오늘의 스태프 출퇴근 현황을 관리합니다',
         'history_title' => '근태 기록', 'history_desc' => '기간별 출퇴근 기록을 조회하고 관리합니다',
-        'dashboard_title' => '근태 대시보드', 'dashboard_desc' => '월간 근태 통계를 확인합니다',
+        'dashboard_title' => '근태 대시보드', 'dashboard_desc' => '월간 근태 통계를 확인합니다.',
+        'report_title' => '근태 리포트', 'report_desc' => '스태프별 근태 리포트를 확인합니다.',
+        'rpt_personal_title' => '개인 리포트', 'rpt_personal_desc' => '개별 스태프의 상세 근태 현황을 확인합니다.',
+        'stats_title' => '근태 통계', 'stats_desc' => '기간별 근태 통계를 분석합니다.',
         'kiosk_title' => '카드리더 키오스크', 'kiosk_mode' => '키오스크 모드',
         'kiosk_scan' => '카드를 태그하세요', 'kiosk_scan_desc' => '출퇴근 카드를 리더기에 가까이 대주세요',
         'kiosk_clocked_in' => '출근 완료!', 'kiosk_clocked_out' => '퇴근 완료!',

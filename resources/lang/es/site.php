@@ -439,6 +439,7 @@ return [
             'no_widgets' => 'No hay widgets.',
             'categories' => [
                 'all' => 'Todos',
+                'system' => 'Sistema',
                 'layout' => 'Diseño',
                 'content' => 'Contenido',
                 'marketing' => 'Marketing',
@@ -513,7 +514,7 @@ return [
             'loading' => 'Cargando vista previa...',
             'i18n_fields' => 'Texto multilingüe',
             'multilang' => 'Entrada multilingüe',
-            'cat' => ['layout' => 'Diseño', 'content' => 'Contenido', 'marketing' => 'Marketing', 'general' => 'General'],
+            'cat' => ['system' => 'Sistema', 'layout' => 'Diseño', 'content' => 'Contenido', 'marketing' => 'Marketing', 'general' => 'General'],
             'w' => [
                 'hero' => 'Banner principal',
                 'hero_desc' => 'Banner principal con título, subtítulo, CTA',
@@ -531,6 +532,8 @@ return [
                 'text_desc' => 'Contenido HTML libre',
                 'spacer' => 'Espaciador',
                 'spacer_desc' => 'Espacio entre secciones',
+                'staff' => 'Personal',
+                'staff_desc' => 'Mostrar personal en tarjetas',
             ],
         ],
     ],

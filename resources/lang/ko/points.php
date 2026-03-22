@@ -1,6 +1,7 @@
 <?php
 return [
     'title' => '적립금 관리',
+    'description' => '회원 적립금과 포인트 정책을 관리합니다.',
     'tab_basic' => '기본 설정',
     'tab_module' => '모듈별 설정',
     'tab_members' => '회원 포인트 목록',

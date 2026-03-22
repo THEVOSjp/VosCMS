@@ -1,0 +1,36 @@
+{
+    "slug": "lookup",
+    "version": "1.0.0",
+    "author": "RezlyX",
+    "category": "system",
+    "icon": "search",
+    "thumbnail": "thumbnail.png",
+    "name": {
+        "ko": "예약 조회", "en": "Reservation Lookup", "ja": "予約照会",
+        "zh_CN": "预约查询", "zh_TW": "預約查詢", "de": "Reservierungsabfrage",
+        "es": "Consulta de reserva", "fr": "Recherche de réservation",
+        "id": "Pencarian Reservasi", "mn": "Захиалга хайх", "ru": "Поиск бронирования",
+        "tr": "Rezervasyon Sorgulama", "vi": "Tra cứu đặt lịch"
+    },
+    "description": {
+        "ko": "예약번호 또는 전화번호로 예약 내역을 조회합니다.",
+        "en": "Look up reservation details by reservation number or phone number.",
+        "ja": "予約番号または電話番号で予約内容を照会します。",
+        "zh_CN": "通过预约号或电话号码查询预约详情。",
+        "zh_TW": "透過預約號或電話號碼查詢預約詳情。",
+        "de": "Reservierungsdetails nach Reservierungsnummer oder Telefonnummer suchen.",
+        "es": "Buscar detalles de reserva por número de reserva o número de teléfono.",
+        "fr": "Rechercher les détails de réservation par numéro ou téléphone.",
+        "id": "Cari detail reservasi berdasarkan nomor reservasi atau nomor telepon.",
+        "mn": "Захиалгын дугаар эсвэл утасны дугаараар захиалга хайх.",
+        "ru": "Поиск бронирования по номеру или телефону.",
+        "tr": "Rezervasyon numarası veya telefon numarası ile rezervasyon sorgulama.",
+        "vi": "Tra cứu chi tiết đặt lịch bằng mã đặt lịch hoặc số điện thoại."
+    },
+    "config_schema": {
+        "fields": [
+            {"key": "title", "type": "text", "label": "Section Title", "i18n": true},
+            {"key": "subtitle", "type": "textarea", "label": "Section Subtitle", "i18n": true}
+        ]
+    }
+}

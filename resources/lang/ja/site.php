@@ -429,6 +429,7 @@ return [
         'no_widgets' => 'ウィジェットがありません。',
         'categories' => [
             'all' => 'すべて',
+            'system' => 'システム',
             'layout' => 'レイアウト',
             'content' => 'コンテンツ',
             'marketing' => 'マーケティング',
@@ -503,7 +504,7 @@ return [
         'loading' => 'プレビュー読み込み中...',
         'i18n_fields' => '多言語テキスト',
         'multilang' => '多言語入力',
-        'cat' => ['layout' => 'レイアウト', 'content' => 'コンテンツ', 'marketing' => 'マーケティング', 'general' => '一般'],
+        'cat' => ['system' => 'システム', 'layout' => 'レイアウト', 'content' => 'コンテンツ', 'marketing' => 'マーケティング', 'general' => '一般'],
         'w' => [
             'hero' => 'ヒーローバナー',
             'hero_desc' => 'メインバナー（タイトル、サブタイトル、CTA）',
@@ -521,6 +522,8 @@ return [
             'text_desc' => '自由HTMLコンテンツ',
             'spacer' => 'スペーサー',
             'spacer_desc' => 'セクション間の余白',
+            'staff' => 'スタッフ紹介',
+            'staff_desc' => 'スタッフをカード形式で表示',
         ],
     ],
 

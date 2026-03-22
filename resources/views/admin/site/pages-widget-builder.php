@@ -19,6 +19,7 @@ try {
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 $currentLocale = $config['locale'] ?? 'ko';
+$pageSlug = $_GET['slug'] ?? 'home';
 
 // ======= AJAX 요청 처리 (별도 파일) =======
 include __DIR__ . '/pages-widget-builder-ajax.php';
@@ -28,14 +29,17 @@ $availableWidgets = $pdo->query("SELECT * FROM rzx_widgets WHERE is_active = 1 O
 
 // 파일 기반 위젯 로더 (widget.json 다국어 데이터 활용)
 $widgetLoader = new \RzxLib\Core\Modules\WidgetLoader($pdo, BASE_PATH . '/widgets');
-$fileWidgets = $widgetLoader->scan();  // slug => widget.json 데이터
-$placedWidgets = $pdo->query("
+$widgetLoader->syncToDatabase();  // 파일 → DB 자동 동기화
+$fileWidgets = $widgetLoader->scan();
+$_pwStmt = $pdo->prepare("
     SELECT pw.*, w.slug as widget_slug, w.name as widget_name, w.icon, w.type as widget_type, w.config_schema
     FROM rzx_page_widgets pw
     JOIN rzx_widgets w ON pw.widget_id = w.id
-    WHERE pw.page_slug = 'home'
+    WHERE pw.page_slug = ?
     ORDER BY pw.sort_order ASC
-")->fetchAll(PDO::FETCH_ASSOC);
+");
+$_pwStmt->execute([$pageSlug]);
+$placedWidgets = $_pwStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 지원 언어 로드
 $supportedLangs = ['ko','en','ja'];
@@ -133,6 +137,7 @@ $iconMap = [
                     $widgetCategories[$cat][] = $aw;
                 }
                 $categoryMeta = [
+                    'system' => ['icon' => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z', 'color' => 'emerald'],
                     'layout' => ['icon' => 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z', 'color' => 'blue'],
                     'content' => ['icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'color' => 'emerald'],
                     'marketing' => ['icon' => 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z', 'color' => 'amber'],
@@ -218,7 +223,7 @@ $iconMap = [
                                 <span id="widgetCount" class="text-xs text-zinc-500 dark:text-zinc-400"></span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <a href="<?= $baseUrl ?>/" target="_blank" class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-300 rounded-lg hover:bg-white dark:hover:bg-zinc-800 transition text-xs font-medium flex items-center">
+                                <a href="<?= $baseUrl ?>/<?= $pageSlug === 'home' ? '' : htmlspecialchars($pageSlug) ?>" target="_blank" class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-300 rounded-lg hover:bg-white dark:hover:bg-zinc-800 transition text-xs font-medium flex items-center">
                                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     <?= __('site.widget_builder.preview') ?>
                                 </a>

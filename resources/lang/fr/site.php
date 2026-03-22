@@ -438,6 +438,7 @@ return [
             'no_widgets' => 'Aucun widget trouvé.',
             'categories' => [
                 'all' => 'Tous',
+                'system' => 'Système',
                 'layout' => 'Mise en page',
                 'content' => 'Contenu',
                 'marketing' => 'Marketing',
@@ -512,7 +513,7 @@ return [
             'loading' => 'Chargement de l\'aperçu...',
             'i18n_fields' => 'Texte multilingue',
             'multilang' => 'Saisie multilingue',
-            'cat' => ['layout' => 'Mise en page', 'content' => 'Contenu', 'marketing' => 'Marketing', 'general' => 'Général'],
+            'cat' => ['system' => 'Système', 'layout' => 'Mise en page', 'content' => 'Contenu', 'marketing' => 'Marketing', 'general' => 'Général'],
             'w' => [
                 'hero' => 'Bannière principale',
                 'hero_desc' => 'Bannière avec titre, sous-titre, CTA',
@@ -530,6 +531,8 @@ return [
                 'text_desc' => 'Contenu HTML libre',
                 'spacer' => 'Espacement',
                 'spacer_desc' => 'Espace entre les sections',
+                'staff' => 'Personnel',
+                'staff_desc' => 'Afficher le personnel en cartes',
             ],
         ],
     ],
