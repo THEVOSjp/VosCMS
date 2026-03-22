@@ -4,6 +4,25 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [1.15.3] - 2026-03-22
+
+### Added
+- **레이아웃 상세 설정 패널** — SkinConfigRenderer 기반 설정 폼 AJAX 로드
+- **레이아웃 메뉴 설정** — layout.json의 menus 섹션 → DB sitemaps 드롭다운 자동 생성
+- **SkinConfigRenderer 탭 지원** — vars에 `tab` 속성 추가 시 탭 UI 자동 생성
+- **SkinConfigRenderer 리팩토링** — renderVar() 단일 메서드 통합, renderFormFlat/renderFormWithTabs 분리, renderDependsOnJs 공통화
+- **layout.json 확장** — menus(GNB/FNB), vars 14개 항목(헤더/로고/색상/푸터/커스텀), 13개 언어
+- **레이아웃 미리보기 연동** — "사용 안 함" 선택 시 ?no_layout=1로 레이아웃 없는 미리보기
+
+### Fixed
+- 레이아웃 관리 메뉴 조회 `rzx_menus` → `rzx_sitemaps` 테이블명 수정
+- 가운데 패널 width 조정 + 액션 링크 whitespace-nowrap
+
+### Pending
+- 레이아웃/스킨 설정값의 실제 페이지 렌더링 적용 (다음 세션)
+
+---
+
 ## [1.15.2] - 2026-03-22
 
 ### Added

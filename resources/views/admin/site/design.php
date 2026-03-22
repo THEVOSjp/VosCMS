@@ -7,6 +7,8 @@
 if (!function_exists('__')) {
     require_once BASE_PATH . '/rzxlib/Core/Helpers/lang.php';
 }
+require_once BASE_PATH . '/rzxlib/Core/Skin/SkinConfigRenderer.php';
+use RzxLib\Core\Skin\SkinConfigRenderer;
 
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
@@ -30,6 +32,114 @@ try {
             foreach ($fields as $f) {
                 if (isset($input[$f])) $stmt->execute([$f, $input[$f]]);
             }
+            echo json_encode(['success' => true]);
+            exit;
+        }
+
+        // 스킨 상세 설정 폼 로드
+        if (($input['action'] ?? '') === 'load_skin_settings') {
+            $group = $input['group'] ?? '';
+            $slug = $input['slug'] ?? '';
+            $locale = $config['locale'] ?? 'ko';
+
+            // 그룹별 경로/JSON 파일 매핑
+            $pathMap = [
+                'layout' => ['dir' => BASE_PATH . '/skins/layouts/' . $slug . '/', 'json' => 'layout.json'],
+                'page' => ['dir' => BASE_PATH . '/skins/page/' . $slug . '/', 'json' => 'skin.json'],
+                'board' => ['dir' => BASE_PATH . '/skins/board/' . $slug . '/', 'json' => 'skin.json'],
+                'member' => ['dir' => BASE_PATH . '/skins/member/' . $slug . '/', 'json' => 'skin.json'],
+            ];
+            $pm = $pathMap[$group] ?? null;
+            if (!$pm || !is_dir($pm['dir'])) {
+                echo json_encode(['success' => false, 'message' => 'Skin not found']);
+                exit;
+            }
+
+            $jsonPath = $pm['dir'] . $pm['json'];
+            $skinData = file_exists($jsonPath) ? json_decode(file_get_contents($jsonPath), true) : [];
+
+            // 저장된 설정 로드
+            $cfgKey = 'skin_detail_' . $group . '_' . $slug;
+            $cfgStmt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = ?");
+            $cfgStmt->execute([$cfgKey]);
+            $savedConfig = json_decode($cfgStmt->fetchColumn() ?: '{}', true) ?: [];
+
+            // 메타 정보 HTML
+            $t = function($v) use ($locale) {
+                if (is_string($v)) return $v;
+                return $v[$locale] ?? $v['en'] ?? $v['ko'] ?? reset($v) ?: '';
+            };
+
+            ob_start();
+            // 경로
+            echo '<div class="divide-y divide-zinc-100 dark:divide-zinc-700 mb-6">';
+            echo '<div class="flex py-3"><span class="w-20 text-sm text-zinc-500 shrink-0">' . (__('site.design.cfg_path') ?? '경로') . '</span><span class="text-sm text-zinc-800 dark:text-zinc-200">/skins/' . htmlspecialchars($group === 'layout' ? 'layouts' : $group) . '/' . htmlspecialchars($slug) . '/</span></div>';
+            // 설명
+            if (!empty($skinData['description'])) {
+                echo '<div class="flex py-3"><span class="w-20 text-sm text-zinc-500 shrink-0">' . (__('site.design.cfg_desc') ?? '설명') . '</span><span class="text-sm text-zinc-800 dark:text-zinc-200">' . htmlspecialchars($t($skinData['description'])) . '</span></div>';
+            }
+            // 작성자
+            if (!empty($skinData['author']['name'])) {
+                $authorHtml = htmlspecialchars($skinData['author']['name']);
+                if (!empty($skinData['author']['url'])) {
+                    $authorHtml = '<a href="' . htmlspecialchars($skinData['author']['url']) . '" target="_blank" class="text-blue-600 hover:underline">' . $authorHtml . ' <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>';
+                }
+                echo '<div class="flex py-3"><span class="w-20 text-sm text-zinc-500 shrink-0">' . (__('site.design.cfg_author') ?? '작성자') . '</span><span class="text-sm">' . $authorHtml . '</span></div>';
+            }
+            // 버전
+            if (!empty($skinData['version'])) {
+                echo '<div class="flex py-3"><span class="w-20 text-sm text-zinc-500 shrink-0">' . (__('site.design.cfg_version') ?? '버전') . '</span><span class="text-sm text-zinc-800 dark:text-zinc-200">v' . htmlspecialchars($skinData['version']) . '</span></div>';
+            }
+            echo '</div>';
+
+            // 메뉴 설정 (menus)
+            if (!empty($skinData['menus'])) {
+                // DB 메뉴 목록 조회
+                $dbMenus = $pdo->query("SELECT id, title FROM {$prefix}sitemaps ORDER BY sort_order")->fetchAll(\PDO::FETCH_ASSOC);
+                $savedMenus = $savedConfig['_menus'] ?? [];
+
+                echo '<h4 class="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">' . (__('site.design.cfg_menus') ?? '메뉴') . '</h4>';
+                echo '<div class="divide-y divide-zinc-100 dark:divide-zinc-700 mb-6">';
+                foreach ($skinData['menus'] as $menuKey => $menuDef) {
+                    $menuTitle = $t($menuDef['title'] ?? $menuKey);
+                    $savedVal = $savedMenus[$menuKey] ?? '';
+                    echo '<div class="flex items-center py-3">';
+                    echo '<span class="w-40 text-sm font-medium text-zinc-700 dark:text-zinc-300 shrink-0">' . htmlspecialchars($menuTitle) . ' (' . htmlspecialchars($menuKey) . ')</span>';
+                    echo '<select name="skin_menu[' . htmlspecialchars($menuKey) . ']" class="flex-1 px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200">';
+                    echo '<option value="">-- ' . (__('site.design.select_menu') ?? '메뉴 선택') . ' --</option>';
+                    foreach ($dbMenus as $dm) {
+                        $sel = ((string)$dm['id'] === (string)$savedVal) ? 'selected' : '';
+                        echo '<option value="' . $dm['id'] . '" ' . $sel . '>' . htmlspecialchars($dm['title']) . '</option>';
+                    }
+                    echo '</select>';
+                    echo '</div>';
+                }
+                echo '</div>';
+            }
+
+            // 확장 변수 (vars)
+            if (!empty($skinData['vars'])) {
+                $renderer = new SkinConfigRenderer($jsonPath, $savedConfig, $locale, $baseUrl);
+                echo '<h4 class="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">' . (__('site.design.cfg_vars') ?? '확장 변수') . '</h4>';
+                echo '<div id="skinDetailForm">';
+                $renderer->renderForm();
+                echo '</div>';
+            }
+
+            $html = ob_get_clean();
+            $hasForm = !empty($skinData['vars']) || !empty($skinData['menus']);
+            echo json_encode(['success' => true, 'html' => $html, 'title' => $t($skinData['title'] ?? $slug), 'hasForm' => $hasForm]);
+            exit;
+        }
+
+        // 스킨 상세 설정 저장
+        if (($input['action'] ?? '') === 'save_skin_detail') {
+            $group = $input['group'] ?? '';
+            $slug = $input['slug'] ?? '';
+            $skinConfig = $input['config'] ?? [];
+            $cfgKey = 'skin_detail_' . $group . '_' . $slug;
+            $stmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+            $stmt->execute([$cfgKey, json_encode($skinConfig, JSON_UNESCAPED_UNICODE)]);
             echo json_encode(['success' => true]);
             exit;
         }
@@ -93,7 +203,7 @@ $menuItems = [
             <!-- 사이트 미리보기 -->
             <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden mb-4">
                 <div class="h-52 bg-zinc-100 dark:bg-zinc-700 relative overflow-hidden">
-                    <iframe src="<?= $baseUrl ?>/" class="w-full h-full border-0 pointer-events-none" style="transform:scale(0.33);transform-origin:top left;width:303%;height:303%" loading="lazy"></iframe>
+                    <iframe id="sitePreviewFrame" src="<?= $baseUrl ?>/" class="w-full h-full border-0 pointer-events-none" style="transform:scale(0.33);transform-origin:top left;width:303%;height:303%" loading="lazy"></iframe>
                 </div>
             </div>
 
@@ -120,7 +230,7 @@ $menuItems = [
         </div>
 
         <!-- 우측: 선택한 메뉴의 스킨 목록 (초기 숨김) -->
-        <div class="flex-1 min-w-0" id="rightPanel" style="display:none">
+        <div class="w-80 shrink-0" id="rightPanel" style="display:none">
             <?php foreach ($menuItems as $key => $item): ?>
             <div id="panel-<?= $key ?>" class="hidden">
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700">
@@ -160,15 +270,15 @@ $menuItems = [
                                 <span class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($skin['title']) ?></span>
                             </div>
                             <!-- 썸네일 + 액션 링크 -->
-                            <div class="flex gap-4 ml-6">
-                                <div class="w-44 h-28 shrink-0 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
+                            <div class="flex gap-3 ml-5">
+                                <div class="w-32 h-24 shrink-0 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
                                     <?php if (!empty($skin['thumbnail'])): ?>
                                     <img src="<?= htmlspecialchars($skin['thumbnail']) ?>" alt="" class="w-full h-full object-cover" onerror="this.style.display='none'">
                                     <?php else: ?>
                                     <svg class="w-8 h-8 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                     <?php endif; ?>
                                 </div>
-                                <div class="flex flex-col gap-1.5 text-sm pt-0.5">
+                                <div class="flex flex-col gap-1.5 text-sm pt-0.5 whitespace-nowrap">
                                     <a href="#" onclick="event.stopPropagation();openSkinSettings('<?= $key ?>','<?= $slug ?>')" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline flex items-center gap-1">
                                         <?= __('site.design.detail_settings') ?? '상세 설정' ?>
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a10 10 0 11-20 0 10 10 0 0120 0z"/></svg>
@@ -192,16 +302,21 @@ $menuItems = [
         </div>
 
         <!-- 설정 패널 (상세 설정 클릭 시 표시) -->
-        <div class="w-96 shrink-0" id="settingsPanel" style="display:none">
+        <div class="flex-1 min-w-0" id="settingsPanel" style="display:none">
             <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-700">
-                    <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200" id="settingsPanelTitle"></h3>
+                    <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200" id="settingsPanelTitle"><?= __('site.design.detail_settings') ?? '설정' ?></h3>
                     <button onclick="closeSettings()" class="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
-                <div id="settingsPanelContent" class="p-6">
-                    <p class="text-sm text-zinc-400 text-center py-8"><?= __('site.design.coming_soon') ?? '준비 중' ?></p>
+                <div id="settingsPanelContent" class="p-6 max-h-[75vh] overflow-y-auto">
+                    <p class="text-sm text-zinc-400 text-center py-8"><?= __('common.msg.loading') ?? '로딩 중...' ?></p>
+                </div>
+                <div id="settingsPanelFooter" class="px-6 py-4 border-t border-zinc-200 dark:border-zinc-700 hidden">
+                    <button onclick="saveSkinDetail()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
+                        <?= __('common.buttons.save') ?? '저장' ?>
+                    </button>
                 </div>
             </div>
         </div>
@@ -244,24 +359,85 @@ function closePanel() {
     activeMenu = null;
 }
 
-function openSkinSettings(group, slug) {
+var currentSettingsGroup = '';
+var currentSettingsSlug = '';
+
+async function openSkinSettings(group, slug) {
     console.log('[Layout] openSkinSettings:', group, slug);
+    currentSettingsGroup = group;
+    currentSettingsSlug = slug;
+
     var panel = document.getElementById('settingsPanel');
     var title = document.getElementById('settingsPanelTitle');
     var content = document.getElementById('settingsPanelContent');
+    var footer = document.getElementById('settingsPanelFooter');
 
-    // 설정 URL 매핑
-    var settingsUrls = {
-        layout: '<?= $adminUrl ?>/site/design',
-        page: '<?= $adminUrl ?>/site/pages/settings?slug=home&tab=skin',
-        board: '<?= $adminUrl ?>/site/boards',
-        member: '<?= $adminUrl ?>/site/design'
-    };
-
-    title.textContent = slug + ' <?= __('site.design.detail_settings') ?? '상세 설정' ?>';
-    content.innerHTML = '<iframe src="' + settingsUrls[group] + '&skin_detail=' + slug + '" class="w-full border-0 min-h-[400px]" style="height:60vh"></iframe>';
-    content.innerHTML = '<p class="text-sm text-zinc-500 text-center py-8"><?= __('site.design.coming_soon') ?? '준비 중' ?><br><br><a href="' + settingsUrls[group] + '" class="text-blue-600 hover:underline"><?= __('site.design.open_settings') ?? '설정 페이지로 이동' ?> →</a></p>';
+    content.innerHTML = '<p class="text-sm text-zinc-400 text-center py-8"><?= __('common.msg.loading') ?? '로딩 중...' ?></p>';
+    footer.classList.add('hidden');
     panel.style.display = '';
+
+    try {
+        var resp = await fetch(window.location.href, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ action: 'load_skin_settings', group: group, slug: slug })
+        });
+        var data = await resp.json();
+        if (data.success) {
+            title.textContent = data.title + ' <?= __('site.design.detail_settings') ?? '설정' ?>';
+            content.innerHTML = data.html;
+            // vars 또는 menus가 있으면 저장 버튼 표시
+            if (data.hasForm) {
+                footer.classList.remove('hidden');
+            }
+        } else {
+            content.innerHTML = '<p class="text-sm text-red-500 text-center py-8">' + (data.message || 'Error') + '</p>';
+        }
+    } catch (e) {
+        content.innerHTML = '<p class="text-sm text-red-500 text-center py-8">' + e.message + '</p>';
+    }
+}
+
+async function saveSkinDetail() {
+    var content = document.getElementById('settingsPanelContent');
+    var form = document.getElementById('skinDetailForm');
+
+    var config = {};
+    // 메뉴 설정 수집
+    var menus = {};
+    content.querySelectorAll('[name^="skin_menu["]').forEach(function(el) {
+        var m = el.name.match(/^skin_menu\[(.+)]$/);
+        if (m) menus[m[1]] = el.value;
+    });
+    if (Object.keys(menus).length > 0) config['_menus'] = menus;
+
+    if (form) form.querySelectorAll('[name^="skin_config["]').forEach(function(el) {
+        var m = el.name.match(/^skin_config\[(.+)]$/);
+        if (!m) return;
+        if (el.type === 'radio' && !el.checked) return;
+        if (el.type === 'checkbox') {
+            config[m[1]] = el.checked ? '1' : '0';
+        } else {
+            config[m[1]] = el.value;
+        }
+    });
+    // 체크 안 된 checkbox 처리
+    form.querySelectorAll('.skin-checkbox').forEach(function(cb) {
+        if (!cb.checked) config[cb.dataset.name] = '0';
+    });
+
+    console.log('[Layout] saveSkinDetail:', currentSettingsGroup, currentSettingsSlug, config);
+    try {
+        var resp = await fetch(window.location.href, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ action: 'save_skin_detail', group: currentSettingsGroup, slug: currentSettingsSlug, config: config })
+        });
+        var data = await resp.json();
+        showResultModal(data.success, data.success ? '' : (data.message || 'Error'));
+    } catch (e) {
+        showResultModal(false, e.message);
+    }
 }
 
 function closeSettings() {
@@ -284,6 +460,14 @@ function selectSkin(group, slug, title) {
     // 좌측 메뉴 현재값 업데이트
     var cur = document.getElementById('current-' + group);
     if (cur) cur.textContent = '[' + title + ']';
+
+    // 레이아웃 변경 시 미리보기 업데이트
+    if (group === 'layout') {
+        var frame = document.getElementById('sitePreviewFrame');
+        if (frame) {
+            frame.src = '<?= $baseUrl ?>/' + (slug === 'none' ? '?no_layout=1' : '');
+        }
+    }
 }
 
 async function saveLayout() {

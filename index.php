@@ -597,6 +597,9 @@ if (empty($path) || $path === 'index.php') {
 if ($__pageFile && !$__noLayout) {
     $__layout = 'default'; // 페이지에서 $__layout = false 로 오버라이드 가능
 
+    // no_layout 파라미터: 레이아웃 없이 콘텐츠만 (레이아웃 관리 미리보기용)
+    if (!empty($_GET['no_layout'])) $__layout = false;
+
     // 페이지에서 사용할 공통 변수 미리 설정
     require_once BASE_PATH . '/rzxlib/Core/I18n/Translator.php';
     \RzxLib\Core\I18n\Translator::init(BASE_PATH . '/resources/lang');
