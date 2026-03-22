@@ -231,6 +231,10 @@ try {
 $pageTitle = htmlspecialchars($pageData['title'] ?? $pageSlug) . ' - ' . (__('site.pages.settings_title') ?? '페이지 설정');
 $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
 ?>
+<?php $embedMode = !empty($_GET['embed']); ?>
+<?php if (!$embedMode): ?>
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
+<?php else: ?>
 <!DOCTYPE html>
 <html lang="<?= $config['locale'] ?? 'ko' ?>">
 <head>
@@ -247,16 +251,7 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
             document.documentElement.classList.add('dark');
         }
     </script>
-<?php $embedMode = !empty($_GET['embed']); ?>
 </head>
-<?php if (!$embedMode): ?>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <?php include BASE_PATH . '/resources/views/admin/partials/admin-sidebar.php'; ?>
-        <main class="flex-1 ml-64">
-            <?php include BASE_PATH . '/resources/views/admin/partials/admin-topbar.php'; ?>
-            <div class="p-6">
-<?php else: ?>
 <div class="p-2">
 <?php endif; ?>
                 <!-- 헤더 -->

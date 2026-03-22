@@ -122,52 +122,18 @@ $iconMap = [
 function getWidgetIcon($icon, $iconMap) {
     return $iconMap[$icon] ?? $iconMap['cube'];
 }
+
+
+$pageHeaderTitle = __('site.widgets.title');
+$pageSubTitle = __('site.widgets.title');
+$pageSubDesc = __('site.widgets.description');
 ?>
-<!DOCTYPE html>
-<html lang="<?= $config['locale'] ?? 'ko' ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <?php include __DIR__ . '/../partials/admin-sidebar.php'; ?>
-
-        <main class="flex-1 ml-64">
-            <?php
-            $pageHeaderTitle = __('site.widgets.title');
-            include __DIR__ . '/../partials/admin-topbar.php';
-            ?>
-
-            <div class="p-6">
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
                 <?php if ($message): ?>
                 <div class="mb-6 p-4 rounded-lg <?= $messageType === 'success' ? 'bg-green-50 text-green-800 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800' : 'bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800' ?>">
                     <?= htmlspecialchars($message) ?>
                 </div>
                 <?php endif; ?>
-
-                <!-- Header -->
-                <div class="mb-6">
-                <?php
-                $headerIcon = 'M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z';
-                $headerTitle = __('site.widgets.title');
-                $headerDescription = __('site.widgets.description');
-                $headerIconColor = '';
-                $headerActions = '<a href="' . $adminUrl . '/site/widgets/create" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition flex items-center"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>' . __('site.widgets.create') . '</a>';
-                include __DIR__ . '/../components/settings-header.php';
-                ?>
-                </div>
 
                 <!-- Tabs -->
                 <div class="flex items-center gap-2 mb-6">

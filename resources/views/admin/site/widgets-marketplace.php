@@ -6,52 +6,17 @@ $pageTitle = __('site.widgets.mp.title') . ' - ' . ($config['app_name'] ?? 'Rezl
 
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
+
+
+$pageHeaderTitle = __('site.widgets.marketplace');
+$pageSubTitle = __('site.widgets.marketplace');
 ?>
-<!DOCTYPE html>
-<html lang="<?= $config['locale'] ?? 'ko' ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <?php include __DIR__ . '/../partials/admin-sidebar.php'; ?>
-
-        <main class="flex-1 ml-64">
-            <?php
-            $pageHeaderTitle = __('site.widgets.mp.title');
-            include __DIR__ . '/../partials/admin-topbar.php';
-            ?>
-
-            <div class="p-6">
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
                 <!-- Back link -->
                 <a href="<?= $adminUrl ?>/site/widgets" class="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:underline mb-4">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                     <?= __('site.widgets.title') ?>
                 </a>
-
-                <!-- Header -->
-                <div class="mb-6">
-                <?php
-                $headerIcon = 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z';
-                $headerTitle = __('site.widgets.mp.title');
-                $headerDescription = __('site.widgets.mp.description');
-                $headerIconColor = '';
-                $headerActions = '';
-                include __DIR__ . '/../components/settings-header.php';
-                ?>
-                </div>
 
                 <!-- Search -->
                 <div class="mb-6">

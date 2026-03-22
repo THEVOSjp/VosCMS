@@ -11,45 +11,12 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 $board = null;
 $boardId = 0;
 $_componentDir = __DIR__ . '/../components/board';
-?>
-<!DOCTYPE html>
-<html lang="<?php echo $config['locale'] ?? 'ko'; ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <?php include __DIR__ . '/../partials/admin-sidebar.php'; ?>
-        <main class="flex-1 ml-64">
-            <?php
-            $pageHeaderTitle = __('site.boards.create_title');
-            include __DIR__ . '/../partials/admin-topbar.php';
-            ?>
-            <div class="p-6">
-                <!-- Header -->
-                <div class="mb-6">
-                <?php
-                $headerIcon = 'M12 4v16m8-8H4';
-                $headerTitle = __('site.boards.create_title');
-                $headerDescription = __('site.boards.create_desc');
-                $headerIconColor = '';
-                $headerActions = '';
-                include __DIR__ . '/../components/settings-header.php';
-                ?>
-                </div>
 
+
+$pageHeaderTitle = __('site.boards.create');
+$pageSubTitle = __('site.boards.create');
+?>
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
                 <!-- Form -->
                 <form id="boardCreateForm" class="space-y-6">
                     <?php $_collapsed = false; include "{$_componentDir}/section-basic.php"; ?>

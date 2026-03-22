@@ -80,60 +80,18 @@ try {
         throw $e;
     }
 }
+
+
+$pageHeaderTitle = __('site.boards.title');
+$pageSubTitle = __('site.boards.title');
+$pageSubDesc = __('site.boards.description');
 ?>
-<!DOCTYPE html>
-<html lang="<?php echo $config['locale'] ?? 'ko'; ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($pageTitle); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { darkMode: 'class' }
-    </script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>
-        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
-    </style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <!-- Sidebar -->
-        <?php include __DIR__ . '/../partials/admin-sidebar.php'; ?>
-
-        <!-- Main Content -->
-        <main class="flex-1 ml-64">
-            <!-- Top Bar -->
-            <?php
-            $pageHeaderTitle = __('site.boards.title');
-            include __DIR__ . '/../partials/admin-topbar.php';
-            ?>
-
-            <!-- Page Content -->
-            <div class="p-6">
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
                 <?php if ($message): ?>
                 <div class="mb-6 p-4 rounded-lg <?php echo $messageType === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800'; ?>">
                     <?php echo htmlspecialchars($message); ?>
                 </div>
                 <?php endif; ?>
-
-                <!-- Header -->
-                <div class="mb-6">
-                <?php
-                $headerIcon = 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z';
-                $headerTitle = __('site.boards.title');
-                $headerDescription = __('site.boards.description');
-                $headerIconColor = '';
-                $headerActions = '<a href="' . $adminUrl . '/site/boards/create" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition flex items-center"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>' . __('site.boards.add') . '</a>';
-                include __DIR__ . '/../components/settings-header.php';
-                ?>
-                </div>
 
                 <!-- 총 개수 / 페이지 -->
                 <div class="mb-4 flex items-center justify-between">

@@ -133,19 +133,13 @@ $languageNames = [
     'es' => 'Español', 'fr' => 'Français', 'id' => 'Bahasa Indonesia',
     'mn' => 'Монгол', 'ru' => 'Русский', 'tr' => 'Türkçe', 'vi' => 'Tiếng Việt',
 ];
+
+
+$pageHeaderTitle = __($pageMeta['title_key']);
 ?>
-<!DOCTYPE html>
-<html lang="<?= $config['locale'] ?? 'ko' ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
     <style>
-        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
         .note-editor { border-radius: 0.5rem; overflow: hidden; }
         .note-editor .note-toolbar { background: #f4f4f5; border-color: #d4d4d8; }
         .note-editor .note-editing-area { background: #fff; }
@@ -170,7 +164,6 @@ $languageNames = [
         .dark .note-dropdown-menu { background: #3f3f46; border-color: #52525b; }
         .dark .note-dropdown-menu .note-dropdown-item { color: #a1a1aa; }
         .dark .note-dropdown-menu .note-dropdown-item:hover { background: #52525b; color: #fff; }
-        /* 미리보기 스타일 */
         #previewBody { color: #18181b; line-height: 1.7; }
         #previewBody h1 { font-size: 1.5em; font-weight: bold; margin: 1em 0 0.5em; }
         #previewBody h2 { font-size: 1.25em; font-weight: bold; margin: 1em 0 0.5em; }
@@ -189,24 +182,6 @@ $languageNames = [
         .dark #previewBody td { border-color: #52525b; }
         .dark #previewBody a { color: #60a5fa; }
     </style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <?php include __DIR__ . '/../partials/admin-sidebar.php'; ?>
-
-        <main class="flex-1 ml-64">
-            <?php
-            $pageHeaderTitle = __($pageMeta['title_key']);
-            include __DIR__ . '/../partials/admin-topbar.php';
-            ?>
-
-            <div class="p-6">
                 <div id="alertBox" class="mb-6 p-4 rounded-lg border hidden"></div>
                 <?php if ($message): ?>
                 <div class="mb-6 p-4 rounded-lg <?= $messageType === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800' ?>">

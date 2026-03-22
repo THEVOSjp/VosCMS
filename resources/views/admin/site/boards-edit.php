@@ -81,7 +81,24 @@ $tabs = [
         'label' => __('site.boards.tab_skin'),
     ],
 ];
+
+
+$pageHeaderTitle = htmlspecialchars($board['title']) . ' ' . __('site.boards.settings');
 ?>
+<?php $embedMode = !empty($_GET['embed']); ?>
+<?php if (!$embedMode): ?>
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
+    <script>
+        // 섹션 접기/펼치기 (인라인 onclick에서 사용)
+        function toggleSection(btn) {
+            var section = btn.closest('[data-section]');
+            var body = section.querySelector('.section-body');
+            var chevron = btn.querySelector('.section-chevron');
+            body.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+        }
+    </script>
+<?php else: ?>
 <!DOCTYPE html>
 <html lang="<?php echo $config['locale'] ?? 'ko'; ?>">
 <head>
@@ -97,7 +114,6 @@ $tabs = [
             (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         }
-        // 섹션 접기/펼치기 (인라인 onclick에서 사용, 먼저 정의)
         function toggleSection(btn) {
             var section = btn.closest('[data-section]');
             var body = section.querySelector('.section-body');
@@ -107,20 +123,9 @@ $tabs = [
         }
     </script>
 </head>
-<?php $embedMode = !empty($_GET['embed']); ?>
 <body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <?php if (!$embedMode): ?>
-    <div class="flex">
-        <?php include __DIR__ . '/../partials/admin-sidebar.php'; ?>
-        <main class="flex-1 ml-64">
-            <?php
-            $pageHeaderTitle = htmlspecialchars($board['title']) . ' ' . __('site.boards.settings');
-            include __DIR__ . '/../partials/admin-topbar.php';
-            ?>
-            <div class="p-6">
-    <?php else: ?>
     <div class="p-4">
-    <?php endif; ?>
+<?php endif; ?>
                 <!-- Header -->
                 <div class="mb-6">
                 <?php

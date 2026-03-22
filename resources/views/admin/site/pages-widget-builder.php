@@ -66,23 +66,16 @@ $iconMap = [
     'arrows-expand' => 'M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4',
     'cube' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
 ];
+
+
+$pageHeaderTitle = __('site.widget_builder.title');
 ?>
-<!DOCTYPE html>
-<html lang="<?= $config['locale'] ?? 'ko' ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    <!-- Summernote (richtext editor) -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
     <style>
-        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
         .widget-ghost { opacity: 0.3; }
         .widget-chosen .widget-toolbar { opacity: 1 !important; }
         .widget-block:hover .widget-toolbar { opacity: 1; }
@@ -96,7 +89,6 @@ $iconMap = [
         .widget-flyout.hidden { opacity: 0; transform: translateX(-8px); pointer-events: none; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         #editSidePanel { transition: width 0.2s ease; }
-        /* Summernote 다크모드 */
         .note-editor { border-radius: 0.5rem; overflow: hidden; }
         .dark .note-editor { border-color: #52525b; }
         .dark .note-editor .note-toolbar { background: #3f3f46; border-color: #52525b; }
@@ -110,22 +102,7 @@ $iconMap = [
         .dark .note-dropdown-menu .note-dropdown-item { color: #a1a1aa; }
         .dark .note-dropdown-menu .note-dropdown-item:hover { background: #52525b; color: #fff; }
     </style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen">
-    <div class="flex">
-        <?php include __DIR__ . '/../partials/admin-sidebar.php'; ?>
-
-        <main class="flex-1 ml-64 flex flex-col h-screen">
-            <?php
-            $pageHeaderTitle = __('site.widget_builder.title');
-            include __DIR__ . '/../partials/admin-topbar.php';
-            ?>
+        </div><!-- close p-6 from _head.php -->
 
             <div class="flex flex-1 overflow-hidden">
                 <!-- 왼쪽: 위젯 팔레트 (카테고리 + 플라이아웃) -->

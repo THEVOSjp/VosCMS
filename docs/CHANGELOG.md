@@ -4,6 +4,20 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [1.15.1] - 2026-03-22
+
+### Changed
+- 사이트 관리 15개 페이지 → `_head.php` 공용 헤더 적용
+  - 게시판: boards, boards-create, boards-edit, boards-trash
+  - 메뉴: menus
+  - 디자인: design
+  - 페이지: pages, pages-settings, pages-edit-content, pages-document, pages-compliance, pages-widget-builder
+  - 위젯: widgets, widgets-create, widgets-marketplace
+- embed 모드 페이지 (boards-edit, pages-settings, pages-edit-content)는 비embed 시만 _head.php 적용
+- 전체 관리자 페이지 헤더/레이아웃 통일 완료
+
+---
+
 ## [1.15.0] - 2026-03-22
 
 ### Added

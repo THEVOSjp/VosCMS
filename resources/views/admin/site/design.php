@@ -22,59 +22,18 @@ $messageType = '';
 // Base URLs for navigation
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
+
+
+$pageHeaderTitle = __('site.design.title');
+$pageSubTitle = __('site.design.title');
+$pageSubDesc = __('site.design.description');
 ?>
-<!DOCTYPE html>
-<html lang="<?php echo $config['locale'] ?? 'ko'; ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($pageTitle); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { darkMode: 'class' }
-    </script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>
-        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
-    </style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <!-- Sidebar -->
-        <?php include __DIR__ . '/../partials/admin-sidebar.php'; ?>
-
-        <!-- Main Content -->
-        <main class="flex-1 ml-64">
-            <!-- Top Bar -->
-            <?php
-            $pageHeaderTitle = __('site.design.title');
-            include __DIR__ . '/../partials/admin-topbar.php';
-            ?>
-
-            <!-- Page Content -->
-            <div class="p-6">
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
                 <?php if ($message): ?>
                 <div class="mb-6 p-4 rounded-lg <?php echo $messageType === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'; ?>">
                     <?php echo htmlspecialchars($message); ?>
                 </div>
                 <?php endif; ?>
-
-                <!-- Header -->
-                <div class="mb-6">
-                <?php
-                $headerIcon = 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01';
-                $headerTitle = __('site.design.title');
-                $headerDescription = __('site.design.description');
-                $headerIconColor = ''; $headerActions = '';
-                include __DIR__ . '/../components/settings-header.php';
-                ?>
-                </div>
 
                 <!-- Design Options Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -123,7 +82,5 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
             </div>
         </main>
     </div>
-
-    <!-- Dark mode toggle is handled by admin-topbar.php -->
 </body>
 </html>

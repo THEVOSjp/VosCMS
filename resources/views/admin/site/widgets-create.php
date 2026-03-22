@@ -80,38 +80,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+
+$pageHeaderTitle = $widget ? __('site.widgets.edit') : __('site.widgets.create');
+$pageSubTitle = $widget ? __('site.widgets.edit') : __('site.widgets.create');
 ?>
-<!DOCTYPE html>
-<html lang="<?= $config['locale'] ?? 'ko' ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>
-        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
-        .code-editor { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; tab-size: 4; }
-    </style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <?php include __DIR__ . '/../partials/admin-sidebar.php'; ?>
-
-        <main class="flex-1 ml-64">
-            <?php
-            $pageHeaderTitle = $widget ? __('site.widgets.edit') : __('site.widgets.create');
-            include __DIR__ . '/../partials/admin-topbar.php';
-            ?>
-
-            <div class="p-6">
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
+    <style>.code-editor { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; tab-size: 4; }</style>
                 <?php if ($message): ?>
                 <div class="mb-6 p-4 rounded-lg <?= $messageType === 'success' ? 'bg-green-50 text-green-800 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800' : 'bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800' ?>">
                     <?= htmlspecialchars($message) ?>

@@ -150,18 +150,14 @@ function renderShortcutMenuItem($item, $depth = 1) {
         <?php endforeach; ?>
     <?php endif;
 }
+
+
+$pageHeaderTitle = __('site.menus.title');
+$pageSubTitle = __('site.menus.title');
+$pageSubDesc = __('site.menus.description');
 ?>
-<!DOCTYPE html>
-<html lang="<?= $config['locale'] ?? 'ko' ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
     <style>
-        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
         .tree-item { cursor: pointer; user-select: none; }
         .tree-item:hover { background-color: rgba(59,130,246,0.08); }
         .tree-item.selected { background-color: rgba(59,130,246,0.15); }
@@ -169,7 +165,6 @@ function renderShortcutMenuItem($item, $depth = 1) {
         .tree-children { padding-left: 1.25rem; border-left: 1px solid #e4e4e7; margin-left: 0.75rem; }
         .dark .tree-children { border-left-color: #3f3f46; }
         .dark .tree-item:hover { background-color: rgba(59,130,246,0.15); }
-        /* 드래그&드롭 */
         .tree-item[draggable="true"] { cursor: grab; }
         .tree-item[draggable="true"]:active { cursor: grabbing; }
         .tree-item.dragging { opacity: 0.4; }
@@ -196,24 +191,6 @@ function renderShortcutMenuItem($item, $depth = 1) {
         .dark .ctx-btn.danger:hover { background-color: rgba(239,68,68,0.1); }
         .chevron { width: 16px; height: 16px; flex-shrink: 0; }
     </style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
-    <div class="flex">
-        <?php include __DIR__ . '/../partials/admin-sidebar.php'; ?>
-
-        <main class="flex-1 ml-64">
-            <?php
-            $pageHeaderTitle = __('site.menus.title');
-            include __DIR__ . '/../partials/admin-topbar.php';
-            ?>
-
-            <div class="p-6">
                 <?php if ($message): ?>
                 <div class="mb-4 p-4 rounded-lg <?= $messageType === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800' ?>">
                     <?= htmlspecialchars($message) ?>
