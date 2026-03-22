@@ -149,15 +149,28 @@ $currency = $currencySymbols[$serviceCurrency] ?? $serviceCurrency;
                                 <option value="inactive" <?= $filterStatus === 'inactive' ? 'selected' : '' ?>><?= __('services.filter_inactive') ?></option>
                             </select>
                         </div>
-                        <button onclick="openServiceModal()"
-                                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            <?= __('services.create') ?>
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <!-- 뷰 전환 버튼 -->
+                            <div class="flex items-center bg-zinc-200 dark:bg-zinc-700 rounded-lg p-0.5">
+                                <button onclick="switchView('table')" id="viewBtnTable" title="<?= __('common.table_view') ?>"
+                                        class="p-1.5 rounded-md transition-colors bg-white dark:bg-zinc-600 text-zinc-900 dark:text-white shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                                </button>
+                                <button onclick="switchView('card')" id="viewBtnCard" title="<?= __('common.card_view') ?>"
+                                        class="p-1.5 rounded-md transition-colors text-zinc-500 dark:text-zinc-400 hover:text-zinc-700">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
+                                </button>
+                            </div>
+                            <button onclick="openServiceModal()"
+                                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <?= __('services.create') ?>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- 서비스 목록 테이블 -->
-                    <div class="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                    <div id="serviceTableView" class="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
                         <?php if (empty($services)): ?>
                         <div class="p-12 text-center text-zinc-500 dark:text-zinc-400">
                             <svg class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
@@ -169,6 +182,7 @@ $currency = $currencySymbols[$serviceCurrency] ?? $serviceCurrency;
                             <table class="w-full text-sm">
                                 <thead class="bg-zinc-50 dark:bg-zinc-700/50">
                                     <tr>
+                                        <th class="w-10 px-2 py-3"></th>
                                         <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('services.fields.name') ?></th>
                                         <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('services.fields.category') ?></th>
                                         <th class="text-right px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('services.fields.price') ?></th>
@@ -177,9 +191,12 @@ $currency = $currencySymbols[$serviceCurrency] ?? $serviceCurrency;
                                         <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('services.actions') ?></th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                                <tbody id="serviceTableBody" class="divide-y divide-zinc-200 dark:divide-zinc-700">
                                     <?php foreach ($services as $svc): ?>
-                                    <tr id="svc-<?= htmlspecialchars($svc['id']) ?>" class="hover:bg-zinc-50 dark:hover:bg-zinc-700/30 transition-colors">
+                                    <tr id="svc-<?= htmlspecialchars($svc['id']) ?>" data-id="<?= htmlspecialchars($svc['id']) ?>" class="hover:bg-zinc-50 dark:hover:bg-zinc-700/30 transition-colors">
+                                        <td class="px-2 py-3 text-center drag-handle cursor-grab active:cursor-grabbing">
+                                            <svg class="w-4 h-4 text-zinc-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
+                                        </td>
                                         <td class="px-4 py-3">
                                             <div class="font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars(getServiceTranslated($svc['id'], 'name', $svc['name'])) ?></div>
                                             <?php $svcDesc = getServiceTranslated($svc['id'], 'description', $svc['description'] ?? ''); if (!empty($svcDesc)): ?>
@@ -231,6 +248,74 @@ $currency = $currencySymbols[$serviceCurrency] ?? $serviceCurrency;
                         </div>
                         <?php endif; ?>
                     </div>
+
+                    <!-- 서비스 카드 뷰 -->
+                    <div id="serviceCardView" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" style="grid-auto-rows:auto">
+                        <?php if (empty($services)): ?>
+                        <div class="col-span-full p-12 text-center text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700">
+                            <svg class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+                            <p><?= __('services.empty') ?></p>
+                        </div>
+                        <?php else: ?>
+                        <?php foreach ($services as $svc):
+                            $svcName = htmlspecialchars(getServiceTranslated($svc['id'], 'name', $svc['name']));
+                            $svcDesc = htmlspecialchars(mb_substr(getServiceTranslated($svc['id'], 'description', $svc['description'] ?? ''), 0, 80));
+                            $catName = $svc['category_name'] ? htmlspecialchars(getCategoryTranslated($svc['category_id'], 'name', $svc['category_name'])) : '';
+                            $imgUrl = !empty($svc['image']) ? $baseUrl . '/storage/' . htmlspecialchars($svc['image']) : '';
+                        ?>
+                        <div data-id="<?= htmlspecialchars($svc['id']) ?>" class="rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-lg transition-all group relative h-56 cursor-grab active:cursor-grabbing <?= $imgUrl ? '' : 'bg-zinc-100 dark:bg-zinc-800' ?>"
+                             <?php if ($imgUrl): ?>style="background-image:url('<?= $imgUrl ?>');background-size:cover;background-position:center"<?php endif; ?>>
+                            <!-- 오버레이 -->
+                            <div class="absolute inset-0 <?= $imgUrl ? 'bg-gradient-to-t from-black/80 via-black/30 to-black/10' : '' ?>"></div>
+                            <?php if (!$imgUrl): ?>
+                            <div class="absolute inset-0 flex items-center justify-center opacity-30">
+                                <svg class="w-16 h-16 text-zinc-400 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>
+                            <?php endif; ?>
+                            <!-- 상태 뱃지 -->
+                            <div class="absolute top-2 right-2 z-10">
+                                <span class="px-2 py-0.5 rounded-full text-xs font-medium <?= $svc['is_active'] ? 'bg-green-500 text-white' : 'bg-zinc-400 text-white' ?>">
+                                    <?= $svc['is_active'] ? __('services.filter_active') : __('services.filter_inactive') ?>
+                                </span>
+                            </div>
+                            <!-- 호버 액션 -->
+                            <div class="absolute top-2 left-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onclick='editService(<?= json_encode($svc, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'
+                                        class="p-1.5 bg-white/90 backdrop-blur rounded-lg text-zinc-700 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="<?= __('services.edit') ?>">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                </button>
+                                <button onclick="deleteService('<?= $svc['id'] ?>')"
+                                        class="p-1.5 bg-white/90 backdrop-blur rounded-lg text-zinc-700 hover:bg-red-50 hover:text-red-600 transition-colors" title="<?= __('services.categories.delete') ?>">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </div>
+                            <!-- 하단 정보 -->
+                            <div class="absolute bottom-0 left-0 right-0 p-4 z-10">
+                                <?php if ($catName): ?>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-white/20 backdrop-blur text-white mb-2"><?= $catName ?></span>
+                                <?php endif; ?>
+                                <h3 class="font-semibold <?= $imgUrl ? 'text-white' : 'text-zinc-900 dark:text-white' ?> text-base"><?= $svcName ?></h3>
+                                <?php if ($svcDesc): ?>
+                                <p class="text-xs <?= $imgUrl ? 'text-white/70' : 'text-zinc-500 dark:text-zinc-400' ?> mt-1 line-clamp-1"><?= $svcDesc ?></p>
+                                <?php endif; ?>
+                                <div class="flex items-center justify-between mt-2">
+                                    <span class="text-sm <?= $imgUrl ? 'text-white/70' : 'text-zinc-500 dark:text-zinc-400' ?>">
+                                        <svg class="w-4 h-4 inline -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <?= $svc['duration'] ?><?= __('services.minute') ?>
+                                    </span>
+                                    <span class="font-bold <?= $imgUrl ? 'text-white' : 'text-zinc-900 dark:text-white' ?>">
+                                        <?php if ($priceDisplay === 'show'): ?>
+                                            <?= $currency ?><?= number_format($svc['price']) ?>
+                                        <?php elseif ($priceDisplay === 'contact'): ?>
+                                            <span class="text-xs font-normal <?= $imgUrl ? 'text-white/70' : 'text-zinc-500' ?>"><?= __('services.settings.general.price_contact') ?></span>
+                                        <?php else: ?>-<?php endif; ?>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
                 </div>
 
             </div>
@@ -246,6 +331,89 @@ $currency = $currencySymbols[$serviceCurrency] ?? $serviceCurrency;
 
     <!-- 다국어 입력 모달 -->
     <?php include __DIR__ . '/components/multilang-modal.php'; ?>
+
+    <!-- SortableJS -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <!-- 뷰 전환 + 드래그앤드롭 -->
+    <script>
+    function switchView(mode) {
+        console.log('[Services] switchView:', mode);
+        const tableView = document.getElementById('serviceTableView');
+        const cardView = document.getElementById('serviceCardView');
+        const btnTable = document.getElementById('viewBtnTable');
+        const btnCard = document.getElementById('viewBtnCard');
+        const activeClass = 'bg-white dark:bg-zinc-600 text-zinc-900 dark:text-white shadow-sm';
+        const inactiveClass = 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700';
+
+        if (mode === 'card') {
+            tableView.classList.add('hidden');
+            cardView.classList.remove('hidden');
+            btnCard.className = 'p-1.5 rounded-md transition-colors ' + activeClass;
+            btnTable.className = 'p-1.5 rounded-md transition-colors ' + inactiveClass;
+        } else {
+            tableView.classList.remove('hidden');
+            cardView.classList.add('hidden');
+            btnTable.className = 'p-1.5 rounded-md transition-colors ' + activeClass;
+            btnCard.className = 'p-1.5 rounded-md transition-colors ' + inactiveClass;
+        }
+        localStorage.setItem('serviceViewMode', mode);
+    }
+    // 순서 저장 API → 저장 후 리로드하여 양쪽 뷰 동기화
+    function saveOrder(container) {
+        const items = container.querySelectorAll('[data-id]');
+        const ids = Array.from(items).map(el => el.dataset.id);
+        console.log('[Services] Saving order:', ids.length, 'ids:', ids);
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'action=reorder_services&ids=' + encodeURIComponent(JSON.stringify(ids))
+        })
+        .then(r => {
+            console.log('[Services] Response status:', r.status, 'type:', r.headers.get('content-type'));
+            return r.text();
+        })
+        .then(text => {
+            console.log('[Services] Response body:', text.substring(0, 200));
+            try {
+                const data = JSON.parse(text);
+                if (data.success) window.location.reload();
+                else console.error('[Services] Order failed:', data.message);
+            } catch(e) {
+                console.error('[Services] Not JSON response, likely HTML page returned');
+            }
+        })
+        .catch(e => console.error('[Services] Order save error:', e));
+    }
+
+    // SortableJS 초기화 + 뷰 모드 복원
+    document.addEventListener('DOMContentLoaded', function() {
+        const saved = localStorage.getItem('serviceViewMode');
+        if (saved === 'card') switchView('card');
+
+        // 테이블 드래그
+        const tbody = document.getElementById('serviceTableBody');
+        if (tbody) {
+            Sortable.create(tbody, {
+                handle: '.drag-handle',
+                animation: 150,
+                ghostClass: 'bg-blue-50',
+                onEnd: function() { saveOrder(tbody); }
+            });
+        }
+
+        // 카드 드래그
+        const cardView = document.getElementById('serviceCardView');
+        if (cardView) {
+            Sortable.create(cardView, {
+                animation: 150,
+                ghostClass: 'opacity-50',
+                filter: '.col-span-full',
+                onEnd: function() { saveOrder(cardView); }
+            });
+        }
+    });
+    </script>
 
     <!-- JavaScript include -->
     <?php include __DIR__ . '/services-js.php'; ?>

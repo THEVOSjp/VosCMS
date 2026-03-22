@@ -182,6 +182,7 @@ return [
     'msg' => [
         'success' => 'Berhasil diproses.',
         'error' => 'Terjadi kesalahan.',
+        'saved' => 'Tersimpan.',
         'not_found' => 'Konten yang diminta tidak ditemukan.',
         'unauthorized' => 'Silakan masuk.',
         'forbidden' => 'Akses ditolak.',

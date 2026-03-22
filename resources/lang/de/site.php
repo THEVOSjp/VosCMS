@@ -122,7 +122,8 @@ return [
         'external_url' => 'Externe URL / Dateipfad',
         'external_url_desc' => 'Externe URLs (https://...) werden im iFrame dargestellt, interne Dateien (.php/.html) per Include.',
         'quick_edit' => 'Schnellbearbeitung', 'open_widget_builder' => 'Widget-Builder oeffnen', 'open_document_editor' => 'Dokumenteneditor oeffnen',
-        'edit_content' => 'Inhalt bearbeiten', 'tab_basic' => 'Modulinfo', 'tab_layout' => 'Layout',
+        'edit_content' => 'Inhalt bearbeiten', 'tab_basic' => 'Modulinfo', 'tab_skin' => 'Skin', 'tab_layout' => 'Layout',
+        'skin_info' => 'Skin-Informationen',
         'cfg' => [
             'page_type' => 'Seitentyp',
             'url_desc' => 'Der Modulname darf nur Kleinbuchstaben, Zahlen und Unterstriche enthalten und muss mit einem Buchstaben beginnen.',
@@ -287,6 +288,8 @@ return [
             'layout_none' => 'Keine Layouts verfügbar.',
             'skin_select' => 'Skin auswählen', 'skin_select_help' => 'Die Seite wird beim Ändern des Skins neu geladen. Detaillierte Skin-Einstellungen können im Skin-Tab konfiguriert werden.',
             'skin_settings' => 'Skin-Einstellungen',
+            'skin_info' => 'Skin-Grundinformationen', 'skin_name' => 'Skin', 'skin_author' => 'Skin-Autor',
+            'skin_date' => 'Datum', 'skin_version' => 'Version', 'skin_desc' => 'Beschreibung',
             'skin_none' => 'Keine Skins verfügbar.', 'skin_no_settings' => 'Dieses Skin hat keine Einstellungen.',
             'section_basic' => 'Grundinformationen', 'section_seo' => 'SEO-Einstellungen', 'section_display' => 'Anzeigeeinstellungen',
             'field_url' => 'URL', 'field_url_help' => 'Nur Kleinbuchstaben, Zahlen, Bindestriche, Unterstriche',

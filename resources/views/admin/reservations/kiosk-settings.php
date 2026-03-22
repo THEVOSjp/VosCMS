@@ -69,22 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_token'] ?? '') === $csrfT
     $kioskBgVideo = $saveData['kiosk_bg_video'];
     $kioskBgOverlay = (int)$saveData['kiosk_bg_overlay'];
 }
+$pageHeaderTitle = __('reservations.kiosk_settings');
 ?>
-<!DOCTYPE html>
-<html lang="<?= $currentLocale ?? 'ko' ?>" class="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-950 min-h-screen">
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
 
-<?php include BASE_PATH . '/resources/views/admin/partials/admin-sidebar.php'; ?>
-<?php include BASE_PATH . '/resources/views/admin/partials/admin-topbar.php'; ?>
-
-<main class="lg:ml-64 pt-16 p-6">
-    <div class="max-w-3xl mx-auto">
+        <div class="max-w-3xl mx-auto">
 
         <!-- 헤더 -->
         <div class="flex items-center justify-between mb-6">
@@ -367,5 +356,8 @@ document.querySelectorAll('input[name="kiosk_languages[]"]').forEach(cb => {
 });
 </script>
 
+    </div>
+    </main>
+</div>
 </body>
 </html>

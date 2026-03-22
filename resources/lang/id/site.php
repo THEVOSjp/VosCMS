@@ -58,7 +58,8 @@ return [
         'external_url' => 'URL Eksternal / Path File',
         'external_url_desc' => 'URL eksternal (https://...) ditampilkan dalam iframe, file internal (.php/.html) disertakan langsung.',
         'quick_edit' => 'Edit Cepat', 'open_widget_builder' => 'Buka Widget Builder', 'open_document_editor' => 'Buka Editor Dokumen',
-        'edit_content' => 'Edit Konten', 'tab_basic' => 'Info Modul', 'tab_layout' => 'Tata Letak',
+        'edit_content' => 'Edit Konten', 'tab_basic' => 'Info Modul', 'tab_skin' => 'Skin', 'tab_layout' => 'Tata Letak',
+        'skin_info' => 'Informasi Skin',
         'cfg' => [
             'page_type' => 'Tipe Halaman',
             'url_desc' => 'Nama modul hanya boleh berisi huruf kecil, angka, dan underscore, dan harus dimulai dengan huruf.',
@@ -223,6 +224,8 @@ return [
         'layout_none' => 'Tidak ada tata letak yang tersedia.',
         'skin_select' => 'Pilih Skin', 'skin_select_help' => 'Halaman akan dimuat ulang saat skin diubah. Pengaturan detail skin dapat dikonfigurasi di tab Skin.',
         'skin_settings' => 'Pengaturan Skin',
+        'skin_info' => 'Informasi Dasar Skin', 'skin_name' => 'Skin', 'skin_author' => 'Pembuat Skin',
+        'skin_date' => 'Tanggal', 'skin_version' => 'Versi', 'skin_desc' => 'Deskripsi',
         'skin_none' => 'Tidak ada skin yang tersedia.', 'skin_no_settings' => 'Skin ini tidak memiliki pengaturan.',
         'section_basic' => 'Informasi Dasar', 'section_seo' => 'Pengaturan SEO', 'section_display' => 'Pengaturan Tampilan',
         'field_url' => 'URL', 'field_url_help' => 'Hanya huruf kecil, angka, tanda hubung, garis bawah',

@@ -79,7 +79,8 @@ return [
         'external_url' => '외부 URL / 파일 경로',
         'external_url_desc' => '외부 URL(https://...)은 iframe으로, 내부 파일(.php/.html)은 include로 렌더링됩니다.',
         'quick_edit' => '빠른 편집', 'open_widget_builder' => '위젯 빌더 열기', 'open_document_editor' => '문서 에디터 열기',
-        'edit_content' => '콘텐츠 편집', 'tab_basic' => '모듈 정보', 'tab_layout' => '레이아웃',
+        'edit_content' => '콘텐츠 편집', 'tab_basic' => '모듈 정보', 'tab_skin' => '스킨', 'tab_layout' => '레이아웃',
+        'skin_info' => '스킨 기본정보',
         'cfg' => [
             'page_type' => '페이지 타입',
             'url_desc' => 'URL상의 모듈 이름은 영문, 숫자, _ 만으로 이루어져야 하며, 첫 글자는 반드시 영문 알파벳이어야 합니다.',
@@ -104,6 +105,9 @@ return [
             'full_width' => '전체 너비',
             'full_width_desc' => '콘텐츠를 전체 너비로 표시합니다. (기본: max-w-5xl)',
             'layout_default' => '기본 레이아웃',
+            'layout_select' => '레이아웃 선택',
+            'skin_select' => '스킨 선택',
+            'skin_card_desc' => '스킨을 변경하면 페이지가 새로고침됩니다. 스킨별 세부 설정은 스킨 탭에서 할 수 있습니다.',
         ],
         'tab_permissions' => '권한 관리',
         'perm' => [

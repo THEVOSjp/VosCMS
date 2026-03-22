@@ -21,7 +21,7 @@
     <?php include __DIR__ . '/../partials/admin-sidebar.php'; ?>
     <main class="flex-1 ml-64">
         <?php
-        $pageHeaderTitle = __('reservations.title');
+        if (!isset($pageHeaderTitle)) $pageHeaderTitle = __('reservations.title');
         include __DIR__ . '/../partials/admin-topbar.php';
         ?>
         <div class="p-6">

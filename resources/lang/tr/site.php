@@ -111,7 +111,8 @@ return [
         'external_url' => 'Harici URL / Dosya Yolu',
         'external_url_desc' => 'Harici URL\'ler (https://...) iframe\'de gorunur, dahili dosyalar (.php/.html) include ile yuklenir.',
         'quick_edit' => 'Hizli Duzenle', 'open_widget_builder' => 'Widget Olusturucu Ac', 'open_document_editor' => 'Belge Duzenleyici Ac',
-        'edit_content' => 'Icerik Duzenle', 'tab_basic' => 'Modul Bilgisi', 'tab_layout' => 'Yerlesim',
+        'edit_content' => 'Icerik Duzenle', 'tab_basic' => 'Modul Bilgisi', 'tab_skin' => 'Tema', 'tab_layout' => 'Yerlesim',
+        'skin_info' => 'Tema Bilgileri',
         'cfg' => [
             'page_type' => 'Sayfa Tipi',
             'url_desc' => 'Modul adi yalnizca kucuk harf, rakam ve alt cizgi icerebilir ve bir harfle baslamalidir.',
@@ -276,6 +277,8 @@ return [
         'layout_none' => 'Kullanılabilir düzen yok.',
         'skin_select' => 'Tema Seç', 'skin_select_help' => 'Tema değiştirildiğinde sayfa yenilenecektir. Tema detay ayarları Tema sekmesinden yapılabilir.',
         'skin_settings' => 'Tema Ayarları',
+        'skin_info' => 'Tema Temel Bilgileri', 'skin_name' => 'Tema', 'skin_author' => 'Tema Yazarı',
+        'skin_date' => 'Tarih', 'skin_version' => 'Sürüm', 'skin_desc' => 'Açıklama',
         'skin_none' => 'Kullanılabilir tema yok.', 'skin_no_settings' => 'Bu temanın ayarları yok.',
         'section_basic' => 'Temel Bilgiler', 'section_seo' => 'SEO Ayarları', 'section_display' => 'Görüntüleme Ayarları',
         'field_url' => 'URL', 'field_url_help' => 'Sadece küçük harfler, rakamlar, tireler, alt çizgiler',

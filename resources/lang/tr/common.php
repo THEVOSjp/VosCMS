@@ -182,6 +182,7 @@ return [
     'msg' => [
         'success' => 'İşlem başarıyla tamamlandı.',
         'error' => 'Bir hata oluştu.',
+        'saved' => 'Kaydedildi.',
         'not_found' => 'İstenen içerik bulunamadı.',
         'unauthorized' => 'Lütfen giriş yapın.',
         'forbidden' => 'Erişim reddedildi.',

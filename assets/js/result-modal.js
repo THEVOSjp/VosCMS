@@ -2,8 +2,9 @@
  * RezlyX 공통 결과 모달
  *
  * 사용법:
- *   showResultModal(true, '저장되었습니다.');
- *   showResultModal(false, '오류가 발생했습니다.');
+ *   showResultModal(true);               // 성공 (기본 메시지)
+ *   showResultModal(true, '커스텀 메시지');  // 성공 (커스텀 메시지)
+ *   showResultModal(false, '에러 메시지');   // 실패
  */
 function showResultModal(success, message) {
     var existing = document.getElementById('rzxResultModal');
@@ -12,7 +13,11 @@ function showResultModal(success, message) {
     var el = document.getElementById('rzxResultModalData');
     var successLabel = (el && el.dataset.success) || 'Success';
     var errorLabel = (el && el.dataset.error) || 'Error';
+    var savedLabel = (el && el.dataset.saved) || 'Saved.';
     var confirmLabel = (el && el.dataset.confirm) || 'OK';
+
+    // 성공 시 항상 로케일 메시지 사용, 실패 시 API 메시지 또는 기본 에러 메시지
+    var displayMsg = success ? savedLabel : (message && message !== 'null' && message !== '' ? message : errorLabel);
 
     var iconSvg = success
         ? '<svg class="w-14 h-14 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
@@ -28,7 +33,7 @@ function showResultModal(success, message) {
         + '<div class="relative bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center transform scale-95 opacity-0 transition-all duration-200" id="rzxResultModalContent">'
         +   iconSvg
         +   '<p class="mt-4 text-lg font-semibold text-zinc-900 dark:text-white">' + (success ? successLabel : errorLabel) + '</p>'
-        +   '<p class="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">' + message + '</p>'
+        +   '<p class="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">' + displayMsg + '</p>'
         +   '<button onclick="closeResultModal()" class="mt-6 px-8 py-2.5 rounded-lg text-sm font-medium text-white ' + btnColor + ' transition">' + confirmLabel + '</button>'
         + '</div>';
 

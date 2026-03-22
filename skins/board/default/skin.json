@@ -80,6 +80,7 @@
     },
     {
       "name": "link_target",
+      "depends_on": "use_link_board",
       "type": "radio",
       "title": { "ko": "링크 게시판 사용시 타겟설정", "en": "Link target", "ja": "リンクターゲット設定" },
       "description": { "ko": "링크 게시판 사용시 타겟설정을 지정합니다.", "en": "Set the link target when using link board.", "ja": "リンク掲示板使用時のターゲット設定を指定します。" },

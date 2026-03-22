@@ -18,11 +18,13 @@ class SkinConfigRenderer
     private array $vars = [];
     private array $saved = [];
     private string $locale;
+    private string $baseUrl = '';
 
-    public function __construct(string $jsonPath, array $savedConfig = [], string $locale = 'ko')
+    public function __construct(string $jsonPath, array $savedConfig = [], string $locale = 'ko', string $baseUrl = '')
     {
         $this->locale = $locale;
         $this->saved = $savedConfig;
+        $this->baseUrl = $baseUrl;
 
         if (file_exists($jsonPath)) {
             $this->schema = json_decode(file_get_contents($jsonPath), true) ?: [];
@@ -119,8 +121,10 @@ class SkinConfigRenderer
             $value = $this->getValue($var);
             $multilang = !empty($var['multilang']);
             $inputId = 'skin_cfg_' . $name;
+            $dependsOn = $var['depends_on'] ?? null;
+            $depAttr = $dependsOn ? ' data-depends-on="' . htmlspecialchars($dependsOn) . '"' : '';
 
-            echo '<div class="mb-4">';
+            echo '<div class="mb-4 skin-var-row"' . $depAttr . '>';
 
             switch ($type) {
                 case 'checkbox':
@@ -170,8 +174,9 @@ class SkinConfigRenderer
                 case 'image':
                     echo '<label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">' . htmlspecialchars($title) . '</label>';
                     if ($value) {
+                        $imgSrc = (str_starts_with($value, 'http') ? $value : $this->baseUrl . $value);
                         echo '<div class="mb-2 flex items-start gap-3">';
-                        echo '<img src="' . htmlspecialchars($value) . '" class="max-h-20 rounded border border-zinc-300 dark:border-zinc-600">';
+                        echo '<img src="' . htmlspecialchars($imgSrc) . '" class="max-h-20 rounded border border-zinc-300 dark:border-zinc-600">';
                         echo '<button type="button" onclick="this.closest(\'.mb-2\').remove();document.querySelector(\'[name=\\\'skin_config[' . $name . ']\\\']]\').value=\'\';document.querySelector(\'[name=\\\'skin_delete[' . $name . ']\\\']]\').value=\'1\'" class="text-xs text-red-500 hover:text-red-700 shrink-0 mt-1">삭제</button>';
                         echo '</div>';
                     }
@@ -183,8 +188,9 @@ class SkinConfigRenderer
                 case 'video':
                     echo '<label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">' . htmlspecialchars($title) . '</label>';
                     if ($value) {
+                        $vidSrc = (str_starts_with($value, 'http') ? $value : $this->baseUrl . $value);
                         echo '<div class="mb-2 flex items-start gap-3">';
-                        echo '<video src="' . htmlspecialchars($value) . '" class="max-h-24 rounded border border-zinc-300 dark:border-zinc-600" muted playsinline></video>';
+                        echo '<video src="' . htmlspecialchars($vidSrc) . '" class="max-h-24 rounded border border-zinc-300 dark:border-zinc-600" muted playsinline></video>';
                         echo '<div class="flex-1 min-w-0"><p class="text-xs text-zinc-400 break-all">' . htmlspecialchars($value) . '</p>';
                         echo '<button type="button" onclick="this.closest(\'.mb-2\').remove();document.querySelector(\'[name=\\\'skin_config[' . $name . ']\\\']]\').value=\'\';document.querySelector(\'[name=\\\'skin_delete[' . $name . ']\\\']]\').value=\'1\'" class="text-xs text-red-500 hover:text-red-700 mt-1">삭제</button>';
                         echo '</div></div>';
@@ -232,5 +238,51 @@ class SkinConfigRenderer
             echo '</div>';
         }
         if ($currentSection !== null) echo '</div>'; // 마지막 섹션 닫기
+
+        // depends_on 자동 연동 JS
+        if ($this->hasDependencies()) {
+            echo '<script>';
+            echo 'document.addEventListener("DOMContentLoaded",function(){';
+            echo 'function skinDepToggle(parentName){';
+            echo '  var cb=document.querySelector("[data-name=\""+parentName+"\"]");';
+            echo '  var radios=document.querySelectorAll("[name=\"skin_config["+parentName+"]\"]");';
+            echo '  var enabled=false;';
+            echo '  if(cb&&cb.type==="checkbox"){enabled=cb.checked;}';
+            echo '  else if(radios.length>0){var v="";radios.forEach(function(r){if(r.checked)v=r.value;});enabled=(v!==""&&v!=="none"&&v!=="0"&&v!=="disabled");}';
+            echo '  document.querySelectorAll("[data-depends-on=\""+parentName+"\"]").forEach(function(row){';
+            echo '    row.style.opacity=enabled?"1":"0.4";';
+            echo '    row.style.pointerEvents=enabled?"auto":"none";';
+            echo '  });';
+            echo '}';
+            foreach ($this->getDependencyParents() as $parent) {
+                echo 'skinDepToggle("' . $parent . '");';
+                echo 'var _cb=document.querySelector("[data-name=\"' . $parent . '\"]");';
+                echo 'if(_cb)_cb.addEventListener("change",function(){skinDepToggle("' . $parent . '")});';
+                echo 'document.querySelectorAll("[name=\"skin_config[' . $parent . ']\"]").forEach(function(r){r.addEventListener("change",function(){skinDepToggle("' . $parent . '")})});';
+            }
+            echo '});';
+            echo '</script>';
+        }
+    }
+
+    /** depends_on이 있는 var가 존재하는지 */
+    private function hasDependencies(): bool
+    {
+        foreach ($this->vars as $var) {
+            if (!empty($var['depends_on'])) return true;
+        }
+        return false;
+    }
+
+    /** depends_on 부모 필드명 목록 (중복 제거) */
+    private function getDependencyParents(): array
+    {
+        $parents = [];
+        foreach ($this->vars as $var) {
+            if (!empty($var['depends_on'])) {
+                $parents[$var['depends_on']] = true;
+            }
+        }
+        return array_keys($parents);
     }
 }

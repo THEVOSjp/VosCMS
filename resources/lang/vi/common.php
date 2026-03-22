@@ -182,6 +182,7 @@ return [
     'msg' => [
         'success' => 'Đã xử lý thành công.',
         'error' => 'Đã xảy ra lỗi.',
+        'saved' => 'Đã lưu.',
         'not_found' => 'Không tìm thấy nội dung yêu cầu.',
         'unauthorized' => 'Vui lòng đăng nhập.',
         'forbidden' => 'Truy cập bị từ chối.',

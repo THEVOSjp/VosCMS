@@ -73,7 +73,7 @@ $baseUrl = $baseUrl ?? $config['app_url'] ?? '';
     $pwaFrontIcon = $_pwaS['pwa_front_icon'] ?? '';
     $pwaFrontTheme = $_pwaS['pwa_front_theme_color'] ?? '#3b82f6';
     ?>
-    <link rel="icon" href="<?php echo $baseUrl; ?>/assets/images/favicon.ico">
+    <link rel="icon" href="<?php echo !empty($siteSettings['favicon']) ? $baseUrl . htmlspecialchars($siteSettings['favicon']) : $baseUrl . '/assets/images/favicon.ico'; ?>">
     <?php if ($pwaFrontIcon): ?>
     <link rel="apple-touch-icon" href="<?php echo $baseUrl . htmlspecialchars($pwaFrontIcon); ?>">
     <?php endif; ?>

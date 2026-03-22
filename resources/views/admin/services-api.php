@@ -107,6 +107,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 echo json_encode(['success' => true, 'message' => 'OK']);
                 exit;
 
+            case 'reorder_services':
+                $ids = json_decode($_POST['ids'] ?? '[]', true);
+                if (!is_array($ids) || empty($ids)) {
+                    echo json_encode(['success' => false, 'message' => 'No IDs']);
+                    exit;
+                }
+                $stmt = $pdo->prepare("UPDATE {$prefix}services SET sort_order = ? WHERE id = ?");
+                foreach ($ids as $i => $id) {
+                    $stmt->execute([$i, $id]);
+                }
+                echo json_encode(['success' => true, 'message' => 'OK']);
+                exit;
+
             default:
                 echo json_encode(['success' => false, 'message' => 'Unknown action']);
                 exit;

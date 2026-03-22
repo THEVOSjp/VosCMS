@@ -12,9 +12,10 @@
 $_baseUrl = $config['app_url'] ?? ($baseUrl ?? '');
 ?>
 <div id="rzxResultModalData" class="hidden"
-     data-success="<?= htmlspecialchars(__('common.msg.success') ?? '처리되었습니다.') ?>"
-     data-error="<?= htmlspecialchars(__('common.msg.error') ?? '오류가 발생했습니다.') ?>"
-     data-confirm="<?= htmlspecialchars(__('common.buttons.confirm') ?? '확인') ?>"></div>
+     data-success="<?= htmlspecialchars(__('common.msg.success') ?? 'Successfully processed.') ?>"
+     data-error="<?= htmlspecialchars(__('common.msg.error') ?? 'An error occurred.') ?>"
+     data-saved="<?= htmlspecialchars(__('common.msg.saved') ?? 'Saved.') ?>"
+     data-confirm="<?= htmlspecialchars(__('common.buttons.confirm') ?? 'OK') ?>"></div>
 <script src="<?= $_baseUrl ?>/assets/js/result-modal.js"></script>
 <?php if (!empty($message) && !empty($messageType)): ?>
 <script>

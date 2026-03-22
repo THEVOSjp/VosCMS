@@ -5,23 +5,11 @@
 include __DIR__ . '/_init.php';
 
 $pageTitle = __('bundles.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageHeaderTitle = __('bundles.title');
 $currentLocale = $config['locale'] ?? 'ko';
 $currency = $siteSettings['service_currency'] ?? $config['currency'] ?? 'JPY';
 ?>
-<!DOCTYPE html>
-<html lang="<?= $currentLocale ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen">
-    <div class="flex">
-        <?php include BASE_PATH . '/resources/views/admin/partials/admin-sidebar.php'; ?>
-        <main class="flex-1 ml-64">
-            <?php include BASE_PATH . '/resources/views/admin/partials/admin-topbar.php'; ?>
-            <div class="p-6">
+<?php include __DIR__ . '/../../admin/reservations/_head.php'; ?>
             <!-- 헤더 -->
             <div class="flex items-center justify-between mb-4">
                 <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('bundles.title') ?></h1>
@@ -119,5 +107,8 @@ $currency = $siteSettings['service_currency'] ?? $config['currency'] ?? 'JPY';
 </div>
 
 <?php include __DIR__ . '/_js.php'; ?>
+    </div>
+    </main>
+</div>
 </body>
 </html>

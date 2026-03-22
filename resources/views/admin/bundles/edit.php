@@ -98,29 +98,7 @@ $pageTitle = htmlspecialchars($bundle['name']) . ' - ' . __('bundles.edit_page')
 $pageHeaderTitle = __('bundles.edit_page');
 $currentLocale = $config['locale'] ?? 'ko';
 ?>
-<!DOCTYPE html>
-<html lang="<?= $currentLocale ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $pageTitle ?></title>
-    <?php include __DIR__ . '/../partials/pwa-head.php'; ?>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>body { font-family: 'Pretendard', sans-serif; }</style>
-    <script>
-        if (localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen">
-    <div class="flex">
-        <?php include BASE_PATH . '/resources/views/admin/partials/admin-sidebar.php'; ?>
-        <main class="flex-1 ml-64">
-            <?php include BASE_PATH . '/resources/views/admin/partials/admin-topbar.php'; ?>
-            <div class="p-6">
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
             <!-- 브레드크럼 -->
             <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400 mb-4">
                 <a href="<?= $adminUrl ?>/bundles" class="hover:text-blue-600"><?= __('bundles.title') ?></a>
@@ -354,5 +332,8 @@ $currentLocale = $config['locale'] ?? 'ko';
 </div>
 
 <?php include __DIR__ . '/edit-js.php'; ?>
+    </div>
+    </main>
+</div>
 </body>
 </html>

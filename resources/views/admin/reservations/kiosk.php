@@ -5,22 +5,9 @@
 include __DIR__ . '/_init.php';
 
 $pageTitle = __('reservations.kiosk') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageHeaderTitle = __('reservations.kiosk');
 ?>
-<!DOCTYPE html>
-<html lang="<?= $currentLocale ?? 'ko' ?>" class="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-zinc-100 dark:bg-zinc-950 min-h-screen">
-
-<?php include BASE_PATH . '/resources/views/admin/partials/admin-sidebar.php'; ?>
-<?php include BASE_PATH . '/resources/views/admin/partials/admin-topbar.php'; ?>
-
-<main class="lg:ml-64 pt-16 p-6">
-    <div class="max-w-4xl mx-auto">
+<?php include __DIR__ . '/../reservations/_head.php'; ?>
 
         <div class="flex items-center justify-between mb-6">
             <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('reservations.kiosk') ?></h1>
@@ -39,7 +26,7 @@ $pageTitle = __('reservations.kiosk') . ' - ' . ($config['app_name'] ?? 'RezlyX'
         </div>
 
         <!-- 키오스크 상태 카드 -->
-        <div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-8 text-center">
+        <div class="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 p-8 text-center">
             <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-100 dark:bg-blue-900/30 mb-4">
                 <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
@@ -54,7 +41,8 @@ $pageTitle = __('reservations.kiosk') . ' - ' . ($config['app_name'] ?? 'RezlyX'
         </div>
 
     </div>
-</main>
+    </main>
+</div>
 
 <script>
 console.log('[Kiosk] Admin kiosk page loaded');

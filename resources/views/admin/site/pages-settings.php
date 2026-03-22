@@ -6,6 +6,8 @@
 if (!function_exists('__')) {
     require_once BASE_PATH . '/rzxlib/Core/Helpers/lang.php';
 }
+require_once BASE_PATH . '/rzxlib/Core/Skin/SkinConfigRenderer.php';
+use RzxLib\Core\Skin\SkinConfigRenderer;
 
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
@@ -19,6 +21,68 @@ try {
     );
     $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
     $defaultLocale = $config['locale'] ?? 'ko';
+
+    // AJAX 처리 - 스킨 설정 저장 (multipart/form-data, 파일 업로드 포함)
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_skin_config_multipart') {
+        header('Content-Type: application/json; charset=utf-8');
+        $slug = $_POST['slug'] ?? '';
+        $skinName = $_POST['skin'] ?? 'default';
+
+        // 기존 설정 로드
+        $configKey = 'page_config_' . $slug;
+        $cfgStmt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = ?");
+        $cfgStmt->execute([$configKey]);
+        $existing = json_decode($cfgStmt->fetchColumn() ?: '{}', true) ?: [];
+        $skinConfig = [];
+
+        // skin_config 값 수집
+        foreach ($_POST as $k => $v) {
+            if (preg_match('/^skin_config\[(.+)]$/', $k, $m)) {
+                $skinConfig[$m[1]] = $v;
+            }
+        }
+        // PHP는 skin_config[key] 형태를 배열로 파싱
+        if (isset($_POST['skin_config']) && is_array($_POST['skin_config'])) {
+            $skinConfig = array_merge($skinConfig, $_POST['skin_config']);
+        }
+
+        // 파일 업로드 처리 (skin_file_*)
+        $uploadDir = BASE_PATH . '/storage/skins/page/' . $skinName . '/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+        $baseUrl = $config['app_url'] ?? '';
+
+        foreach ($_FILES as $fileKey => $file) {
+            if (strpos($fileKey, 'skin_file_') !== 0 || $file['error'] !== UPLOAD_ERR_OK) continue;
+            $varName = str_replace('skin_file_', '', $fileKey);
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $fileName = $varName . '_' . time() . '.' . $ext;
+            if (move_uploaded_file($file['tmp_name'], $uploadDir . $fileName)) {
+                // 기존 파일 삭제
+                $oldVal = $existing['skin_config'][$varName] ?? '';
+                if ($oldVal && file_exists(BASE_PATH . $oldVal)) @unlink(BASE_PATH . $oldVal);
+                $skinConfig[$varName] = '/storage/skins/page/' . $skinName . '/' . $fileName;
+            }
+        }
+
+        // 삭제 처리 (skin_delete[key] = "1")
+        $deletes = $_POST['skin_delete'] ?? [];
+        if (is_array($deletes)) {
+            foreach ($deletes as $dk => $dv) {
+                if ($dv === '1' && !empty($existing['skin_config'][$dk])) {
+                    $oldPath = BASE_PATH . $existing['skin_config'][$dk];
+                    if (file_exists($oldPath)) @unlink($oldPath);
+                    $skinConfig[$dk] = '';
+                }
+            }
+        }
+
+        $existing['skin_config'] = $skinConfig;
+        $configJson = json_encode($existing, JSON_UNESCAPED_UNICODE);
+        $stmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+        $stmt->execute([$configKey, $configJson]);
+        echo json_encode(['success' => true, 'message' => __('common.msg.saved') ?? 'Saved.']);
+        exit;
+    }
 
     // AJAX 처리 - OG 이미지 업로드 (multipart/form-data)
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_FILES['og_image_file'])) {
@@ -56,11 +120,13 @@ try {
         exit;
     }
 
-    // AJAX 처리 - OG 이미지 삭제
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false) {
+    // AJAX 처리 - JSON POST (한 번만 읽기)
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && (strpos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false || !empty($_SERVER['HTTP_X_REQUESTED_WITH']))) {
+        header('Content-Type: application/json; charset=utf-8');
         $input = json_decode(file_get_contents('php://input'), true);
-        if (($input['action'] ?? '') === 'delete_og_image') {
-            header('Content-Type: application/json; charset=utf-8');
+        $action = $input['action'] ?? '';
+
+        if ($action === 'delete_og_image') {
             $slug = $input['slug'] ?? '';
             $imgPath = $input['image_path'] ?? '';
             if ($imgPath && strpos($imgPath, '/storage/pages/') !== false && file_exists(BASE_PATH . $imgPath)) {
@@ -69,13 +135,6 @@ try {
             echo json_encode(['success' => true]);
             exit;
         }
-    }
-
-    // AJAX 처리 - 설정 저장
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && (strpos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false || !empty($_SERVER['HTTP_X_REQUESTED_WITH']))) {
-        header('Content-Type: application/json; charset=utf-8');
-        $input = json_decode(file_get_contents('php://input'), true);
-        $action = $input['action'] ?? '';
 
         if ($action === 'save_settings') {
             $slug = $input['slug'] ?? '';
@@ -85,7 +144,24 @@ try {
             $configJson = json_encode($settings, JSON_UNESCAPED_UNICODE);
             $stmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
             $stmt->execute([$configKey, $configJson]);
-            echo json_encode(['success' => true, 'message' => '설정이 저장되었습니다.']);
+            echo json_encode(['success' => true, 'message' => __('common.msg.saved') ?? 'Settings saved.']);
+            exit;
+        }
+
+        if ($action === 'save_skin_config') {
+            $slug = $input['slug'] ?? '';
+            $skinConfig = $input['skin_config'] ?? [];
+
+            $configKey = 'page_config_' . $slug;
+            $cfgStmt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = ?");
+            $cfgStmt->execute([$configKey]);
+            $existing = json_decode($cfgStmt->fetchColumn() ?: '{}', true) ?: [];
+            $existing['skin_config'] = $skinConfig;
+
+            $configJson = json_encode($existing, JSON_UNESCAPED_UNICODE);
+            $stmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+            $stmt->execute([$configKey, $configJson]);
+            echo json_encode(['success' => true, 'message' => __('common.msg.saved') ?? 'Settings saved.']);
             exit;
         }
 
@@ -118,11 +194,15 @@ try {
             $ljPath = $layoutsDir . $ld . '/layout.json';
             if (file_exists($ljPath)) {
                 $lj = json_decode(file_get_contents($ljPath), true);
-                $layouts[$ld] = $lj['title'][$defaultLocale] ?? $lj['title']['en'] ?? $ld;
+                $layouts[$ld] = [
+                    'title' => $lj['title'][$defaultLocale] ?? $lj['title']['en'] ?? $ld,
+                    'version' => $lj['version'] ?? '',
+                    'thumbnail' => !empty($lj['thumbnail']) ? $baseUrl . '/skins/layouts/' . $ld . '/' . $lj['thumbnail'] : '',
+                ];
             }
         }
     }
-    if (empty($layouts)) $layouts['default'] = __('site.pages.cfg.layout_default') ?? '기본 레이아웃';
+    if (empty($layouts)) $layouts['default'] = ['title' => __('site.pages.cfg.layout_default') ?? '기본 레이아웃', 'version' => '', 'thumbnail' => ''];
 
     // 페이지 스킨 목록 (skins/page/*/skin.json)
     $skins = [];
@@ -133,7 +213,11 @@ try {
             $sjPath = $pageSkinDir . $sd . '/skin.json';
             if (file_exists($sjPath)) {
                 $sj = json_decode(file_get_contents($sjPath), true);
-                $skins[$sd] = $sj['title'][$defaultLocale] ?? $sj['title']['en'] ?? $sd;
+                $skins[$sd] = [
+                    'title' => $sj['title'][$defaultLocale] ?? $sj['title']['en'] ?? $sd,
+                    'version' => $sj['version'] ?? '',
+                    'thumbnail' => !empty($sj['thumbnail']) ? $baseUrl . '/skins/page/' . $sd . '/' . $sj['thumbnail'] : '',
+                ];
             }
         }
     }
@@ -199,6 +283,7 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                                 'basic' => ['label' => __('site.pages.tab_basic') ?? '기본 설정', 'icon' => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z'],
                                 'addition' => ['label' => __('site.pages.tab_addition') ?? '추가 설정', 'icon' => 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4'],
                                 'permissions' => ['label' => __('site.pages.tab_permissions') ?? '권한 관리', 'icon' => 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'],
+                                'skin' => ['label' => __('site.pages.tab_skin') ?? '스킨', 'icon' => 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01'],
                             ];
                             foreach ($tabs as $key => $tab):
                                 $isActive = $currentTab === $key;
@@ -333,42 +418,70 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                                 </select>
                             </div>
                         </div>
-                        <!-- 레이아웃 -->
-                        <div class="flex items-start px-6 py-4">
-                            <label class="w-40 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300 pt-2"><?= __('site.pages.cfg.layout') ?? '레이아웃' ?></label>
-                            <div class="flex-1">
-                                <select id="cfgLayout" class="<?= $_inp ?> max-w-md">
-                                    <?php foreach ($layouts as $lk => $lv): ?>
-                                    <option value="<?= $lk ?>" <?= ($pageConfig['layout'] ?? 'default') === $lk ? 'selected' : '' ?>><?= htmlspecialchars($lv) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <p class="text-xs text-zinc-400 mt-1"><?= __('site.pages.cfg.layout_desc') ?? '사이트의 레이아웃을 쉽게 만들 수 있도록 도와줍니다.' ?></p>
-                            </div>
                         </div>
-                        <!-- 스킨 -->
-                        <div class="flex items-start px-6 py-4">
-                            <label class="w-40 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300 pt-2"><?= __('site.pages.cfg.skin') ?? '스킨' ?></label>
-                            <div class="flex-1">
-                                <select id="cfgSkin" class="<?= $_inp ?> max-w-md">
-                                    <option value=""><?= __('site.pages.cfg.skin_default') ?? '사이트 기본 스킨 사용' ?></option>
-                                    <?php foreach ($skins as $sk => $sv): ?>
-                                    <option value="<?= $sk ?>" <?= ($pageConfig['skin'] ?? '') === $sk ? 'selected' : '' ?>><?= htmlspecialchars($sv) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <p class="text-xs text-zinc-400 mt-1"><?= __('site.pages.cfg.skin_desc') ?? '콘텐츠 스킨을 선택할 수 있습니다.' ?></p>
+                    </div>
+
+                    <!-- 레이아웃 선택 (카드형) -->
+                    <input type="hidden" id="cfgLayout" value="<?= htmlspecialchars($pageConfig['layout'] ?? 'default') ?>">
+                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
+                        <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-1"><?= __('site.pages.cfg.layout_select') ?? '레이아웃 선택' ?></h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+                            <?php foreach ($layouts as $lk => $lInfo):
+                                $isSelected = ($pageConfig['layout'] ?? 'default') === $lk;
+                            ?>
+                            <div onclick="selectLayout('<?= $lk ?>')" id="layout-card-<?= $lk ?>"
+                                 class="cursor-pointer rounded-xl border-2 p-1 transition-all <?= $isSelected ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400' ?>">
+                                <div class="h-24 bg-zinc-100 dark:bg-zinc-700 rounded-lg flex items-center justify-center">
+                                    <?php if ($lInfo['thumbnail']): ?>
+                                    <img src="<?= htmlspecialchars($lInfo['thumbnail']) ?>" alt="" class="max-h-full max-w-full object-contain rounded-lg" onerror="this.parentElement.innerHTML='<svg class=\'w-8 h-8 text-zinc-400\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z\'/></svg>'">
+                                    <?php else: ?>
+                                    <svg class="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="px-2 py-2">
+                                    <p class="text-sm font-medium text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($lInfo['title']) ?></p>
+                                    <?php if ($lInfo['version']): ?>
+                                    <p class="text-xs text-zinc-400">v<?= htmlspecialchars($lInfo['version']) ?></p>
+                                    <?php endif; ?>
+                                </div>
                             </div>
+                            <?php endforeach; ?>
                         </div>
-                        <!-- 페이지 제목 표시 -->
-                        <div class="flex items-start px-6 py-4">
-                            <label class="w-40 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300 pt-2"><?= __('site.pages.cfg.show_title') ?? '페이지 제목 표시' ?></label>
-                            <div class="flex-1">
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="cfgShowTitle" class="sr-only peer" <?= ($pageConfig['show_title'] ?? true) ? 'checked' : '' ?>>
-                                    <div class="w-11 h-6 bg-zinc-200 rounded-full peer dark:bg-zinc-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                </label>
-                                <p class="text-xs text-zinc-400 mt-1"><?= __('site.pages.cfg.show_title_desc') ?? '페이지 상단에 제목을 표시합니다.' ?></p>
+                        <p class="text-xs text-zinc-400 mt-3"><?= __('site.pages.cfg.layout_desc') ?? '게시판에 적용할 레이아웃을 선택합니다. 레이아웃을 변경하면 페이지가 새로고침됩니다.' ?></p>
+                    </div>
+
+                    <!-- 스킨 선택 (카드형) -->
+                    <input type="hidden" id="cfgSkin" value="<?= htmlspecialchars($pageConfig['skin'] ?? '') ?>">
+                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
+                        <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-1"><?= __('site.pages.cfg.skin_select') ?? '스킨 선택' ?></h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+                            <?php foreach ($skins as $sk => $sInfo):
+                                $isSelected = ($pageConfig['skin'] ?? '') === $sk || (empty($pageConfig['skin']) && $sk === 'default');
+                            ?>
+                            <div onclick="selectSkin('<?= $sk ?>')" id="skin-card-<?= $sk ?>"
+                                 class="cursor-pointer rounded-xl border-2 p-1 transition-all <?= $isSelected ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400' ?>">
+                                <div class="h-24 bg-zinc-100 dark:bg-zinc-700 rounded-lg flex items-center justify-center">
+                                    <?php if ($sInfo['thumbnail']): ?>
+                                    <img src="<?= htmlspecialchars($sInfo['thumbnail']) ?>" alt="" class="max-h-full max-w-full object-contain rounded-lg" onerror="this.parentElement.innerHTML='<svg class=\'w-8 h-8 text-zinc-400\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01\'/></svg>'">
+                                    <?php else: ?>
+                                    <svg class="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="px-2 py-2">
+                                    <p class="text-sm font-medium text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($sInfo['title']) ?></p>
+                                    <?php if ($sInfo['version']): ?>
+                                    <p class="text-xs text-zinc-400">v<?= htmlspecialchars($sInfo['version']) ?></p>
+                                    <?php endif; ?>
+                                </div>
                             </div>
+                            <?php endforeach; ?>
                         </div>
+                        <p class="text-xs text-zinc-400 mt-3"><?= __('site.pages.cfg.skin_card_desc') ?? '스킨을 변경하면 페이지가 새로고침됩니다. 스킨별 세부 설정은 스킨 탭에서 할 수 있습니다.' ?></p>
+                    </div>
+
+                    <!-- 추가 설정 카드 -->
+                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700">
+                        <div class="divide-y divide-zinc-100 dark:divide-zinc-700">
                         <!-- 전체 너비 -->
                         <div class="flex items-start px-6 py-4">
                             <label class="w-40 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300 pt-2"><?= __('site.pages.cfg.full_width') ?? '전체 너비' ?></label>
@@ -380,13 +493,138 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                                 <p class="text-xs text-zinc-400 mt-1"><?= __('site.pages.cfg.full_width_desc') ?? '콘텐츠를 전체 너비로 표시합니다. (기본: max-w-5xl)' ?></p>
                             </div>
                         </div>
+                        </div>
                     </div>
 
                     <!-- 저장 -->
-                    <div class="flex justify-end px-6 py-4 border-t border-zinc-100 dark:border-zinc-700">
+                    <div class="flex justify-end mt-4">
                         <button onclick="saveSettings()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"><?= __('common.buttons.save') ?? '저장' ?></button>
                     </div>
-                </div>
+
+                <?php elseif ($currentTab === 'skin'): ?>
+                <?php
+                    $currentPageSkin = !empty($pageConfig['skin']) ? $pageConfig['skin'] : 'default';
+                    $savedSkinConfig = !empty($pageConfig['skin_config']) ? (is_array($pageConfig['skin_config']) ? $pageConfig['skin_config'] : json_decode($pageConfig['skin_config'], true)) : [];
+                    $pageSkinJsonPath = BASE_PATH . '/skins/page/' . $currentPageSkin . '/skin.json';
+                    $skinRenderer = new SkinConfigRenderer($pageSkinJsonPath, $savedSkinConfig ?: [], $defaultLocale, $baseUrl);
+                    $skinMeta = $skinRenderer->getMeta();
+                    $skinThumbnail = $skinMeta['thumbnail'] ?? '';
+                    $skinThumbnailUrl = $skinThumbnail ? $baseUrl . '/skins/page/' . $currentPageSkin . '/' . $skinThumbnail : '';
+                ?>
+                <form id="pageSkinForm" class="space-y-6">
+                    <!-- 스킨 기본정보 -->
+                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                        <div class="p-4 border-b border-zinc-200 dark:border-zinc-700">
+                            <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-200"><?= __('site.pages.skin_info') ?? '스킨 기본정보' ?></h3>
+                        </div>
+                        <div class="flex">
+                            <div class="flex-1 divide-y divide-zinc-100 dark:divide-zinc-700">
+                                <!-- 스킨명 -->
+                                <div class="flex px-6 py-3">
+                                    <span class="w-32 text-sm text-zinc-500 dark:text-zinc-400 shrink-0"><?= __('site.boards.skin_name') ?? '스킨' ?></span>
+                                    <span class="text-sm text-zinc-800 dark:text-zinc-200 font-medium">
+                                        <?= htmlspecialchars($skinMeta['title'] ?: $currentPageSkin) ?>
+                                        <span class="ml-2 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs rounded-full"><?= htmlspecialchars($currentPageSkin) ?></span>
+                                    </span>
+                                </div>
+                                <!-- 제작자 -->
+                                <?php if (!empty($skinMeta['author']['name'])): ?>
+                                <div class="flex px-6 py-3">
+                                    <span class="w-32 text-sm text-zinc-500 dark:text-zinc-400 shrink-0"><?= __('site.boards.skin_author') ?? '스킨 제작자' ?></span>
+                                    <span class="text-sm text-zinc-800 dark:text-zinc-200">
+                                        <?php if (!empty($skinMeta['author']['url'])): ?>
+                                        <a href="<?= htmlspecialchars($skinMeta['author']['url']) ?>" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline"><?= htmlspecialchars($skinMeta['author']['name']) ?></a>
+                                        <svg class="w-3 h-3 inline ml-0.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                        <span class="text-xs text-zinc-400 ml-2"><?= htmlspecialchars($skinMeta['author']['url']) ?></span>
+                                        <?php else: ?>
+                                        <?= htmlspecialchars($skinMeta['author']['name']) ?>
+                                        <?php endif; ?>
+                                        <?php if (!empty($skinMeta['author']['email'])): ?>
+                                        <span class="text-xs text-zinc-400 ml-2">, <?= htmlspecialchars($skinMeta['author']['email']) ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                </div>
+                                <?php endif; ?>
+                                <!-- 날짜 -->
+                                <?php if (!empty($skinMeta['date'])): ?>
+                                <div class="flex px-6 py-3">
+                                    <span class="w-32 text-sm text-zinc-500 dark:text-zinc-400 shrink-0"><?= __('site.boards.skin_date') ?? '날짜' ?></span>
+                                    <span class="text-sm text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($skinMeta['date']) ?></span>
+                                </div>
+                                <?php endif; ?>
+                                <!-- 버전 -->
+                                <?php if (!empty($skinMeta['version'])): ?>
+                                <div class="flex px-6 py-3">
+                                    <span class="w-32 text-sm text-zinc-500 dark:text-zinc-400 shrink-0"><?= __('site.boards.skin_version') ?? '버전' ?></span>
+                                    <span class="text-sm text-zinc-800 dark:text-zinc-200">v<?= htmlspecialchars($skinMeta['version']) ?></span>
+                                </div>
+                                <?php endif; ?>
+                                <!-- 설명 -->
+                                <?php if (!empty($skinMeta['description'])): ?>
+                                <div class="flex px-6 py-3">
+                                    <span class="w-32 text-sm text-zinc-500 dark:text-zinc-400 shrink-0"><?= __('site.boards.skin_desc') ?? '설명' ?></span>
+                                    <span class="text-sm text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars($skinMeta['description']) ?></span>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                            <!-- 썸네일 -->
+                            <?php if ($skinThumbnailUrl): ?>
+                            <div class="w-52 shrink-0 border-l border-zinc-100 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-700/30 flex items-center justify-center p-4">
+                                <img src="<?= htmlspecialchars($skinThumbnailUrl) ?>" alt="<?= htmlspecialchars($skinMeta['title'] ?? '') ?>" class="max-w-full max-h-48 rounded-lg shadow-sm object-contain" onerror="this.parentElement.innerHTML='<span class=\'text-zinc-400 text-xs\'>No preview</span>'">
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- 확장 변수 (skin.json vars) -->
+                    <?php if ($skinRenderer->hasVars()): ?>
+                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
+                        <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-4"><?= __('site.boards.skin_settings') ?? '확장 변수' ?></h3>
+                        <div id="skinConfigForm">
+                            <?php $skinRenderer->renderForm(); ?>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3">
+                        <span id="skinSaveStatus" class="text-sm text-green-600 dark:text-green-400 hidden"></span>
+                        <button type="submit" class="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition"><?= __('common.buttons.save') ?? '저장' ?></button>
+                    </div>
+                    <?php else: ?>
+                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6 text-center">
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('site.boards.skin_no_settings') ?? '이 스킨에는 설정 가능한 항목이 없습니다.' ?></p>
+                    </div>
+                    <?php endif; ?>
+                </form>
+
+                <script>
+                console.log('[PageSkin] 스킨 탭 로드됨, skin:', '<?= $currentPageSkin ?>');
+                document.getElementById('pageSkinForm')?.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const fd = new FormData(this);
+                    // 체크되지 않은 checkbox → "0" 추가
+                    this.querySelectorAll('.skin-checkbox').forEach(cb => {
+                        if (!cb.checked) fd.set('skin_config[' + cb.dataset.name + ']', '0');
+                    });
+                    fd.append('action', 'save_skin_config_multipart');
+                    fd.append('slug', '<?= $pageSlug ?>');
+                    fd.append('skin', '<?= $currentPageSkin ?>');
+
+                    try {
+                        const apiUrl = '<?= $adminUrl ?>/site/pages/settings?slug=<?= urlencode($pageSlug) ?>&tab=skin';
+                        const resp = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                            body: fd
+                        });
+                        const data = await resp.json();
+                        showResultModal(data.success, data.success ? '' : data.message);
+                        if (data.success) setTimeout(() => location.reload(), 1500);
+                    } catch (err) {
+                        console.error('[PageSkin] 에러:', err);
+                        showResultModal(false, err.message);
+                    }
+                });
+                </script>
 
                 <?php elseif ($currentTab === 'addition'): ?>
                 <?php
@@ -509,6 +747,26 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
 var PAGE_URL = '<?= $adminUrl ?>/site/pages/settings';
 var SLUG = '<?= htmlspecialchars($pageSlug) ?>';
 
+function selectLayout(key) {
+    console.log('[PageSettings] selectLayout:', key);
+    document.getElementById('cfgLayout').value = key;
+    document.querySelectorAll('[id^="layout-card-"]').forEach(function(el) {
+        el.className = el.className.replace(/border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800/g, '').replace(/border-zinc-200 dark:border-zinc-700 hover:border-zinc-400/g, '') + ' border-zinc-200 dark:border-zinc-700 hover:border-zinc-400';
+    });
+    var card = document.getElementById('layout-card-' + key);
+    if (card) card.className = card.className.replace(/border-zinc-200 dark:border-zinc-700 hover:border-zinc-400/g, '') + ' border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800';
+}
+
+function selectSkin(key) {
+    console.log('[PageSettings] selectSkin:', key);
+    document.getElementById('cfgSkin').value = key;
+    document.querySelectorAll('[id^="skin-card-"]').forEach(function(el) {
+        el.className = el.className.replace(/border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800/g, '').replace(/border-zinc-200 dark:border-zinc-700 hover:border-zinc-400/g, '') + ' border-zinc-200 dark:border-zinc-700 hover:border-zinc-400';
+    });
+    var card = document.getElementById('skin-card-' + key);
+    if (card) card.className = card.className.replace(/border-zinc-200 dark:border-zinc-700 hover:border-zinc-400/g, '') + ' border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800';
+}
+
 function getModuleAdmins() {
     var list = [];
     document.querySelectorAll('#moduleAdminList > div').forEach(function(el) {
@@ -597,7 +855,6 @@ async function saveSettings() {
     var settings = {
         slug: document.getElementById('cfgSlug')?.value || SLUG,
         browser_title: document.getElementById('cfgBrowserTitle')?.value || '',
-        show_title: document.getElementById('cfgShowTitle')?.checked ? true : false,
         full_width: document.getElementById('cfgFullWidth')?.checked ? true : false,
         search_index: document.getElementById('cfgSearchIndex')?.checked ? 'yes' : 'no',
         layout: document.getElementById('cfgLayout')?.value || 'default',
@@ -626,14 +883,12 @@ async function saveSettings() {
             body: JSON.stringify({ action: 'save_settings', slug: SLUG, settings: settings })
         });
         var data = await res.json();
-        showResultModal(data.success, data.message);
+        showResultModal(data.success, data.success ? '' : data.message);
         console.log('[saveSettings]', data);
     } catch (e) {
         showResultModal(false, '<?= __("common.msg.error") ?? "오류가 발생했습니다." ?>');
         console.error('[saveSettings]', e);
     }
-}
-
 }
 </script>
 <?php include BASE_PATH . '/resources/views/admin/partials/result-modal.php'; ?>

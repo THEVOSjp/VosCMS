@@ -122,7 +122,8 @@ return [
         'external_url' => 'URL ben ngoai / Duong dan tap tin',
         'external_url_desc' => 'URL ben ngoai (https://...) hien thi trong iframe, tap tin noi bo (.php/.html) duoc include truc tiep.',
         'quick_edit' => 'Chinh sua nhanh', 'open_widget_builder' => 'Mo trinh tao widget', 'open_document_editor' => 'Mo trinh soan tai lieu',
-        'edit_content' => 'Chinh sua noi dung', 'tab_basic' => 'Thong tin module', 'tab_layout' => 'Bo cuc',
+        'edit_content' => 'Chinh sua noi dung', 'tab_basic' => 'Thong tin module', 'tab_skin' => 'Giao diện', 'tab_layout' => 'Bo cuc',
+        'skin_info' => 'Thông tin giao diện',
         'cfg' => [
             'page_type' => 'Loai trang',
             'url_desc' => 'Ten module chi duoc chua chu cai thuong, so va dau gach duoi, va phai bat dau bang chu cai.',
@@ -287,6 +288,8 @@ return [
         'layout_none' => 'Không có bố cục nào khả dụng.',
         'skin_select' => 'Chọn giao diện', 'skin_select_help' => 'Trang sẽ được tải lại khi thay đổi giao diện. Cài đặt chi tiết giao diện có thể được cấu hình trong tab Giao diện.',
         'skin_settings' => 'Cài đặt giao diện',
+        'skin_info' => 'Thông tin giao diện', 'skin_name' => 'Giao diện', 'skin_author' => 'Tác giả giao diện',
+        'skin_date' => 'Ngày', 'skin_version' => 'Phiên bản', 'skin_desc' => 'Mô tả',
         'skin_none' => 'Không có giao diện nào.', 'skin_no_settings' => 'Giao diện này không có cài đặt.',
         'section_basic' => 'Thông tin Cơ bản', 'section_seo' => 'Cài đặt SEO', 'section_display' => 'Cài đặt Hiển thị',
         'field_url' => 'URL', 'field_url_help' => 'Chỉ chữ thường, số, dấu gạch ngang, dấu gạch dưới',

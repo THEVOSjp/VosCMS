@@ -19,7 +19,7 @@ return [
     'success' => [
         'created' => '서비스가 생성되었습니다.', 'updated' => '서비스가 수정되었습니다.',
         'deleted' => '서비스가 삭제되었습니다.', 'activated' => '서비스가 활성화되었습니다.',
-        'deactivated' => '서비스가 비활성화되었습니다.',
+        'deactivated' => '서비스가 비활성화되었습니다.', 'reordered' => '서비스 순서가 저장되었습니다.',
     ],
     'error' => [
         'has_reservations' => '예약이 있는 서비스는 삭제할 수 없습니다.',

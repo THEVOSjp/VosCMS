@@ -181,6 +181,7 @@ return [
     'msg' => [
         'success' => 'Erfolgreich verarbeitet.',
         'error' => 'Ein Fehler ist aufgetreten.',
+        'saved' => 'Gespeichert.',
         'not_found' => 'Der angeforderte Inhalt wurde nicht gefunden.',
         'unauthorized' => 'Bitte melden Sie sich an.',
         'forbidden' => 'Zugriff verweigert.',

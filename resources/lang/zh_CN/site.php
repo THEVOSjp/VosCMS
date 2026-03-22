@@ -122,7 +122,8 @@ return [
         'external_url' => '外部URL / 文件路径',
         'external_url_desc' => '外部URL (https://...) 以iframe显示，内部文件 (.php/.html) 通过include加载。',
         'quick_edit' => '快速编辑', 'open_widget_builder' => '打开小组件构建器', 'open_document_editor' => '打开文档编辑器',
-        'edit_content' => '编辑内容', 'tab_basic' => '模块信息', 'tab_layout' => '布局',
+        'edit_content' => '编辑内容', 'tab_basic' => '模块信息', 'tab_skin' => '皮肤', 'tab_layout' => '布局',
+        'skin_info' => '皮肤信息',
         'cfg' => [
             'page_type' => '页面类型',
             'url_desc' => '模块名称只能包含小写字母、数字和下划线，且必须以字母开头。',
@@ -287,6 +288,8 @@ return [
         'layout_none' => '没有可用的布局。',
         'skin_select' => '选择皮肤', 'skin_select_help' => '更改皮肤后页面将刷新。皮肤的详细设置可在皮肤选项卡中配置。',
         'skin_settings' => '皮肤设置',
+        'skin_info' => '皮肤基本信息', 'skin_name' => '皮肤', 'skin_author' => '皮肤作者',
+        'skin_date' => '日期', 'skin_version' => '版本', 'skin_desc' => '说明',
         'skin_none' => '没有可用的皮肤。', 'skin_no_settings' => '此皮肤没有设置项。',
         'section_basic' => '基本信息', 'section_seo' => 'SEO设置', 'section_display' => '显示设置',
         'field_url' => 'URL', 'field_url_help' => '仅限小写字母、数字、连字符、下划线',

@@ -182,6 +182,7 @@ return [
     'msg' => [
         'success' => 'Successfully processed.',
         'error' => 'An error occurred.',
+        'saved' => 'Settings saved.',
         'not_found' => 'The requested content was not found.',
         'unauthorized' => 'Please log in.',
         'forbidden' => 'Access denied.',
@@ -260,4 +261,7 @@ return [
         'offline' => 'You are offline',
         'online' => 'Back online',
     ],
+
+    'table_view' => 'Table View',
+    'card_view' => 'Card View',
 ];

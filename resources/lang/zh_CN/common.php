@@ -133,6 +133,7 @@ return [
     'msg' => [
         'success' => '处理成功。',
         'error' => '发生错误。',
+        'saved' => '已保存。',
         'not_found' => '未找到请求的内容。',
         'unauthorized' => '请登录。',
         'forbidden' => '访问被拒绝。',

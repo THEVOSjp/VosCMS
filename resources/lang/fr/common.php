@@ -182,6 +182,7 @@ return [
     'msg' => [
         'success' => 'Operation reussie.',
         'error' => 'Une erreur est survenue.',
+        'saved' => 'Enregistré.',
         'not_found' => 'Le contenu demande est introuvable.',
         'unauthorized' => 'Veuillez vous connecter.',
         'forbidden' => 'Acces refuse.',

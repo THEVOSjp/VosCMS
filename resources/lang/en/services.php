@@ -31,6 +31,7 @@ return [
         'deleted' => 'Service deleted.',
         'activated' => 'Service activated.',
         'deactivated' => 'Service deactivated.',
+        'reordered' => 'Service order has been saved.',
     ],
     'error' => ['has_reservations' => 'Cannot delete service with existing reservations.', 'server_error' => 'A server error occurred.', 'generic' => 'An error occurred.', 'delete_failed' => 'Delete failed'],
     'empty' => 'No services registered.',

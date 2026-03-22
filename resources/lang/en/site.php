@@ -122,8 +122,8 @@ return [
         'external_url' => 'External URL / File Path',
         'external_url_desc' => 'External URLs (https://...) render in iframe, internal files (.php/.html) render via include.',
         'quick_edit' => 'Quick Edit', 'open_widget_builder' => 'Open Widget Builder', 'open_document_editor' => 'Open Document Editor',
-        'edit_content' => 'Edit Content', 'tab_basic' => 'Module Info', 'tab_addition' => 'Additional Settings',
-        'tab_permissions' => 'Permissions',
+        'edit_content' => 'Edit Content', 'tab_basic' => 'Module Info', 'tab_skin' => 'Skin', 'tab_addition' => 'Additional Settings',
+        'tab_permissions' => 'Permissions', 'skin_info' => 'Skin Information',
         'cfg' => [
             'page_type' => 'Page Type',
             'url_desc' => 'Module name must contain only lowercase letters, numbers, and underscores, starting with a letter.',

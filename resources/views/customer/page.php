@@ -44,6 +44,38 @@ $seoContext = [
     'content' => $pageType === 'document' ? $pageContent : '',
 ];
 
+// 페이지 설정 & 스킨 설정 로드
+$_pgCfgKey = 'page_config_' . $pageSlug;
+$_pgCfgStmt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = ?");
+$_pgCfgStmt->execute([$_pgCfgKey]);
+$_pgCfg = json_decode($_pgCfgStmt->fetchColumn() ?: '{}', true) ?: [];
+$_skinCfg = $_pgCfg['skin_config'] ?? [];
+$_showTitle = ($_skinCfg['show_title'] ?? '1') !== '0';
+$_contentWidth = $_skinCfg['content_width'] ?? 'max-w-5xl';
+$_contentBg = $_skinCfg['content_bg'] ?? 'transparent';
+$_showBreadcrumb = ($_skinCfg['show_breadcrumb'] ?? '0') !== '0';
+$_primaryColor = $_skinCfg['primary_color'] ?? '';
+$_customCss = $_skinCfg['custom_css'] ?? '';
+$_customHeader = $_skinCfg['custom_header_html'] ?? '';
+$_customFooter = $_skinCfg['custom_footer_html'] ?? '';
+$_bgClass = $_contentBg === 'white' ? 'bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6' : '';
+// 제목 배경 설정
+$_titleBgType = $_skinCfg['title_bg_type'] ?? 'none';
+$_titleBgImage = $_skinCfg['title_bg_image'] ?? '';
+$_titleBgVideo = $_skinCfg['title_bg_video'] ?? '';
+$_titleBgHeight = (int)($_skinCfg['title_bg_height'] ?? 200);
+$_titleBgOverlay = (int)($_skinCfg['title_bg_overlay'] ?? 40);
+$_titleTextColor = $_skinCfg['title_text_color'] ?? 'auto';
+$_hasTitleBg = $_showTitle && $_titleBgType !== 'none' && (($_titleBgType === 'image' && $_titleBgImage) || ($_titleBgType === 'video' && $_titleBgVideo));
+$_titleTextClass = 'text-zinc-800 dark:text-zinc-100';
+if ($_hasTitleBg) {
+    $_titleTextClass = $_titleTextColor === 'dark' ? 'text-zinc-900' : 'text-white';
+} elseif ($_titleTextColor === 'white') {
+    $_titleTextClass = 'text-white';
+} elseif ($_titleTextColor === 'dark') {
+    $_titleTextClass = 'text-zinc-900';
+}
+
 // 관리자 아이콘 (설정 + 편집)
 $_adminIcons = '';
 if (!empty($_SESSION['admin_id'])) {
@@ -57,6 +89,12 @@ if (!empty($_SESSION['admin_id'])) {
 }
 ?>
 
+<?php
+// 공통 스킨 스타일 출력 (모든 페이지 타입)
+if ($_customCss) echo '<style>' . $_customCss . '</style>';
+if ($_primaryColor) echo '<style>:root { --page-primary: ' . htmlspecialchars($_primaryColor) . '; }</style>';
+?>
+
 <?php if ($pageType === 'external'): ?>
     <?php
     $isExternalUrl = preg_match('#^https?://#', $pageContent);
@@ -64,16 +102,30 @@ if (!empty($_SESSION['admin_id'])) {
     $isHtmlFile = str_ends_with(trim($pageContent), '.html') || str_ends_with(trim($pageContent), '.htm');
     ?>
 
-    <?php if ($isExternalUrl): ?>
-    <!-- 외부 URL: iframe으로 RezlyX 레이아웃 안에 표시 -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-        <div class="flex items-center justify-between mb-3">
-            <h1 class="text-xl font-bold text-zinc-800 dark:text-zinc-100 inline-flex items-center gap-2"><?= htmlspecialchars($pageTitle) ?> <?= $_adminIcons ?></h1>
-            <a href="<?= htmlspecialchars($pageContent) ?>" target="_blank" class="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
-                <?= __('common.open_new_window') ?? '새 창에서 열기' ?>
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-            </a>
-        </div>
+    <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 py-4">
+        <?php if ($_showBreadcrumb && !$_hasTitleBg): ?>
+        <nav class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+            <a href="<?= $config['app_url'] ?? '' ?>/" class="hover:text-blue-600"><?= __('common.home') ?? '홈' ?></a>
+            <span class="mx-1">/</span>
+            <span class="text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($pageTitle) ?></span>
+        </nav>
+        <?php endif; ?>
+        <?php if ($_customHeader): ?><div class="mb-4"><?= $_customHeader ?></div><?php endif; ?>
+        <?php if ($_showTitle && $_hasTitleBg): ?>
+            <?php include __DIR__ . '/_page-title-bg.php'; ?>
+        <?php elseif ($_showTitle): ?>
+            <div class="flex items-center justify-between mb-3">
+                <h1 class="text-xl font-bold <?= $_titleTextClass ?> inline-flex items-center gap-2"><?= htmlspecialchars($pageTitle) ?> <?= $_adminIcons ?></h1>
+                <?php if ($isExternalUrl): ?>
+                <a href="<?= htmlspecialchars($pageContent) ?>" target="_blank" class="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                    <?= __('common.open_new_window') ?? '새 창에서 열기' ?>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($isExternalUrl): ?>
         <div class="rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700" style="height: calc(100vh - 200px);">
             <iframe src="<?= htmlspecialchars($pageContent) ?>"
                     class="w-full h-full border-0"
@@ -82,11 +134,7 @@ if (!empty($_SESSION['admin_id'])) {
                     onerror="this.parentElement.innerHTML='<div class=\'p-8 text-center text-zinc-500\'><p>이 사이트는 외부 표시를 허용하지 않습니다.</p><a href=\'<?= htmlspecialchars($pageContent) ?>\' target=\'_blank\' class=\'mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg\'>새 창에서 열기</a></div>'">
             </iframe>
         </div>
-    </div>
-
-    <?php elseif ($isPhpFile || $isHtmlFile): ?>
-    <!-- 내부 파일: 직접 include -->
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        <?php elseif ($isPhpFile || $isHtmlFile): ?>
         <?php
         $filePath = BASE_PATH . '/' . ltrim($pageContent, '/');
         if (file_exists($filePath)) {
@@ -95,20 +143,32 @@ if (!empty($_SESSION['admin_id'])) {
             echo '<div class="p-8 text-center text-zinc-500">페이지 파일을 찾을 수 없습니다: ' . htmlspecialchars($pageContent) . '</div>';
         }
         ?>
-    </div>
-
-    <?php else: ?>
-    <!-- 외부 타입이지만 HTML 콘텐츠 -->
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-        <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mb-4 inline-flex items-center gap-2"><?= htmlspecialchars($pageTitle) ?> <?= $_adminIcons ?></h1>
+        <?php else: ?>
         <div class="board-content bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
             <?= $pageContent ?>
         </div>
+        <?php endif; ?>
+        <?php if ($_customFooter): ?><div class="mt-4"><?= $_customFooter ?></div><?php endif; ?>
     </div>
-    <?php endif; ?>
 
 <?php elseif ($pageType === 'widget'): ?>
     <!-- 위젯 페이지: WidgetRenderer로 렌더링 -->
+    <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 py-6">
+        <?php if ($_showBreadcrumb && !$_hasTitleBg): ?>
+        <nav class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+            <a href="<?= $config['app_url'] ?? '' ?>/" class="hover:text-blue-600"><?= __('common.home') ?? '홈' ?></a>
+            <span class="mx-1">/</span>
+            <span class="text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($pageTitle) ?></span>
+        </nav>
+        <?php endif; ?>
+        <?php if ($_customHeader): ?><div class="mb-4"><?= $_customHeader ?></div><?php endif; ?>
+        <?php if ($_showTitle && $_hasTitleBg): ?>
+            <?php include __DIR__ . '/_page-title-bg.php'; ?>
+        <?php elseif ($_showTitle): ?>
+        <h1 class="text-2xl font-bold <?= $_titleTextClass ?> mb-4 inline-flex items-center gap-2"><?= htmlspecialchars($pageTitle) ?> <?= $_adminIcons ?></h1>
+        <?php elseif ($_adminIcons): ?>
+        <div class="flex justify-end mb-2 gap-2"><?= $_adminIcons ?></div>
+        <?php endif; ?>
     <?php
     require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetRenderer.php';
     $widgets = $pdo->prepare("SELECT pw.*, w.widget_type, w.name as widget_name FROM {$prefix}page_widgets pw LEFT JOIN {$prefix}widgets w ON pw.widget_id = w.id WHERE pw.page_slug = ? AND pw.is_active = 1 ORDER BY pw.sort_order");
@@ -125,16 +185,32 @@ if (!empty($_SESSION['admin_id'])) {
             }
         }
     } else {
-        echo '<div class="max-w-5xl mx-auto px-4 py-16 text-center text-zinc-400">위젯이 아직 추가되지 않았습니다.</div>';
+        echo '<div class="py-16 text-center text-zinc-400">위젯이 아직 추가되지 않았습니다.</div>';
     }
     ?>
+        <?php if ($_customFooter): ?><div class="mt-4"><?= $_customFooter ?></div><?php endif; ?>
+    </div>
 
 <?php else: ?>
-    <!-- 문서 페이지: HTML 콘텐츠 렌더링 -->
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-        <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mb-4 inline-flex items-center gap-2"><?= htmlspecialchars($pageTitle) ?> <?= $_adminIcons ?></h1>
+    <!-- 문서 페이지: HTML 콘텐츠 렌더링 (스킨 설정 적용) -->
+    <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 py-6">
+        <?php if ($_showBreadcrumb && !$_hasTitleBg): ?>
+        <nav class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+            <a href="<?= $config['app_url'] ?? '' ?>/" class="hover:text-blue-600"><?= __('common.home') ?? '홈' ?></a>
+            <span class="mx-1">/</span>
+            <span class="text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($pageTitle) ?></span>
+        </nav>
+        <?php endif; ?>
+        <?php if ($_customHeader): ?><div class="mb-4"><?= $_customHeader ?></div><?php endif; ?>
+        <?php if ($_showTitle && $_hasTitleBg): ?>
+            <?php include __DIR__ . '/_page-title-bg.php'; ?>
+        <?php elseif ($_showTitle): ?>
+        <h1 class="text-2xl font-bold <?= $_titleTextClass ?> mb-4 inline-flex items-center gap-2"><?= htmlspecialchars($pageTitle) ?> <?= $_adminIcons ?></h1>
+        <?php elseif ($_adminIcons): ?>
+        <div class="flex justify-end mb-2 gap-2"><?= $_adminIcons ?></div>
+        <?php endif; ?>
         <?php if ($pageContent): ?>
-        <div class="board-content bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
+        <div class="board-content <?= $_bgClass ?: 'bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6' ?>">
             <?= $pageContent ?>
         </div>
         <?php else: ?>
@@ -142,5 +218,6 @@ if (!empty($_SESSION['admin_id'])) {
             <?= __('common.page_empty') ?? '페이지 내용이 아직 작성되지 않았습니다.' ?>
         </div>
         <?php endif; ?>
+        <?php if ($_customFooter): ?><div class="mt-4"><?= $_customFooter ?></div><?php endif; ?>
     </div>
 <?php endif; ?>

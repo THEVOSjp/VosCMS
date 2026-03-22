@@ -9,7 +9,10 @@ $pwaAdminIcon = $_pwaSettings['pwa_admin_icon'] ?? '';
 $pwaAdminTheme = $_pwaSettings['pwa_admin_theme_color'] ?? '#18181b';
 $pwaAdminName = $_pwaSettings['pwa_admin_name'] ?? 'RezlyX Admin';
 $iconHref = $pwaAdminIcon ? $baseUrl . $pwaAdminIcon : '';
+$_faviconPath = $_pwaSettings['favicon'] ?? '';
 ?>
+<!-- Favicon -->
+<link rel="icon" href="<?php echo $_faviconPath ? $baseUrl . htmlspecialchars($_faviconPath) : $baseUrl . '/assets/images/favicon.ico'; ?>">
 <!-- PWA Admin -->
 <link rel="manifest" href="<?php echo $baseUrl; ?>/admin-manifest.json">
 <meta name="theme-color" content="<?php echo htmlspecialchars($pwaAdminTheme); ?>">

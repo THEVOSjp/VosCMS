@@ -82,7 +82,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
     <?php if (!empty($metaDescription)): ?><meta name="description" content="<?= htmlspecialchars($metaDescription) ?>"><?php endif; ?>
     <?php if (!empty($metaRobots)): ?><meta name="robots" content="<?= $metaRobots ?>"><?php endif; ?>
     <meta name="base-url" content="<?= $baseUrl ?>">
-    <link rel="icon" href="<?= $baseUrl ?>/assets/images/favicon.ico">
+    <link rel="icon" href="<?= !empty($siteSettings['favicon']) ? $baseUrl . htmlspecialchars($siteSettings['favicon']) : $baseUrl . '/assets/images/favicon.ico' ?>">
     <?php if ($pwaFrontEnabled): ?>
     <link rel="manifest" href="<?= $baseUrl ?>/manifest.json">
     <meta name="theme-color" content="<?= htmlspecialchars($pwaFrontTheme) ?>">

@@ -226,7 +226,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                     const resultSpan = document.getElementById('migrationResult');
 
                     try {
-                        const resp = await fetch(window.location.origin + '/update-api.php', {
+                        const resp = await fetch('<?= $baseUrl ?>/update-api.php', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                             body: 'action=run_migrations'

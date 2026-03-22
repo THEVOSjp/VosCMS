@@ -7,6 +7,8 @@
  */
 
 define('REZLYX_START', microtime(true));
+header('X-Frame-Options: SAMEORIGIN');
+header("Content-Security-Policy: frame-ancestors 'self'");
 date_default_timezone_set('Asia/Seoul'); // 기본값, DB 설정 로드 후 재설정
 
 /*

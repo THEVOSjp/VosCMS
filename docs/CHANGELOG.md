@@ -4,6 +4,44 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [1.14.1] - 2026-03-22
+
+### Added
+- **페이지 스킨 탭** — 스킨 기본정보 + 확장 변수 설정 (SkinConfigRenderer 기반)
+- **페이지 스킨 전 타입 적용** — document/widget/external 모두 스킨 설정 적용
+- **제목 배경 시스템** — 이미지/동영상 배경 + 오버레이 + 텍스트 색상 (공통 partial `_page-title-bg.php`)
+- **depends_on 시스템** — skin.json에서 필드 간 의존 관계 선언적 정의, 렌더러 자동 JS 생성 (checkbox/radio 지원)
+- **스킨 파일 업로드** — multipart 전송으로 이미지/동영상 업로드 지원 (`storage/skins/page/{skin}/`)
+- **카드형 레이아웃/스킨 선택** — 모듈 정보 탭에서 썸네일 카드 UI로 변경
+- **SEO 시스템** — SEO 헬퍼, 제목 패턴, OG/Twitter 메타태그, 콘텐츠 추출
+- **OG Image 업로드** — URL 입력 + 파일 업로드 + 미리보기
+- **공통 결과 모달** — 저장 성공/실패 모달 UI 통합 (13개 언어 지원)
+- **서비스 카드 뷰** — 배경 이미지 전체 적용 카드 + 테이블/카드 전환 버튼
+- **서비스 드래그 앤 드롭 순서** — 테이블/카드 양쪽 뷰에서 순서 변경 + DB 저장
+- **예약 스태프 배정/지명** — 예약 상세에서 배정/지명 버튼 2개
+- **예약 경로 UI** — 전화예약/현장접수/온라인 선택
+- **전화 예약 설정** — 서비스 기본설정에서 활성/비활성 토글
+- **보안 헤더** — X-Frame-Options + CSP frame-ancestors
+- **PAGE_SYSTEM.md** — 페이지 시스템 개발 문서
+- **PRD_OrderSystem.md** — 테이블 주문 시스템 기획 문서
+- **PRD_KioskSystem.md** — 키오스크 시스템 기획 문서
+
+### Fixed
+- 파비콘 DB 설정 적용 (프론트/관리자/스킨 레이아웃 4곳)
+- 대시보드 마이그레이션 URL `window.location.origin` → `$baseUrl` (서브디렉토리 환경)
+- 페이지 설정 embed 모드 API URL → admin 경로 직접 지정
+- 결과 모달 다국어: API 응답 대신 페이지 렌더링 시 로케일 메시지 사용
+- 스킨 탭 빈 skin 값 폴백 (`""` → `default`)
+- pages-settings.php `php://input` 중복 소비 문제 해결
+
+### Changed
+- 키오스크/키오스크 설정/번들 페이지 → `_head.php` 공용 헤더 적용
+- 스킨 설정 저장 JSON → FormData(multipart) 전송 (파일 업로드 지원)
+- SkinConfigRenderer에 `$baseUrl` 파라미터 추가 (이미지/비디오 미리보기)
+- 13개 언어 스킨 번역 (skin.json + site.php + common.php)
+
+---
+
 ## [1.13.0] - 2026-03-21
 
 ### Added

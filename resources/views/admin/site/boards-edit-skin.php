@@ -12,7 +12,7 @@ $locale = $config['locale'] ?? 'ko';
 
 $skinsDir = BASE_PATH . '/skins';
 $currentSkinJson = $skinsDir . '/board/' . $currentSkin . '/skin.json';
-$skinRenderer = new SkinConfigRenderer($currentSkinJson, $savedConfig, $locale);
+$skinRenderer = new SkinConfigRenderer($currentSkinJson, $savedConfig, $locale, $baseUrl);
 $skinMeta = $skinRenderer->getMeta();
 ?>
 <form id="boardSkinForm" class="space-y-6">

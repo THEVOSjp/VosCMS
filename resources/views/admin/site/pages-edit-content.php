@@ -259,7 +259,7 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
     </div>
 
 <script>
-var PAGE_URL = window.location.href.split('?')[0];
+var PAGE_URL = '<?= $adminUrl ?>/site/pages/edit-content';
 var SLUG = '<?= htmlspecialchars($pageSlug) ?>';
 var CURRENT_LOCALE = '<?= $defaultLocale ?>';
 var ADMIN_URL = '<?= $adminUrl ?>';
@@ -291,7 +291,7 @@ async function savePage() {
         is_active: document.getElementById('fmActive').checked ? 1 : 0,
         locale: CURRENT_LOCALE
     });
-    showMsg(data.success ? 'success' : 'error', data.message);
+    showResultModal(data.success, data.success ? '' : data.message);
     if (data.success && data.slug && data.slug !== SLUG) {
         window.location.href = PAGE_URL + '?slug=' + data.slug;
     }
@@ -301,7 +301,7 @@ async function deletePage() {
     if (!confirm('이 페이지를 삭제하시겠습니까? 모든 언어의 콘텐츠가 삭제됩니다.')) return;
     var data = await apiFetch({ action: 'delete', slug: SLUG });
     if (data.success && data.redirect) window.location.href = data.redirect;
-    else showMsg('error', data.message);
+    else showResultModal(false, data.message);
 }
 
 async function switchLocale(locale) {
@@ -319,6 +319,7 @@ async function switchLocale(locale) {
     console.log('[PageSettings] locale:', locale);
 }
 </script>
+<?php include BASE_PATH . '/resources/views/admin/partials/result-modal.php'; ?>
 <?php if (!$embedMode): ?>
 </body>
 </html>
