@@ -114,7 +114,8 @@ ob_start();
                 $sName = _wStaffLocName($staff['name'], $staff['name_i18n'] ?? null, $currentLocale);
                 $subName = _wStaffSubName($staff['name_i18n'] ?? null, $currentLocale);
                 $svcs = $staffServices[$staff['id']] ?? [];
-                $avatar = $staff['avatar'] ?? '';
+                $_rawAvatar = $staff['avatar'] ?? '';
+                $avatar = !empty($_rawAvatar) ? (str_starts_with($_rawAvatar, 'http') ? $_rawAvatar : $baseUrl . '/' . ltrim($_rawAvatar, '/')) : '';
                 $fee = (float)($staff['designation_fee'] ?? 0);
             ?>
             <div class="text-center group">

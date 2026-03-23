@@ -10,7 +10,7 @@ Object.assign(POS, {
         if (path.startsWith('http')) return path;
         // adminUrl에서 /theadmin 또는 /admin 등 마지막 경로 세그먼트 제거
         const appUrl = this.adminUrl.replace(/\/[^/]+$/, '');
-        return path.startsWith('/') ? appUrl + path : appUrl + '/storage/' + path;
+        return path.startsWith('/') ? appUrl + path : appUrl + '/' + path;
     },
 
     // ─── 서비스 상세 모달 ───

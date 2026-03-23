@@ -121,8 +121,10 @@ $subName = getSubNameVal($staff['name_i18n'], $currentLocale);
 $positionLabel = getLocalizedVal($staff['position_name'] ?? '', $staff['position_name_i18n'] ?? null, $currentLocale);
 $bio = getLocalizedVal($staff['bio'] ?? '', $staff['bio_i18n'] ?? null, $currentLocale);
 $designationFee = (float)($staff['designation_fee'] ?? 0);
-$avatarUrl = $staff['avatar'] ?? '';
-$bannerUrl = $staff['banner'] ?? '';
+$_rawAvatar = $staff['avatar'] ?? '';
+$avatarUrl = !empty($_rawAvatar) ? (str_starts_with($_rawAvatar, 'http') ? $_rawAvatar : $baseUrl . '/' . ltrim($_rawAvatar, '/')) : '';
+$_rawBanner = $staff['banner'] ?? '';
+$bannerUrl = !empty($_rawBanner) ? (str_starts_with($_rawBanner, 'http') ? $_rawBanner : $baseUrl . '/' . ltrim($_rawBanner, '/')) : '';
 
 // 로그인 회원: 등급 할인/적립금 조회
 $userGrade = null;
@@ -370,7 +372,7 @@ $days = $dayLabels[$currentLocale] ?? $dayLabels['en'];
                     <input type="checkbox" class="hidden sd-svc-check" value="<?= $svc['id'] ?>"
                            data-name="<?= $svcName ?>" data-price="<?= $svcPrice ?>" data-duration="<?= $svcDuration ?>">
                     <div class="sd-card-inner group relative rounded-xl border-2 border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 hover:shadow-md cursor-pointer transition-all overflow-hidden"
-                         style="min-height:150px;<?php if ($hasImage): ?>background-image:url('<?= htmlspecialchars($baseUrl . '/storage/' . $svcImage) ?>');background-size:cover;background-position:center<?php endif; ?>">
+                         style="min-height:150px;<?php if ($hasImage): ?>background-image:url('<?= htmlspecialchars($baseUrl . '/' . $svcImage) ?>');background-size:cover;background-position:center<?php endif; ?>">
                         <?php if (!$hasImage): ?>
                         <div class="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-zinc-700 dark:to-zinc-800"></div>
                         <?php endif; ?>

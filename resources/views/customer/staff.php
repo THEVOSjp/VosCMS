@@ -150,7 +150,8 @@ $seoContext = ['type' => 'sub', 'subpage_title' => __('staff_page.title')];
                 $subName = getSubName($staff['name_i18n'], $currentLocale);
                 $bio = getLocalizedName($staff['bio'] ?? '', $staff['bio_i18n'] ?? null, $currentLocale);
                 $services = $staffServices[$staff['id']] ?? [];
-                $avatarUrl = $staff['avatar'] ?? '';
+                $rawAvatar = $staff['avatar'] ?? '';
+                $avatarUrl = !empty($rawAvatar) ? (str_starts_with($rawAvatar, 'http') ? $rawAvatar : $baseUrl . '/' . ltrim($rawAvatar, '/')) : '';
                 $designationFee = (float)($staff['designation_fee'] ?? 0);
             ?>
             <div class="text-center group">

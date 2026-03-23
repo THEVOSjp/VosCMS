@@ -31,7 +31,7 @@ $expectedPts = $pointsEnabled ? ($g['expected_points'] ?? 0) : 0;
 $pointsBalance = $pointsEnabled ? ($g['points_balance'] ?? 0) : 0;
 ?>
 <div class="pos-card rounded-xl border-2 <?= $borderCls ?> shadow-sm relative overflow-hidden hover:shadow-md transition flex flex-col"
-     style="min-height:200px;<?php if ($hasServiceBg): ?>background-image:url('<?= htmlspecialchars($appUrl . '/storage/' . $svcImg) ?>');background-size:cover;background-position:center<?php endif; ?>">
+     style="min-height:200px;<?php if ($hasServiceBg): ?>background-image:url('<?= htmlspecialchars($appUrl . '/' . $svcImg) ?>');background-size:cover;background-position:center<?php endif; ?>">
 
     <?php if ($hasServiceBg): ?>
     <?php
@@ -59,9 +59,9 @@ $pointsBalance = $pointsEnabled ? ($g['points_balance'] ?? 0) : 0;
                     <?php if ($hasProfile): ?>
                     <?php
                     // profile_image는 이미 /storage/ 포함, service image는 미포함 → 분기 처리
-                    $profileSrc = (str_starts_with($profileImg, '/storage/') || str_starts_with($profileImg, 'http'))
-                        ? $appUrl . $profileImg
-                        : $appUrl . '/storage/' . $profileImg;
+                    $profileSrc = str_starts_with($profileImg, 'http')
+                        ? $profileImg
+                        : $appUrl . '/' . ltrim($profileImg, '/');
                     ?>
                     <img src="<?= htmlspecialchars($profileSrc) ?>" alt=""
                          class="w-11 h-11 rounded-full object-cover border-2 border-blue-400/80 shadow-md flex-shrink-0">

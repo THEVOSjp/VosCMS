@@ -397,7 +397,7 @@ $pageSubDesc = __('staff.description');
                             <!-- 아바타 (배너 아래 겹침) -->
                             <div class="absolute -top-7 left-5 w-14 h-14 rounded-full bg-white dark:bg-zinc-800 border-2 border-white dark:border-zinc-800 shadow overflow-hidden">
                                 <?php if ($s['avatar']): ?>
-                                <img src="<?= htmlspecialchars($s['avatar']) ?>" class="w-full h-full object-cover" alt="">
+                                <img src="<?= htmlspecialchars(str_starts_with($s['avatar'], 'http') ? $s['avatar'] : $baseUrl . '/' . ltrim($s['avatar'], '/')) ?>" class="w-full h-full object-cover" alt="">
                                 <?php else: ?>
                                 <div class="w-full h-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-lg font-bold text-zinc-500"><?= mb_substr($s['name'], 0, 1) ?></div>
                                 <?php endif; ?>

@@ -241,7 +241,7 @@ $currentLocale = $config['locale'] ?? 'ko';
                             <div class="flex items-center gap-3 p-3 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 svc-item" data-id="<?= $item['service_id'] ?>">
                                 <svg class="w-5 h-5 text-zinc-300 cursor-grab drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
                                 <?php if ($item['image']): ?>
-                                <img src="<?= htmlspecialchars($baseUrl . '/storage/' . $item['image']) ?>" class="w-10 h-10 rounded object-cover flex-shrink-0">
+                                <img src="<?= htmlspecialchars($baseUrl . '/' . $item['image']) ?>" class="w-10 h-10 rounded object-cover flex-shrink-0">
                                 <?php else: ?>
                                 <div class="w-10 h-10 rounded bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center flex-shrink-0">
                                     <svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>

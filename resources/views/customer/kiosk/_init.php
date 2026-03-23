@@ -42,7 +42,7 @@ $kioskLogoSrc = '';
 if ($kioskLogoOverride) {
     $kioskLogoSrc = $kioskLogoOverride;
 } elseif ($logoType === 'image' && $logoImage) {
-    $kioskLogoSrc = $baseUrl . '/storage/' . $logoImage;
+    $kioskLogoSrc = $baseUrl . '/' . $logoImage;
 }
 
 // 테마별 색상

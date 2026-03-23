@@ -617,11 +617,38 @@ if ($__pageFile && !$__noLayout) {
     $__siteBoardSkin = $siteSettings['site_board_skin'] ?? 'default';
     $__siteMemberSkin = $siteSettings['site_member_skin'] ?? 'default';
 
+    // 게시판 개별 레이아웃 조회 (board_config_{slug}.layout)
+    if (!empty($boardSlug) && isset($pdo)) {
+        $__bcKey = 'board_config_' . $boardSlug;
+        if (isset($siteSettings[$__bcKey])) {
+            $__boardConfig = json_decode($siteSettings[$__bcKey], true) ?: [];
+        } else {
+            $__bcStmt = $pdo->prepare("SELECT value FROM {$prefix}settings WHERE `key` = ?");
+            $__bcStmt->execute([$__bcKey]);
+            $__boardConfig = json_decode($__bcStmt->fetchColumn() ?: '{}', true) ?: [];
+        }
+        if (!empty($__boardConfig['layout']) && $__boardConfig['layout'] !== 'default') {
+            $__layout = $__boardConfig['layout'];
+        }
+    }
+
+    // 페이지 개별 레이아웃 조회 (page_config_{slug}.layout)
+    if (!empty($pageSlug) && isset($pdo)) {
+        $__pcKey = 'page_config_' . $pageSlug;
+        if (isset($siteSettings[$__pcKey])) {
+            $__pageConfig = json_decode($siteSettings[$__pcKey], true) ?: [];
+        } else {
+            $__pcStmt = $pdo->prepare("SELECT value FROM {$prefix}settings WHERE `key` = ?");
+            $__pcStmt->execute([$__pcKey]);
+            $__pageConfig = json_decode($__pcStmt->fetchColumn() ?: '{}', true) ?: [];
+        }
+        if (!empty($__pageConfig['layout']) && $__pageConfig['layout'] !== 'default') {
+            $__layout = $__pageConfig['layout'];
+        }
+    }
+
     // none이면 레이아웃 미사용
     if ($__layout === 'none') $__layout = false;
-
-    // no_layout 파라미터: 레이아웃 없이 콘텐츠만 (레이아웃 관리 미리보기용)
-    if (!empty($_GET['no_layout'])) $__layout = false;
 
     // 페이지에서 사용할 공통 변수 미리 설정
     require_once BASE_PATH . '/rzxlib/Core/I18n/Translator.php';
@@ -639,25 +666,35 @@ if ($__pageFile && !$__noLayout) {
     include $__pageFile;
     $__content = ob_get_clean();
 
-    // 페이지에서 $__layout = false 설정 시 콘텐츠만 출력
-    if ($__layout === false) {
+    // no_layout=1: 외부 iframe / 미리보기용 → 콘텐츠만 출력
+    if (!empty($_GET['no_layout'])) {
         echo $__content;
     } else {
-        // 스킨 레이아웃 파일 확인 (skins/layouts/{name}/main.php)
-        $__layoutFile = BASE_PATH . '/skins/layouts/' . $__layout . '/main.php';
-        if ($__layout !== 'default' && file_exists($__layoutFile)) {
-            // 스킨 레이아웃의 설정값 로드
-            $__layoutConfig = [];
-            $__lcKey = 'skin_detail_layout_' . $__layout;
-            if (isset($siteSettings[$__lcKey])) {
-                $__layoutConfig = json_decode($siteSettings[$__lcKey], true) ?: [];
-            }
-            include $__layoutFile;
-        } else {
-            // 기본 레이아웃 (base-header + content + base-footer)
-            include BASE_PATH . '/resources/views/layouts/base-header.php';
-            echo $__content;
-            include BASE_PATH . '/resources/views/layouts/base-footer.php';
+        // 항상 사이트 레이아웃 적용 (페이지별 "사용 안함"이어도 사이트 레이아웃 사용)
+        $__siteLayout = $siteSettings['site_layout'] ?? 'default';
+        if ($__layout === false || $__layout === 'none') {
+            $__layout = $__siteLayout;
+        }
+
+        // 스킨 레이아웃 설정값 로드
+        $__layoutConfig = [];
+        $__lcKey = 'skin_detail_layout_' . $__layout;
+        if (isset($siteSettings[$__lcKey])) {
+            $__layoutConfig = json_decode($siteSettings[$__lcKey], true) ?: [];
+        }
+        $content = $__content;
+
+        // 레이아웃 header/footer 사용
+        $__layoutDir = BASE_PATH . '/skins/layouts/' . $__layout;
+        $__headerFile = $__layoutDir . '/header.php';
+        $__footerFile = $__layoutDir . '/footer.php';
+
+        if (file_exists($__headerFile)) {
+            include $__headerFile;
+        }
+        echo $content;
+        if (file_exists($__footerFile)) {
+            include $__footerFile;
         }
     }
 }

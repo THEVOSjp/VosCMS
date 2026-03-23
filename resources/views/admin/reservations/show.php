@@ -523,7 +523,7 @@ include __DIR__ . '/_head.php';
                 ?>
                 <div class="flex items-start gap-3 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg" data-svc-row data-svc-id="<?= htmlspecialchars($rs['service_id']) ?>" data-svc-price="<?= (float)$rs['price'] ?>" data-svc-duration="<?= (int)$rs['duration'] ?>">
                     <?php if ($hasImg): ?>
-                    <img src="<?= htmlspecialchars($appUrl . '/storage/' . $svcImg) ?>" alt=""
+                    <img src="<?= htmlspecialchars($appUrl . '/' . $svcImg) ?>" alt=""
                          class="w-14 h-14 rounded-lg object-cover flex-shrink-0 border border-zinc-200 dark:border-zinc-700">
                     <?php else: ?>
                     <div class="w-14 h-14 rounded-lg bg-zinc-200 dark:bg-zinc-700 flex-shrink-0 flex items-center justify-center">

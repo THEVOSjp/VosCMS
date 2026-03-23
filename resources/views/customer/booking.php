@@ -380,7 +380,7 @@ $seoContext = ['type' => 'sub', 'subpage_title' => __('common.nav.booking')];
                            data-price="<?= $svcPrice ?>"
                            data-duration="<?= $svcDuration ?>">
                     <div class="bk-svc-card group relative rounded-xl border-2 border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 hover:shadow-md cursor-pointer transition-all overflow-hidden"
-                         style="min-height:150px;<?php if ($hasImage): ?>background-image:url('<?= htmlspecialchars($baseUrl . '/storage/' . $svcImage) ?>');background-size:cover;background-position:center<?php endif; ?>">
+                         style="min-height:150px;<?php if ($hasImage): ?>background-image:url('<?= htmlspecialchars($baseUrl . '/' . $svcImage) ?>');background-size:cover;background-position:center<?php endif; ?>">
                         <?php if (!$hasImage): ?>
                         <div class="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-zinc-700 dark:to-zinc-800"></div>
                         <?php endif; ?>

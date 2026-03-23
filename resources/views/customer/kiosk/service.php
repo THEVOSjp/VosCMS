@@ -210,7 +210,7 @@ if ($type === 'designation' && $staffId) {
                 <?php foreach ($services as $svc):
                     $svcName = kioskTr($translations, 'service.' . $svc['id'] . '.name', $svc['name']);
                     $svcDesc = kioskTr($translations, 'service.' . $svc['id'] . '.description', $svc['description'] ?? '');
-                    $imgUrl = $svc['image'] ? ($baseUrl . '/storage/' . $svc['image']) : '';
+                    $imgUrl = $svc['image'] ? ($baseUrl . '/' . $svc['image']) : '';
                 ?>
                 <button type="button" onclick="toggleService(this, '<?= $svc['id'] ?>')"
                         class="svc-card relative flex flex-col rounded-2xl backdrop-blur-sm border <?= $btnBg ?> overflow-hidden text-left"

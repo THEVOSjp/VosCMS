@@ -2,116 +2,203 @@
 
 RezlyX의 사이트 전체 레이아웃과 스킨을 관리하는 시스템.
 
-## 개요
+## 핵심 개념
 
-레이아웃 관리 페이지에서 4개 카테고리의 스킨/레이아웃을 선택하여 사이트 전체에 적용한다.
+### 레이아웃이란?
+헤더(메뉴) + 콘텐츠 + 푸터를 감싸는 **껍데기**. 각 페이지는 독립적으로 동작하며, 레이아웃이 없어도 콘텐츠만 출력 가능.
+
+### 레이아웃 적용 흐름 (index.php)
+
+```
+요청 → index.php → 페이지 콘텐츠 렌더링 → 레이아웃 적용
+
+1. ?no_layout=1 파라미터 있으면:
+   → 콘텐츠만 출력 (외부 iframe 삽입용)
+
+2. 그 외:
+   → 항상 사이트 레이아웃 적용
+   → skins/layouts/{name}/header.php + 콘텐츠 + footer.php
+```
+
+### 4가지 사용 시나리오
+
+| 시나리오 | 설정 | 결과 |
+|---------|------|------|
+| 일반 페이지 | 사이트 전체 레이아웃 | default/header.php + 콘텐츠 + default/footer.php |
+| 특별한 페이지 | 개별 레이아웃 지정 | minimal/header.php + 콘텐츠 + minimal/footer.php |
+| 레이아웃 "사용 안 함" | 내 사이트 접속 | **사이트 전체 레이아웃으로 폴백** (헤더/푸터 유지) |
+| 외부 제공용 | ?no_layout=1 | 콘텐츠만 출력 (iframe 삽입 가능) |
+
+**"사용 안 함"은 외부 제공 설정이지, 내 사이트에서 헤더/푸터를 제거하는 것이 아님.**
+
+## 레이아웃 파일 구조
+
+```
+skins/layouts/{name}/
+├── layout.json      # 메타 정보 + 확장 변수 (vars)
+├── header.php       # 필수 — 없으면 헤더 없이 출력
+├── footer.php       # 필수 — 없으면 푸터 없이 출력
+├── main.php         # 레거시 (현재 미사용)
+└── thumbnail.png    # 미리보기 썸네일
+```
+
+### header.php 역할
+- `<html>`, `<head>`, 다크모드, Tailwind CDN, 파비콘, PWA
+- PC 상단 메뉴 (네비게이션)
+- 언어 선택기, 다크모드 토글, 로그인/회원가입 버튼
+
+### footer.php 역할
+- 푸터 (카피라이트, 약관 링크)
+- 모바일 하단 메뉴바 + 더보기 메뉴
+- JS (다크모드, 모바일 메뉴, PWA 등)
+- `</body>`, `</html>`
+
+## 기본 제공 레이아웃
+
+| 이름 | 설명 | 모바일 메뉴 |
+|------|------|-----------|
+| **default** | 기본 레이아웃 | 드롭업 (하단 바 위에 팝업) |
+| **modern** | default 기반 (디자인 변경용) | 드롭업 |
+| **minimal** | 간소화 레이아웃 | Bottom Sheet (하단에서 올라옴) |
+
+## 카테고리별 스킨
 
 | 카테고리 | DB 키 | 스킨 디렉토리 | 설명 |
 |---------|-------|-------------|------|
-| 레이아웃 | `site_layout` | `skins/layouts/{name}/` | 사이트 전체 레이아웃 (헤더+콘텐츠+푸터) |
-| 페이지 | `site_page_skin` | `skins/page/{name}/` | 문서/위젯/외부 페이지 스킨 |
-| 게시판 | `site_board_skin` | `skins/board/{name}/` | 게시판 목록/읽기/쓰기 스킨 |
-| 회원 | `site_member_skin` | `skins/member/{name}/` | 로그인/회원가입/마이페이지 스킨 |
+| 레이아웃 | `site_layout` | `skins/layouts/{name}/` | 헤더+콘텐츠+푸터 |
+| 페이지 | `site_page_skin` | `skins/page/{name}/` | 문서/위젯/외부 페이지 |
+| 게시판 | `site_board_skin` | `skins/board/{name}/` | 목록/읽기/쓰기 |
+| 회원 | `site_member_skin` | `skins/member/{name}/` | 로그인/가입/마이페이지 |
 
-## 디렉토리 구조
+## 스킨 적용 우선순위
 
 ```
-skins/
-├── layouts/
-│   └── default/
-│       ├── layout.json      # 레이아웃 메타 정보
-│       ├── main.php         # 레이아웃 템플릿
-│       └── thumbnail.png    # 미리보기 썸네일
-├── page/
-│   └── default/
-│       ├── skin.json        # 페이지 스킨 메타 + 확장 변수
-│       └── thumbnail.png
-├── board/
-│   └── default/
-│       ├── skin.json
-│       ├── _list-table.php  # 목록형
-│       ├── _list-card.php   # 카드형
-│       ├── _list-gallery.php
-│       ├── _list-webzine.php
-│       ├── _list-notices.php
-│       └── thumbnail.png
-└── member/
-    ├── default/
-    └── modern/
+개별 설정 (page_config_{slug}.skin) > 전체 설정 (site_page_skin) > 기본값 (default)
 ```
 
 ## 설정 파일
 
-### layout.json (레이아웃)
+### layout.json
 
 ```json
 {
   "title": { "ko": "기본 레이아웃", "en": "Default Layout" },
-  "description": { "ko": "헤더 + 콘텐츠 + 푸터 기본 구조", ... },
+  "description": { "ko": "헤더 + 콘텐츠 + 푸터 기본 구조" },
   "version": "1.0.0",
-  "author": { "name": "RezlyX" }
+  "author": { "name": "RezlyX", "url": "https://rezlyx.com" },
+  "menus": {
+    "main_menu": { "name": { "ko": "메인 메뉴", "en": "Main Menu" } }
+  },
+  "vars": [
+    {
+      "name": "point_color",
+      "title": { "ko": "포인트 컬러" },
+      "type": "color",
+      "default": "#3B82F6",
+      "tab": "basic"
+    },
+    {
+      "name": "show_title",
+      "title": { "ko": "제목 표시" },
+      "type": "checkbox",
+      "default": "1",
+      "tab": "basic"
+    },
+    {
+      "name": "title_bg_type",
+      "title": { "ko": "배경 타입" },
+      "type": "radio",
+      "options": ["none", "image", "video"],
+      "default": "none",
+      "depends_on": "show_title",
+      "tab": "basic"
+    }
+  ],
+  "tabs": {
+    "basic": { "ko": "기본 설정", "en": "Basic" },
+    "header": { "ko": "헤더", "en": "Header" },
+    "footer": { "ko": "푸터", "en": "Footer" }
+  }
 }
 ```
 
-### skin.json (스킨)
+### vars 속성
 
-```json
-{
-  "title": { "ko": "기본 페이지 스킨", ... },
-  "description": { ... },
-  "version": "1.0.0",
-  "date": "2026-03-21",
-  "thumbnail": "thumbnail.png",
-  "author": { "name": "RezlyX", "url": "...", "email": "..." },
-  "vars": [ ... ]
-}
-```
-
-`vars`의 상세 스펙은 `PAGE_SYSTEM.md`의 스킨 시스템 섹션 참조.
-
-## 관리자 페이지
-
-### 레이아웃 관리 (`admin/site/design.php`)
-
-3단 구조:
-
-```
-┌──────────────┬───────────────┬──────────────┐
-│ 사이트 미리보기│ 스킨 목록      │ 상세 설정     │
-│ (iframe 축소) │               │ (준비 중)     │
-├──────────────┤ ○ 사용 안 함   │              │
-│ 레이아웃 [..] │ ＋ 다른 설치   │              │
-│ 페이지 [..]  │               │              │
-│ 게시판 [..]  │ ◉ 기본 레이아웃│              │
-│ 회원 [..]    │   [썸네일]     │              │
-├──────────────┤   상세 설정    │              │
-│ [레이아웃 저장]│   복사본 생성  │              │
-│              │   삭제        │              │
-└──────────────┴───────────────┴──────────────┘
-```
-
-**좌측**: 사이트 미리보기 + 4개 메뉴
-- 초기 상태: 미리보기 + 메뉴만 표시
-- 메뉴 클릭: 우측에 해당 스킨 목록 표시
-- 같은 메뉴 재클릭: 패널 닫기
-
-**중앙 (스킨 목록)**:
-- 사용 안 함
-- 다른 스킨 설치 (준비 중)
-- 설치된 스킨: 라디오 + 썸네일 + 액션 링크
-- 선택 시 노란 배경 + 좌측 메뉴 현재값 업데이트
-
-**우측 (상세 설정)**:
-- 스킨의 상세 설정 클릭 시 표시
-- SkinConfigRenderer 기반 설정 폼 (향후 구현)
-
-### 각 스킨 항목 액션
-
-| 액션 | 설명 | 상태 |
+| 속성 | 타입 | 설명 |
 |------|------|------|
-| 상세 설정 | 우측에 스킨 설정 패널 표시 | 준비 중 |
-| 복사본 생성 | 스킨 디렉토리 복제 | 준비 중 |
-| 삭제 | 스킨 디렉토리 삭제 (default 제외) | 준비 중 |
+| `name` | string | 변수명 (고유) |
+| `title` | object | 다국어 라벨 |
+| `type` | string | text, textarea, checkbox, select, radio, color, number, image, video |
+| `default` | string | 기본값 |
+| `description` | object | 다국어 설명 |
+| `options` | array | select/radio의 선택지 |
+| `depends_on` | string | 이 필드가 활성일 때만 표시 (checkbox name) |
+| `tab` | string | 소속 탭 (tabs에 정의된 키) |
+| `section` | object | 섹션 제목 (구분선 + 제목) |
+
+## 레이아웃 제작 가이드
+
+### 새 레이아웃 만들기
+
+1. `skins/layouts/{name}/` 디렉토리 생성
+2. `layout.json` 작성 (메타 + vars)
+3. `header.php` 작성 (HTML head + 메뉴)
+4. `footer.php` 작성 (푸터 + JS + `</body></html>`)
+5. `thumbnail.png` 추가 (선택)
+
+### header.php 필수 요소
+
+```php
+<?php
+// 사용 가능한 변수:
+// $baseUrl, $config, $siteSettings, $currentLocale
+// $isLoggedIn, $currentUser, $isAdmin
+// $mainMenu (메뉴 배열), $siteName
+// $__layoutConfig (layout.json vars의 저장된 값)
+?>
+<!DOCTYPE html>
+<html lang="<?= $currentLocale ?>">
+<head>
+    <!-- 필수: Tailwind, 파비콘, SEO 메타 등 -->
+</head>
+<body>
+    <!-- 헤더/메뉴 HTML -->
+```
+
+### footer.php 필수 요소
+
+```php
+    <!-- 푸터 HTML -->
+    <!-- 모바일 메뉴 (선택) -->
+    <!-- JS -->
+</body>
+</html>
+```
+
+### 콘텐츠 출력
+
+header.php와 footer.php 사이에 `$content` 변수가 자동으로 echo됩니다. 레이아웃 파일에서 콘텐츠를 직접 echo할 필요 없음.
+
+## 외부 콘텐츠 제공 (iframe)
+
+게시판/페이지를 다른 사이트에 제공할 때:
+
+```
+내 사이트:
+  https://mysite.com/board/notice
+  → 헤더 + 게시판 + 푸터 (정상 표시)
+
+외부 사이트에서 iframe:
+  <iframe src="https://mysite.com/board/notice?no_layout=1">
+  → 콘텐츠만 출력 (헤더/푸터 없음)
+  → 외부 사이트의 디자인에 자연스럽게 삽입
+```
+
+## 관리자 페이지 (레이아웃 관리)
+
+경로: `admin/site/design.php`
+
+3단 구조: 좌측(미리보기+메뉴) → 중앙(스킨 목록) → 우측(상세 설정)
 
 ## DB 저장
 
@@ -123,43 +210,13 @@ skins/
 | `site_page_skin` | `default` | 페이지 기본 스킨 |
 | `site_board_skin` | `default` | 게시판 기본 스킨 |
 | `site_member_skin` | `default` | 회원 기본 스킨 |
-
-값이 `none`이면 해당 스킨을 사용하지 않음.
-
-## 스킨 적용 우선순위
-
-개별 페이지/게시판에서 스킨을 지정하면 해당 설정이 우선.
-미지정 시 레이아웃 관리의 전체 설정값 사용.
-
-```
-개별 설정 (page_config_{slug}.skin) > 전체 설정 (site_page_skin) > 기본값 (default)
-```
-
-## 스킨 스캔
-
-관리자 페이지 진입 시 `skins/` 디렉토리를 스캔하여 설치된 스킨 목록을 자동 로드.
-
-```php
-function scanSkins($dir, $type, $baseUrl, $locale) {
-    // layout.json 또는 skin.json 읽어서 메타 정보 추출
-    // thumbnail.png 존재 시 썸네일 URL 생성
-}
-```
+| `skin_detail_layout_{name}` | JSON | 레이아웃 상세 설정값 |
 
 ## SkinConfigRenderer
 
-`skin.json`의 `vars` 배열을 읽어 설정 폼을 자동 생성하는 공용 렌더러.
+`skin.json`/`layout.json`의 `vars`를 읽어 설정 폼을 자동 생성하는 공용 렌더러.
 
 - 지원 타입: text, textarea, checkbox, select, radio, color, number, image, video
-- `depends_on`: 필드 간 의존 관계 선언적 정의
-- `$baseUrl` 파라미터로 이미지/비디오 미리보기 경로 지원
-
-상세 스펙은 `PAGE_SYSTEM.md` 참조.
-
-## 향후 계획
-
-- [ ] 상세 설정 패널: SkinConfigRenderer 기반 인라인 설정
-- [ ] 복사본 생성: 스킨 디렉토리 복제 + 자동 slug 생성
-- [ ] 삭제: 확인 모달 + 디렉토리 삭제
-- [ ] 스킨 마켓플레이스: 외부 스킨 설치/업데이트
-- [ ] 스킨 내보내기/가져오기: ZIP 패키징
+- `depends_on`: 필드 간 의존 관계 (체크박스 연동)
+- `tab`: 탭 구조 지원
+- 파일: `rzxlib/Core/Skin/SkinConfigRenderer.php`
