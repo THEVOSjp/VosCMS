@@ -69,6 +69,8 @@ return [
     'event_end' => 'End Date',
 
     // Customer page
+    'recommended' => 'Recommended',
+    'default_name' => 'Bundle Service',
     'customer' => [
         'title' => 'Recommended Packages',
     ],

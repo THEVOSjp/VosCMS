@@ -186,7 +186,7 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Slug (URL)</label>
                                 <div class="flex items-center gap-2">
                                     <span class="text-sm text-zinc-400"><?= $baseUrl ?>/</span>
-                                    <input type="text" id="fmSlug" value="<?= htmlspecialchars($pageSlug) ?>" class="flex-1 px-3 py-2 border rounded-lg dark:bg-zinc-700 dark:border-zinc-600 dark:text-white text-sm focus:ring-2 focus:ring-blue-500" <?= !empty($pageData['is_system']) ? 'disabled' : '' ?>>
+                                    <input type="text" id="fmSlug" value="<?= htmlspecialchars($pageSlug) ?>" class="flex-1 px-3 py-2 border rounded-lg dark:bg-zinc-700 dark:border-zinc-600 dark:text-white text-sm focus:ring-2 focus:ring-blue-500" >
                                 </div>
                             </div>
                             <!-- 콘텐츠 / 외부 URL -->
@@ -286,10 +286,12 @@ async function savePage() {
         is_active: document.getElementById('fmActive').checked ? 1 : 0,
         locale: CURRENT_LOCALE
     });
-    showResultModal(data.success, data.success ? '' : data.message);
     if (data.success && data.slug && data.slug !== SLUG) {
+        SLUG = data.slug;
         window.location.href = PAGE_URL + '?slug=' + data.slug;
+        return;
     }
+    showResultModal(data.success, data.success ? '' : data.message);
 }
 
 async function deletePage() {

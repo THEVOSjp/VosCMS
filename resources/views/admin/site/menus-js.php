@@ -285,7 +285,8 @@ var menuTypeInfo = {
     external: { title: '<?= __('site.menus.type_external') ?>', desc: '<?= __('site.menus.desc_external') ?>' },
     board:    { title: '<?= __('site.menus.type_board') ?>',    desc: '<?= __('site.menus.desc_board') ?>' },
     member:   { title: '<?= __('site.menus.type_member') ?>',   desc: '<?= __('site.menus.desc_member') ?>' },
-    shortcut: { title: '<?= __('site.menus.type_shortcut') ?>', desc: '<?= __('site.menus.desc_shortcut') ?>' }
+    shortcut: { title: '<?= __('site.menus.type_shortcut') ?>', desc: '<?= __('site.menus.desc_shortcut') ?>' },
+    system:   { title: '<?= __('site.menus.type_system') ?? '시스템 페이지' ?>', desc: '<?= __('site.menus.desc_system') ?? '시스템에서 제공하는 기본 페이지를 메뉴에 추가합니다.' ?>' }
 };
 
 function selectMenuType(type) {
@@ -298,6 +299,21 @@ function selectMenuType(type) {
     var info = menuTypeInfo[type] || { title: type, desc: '' };
     document.getElementById('panel4Title').textContent = info.title;
     document.getElementById('panel4Desc').textContent = info.desc;
+
+    // 시스템 페이지 타입: 폼 숨기고 목록 표시
+    var sysList = document.getElementById('systemPageList');
+    var menuForm = document.getElementById('menuForm');
+    if (type === 'system') {
+        sysList.classList.remove('hidden');
+        menuForm.classList.add('hidden');
+        document.getElementById('panel4Desc').textContent = '';
+        showPanel(4);
+        console.log('[Menu] System page list shown');
+        return;
+    } else {
+        sysList.classList.add('hidden');
+        menuForm.classList.remove('hidden');
+    }
 
     // 폼 초기화
     document.getElementById('formAction').value = 'add_menu_item';
@@ -454,6 +470,25 @@ function saveForm() {
     };
     console.log('[Menu] Save form:', action, data);
     apiCall(action, data);
+}
+
+// ─── 시스템 페이지 메뉴 추가 ───
+function addSystemPage(slug, title) {
+    var data = {
+        id: '',
+        sitemap_id: selectedSitemapId,
+        parent_id: (addMode === 'sub') ? selectedId : '',
+        menu_type: 'page',
+        title: title,
+        url: slug,
+        target: '_self',
+        icon: '',
+        css_class: '',
+        description: '',
+        expand: 0
+    };
+    console.log('[Menu] Add system page:', slug, title);
+    apiCall('add_menu_item', data);
 }
 
 // ─── API 호출 ───

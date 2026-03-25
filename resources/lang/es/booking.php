@@ -188,4 +188,7 @@ return [
     'points_default_name' => 'Puntos',
     'deposit_pay_now' => 'Depósito (Pagar ahora)',
     'deposit_remaining_later' => 'El saldo restante se cobrará en el servicio',
+    'next' => 'Siguiente',
+    'categories' => 'categorías',
+    'service_count' => 'servicios',
 ];

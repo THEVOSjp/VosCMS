@@ -55,6 +55,7 @@ return [
         'tabs' => ['general' => 'Allgemein', 'holidays' => 'Feiertage'],
         'general' => [
             'title' => 'Service-Grundeinstellungen',
+            'bundle_name' => 'Paketname', 'bundle_name_placeholder' => 'Paketservice (Standard)', 'bundle_name_hint' => 'Legen Sie einen benutzerdefinierten Namen fest.',
             'description' => 'Standardoptionen für Servicebuchungen konfigurieren.',
             'saved' => 'Einstellungen gespeichert.',
             'default_duration' => 'Standarddauer',

@@ -188,4 +188,7 @@ return [
     'points_default_name' => 'Points',
     'deposit_pay_now' => 'Acompte (À payer)',
     'deposit_remaining_later' => 'Le solde restant sera facturé lors du service',
+    'next' => 'Suivant',
+    'categories' => 'catégories',
+    'service_count' => 'services',
 ];

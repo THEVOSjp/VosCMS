@@ -7,22 +7,27 @@
 require_once BASE_PATH . '/rzxlib/Core/Auth/Auth.php';
 use RzxLib\Core\Auth\Auth;
 
-$pageTitle = ($config['app_name'] ?? 'RezlyX') . ' - ' . __('common.nav.booking');
-$baseUrl = $config['app_url'] ?? '';
-$appName = $config['app_name'] ?? 'RezlyX';
+$_isWidgetMode = !empty($_GET['widget_mode']);
+// 위젯 모드에서는 $config가 위젯 설정이므로 사이트 설정은 글로벌에서 가져옴
+$_siteConfig = (isset($config['app_url']) || isset($config['app_name'])) ? $config : ($GLOBALS['config'] ?? []);
+$pageTitle = ($_siteConfig['app_name'] ?? 'RezlyX') . ' - ' . __('common.nav.booking');
+if (!isset($baseUrl)) $baseUrl = $_siteConfig['app_url'] ?? '';
+$appName = $_siteConfig['app_name'] ?? 'RezlyX';
 
-$isLoggedIn = Auth::check();
-$currentUser = $isLoggedIn ? Auth::user() : null;
+if (!isset($isLoggedIn)) $isLoggedIn = Auth::check();
+if (!isset($currentUser)) $currentUser = $isLoggedIn ? Auth::user() : null;
 
 $services = [];
 
 try {
-    $pdo = new PDO(
-        'mysql:host=' . ($_ENV['DB_HOST'] ?? 'localhost') . ';dbname=' . ($_ENV['DB_DATABASE'] ?? 'rezlyx') . ';charset=utf8mb4',
-        $_ENV['DB_USERNAME'] ?? 'root',
-        $_ENV['DB_PASSWORD'] ?? '',
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-    );
+    if (!isset($pdo)) {
+        $pdo = new PDO(
+            'mysql:host=' . ($_ENV['DB_HOST'] ?? 'localhost') . ';dbname=' . ($_ENV['DB_DATABASE'] ?? 'rezlyx') . ';charset=utf8mb4',
+            $_ENV['DB_USERNAME'] ?? 'root',
+            $_ENV['DB_PASSWORD'] ?? '',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+        );
+    }
     $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
 
     // 서비스 로드 (카테고리 JOIN)
@@ -54,7 +59,7 @@ try {
     }
 
     // POST 처리
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         header('Content-Type: application/json; charset=utf-8');
         $input = json_decode(file_get_contents('php://input'), true);
 
@@ -272,15 +277,17 @@ $_currencySymbols = ['KRW' => '₩', 'USD' => '$', 'JPY' => '¥', 'EUR' => '€'
 $currencySymbol = $_currencySymbols[$serviceCurrency] ?? $serviceCurrency;
 
 // 서비스 번역 헬퍼
-function getBookingSvcTranslated($svcId, $field, $default) {
-    global $svcTranslations, $localeChain;
-    $key = "service.{$svcId}.{$field}";
-    if (isset($svcTranslations[$key])) {
-        foreach ($localeChain as $loc) {
-            if (!empty($svcTranslations[$key][$loc])) return $svcTranslations[$key][$loc];
+if (!function_exists('getBookingSvcTranslated')) {
+    function getBookingSvcTranslated($svcId, $field, $default) {
+        global $svcTranslations, $localeChain;
+        $key = "service.{$svcId}.{$field}";
+        if (isset($svcTranslations[$key])) {
+            foreach ($localeChain as $loc) {
+                if (!empty($svcTranslations[$key][$loc])) return $svcTranslations[$key][$loc];
+            }
         }
+        return $default;
     }
-    return $default;
 }
 
 // 스텝 정의: 서비스 → 날짜/시간 → 고객정보 → 확인 (4단계)

@@ -288,10 +288,16 @@ try {
     }
 
     // 스태프 목록 로드
-    $staffList = $pdo->query("SELECT s.*, p.name as position_name FROM {$prefix}staff s LEFT JOIN {$prefix}staff_positions p ON s.position_id = p.id ORDER BY s.sort_order ASC, s.name ASC")->fetchAll(PDO::FETCH_ASSOC);
+    $_locale = $config['locale'] ?? 'ko';
+    $staffList = $pdo->query("SELECT s.*, p.name as position_name, p.name_i18n as position_name_i18n FROM {$prefix}staff s LEFT JOIN {$prefix}staff_positions p ON s.position_id = p.id ORDER BY s.sort_order ASC, s.name ASC")->fetchAll(PDO::FETCH_ASSOC);
 
-    // 활성 직책 목록
-    $positions = $pdo->query("SELECT id, name FROM {$prefix}staff_positions WHERE is_active = 1 ORDER BY sort_order ASC")->fetchAll(PDO::FETCH_ASSOC);
+    // 활성 직책 목록 (다국어)
+    $positions = $pdo->query("SELECT id, name, name_i18n FROM {$prefix}staff_positions WHERE is_active = 1 ORDER BY sort_order ASC")->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($positions as &$_p) {
+        $_pI18n = $_p['name_i18n'] ? (is_string($_p['name_i18n']) ? json_decode($_p['name_i18n'], true) : $_p['name_i18n']) : [];
+        $_p['display_name'] = $_pI18n[$_locale] ?? $_pI18n['en'] ?? $_p['name'];
+    }
+    unset($_p);
 
     // 서비스 목록
     $services = $pdo->query("SELECT id, name FROM {$prefix}services WHERE is_active = 1 ORDER BY sort_order ASC")->fetchAll(PDO::FETCH_ASSOC);
@@ -333,6 +339,14 @@ try {
     $staffBundlesMap = [];
     try {
         $allBundles = $pdo->query("SELECT id, name, bundle_price, is_active FROM {$prefix}service_bundles WHERE is_active = 1 ORDER BY display_order, name")->fetchAll(PDO::FETCH_ASSOC);
+        // 번들명 다국어
+        foreach ($allBundles as &$_bdl) {
+            $_bdlTr = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = ? AND locale IN (?, 'en') ORDER BY FIELD(locale, ?, 'en') LIMIT 1");
+            $_bdlTr->execute(['bundle.' . $_bdl['id'] . '.name', $_locale, $_locale]);
+            $_bdlVal = $_bdlTr->fetchColumn();
+            if ($_bdlVal) $_bdl['name'] = $_bdlVal;
+        }
+        unset($_bdl);
         $sbRows = $pdo->query("SELECT staff_id, bundle_id FROM {$prefix}staff_bundles")->fetchAll(PDO::FETCH_ASSOC);
         foreach ($sbRows as $row) {
             $staffBundlesMap[$row['staff_id']][] = $row['bundle_id'];
@@ -381,7 +395,8 @@ $pageSubDesc = __('staff.description');
                         <!-- 배너 헤더 -->
                         <div class="relative h-20 bg-gradient-to-r from-blue-500 to-purple-500 overflow-hidden">
                             <?php if (!empty($s['banner'])): ?>
-                            <img src="<?= htmlspecialchars($s['banner']) ?>" class="w-full h-full object-cover" alt="">
+                            <?php $_sBanner = $s['banner']; if (!str_starts_with($_sBanner, 'http')) $_sBanner = $baseUrl . $_sBanner; ?>
+                            <img src="<?= htmlspecialchars($_sBanner) ?>" class="w-full h-full object-cover" alt="">
                             <?php endif; ?>
                             <!-- 상태 배지 -->
                             <div class="absolute top-2 right-2 flex gap-1">
@@ -405,10 +420,17 @@ $pageSubDesc = __('staff.description');
                             <div class="pt-9">
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2">
-                                    <h3 class="text-base font-semibold text-zinc-900 dark:text-white truncate"><?= htmlspecialchars($s['name']) ?></h3>
+                                    <?php
+                                    $_sNameI18n = $s['name_i18n'] ? (is_string($s['name_i18n']) ? json_decode($s['name_i18n'], true) : $s['name_i18n']) : [];
+                                    $_sDispName = $_sNameI18n[$_locale] ?? $_sNameI18n['en'] ?? $s['name'];
+                                    ?>
+                                    <h3 class="text-base font-semibold text-zinc-900 dark:text-white truncate"><?= htmlspecialchars($_sDispName) ?></h3>
                                 </div>
-                                    <?php if ($s['position_name']): ?>
-                                    <p class="text-xs text-blue-600 dark:text-blue-400 mt-0.5"><?= htmlspecialchars($s['position_name']) ?></p>
+                                    <?php if ($s['position_name']):
+                                        $_posI18n = $s['position_name_i18n'] ? (is_string($s['position_name_i18n']) ? json_decode($s['position_name_i18n'], true) : $s['position_name_i18n']) : [];
+                                        $_posDisp = $_posI18n[$_locale] ?? $_posI18n['en'] ?? $s['position_name'];
+                                    ?>
+                                    <p class="text-xs text-blue-600 dark:text-blue-400 mt-0.5"><?= htmlspecialchars($_posDisp) ?></p>
                                     <?php endif; ?>
                                     <?php if ($s['email'] || $s['phone']): ?>
                                     <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 truncate"><?= htmlspecialchars($s['email'] ?? '') ?><?= $s['email'] && $s['phone'] ? ' · ' : '' ?><?= htmlspecialchars($s['phone'] ?? '') ?></p>

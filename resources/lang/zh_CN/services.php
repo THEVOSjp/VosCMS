@@ -55,6 +55,7 @@ return [
         'tabs' => ['general' => '基本设置', 'holidays' => '节假日管理'],
         'general' => [
             'title' => '服务基本设置',
+            'bundle_name' => '套餐服务名称', 'bundle_name_placeholder' => '套餐服务（默认）', 'bundle_name_hint' => '设置适合行业的名称。留空则使用默认值。',
             'description' => '配置服务预约的默认选项。',
             'saved' => '设置已保存。',
             'default_duration' => '默认时长',

@@ -63,9 +63,9 @@ async function uploadImage(e) {
             img.classList.remove('hidden');
             const placeholder = document.getElementById('noImagePlaceholder');
             if (placeholder) placeholder.classList.add('hidden');
-            showMsg('success', '<?= __("bundles.image_uploaded") ?>');
+            showResultModal(true, '<?= __("bundles.image_uploaded") ?>');
         } else {
-            showMsg('error', data.message);
+            showResultModal(false, data.message);
         }
     } catch(err) {
         console.error('[BundleEdit] upload error', err);
@@ -201,13 +201,13 @@ async function saveAll() {
         });
         const data = await res.json();
         if (data.success) {
-            showMsg('success', data.message);
+            showResultModal(true, data.message);
         } else {
-            showMsg('error', data.message || 'Error');
+            showResultModal(false, data.message || 'Error');
         }
     } catch(e) {
         console.error('[BundleEdit] save error', e);
-        showMsg('error', e.message);
+        showResultModal(false, e.message);
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> <?= __("bundles.save") ?>';

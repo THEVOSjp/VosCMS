@@ -36,6 +36,8 @@ return [
     ],
 
     // 고객 페이지
+    'recommended' => 'Đề xuất',
+    'default_name' => 'Gói dịch vụ',
     'customer' => [
         'title' => 'Gói Khuyến Nghị',
     ],

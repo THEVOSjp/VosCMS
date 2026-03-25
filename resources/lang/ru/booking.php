@@ -188,4 +188,7 @@ return [
     'points_default_name' => 'Баллы',
     'deposit_pay_now' => 'Залог (Оплатить сейчас)',
     'deposit_remaining_later' => 'Остаток будет списан при оказании услуги',
+    'next' => 'Далее',
+    'categories' => 'категорий',
+    'service_count' => 'услуг',
 ];

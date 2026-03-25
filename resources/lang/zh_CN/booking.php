@@ -188,4 +188,7 @@ return [
     'points_default_name' => '积分',
     'deposit_pay_now' => '预约金（支付金额）',
     'deposit_remaining_later' => '余额将在服务时收取',
+    'next' => '下一步',
+    'categories' => '个分类',
+    'service_count' => '项服务',
 ];

@@ -36,6 +36,8 @@ return [
     ],
 
     // 고객 페이지
+    'recommended' => 'Önerilen',
+    'default_name' => 'Paket Hizmeti',
     'customer' => [
         'title' => 'Önerilen Setler',
     ],

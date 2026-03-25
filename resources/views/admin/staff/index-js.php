@@ -181,7 +181,7 @@
                                 class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
                             <option value="">-</option>
                             <?php foreach ($positions as $pos): ?>
-                            <option value="<?= $pos['id'] ?>"><?= htmlspecialchars($pos['name']) ?></option>
+                            <option value="<?= $pos['id'] ?>"><?= htmlspecialchars($pos['display_name']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -352,6 +352,8 @@
 (function() {
     'use strict';
     var STAFF_URL = '<?= $adminUrl ?>/staff';
+    var BASE_URL = '<?= $baseUrl ?>';
+    function fixImgUrl(url) { if (!url) return ''; if (url.startsWith('http')) return url; return BASE_URL + (url.startsWith('/') ? '' : '/') + url; }
 
     // ─── 회원 검색 ───
     var memberSearchTimer = null;
@@ -444,7 +446,7 @@
             var nameHtml = query ? highlightMatch(m.name || '', query) : escapeHtml(m.name || '');
             var emailHtml = query ? highlightMatch(m.email || '', query) : escapeHtml(m.email || '');
             var avatarHtml = m.avatar
-                ? '<img src="' + m.avatar.replace(/"/g, '&quot;') + '" class="w-7 h-7 rounded-full object-cover shrink-0" onerror="this.style.display=\'none\'">'
+                ? '<img src="' + fixImgUrl(m.avatar).replace(/"/g, '&quot;') + '" class="w-7 h-7 rounded-full object-cover shrink-0" onerror="this.style.display=\'none\'">'
                 : '<div class="w-7 h-7 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 text-xs font-semibold shrink-0">' + escapeHtml(initial) + '</div>';
             div.innerHTML = avatarHtml +
                 '<div class="flex-1 min-w-0"><div class="text-sm font-medium text-zinc-900 dark:text-white truncate">' +
@@ -481,7 +483,7 @@
         // 회원 프로필 사진을 스태프 사진 미리보기에 반영 + hidden 필드에 URL 저장
         document.getElementById('formMemberAvatarUrl').value = '';
         if (m.avatar) {
-            document.getElementById('avatarPreview').innerHTML = '<img src="' + m.avatar.replace(/"/g, '&quot;') + '" class="w-full h-full object-cover">';
+            document.getElementById('avatarPreview').innerHTML = '<img src="' + fixImgUrl(m.avatar).replace(/"/g, '&quot;') + '" class="w-full h-full object-cover">';
             document.getElementById('removeAvatarBtn').classList.remove('hidden');
             document.getElementById('formMemberAvatarUrl').value = m.avatar;
             console.log('[StaffManage] Member avatar URL set:', m.avatar);
@@ -544,7 +546,7 @@
         var preview = document.getElementById('avatarPreview');
         var removeBtn = document.getElementById('removeAvatarBtn');
         if (isEdit && data.avatar) {
-            preview.innerHTML = '<img src="' + data.avatar + '" class="w-full h-full object-cover">';
+            preview.innerHTML = '<img src="' + fixImgUrl(data.avatar) + '" class="w-full h-full object-cover">';
             removeBtn.classList.remove('hidden');
         } else {
             preview.innerHTML = '<svg class="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>';
@@ -556,7 +558,7 @@
         var bannerPreview = document.getElementById('bannerPreview');
         var removeBannerBtn = document.getElementById('removeBannerBtn');
         if (isEdit && data.banner) {
-            bannerPreview.innerHTML = '<img src="' + data.banner + '" class="w-full h-full object-cover">';
+            bannerPreview.innerHTML = '<img src="' + fixImgUrl(data.banner) + '" class="w-full h-full object-cover">';
             removeBannerBtn.classList.remove('hidden');
         } else {
             bannerPreview.innerHTML = '<span class="text-xs text-zinc-400"><?= __('staff.fields.no_banner') ?? 'No banner' ?></span>';

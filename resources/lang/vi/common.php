@@ -182,6 +182,7 @@ return [
 
     // Messages
     'msg' => [
+        'coming_soon' => 'Đang chuẩn bị cập nhật tính năng.',
         'success' => 'Đã xử lý thành công.',
         'error' => 'Đã xảy ra lỗi.',
         'saved' => 'Đã lưu.',

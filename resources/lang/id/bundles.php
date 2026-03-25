@@ -36,6 +36,8 @@ return [
     ],
 
     // 고객 페이지
+    'recommended' => 'Rekomendasi',
+    'default_name' => 'Layanan Paket',
     'customer' => [
         'title' => 'Paket Rekomendasi',
     ],

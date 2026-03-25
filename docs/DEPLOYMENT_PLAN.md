@@ -344,7 +344,92 @@ Step 5: 설치 완료
 | 6 | ionCube 암호화 테스트 | 중 |
 | 7 | 업데이트 시스템 | 상 |
 
-## 11. 참고사항
+## 11. 데모 사이트 전략
+
+### 11.1 서브도메인 구조 (권장)
+
+```
+rezlyx.com              → 고객 포털 (메인 사이트 + 라이선스 관리)
+salon.rezlyx.com        → 미용실 데모
+clinic.rezlyx.com       → 병원/클리닉 데모
+restaurant.rezlyx.com   → 요식업 데모
+fitness.rezlyx.com      → 피트니스 데모
+```
+
+**서브도메인 선택 이유:**
+- 고객에게 전문적 인상 (`salon.rezlyx.com` > `rezlyx.com/demo/salon`)
+- 실제 배포 환경과 동일한 구조 (고객 사이트 = 독립 도메인)
+- 각 데모 독립 관리 (DB, 설정, 스토리지 별도)
+- SaaS 전환 시 멀티테넌트로 자연스럽게 확장
+
+### 11.2 서버 구조
+
+```
+프로덕션 서버 (Linux)
+├── /var/www/rezlyx.com/          → 고객 포털
+├── /var/www/demo/salon/          → salon.rezlyx.com
+├── /var/www/demo/clinic/         → clinic.rezlyx.com
+├── /var/www/demo/restaurant/     → restaurant.rezlyx.com
+└── /var/www/demo/fitness/        → fitness.rezlyx.com
+
+DB:
+├── rezlyx_portal                 → 고객 포털 + 라이선스
+├── rezlyx_salon                  → 미용실 데모
+├── rezlyx_clinic                 → 클리닉 데모
+├── rezlyx_restaurant             → 요식업 데모
+└── rezlyx_fitness                → 피트니스 데모
+```
+
+### 11.3 DNS 설정
+
+```
+rezlyx.com        A    → 서버 IP
+*.rezlyx.com      A    → 서버 IP (와일드카드)
+```
+
+SSL: 와일드카드 인증서 (`*.rezlyx.com`) 1개로 모든 서브도메인 커버
+
+### 11.4 Nginx VirtualHost 설정 (프로덕션)
+
+```nginx
+# 고객 포털
+server {
+    server_name rezlyx.com;
+    root /var/www/rezlyx.com;
+    # ...
+}
+
+# 데모 사이트 (서브도메인별)
+server {
+    server_name salon.rezlyx.com;
+    root /var/www/demo/salon;
+    # ...
+}
+
+server {
+    server_name clinic.rezlyx.com;
+    root /var/www/demo/clinic;
+    # ...
+}
+```
+
+### 11.5 개발 환경
+
+로컬 개발은 현재 XAMPP(Windows) 환경을 유지하고, **프로덕션용 Linux 서버를 별도 준비**하여 데모 사이트를 운영한다.
+
+| 환경 | 도구 | 용도 |
+|------|------|------|
+| 로컬 (Windows) | XAMPP | 개발/디버깅 |
+| 프로덕션 (Linux) | Nginx + PHP-FPM + MariaDB | 데모 사이트 + 고객 포털 |
+
+**Linux 서버 준비사항:**
+- OS: Ubuntu 22.04+ 또는 CentOS Stream 9
+- PHP 8.1+ (ionCube Loader 포함)
+- MariaDB 10.4+ 또는 MySQL 8.0+
+- Nginx + SSL (Let's Encrypt 와일드카드)
+- 최소 사양: 2 vCPU, 4GB RAM, 40GB SSD
+
+## 12. 참고사항
 
 - 고객 예약 기능은 라이선스 상태와 무관하게 항상 동작 (사업 중단 방지)
 - ionCube 미지원 호스팅을 위한 대안 검토 필요

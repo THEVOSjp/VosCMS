@@ -188,4 +188,7 @@ return [
     'points_default_name' => 'ポイント',
     'deposit_pay_now' => '予約金（お支払い金額）',
     'deposit_remaining_later' => '残額はサービス利用時にお支払いいただきます',
+    'next' => '次へ',
+    'categories' => '件のカテゴリ',
+    'service_count' => '件のサービス',
 ];

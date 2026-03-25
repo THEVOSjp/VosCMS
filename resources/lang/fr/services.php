@@ -55,6 +55,7 @@ return [
         'tabs' => ['general' => 'Général', 'holidays' => 'Jours fériés'],
         'general' => [
             'title' => 'Paramètres généraux des services',
+            'bundle_name' => 'Nom du forfait', 'bundle_name_placeholder' => 'Service forfait', 'bundle_name_hint' => 'Définissez un nom personnalisé.',
             'description' => 'Configurez les options par défaut pour les réservations de services.',
             'saved' => 'Paramètres enregistrés.',
             'default_duration' => 'Durée par défaut',

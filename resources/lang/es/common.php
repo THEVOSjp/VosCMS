@@ -181,6 +181,7 @@ return [
 
     // Messages
     'msg' => [
+        'coming_soon' => 'Actualización de función en preparación.',
         'success' => 'Procesado correctamente.',
         'error' => 'Ha ocurrido un error.',
         'saved' => 'Guardado.',

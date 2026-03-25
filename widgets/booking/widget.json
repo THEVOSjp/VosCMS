@@ -29,9 +29,9 @@
     },
     "config_schema": {
         "fields": [
-            {"key": "title", "type": "text", "label": "Section Title", "i18n": true},
-            {"key": "show_staff_select", "type": "toggle", "label": "Show Staff Selection", "default": true},
-            {"key": "show_service_select", "type": "toggle", "label": "Show Service Selection", "default": true}
+            {"key": "title", "type": "text", "i18n": true, "label": {"ko": "섹션 제목", "en": "Section Title", "ja": "セクションタイトル", "zh_CN": "栏目标题", "zh_TW": "欄目標題", "de": "Abschnittstitel", "es": "Título de sección", "fr": "Titre de section", "id": "Judul Bagian", "mn": "Хэсгийн гарчиг", "ru": "Заголовок раздела", "tr": "Bölüm Başlığı", "vi": "Tiêu đề phần"}},
+            {"key": "show_staff_select", "type": "toggle", "default": true, "label": {"ko": "스태프 선택 표시", "en": "Show Staff Selection", "ja": "スタッフ選択を表示", "zh_CN": "显示员工选择", "zh_TW": "顯示員工選擇", "de": "Mitarbeiterauswahl anzeigen", "es": "Mostrar selección de personal", "fr": "Afficher la sélection du personnel", "id": "Tampilkan Pilihan Staf", "mn": "Ажилтан сонголт харуулах", "ru": "Показать выбор сотрудника", "tr": "Personel Seçimini Göster", "vi": "Hiển thị chọn nhân viên"}},
+            {"key": "show_service_select", "type": "toggle", "default": true, "label": {"ko": "서비스 선택 표시", "en": "Show Service Selection", "ja": "サービス選択を表示", "zh_CN": "显示服务选择", "zh_TW": "顯示服務選擇", "de": "Dienstauswahl anzeigen", "es": "Mostrar selección de servicio", "fr": "Afficher la sélection de service", "id": "Tampilkan Pilihan Layanan", "mn": "Үйлчилгээ сонголт харуулах", "ru": "Показать выбор услуги", "tr": "Hizmet Seçimini Göster", "vi": "Hiển thị chọn dịch vụ"}}
         ]
     }
 }

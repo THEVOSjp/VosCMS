@@ -61,6 +61,7 @@ return [
             'default_duration' => 'Default Duration',
             'default_buffer' => 'Default Buffer Time',
             'advance_booking_days' => 'Advance Booking Period',
+            'bundle_name' => 'Bundle Service Name', 'bundle_name_placeholder' => 'Bundle Service (default)', 'bundle_name_hint' => 'Set a custom name like Package, Coupon, or Course. Leave empty to use the default.',
             'phone_booking' => 'Phone Reservation',
             'phone_booking_hint' => 'When enabled, phone reservation source is available in admin reservation creation.',
             'same_day_booking' => 'Same-day Booking',

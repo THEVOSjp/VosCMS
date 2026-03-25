@@ -188,4 +188,7 @@ return [
     'points_default_name' => 'Punkte',
     'deposit_pay_now' => 'Anzahlung (Jetzt zahlen)',
     'deposit_remaining_later' => 'Der Restbetrag wird bei der Dienstleistung berechnet',
+    'next' => 'Weiter',
+    'categories' => 'Kategorien',
+    'service_count' => 'Dienste',
 ];

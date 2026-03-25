@@ -101,10 +101,14 @@ class WidgetLoader
 
         // render.php는 return 문으로 HTML을 반환해야 함
         try {
-            $result = (function() use ($renderFile, $config, $widget, $renderer, $pdo, $baseUrl, $locale, $loader) {
+            $siteSettings = $GLOBALS['siteSettings'] ?? [];
+            $result = (function() use ($renderFile, $config, $widget, $renderer, $pdo, $baseUrl, $locale, $loader, $siteSettings) {
                 return include $renderFile;
             })();
-            return is_string($result) ? $result : '';
+            // render.php가 return으로 문자열을 반환하거나, ob에 출력한 경우 모두 처리
+            if (is_string($result) && strlen($result) > 0) return $result;
+            // include가 1을 반환한 경우 (return 없이 ob 출력)
+            return '';
         } catch (\Throwable $e) {
             error_log("WidgetLoader render error [{$slug}]: " . $e->getMessage());
             return '<!-- Widget render error: ' . htmlspecialchars($slug) . ' -->';

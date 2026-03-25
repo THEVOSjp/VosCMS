@@ -3,7 +3,9 @@
  * RezlyX Admin - WYSIWYG 위젯 빌더
  * 실시간 미리보기 + 드래그앤드롭 + 설정 편집
  */
-$pageTitle = __('site.widget_builder.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$_wbSlug = $_GET['slug'] ?? 'home';
+$_wbIsHome = ($_wbSlug === 'home' || empty($_wbSlug));
+$pageTitle = ($_wbIsHome ? __('site.widget_builder.title') : (__('site.widget_builder.page_edit') ?? '페이지 편집')) . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 
 try {
     $pdo = new PDO(
@@ -68,9 +70,21 @@ $iconMap = [
 ];
 
 
-$pageHeaderTitle = __('site.widget_builder.title');
+// 페이지 제목 가져오기
+$_wbPageTitle = $pageSlug;
+if (!$_wbIsHome) {
+    $_wbTitleStmt = $pdo->prepare("SELECT title FROM rzx_page_contents WHERE page_slug = ? AND locale = ? LIMIT 1");
+    $_wbTitleStmt->execute([$pageSlug, $currentLocale]);
+    $_wbPageTitle = $_wbTitleStmt->fetchColumn() ?: $pageSlug;
+}
+$pageHeaderTitle = $_wbIsHome
+    ? __('site.widget_builder.title')
+    : $_wbPageTitle . ' — ' . (__('site.widget_builder.page_edit') ?? '페이지 편집');
+$_isEmbed = !empty($_GET['embed']);
 ?>
+<?php if (!$_isEmbed): ?>
 <?php include __DIR__ . '/../reservations/_head.php'; ?>
+<?php endif; ?>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
@@ -102,7 +116,7 @@ $pageHeaderTitle = __('site.widget_builder.title');
         .dark .note-dropdown-menu .note-dropdown-item { color: #a1a1aa; }
         .dark .note-dropdown-menu .note-dropdown-item:hover { background: #52525b; color: #fff; }
     </style>
-        </div><!-- close p-6 from _head.php -->
+        <?php if (!$_isEmbed): ?></div><!-- close p-6 from _head.php --><?php endif; ?>
 
             <div class="flex flex-1 overflow-hidden">
                 <!-- 왼쪽: 위젯 팔레트 (카테고리 + 플라이아웃) -->
@@ -147,14 +161,14 @@ $pageHeaderTitle = __('site.widget_builder.title');
                     </div>
 
                     <!-- 플라이아웃 패널 -->
-                    <div id="widgetFlyout" class="widget-flyout hidden absolute left-full top-0 bottom-0 w-72 bg-white dark:bg-zinc-800 border-l border-zinc-200 dark:border-zinc-700 shadow-xl flex flex-col z-40" style="min-height:100%;">
+                    <div id="widgetFlyout" class="widget-flyout hidden absolute left-full top-0 bottom-0 bg-white dark:bg-zinc-800 border-l border-zinc-200 dark:border-zinc-700 shadow-xl flex flex-col z-40" style="min-height:100%; width: 580px;">
                         <div class="px-4 py-3 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
                             <h3 id="flyoutTitle" class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"></h3>
                             <button id="flyoutClose" class="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-400">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
-                        <div id="flyoutContent" class="flex-1 overflow-y-auto p-3 grid grid-cols-2 gap-2 auto-rows-min content-start">
+                        <div id="flyoutContent" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-3">
                         </div>
                     </div>
                 </aside>
@@ -227,8 +241,8 @@ $pageHeaderTitle = __('site.widget_builder.title');
                                     <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
                                     <div class="w-2.5 h-2.5 rounded-full bg-green-400"></div>
                                 </div>
-                                <div class="flex-1 bg-white dark:bg-zinc-700 rounded-md px-3 py-1 text-[10px] text-zinc-400 dark:text-zinc-500 text-center">
-                                    <?= htmlspecialchars($baseUrl) ?>/
+                                <div class="flex-1 bg-white dark:bg-zinc-700 rounded-md px-3 py-1 text-xs text-zinc-500 dark:text-zinc-400 text-center">
+                                    <?= htmlspecialchars($baseUrl) ?>/<?= htmlspecialchars($pageSlug) ?>
                                 </div>
                             </div>
                             <!-- 위젯 렌더링 캔버스 -->
@@ -384,6 +398,8 @@ $pageHeaderTitle = __('site.widget_builder.title');
         </div>
     </div>
 
+    <?php include BASE_PATH . '/resources/views/admin/partials/result-modal.php'; ?>
+    <script src="<?= $baseUrl ?>/assets/js/result-modal.js"></script>
     <?php include __DIR__ . '/pages-widget-builder-js.php'; ?>
 </body>
 </html>

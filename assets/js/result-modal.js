@@ -16,8 +16,10 @@ function showResultModal(success, message) {
     var savedLabel = (el && el.dataset.saved) || 'Saved.';
     var confirmLabel = (el && el.dataset.confirm) || 'OK';
 
-    // 성공 시 항상 로케일 메시지 사용, 실패 시 API 메시지 또는 기본 에러 메시지
-    var displayMsg = success ? savedLabel : (message && message !== 'null' && message !== '' ? message : errorLabel);
+    // 커스텀 메시지가 있으면 우선, 없으면 기본 메시지
+    var displayMsg = (message && message !== 'null' && message !== '')
+        ? message
+        : (success ? savedLabel : errorLabel);
 
     var iconSvg = success
         ? '<svg class="w-14 h-14 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'

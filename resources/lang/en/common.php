@@ -182,6 +182,7 @@ return [
 
     // Messages
     'msg' => [
+        'coming_soon' => 'Feature update coming soon.',
         'success' => 'Successfully processed.',
         'error' => 'An error occurred.',
         'saved' => 'Settings saved.',

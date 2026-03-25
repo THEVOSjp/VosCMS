@@ -138,13 +138,37 @@ try {
 
         if ($action === 'save_settings') {
             $slug = $input['slug'] ?? '';
+            $newSlug = trim($input['new_slug'] ?? $slug);
             $settings = $input['settings'] ?? [];
 
+            // slug 변경 처리
+            if ($newSlug && $newSlug !== $slug) {
+                // 중복 체크
+                $chk = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}page_contents WHERE page_slug = ?");
+                $chk->execute([$newSlug]);
+                if ((int)$chk->fetchColumn() > 0) {
+                    echo json_encode(['success' => false, 'message' => '이미 사용 중인 URL ID입니다.']);
+                    exit;
+                }
+                // page_contents slug 변경
+                $pdo->prepare("UPDATE {$prefix}page_contents SET page_slug = ? WHERE page_slug = ?")->execute([$newSlug, $slug]);
+                // page_widgets slug 변경
+                $pdo->prepare("UPDATE {$prefix}page_widgets SET page_slug = ? WHERE page_slug = ?")->execute([$newSlug, $slug]);
+                // 메뉴 URL 변경
+                $pdo->prepare("UPDATE {$prefix}menu_items SET url = ? WHERE url = ?")->execute([$newSlug, $slug]);
+                // page_config 키 변경
+                $oldKey = 'page_config_' . $slug;
+                $newKey = 'page_config_' . $newSlug;
+                $pdo->prepare("UPDATE {$prefix}settings SET `key` = ? WHERE `key` = ?")->execute([$newKey, $oldKey]);
+                $slug = $newSlug;
+            }
+
             $configKey = 'page_config_' . $slug;
+            $settings['slug'] = $slug;
             $configJson = json_encode($settings, JSON_UNESCAPED_UNICODE);
             $stmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
             $stmt->execute([$configKey, $configJson]);
-            echo json_encode(['success' => true, 'message' => __('common.msg.saved') ?? 'Settings saved.']);
+            echo json_encode(['success' => true, 'message' => __('common.msg.saved') ?? 'Settings saved.', 'new_slug' => $slug]);
             exit;
         }
 
@@ -417,12 +441,24 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                     </div>
 
                     <!-- 레이아웃 선택 (카드형) -->
-                    <input type="hidden" id="cfgLayout" value="<?= htmlspecialchars($pageConfig['layout'] ?? 'default') ?>">
+                    <input type="hidden" id="cfgLayout" value="<?= htmlspecialchars($pageConfig['layout'] ?? 'inherit') ?>">
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
                         <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-1"><?= __('site.pages.cfg.layout_select') ?? '레이아웃 선택' ?></h3>
+                        <p class="text-xs text-zinc-400 mb-4"><?= __('site.pages.cfg.layout_inherit_desc') ?? '전체 설정 따름을 선택하면 레이아웃 관리에서 설정한 레이아웃이 적용됩니다.' ?></p>
                         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+                            <?php $__inheritSelected = ($pageConfig['layout'] ?? 'inherit') === 'inherit'; ?>
+                            <div onclick="selectLayout('inherit')" id="layout-card-inherit"
+                                 class="cursor-pointer rounded-xl border-2 p-1 transition-all <?= $__inheritSelected ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400' ?>">
+                                <div class="h-24 bg-zinc-100 dark:bg-zinc-700 rounded-lg flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                                </div>
+                                <div class="px-2 py-2">
+                                    <p class="text-sm font-medium text-blue-600 dark:text-blue-400"><?= __('site.pages.cfg.layout_inherit') ?? '전체 설정 따름' ?></p>
+                                    <p class="text-xs text-zinc-400"><?= htmlspecialchars($siteSettings['site_layout'] ?? 'default') ?></p>
+                                </div>
+                            </div>
                             <?php foreach ($layouts as $lk => $lInfo):
-                                $isSelected = ($pageConfig['layout'] ?? 'default') === $lk;
+                                $isSelected = ($pageConfig['layout'] ?? 'inherit') === $lk;
                             ?>
                             <div onclick="selectLayout('<?= $lk ?>')" id="layout-card-<?= $lk ?>"
                                  class="cursor-pointer rounded-xl border-2 p-1 transition-all <?= $isSelected ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400' ?>">
@@ -727,10 +763,10 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
 
                 <!-- 하단 바로가기 -->
                 <div class="mt-6 flex items-center gap-3">
-                    <a href="<?= $embedMode ? $baseUrl . '/' . urlencode($pageSlug) . '/edit' : $adminUrl . '/site/pages/edit-content?slug=' . urlencode($pageSlug) ?>" class="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <a id="linkEditContent" href="<?= $embedMode ? $baseUrl . '/' . urlencode($pageSlug) . '/edit' : $adminUrl . '/site/pages/edit-content?slug=' . urlencode($pageSlug) ?>" class="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                         <?= __('site.pages.edit_content') ?? '콘텐츠 편집' ?> →
                     </a>
-                    <a href="<?= $baseUrl ?>/<?= htmlspecialchars($pageSlug) ?>" target="_blank" class="px-4 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                    <a id="linkPreview" href="<?= $baseUrl ?>/<?= htmlspecialchars($pageSlug) ?>" target="_blank" class="px-4 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg border border-zinc-200 dark:border-zinc-700">
                         <?= __('site.pages.document.preview') ?? '미리보기' ?> →
                     </a>
                 </div>
@@ -741,6 +777,18 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
 <script>
 var PAGE_URL = '<?= $adminUrl ?>/site/pages/settings';
 var SLUG = '<?= htmlspecialchars($pageSlug) ?>';
+var BASE_URL = '<?= $baseUrl ?>';
+var ADMIN_URL = '<?= $adminUrl ?>';
+var EMBED_MODE = <?= $embedMode ? 'true' : 'false' ?>;
+
+// slug 입력 변경 시 미리보기/편집 URL 실시간 업데이트
+document.getElementById('cfgSlug')?.addEventListener('input', function() {
+    var s = this.value.trim();
+    var preview = document.getElementById('linkPreview');
+    var edit = document.getElementById('linkEditContent');
+    if (preview) preview.href = BASE_URL + '/' + encodeURIComponent(s);
+    if (edit) edit.href = EMBED_MODE ? BASE_URL + '/' + encodeURIComponent(s) + '/edit' : ADMIN_URL + '/site/pages/edit-content?slug=' + encodeURIComponent(s);
+});
 
 function selectLayout(key) {
     console.log('[PageSettings] selectLayout:', key);
@@ -852,7 +900,7 @@ async function saveSettings() {
         browser_title: document.getElementById('cfgBrowserTitle')?.value || '',
         full_width: document.getElementById('cfgFullWidth')?.checked ? true : false,
         search_index: document.getElementById('cfgSearchIndex')?.checked ? 'yes' : 'no',
-        layout: document.getElementById('cfgLayout')?.value || 'default',
+        layout: document.getElementById('cfgLayout')?.value || 'inherit',
         skin: document.getElementById('cfgSkin')?.value || '',
         meta_title: document.getElementById('cfgMetaTitle')?.value || '',
         meta_description: document.getElementById('cfgMetaDesc')?.value || '',
@@ -875,11 +923,15 @@ async function saveSettings() {
         var res = await fetch(PAGE_URL + '?slug=' + SLUG, {
             method: 'POST',
             headers: {'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
-            body: JSON.stringify({ action: 'save_settings', slug: SLUG, settings: settings })
+            body: JSON.stringify({ action: 'save_settings', slug: SLUG, new_slug: settings.slug, settings: settings })
         });
         var data = await res.json();
         showResultModal(data.success, data.success ? '' : data.message);
         console.log('[saveSettings]', data);
+        // slug 변경 시 URL 리다이렉트
+        if (data.success && data.new_slug && data.new_slug !== SLUG) {
+            setTimeout(() => { window.location.href = PAGE_URL + '?slug=' + data.new_slug; }, 1500);
+        }
     } catch (e) {
         showResultModal(false, '<?= __("common.msg.error") ?? "오류가 발생했습니다." ?>');
         console.error('[saveSettings]', e);

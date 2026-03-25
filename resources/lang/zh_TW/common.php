@@ -133,6 +133,7 @@ return [
 
     // Messages
     'msg' => [
+        'coming_soon' => '功能更新準備中。',
         'success' => '處理成功。',
         'error' => '發生錯誤。',
         'saved' => '已儲存。',

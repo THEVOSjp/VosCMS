@@ -7,7 +7,7 @@
  *   title, subtitle, columns(2-6), show_position_filter, show_designation_fee,
  *   show_booking_btn, show_services, max_staff(0=all)
  */
-// $config は WidgetLoader から渡される設定配列
+// $config: WidgetLoader에서 전달되는 설정 배열
 $wColumns = (int)($config['columns'] ?? 4);
 $wShowFilter = ($config['show_position_filter'] ?? true) !== false && ($config['show_position_filter'] ?? '1') !== '0';
 $wShowFee = ($config['show_designation_fee'] ?? true) !== false && ($config['show_designation_fee'] ?? '1') !== '0';
@@ -66,8 +66,15 @@ try {
     if ($wShowSvc && !empty($staffList)) {
         $ids = array_column($staffList, 'id');
         $ph = implode(',', array_fill(0, count($ids), '?'));
-        $stmt = $pdo->prepare("SELECT ss.staff_id, sv.name as service_name FROM {$prefix}staff_services ss JOIN {$prefix}services sv ON ss.service_id = sv.id WHERE ss.staff_id IN ({$ph}) AND sv.is_active = 1 ORDER BY sv.sort_order, sv.name");
-        $stmt->execute($ids);
+        $_wLocale = $locale ?? ($currentLocale ?? 'ko');
+        $stmt = $pdo->prepare("SELECT ss.staff_id, COALESCE(t.content, te.content, sv.name) as service_name
+            FROM {$prefix}staff_services ss
+            JOIN {$prefix}services sv ON ss.service_id = sv.id
+            LEFT JOIN {$prefix}translations t ON t.lang_key = CONCAT('service.', sv.id, '.name') AND t.locale = ?
+            LEFT JOIN {$prefix}translations te ON te.lang_key = CONCAT('service.', sv.id, '.name') AND te.locale = 'en'
+            WHERE ss.staff_id IN ({$ph}) AND sv.is_active = 1
+            ORDER BY sv.sort_order, sv.name");
+        $stmt->execute(array_merge([$_wLocale], $ids));
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $staffServices[$row['staff_id']][] = $row['service_name'];
         }

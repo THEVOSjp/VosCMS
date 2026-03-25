@@ -55,7 +55,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                 'config' => json_encode($widgetConfig),
                 'config_schema' => $widget['config_schema'] ?? '{}',
             ];
+            $GLOBALS['_rzx_widget_preview'] = true;
             $html = $renderer->render($fakeData);
+            unset($GLOBALS['_rzx_widget_preview']);
         }
         echo json_encode(['success' => true, 'html' => $html]);
         exit;

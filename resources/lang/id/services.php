@@ -41,6 +41,7 @@ return [
         'tabs' => ['general' => 'Umum', 'holidays' => 'Hari Libur'],
         'general' => [
             'title' => 'Pengaturan Dasar Layanan',
+            'bundle_name' => 'Nama Paket', 'bundle_name_placeholder' => 'Layanan Paket', 'bundle_name_hint' => 'Atur nama khusus.',
             'description' => 'Konfigurasi opsi default untuk reservasi layanan.',
             'saved' => 'Pengaturan disimpan.',
             'default_duration' => 'Durasi Default',

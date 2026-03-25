@@ -36,6 +36,8 @@ return [
     ],
 
     // 고객 페이지
+    'recommended' => 'Empfohlen',
+    'default_name' => 'Paketservice',
     'customer' => [
         'title' => 'Empfohlene Sets',
     ],

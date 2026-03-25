@@ -188,4 +188,7 @@ return [
     'points_default_name' => 'Puan',
     'deposit_pay_now' => 'Depozito (Şimdi Öde)',
     'deposit_remaining_later' => 'Kalan bakiye hizmet sırasında tahsil edilecektir',
+    'next' => 'İleri',
+    'categories' => 'kategori',
+    'service_count' => 'hizmet',
 ];

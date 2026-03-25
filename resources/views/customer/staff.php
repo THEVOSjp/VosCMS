@@ -50,14 +50,18 @@ try {
     $staffServices = [];
     if (!empty($staffIds)) {
         $placeholders = implode(',', array_fill(0, count($staffIds), '?'));
-        $stmt = $pdo->prepare("SELECT ss.staff_id, sv.name as service_name
+        $_locale = $currentLocale ?? ($config['locale'] ?? 'ko');
+        $stmt = $pdo->prepare("SELECT ss.staff_id, sv.name as service_name,
+                COALESCE(t.content, te.content, sv.name) as localized_name
             FROM {$prefix}staff_services ss
             JOIN {$prefix}services sv ON ss.service_id = sv.id
+            LEFT JOIN {$prefix}translations t ON t.lang_key = CONCAT('service.', sv.id, '.name') AND t.locale = ?
+            LEFT JOIN {$prefix}translations te ON te.lang_key = CONCAT('service.', sv.id, '.name') AND te.locale = 'en'
             WHERE ss.staff_id IN ({$placeholders}) AND sv.is_active = 1
             ORDER BY sv.sort_order, sv.name");
-        $stmt->execute($staffIds);
+        $stmt->execute(array_merge([$_locale], $staffIds));
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $staffServices[$row['staff_id']][] = $row['service_name'];
+            $staffServices[$row['staff_id']][] = $row['localized_name'];
         }
     }
 } catch (PDOException $e) {
@@ -108,9 +112,11 @@ $seoContext = ['type' => 'sub', 'subpage_title' => __('staff_page.title')];
     <main class="max-w-7xl mx-auto px-4 py-8">
         <!-- Page Title -->
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+            <?php require_once BASE_PATH . '/rzxlib/Core/Helpers/admin-icons.php'; ?>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
                 <?= __('staff_page.subtitle') ?>
-                <span class="text-lg font-normal text-gray-500 dark:text-zinc-400 ml-3"><?= __('staff_page.title') ?></span>
+                <span class="text-lg font-normal text-gray-500 dark:text-zinc-400"><?= __('staff_page.title') ?></span>
+                <?= rzx_admin_icons($baseUrl . '/staff/settings', $baseUrl . '/staff/edit') ?>
             </h1>
         </div>
 

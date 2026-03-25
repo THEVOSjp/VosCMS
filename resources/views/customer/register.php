@@ -162,11 +162,16 @@ if ($useSkin) {
         'registerFields' => $registerFields,
     ]);
 
-    // 레이아웃이 적용되면 <main> 콘텐츠만 추출 (스크립트 포함)
+    // 레이아웃이 적용되면 <main> 콘텐츠 + 스크립트 추출
     if (isset($__layout) && $__layout !== false) {
+        $__bodyContent = '';
         if (preg_match('/<main[^>]*>(.*)<\/main>/is', $skinHtml, $__mm)) {
-            echo '<div class="py-12 px-4">' . $__mm[1] . '</div>';
+            $__bodyContent .= '<div class="py-12 px-4">' . $__mm[1] . '</div>';
         }
+        if (preg_match_all('/<script\b[^>]*>.*?<\/script>/is', $skinHtml, $__scripts)) {
+            $__bodyContent .= implode("\n", $__scripts[0]);
+        }
+        echo $__bodyContent;
     } else {
         ?>
 <!DOCTYPE html>

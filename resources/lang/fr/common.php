@@ -182,6 +182,7 @@ return [
 
     // Messages
     'msg' => [
+        'coming_soon' => 'Mise à jour de la fonctionnalité en préparation.',
         'success' => 'Operation reussie.',
         'error' => 'Une erreur est survenue.',
         'saved' => 'Enregistré.',

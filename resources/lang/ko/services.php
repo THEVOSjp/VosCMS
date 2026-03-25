@@ -43,6 +43,7 @@ return [
             'title' => '서비스 기본설정', 'description' => '서비스 예약의 기본 옵션을 설정합니다.',
             'saved' => '설정이 저장되었습니다.', 'default_duration' => '기본 소요시간',
             'default_buffer' => '기본 버퍼 시간', 'advance_booking_days' => '예약 가능 기간',
+            'bundle_name' => '세트 서비스 명칭', 'bundle_name_placeholder' => '세트 서비스 (기본)', 'bundle_name_hint' => '세트 서비스, 패키지 서비스, 쿠폰 서비스 등 업종에 맞는 명칭을 설정합니다. 비워두면 기본값이 사용됩니다.',
             'phone_booking' => '전화 예약',
             'phone_booking_hint' => '활성화 시 관리자 예약 생성에서 전화예약 경로를 사용할 수 있습니다.',
             'same_day_booking' => '당일 예약 허용',

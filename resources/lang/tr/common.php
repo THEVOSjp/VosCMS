@@ -182,6 +182,7 @@ return [
 
     // Messages
     'msg' => [
+        'coming_soon' => 'Özellik güncellemesi hazırlanıyor.',
         'success' => 'İşlem başarıyla tamamlandı.',
         'error' => 'Bir hata oluştu.',
         'saved' => 'Kaydedildi.',

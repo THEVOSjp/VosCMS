@@ -132,6 +132,7 @@ $startNo = $totalCount - $offset;
 
     <div class="board-skin-wrap max-w-5xl mx-auto px-4 sm:px-6 py-6">
         <!-- 게시판 제목 (배경 이미지/동영상 지원) -->
+        <?php require_once BASE_PATH . '/rzxlib/Core/Helpers/admin-icons.php'; ?>
         <?php if ($_hasTitleBg): ?>
         <?php
             $_txtColorClass = $_skinTitleTextColor === 'white' ? 'text-white' : ($_skinTitleTextColor === 'dark' ? 'text-zinc-800' : 'text-white');
@@ -153,11 +154,7 @@ $startNo = $totalCount - $offset;
             <div class="relative z-10 flex flex-col justify-end h-full p-6">
                 <h1 class="text-2xl font-bold <?= $_txtColorClass ?> inline-flex items-center gap-2 drop-shadow-sm">
                     <?= htmlspecialchars($board['title']) ?>
-                    <?php if (!empty($_SESSION['admin_id'])): ?>
-                    <a href="<?= $baseUrl ?>/board/<?= htmlspecialchars($board['slug']) ?>/settings" class="<?= $_gearColorClass ?> transition" title="<?= __('board.board_settings') ?>">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    </a>
-                    <?php endif; ?>
+                    <?= rzx_admin_icons($baseUrl . '/board/' . htmlspecialchars($board['slug']) . '/settings', '') ?>
                 </h1>
                 <?php if (!empty($board['description'])): ?>
                 <p class="mt-1 text-sm <?= $_descColorClass ?> drop-shadow-sm"><?= htmlspecialchars($board['description']) ?></p>
@@ -169,11 +166,7 @@ $startNo = $totalCount - $offset;
         <div class="mb-6">
             <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 inline-flex items-center gap-2">
                 <?= htmlspecialchars($board['title']) ?>
-                <?php if (!empty($_SESSION['admin_id'])): ?>
-                <a href="<?= $baseUrl ?>/board/<?= htmlspecialchars($board['slug']) ?>/settings" class="text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition" title="<?= __('board.board_settings') ?>">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                </a>
-                <?php endif; ?>
+                <?= rzx_admin_icons($baseUrl . '/board/' . htmlspecialchars($board['slug']) . '/settings', '') ?>
             </h1>
             <?php if (!empty($board['description'])): ?>
             <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars($board['description']) ?></p>

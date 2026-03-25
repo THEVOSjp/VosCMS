@@ -36,6 +36,8 @@ return [
     ],
 
     // 고객 페이지
+    'recommended' => 'Санал болгох',
+    'default_name' => 'Багц үйлчилгээ',
     'customer' => [
         'title' => 'Санал болгох сэт',
     ],

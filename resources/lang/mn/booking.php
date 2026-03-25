@@ -188,4 +188,7 @@ return [
     'points_default_name' => 'Оноо',
     'deposit_pay_now' => 'Урьдчилгаа (Одоо төлөх)',
     'deposit_remaining_later' => 'Үлдэгдэл үйлчилгээний үед төлөгдөнө',
+    'next' => 'Дараах',
+    'categories' => 'ангилал',
+    'service_count' => 'үйлчилгээ',
 ];

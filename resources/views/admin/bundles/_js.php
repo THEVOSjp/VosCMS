@@ -2,6 +2,7 @@
 const BUNDLE_URL = window.location.href;
 const CURRENCY = '<?= $currency ?>';
 const ADMIN_URL = '<?= $adminUrl ?>';
+const BASE_URL = '<?= $baseUrl ?>';
 const LABELS = {
     create: '<?= __("bundles.create") ?>',
     edit: '<?= __("bundles.edit") ?>',
@@ -80,7 +81,7 @@ function renderCard(b) {
     <div class="bg-white dark:bg-zinc-800 rounded-xl border dark:border-zinc-700 overflow-hidden hover:shadow-lg transition-shadow group flex flex-col h-full">
         <!-- 이미지 헤더 -->
         <div class="relative h-36 bg-gradient-to-br from-blue-500 to-indigo-600 overflow-hidden">
-            ${b.image ? `<img src="${escHtml(b.image)}" class="w-full h-full object-cover">` : `
+            ${b.image ? `<img src="${b.image.startsWith('http') ? escHtml(b.image) : BASE_URL + escHtml(b.image)}" class="w-full h-full object-cover">` : `
             <div class="absolute inset-0 flex items-center justify-center">
                 <svg class="w-16 h-16 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
             </div>`}
@@ -120,7 +121,6 @@ function renderCard(b) {
         <!-- 하단 액션 -->
         <div class="flex items-center border-t dark:border-zinc-700 divide-x dark:divide-zinc-700">
             <a href="${ADMIN_URL}/bundles/${b.id}" class="flex-1 py-2.5 text-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition">${LABELS.manage}</a>
-            <button onclick="event.preventDefault();editBundle('${b.id}')" class="flex-1 py-2.5 text-center text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition">${LABELS.edit}</button>
             <button onclick="event.preventDefault();toggleBundle('${b.id}')" class="py-2.5 px-4 text-center text-sm text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition">
                 ${parseInt(b.is_active) ? '⏸' : '▶'}
             </button>

@@ -55,6 +55,7 @@ return [
         'tabs' => ['general' => 'Cài đặt chung', 'holidays' => 'Ngày lễ'],
         'general' => [
             'title' => 'Cài đặt chung dịch vụ',
+            'bundle_name' => 'Tên gói dịch vụ', 'bundle_name_placeholder' => 'Gói dịch vụ', 'bundle_name_hint' => 'Đặt tên tùy chỉnh.',
             'description' => 'Cấu hình tùy chọn mặc định cho đặt lịch dịch vụ.',
             'saved' => 'Cài đặt đã được lưu.',
             'default_duration' => 'Thời lượng mặc định',

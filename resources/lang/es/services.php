@@ -55,6 +55,7 @@ return [
         'tabs' => ['general' => 'General', 'holidays' => 'Festivos'],
         'general' => [
             'title' => 'Configuración General de Servicios',
+            'bundle_name' => 'Nombre del paquete', 'bundle_name_placeholder' => 'Servicio de paquete', 'bundle_name_hint' => 'Establezca un nombre personalizado.',
             'description' => 'Configure las opciones predeterminadas para las reservas de servicios.',
             'saved' => 'Configuración guardada.',
             'default_duration' => 'Duración predeterminada',

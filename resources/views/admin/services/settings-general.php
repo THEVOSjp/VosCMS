@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             'service_deposit_amount' => trim($_POST['service_deposit_amount'] ?? '0'),
             'service_deposit_percent' => trim($_POST['service_deposit_percent'] ?? '0'),
             'service_deposit_refund_hours' => trim($_POST['service_deposit_refund_hours'] ?? '24'),
+            'bundle_display_name' => trim($_POST['bundle_display_name'] ?? ''),
         ];
 
         $stmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
@@ -81,6 +82,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                                class="w-32 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <span class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('services.minute') ?></span>
                     </div>
+                </div>
+
+                <!-- 세트 서비스 명칭 -->
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                        <?= __('services.settings.general.bundle_name') ?? '세트 서비스 명칭' ?>
+                    </label>
+                    <?php rzx_multilang_input('bundle_display_name', $settings['bundle_display_name'] ?? '', 'bundle_display_name', ['placeholder' => __('services.settings.general.bundle_name_placeholder') ?? '세트 서비스 (기본)']); ?>
+                    <p class="mt-1 text-xs text-zinc-400"><?= __('services.settings.general.bundle_name_hint') ?? '세트 서비스, 패키지 서비스, 쿠폰 서비스 등 업종에 맞는 명칭을 설정합니다. 비워두면 기본값이 사용됩니다.' ?></p>
                 </div>
 
                 <!-- 전화 예약 -->
@@ -214,12 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 <!-- 적립금 명칭 -->
                 <div>
                     <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('services.settings.general.points_name') ?></label>
-                    <div class="flex items-center gap-2">
-                        <input type="text" name="service_points_name" id="service_points_name" value="<?= htmlspecialchars($settings['service_points_name'] ?? '') ?>"
-                               placeholder="<?= __('services.settings.general.points_name_placeholder') ?>"
-                               class="flex-1 md:max-w-64 px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <?= rzx_multilang_btn("openMultilangModal('services.settings.general.points_name', 'service_points_name')") ?>
-                    </div>
+                    <?php rzx_multilang_input('service_points_name', $settings['service_points_name'] ?? '', 'service_points_name', ['placeholder' => __('services.settings.general.points_name_placeholder')]); ?>
                     <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1"><?= __('services.settings.general.points_name_hint') ?></p>
                 </div>
             </div>

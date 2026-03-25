@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
 
     // ---- 번들 목록 ----
     if ($action === 'list') {
+        $_locale = $config['locale'] ?? 'ko';
         $rows = $pdo->query("
             SELECT b.*, b.event_price, b.event_start, b.event_end, b.event_label,
                    COUNT(bi.id) as item_count,
@@ -45,6 +46,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             GROUP BY b.id
             ORDER BY b.display_order, b.created_at DESC
         ")->fetchAll(PDO::FETCH_ASSOC);
+
+        // 다국어 적용
+        foreach ($rows as &$_b) {
+            // 번들 이름/설명
+            $_bNameTr = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = ? AND locale = ?");
+            $_bNameTr->execute(['bundle.' . $_b['id'] . '.name', $_locale]);
+            $_trName = $_bNameTr->fetchColumn();
+            if ($_trName) $_b['name'] = $_trName;
+
+            $_bDescTr = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = ? AND locale = ?");
+            $_bDescTr->execute(['bundle.' . $_b['id'] . '.description', $_locale]);
+            $_trDesc = $_bDescTr->fetchColumn();
+            if ($_trDesc) $_b['description'] = $_trDesc;
+
+            // 서비스명 다국어
+            if (!empty($_b['service_names'])) {
+                $svcIds = $pdo->prepare("SELECT s.id, s.name FROM {$prefix}service_bundle_items bi JOIN {$prefix}services s ON bi.service_id = s.id WHERE bi.bundle_id = ? ORDER BY bi.sort_order");
+                $svcIds->execute([$_b['id']]);
+                $localNames = [];
+                while ($svc = $svcIds->fetch(PDO::FETCH_ASSOC)) {
+                    $sTr = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = ? AND locale = ?");
+                    $sTr->execute(['service.' . $svc['id'] . '.name', $_locale]);
+                    $localNames[] = $sTr->fetchColumn() ?: $svc['name'];
+                }
+                $_b['service_names'] = implode(', ', $localNames);
+            }
+        }
+        unset($_b);
 
         echo json_encode(['success' => true, 'bundles' => $rows]);
         exit;

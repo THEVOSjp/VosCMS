@@ -13,7 +13,7 @@ use RzxLib\Reservation\Models\Service;
 use RzxLib\Core\Helpers\Encryption;
 
 $pageTitle = ($config['app_name'] ?? 'RezlyX') . ' - ' . __('booking.lookup.title');
-$baseUrl = $config['app_url'] ?? '';
+if (!isset($baseUrl)) $baseUrl = $config['app_url'] ?? '';
 
 // 검색 결과
 $reservations = [];

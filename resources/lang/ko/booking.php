@@ -150,7 +150,6 @@ return [
         'created_at' => '예약 일시',
         'staff' => '담당 스태프',
         'designation_fee' => '지명비',
-        'services' => '서비스 내역',
         'payment' => '결제 정보',
         'total' => '합계',
         'discount' => '할인',
@@ -213,4 +212,7 @@ return [
     'points_default_name' => '적립금',
     'deposit_pay_now' => '예약금 (결제 금액)',
     'deposit_remaining_later' => '잔액은 서비스 이용 시 결제됩니다',
+    'next' => '다음',
+    'categories' => '개 카테고리',
+    'service_count' => '개 서비스',
 ];

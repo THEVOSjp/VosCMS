@@ -188,4 +188,7 @@ return [
     'points_default_name' => 'Điểm',
     'deposit_pay_now' => 'Đặt cọc (Thanh toán ngay)',
     'deposit_remaining_later' => 'Số dư còn lại sẽ được thu khi sử dụng dịch vụ',
+    'next' => 'Tiếp theo',
+    'categories' => 'danh mục',
+    'service_count' => 'dịch vụ',
 ];

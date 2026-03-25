@@ -36,6 +36,8 @@ return [
     ],
 
     // 고객 페이지
+    'recommended' => 'Recommandé',
+    'default_name' => 'Service forfait',
     'customer' => [
         'title' => 'Ensembles Recommandés',
     ],

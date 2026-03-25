@@ -91,11 +91,14 @@ if ($useSkin) {
         'baseUrl' => $baseUrl,
     ]);
 
-    // 레이아웃이 적용되면 <main> 콘텐츠만 추출
+    // 레이아웃이 적용되면 <main> 콘텐츠 + 스크립트 추출
     if (isset($__layout) && $__layout !== false) {
         $__out = '';
         if (preg_match('/<main[^>]*>(.*)<\/main>/is', $skinHtml, $__mm)) {
             $__out .= '<div class="py-12 px-4">' . $__mm[1] . '</div>';
+        }
+        if (preg_match_all('/<script\b[^>]*>.*?<\/script>/is', $skinHtml, $__scripts)) {
+            $__out .= implode("\n", $__scripts[0]);
         }
         echo $__out;
     } else {

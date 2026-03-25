@@ -182,6 +182,7 @@ return [
 
     // Messages
     'msg' => [
+        'coming_soon' => 'Pembaruan fitur sedang disiapkan.',
         'success' => 'Berhasil diproses.',
         'error' => 'Terjadi kesalahan.',
         'saved' => 'Tersimpan.',

@@ -15,6 +15,14 @@ var WBEdit = (function() {
     var editBlock = null;
     var editTempConfig = {};
     var esc = WB.escapeHtml;
+    var currentLocale = '<?= $currentLocale ?? "ko" ?>';
+    // 다국어 라벨 처리: 객체이면 현재 로케일 → en → 첫 번째 값
+    function getLabel(label, fallback) {
+        if (!label) return fallback || '';
+        if (typeof label === 'string') return label;
+        if (typeof label === 'object') return label[currentLocale] || label['en'] || Object.values(label)[0] || fallback || '';
+        return String(label);
+    }
     var globeSvg = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>';
     var iCls = 'edit-field i18n-extra w-full px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-600 rounded text-[11px] bg-zinc-50 dark:bg-zinc-700/50 text-zinc-900 dark:text-white';
     var fCls = 'edit-field w-full px-3 py-2 border border-zinc-200 dark:border-zinc-600 rounded-lg text-xs bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white';
@@ -111,15 +119,15 @@ var WBEdit = (function() {
         var defaultVal = getI18nValue(editTempConfig, f.key, currentLocale);
         var h = '<div class="i18n-field-wrap" data-key="' + f.key + '">';
         h += '<div class="flex items-center justify-between mb-1">';
-        h += '<label class="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400">' + esc(f.label || f.key) + '</label>';
+        h += '<label class="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400">' + esc(getLabel(f.label, f.key)) + '</label>';
         h += '<button type="button" class="i18n-toggle p-1 text-zinc-400 hover:text-blue-500 dark:hover:text-blue-400 rounded transition" title="' + translations.multilang + '">' + globeSvg + '</button></div>';
         if (f.type === 'richtext') {
-            h += '<div class="flex gap-1"><textarea class="edit-field i18n-default w-full px-3 py-2 border border-zinc-200 dark:border-zinc-600 rounded-lg text-xs bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white resize-y richtext-i18n-src" data-key="' + f.key + '" data-lang="' + currentLocale + '" rows="3" placeholder="' + esc(f.label) + ' (' + (langNames[currentLocale] || currentLocale) + ')">' + esc(String(defaultVal)) + '</textarea>';
+            h += '<div class="flex gap-1"><textarea class="edit-field i18n-default w-full px-3 py-2 border border-zinc-200 dark:border-zinc-600 rounded-lg text-xs bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white resize-y richtext-i18n-src" data-key="' + f.key + '" data-lang="' + currentLocale + '" rows="3" placeholder="' + esc(getLabel(f.label, f.key)) + ' (' + (langNames[currentLocale] || currentLocale) + ')">' + esc(String(defaultVal)) + '</textarea>';
             h += '<button type="button" class="richtext-modal-btn flex-shrink-0 px-2 py-1 bg-blue-600 text-white text-[10px] rounded-lg hover:bg-blue-700 transition self-start" data-key="' + f.key + '" data-lang="' + currentLocale + '" data-label="' + esc(langNames[currentLocale] || currentLocale) + '" title="Editor"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button></div>';
         } else if (f.type === 'textarea') {
-            h += '<textarea class="edit-field i18n-default w-full px-3 py-2 border border-zinc-200 dark:border-zinc-600 rounded-lg text-xs bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 resize-y" data-key="' + f.key + '" data-lang="' + currentLocale + '" rows="3" placeholder="' + esc(f.label) + ' (' + (langNames[currentLocale] || currentLocale) + ')">' + esc(String(defaultVal)) + '</textarea>';
+            h += '<textarea class="edit-field i18n-default w-full px-3 py-2 border border-zinc-200 dark:border-zinc-600 rounded-lg text-xs bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 resize-y" data-key="' + f.key + '" data-lang="' + currentLocale + '" rows="3" placeholder="' + esc(getLabel(f.label, f.key)) + ' (' + (langNames[currentLocale] || currentLocale) + ')">' + esc(String(defaultVal)) + '</textarea>';
         } else {
-            h += '<input type="text" class="edit-field i18n-default w-full px-3 py-2 border border-zinc-200 dark:border-zinc-600 rounded-lg text-xs bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500" data-key="' + f.key + '" data-lang="' + currentLocale + '" value="' + esc(String(defaultVal)) + '" placeholder="' + esc(f.label) + ' (' + (langNames[currentLocale] || currentLocale) + ')">';
+            h += '<input type="text" class="edit-field i18n-default w-full px-3 py-2 border border-zinc-200 dark:border-zinc-600 rounded-lg text-xs bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500" data-key="' + f.key + '" data-lang="' + currentLocale + '" value="' + esc(String(defaultVal)) + '" placeholder="' + esc(getLabel(f.label, f.key)) + ' (' + (langNames[currentLocale] || currentLocale) + ')">';
         }
         h += '<div class="i18n-expanded hidden mt-2 space-y-1.5 pl-2 border-l-2 border-blue-200 dark:border-blue-800">';
         supportedLangs.forEach(function(lang) {
@@ -129,12 +137,12 @@ var WBEdit = (function() {
             if (f.type === 'richtext') {
                 // richtext: textarea + 편집 버튼
                 h += '<div><label class="text-[10px] text-zinc-400 dark:text-zinc-500">' + esc(langLabel) + '</label>';
-                h += '<div class="flex gap-1"><textarea class="' + iCls + ' resize-y flex-1 richtext-i18n-src" data-key="' + f.key + '" data-lang="' + lang + '" rows="2" placeholder="' + esc(f.label) + ' (' + esc(langLabel) + ')">' + esc(String(langVal)) + '</textarea>';
+                h += '<div class="flex gap-1"><textarea class="' + iCls + ' resize-y flex-1 richtext-i18n-src" data-key="' + f.key + '" data-lang="' + lang + '" rows="2" placeholder="' + esc(getLabel(f.label, f.key)) + ' (' + esc(langLabel) + ')">' + esc(String(langVal)) + '</textarea>';
                 h += '<button type="button" class="richtext-modal-btn flex-shrink-0 px-2 py-1 bg-blue-600 text-white text-[10px] rounded-lg hover:bg-blue-700 transition self-start" data-key="' + f.key + '" data-lang="' + lang + '" data-label="' + esc(langLabel) + '" title="Editor"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button></div></div>';
             } else if (f.type === 'textarea') {
-                h += '<div><label class="text-[10px] text-zinc-400 dark:text-zinc-500">' + esc(langLabel) + '</label><textarea class="' + iCls + ' resize-y" data-key="' + f.key + '" data-lang="' + lang + '" rows="2" placeholder="' + esc(f.label) + ' (' + esc(langLabel) + ')">' + esc(String(langVal)) + '</textarea></div>';
+                h += '<div><label class="text-[10px] text-zinc-400 dark:text-zinc-500">' + esc(langLabel) + '</label><textarea class="' + iCls + ' resize-y" data-key="' + f.key + '" data-lang="' + lang + '" rows="2" placeholder="' + esc(getLabel(f.label, f.key)) + ' (' + esc(langLabel) + ')">' + esc(String(langVal)) + '</textarea></div>';
             } else {
-                h += '<div><label class="text-[10px] text-zinc-400 dark:text-zinc-500">' + esc(langLabel) + '</label><input type="text" class="' + iCls + '" data-key="' + f.key + '" data-lang="' + lang + '" value="' + esc(String(langVal)) + '" placeholder="' + esc(f.label) + ' (' + esc(langLabel) + ')"></div>';
+                h += '<div><label class="text-[10px] text-zinc-400 dark:text-zinc-500">' + esc(langLabel) + '</label><input type="text" class="' + iCls + '" data-key="' + f.key + '" data-lang="' + lang + '" value="' + esc(String(langVal)) + '" placeholder="' + esc(getLabel(f.label, f.key)) + ' (' + esc(langLabel) + ')"></div>';
             }
         });
         return h + '</div></div>';
@@ -156,7 +164,7 @@ var WBEdit = (function() {
     // ===== 단일 필드 =====
     function renderSingleField(f) {
         var val = editTempConfig[f.key] !== undefined ? editTempConfig[f.key] : (f.default !== undefined ? f.default : '');
-        var h = '<div><label class="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">' + esc(f.label || f.key) + '</label>';
+        var h = '<div><label class="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">' + esc(getLabel(f.label, f.key)) + '</label>';
         switch (f.type) {
             case 'number': h += '<input type="number" class="edit-field w-full px-3 py-2 border border-zinc-200 dark:border-zinc-600 rounded-lg text-xs bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white" data-key="' + f.key + '" value="' + esc(String(val)) + '">'; break;
             case 'color': h += '<div class="flex items-center gap-2"><input type="color" class="edit-field w-10 h-8 rounded-lg cursor-pointer border border-zinc-200 dark:border-zinc-600" data-key="' + f.key + '" value="' + esc(String(val || '#000000')) + '"><span class="color-label text-xs text-zinc-500">' + esc(String(val || '#000000')) + '</span></div>'; break;
@@ -195,7 +203,7 @@ var WBEdit = (function() {
             case 'range': var mn = f.min !== undefined ? f.min : 0, mx = f.max !== undefined ? f.max : 100; h += '<div class="flex items-center gap-3"><input type="range" class="edit-field range-input flex-1 h-2 bg-zinc-200 dark:bg-zinc-600 rounded-lg appearance-none cursor-pointer accent-blue-600" data-key="' + f.key + '" min="' + mn + '" max="' + mx + '" value="' + esc(String(val)) + '"><span class="range-val text-xs text-zinc-500 w-10 text-right">' + esc(String(val)) + '%</span></div>'; break;
             case 'richtext':
                 h += '<div class="flex gap-1"><textarea class="edit-field w-full px-3 py-2 border border-zinc-200 dark:border-zinc-600 rounded-lg text-xs bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white resize-y richtext-i18n-src" data-key="' + f.key + '" rows="3">' + esc(typeof val === 'string' ? val : '') + '</textarea>';
-                h += '<button type="button" class="richtext-modal-btn flex-shrink-0 px-2 py-1 bg-blue-600 text-white text-[10px] rounded-lg hover:bg-blue-700 transition self-start" data-key="' + f.key + '" data-label="' + esc(f.label || f.key) + '" title="Editor"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button></div>';
+                h += '<button type="button" class="richtext-modal-btn flex-shrink-0 px-2 py-1 bg-blue-600 text-white text-[10px] rounded-lg hover:bg-blue-700 transition self-start" data-key="' + f.key + '" data-label="' + esc(getLabel(f.label, f.key)) + '" title="Editor"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button></div>';
                 break;
             case 'code':
                 var codeLang = f.lang || 'text';

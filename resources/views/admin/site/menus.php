@@ -216,7 +216,7 @@ $pageSubDesc = __('site.menus.description');
                             </div>
                         </div>
                         <!-- 트리 -->
-                        <div class="p-3 space-y-2 min-h-[400px] max-h-[550px] overflow-y-auto" id="sitemapTree">
+                        <div class="p-3 space-y-2 min-h-[400px] max-h-[calc(100vh-220px)] overflow-y-auto" id="sitemapTree">
                             <?php foreach ($sitemaps as $sitemap): ?>
                             <div class="sitemap-group" data-sitemap-id="<?= $sitemap['id'] ?>">
                                 <div class="tree-item flex items-center px-3 py-2 rounded text-sm font-medium text-zinc-900 dark:text-white"
@@ -369,6 +369,10 @@ $pageSubDesc = __('site.menus.description');
                                 <span><?= __('site.menus.type_external') ?></span>
                                 <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </button>
+                            <button onclick="selectMenuType('system')" class="ctx-btn" data-mtype="system">
+                                <span><?= __('site.menus.type_system') ?? '시스템 페이지' ?></span>
+                                <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
                             <button onclick="selectMenuType('board')" class="ctx-btn" data-mtype="board">
                                 <span><?= __('site.menus.type_board') ?></span>
                                 <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
@@ -397,6 +401,31 @@ $pageSubDesc = __('site.menus.description');
                             <button onclick="closePanel(4)" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 ml-2 flex-shrink-0">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
+                        </div>
+                        <!-- 시스템 페이지 목록 (system 타입 선택 시) -->
+                        <div id="systemPageList" class="hidden p-4">
+                            <p class="text-xs text-blue-600 dark:text-blue-400 mb-3"><?= __('site.menus.desc_system') ?? '시스템에서 제공하는 기본 페이지를 메뉴에 추가합니다.' ?></p>
+                            <div class="space-y-1">
+                                <?php
+                                $__sysItems = [
+                                    ['slug' => 'staff', 'title' => __('site.pages.staff_intro') ?? '스태프 소개', 'icon' => '👥'],
+                                    ['slug' => 'booking', 'title' => __('site.pages.booking') ?? '예약하기', 'icon' => '📅'],
+                                    ['slug' => 'lookup', 'title' => __('site.pages.lookup') ?? '예약 조회', 'icon' => '🔍'],
+                                    ['slug' => 'terms', 'title' => __('site.pages.terms') ?? '이용약관', 'icon' => '📄'],
+                                    ['slug' => 'privacy', 'title' => __('site.pages.privacy') ?? '개인정보처리방침', 'icon' => '🔒'],
+                                    ['slug' => 'data-policy', 'title' => __('site.pages.data_policy') ?? '데이터 관리 정책', 'icon' => '🛡️'],
+                                    ['slug' => 'refund-policy', 'title' => __('site.pages.refund_policy') ?? '취소 환불 규정', 'icon' => '💳'],
+                                    ['slug' => 'tokushoho', 'title' => __('site.pages.tokushoho') ?? '특정상거래법 표기', 'icon' => '📋'],
+                                    ['slug' => 'funds-settlement', 'title' => __('site.pages.funds_settlement') ?? '자금결제법 표시', 'icon' => '💰'],
+                                ];
+                                foreach ($__sysItems as $__si): ?>
+                                <button type="button" onclick="addSystemPage('<?= $__si['slug'] ?>', '<?= htmlspecialchars($__si['title'], ENT_QUOTES) ?>')"
+                                        class="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition text-left">
+                                    <span class="text-base"><?= $__si['icon'] ?></span>
+                                    <span><?= htmlspecialchars($__si['title']) ?></span>
+                                </button>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
                         <div class="p-4">
                             <p id="panel4Desc" class="text-xs text-blue-600 dark:text-blue-400 mb-4"></p>

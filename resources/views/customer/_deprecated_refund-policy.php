@@ -1,10 +1,11 @@
 <?php
 /**
- * RezlyX - 개인정보처리방침 (고객용)
+ * RezlyX - 취소 환불 규정 (고객용)
  */
 $isEmbed = isset($_GET['embed']) && $_GET['embed'] === '1';
 if ($isEmbed) $__layout = false; // embed 모드: 레이아웃 미적용
 $currentLocale = current_locale();
+$_sName = function_exists('get_site_name') ? get_site_name() : ($siteSettings['site_name'] ?? ($config['app_name'] ?? 'RezlyX'));
 
 // DB에서 커스텀 콘텐츠 로드
 $customContent = null;
@@ -16,7 +17,7 @@ try {
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 
-    $stmt = $pdo->prepare("SELECT title, content FROM rzx_page_contents WHERE page_slug = 'privacy' AND locale = ? AND is_active = 1");
+    $stmt = $pdo->prepare("SELECT title, content FROM rzx_page_contents WHERE page_slug = 'refund-policy' AND locale = ? AND is_active = 1");
     $stmt->execute([$currentLocale]);
     $customContent = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -28,8 +29,7 @@ try {
     // 무시
 }
 
-$customPageTitle = !empty($customContent['title']) ? $customContent['title'] : __('customer.privacy.title');
-$_sName = function_exists('get_site_name') ? get_site_name() : ($siteSettings['site_name'] ?? ($config['app_name'] ?? 'RezlyX'));
+$customPageTitle = !empty($customContent['title']) ? $customContent['title'] : __('customer.refund_policy.title');
 $pageTitle = $_sName . ' - ' . $customPageTitle;
 
 // page-content 스타일을 headExtra로 주입
@@ -62,6 +62,7 @@ if ($isEmbed) {
     <title><?= htmlspecialchars($pageTitle) ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <?= $headExtra ?>
     <script>
         if (localStorage.getItem('darkMode') === 'true' ||
@@ -81,37 +82,31 @@ if ($isEmbed) {
 
             <?php if (!empty($customContent['content'])): ?>
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                <?= htmlspecialchars($customContent['title'] ?: __('customer.privacy.title')) ?>
+                <?= htmlspecialchars($customContent['title'] ?: __('customer.refund_policy.title')) ?>
             </h1>
-            <p class="text-gray-500 dark:text-zinc-400 mb-8"><?= __('customer.privacy.last_updated') ?>: <?= date('Y-m-d') ?></p>
+            <p class="text-gray-500 dark:text-zinc-400 mb-8"><?= __('customer.refund_policy.last_updated') ?>: <?= date('Y-m-d') ?></p>
             <div class="page-content text-gray-700 dark:text-zinc-300">
                 <?= $customContent['content'] ?>
             </div>
             <?php else: ?>
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2"><?= __('customer.privacy.title') ?></h1>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2"><?= __('customer.refund_policy.title') ?></h1>
             <div class="mt-8 p-6 bg-zinc-50 dark:bg-zinc-700/50 rounded-lg text-center">
-                <p class="text-zinc-500 dark:text-zinc-400"><?= __('customer.privacy.not_configured') ?></p>
+                <p class="text-zinc-500 dark:text-zinc-400"><?= __('customer.refund_policy.not_configured') ?></p>
             </div>
             <?php endif; ?>
 
             <div class="mt-8 pt-6 border-t dark:border-zinc-700">
                 <p class="text-sm text-gray-500 dark:text-zinc-400">
-                    <?= __('customer.privacy.contact', ['name' => htmlspecialchars($_sName)]) ?>
+                    <?= __('customer.refund_policy.contact', ['name' => htmlspecialchars($_sName)]) ?>
                 </p>
             </div>
         </div>
 
-        <?php if (!$isEmbed): ?>
-        <div class="flex justify-between items-center mt-8">
-            <a href="<?= $baseUrl ?>/terms" class="text-blue-600 dark:text-blue-400 hover:underline">&larr; <?= __('customer.privacy.terms_link') ?></a>
-            <a href="<?= $baseUrl ?>/" class="text-blue-600 dark:text-blue-400 hover:underline"><?= __('customer.privacy.back_home') ?> &rarr;</a>
-        </div>
-        <?php endif; ?>
     </div>
 
-<?php if ($isEmbed): ?>
+<?php if ($isEmbed) { ?>
     </main>
 </body>
 </html>
-<?php else:
-endif; ?>
+<?php } else {
+} ?>

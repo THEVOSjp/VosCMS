@@ -86,16 +86,15 @@ if ($_hasTitleBg) {
 }
 
 // 관리자 아이콘 (설정 + 편집)
-$_adminIcons = '';
-if (!empty($_SESSION['admin_id'])) {
-    $adminPath = $config['admin_path'] ?? 'admin';
-    $_settingsUrl = ($config['app_url'] ?? '') . '/' . urlencode($pageSlug) . '/settings';
+require_once BASE_PATH . '/rzxlib/Core/Helpers/admin-icons.php';
+$_settingsUrl = ($config['app_url'] ?? '') . '/' . urlencode($pageSlug) . '/settings';
+$_adminPath = $config['admin_path'] ?? 'theadmin';
+if ($pageType === 'widget' || $pageType === 'system') {
+    $_editUrl = ($config['app_url'] ?? '') . '/' . $_adminPath . '/site/pages/widget-builder?slug=' . urlencode($pageSlug);
+} else {
     $_editUrl = ($config['app_url'] ?? '') . '/' . urlencode($pageSlug) . '/edit';
-    // 기어 아이콘 (환경 설정)
-    $_adminIcons .= '<a href="' . htmlspecialchars($_settingsUrl) . '" class="text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition" title="' . (__('common.page_settings') ?? '페이지 설정') . '"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></a>';
-    // 편집 아이콘 (콘텐츠 편집)
-    $_adminIcons .= '<a href="' . htmlspecialchars($_editUrl) . '" class="text-zinc-400 hover:text-green-600 dark:hover:text-green-400 transition" title="' . (__('common.edit') ?? '편집') . '"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></a>';
 }
+$_adminIcons = rzx_admin_icons($_settingsUrl, $_editUrl);
 ?>
 
 <?php
@@ -160,7 +159,7 @@ if ($_primaryColor) echo '<style>:root { --page-primary: ' . htmlspecialchars($_
         <?php if ($_customFooter): ?><div class="mt-4"><?= $_customFooter ?></div><?php endif; ?>
     </div>
 
-<?php elseif ($pageType === 'widget'): ?>
+<?php elseif ($pageType === 'widget' || $pageType === 'system'): ?>
     <!-- 위젯 페이지: WidgetRenderer로 렌더링 -->
     <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 py-6">
         <?php if ($_showBreadcrumb && !$_hasTitleBg): ?>
@@ -179,20 +178,30 @@ if ($_primaryColor) echo '<style>:root { --page-primary: ' . htmlspecialchars($_
         <div class="flex justify-end mb-2 gap-2"><?= $_adminIcons ?></div>
         <?php endif; ?>
     <?php
+    require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetLoader.php';
     require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetRenderer.php';
-    $widgets = $pdo->prepare("SELECT pw.*, w.widget_type, w.name as widget_name FROM {$prefix}page_widgets pw LEFT JOIN {$prefix}widgets w ON pw.widget_id = w.id WHERE pw.page_slug = ? AND pw.is_active = 1 ORDER BY pw.sort_order");
+    $renderer = new \RzxLib\Core\Modules\WidgetRenderer($pdo, $pageSlug, $currentLocale ?? 'ko', $baseUrl ?? '');
+    $widgets = $pdo->prepare("SELECT pw.*, w.slug as widget_type, w.name as widget_name FROM {$prefix}page_widgets pw LEFT JOIN {$prefix}widgets w ON pw.widget_id = w.id WHERE pw.page_slug = ? AND pw.is_active = 1 ORDER BY pw.sort_order");
     $widgets->execute([$pageSlug]);
     $widgetList = $widgets->fetchAll(PDO::FETCH_ASSOC);
 
     if (!empty($widgetList)) {
+        $_savedConfig = $config; // 사이트 설정 백업
+        $locale = $currentLocale ?? 'ko'; // 위젯에서 사용할 로케일
         foreach ($widgetList as $w) {
-            $widgetConfig = json_decode($w['config'] ?? '{}', true) ?: [];
-            $widgetType = $w['widget_type'] ?? 'text';
+            $config = json_decode($w['config'] ?? '{}', true) ?: [];
+            $widgetType = $w['widget_type'] ?? ($w['widget_slug'] ?? 'text');
             $renderFile = BASE_PATH . '/widgets/' . $widgetType . '/render.php';
             if (file_exists($renderFile)) {
-                include $renderFile;
+                try {
+                    $__wOut = include $renderFile;
+                    if (is_string($__wOut)) echo $__wOut;
+                } catch (\Throwable $__wErr) {
+                    echo '<!-- WIDGET_ERROR[' . $widgetType . ']: ' . htmlspecialchars($__wErr->getMessage()) . ' at ' . $__wErr->getFile() . ':' . $__wErr->getLine() . ' -->';
+                }
             }
         }
+        $config = $_savedConfig; // 사이트 설정 복원
     } else {
         echo '<div class="py-16 text-center text-zinc-400">위젯이 아직 추가되지 않았습니다.</div>';
     }

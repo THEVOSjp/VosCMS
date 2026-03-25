@@ -82,7 +82,8 @@ var WB = (function() {
             var iconPath = widgetIconMap[w.icon] || widgetIconMap['cube'] || '';
 
             var card = document.createElement('div');
-            card.className = 'widget-palette-item group/card flex flex-col items-center p-3 rounded-xl border ' + colors.border + ' ' + colors.hoverBg + ' bg-white dark:bg-zinc-800/50 cursor-pointer transition-all';
+            card.className = 'widget-palette-item group/card relative rounded-xl border ' + colors.border + ' cursor-pointer transition-all hover:shadow-lg overflow-hidden';
+            card.style.aspectRatio = '3/2';
             card.dataset.widgetId = w.id;
             card.dataset.widgetSlug = w.slug;
             card.dataset.widgetName = w.name;
@@ -90,26 +91,31 @@ var WB = (function() {
             card.dataset.configSchema = w.configSchema;
             card.dataset.defaultConfig = w.defaultConfig;
 
-            // 썸네일 또는 아이콘
-            var visualHtml = w.thumbnail
-                ? '<div class="w-full aspect-video rounded-lg overflow-hidden mb-2 bg-zinc-100 dark:bg-zinc-700">' +
-                      '<img src="' + escapeHtml(w.thumbnail) + '" alt="" class="w-full h-full object-cover">' +
-                  '</div>'
-                : '<div class="w-10 h-10 ' + colors.bg + ' rounded-lg flex items-center justify-center mb-2">' +
-                      '<svg class="w-5 h-5 ' + colors.text + '" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+            // 배경: 썸네일 또는 그라데이션 + 아이콘
+            var bgHtml = w.thumbnail
+                ? '<img src="' + escapeHtml(w.thumbnail) + '" alt="" class="absolute inset-0 w-full h-full object-cover">'
+                : '<div class="absolute inset-0 ' + colors.bg + ' flex items-center justify-center">' +
+                      '<svg class="w-12 h-12 ' + colors.text + ' opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
                           '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="' + escapeHtml(iconPath) + '"/>' +
                       '</svg>' +
                   '</div>';
 
-            card.innerHTML = visualHtml +
-                '<p class="text-xs font-semibold text-zinc-700 dark:text-zinc-200 text-center leading-tight">' + escapeHtml(displayName) + '</p>' +
-                '<p class="text-[10px] text-zinc-400 dark:text-zinc-500 text-center mt-1 line-clamp-2 leading-tight">' + escapeHtml(desc) + '</p>' +
-                '<div class="mt-2 opacity-0 group-hover/card:opacity-100 transition-opacity">' +
-                    '<span class="inline-flex items-center gap-1 text-[10px] font-medium ' + colors.text + '">' +
-                        '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>' +
-                        'Add' +
+            // 하단 이름 바
+            var nameBar = '<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2">' +
+                    '<p class="text-sm font-bold text-white leading-tight">' + escapeHtml(displayName) + '</p>' +
+                '</div>';
+
+            // 호버 오버레이
+            var hoverOverlay = '<div class="absolute inset-0 bg-black/60 opacity-0 group-hover/card:opacity-100 transition-opacity flex flex-col items-center justify-center text-center px-3">' +
+                    '<p class="text-base font-bold text-white">' + escapeHtml(displayName) + '</p>' +
+                    '<p class="text-xs text-zinc-300 mt-1 line-clamp-2">' + escapeHtml(desc) + '</p>' +
+                    '<span class="mt-3 inline-flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">' +
+                        '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>' +
+                        '<?= __("common.buttons.add") ?? "추가" ?>' +
                     '</span>' +
                 '</div>';
+
+            card.innerHTML = bgHtml + nameBar + hoverOverlay;
 
             // 클릭 → 위젯 추가
             card.addEventListener('click', function() {
@@ -229,7 +235,16 @@ var WB = (function() {
     }
 
     function bindBlockEvents(block) {
-        block.querySelector('.btn-edit').addEventListener('click', function(e) { e.stopPropagation(); if (WB.enterInlineMode) WB.enterInlineMode(block); else console.warn('[WYSIWYG] Inline mode not loaded'); });
+        block.querySelector('.btn-edit').addEventListener('click', function(e) {
+            e.stopPropagation();
+            var sysWidgets = ['booking', 'lookup', 'staff', 'cta001'];
+            if (sysWidgets.indexOf(block.dataset.widgetSlug) !== -1) {
+                if (typeof showResultModal === 'function') showResultModal(true, '<?= __("common.msg.coming_soon") ?? "기능 업데이트 준비중입니다." ?>');
+                else alert('<?= __("common.msg.coming_soon") ?? "기능 업데이트 준비중입니다." ?>');
+                return;
+            }
+            if (WB.enterInlineMode) WB.enterInlineMode(block); else console.warn('[WYSIWYG] Inline mode not loaded');
+        });
         block.querySelector('.btn-config').addEventListener('click', function(e) { e.stopPropagation(); WB.openEditModal(block); });
         block.querySelector('.btn-remove').addEventListener('click', function(e) {
             e.stopPropagation();
@@ -268,7 +283,9 @@ var WB = (function() {
             if (data.success && data.html) {
                 var iframe = block.querySelector('.widget-preview');
                 var loading = block.querySelector('.widget-loading');
-                iframe.srcdoc = buildPreviewDoc(data.html);
+                // 미리보기에서 script 태그 제거 (iframe 내 JS 에러 방지)
+                var cleanHtml = data.html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+                iframe.srcdoc = buildPreviewDoc(cleanHtml);
                 iframe.onload = function() {
                     loading.classList.add('hidden');
                     iframe.classList.remove('hidden');

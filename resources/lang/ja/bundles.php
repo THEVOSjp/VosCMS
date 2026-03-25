@@ -69,6 +69,8 @@ return [
     'event_end' => '終了日時',
 
     // カスタマーページ
+    'recommended' => 'おすすめ',
+    'default_name' => 'セットサービス',
     'customer' => [
         'title' => 'おすすめパッケージ',
     ],

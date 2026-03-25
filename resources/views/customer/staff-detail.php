@@ -7,12 +7,12 @@ require_once BASE_PATH . '/rzxlib/Core/Auth/Auth.php';
 use RzxLib\Core\Auth\Auth;
 
 $baseUrl = $config['app_url'] ?? '';
-$staffId = (int)($routeParams['id'] ?? 0);
+$staffId = $routeParams['id'] ?? $staffSlug ?? 0;
 $currentLocale = $config['locale'] ?? 'ko';
 $isLoggedIn = Auth::check();
 $currentUser = $isLoggedIn ? Auth::user() : null;
 
-if (!$staffId) {
+if (empty($staffId)) {
     header('Location: ' . $baseUrl . '/staff');
     exit;
 }
@@ -101,6 +101,42 @@ try {
     $bundleStmt->execute([$staffId]);
     $staffBundles = $bundleStmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // 다국어 번역 헬퍼 (폴백: 현재 로케일 → en → 원본)
+    $_trCache = [];
+    $_trStmt = $pdo->prepare("SELECT locale, content FROM {$prefix}translations WHERE lang_key = ? AND locale IN (?, 'en')");
+    function _tr($pdo, $prefix, $langKey, $default, $locale) {
+        global $_trCache, $_trStmt;
+        if (isset($_trCache[$langKey])) {
+            $cached = $_trCache[$langKey];
+        } else {
+            $_trStmt->execute([$langKey, $locale]);
+            $cached = [];
+            while ($r = $_trStmt->fetch(PDO::FETCH_ASSOC)) $cached[$r['locale']] = $r['content'];
+            $_trCache[$langKey] = $cached;
+        }
+        return $cached[$locale] ?? $cached['en'] ?? $default;
+    }
+
+    // 서비스 다국어 적용
+    foreach ($staffServices as &$_sv) {
+        $_sv['name'] = _tr($pdo, $prefix, 'service.' . $_sv['id'] . '.name', $_sv['name'], $currentLocale);
+        if (!empty($_sv['category_name'])) {
+            $_sv['category_name'] = _tr($pdo, $prefix, 'category.' . ($_sv['category_id'] ?? '') . '.name', $_sv['category_name'], $currentLocale);
+        }
+    }
+    unset($_sv);
+
+    // 번들 다국어 적용
+    foreach ($staffBundles as &$_bdl) {
+        $_bdl['name'] = _tr($pdo, $prefix, 'bundle.' . $_bdl['id'] . '.name', $_bdl['name'], $currentLocale);
+        $_bdl['description'] = _tr($pdo, $prefix, 'bundle.' . $_bdl['id'] . '.description', $_bdl['description'] ?? '', $currentLocale);
+    }
+    unset($_bdl);
+
+    // bundle_display_name 다국어
+    $_bdnVal = _tr($pdo, $prefix, 'bundle_display_name', '', $currentLocale);
+    if ($_bdnVal) $siteSettings['bundle_display_name'] = $_bdnVal;
+
     // 주간 스케줄 (프로필 표시용)
     $stmt = $pdo->prepare("SELECT * FROM {$prefix}staff_schedules WHERE staff_id = ? ORDER BY day_of_week");
     $stmt->execute([$staffId]);
@@ -136,7 +172,7 @@ $depositType = $siteSettings['service_deposit_type'] ?? 'fixed';
 $depositAmount = (float)($siteSettings['service_deposit_amount'] ?? 0);
 $depositPercent = (float)($siteSettings['service_deposit_percent'] ?? 0);
 if ($isLoggedIn && $currentUser) {
-    $ugStmt = $pdo->prepare("SELECT u.points_balance, g.name as grade_name, g.discount_rate, g.point_rate, g.color as grade_color
+    $ugStmt = $pdo->prepare("SELECT u.points_balance, g.id as grade_id, g.name as grade_name, g.discount_rate, g.point_rate, g.color as grade_color
         FROM {$prefix}users u LEFT JOIN {$prefix}member_grades g ON u.grade_id = g.id WHERE u.id = ?");
     $ugStmt->execute([$currentUser['id']]);
     $ugRow = $ugStmt->fetch(PDO::FETCH_ASSOC);
@@ -144,6 +180,7 @@ if ($isLoggedIn && $currentUser) {
         $userPointsBalance = (float)($ugRow['points_balance'] ?? 0);
         if (!empty($ugRow['grade_name'])) {
             $userGrade = [
+                'id' => $ugRow['grade_id'],
                 'name' => $ugRow['grade_name'],
                 'discount_rate' => (float)($ugRow['discount_rate'] ?? 0),
                 'point_rate' => (float)($ugRow['point_rate'] ?? 0),
@@ -249,7 +286,11 @@ $days = $dayLabels[$currentLocale] ?? $dayLabels['en'];
         <!-- Bundle Packages -->
         <?php if (!empty($staffBundles)): ?>
         <div class="border-t border-gray-200 dark:border-zinc-700 pt-6 mb-6">
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4"><?= __('bundles.customer.title') ?></h2>
+            <?php
+            $_bundleName = $siteSettings['bundle_display_name'] ?? '';
+            if (!$_bundleName) $_bundleName = __('bundles.default_name') ?? '세트 서비스';
+            ?>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4"><?= __('bundles.recommended') ?? '추천' ?> <?= htmlspecialchars($_bundleName) ?></h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="sdBundleList">
                 <?php foreach ($staffBundles as $bdl):
                     $bdlPrice = (float)$bdl['bundle_price'];
@@ -257,7 +298,7 @@ $days = $dayLabels[$currentLocale] ?? $dayLabels['en'];
                     $discPct = $origPrice > 0 && $bdlPrice < $origPrice ? round((1 - $bdlPrice / $origPrice) * 100) : 0;
                     $svcIdList = $bdl['service_id_list'] ?? '';
                 ?>
-                <?php $bdlImage = $bdl['image'] ?? ''; ?>
+                <?php $bdlImage = $bdl['image'] ?? ''; if ($bdlImage && !str_starts_with($bdlImage, 'http')) $bdlImage = $baseUrl . $bdlImage; ?>
                 <div class="sd-bundle-card cursor-pointer" data-bundle-id="<?= htmlspecialchars($bdl['id']) ?>" data-services="<?= htmlspecialchars($svcIdList) ?>" data-price="<?= $bdlPrice ?>" data-duration="<?= (int)$bdl['total_duration'] ?>" data-name="<?= htmlspecialchars($bdl['name']) ?>">
                     <div class="sd-bundle-inner relative rounded-xl border-2 border-gray-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-600 overflow-hidden transition-all bg-white dark:bg-zinc-800 hover:shadow-md">
                         <?php if ($bdlImage): ?>
@@ -491,7 +532,7 @@ $days = $dayLabels[$currentLocale] ?? $dayLabels['en'];
                     <div id="sdDiscountRow" class="flex justify-between text-sm hidden">
                         <span class="text-red-500 dark:text-red-400">
                             <?= __('booking.member_discount') ?>
-                            <span class="text-xs">(<?= htmlspecialchars($userGrade['name']) ?> <?= $userGrade['discount_rate'] ?>%)</span>
+                            <span class="text-xs">(<?= htmlspecialchars(_tr($pdo, $prefix, 'grade.' . ($userGrade['id'] ?? '') . '.name', $userGrade['name'], $currentLocale)) ?> <?= $userGrade['discount_rate'] ?>%)</span>
                         </span>
                         <span id="sdDiscountAmount" class="text-red-500 dark:text-red-400 font-medium"></span>
                     </div>
@@ -502,17 +543,17 @@ $days = $dayLabels[$currentLocale] ?? $dayLabels['en'];
                     <div id="sdPointsRow" class="hidden">
                         <div class="flex items-center justify-between text-sm mb-1">
                             <label for="sdPointsInput" class="text-gray-500 dark:text-zinc-400">
-                                <?= get_points_name() ?> <?= __('reservations.used') ?>
+                                <?= get_points_name($currentLocale) ?> <?= __('reservations.used') ?>
                                 <span class="text-xs text-blue-500">(<?= __('booking.points_balance') ?>: &yen;<?= number_format($userPointsBalance) ?>)</span>
                             </label>
-                            <button type="button" id="sdPointsAllBtn" class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 font-medium">
-                                <?= __('booking.use_all') ?>
-                            </button>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="text-sm text-gray-400">&yen;</span>
                             <input type="number" id="sdPointsInput" min="0" max="<?= (int)$userPointsBalance ?>" step="1" value="0"
                                    class="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            <button type="button" id="sdPointsAllBtn" class="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-blue-200 dark:border-blue-800 rounded-lg transition whitespace-nowrap">
+                                <?= __('booking.use_all') ?>
+                            </button>
                         </div>
                     </div>
                     <?php endif; ?>

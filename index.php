@@ -200,15 +200,9 @@ $__noLayout = false; // API, 로그인 등 자체 레이아웃 페이지
 // Route to appropriate handler
 if (empty($path) || $path === 'index.php') {
     $__pageFile = BASE_PATH . '/resources/views/customer/home.php';
-} elseif ($path === 'staff') {
-    $__pageFile = BASE_PATH . '/resources/views/customer/staff.php';
-} elseif (preg_match('#^staff/([^/]+)$#', $path, $m)) {
+} elseif (preg_match('#^staff/([^/]+)$#', $path, $m) && !in_array($m[1], ['settings', 'edit'])) {
     $staffSlug = $m[1];
     $__pageFile = BASE_PATH . '/resources/views/customer/staff-detail.php';
-} elseif ($path === 'booking') {
-    $__pageFile = BASE_PATH . '/resources/views/customer/booking.php';
-} elseif ($path === 'lookup') {
-    $__pageFile = BASE_PATH . '/resources/views/customer/booking/lookup.php';
 } elseif (preg_match('#^booking/detail/([A-Za-z0-9]+)$#', $path, $m)) {
     $reservationNumber = $m[1];
     $__pageFile = BASE_PATH . '/resources/views/customer/booking/detail.php';
@@ -575,7 +569,7 @@ if (empty($path) || $path === 'index.php') {
 
                 // 페이지 설정/편집 프론트 라우트: {slug}/settings, {slug}/edit
                 $_pageRouteMatch = false;
-                if (preg_match('#^([a-z0-9_-]+)/(settings|edit)$#', $path, $_prm)) {
+                if (preg_match('#^([a-zA-Z0-9_-]+)/(settings|edit)$#', $path, $_prm)) {
                     $_prSlug = $_prm[1];
                     $_prAction = $_prm[2];
                     $_prCheck = $pdo->prepare("SELECT page_slug FROM {$_pfx}page_contents WHERE page_slug = ? LIMIT 1");
@@ -585,7 +579,15 @@ if (empty($path) || $path === 'index.php') {
                         if ($_prAction === 'settings') {
                             $__pageFile = BASE_PATH . '/resources/views/customer/page-settings.php';
                         } else {
-                            $__pageFile = BASE_PATH . '/resources/views/customer/page-edit.php';
+                            // 위젯/시스템 타입이면 위젯 빌더, 그 외 콘텐츠 편집
+                            $_ptChk = $pdo->prepare("SELECT page_type FROM {$_pfx}page_contents WHERE page_slug = ? LIMIT 1");
+                            $_ptChk->execute([$_prSlug]);
+                            $_ptType = $_ptChk->fetchColumn();
+                            if ($_ptType === 'widget' || $_ptType === 'system') {
+                                $__pageFile = BASE_PATH . '/resources/views/customer/page-widget-builder.php';
+                            } else {
+                                $__pageFile = BASE_PATH . '/resources/views/customer/page-edit.php';
+                            }
                         }
                         $_pageRouteMatch = true;
                     }
@@ -618,32 +620,37 @@ if ($__pageFile && !$__noLayout) {
     $__siteMemberSkin = $siteSettings['site_member_skin'] ?? 'default';
 
     // 게시판 개별 레이아웃 조회 (board_config_{slug}.layout)
+    // 개별 설정이 'inherit' 또는 미설정이면 전체 설정 유지, 명시적 지정 시에만 개별 적용
     if (!empty($boardSlug) && isset($pdo)) {
         $__bcKey = 'board_config_' . $boardSlug;
         if (isset($siteSettings[$__bcKey])) {
             $__boardConfig = json_decode($siteSettings[$__bcKey], true) ?: [];
         } else {
-            $__bcStmt = $pdo->prepare("SELECT value FROM {$prefix}settings WHERE `key` = ?");
+            $__pfx = $_ENV['DB_PREFIX'] ?? 'rzx_';
+            $__bcStmt = $pdo->prepare("SELECT value FROM {$__pfx}settings WHERE `key` = ?");
             $__bcStmt->execute([$__bcKey]);
             $__boardConfig = json_decode($__bcStmt->fetchColumn() ?: '{}', true) ?: [];
         }
-        if (!empty($__boardConfig['layout']) && $__boardConfig['layout'] !== 'default') {
-            $__layout = $__boardConfig['layout'];
+        $__boardLayout = $__boardConfig['layout'] ?? '';
+        if ($__boardLayout !== '' && $__boardLayout !== 'inherit') {
+            $__layout = $__boardLayout;
         }
     }
 
     // 페이지 개별 레이아웃 조회 (page_config_{slug}.layout)
+    // 개별 설정이 'inherit' 또는 미설정이면 전체 설정 유지, 명시적 지정 시에만 개별 적용
     if (!empty($pageSlug) && isset($pdo)) {
         $__pcKey = 'page_config_' . $pageSlug;
         if (isset($siteSettings[$__pcKey])) {
             $__pageConfig = json_decode($siteSettings[$__pcKey], true) ?: [];
         } else {
-            $__pcStmt = $pdo->prepare("SELECT value FROM {$prefix}settings WHERE `key` = ?");
+            $__pcStmt = $pdo->prepare("SELECT value FROM " . ($_ENV['DB_PREFIX'] ?? 'rzx_') . "settings WHERE `key` = ?");
             $__pcStmt->execute([$__pcKey]);
             $__pageConfig = json_decode($__pcStmt->fetchColumn() ?: '{}', true) ?: [];
         }
-        if (!empty($__pageConfig['layout']) && $__pageConfig['layout'] !== 'default') {
-            $__layout = $__pageConfig['layout'];
+        $__pageLayout = $__pageConfig['layout'] ?? '';
+        if ($__pageLayout !== '' && $__pageLayout !== 'inherit') {
+            $__layout = $__pageLayout;
         }
     }
 

@@ -188,4 +188,7 @@ return [
     'points_default_name' => 'Poin',
     'deposit_pay_now' => 'Deposit (Bayar Sekarang)',
     'deposit_remaining_later' => 'Sisa saldo akan ditagih saat layanan',
+    'next' => 'Selanjutnya',
+    'categories' => 'kategori',
+    'service_count' => 'layanan',
 ];

@@ -188,4 +188,7 @@ return [
     'points_default_name' => '積分',
     'deposit_pay_now' => '預約金（支付金額）',
     'deposit_remaining_later' => '餘額將在服務時收取',
+    'next' => '下一步',
+    'categories' => '個分類',
+    'service_count' => '項服務',
 ];

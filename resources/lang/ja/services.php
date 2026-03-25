@@ -55,6 +55,7 @@ return [
         'tabs' => ['general' => '基本設定', 'holidays' => '祝日管理'],
         'general' => [
             'title' => 'サービス基本設定',
+            'bundle_name' => 'セットサービス名称', 'bundle_name_placeholder' => 'セットサービス（デフォルト）', 'bundle_name_hint' => '業種に合わせた名称を設定します。空欄の場合はデフォルト値が使用されます。',
             'description' => 'サービス予約のデフォルトオプションを設定します。',
             'saved' => '設定が保存されました。',
             'default_duration' => 'デフォルト所要時間',

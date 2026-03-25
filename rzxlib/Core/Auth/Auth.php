@@ -122,6 +122,24 @@ class Auth
         $_SESSION['user_name'] = $user['name'];
         $_SESSION['user_logged_in_at'] = time();
 
+        // 관리자 여부 체크: rzx_admins 테이블에 존재하면 admin 세션도 설정
+        try {
+            $pdo = self::getPdo();
+            $adminTable = self::$prefix . 'admins';
+            $adminStmt = $pdo->prepare("SELECT id, role, name, email, permissions FROM {$adminTable} WHERE email = ? LIMIT 1");
+            $adminStmt->execute([$user['email']]);
+            $admin = $adminStmt->fetch(\PDO::FETCH_ASSOC);
+            if ($admin) {
+                $_SESSION['admin_id'] = $admin['id'];
+                $_SESSION['admin_role'] = $admin['role'] ?? 'admin';
+                $_SESSION['admin_name'] = $admin['name'];
+                $_SESSION['admin_email'] = $admin['email'];
+                $_SESSION['admin_permissions'] = $admin['permissions'] ?? '[]';
+            }
+        } catch (\Exception $e) {
+            // 관리자 테이블 없어도 로그인은 정상 진행
+        }
+
         // 로그인 상태 유지 (Remember Me)
         if ($remember) {
             $token = bin2hex(random_bytes(32));

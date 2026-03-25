@@ -55,6 +55,7 @@ return [
         'tabs' => ['general' => 'Genel', 'holidays' => 'Tatiller'],
         'general' => [
             'title' => 'Hizmet Genel Ayarları',
+            'bundle_name' => 'Paket Adı', 'bundle_name_placeholder' => 'Paket Hizmeti', 'bundle_name_hint' => 'Özel bir ad belirleyin.',
             'description' => 'Hizmet rezervasyonları için varsayılan seçenekleri yapılandırın.',
             'saved' => 'Ayarlar kaydedildi.',
             'default_duration' => 'Varsayılan Süre',

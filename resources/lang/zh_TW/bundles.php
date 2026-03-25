@@ -36,6 +36,8 @@ return [
     ],
 
     // 고객 페이지
+    'recommended' => '推薦',
+    'default_name' => '套餐服務',
     'customer' => [
         'title' => '推薦套餐',
     ],

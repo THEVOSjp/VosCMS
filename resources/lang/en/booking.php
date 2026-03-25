@@ -188,4 +188,7 @@ return [
     'points_default_name' => 'Points',
     'deposit_pay_now' => 'Deposit (Pay Now)',
     'deposit_remaining_later' => 'Remaining balance will be charged at service time',
+    'next' => 'Next',
+    'categories' => 'categories',
+    'service_count' => 'services',
 ];

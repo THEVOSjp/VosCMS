@@ -69,6 +69,8 @@ return [
     'event_end' => '종료일시',
 
     // 고객 페이지
+    'recommended' => '추천',
+    'default_name' => '세트 서비스',
     'customer' => [
         'title' => '추천 패키지',
     ],

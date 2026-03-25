@@ -174,12 +174,6 @@ if ($isEmbed) {
             </div>
         </div>
 
-        <?php if (!$isEmbed): ?>
-        <div class="flex justify-between items-center mt-8">
-            <a href="<?= $baseUrl ?>/" class="text-blue-600 dark:text-blue-400 hover:underline">&larr; <?= __('customer.data_policy.back_home') ?></a>
-            <a href="<?= $baseUrl ?>/privacy" class="text-blue-600 dark:text-blue-400 hover:underline"><?= __('customer.data_policy.privacy_link') ?> &rarr;</a>
-        </div>
-        <?php endif; ?>
     </div>
 
 <?php if ($isEmbed) { ?>
