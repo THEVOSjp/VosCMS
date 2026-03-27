@@ -99,7 +99,7 @@ function renderCard(b) {
         <!-- 본문 -->
         <div class="p-4 flex-1">
             <h3 class="font-semibold text-zinc-900 dark:text-white mb-1 truncate">${escHtml(b.name)}</h3>
-            ${b.description ? `<p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3 line-clamp-2">${escHtml(b.description)}</p>` : '<div class="mb-3"></div>'}
+            ${b.description ? `<p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3 line-clamp-2">${escHtml(stripHtml(b.description))}</p>` : '<div class="mb-3"></div>'}
             <!-- 가격 -->
             <div class="flex items-baseline gap-2 mb-3">
                 <span class="text-xl font-bold ${eventActive ? 'text-orange-600 dark:text-orange-400' : 'text-blue-600 dark:text-blue-400'}">${numberFmt(displayPrice)}</span>
@@ -256,5 +256,6 @@ function calcDiscount() {
 }
 
 function numberFmt(n) { return Number(n).toLocaleString(); }
+function stripHtml(s) { return s.replace(/<[^>]*>/g, '').trim(); }
 function escHtml(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 </script>
