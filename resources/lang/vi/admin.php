@@ -44,6 +44,7 @@ return [
         'page_management' => 'Quản lý trang',
         'board_management' => 'Quản lý Diễn đàn',
         'widget_management' => 'Quản lý widget',
+            'staff_admins' => 'Quyền quản trị',
     ],
     'stats' => [
         'today_reservations' => 'Đặt chỗ hôm nay',

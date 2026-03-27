@@ -191,4 +191,9 @@ return [
     'next' => 'Selanjutnya',
     'categories' => 'kategori',
     'service_count' => 'layanan',
+    'expected_points' => 'Poin diperkirakan',
+    'reservation_complete' => 'Reservasi selesai',
+    'reservation_complete_desc' => 'Silakan periksa detail reservasi',
+    'reservation_number' => 'No. Reservasi',
+    'check_summary' => 'Lihat detail',
 ];

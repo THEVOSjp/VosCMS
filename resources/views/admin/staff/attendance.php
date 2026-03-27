@@ -317,8 +317,15 @@ $pageSubDesc = __('staff.attendance.description');
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-zinc-500 dark:text-zinc-400 font-semibold text-sm overflow-hidden">
-                                    <?php if ($staff['avatar']): ?>
-                                        <img src="<?= htmlspecialchars($staff['avatar']) ?>" class="w-full h-full object-cover">
+                                    <?php
+                                    $_attAvatar = $staff['avatar'] ?? '';
+                                    if ($_attAvatar && !str_starts_with($_attAvatar, 'http')) {
+                                        $_attBasePath = parse_url($baseUrl, PHP_URL_PATH) ?: '';
+                                        $_attAvatar = $_attBasePath . ($_attAvatar[0] === '/' ? $_attAvatar : '/' . $_attAvatar);
+                                    }
+                                    ?>
+                                    <?php if ($_attAvatar): ?>
+                                        <img src="<?= htmlspecialchars($_attAvatar) ?>" class="w-full h-full object-cover">
                                     <?php else: ?>
                                         <?= mb_substr($staff['name'], 0, 1) ?>
                                     <?php endif; ?>

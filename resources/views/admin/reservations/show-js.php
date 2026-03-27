@@ -8,9 +8,9 @@ async function changeStatus(id, action) {
         complete: '<?= __('reservations.complete_msg') ?>',
         'no-show': '<?= __('reservations.noshow_msg') ?>'
     };
-    if (!confirm(msgs[action] || '진행하시겠습니까?')) return;
+    if (!confirm(msgs[action] || '<?= __('reservations.show_confirm_proceed') ?>')) return;
     let reason = '';
-    if (action === 'cancel') reason = prompt('취소 사유:', '관리자에 의한 취소') || '';
+    if (action === 'cancel') reason = prompt('<?= __('reservations.show_cancel_reason_prompt') ?>', '<?= __('reservations.show_cancel_reason_default') ?>') || '';
     try {
         console.log('[Show] Changing status:', id, action);
         const resp = await fetch(`<?= $adminUrl ?>/reservations/${id}/${action}`, {
@@ -21,7 +21,7 @@ async function changeStatus(id, action) {
         const data = await resp.json();
         console.log('[Show] Status result:', data);
         if (data.error) {
-            alert(data.message || '처리에 실패했습니다.');
+            alert(data.message || '<?= __('reservations.show_process_fail') ?>');
         } else {
             location.reload();
         }
@@ -36,7 +36,7 @@ async function saveMemo(e) {
     const content = document.getElementById('memoContent').value.trim();
     if (!content) return;
     const btn = document.getElementById('saveMemoBtn');
-    btn.textContent = '저장 중...';
+    btn.textContent = '<?= __('reservations.show_memo_saving') ?>';
     btn.disabled = true;
     try {
         console.log('[Show] Saving admin memo');
@@ -48,7 +48,7 @@ async function saveMemo(e) {
         const data = await resp.json();
         console.log('[Show] Memo save result:', data);
         if (data.success) {
-            btn.textContent = '저장됨 ✓';
+            btn.textContent = '<?= __('reservations.show_memo_saved') ?>';
             document.getElementById('memoContent').value = '';
             // 새 메모를 목록 맨 위에 추가
             const list = document.getElementById('memoList');
@@ -65,16 +65,16 @@ async function saveMemo(e) {
                     ${m.reservation_number ? `<span>&middot;</span><span class="font-mono">${escapeHtml(m.reservation_number)}</span>` : ''}
                 </div>`;
             list.insertBefore(div, list.firstChild);
-            setTimeout(() => { btn.textContent = '저장'; btn.disabled = false; }, 1500);
+            setTimeout(() => { btn.textContent = '<?= __('reservations.show_memo_save') ?>'; btn.disabled = false; }, 1500);
         } else {
-            alert(data.message || '저장 실패');
-            btn.textContent = '저장';
+            alert(data.message || '<?= __('reservations.show_memo_save_fail') ?>');
+            btn.textContent = '<?= __('reservations.show_memo_save') ?>';
             btn.disabled = false;
         }
     } catch (err) {
         console.error('[Show] Memo save error:', err);
-        alert('저장 실패');
-        btn.textContent = '저장';
+        alert('<?= __('reservations.show_memo_save_fail') ?>');
+        btn.textContent = '<?= __('reservations.show_memo_save') ?>';
         btn.disabled = false;
     }
 }
@@ -98,7 +98,7 @@ let staffChangeMode = 'assign'; // 'assign' or 'designate'
 async function openStaffChangePanel(mode) {
     staffChangeMode = mode || 'assign';
     const isDesignate = staffChangeMode === 'designate';
-    const modeLabel = isDesignate ? '지명' : '배정';
+    const modeLabel = isDesignate ? '<?= __('reservations.show_designation') ?>' : '<?= __('reservations.show_assignment') ?>';
     const modeColor = isDesignate ? 'violet' : 'emerald';
 
     console.log('[Show] Opening staff change panel, mode:', staffChangeMode);
@@ -107,7 +107,7 @@ async function openStaffChangePanel(mode) {
     const panelTitle = document.getElementById('staffPanelTitle');
     if (!panel) return;
     panel.classList.remove('hidden');
-    if (panelTitle) panelTitle.textContent = '스태프 ' + modeLabel;
+    if (panelTitle) panelTitle.textContent = '<?= __('reservations.show_etc_staff') ?> ' + modeLabel;
     list.innerHTML = '<div class="text-center py-3 text-zinc-400 text-xs"><svg class="w-4 h-4 animate-spin mx-auto mb-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg></div>';
 
     try {
@@ -117,7 +117,7 @@ async function openStaffChangePanel(mode) {
         console.log('[Show] Available staff:', data);
 
         if (!data.success || !data.staff || !data.staff.length) {
-            list.innerHTML = '<p class="text-center text-zinc-400 text-xs py-3">' + modeLabel + ' 가능한 스태프가 없습니다.</p>';
+            list.innerHTML = '<p class="text-center text-zinc-400 text-xs py-3">' + modeLabel + ' <?= __('reservations.show_staff_no_available', ['mode' => '']) ?></p>';
             return;
         }
 
@@ -137,13 +137,13 @@ async function openStaffChangePanel(mode) {
                 <div class="w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center flex-shrink-0 mr-2">
                     <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
                 </div>
-                <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">미배정${!currentStaffId ? ' <span class="text-xs text-zinc-400">(현재)</span>' : ''}</p>
+                <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400"><?= __('reservations.show_unassigned') ?>${!currentStaffId ? ' <span class="text-xs text-zinc-400"><?= __('reservations.show_staff_current') ?></span>' : ''}</p>
             </label>`;
         }
 
         const accentCls = isDesignate ? 'text-violet-600' : 'text-emerald-600';
         const activeBorder = isDesignate ? 'border-violet-400 bg-violet-50 dark:bg-violet-900/20' : 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20';
-        const currentLabel = isDesignate ? '<span class="text-xs text-violet-500">(현재)</span>' : '<span class="text-xs text-emerald-500">(현재)</span>';
+        const currentLabel = isDesignate ? '<span class="text-xs text-violet-500"><?= __('reservations.show_staff_current') ?></span>' : '<span class="text-xs text-emerald-500"><?= __('reservations.show_staff_current') ?></span>';
 
         html += data.staff.map(s => {
             const isCurrent = String(s.id) === String(currentStaffId);
@@ -157,17 +157,17 @@ async function openStaffChangePanel(mode) {
                     ${avatarUrl ? '<img src="' + escapeHtml(avatarUrl) + '" class="w-7 h-7 rounded-full object-cover">' : '<svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>'}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-zinc-900 dark:text-white">${escapeHtml(s.name)}${feeHtml}${busy ? ' <span class="text-xs text-red-400">(예약있음)</span>' : ''}${isCurrent ? ' ' + currentLabel : ''}</p>
+                    <p class="text-sm font-medium text-zinc-900 dark:text-white">${escapeHtml(s.name)}${feeHtml}${busy ? ' <span class="text-xs text-red-400"><?= __('reservations.show_staff_busy') ?></span>' : ''}${isCurrent ? ' ' + currentLabel : ''}</p>
                 </div>
             </label>`;
         }).join('');
 
         list.innerHTML = html;
         const btnColor = isDesignate ? 'bg-violet-600 hover:bg-violet-700' : 'bg-emerald-600 hover:bg-emerald-700';
-        list.innerHTML += `<button type="button" id="staffChangeConfirmBtn" onclick="confirmStaffChange()" class="w-full py-2 ${btnColor} text-white rounded-lg text-sm font-bold transition mt-2 disabled:opacity-50" ${currentStaffId ? '' : 'disabled'}>${modeLabel} 확인</button>`;
+        list.innerHTML += `<button type="button" id="staffChangeConfirmBtn" onclick="confirmStaffChange()" class="w-full py-2 ${btnColor} text-white rounded-lg text-sm font-bold transition mt-2 disabled:opacity-50" ${currentStaffId ? '' : 'disabled'}>${modeLabel} <?= __('reservations.show_staff_confirm_btn', ['mode' => '']) ?></button>`;
     } catch (err) {
         console.error('[Show] Staff fetch error:', err);
-        list.innerHTML = '<p class="text-center text-red-400 text-xs py-3">스태프 조회 실패</p>';
+        list.innerHTML = '<p class="text-center text-red-400 text-xs py-3"><?= __('reservations.show_staff_fetch_fail') ?></p>';
     }
 }
 
@@ -190,7 +190,7 @@ async function confirmStaffChange() {
     console.log('[Show] Changing staff to:', staffId, 'mode:', staffChangeMode);
 
     const btn = document.getElementById('staffChangeConfirmBtn');
-    btn.textContent = '변경 중...';
+    btn.textContent = '<?= __('reservations.show_staff_changing') ?>';
     btn.disabled = true;
 
     try {
@@ -208,14 +208,14 @@ async function confirmStaffChange() {
         if (data.success) {
             location.reload();
         } else {
-            alert(data.message || '변경 실패');
-            btn.textContent = '배정 확인';
+            alert(data.message || '<?= __('reservations.show_staff_change_fail') ?>');
+            btn.textContent = '<?= __('reservations.show_staff_confirm_btn', ['mode' => '']) ?>';
             btn.disabled = false;
         }
     } catch (err) {
         console.error('[Show] Staff change error:', err);
-        alert('변경 실패');
-        btn.textContent = '배정 확인';
+        alert('<?= __('reservations.show_staff_change_fail') ?>');
+        btn.textContent = '<?= __('reservations.show_staff_confirm_btn', ['mode' => '']) ?>';
         btn.disabled = false;
     }
 }
@@ -235,13 +235,13 @@ async function removeShowService(reservationId, serviceId, btnEl) {
         console.log('[Show] Remove result:', data);
 
         if (data.error) {
-            alert(data.message || '삭제 실패');
+            alert(data.message || '<?= __('reservations.show_delete_fail') ?>');
             return;
         }
 
         if (data.remaining === 0) {
             // 예약 자체가 삭제됨 → 목록으로 이동
-            alert('모든 서비스가 삭제되어 예약이 삭제되었습니다.');
+            alert('<?= __('reservations.show_all_services_removed') ?>');
             location.href = adminUrl + '/reservations';
             return;
         }
@@ -257,7 +257,7 @@ async function removeShowService(reservationId, serviceId, btnEl) {
         location.reload();
     } catch (err) {
         console.error('[Show] Remove service error:', err);
-        alert('삭제 실패');
+        alert('<?= __('reservations.show_delete_fail') ?>');
     }
 }
 
@@ -303,7 +303,7 @@ async function loadShowAddServiceList() {
         console.log('[Show] Services loaded:', data);
 
         if (!data.services || !data.services.length) {
-            list.innerHTML = '<p class="text-center text-zinc-400 text-xs py-3">등록된 서비스가 없습니다.</p>';
+            list.innerHTML = '<p class="text-center text-zinc-400 text-xs py-3"><?= __('reservations.show_add_service_none') ?></p>';
             return;
         }
 
@@ -317,7 +317,7 @@ async function loadShowAddServiceList() {
                 ${exists ? 'border-zinc-200 dark:border-zinc-700 opacity-40' : 'border-zinc-200 dark:border-zinc-700 hover:bg-blue-50 dark:hover:bg-blue-900/20'}">
                 <input type="checkbox" name="showAddSvc" value="${s.id}" class="mr-2.5 text-blue-600 rounded" ${exists ? 'disabled' : ''} onchange="onShowAddSvcChange()">
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-zinc-900 dark:text-white">${escapeHtml(s.name)}${exists ? ' <span class=&quot;text-xs text-zinc-400&quot;>(추가됨)</span>' : ''}</p>
+                    <p class="text-sm font-medium text-zinc-900 dark:text-white">${escapeHtml(s.name)}${exists ? ' <span class=&quot;text-xs text-zinc-400&quot;><?= __('reservations.show_add_service_added') ?></span>' : ''}</p>
                     <p class="text-xs text-zinc-500">${s.duration}분 · ${s.price_formatted || s.price}</p>
                 </div>
             </label>`;
@@ -326,7 +326,7 @@ async function loadShowAddServiceList() {
         _showAddServiceLoaded = true;
     } catch (err) {
         console.error('[Show] Load services error:', err);
-        list.innerHTML = '<p class="text-center text-red-400 text-xs py-3">서비스 목록 로드 실패</p>';
+        list.innerHTML = '<p class="text-center text-red-400 text-xs py-3"><?= __('reservations.show_add_service_load_fail') ?></p>';
     }
 }
 
@@ -344,7 +344,7 @@ async function submitShowAddService() {
     console.log('[Show] Adding services:', serviceIds);
 
     const btn = document.getElementById('showAddServiceBtn');
-    btn.textContent = '추가 중...';
+    btn.textContent = '<?= __('reservations.show_add_service_adding') ?>';
     btn.disabled = true;
 
     try {
@@ -362,8 +362,8 @@ async function submitShowAddService() {
         console.log('[Show] Add service result:', data);
 
         if (data.error) {
-            alert(data.message || '추가 실패');
-            btn.textContent = '추가';
+            alert(data.message || '<?= __('reservations.show_add_service_fail') ?>');
+            btn.textContent = '<?= __('reservations.show_add_service_btn') ?>';
             btn.disabled = false;
             return;
         }
@@ -372,8 +372,8 @@ async function submitShowAddService() {
         location.reload();
     } catch (err) {
         console.error('[Show] Add service error:', err);
-        alert('추가 실패');
-        btn.textContent = '추가';
+        alert('<?= __('reservations.show_add_service_fail') ?>');
+        btn.textContent = '<?= __('reservations.show_add_service_btn') ?>';
         btn.disabled = false;
     }
 }

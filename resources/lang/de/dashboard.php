@@ -1,0 +1,22 @@
+<?php
+return [
+    'system_running' => 'System läuft',
+    'db_connected' => 'Datenbankverbindung OK',
+    'db_failed' => 'Datenbankverbindung fehlgeschlagen',
+    'today_reservations' => 'Heutige Buchungen',
+    'total_members' => 'Alle Mitglieder',
+    'total_services' => 'Registrierte Dienste',
+    'system_version' => 'Systemversion',
+    'quick_actions' => 'Schnellaktionen',
+    'new_reservation' => 'Neue Buchung',
+    'add_service' => 'Dienst hinzufügen',
+    'manage_members' => 'Mitglieder verwalten',
+    'system_settings' => 'Systemeinstellungen',
+    'system_info' => 'Systeminfo',
+    'php_version' => 'PHP-Version',
+    'environment' => 'Umgebung',
+    'timezone' => 'Zeitzone',
+    'debug_mode' => 'Debug-Modus',
+    'enabled' => 'Aktiviert',
+    'disabled' => 'Deaktiviert',
+];

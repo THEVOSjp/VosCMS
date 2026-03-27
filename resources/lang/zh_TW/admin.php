@@ -44,6 +44,7 @@ return [
         'page_management' => '頁面管理',
         'board_management' => '論壇管理',
         'widget_management' => '小工具管理',
+            'staff_admins' => '管理員權限',
     ],
     'stats' => [
         'today_reservations' => '今日預約',

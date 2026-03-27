@@ -9,8 +9,9 @@ window.ResFormStaff = {
     _resolveImg(path) {
         if (!path) return '';
         if (path.startsWith('http')) return path;
-        const base = location.pathname.replace(/\/[^/]+\/reservations.*$/, '');
-        return location.origin + base + (path.startsWith('/') ? path : '/storage/' + path);
+        const base = '<?= $baseUrl ?? '' ?>';
+        if (path.startsWith('/')) return base + path;
+        return base + '/' + path;
     },
 
     async open(fId, mode) {
@@ -24,7 +25,7 @@ window.ResFormStaff = {
         const endVal = document.getElementById(fId + '_endTime')?.value || '';
 
         if (!dateVal || !startVal) {
-            alert('날짜와 시작 시간을 먼저 선택해주세요.');
+            alert('<?= __('reservations.error_date_time_required') ?? '날짜와 시작 시간을 먼저 선택해주세요.' ?>');
             return;
         }
 
@@ -123,6 +124,8 @@ window.ResFormStaff = {
         selectedEl.classList.remove('hidden');
         document.getElementById(fId + '_staffList').classList.add('hidden');
         console.log('[ResFormStaff] Confirmed:', staffName, mode, 'fee:', staffFee);
+        // 금액 재계산 (지명료 반영)
+        if (window['recalcResForm_' + fId]) window['recalcResForm_' + fId]();
     },
 
     clear(fId) {
@@ -132,6 +135,8 @@ window.ResFormStaff = {
         document.getElementById(fId + '_staffList').classList.add('hidden');
         document.getElementById(fId + '_staffAvatar').innerHTML = '<svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>';
         console.log('[ResFormStaff] Cleared:', fId);
+        // 금액 재계산 (지명료 제거)
+        if (window['recalcResForm_' + fId]) window['recalcResForm_' + fId]();
     }
 };
 </script>

@@ -265,4 +265,7 @@ return [
         'offline' => 'Vous etes hors ligne',
         'online' => 'De retour en ligne',
     ],
+
+    'selected' => 'sélectionné',
+    'unit' => ['items' => '', 'minutes' => 'min'],
 ];

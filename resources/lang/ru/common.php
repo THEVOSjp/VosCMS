@@ -263,4 +263,7 @@ return [
         'offline' => 'Вы офлайн',
         'online' => 'Снова онлайн',
     ],
+
+    'selected' => 'выбрано',
+    'unit' => ['items' => '', 'minutes' => 'мин'],
 ];

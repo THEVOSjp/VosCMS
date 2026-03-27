@@ -265,4 +265,7 @@ return [
         'offline' => 'Bạn đang ngoại tuyến',
         'online' => 'Đã kết nối lại',
     ],
+
+    'selected' => 'đã chọn',
+    'unit' => ['items' => '', 'minutes' => 'phút'],
 ];

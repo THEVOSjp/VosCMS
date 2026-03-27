@@ -53,6 +53,7 @@ return [
         'page_management' => '페이지 관리',
         'board_management' => '게시판 관리',
         'widget_management' => '위젯 관리',
+            'staff_admins' => '관리자 권한',
     ],
 
     // 대시보드

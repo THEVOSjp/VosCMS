@@ -73,6 +73,17 @@ return [
     'card_number_desc' => 'RFID/NFC 카드리더 출퇴근 기록에 사용됩니다.',
     'admins' => [
         'title' => '관리자 관리', 'description' => '시스템 관리자 계정을 관리합니다.',
+        'add_admin' => '관리자 추가',
+        'col_admin' => '관리자', 'col_role' => '역할', 'col_permissions' => '권한', 'col_status' => '상태', 'col_manage' => '관리',
+        'role_supervisor' => '슈퍼바이저', 'role_manager' => '매니저', 'role_staff' => '스태프',
+        'all_permissions' => '전체', 'perm_count_unit' => '개',
+        'status_active' => '활성', 'status_inactive' => '비활성', 'status_protected' => '보호됨',
+        'empty' => '등록된 관리자가 없습니다.',
+        'guide_title' => '권한 안내',
+        'guide_supervisor' => '<strong>슈퍼바이저</strong>: 모든 메뉴에 접근 가능하며 삭제/비활성화가 불가합니다.',
+        'guide_manager' => '<strong>매니저</strong>: 지정된 권한 범위 내에서 관리 가능합니다.',
+        'guide_staff' => '<strong>스태프</strong>: 개별적으로 부여된 권한만 사용할 수 있습니다.',
+        'guide_member_link' => '관리자로 추가하려면 해당 스태프가 <strong>회원 연동</strong>이 되어있어야 합니다.',
     ],
     'schedule' => [
         'title' => '스케줄 관리', 'description' => '스태프별 근무 시간과 휴무일을 설정합니다.',

@@ -155,33 +155,33 @@ ob_start();
         $_lbl = 'w-48 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300 pt-2';
         $_hint = 'text-xs text-zinc-500 dark:text-zinc-400 mt-1';
         $_radio = 'w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500';
-        $_yes = __('common.yes') ?? '예';
-        $_no = __('common.no') ?? '아니오';
+        $_yes = __('common.yes');
+        $_no = __('common.no');
         ?>
 
         <!-- 페이지 제목 패턴 -->
         <div class="border-b dark:border-zinc-700 pb-6">
-            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.title_pattern.title') ?? '페이지 제목 패턴' ?></h3>
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.title_pattern.title') ?></h3>
             <div class="space-y-4">
                 <div class="flex items-start gap-4">
-                    <label class="<?= $_lbl ?>"><?= __('settings.seo.title_pattern.main') ?? '메인화면 제목' ?></label>
+                    <label class="<?= $_lbl ?>"><?= __('settings.seo.title_pattern.main') ?></label>
                     <div class="flex-1">
                         <?php rzx_multilang_input('seo_title_main', $settings['seo_title_main'] ?? '$SITE_TITLE - $SITE_SUBTITLE', 'settings.seo_title_main'); ?>
-                        <p class="<?= $_hint ?>"><?= __('settings.seo.title_pattern.main_hint') ?? '사이트 메인 화면에 표시되는 제목 형태입니다.' ?><br><?= __('settings.seo.title_pattern.vars') ?? '$SITE_TITLE (사이트 제목), $SITE_SUBTITLE (사이트 부제목), $SUBPAGE_TITLE (서브페이지 제목)' ?></p>
+                        <p class="<?= $_hint ?>"><?= __('settings.seo.title_pattern.main_hint') ?><br><?= __('settings.seo.title_pattern.vars') ?></p>
                     </div>
                 </div>
                 <div class="flex items-start gap-4">
-                    <label class="<?= $_lbl ?>"><?= __('settings.seo.title_pattern.sub') ?? '서브페이지 제목' ?></label>
+                    <label class="<?= $_lbl ?>"><?= __('settings.seo.title_pattern.sub') ?></label>
                     <div class="flex-1">
                         <?php rzx_multilang_input('seo_title_sub', $settings['seo_title_sub'] ?? '$SITE_TITLE - $SUBPAGE_TITLE', 'settings.seo_title_sub'); ?>
-                        <p class="<?= $_hint ?>"><?= __('settings.seo.title_pattern.sub_hint') ?? '문서 목록, 페이지 등 주요 메뉴를 방문하면 표시되는 제목 형태입니다.' ?> <?= __('settings.seo.title_pattern.vars_sub') ?? '위의 변수들과 함께 $PAGE (페이지)도 사용할 수 있습니다.' ?></p>
+                        <p class="<?= $_hint ?>"><?= __('settings.seo.title_pattern.sub_hint') ?> <?= __('settings.seo.title_pattern.vars_sub') ?></p>
                     </div>
                 </div>
                 <div class="flex items-start gap-4">
-                    <label class="<?= $_lbl ?>"><?= __('settings.seo.title_pattern.document') ?? '개별 문서 페이지 제목' ?></label>
+                    <label class="<?= $_lbl ?>"><?= __('settings.seo.title_pattern.document') ?></label>
                     <div class="flex-1">
                         <?php rzx_multilang_input('seo_title_document', $settings['seo_title_document'] ?? '$SITE_TITLE - $DOCUMENT_TITLE', 'settings.seo_title_document'); ?>
-                        <p class="<?= $_hint ?>"><?= __('settings.seo.title_pattern.document_hint') ?? '게시물을 읽는 화면에서 표시되는 제목 형태입니다.' ?> <?= __('settings.seo.title_pattern.vars_doc') ?? '위에 변수들과 함께 $CATEGORY (카테고리명), $DOCUMENT_TITLE (문서 제목)도 사용할 수 있습니다.' ?></p>
+                        <p class="<?= $_hint ?>"><?= __('settings.seo.title_pattern.document_hint') ?> <?= __('settings.seo.title_pattern.vars_doc') ?></p>
                     </div>
                 </div>
             </div>
@@ -258,12 +258,12 @@ ob_start();
 
         <!-- 소셜 메타 태그 옵션 -->
         <div class="border-b dark:border-zinc-700 pb-6">
-            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.social.title') ?? '소셜 메타 태그 옵션' ?></h3>
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.social.title') ?></h3>
             <div class="space-y-3">
                 <?php
                 $socialOpts = [
-                    ['name' => 'seo_og_tag', 'label' => __('settings.seo.social.og_tag') ?? 'OpenGraph 태그 사용'],
-                    ['name' => 'seo_twitter_tag', 'label' => __('settings.seo.social.twitter_tag') ?? '트위터 메타 태그 사용'],
+                    ['name' => 'seo_og_tag', 'label' => __('settings.seo.social.og_tag')],
+                    ['name' => 'seo_twitter_tag', 'label' => __('settings.seo.social.twitter_tag')],
                 ];
                 foreach ($socialOpts as $opt):
                     $val = $settings[$opt['name']] ?? 'N';
@@ -287,11 +287,11 @@ ob_start();
 
         <!-- 콘텐츠 자동 추출 -->
         <div class="border-b dark:border-zinc-700 pb-6">
-            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.extract.title') ?? '콘텐츠 자동 추출' ?></h3>
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.extract.title') ?></h3>
             <div class="space-y-3">
                 <!-- 본문에서 설명 추출 -->
                 <div class="flex items-center gap-4">
-                    <label class="<?= $_lbl ?>"><?= __('settings.seo.extract.description') ?? '본문에서 설명 추출' ?></label>
+                    <label class="<?= $_lbl ?>"><?= __('settings.seo.extract.description') ?></label>
                     <div class="flex items-center gap-4">
                         <label class="flex items-center cursor-pointer">
                             <input type="radio" name="seo_extract_desc" value="Y" <?= ($settings['seo_extract_desc'] ?? 'N') === 'Y' ? 'checked' : '' ?> class="<?= $_radio ?>">
@@ -299,13 +299,13 @@ ob_start();
                         </label>
                         <label class="flex items-center cursor-pointer">
                             <input type="radio" name="seo_extract_desc" value="N" <?= ($settings['seo_extract_desc'] ?? 'N') !== 'Y' ? 'checked' : '' ?> class="<?= $_radio ?>">
-                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.seo.extract.description_no') ?? '아니오 (모듈 또는 사이트 전체 설명만 사용)' ?></span>
+                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.seo.extract.description_no') ?></span>
                         </label>
                     </div>
                 </div>
                 <!-- 본문에서 이미지 추출 -->
                 <div class="flex items-center gap-4">
-                    <label class="<?= $_lbl ?>"><?= __('settings.seo.extract.image') ?? '본문에서 이미지 추출' ?></label>
+                    <label class="<?= $_lbl ?>"><?= __('settings.seo.extract.image') ?></label>
                     <div class="flex items-center gap-4">
                         <label class="flex items-center cursor-pointer">
                             <input type="radio" name="seo_extract_image" value="Y" <?= ($settings['seo_extract_image'] ?? 'N') === 'Y' ? 'checked' : '' ?> class="<?= $_radio ?>">
@@ -313,13 +313,13 @@ ob_start();
                         </label>
                         <label class="flex items-center cursor-pointer">
                             <input type="radio" name="seo_extract_image" value="N" <?= ($settings['seo_extract_image'] ?? 'N') !== 'Y' ? 'checked' : '' ?> class="<?= $_radio ?>">
-                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.seo.extract.image_no') ?? '아니오 (사이트 대표 이미지 사용)' ?></span>
+                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.seo.extract.image_no') ?></span>
                         </label>
                     </div>
                 </div>
                 <!-- 본문에서 해시태그 추출 -->
                 <div class="flex items-center gap-4">
-                    <label class="<?= $_lbl ?>"><?= __('settings.seo.extract.hashtag') ?? '본문에서 해시태그 추출' ?></label>
+                    <label class="<?= $_lbl ?>"><?= __('settings.seo.extract.hashtag') ?></label>
                     <div class="flex items-center gap-4">
                         <label class="flex items-center cursor-pointer">
                             <input type="radio" name="seo_extract_hashtag" value="Y" <?= ($settings['seo_extract_hashtag'] ?? 'N') === 'Y' ? 'checked' : '' ?> class="<?= $_radio ?>">
@@ -336,12 +336,12 @@ ob_start();
 
         <!-- 문서 메타 표시 -->
         <div class="border-b dark:border-zinc-700 pb-6">
-            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.display.title') ?? '문서 메타 표시' ?></h3>
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-4"><?= __('settings.seo.display.title') ?></h3>
             <div class="space-y-3">
                 <?php
                 $displayOpts = [
-                    ['name' => 'seo_show_author', 'label' => __('settings.seo.display.author') ?? '글 작성자 이름 표시'],
-                    ['name' => 'seo_show_datetime', 'label' => __('settings.seo.display.datetime') ?? '글 작성/수정 시각 표시'],
+                    ['name' => 'seo_show_author', 'label' => __('settings.seo.display.author')],
+                    ['name' => 'seo_show_datetime', 'label' => __('settings.seo.display.datetime')],
                 ];
                 foreach ($displayOpts as $opt):
                     $val = $settings[$opt['name']] ?? 'N';

@@ -29,7 +29,7 @@
         <div class="flex items-center justify-between p-5 border-b border-zinc-200 dark:border-zinc-700 sticky top-0 bg-white dark:bg-zinc-800 z-10 rounded-t-2xl">
             <h3 class="text-lg font-bold text-zinc-900 dark:text-white flex items-center">
                 <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                예약 등록
+                <?= __('reservations.cal_add') ?>
             </h3>
             <button onclick="rzxCalCloseAdd()" class="p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition">
                 <svg class="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -40,6 +40,7 @@
             <?php
             $resForm = [
                 'services'         => $cal['services'] ?? [],
+                'bundles'          => $cal['bundles'] ?? [],
                 'adminUrl'         => $cal['adminUrl'],
                 'csrfToken'        => $cal['csrfToken'],
                 'currencySymbol'   => $cal['currencySymbol'],

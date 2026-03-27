@@ -215,4 +215,7 @@ return [
         'offline' => '您已离线',
         'online' => '已恢复在线',
     ],
+
+    'selected' => '已选',
+    'unit' => ['items' => '个', 'minutes' => '分钟'],
 ];

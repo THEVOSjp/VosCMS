@@ -238,4 +238,7 @@ return [
         'offline' => 'オフライン状態です',
         'online' => 'オンラインに戻りました',
     ],
+
+    'selected' => '選択',
+    'unit' => ['items' => '件', 'minutes' => '分'],
 ];

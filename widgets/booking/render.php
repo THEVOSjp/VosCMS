@@ -36,12 +36,34 @@ try {
         LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id
         WHERE s.is_active = 1 ORDER BY s.sort_order, s.name")->fetchAll(PDO::FETCH_ASSOC);
 
+    // 번들(추천 패키지) 로드
+    $bundles = [];
+    $bundleDisplayName = $siteSettings['bundle_display_name'] ?? '';
+    if (!$bundleDisplayName || $bundleDisplayName === '') $bundleDisplayName = __('bundles.recommended') ?? '추천 패키지';
+    $bStmt = $pdo->query("SELECT b.*, GROUP_CONCAT(bi.service_id) as svc_ids, COUNT(bi.service_id) as svc_count, SUM(s.duration) as total_duration
+        FROM {$prefix}service_bundles b
+        LEFT JOIN {$prefix}service_bundle_items bi ON b.id = bi.bundle_id
+        LEFT JOIN {$prefix}services s ON bi.service_id = s.id
+        WHERE b.is_active = 1 GROUP BY b.id ORDER BY b.display_order");
+    while ($b = $bStmt->fetch(PDO::FETCH_ASSOC)) {
+        $b['svc_id_list'] = $b['svc_ids'] ? explode(',', $b['svc_ids']) : [];
+        // 이벤트 가격 확인
+        $now = date('Y-m-d H:i:s');
+        $b['is_event'] = $b['event_price'] && $b['event_price'] > 0 && (!$b['event_start'] || $b['event_start'] <= $now) && (!$b['event_end'] || $b['event_end'] >= $now);
+        $b['display_price'] = $b['is_event'] ? $b['event_price'] : $b['bundle_price'];
+        // 이미지 경로
+        if ($b['image'] && !str_starts_with($b['image'], 'http')) {
+            $b['image'] = $baseUrl . '/' . ltrim($b['image'], '/');
+        }
+        $bundles[] = $b;
+    }
+
     // 번역 로드
     $defaultLocale = $siteSettings['default_language'] ?? 'ko';
     $localeChain = array_unique(array_filter([$currentLocale, 'en', $defaultLocale]));
     $lcPH = implode(',', array_fill(0, count($localeChain), '?'));
     $trStmt = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations
-        WHERE locale IN ({$lcPH}) AND (lang_key LIKE 'service.%.name' OR lang_key LIKE 'service.%.description')");
+        WHERE locale IN ({$lcPH}) AND (lang_key LIKE 'service.%.name' OR lang_key LIKE 'service.%.description' OR lang_key LIKE 'bundle.%.name' OR lang_key LIKE 'bundle.%.description')");
     $trStmt->execute(array_values($localeChain));
     while ($tr = $trStmt->fetch(PDO::FETCH_ASSOC)) {
         $svcTranslations[$tr['lang_key']][$tr['locale']] = $tr['content'];

@@ -10,9 +10,32 @@ if (!$id) { header("Location: {$adminUrl}/reservations"); exit; }
 $stmt = $pdo->prepare("SELECT * FROM {$prefix}reservations WHERE id = ?");
 $stmt->execute([$id]);
 $r = $stmt->fetch(PDO::FETCH_ASSOC);
-if (!$r) { http_response_code(404); echo '<p>예약을 찾을 수 없습니다.</p>'; exit; }
+if (!$r) { http_response_code(404); echo '<p>' . __('reservations.show_not_found') . '</p>'; exit; }
 
 $serviceName = getServiceName($pdo, $prefix, $r['id']);
+
+// 서비스명/카테고리명 DB 번역 캐시 로드
+$_trLocale = $config['locale'] ?? 'ko';
+$_trDefLocale = $siteSettings['default_language'] ?? 'ko';
+$_trLocaleChain = array_unique(array_filter([$_trLocale, 'en', $_trDefLocale]));
+$_trCache = [];
+try {
+    $_ph = implode(',', array_fill(0, count($_trLocaleChain), '?'));
+    $_trSt = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations WHERE locale IN ({$_ph}) AND (lang_key LIKE 'service.%.name' OR lang_key LIKE 'category.%.name')");
+    $_trSt->execute(array_values($_trLocaleChain));
+    while ($_tr = $_trSt->fetch(PDO::FETCH_ASSOC)) { $_trCache[$_tr['lang_key']][$_tr['locale']] = $_tr['content']; }
+} catch (PDOException $e) {}
+
+function translateDbName(string $type, ?string $id, string $fallback, array $cache, array $chain): string {
+    if (!$id) return $fallback;
+    $key = "{$type}.{$id}.name";
+    if (isset($cache[$key])) {
+        foreach ($chain as $lc) {
+            if (!empty($cache[$key][$lc])) return $cache[$key][$lc];
+        }
+    }
+    return $fallback;
+}
 
 // 번들 정보 조회
 $bundleInfo = null;
@@ -32,7 +55,7 @@ try {
     $rsSvcStmt = $pdo->prepare("
         SELECT rs.service_id, COALESCE(rs.service_name, s.name) as service_name, rs.price, rs.duration, rs.bundle_id,
                s.image as service_image, s.description as service_description,
-               c.name as category_name
+               s.category_id, c.name as category_name
         FROM {$prefix}reservation_services rs
         LEFT JOIN {$prefix}services s ON rs.service_id = s.id
         LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id
@@ -45,7 +68,7 @@ try {
     $rsSvcStmt = $pdo->prepare("
         SELECT rs.service_id, s.name as service_name, rs.price, rs.duration, NULL as bundle_id,
                s.image as service_image, s.description as service_description,
-               c.name as category_name
+               s.category_id, c.name as category_name
         FROM {$prefix}reservation_services rs
         LEFT JOIN {$prefix}services s ON rs.service_id = s.id
         LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id
@@ -106,7 +129,7 @@ if (!empty($r['user_id'])) {
 }
 
 // 요일 계산
-$weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+$weekdays = __('reservations.weekdays');
 $dateTs = strtotime($r['reservation_date']);
 $dayOfWeek = $weekdays[(int)date('w', $dateTs)];
 
@@ -170,9 +193,9 @@ include __DIR__ . '/_head.php';
     <div class="flex items-center justify-between">
         <?php
         $steps = [
-            ['pending', '대기중', 'bg-yellow-400'],
-            ['confirmed', '확정', 'bg-blue-400'],
-            ['completed', '완료', 'bg-green-400'],
+            ['pending', __('reservations.show_step_pending'), 'bg-yellow-400'],
+            ['confirmed', __('reservations.show_step_confirmed'), 'bg-blue-400'],
+            ['completed', __('reservations.show_step_completed'), 'bg-green-400'],
         ];
         $statusOrder = ['pending' => 0, 'confirmed' => 1, 'completed' => 2, 'cancelled' => -1, 'no_show' => -1];
         $currentStep = $statusOrder[$r['status']] ?? -1;
@@ -208,7 +231,7 @@ include __DIR__ . '/_head.php';
                 <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-red-500 text-white">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </div>
-                <span class="text-[10px] mt-1 font-bold text-red-500"><?= $r['status'] === 'cancelled' ? '취소' : '노쇼' ?></span>
+                <span class="text-[10px] mt-1 font-bold text-red-500"><?= $r['status'] === 'cancelled' ? __('reservations.show_step_cancelled') : __('reservations.show_step_noshow') ?></span>
             </div>
         </div>
         <?php endif; ?>
@@ -220,14 +243,14 @@ include __DIR__ . '/_head.php';
     <div class="lg:col-span-2 space-y-6">
         <!-- 예약 정보 -->
         <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
-            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">예약 정보</h3>
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('reservations.show_reservation_info') ?></h3>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">상태</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.show_status') ?></p>
                     <div><?= statusBadge($r['status']) ?></div>
                 </div>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">서비스</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.show_service') ?></p>
                     <p class="text-sm font-medium text-zinc-900 dark:text-white">
                         <?= htmlspecialchars($serviceName) ?>
                         <?php if ($bundleInfo): ?>
@@ -239,35 +262,35 @@ include __DIR__ . '/_head.php';
                     </p>
                 </div>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">예약 경로</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.show_source') ?></p>
                     <?php
                     $srcLabel = match($r['source'] ?? 'online') {
-                        'walk_in' => ['현장접수', 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'],
-                        'phone' => ['전화예약', 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400'],
-                        'staff_page' => ['스태프 지명', 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'],
-                        default => ['온라인', 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'],
+                        'walk_in' => [__('reservations.show_source_walkin'), 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'],
+                        'phone' => [__('reservations.show_source_phone'), 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400'],
+                        'staff_page' => [__('reservations.show_source_staff_page'), 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'],
+                        default => [__('reservations.show_source_online'), 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'],
                     };
                     ?>
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium <?= $srcLabel[1] ?>"><?= $srcLabel[0] ?></span>
                 </div>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">예약일</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.show_date') ?></p>
                     <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= $r['reservation_date'] ?> (<?= $dayOfWeek ?>)</p>
                 </div>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">시간 / 소요</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.show_time_duration') ?></p>
                     <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= substr($r['start_time'], 0, 5) ?> ~ <?= substr($r['end_time'] ?? '', 0, 5) ?> <span class="text-xs text-zinc-400">(<?= $totalDuration ?>분)</span></p>
                 </div>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">결제 상태</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.show_payment_status') ?></p>
                     <?php
                     $paidAmt = (float)($r['paid_amount'] ?? 0);
                     $finalAmt = (float)($r['final_amount'] ?? 0);
                     $pSt = $r['payment_status'] ?? 'unpaid';
                     $pLabel = match($pSt) {
-                        'paid' => ['결제완료', 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'],
-                        'partial' => ['부분결제', 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'],
-                        default => ['미결제', 'bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400'],
+                        'paid' => [__('reservations.show_pay_paid'), 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'],
+                        'partial' => [__('reservations.show_pay_partial'), 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'],
+                        default => [__('reservations.show_pay_unpaid'), 'bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400'],
                     };
                     ?>
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium <?= $pLabel[1] ?>"><?= $pLabel[0] ?></span>
@@ -276,23 +299,23 @@ include __DIR__ . '/_head.php';
                     <?php endif; ?>
                 </div>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">예약번호</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.show_reservation_number') ?></p>
                     <p class="text-sm font-mono text-zinc-900 dark:text-white"><?= htmlspecialchars($r['reservation_number'] ?? '') ?></p>
                 </div>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">담당 스태프</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.show_staff') ?></p>
                     <?php if (!empty($r['staff_id']) && $staffName !== '-'):
                         $isDesig = (float)($r['designation_fee'] ?? 0) > 0;
                     ?>
                     <div class="flex items-center gap-2">
                         <?php if ($isDesig): ?>
-                        <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">지명</span>
+                        <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"><?= __('reservations.show_designation') ?></span>
                         <?php else: ?>
-                        <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">배정</span>
+                        <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"><?= __('reservations.show_assignment') ?></span>
                         <?php endif; ?>
                     </div>
                     <?php else: ?>
-                    <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-zinc-100 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400">미배정</span>
+                    <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-zinc-100 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400"><?= __('reservations.show_unassigned') ?></span>
                     <?php endif; ?>
                 </div>
             </div>
@@ -319,18 +342,18 @@ include __DIR__ . '/_head.php';
                     <div class="flex items-center gap-2">
                         <a href="<?= $adminUrl ?>/staff" class="text-sm font-semibold text-zinc-900 dark:text-white hover:text-violet-600 dark:hover:text-violet-400 hover:underline transition"><?= htmlspecialchars($staffName) ?></a>
                         <?php if ($isDesignation): ?>
-                        <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">지명</span>
+                        <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"><?= __('reservations.show_designation') ?></span>
                         <span class="text-xs text-violet-600 dark:text-violet-400 font-medium"><?= formatPrice((float)$r['designation_fee']) ?></span>
                         <?php else: ?>
-                        <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">배정</span>
+                        <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"><?= __('reservations.show_assignment') ?></span>
                         <?php endif; ?>
                     </div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400">담당 스태프</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('reservations.show_staff_label') ?></p>
                 </div>
                 <?php if ($canChangeStaff): ?>
                 <div class="flex gap-1.5 flex-shrink-0">
-                    <button type="button" onclick="openStaffChangePanel('assign')" class="px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/20 rounded-lg border border-emerald-300 dark:border-emerald-700 transition">배정</button>
-                    <button type="button" onclick="openStaffChangePanel('designate')" class="px-2.5 py-1.5 text-xs font-medium text-violet-600 hover:bg-violet-100 dark:hover:bg-violet-900/20 rounded-lg border border-violet-300 dark:border-violet-700 transition">지명</button>
+                    <button type="button" onclick="openStaffChangePanel('assign')" class="px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/20 rounded-lg border border-emerald-300 dark:border-emerald-700 transition"><?= __('reservations.show_staff_assign_btn') ?></button>
+                    <button type="button" onclick="openStaffChangePanel('designate')" class="px-2.5 py-1.5 text-xs font-medium text-violet-600 hover:bg-violet-100 dark:hover:bg-violet-900/20 rounded-lg border border-violet-300 dark:border-violet-700 transition"><?= __('reservations.show_staff_designate_btn') ?></button>
                 </div>
                 <?php endif; ?>
                 <?php else: ?>
@@ -339,15 +362,15 @@ include __DIR__ . '/_head.php';
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2">
-                        <span class="text-sm text-zinc-400">미배정</span>
-                        <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-zinc-100 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400">미배정</span>
+                        <span class="text-sm text-zinc-400"><?= __('reservations.show_unassigned') ?></span>
+                        <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-zinc-100 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400"><?= __('reservations.show_unassigned') ?></span>
                     </div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400">담당 스태프</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('reservations.show_staff_label') ?></p>
                 </div>
                 <?php if ($canChangeStaff): ?>
                 <div class="flex gap-1.5 flex-shrink-0">
-                    <button type="button" onclick="openStaffChangePanel('assign')" class="px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/20 rounded-lg border border-emerald-300 dark:border-emerald-700 transition">배정</button>
-                    <button type="button" onclick="openStaffChangePanel('designate')" class="px-2.5 py-1.5 text-xs font-medium text-violet-600 hover:bg-violet-100 dark:hover:bg-violet-900/20 rounded-lg border border-violet-300 dark:border-violet-700 transition">지명</button>
+                    <button type="button" onclick="openStaffChangePanel('assign')" class="px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/20 rounded-lg border border-emerald-300 dark:border-emerald-700 transition"><?= __('reservations.show_staff_assign_btn') ?></button>
+                    <button type="button" onclick="openStaffChangePanel('designate')" class="px-2.5 py-1.5 text-xs font-medium text-violet-600 hover:bg-violet-100 dark:hover:bg-violet-900/20 rounded-lg border border-violet-300 dark:border-violet-700 transition"><?= __('reservations.show_staff_designate_btn') ?></button>
                 </div>
                 <?php endif; ?>
                 <?php endif; ?>
@@ -356,20 +379,20 @@ include __DIR__ . '/_head.php';
             <?php if ($canChangeStaff): ?>
             <div id="staffChangePanel" class="hidden mt-2 p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg">
                 <div class="flex items-center justify-between mb-2">
-                    <p id="staffPanelTitle" class="text-xs font-semibold text-zinc-700 dark:text-zinc-300">스태프 배정</p>
+                    <p id="staffPanelTitle" class="text-xs font-semibold text-zinc-700 dark:text-zinc-300"><?= __('reservations.show_staff_assign_title') ?></p>
                     <button type="button" onclick="closeStaffChangePanel()" class="p-1 text-zinc-400 hover:text-zinc-600 rounded transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
                 <div id="staffChangeList" class="space-y-1.5 max-h-48 overflow-y-auto">
-                    <div class="text-center py-3 text-zinc-400 text-xs">로딩 중...</div>
+                    <div class="text-center py-3 text-zinc-400 text-xs"><?= __('reservations.show_staff_loading') ?></div>
                 </div>
             </div>
             <?php endif; ?>
 
             <?php if ($r['status'] === 'cancelled' && !empty($r['cancel_reason'])): ?>
             <div class="mt-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                <p class="text-xs text-red-500 mb-1">취소 사유</p>
+                <p class="text-xs text-red-500 mb-1"><?= __('reservations.show_cancel_reason') ?></p>
                 <p class="text-sm text-red-800 dark:text-red-300"><?= htmlspecialchars($r['cancel_reason']) ?></p>
                 <p class="text-xs text-red-400 mt-1"><?= $r['cancelled_at'] ?></p>
             </div>
@@ -379,11 +402,11 @@ include __DIR__ . '/_head.php';
         <!-- 고객 정보 -->
         <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">고객 정보</h3>
+                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('reservations.show_customer_info') ?></h3>
                 <?php if (!empty($r['user_id'])): ?>
-                <span class="px-2 py-0.5 text-[10px] font-medium rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">회원</span>
+                <span class="px-2 py-0.5 text-[10px] font-medium rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"><?= __('reservations.show_customer_member') ?></span>
                 <?php else: ?>
-                <span class="px-2 py-0.5 text-[10px] font-medium rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400">비회원</span>
+                <span class="px-2 py-0.5 text-[10px] font-medium rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400"><?= __('reservations.show_customer_guest') ?></span>
                 <?php endif; ?>
             </div>
             <!-- 프로필 헤더 -->
@@ -406,9 +429,9 @@ include __DIR__ . '/_head.php';
                         <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold text-white" style="background-color: <?= htmlspecialchars($userGrade['color']) ?>"><?= htmlspecialchars($userGrade['name']) ?></span>
                         <?php endif; ?>
                         <?php if (!empty($visitStats)): ?>
-                        <span>방문 <?= (int)$visitStats['completed'] ?>회</span>
+                        <span><?= __('reservations.show_customer_visit_count', ['count' => (int)$visitStats['completed']]) ?></span>
                         <?php if ((int)$visitStats['no_show'] > 0): ?>
-                        <span class="text-red-400">노쇼 <?= (int)$visitStats['no_show'] ?>회</span>
+                        <span class="text-red-400"><?= __('reservations.show_customer_noshow_count', ['count' => (int)$visitStats['no_show']]) ?></span>
                         <?php endif; ?>
                         <?php endif; ?>
                     </div>
@@ -418,18 +441,18 @@ include __DIR__ . '/_head.php';
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <?php if (empty($r['user_id']) || !$userDetail): ?>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">이름</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.show_customer_name') ?></p>
                     <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($r['customer_name']) ?></p>
                 </div>
                 <?php endif; ?>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">전화번호</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.show_customer_phone') ?></p>
                     <p class="text-sm font-medium text-zinc-900 dark:text-white">
                         <a href="tel:<?= htmlspecialchars($r['customer_phone']) ?>" class="text-blue-600 dark:text-blue-400 hover:underline"><?= htmlspecialchars($r['customer_phone']) ?></a>
                     </p>
                 </div>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">이메일</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.show_customer_email') ?></p>
                     <p class="text-sm font-medium text-zinc-900 dark:text-white">
                         <?php if (!empty($r['customer_email'])): ?>
                         <a href="mailto:<?= htmlspecialchars($r['customer_email']) ?>" class="text-blue-600 dark:text-blue-400 hover:underline"><?= htmlspecialchars($r['customer_email']) ?></a>
@@ -438,28 +461,28 @@ include __DIR__ . '/_head.php';
                 </div>
                 <?php if (!empty($userDetail['birth_date'])): ?>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">생년월일</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.show_customer_birth') ?></p>
                     <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= $userDetail['birth_date'] ?>
                         <?php $age = (int)date('Y') - (int)substr($userDetail['birth_date'], 0, 4); ?>
-                        <span class="text-xs text-zinc-400">(<?= $age ?>세)</span>
+                        <span class="text-xs text-zinc-400">(<?= __('reservations.show_customer_age', ['age' => $age]) ?>)</span>
                     </p>
                 </div>
                 <?php endif; ?>
                 <?php if (!empty($userDetail['gender'])): ?>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">성별</p>
-                    <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= match($userDetail['gender']) { 'male' => '남성', 'female' => '여성', default => '기타' } ?></p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.show_customer_gender') ?></p>
+                    <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= match($userDetail['gender']) { 'male' => __('reservations.show_customer_gender_male'), 'female' => __('reservations.show_customer_gender_female'), default => __('reservations.show_customer_gender_other') } ?></p>
                 </div>
                 <?php endif; ?>
                 <?php if ($userGrade): ?>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">회원 등급</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.show_customer_grade') ?></p>
                     <p class="text-sm font-medium">
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold text-white" style="background-color: <?= htmlspecialchars($userGrade['color']) ?>">
                             <?= htmlspecialchars($userGrade['name']) ?>
                         </span>
                         <?php if ($userGrade['discount_rate'] > 0): ?>
-                        <span class="ml-1 text-xs text-zinc-500 dark:text-zinc-400">할인 <?= $userGrade['discount_rate'] ?>%</span>
+                        <span class="ml-1 text-xs text-zinc-500 dark:text-zinc-400"><?= __('reservations.show_customer_discount', ['rate' => $userGrade['discount_rate']]) ?></span>
                         <?php endif; ?>
                     </p>
                 </div>
@@ -470,14 +493,14 @@ include __DIR__ . '/_head.php';
                     <p class="text-sm font-medium text-zinc-900 dark:text-white">
                         <?= formatPrice($userPoints) ?>
                         <?php if ($userGrade && $userGrade['point_rate'] > 0): ?>
-                        <span class="ml-1 text-xs text-zinc-500 dark:text-zinc-400">(적립 <?= $userGrade['point_rate'] ?>%)</span>
+                        <span class="ml-1 text-xs text-zinc-500 dark:text-zinc-400">(<?= __('reservations.show_customer_points_earn', ['rate' => $userGrade['point_rate']]) ?>)</span>
                         <?php endif; ?>
                     </p>
                 </div>
                 <?php endif; ?>
                 <?php if (!empty($userDetail['member_since'])): ?>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1">가입일</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.show_customer_joined') ?></p>
                     <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= date('Y-m-d', strtotime($userDetail['member_since'])) ?></p>
                 </div>
                 <?php endif; ?>
@@ -488,7 +511,7 @@ include __DIR__ . '/_head.php';
             <div class="mt-4 p-3 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-800/30">
                 <p class="text-xs font-medium text-amber-600 dark:text-amber-400 mb-1 flex items-center gap-1">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
-                    고객 요구사항
+                    <?= __('reservations.show_customer_request') ?>
                 </p>
                 <p class="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap"><?= htmlspecialchars($r['notes']) ?></p>
             </div>
@@ -499,7 +522,7 @@ include __DIR__ . '/_head.php';
             <div class="mt-3 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700">
                 <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1 flex items-center gap-1">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    관리자 메모
+                    <?= __('reservations.show_admin_notes') ?>
                 </p>
                 <p class="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap"><?= htmlspecialchars($r['admin_notes']) ?></p>
             </div>
@@ -509,11 +532,11 @@ include __DIR__ . '/_head.php';
         <!-- 서비스 상세 정보 -->
         <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">서비스 상세</h3>
-                <span id="showSvcSummary" class="text-sm text-zinc-500 dark:text-zinc-400"><?= count($reservationServices) ?>건 · <?= $totalDuration ?>분</span>
+                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('reservations.show_service_detail') ?></h3>
+                <span id="showSvcSummary" class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('reservations.show_service_count_duration', ['count' => count($reservationServices), 'min' => $totalDuration]) ?></span>
             </div>
             <?php if (empty($reservationServices)): ?>
-            <p class="text-sm text-zinc-400 text-center py-4">등록된 서비스가 없습니다.</p>
+            <p class="text-sm text-zinc-400 text-center py-4"><?= __('reservations.show_no_services') ?></p>
             <?php else: ?>
             <div class="space-y-3">
                 <?php foreach ($reservationServices as $idx => $rs):
@@ -532,12 +555,12 @@ include __DIR__ . '/_head.php';
                     <?php endif; ?>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 mb-0.5">
-                            <p class="text-sm font-semibold text-zinc-900 dark:text-white truncate"><?= htmlspecialchars($rs['service_name']) ?></p>
+                            <p class="text-sm font-semibold text-zinc-900 dark:text-white truncate"><?= htmlspecialchars(translateDbName('service', $rs['service_id'] ?? null, $rs['service_name'], $_trCache, $_trLocaleChain)) ?></p>
                             <?php if ($rs['category_name']): ?>
-                            <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400 flex-shrink-0"><?= htmlspecialchars($rs['category_name']) ?></span>
+                            <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400 flex-shrink-0"><?= htmlspecialchars(translateDbName('category', $rs['category_id'] ?? null, $rs['category_name'], $_trCache, $_trLocaleChain)) ?></span>
                             <?php endif; ?>
                             <?php if ($isBundled): ?>
-                            <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 flex-shrink-0">번들</span>
+                            <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 flex-shrink-0"><?= __('reservations.show_bundle') ?></span>
                             <?php endif; ?>
                         </div>
                         <?php if (!empty($rs['service_description'])): ?>
@@ -573,10 +596,10 @@ include __DIR__ . '/_head.php';
                     <?php endif; ?>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 mb-0.5">
-                            <p class="text-sm font-semibold text-zinc-900 dark:text-white">지명비</p>
-                            <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 flex-shrink-0">지명</span>
+                            <p class="text-sm font-semibold text-zinc-900 dark:text-white"><?= __('reservations.show_designation_fee') ?></p>
+                            <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 flex-shrink-0"><?= __('reservations.show_designation') ?></span>
                         </div>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400">담당: <?= htmlspecialchars($staffName) ?></p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('reservations.show_designation_staff', ['name' => htmlspecialchars($staffName)]) ?></p>
                         <div class="flex items-center gap-3 text-xs mt-1">
                             <span class="font-semibold text-blue-600 dark:text-blue-400"><?= formatPrice($designFee) ?></span>
                         </div>
@@ -587,21 +610,21 @@ include __DIR__ . '/_head.php';
             <!-- 서비스 합계 -->
             <div class="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700 space-y-1.5 text-sm">
                 <div class="flex items-center justify-between">
-                    <span class="text-zinc-500 dark:text-zinc-400">서비스 (<?= count($reservationServices) ?>건 · <?= $totalDuration ?>분)</span>
+                    <span class="text-zinc-500 dark:text-zinc-400"><?= __('reservations.show_service_total_label', ['count' => count($reservationServices), 'min' => $totalDuration]) ?></span>
                     <span class="text-zinc-900 dark:text-white"><?= formatPrice($totalServicePrice) ?></span>
                 </div>
                 <?php if ($designFee > 0): ?>
                 <div class="flex items-center justify-between">
-                    <span class="text-zinc-500 dark:text-zinc-400">지명비</span>
+                    <span class="text-zinc-500 dark:text-zinc-400"><?= __('reservations.show_designation_fee') ?></span>
                     <span class="text-zinc-900 dark:text-white"><?= formatPrice($designFee) ?></span>
                 </div>
                 <div class="flex items-center justify-between pt-1.5 border-t border-zinc-200 dark:border-zinc-700">
-                    <span class="font-semibold text-zinc-900 dark:text-white">합계</span>
+                    <span class="font-semibold text-zinc-900 dark:text-white"><?= __('reservations.show_total') ?></span>
                     <span class="font-bold text-zinc-900 dark:text-white"><?= formatPrice($totalServicePrice + $designFee) ?></span>
                 </div>
                 <?php else: ?>
                 <div class="flex items-center justify-between">
-                    <span class="font-semibold text-zinc-900 dark:text-white">합계</span>
+                    <span class="font-semibold text-zinc-900 dark:text-white"><?= __('reservations.show_total') ?></span>
                     <span class="font-bold text-zinc-900 dark:text-white"><?= formatPrice($totalServicePrice) ?></span>
                 </div>
                 <?php endif; ?>
@@ -612,20 +635,20 @@ include __DIR__ . '/_head.php';
             <?php if (in_array($r['status'], ['pending', 'confirmed'])): ?>
             <button type="button" id="showAddServiceToggleBtn" onclick="toggleShowAddService()" class="mt-3 w-full py-2 flex items-center justify-center gap-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-dashed border-blue-300 dark:border-blue-700 rounded-lg transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                서비스 추가
+                <?= __('reservations.show_add_service') ?>
             </button>
             <div id="showAddServiceArea" class="hidden mt-3 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-200 dark:border-blue-800/30">
                 <div class="flex items-center justify-between mb-3">
-                    <p class="text-sm font-semibold text-blue-700 dark:text-blue-400">서비스 추가</p>
+                    <p class="text-sm font-semibold text-blue-700 dark:text-blue-400"><?= __('reservations.show_add_service_title') ?></p>
                     <button type="button" onclick="toggleShowAddService()" class="p-1 text-zinc-400 hover:text-zinc-600 rounded transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
                 <div id="showAddServiceList" class="space-y-1.5 max-h-48 overflow-y-auto mb-3">
-                    <div class="text-center py-3 text-zinc-400 text-xs">로딩 중...</div>
+                    <div class="text-center py-3 text-zinc-400 text-xs"><?= __('reservations.show_staff_loading') ?></div>
                 </div>
                 <button type="button" id="showAddServiceBtn" onclick="submitShowAddService()" disabled
-                        class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition disabled:opacity-50">추가</button>
+                        class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition disabled:opacity-50"><?= __('reservations.show_add_service_btn') ?></button>
             </div>
             <?php endif; ?>
         </div>
@@ -635,12 +658,12 @@ include __DIR__ . '/_head.php';
     <div class="space-y-6">
         <!-- 결제 정보 -->
         <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
-            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">결제 정보</h3>
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('reservations.show_payment_info') ?></h3>
             <div class="space-y-3">
                 <!-- 서비스 항목별 금액 -->
                 <?php foreach ($reservationServices as $rs): ?>
                 <div class="flex justify-between text-sm">
-                    <span class="text-zinc-500 dark:text-zinc-400 truncate mr-2"><?= htmlspecialchars($rs['service_name']) ?></span>
+                    <span class="text-zinc-500 dark:text-zinc-400 truncate mr-2"><?= htmlspecialchars(translateDbName('service', $rs['service_id'] ?? null, $rs['service_name'], $_trCache, $_trLocaleChain)) ?></span>
                     <span class="text-zinc-900 dark:text-white flex-shrink-0"><?= formatPrice((float)$rs['price']) ?></span>
                 </div>
                 <?php endforeach; ?>
@@ -648,19 +671,19 @@ include __DIR__ . '/_head.php';
                 <div class="flex justify-between text-sm">
                     <span class="text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
                         <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                        지명비 (<?= htmlspecialchars($staffName) ?>)
+                        <?= __('reservations.show_designation_fee') ?> (<?= htmlspecialchars($staffName) ?>)
                     </span>
                     <span class="text-blue-600 dark:text-blue-400 flex-shrink-0">+<?= formatPrice((float)$r['designation_fee']) ?></span>
                 </div>
                 <?php endif; ?>
                 <div class="border-t border-zinc-200 dark:border-zinc-700 pt-2 flex justify-between text-sm">
-                    <span class="text-zinc-500 dark:text-zinc-400">소계</span>
+                    <span class="text-zinc-500 dark:text-zinc-400"><?= __('reservations.show_subtotal') ?></span>
                     <span class="text-zinc-900 dark:text-white"><?= formatPrice((float)$r['total_amount'] + (float)($r['designation_fee'] ?? 0)) ?></span>
                 </div>
                 <?php if ((float)$r['discount_amount'] > 0): ?>
                 <div class="flex justify-between text-sm">
                     <span class="text-zinc-500 dark:text-zinc-400">
-                        회원 할인
+                        <?= __('reservations.show_member_discount') ?>
                         <?php if ($userGrade && $userGrade['discount_rate'] > 0): ?>
                         <span class="text-xs text-red-400">(<?= htmlspecialchars($userGrade['name']) ?> <?= $userGrade['discount_rate'] ?>%)</span>
                         <?php endif; ?>
@@ -675,7 +698,7 @@ include __DIR__ . '/_head.php';
                 </div>
                 <?php endif; ?>
                 <div class="border-t border-zinc-200 dark:border-zinc-700 pt-3 flex justify-between">
-                    <span class="font-semibold text-zinc-900 dark:text-white">최종 금액</span>
+                    <span class="font-semibold text-zinc-900 dark:text-white"><?= __('reservations.show_final_amount') ?></span>
                     <span class="font-bold text-lg text-blue-600 dark:text-blue-400"><?= formatPrice((float)$r['final_amount']) ?></span>
                 </div>
                 <?php if ($userGrade && $userGrade['point_rate'] > 0 && $r['status'] === 'completed'): ?>
@@ -689,21 +712,21 @@ include __DIR__ . '/_head.php';
 
         <!-- 관리자 메모 (레코드 기반) -->
         <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
-            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">관리자 메모</h3>
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('reservations.show_admin_notes') ?></h3>
 
             <?php if (!empty($r['user_id'])): ?>
             <!-- 메모 입력 -->
             <form onsubmit="saveMemo(event)" class="mb-4">
                 <textarea id="memoContent" rows="3"
                     class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg text-sm text-zinc-900 dark:text-zinc-100 resize-none"
-                    placeholder="메모 입력..."></textarea>
-                <button type="submit" id="saveMemoBtn" class="mt-2 px-4 py-2 bg-zinc-800 dark:bg-zinc-600 text-white rounded-lg text-sm hover:bg-zinc-700 w-full transition">저장</button>
+                    placeholder="<?= __('reservations.show_memo_placeholder') ?>"></textarea>
+                <button type="submit" id="saveMemoBtn" class="mt-2 px-4 py-2 bg-zinc-800 dark:bg-zinc-600 text-white rounded-lg text-sm hover:bg-zinc-700 w-full transition"><?= __('reservations.show_memo_save') ?></button>
             </form>
 
             <!-- 메모 목록 -->
             <div id="memoList" class="space-y-3 max-h-64 overflow-y-auto">
                 <?php if (empty($adminMemos)): ?>
-                <p class="text-xs text-zinc-400 dark:text-zinc-500 text-center py-2" id="noMemoMsg">메모가 없습니다.</p>
+                <p class="text-xs text-zinc-400 dark:text-zinc-500 text-center py-2" id="noMemoMsg"><?= __('reservations.show_no_memo') ?></p>
                 <?php else: ?>
                 <?php foreach ($adminMemos as $memo): ?>
                 <div class="border-l-2 <?= ($memo['reservation_id'] === $r['id']) ? 'border-blue-400' : 'border-zinc-300 dark:border-zinc-600' ?> pl-3 py-1">
@@ -722,22 +745,22 @@ include __DIR__ . '/_head.php';
                 <?php endif; ?>
             </div>
             <?php else: ?>
-            <p class="text-xs text-zinc-400 dark:text-zinc-500 text-center py-2">비회원 예약 — 메모 기능을 사용하려면 회원 연결이 필요합니다.</p>
+            <p class="text-xs text-zinc-400 dark:text-zinc-500 text-center py-2"><?= __('reservations.show_guest_memo_notice') ?></p>
             <?php endif; ?>
         </div>
 
         <!-- 기타 정보 -->
         <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
-            <h3 class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 mb-3">기타 정보</h3>
+            <h3 class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 mb-3"><?= __('reservations.show_etc_info') ?></h3>
             <div class="space-y-2 text-xs text-zinc-500 dark:text-zinc-400">
-                <div class="flex justify-between"><span>예약 경로</span><span class="text-zinc-700 dark:text-zinc-300"><?= match($r['source'] ?? 'online') { 'walk_in' => '현장접수', 'phone' => '전화예약', 'staff_page' => '스태프 지명', default => '온라인' } ?></span></div>
-                <div class="flex justify-between"><span>스태프</span><span class="text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars($staffName) ?> <?= (float)($r['designation_fee'] ?? 0) > 0 ? '(지명)' : (!empty($r['staff_id']) ? '(배정)' : '') ?></span></div>
-                <div class="flex justify-between"><span>생성일</span><span class="text-zinc-700 dark:text-zinc-300"><?= $r['created_at'] ?? '-' ?></span></div>
-                <div class="flex justify-between"><span>수정일</span><span class="text-zinc-700 dark:text-zinc-300"><?= $r['updated_at'] ?? '-' ?></span></div>
+                <div class="flex justify-between"><span><?= __('reservations.show_etc_source') ?></span><span class="text-zinc-700 dark:text-zinc-300"><?= match($r['source'] ?? 'online') { 'walk_in' => __('reservations.show_source_walkin'), 'phone' => __('reservations.show_source_phone'), 'staff_page' => __('reservations.show_source_staff_page'), default => __('reservations.show_source_online') } ?></span></div>
+                <div class="flex justify-between"><span><?= __('reservations.show_etc_staff') ?></span><span class="text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars($staffName) ?> <?= (float)($r['designation_fee'] ?? 0) > 0 ? '(' . __('reservations.show_designation') . ')' : (!empty($r['staff_id']) ? '(' . __('reservations.show_assignment') . ')' : '') ?></span></div>
+                <div class="flex justify-between"><span><?= __('reservations.show_etc_created') ?></span><span class="text-zinc-700 dark:text-zinc-300"><?= $r['created_at'] ?? '-' ?></span></div>
+                <div class="flex justify-between"><span><?= __('reservations.show_etc_updated') ?></span><span class="text-zinc-700 dark:text-zinc-300"><?= $r['updated_at'] ?? '-' ?></span></div>
                 <?php if (!empty($r['user_id'])): ?>
-                <div class="flex justify-between"><span>회원 ID</span><span class="font-mono text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars(substr($r['user_id'], 0, 8)) ?>...</span></div>
+                <div class="flex justify-between"><span><?= __('reservations.show_etc_user_id') ?></span><span class="font-mono text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars(substr($r['user_id'], 0, 8)) ?>...</span></div>
                 <?php endif; ?>
-                <div class="flex justify-between"><span>예약 ID</span><span class="font-mono text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars(substr($r['id'], 0, 8)) ?>...</span></div>
+                <div class="flex justify-between"><span><?= __('reservations.show_etc_reservation_id') ?></span><span class="font-mono text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars(substr($r['id'], 0, 8)) ?>...</span></div>
             </div>
         </div>
     </div>

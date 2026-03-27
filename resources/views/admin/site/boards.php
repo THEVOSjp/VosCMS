@@ -71,6 +71,26 @@ try {
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $boards = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // 게시판 제목 다국어 적용
+    $_bLocale = $config['locale'] ?? 'ko';
+    $_bDefLocale = $siteSettings['default_language'] ?? 'ko';
+    $_bChain = array_unique(array_filter([$_bLocale, 'en', $_bDefLocale]));
+    $_bTr = [];
+    try {
+        $_bPH = implode(',', array_fill(0, count($_bChain), '?'));
+        $_bStmt = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations WHERE locale IN ({$_bPH}) AND lang_key LIKE 'board.%.title'");
+        $_bStmt->execute(array_values($_bChain));
+        while ($_bt = $_bStmt->fetch(PDO::FETCH_ASSOC)) { $_bTr[$_bt['lang_key']][$_bt['locale']] = $_bt['content']; }
+    } catch (PDOException $e2) {}
+
+    foreach ($boards as &$_bd) {
+        $k = "board.{$_bd['id']}.title";
+        if (isset($_bTr[$k])) {
+            foreach ($_bChain as $lc) { if (!empty($_bTr[$k][$lc])) { $_bd['title'] = $_bTr[$k][$lc]; break; } }
+        }
+    }
+    unset($_bd);
 } catch (PDOException $e) {
     if (stripos($e->getMessage(), 'doesn\'t exist') !== false || stripos($e->getMessage(), 'not found') !== false) {
         $boardsTableMissing = true;
@@ -108,7 +128,6 @@ $pageSubDesc = __('site.boards.description');
                             <thead>
                                 <tr class="bg-zinc-50 dark:bg-zinc-700/50 border-b border-zinc-200 dark:border-zinc-700">
                                     <th class="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300 w-16"><?= __('site.boards.col_no') ?></th>
-                                    <th class="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300 w-28"><?= __('site.boards.col_category') ?></th>
                                     <th class="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"><?= __('site.boards.col_url') ?></th>
                                     <th class="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"><?= __('site.boards.col_title') ?></th>
                                     <th class="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300 w-32"><?= __('site.boards.col_note') ?></th>
@@ -119,7 +138,7 @@ $pageSubDesc = __('site.boards.description');
                             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                                 <?php if (empty($boards)): ?>
                                 <tr>
-                                    <td colspan="7" class="px-4 py-12 text-center text-zinc-400 dark:text-zinc-500">
+                                    <td colspan="6" class="px-4 py-12 text-center text-zinc-400 dark:text-zinc-500">
                                         <svg class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
                                         </svg>
@@ -130,11 +149,6 @@ $pageSubDesc = __('site.boards.description');
                                 <?php foreach ($boards as $board): ?>
                                 <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-700/30 transition">
                                     <td class="px-4 py-3 text-zinc-500 dark:text-zinc-400 font-mono text-xs">#<?= $board['id'] ?></td>
-                                    <td class="px-4 py-3">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
-                                            <?= htmlspecialchars($board['category'] ?? 'board') ?>
-                                        </span>
-                                    </td>
                                     <td class="px-4 py-3">
                                         <code class="text-xs bg-zinc-100 dark:bg-zinc-700 px-2 py-1 rounded text-zinc-700 dark:text-zinc-300">/<?= htmlspecialchars($board['slug']) ?></code>
                                     </td>

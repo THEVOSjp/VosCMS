@@ -51,7 +51,21 @@ $currentTab = $_GET['tab'] ?? 'basic';
 $validTabs = ['basic', 'categories', 'extra_vars', 'permissions', 'addition', 'skin'];
 if (!in_array($currentTab, $validTabs)) $currentTab = 'basic';
 
-$pageTitle = htmlspecialchars($board['title']) . ' ' . __('site.boards.settings') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+// 게시판 제목 다국어
+$_beLocale = $config['locale'] ?? 'ko';
+$_beDefLocale = $siteSettings['default_language'] ?? 'ko';
+$_beChain = array_unique(array_filter([$_beLocale, 'en', $_beDefLocale]));
+$_beTrTitle = $board['title'];
+try {
+    $_bePH = implode(',', array_fill(0, count($_beChain), '?'));
+    $_beStmt = $pdo->prepare("SELECT locale, content FROM {$prefix}translations WHERE lang_key = ? AND locale IN ({$_bePH})");
+    $_beStmt->execute(array_merge(["board.{$boardId}.title"], array_values($_beChain)));
+    $_beTrData = [];
+    while ($_bt = $_beStmt->fetch(PDO::FETCH_ASSOC)) { $_beTrData[$_bt['locale']] = $_bt['content']; }
+    foreach ($_beChain as $lc) { if (!empty($_beTrData[$lc])) { $_beTrTitle = $_beTrData[$lc]; break; } }
+} catch (PDOException $e) {}
+
+$pageTitle = htmlspecialchars($_beTrTitle) . ' ' . __('site.boards.settings') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 
 // 탭 정의
 $tabs = [
@@ -83,7 +97,7 @@ $tabs = [
 ];
 
 
-$pageHeaderTitle = htmlspecialchars($board['title']) . ' ' . __('site.boards.settings');
+$pageHeaderTitle = htmlspecialchars($_beTrTitle) . ' ' . __('site.boards.settings');
 ?>
 <?php $embedMode = !empty($_GET['embed']); ?>
 <?php if (!$embedMode): ?>
@@ -130,7 +144,7 @@ $pageHeaderTitle = htmlspecialchars($board['title']) . ' ' . __('site.boards.set
                 <div class="mb-6">
                 <?php
                 $headerIcon = 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z';
-                $headerTitle = htmlspecialchars($board['title']) . ' - ' . __('site.boards.edit_title');
+                $headerTitle = htmlspecialchars($_beTrTitle) . ' - ' . __('site.boards.edit_title');
                 $headerDescription = '/board/' . htmlspecialchars($board['slug']);
                 $headerIconColor = '';
                 $trashCount = 0;

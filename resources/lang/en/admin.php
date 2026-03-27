@@ -44,6 +44,7 @@ return [
         'page_management' => 'Page Management',
         'board_management' => 'Board Management',
         'widget_management' => 'Widget Management',
+            'staff_admins' => 'Admin Permissions',
     ],
     'stats' => [
         'today_reservations' => 'Today\'s Reservations',

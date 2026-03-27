@@ -267,4 +267,7 @@ return [
 
     'table_view' => 'Table View',
     'card_view' => 'Card View',
+
+    'selected' => 'selected',
+    'unit' => ['items' => '', 'minutes' => 'min'],
 ];

@@ -119,7 +119,7 @@ $currentLocale = $config['locale'] ?? 'ko';
                         <div class="p-4">
                             <div id="imagePreview" class="relative w-full aspect-video bg-zinc-100 dark:bg-zinc-700 rounded-lg overflow-hidden mb-3 flex items-center justify-center cursor-pointer group" onclick="document.getElementById('imageInput').click()">
                                 <?php if ($bundle['image']): ?>
-                                <?php $_bdlImgUrl = $bundle['image']; if (!str_starts_with($_bdlImgUrl, 'http')) $_bdlImgUrl = $baseUrl . $_bdlImgUrl; ?>
+                                <?php $_bdlImgUrl = $bundle['image']; if (!str_starts_with($_bdlImgUrl, 'http')) $_bdlImgUrl = $baseUrl . '/' . ltrim($_bdlImgUrl, '/'); ?>
                                 <img src="<?= htmlspecialchars($_bdlImgUrl) ?>" class="w-full h-full object-cover" id="previewImg">
                                 <?php else: ?>
                                 <div id="noImagePlaceholder" class="text-center">

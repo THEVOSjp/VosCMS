@@ -30,9 +30,8 @@ function getSubNameVal($nameI18n, $locale) {
     if (empty($nameI18n)) return '';
     $i18n = is_string($nameI18n) ? json_decode($nameI18n, true) : $nameI18n;
     if (!is_array($i18n)) return '';
-    if ($locale === 'ja' && !empty($i18n['ko'])) return $i18n['ko'];
-    if (!empty($i18n['en'])) return $i18n['en'];
-    if (!empty($i18n['ja'])) return $i18n['ja'];
+    // 서브네임은 항상 영어 대문자로 표시
+    if (!empty($i18n['en'])) return strtoupper($i18n['en']);
     return '';
 }
 
@@ -566,6 +565,24 @@ $days = $dayLabels[$currentLocale] ?? $dayLabels['en'];
                         </div>
                     </div>
 
+                    <!-- 예상 적립금 -->
+                    <?php
+                    $_pointRate = (float)($siteSettings['point_rate'] ?? 0);
+                    $_pointEnabled = ($siteSettings['point_enabled'] ?? '') === 'true';
+                    $_pointName = $siteSettings['point_name'] ?? __('booking.points_default_name') ?? '적립금';
+                    ?>
+                    <?php if ($_pointEnabled && $_pointRate > 0): ?>
+                    <div id="sdEarnPointsRow" class="hidden mt-2 p-2.5 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-green-700 dark:text-green-300 font-medium flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <?= __('booking.expected_points') ?? '예상 적립' ?> (<?= htmlspecialchars($_pointName) ?> <?= $_pointRate ?>%)
+                            </span>
+                            <span id="sdEarnPoints" class="text-sm font-bold text-green-600 dark:text-green-400"></span>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     <!-- 예약금 안내 -->
                     <?php if ($depositEnabled): ?>
                     <div id="sdDepositRow" class="hidden mt-2 p-2.5 bg-violet-50 dark:bg-violet-900/20 rounded-lg border border-violet-200 dark:border-violet-800">
@@ -588,9 +605,18 @@ $days = $dayLabels[$currentLocale] ?? $dayLabels['en'];
                                    value="<?= htmlspecialchars($isLoggedIn && $currentUser ? ($currentUser['name'] ?? '') : '') ?>">
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 dark:text-zinc-400 mb-1"><?= __('booking.form.customer_phone') ?> <span class="text-red-500">*</span></label>
-                            <input id="sdCustPhone" type="tel" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                   value="<?= htmlspecialchars($isLoggedIn && $currentUser ? ($currentUser['phone'] ?? '') : '') ?>">
+                            <?php
+                            $_sdPhoneVal = $isLoggedIn && $currentUser ? ($currentUser['phone'] ?? '') : '';
+                            $phoneInputConfig = [
+                                'name' => 'customer_phone',
+                                'id' => 'sdCustPhone',
+                                'label' => __('booking.form.customer_phone'),
+                                'value' => $_sdPhoneVal,
+                                'required' => true,
+                                'show_label' => true,
+                            ];
+                            include BASE_PATH . '/resources/views/components/phone-input.php';
+                            ?>
                         </div>
                     </div>
                     <div>
@@ -632,6 +658,8 @@ $days = $dayLabels[$currentLocale] ?? $dayLabels['en'];
         </div>
     </main>
 
+<script src="<?= $baseUrl ?>/assets/js/phone-input.js"></script>
+<script>document.addEventListener('DOMContentLoaded', function() { if (typeof PhoneInput !== 'undefined') PhoneInput.init(); });</script>
 <?php include BASE_PATH . '/resources/views/customer/staff-detail-js.php'; ?>
 
 <?php

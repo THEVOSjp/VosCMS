@@ -263,4 +263,7 @@ return [
         'offline' => 'Esta sin conexion',
         'online' => 'De vuelta en linea',
     ],
+
+    'selected' => 'seleccionado',
+    'unit' => ['items' => '', 'minutes' => 'min'],
 ];

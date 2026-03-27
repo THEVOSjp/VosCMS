@@ -15,6 +15,7 @@
         depositType: '<?= $depositType ?>',
         depositAmount: <?= $depositAmount ?>,
         depositPercent: <?= $depositPercent ?>,
+        currencySymbol: '<?= $currencySymbol ?? '¥' ?>',
         dayLabels: <?= json_encode($days) ?>,
         monthNames: {
             ko: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
@@ -420,6 +421,18 @@
         if (total < 0) total = 0;
         if (grandTotal) grandTotal.textContent = '¥' + Number(total).toLocaleString();
 
+        // 예상 적립금 표시
+        var earnRow = document.getElementById('sdEarnPointsRow');
+        var earnEl = document.getElementById('sdEarnPoints');
+        var pointRate = <?= (float)($siteSettings['point_rate'] ?? 0) ?>;
+        if (earnRow && pointRate > 0 && total > 0) {
+            var earnPoints = Math.floor(total * pointRate / 100);
+            earnRow.classList.remove('hidden');
+            if (earnEl) earnEl.textContent = '+' + CONFIG.currencySymbol + Number(earnPoints).toLocaleString();
+        } else if (earnRow) {
+            earnRow.classList.add('hidden');
+        }
+
         // 예약금 표시
         var depositRow = document.getElementById('sdDepositRow');
         var depositAmountEl = document.getElementById('sdDepositAmount');
@@ -496,15 +509,25 @@
             .then(function(data) {
                 console.log('[StaffDetail] Reservation result:', data);
                 if (data.success) {
-                    // 성공: 폼 숨기고 성공 메시지 표시
-                    bookingSummary.querySelector('.bg-white, .dark\\:bg-zinc-800').style.display = 'none';
-                    if (bookingSuccess) {
-                        bookingSuccess.classList.remove('hidden');
-                        var numEl = document.getElementById('sdReservationNumber');
-                        if (numEl) numEl.textContent = data.reservation_number || '';
-                    }
+                    // 성공: 모달로 완료 메시지 표시 (요약 내용 유지)
+                    var resNum = data.reservation_number || '';
+                    var modalHtml = '<div id="sdBookingModal" class="fixed inset-0 z-[9999] flex items-center justify-center" style="background:rgba(0,0,0,0.5)">' +
+                        '<div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center">' +
+                            '<svg class="w-16 h-16 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' +
+                            '<h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2"><?= addslashes(__('booking.reservation_complete') ?? '예약이 완료되었습니다') ?></h3>' +
+                            '<p class="text-gray-500 dark:text-zinc-400 mb-4"><?= addslashes(__('booking.reservation_complete_desc') ?? '예약 내용을 확인해주세요') ?></p>' +
+                            (resNum ? '<div class="bg-gray-50 dark:bg-zinc-700 rounded-lg px-4 py-3 mb-6"><p class="text-xs text-gray-500 dark:text-zinc-400"><?= addslashes(__('booking.reservation_number') ?? '예약번호') ?></p><p class="text-lg font-mono font-bold text-blue-600 dark:text-blue-400">' + resNum + '</p></div>' : '') +
+                            '<div class="flex gap-3">' +
+                                '<a href="' + CONFIG.baseUrl + '/" class="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-700 rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-600 transition"><?= addslashes(__('common.nav.home') ?? '홈으로') ?></a>' +
+                                '<button onclick="document.getElementById(\'sdBookingModal\').remove()" class="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition"><?= addslashes(__('booking.check_summary') ?? '예약 내용 확인') ?></button>' +
+                            '</div>' +
+                        '</div></div>';
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                    // 버튼 비활성 유지 (중복 예약 방지)
+                    bookBtn.textContent = '<?= addslashes(__('booking.reservation_complete') ?? '예약 완료') ?>';
                 } else {
-                    alert(data.message || 'Error');
+                    if (typeof showResultModal === 'function') showResultModal(false, data.message || 'Error');
+                    else alert(data.message || 'Error');
                     bookBtn.disabled = false;
                     bookBtn.textContent = '<?= addslashes(__('staff_page.book_selected')) ?>';
                 }

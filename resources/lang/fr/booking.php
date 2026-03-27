@@ -191,4 +191,9 @@ return [
     'next' => 'Suivant',
     'categories' => 'catégories',
     'service_count' => 'services',
+    'expected_points' => 'Points prévus',
+    'reservation_complete' => 'Réservation terminée',
+    'reservation_complete_desc' => 'Veuillez vérifier votre réservation',
+    'reservation_number' => 'No. Réservation',
+    'check_summary' => 'Voir les détails',
 ];

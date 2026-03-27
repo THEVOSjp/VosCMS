@@ -1,0 +1,22 @@
+<?php
+return [
+    'system_running' => 'Систем хэвийн',
+    'db_connected' => 'Сан холбогдсон',
+    'db_failed' => 'Сан холбогдоогүй',
+    'today_reservations' => 'Өнөөдрийн захиалга',
+    'total_members' => 'Нийт гишүүд',
+    'total_services' => 'Үйлчилгээ',
+    'system_version' => 'Хувилбар',
+    'quick_actions' => 'Шуурхай',
+    'new_reservation' => 'Шинэ захиалга',
+    'add_service' => 'Үйлчилгээ нэмэх',
+    'manage_members' => 'Гишүүд',
+    'system_settings' => 'Тохиргоо',
+    'system_info' => 'Систем мэдээлэл',
+    'php_version' => 'PHP',
+    'environment' => 'Орчин',
+    'timezone' => 'Цагийн бүс',
+    'debug_mode' => 'Дебаг',
+    'enabled' => 'Идэвхтэй',
+    'disabled' => 'Идэвхгүй',
+];

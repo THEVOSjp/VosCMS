@@ -498,7 +498,7 @@ include __DIR__ . '/_tabs.php';
                         $statusClass = $statusColors[$msg['status']] ?? $statusColors['pending'];
                         ?>
                         <span class="px-2 py-1 text-xs font-medium rounded-full <?= $statusClass ?>">
-                            <?= ucfirst($msg['status']) ?>
+                            <?= __('settings.pwa_status_' . $msg['status']) ?? ucfirst($msg['status']) ?>
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400">

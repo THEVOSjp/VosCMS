@@ -266,4 +266,7 @@ return [
         'offline' => 'Çevrimdışısınız',
         'online' => 'Tekrar çevrimiçi',
     ],
+
+    'selected' => 'seçildi',
+    'unit' => ['items' => '', 'minutes' => 'dk'],
 ];

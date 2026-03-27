@@ -191,4 +191,9 @@ return [
     'next' => '下一步',
     'categories' => '个分类',
     'service_count' => '项服务',
+    'expected_points' => '预计积分',
+    'reservation_complete' => '预约已完成',
+    'reservation_complete_desc' => '请确认预约内容',
+    'reservation_number' => '预约编号',
+    'check_summary' => '查看详情',
 ];

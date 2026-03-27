@@ -81,16 +81,61 @@
                 cnt++;
             }
         });
-        countEl.textContent = cnt + '개 선택';
+        // 지명료 추가
+        var designFeeEl = document.getElementById(fId + '_designationFee');
+        var designFee = designFeeEl ? parseFloat(designFeeEl.value || 0) : 0;
+        var totalWithFee = price + designFee;
+
+        countEl.textContent = cnt + '<?= __('common.unit.items') ?? '개' ?> <?= __('common.selected') ?? '선택' ?>';
+        var listEl = document.getElementById(fId + '_selectedList');
         if (cnt > 0) {
             summaryEl.classList.remove('hidden');
-            durationEl.textContent = dur + '분';
-            priceEl.textContent = fmtCurrency(price);
+            durationEl.textContent = dur + '<?= __('common.unit.minutes') ?? '분' ?>';
+            priceEl.textContent = fmtCurrency(totalWithFee);
             submitBtn.disabled = false;
             calcEnd(dur);
+            // 선택 항목 리스트 업데이트
+            if (listEl) {
+                var html = '';
+                checks.forEach(function(cb) {
+                    if (cb.checked) {
+                        var card = cb.closest('.rf-card');
+                        var name = card ? (card.querySelector('.text-sm.font-bold')?.textContent || cb.value) : cb.value;
+                        var p = parseFloat(cb.dataset.price || 0);
+                        var d = parseInt(cb.dataset.duration || 0);
+                        html += '<div class="flex items-center justify-between text-xs py-1">' +
+                            '<span class="text-zinc-700 dark:text-zinc-300 truncate flex-1">' + name + ' <span class="text-zinc-400">' + d + '<?= __('common.unit.minutes') ?? '분' ?></span></span>' +
+                            '<span class="text-zinc-600 dark:text-zinc-400 font-medium ml-2">' + fmtCurrency(p) + '</span></div>';
+                    }
+                });
+                // 지명료 행 추가
+                if (designFee > 0) {
+                    var staffNameEl = document.getElementById(fId + '_staffName');
+                    var staffName = staffNameEl ? staffNameEl.textContent : '';
+                    html += '<div class="flex items-center justify-between text-xs py-1 text-violet-600 dark:text-violet-400">' +
+                        '<span class="truncate flex-1">🏷 <?= __('reservations.designation_fee') ?? '지명료' ?>' + (staffName ? ' (' + staffName + ')' : '') + '</span>' +
+                        '<span class="font-medium ml-2">+' + fmtCurrency(designFee) + '</span></div>';
+                }
+                listEl.innerHTML = html;
+            }
+            // 번들 할인 표시
+            var discountEl = document.getElementById(fId + '_bundleDiscount');
+            var activeBundle = window['_rfActiveBundle_' + fId];
+            if (discountEl && activeBundle && activeBundle.price > 0 && activeBundle.price < price) {
+                discountEl.classList.remove('hidden');
+                document.getElementById(fId + '_bundleName').textContent = activeBundle.name;
+                document.getElementById(fId + '_bundleOriginal').textContent = fmtCurrency(totalWithFee);
+                document.getElementById(fId + '_bundlePrice').textContent = fmtCurrency(activeBundle.price + designFee);
+            } else if (discountEl) {
+                discountEl.classList.add('hidden');
+            }
         } else {
             summaryEl.classList.add('hidden');
+            if (listEl) listEl.innerHTML = '';
             submitBtn.disabled = true;
+            var discountEl2 = document.getElementById(fId + '_bundleDiscount');
+            if (discountEl2) discountEl2.classList.add('hidden');
+            window['_rfActiveBundle_' + fId] = null;
         }
     }
 
@@ -143,18 +188,107 @@
         searchInput.addEventListener('input', filterCards);
     }
 
-    // 폼 제출 검증 + 더블클릭 방지
+    // 번들(패키지) 선택
+    document.querySelectorAll('.rf-bundle-card[data-form-id="' + fId + '"]').forEach(function(bCard) {
+        bCard.addEventListener('click', function() {
+            var svcStr = this.dataset.services || '';
+            var svcIds = svcStr.split(',').filter(Boolean);
+            if (!svcIds.length) return;
+            console.log('[ResForm] Bundle selected:', svcIds);
+
+            // 기존 선택 해제
+            checks.forEach(cb => {
+                cb.checked = false;
+                styleCard(cb.closest('.rf-card'), false);
+            });
+
+            // 번들에 포함된 서비스 선택
+            svcIds.forEach(id => {
+                var cb = form.querySelector('.rf-check[value="' + id + '"]');
+                if (cb) {
+                    cb.checked = true;
+                    styleCard(cb.closest('.rf-card'), true);
+                }
+            });
+
+            // 번들 카드 하이라이트
+            document.querySelectorAll('.rf-bundle-card[data-form-id="' + fId + '"]').forEach(c => {
+                c.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200');
+            });
+            this.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
+
+            // 번들 할인 표시
+            var bundlePrice = parseFloat(this.dataset.bundlePrice || 0);
+            var bundleName = this.dataset.bundleName || '';
+            window['_rfActiveBundle_' + fId] = { price: bundlePrice, name: bundleName };
+
+            recalc();
+        });
+    });
+
+    // 폼 제출 검증 + AJAX 제출 (모달 모드)
+    var formMode = '<?= $resForm['mode'] ?? 'page' ?>';
     form.addEventListener('submit', function(e) {
-        const checked = form.querySelectorAll('.rf-check:checked');
+        e.preventDefault();
+
+        var checked = form.querySelectorAll('.rf-check:checked');
         if (checked.length === 0) {
-            e.preventDefault();
-            alert('서비스를 1개 이상 선택해주세요.');
+            if (typeof showResultModal === 'function') showResultModal(false, '<?= __('reservations.error_no_service') ?? '서비스를 1개 이상 선택해주세요.' ?>');
+            else alert('<?= __('reservations.error_no_service') ?? '서비스를 1개 이상 선택해주세요.' ?>');
             return;
         }
+
+        var nameVal = document.getElementById(fId + '_name')?.value?.trim();
+        var phoneEl = document.getElementById(fId + '_phone_number') || document.getElementById(fId + '_phone');
+        var phoneVal = phoneEl?.value?.trim();
+        if (!nameVal || !phoneVal) {
+            if (typeof showResultModal === 'function') showResultModal(false, '<?= __('reservations.error_required') ?? '필수 항목을 모두 입력해주세요.' ?>');
+            else alert('<?= __('reservations.error_required') ?? '필수 항목을 모두 입력해주세요.' ?>');
+            return;
+        }
+
         // 더블 클릭 방지
         submitBtn.disabled = true;
-        submitBtn.textContent = '처리중...';
-        console.log('[ResForm] Submit:', fId, 'services:', checked.length);
+        submitBtn.textContent = '<?= __('common.processing') ?? '처리중...' ?>';
+        console.log('[ResForm] Submit:', fId, 'services:', checked.length, 'mode:', formMode);
+
+        // phone-input 컴포넌트: 국가코드 + 번호 조합
+        var phoneCountryEl = document.getElementById(fId + '_phone_country');
+        if (phoneCountryEl && phoneEl) {
+            var fullPhone = (phoneCountryEl.value || '') + phoneVal.replace(/^0+/, '');
+            var hiddenPhoneEl = document.getElementById(fId + '_phone');
+            if (hiddenPhoneEl) hiddenPhoneEl.value = fullPhone;
+        }
+
+        if (formMode === 'modal') {
+            // AJAX 제출
+            var fd = new FormData(form);
+            fetch(form.action, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    if (typeof showResultModal === 'function') showResultModal(true, data.message || '');
+                    // 모달 닫기 + 캘린더 새로고침
+                    setTimeout(function() {
+                        if (typeof rzxCalCloseAdd === 'function') rzxCalCloseAdd();
+                        location.reload();
+                    }, 1500);
+                } else {
+                    if (typeof showResultModal === 'function') showResultModal(false, data.message || '<?= __('common.msg.error') ?? '오류가 발생했습니다.' ?>');
+                    else alert(data.message || '<?= __('common.msg.error') ?? '오류가 발생했습니다.' ?>');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '<?= __('reservations.form_submit') ?? '등록' ?>';
+                }
+            })
+            .catch(err => {
+                console.error('[ResForm] Submit error:', err);
+                submitBtn.disabled = false;
+                submitBtn.textContent = '<?= __('reservations.form_submit') ?? '등록' ?>';
+            });
+        } else {
+            // 일반 폼 제출 (페이지 모드)
+            form.submit();
+        }
     });
 
     // ─── 고객 검색 자동완성 ───
@@ -224,6 +358,9 @@
 
     // 초기화
     recalc();
+
+    // 외부에서 금액 재계산 호출용
+    window['recalcResForm_' + fId] = recalc;
 
     // 외부에서 폼 리셋 시 사용할 전역 함수
     window['resetResForm_' + fId] = function(date) {

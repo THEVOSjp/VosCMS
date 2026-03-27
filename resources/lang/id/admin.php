@@ -44,6 +44,7 @@ return [
         'page_management' => 'Manajemen Halaman',
         'board_management' => 'Manajemen Forum',
         'widget_management' => 'Manajemen Widget',
+            'staff_admins' => 'Izin Admin',
     ],
     'stats' => [
         'today_reservations' => 'Reservasi Hari Ini',

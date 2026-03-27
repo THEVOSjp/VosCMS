@@ -191,4 +191,9 @@ return [
     'next' => 'Дараах',
     'categories' => 'ангилал',
     'service_count' => 'үйлчилгээ',
+    'expected_points' => 'Урамшуулал',
+    'reservation_complete' => 'Захиалга амжилттай',
+    'reservation_complete_desc' => 'Захиалгын мэдээллийг шалгана уу',
+    'reservation_number' => 'Захиалгын дугаар',
+    'check_summary' => 'Дэлгэрэнгүй',
 ];

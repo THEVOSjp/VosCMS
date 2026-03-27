@@ -264,4 +264,7 @@ return [
         'offline' => 'Anda sedang offline',
         'online' => 'Kembali online',
     ],
+
+    'selected' => 'dipilih',
+    'unit' => ['items' => '', 'minutes' => 'mnt'],
 ];

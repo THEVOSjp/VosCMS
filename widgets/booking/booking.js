@@ -342,6 +342,46 @@
 
     // === Init ===
     renderProgressBar();
+    // 번들(패키지) 선택 - 이벤트 바인딩
+    document.querySelectorAll('[data-bundle-select]').forEach(function(card) {
+        card.addEventListener('click', function() { selectBundleHandler(card); });
+    });
+
+    function selectBundleHandler(card) {
+        var svcStr = card.dataset.services || '';
+        var svcIds = svcStr.split(',').filter(Boolean);
+        if (!svcIds.length) return;
+        console.log('[BW] Bundle selected, services:', svcIds);
+
+        // 기존 선택 해제
+        document.querySelectorAll('.bw-svc-card input[name="bw_service[]"]').forEach(function(cb) {
+            cb.checked = false;
+            var inner = cb.closest('.bw-svc-card').querySelector('.bw-card-inner');
+            if (inner) {
+                inner.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200');
+                var overlay = inner.querySelector('.bw-overlay');
+                var checkIcon = inner.querySelector('.bw-check-icon');
+                var circle = inner.querySelector('.bw-circle');
+                if (overlay) overlay.classList.add('hidden');
+                if (checkIcon) checkIcon.classList.add('hidden');
+                if (circle) { circle.classList.remove('bg-blue-500', 'border-blue-500'); circle.classList.add('bg-black/20', 'border-white/70'); }
+            }
+        });
+
+        // 번들에 포함된 서비스 선택
+        svcIds.forEach(function(id) {
+            var cb = document.querySelector('.bw-svc-card input[name="bw_service[]"][value="' + id + '"]');
+            if (cb) {
+                cb.checked = true;
+                cb.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+
+        // 번들 카드 하이라이트
+        document.querySelectorAll('.bw-bundle-card').forEach(function(c) { c.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200'); });
+        card.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
+    }
+
     showStep(0);
     handleUrlPreselection();
     console.log('[BW] Booking widget initialized.');

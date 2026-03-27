@@ -1,0 +1,22 @@
+<?php
+return [
+    'system_running' => 'システム正常稼働中',
+    'db_connected' => 'データベース接続成功',
+    'db_failed' => 'データベース接続失敗',
+    'today_reservations' => '本日の予約',
+    'total_members' => '全会員',
+    'total_services' => '登録サービス',
+    'system_version' => 'システムバージョン',
+    'quick_actions' => 'クイックアクション',
+    'new_reservation' => '予約登録',
+    'add_service' => 'サービス追加',
+    'manage_members' => '会員管理',
+    'system_settings' => 'システム設定',
+    'system_info' => 'システム情報',
+    'php_version' => 'PHPバージョン',
+    'environment' => '環境',
+    'timezone' => 'タイムゾーン',
+    'debug_mode' => 'デバッグモード',
+    'enabled' => '有効',
+    'disabled' => '無効',
+];

@@ -121,7 +121,7 @@ function addSelectedServices() {
     if (emptyMsg) emptyMsg.remove();
 
     document.querySelectorAll('.svc-picker-check:checked').forEach(cb => {
-        const imgSrc = cb.dataset.image ? `${BASE_URL}/storage/${cb.dataset.image}` : '';
+        const imgSrc = cb.dataset.image ? `${BASE_URL}/${cb.dataset.image.replace(/^\/+/, '')}` : '';
         const html = `
         <div class="flex items-center gap-3 p-3 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 svc-item" data-id="${cb.value}">
             <svg class="w-5 h-5 text-zinc-300 cursor-grab drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>

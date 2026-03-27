@@ -62,16 +62,44 @@ function formatPrice(float $amount): string {
 // 서비스 이름 가져오기 (junction table 기반, service_name 컬럼 미존재 시 폴백)
 function getServiceName(\PDO $pdo, string $prefix, ?string $reservationId): string {
     if (!$reservationId) return '-';
-    try {
-        $stmt = $pdo->prepare("SELECT GROUP_CONCAT(service_name ORDER BY sort_order SEPARATOR ', ') FROM {$prefix}reservation_services WHERE reservation_id = ?");
-        $stmt->execute([$reservationId]);
-        $name = $stmt->fetchColumn();
-    } catch (\PDOException $e) {
-        $stmt = $pdo->prepare("SELECT GROUP_CONCAT(s.name SEPARATOR ', ') FROM {$prefix}reservation_services rs JOIN {$prefix}services s ON rs.service_id = s.id WHERE rs.reservation_id = ?");
-        $stmt->execute([$reservationId]);
-        $name = $stmt->fetchColumn();
+
+    // 번역 캐시 로드 (한 번만)
+    static $svcTrCache = null;
+    static $localeChain = null;
+    if ($svcTrCache === null) {
+        global $config, $siteSettings;
+        $_loc = $config['locale'] ?? 'ko';
+        $_defLoc = $siteSettings['default_language'] ?? 'ko';
+        $localeChain = array_unique(array_filter([$_loc, 'en', $_defLoc]));
+        $svcTrCache = [];
+        try {
+            $_ph = implode(',', array_fill(0, count($localeChain), '?'));
+            $_st = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations WHERE locale IN ({$_ph}) AND lang_key LIKE 'service.%.name'");
+            $_st->execute(array_values($localeChain));
+            while ($_r = $_st->fetch(\PDO::FETCH_ASSOC)) { $svcTrCache[$_r['lang_key']][$_r['locale']] = $_r['content']; }
+        } catch (\PDOException $e) {}
     }
-    return $name ?: '-';
+
+    try {
+        $stmt = $pdo->prepare("SELECT service_id, service_name FROM {$prefix}reservation_services WHERE reservation_id = ? ORDER BY sort_order");
+        $stmt->execute([$reservationId]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $names = [];
+        foreach ($rows as $row) {
+            $sid = $row['service_id'] ?? '';
+            $name = $row['service_name'] ?? '';
+            $key = "service.{$sid}.name";
+            if ($sid && isset($svcTrCache[$key])) {
+                foreach ($localeChain as $lc) {
+                    if (!empty($svcTrCache[$key][$lc])) { $name = $svcTrCache[$key][$lc]; break; }
+                }
+            }
+            $names[] = $name;
+        }
+        return $names ? implode(', ', $names) : '-';
+    } catch (\PDOException $e) {
+        return '-';
+    }
 }
 
 // 전화번호로 회원 찾기 (암호화된 전화번호 복호화 후 비교)

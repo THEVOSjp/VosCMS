@@ -6,6 +6,21 @@ include __DIR__ . '/_init.php';
 
 $pageTitle = __('reservations.create') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $services = getServices($pdo, $prefix);
+
+// 번들 로드 (calendar-loader와 동일 로직)
+$_createBundles = [];
+try {
+    $_bStmt = $pdo->query("SELECT b.*, GROUP_CONCAT(bi.service_id) as svc_ids, COUNT(bi.service_id) as svc_count, SUM(sv.duration) as total_duration FROM {$prefix}service_bundles b LEFT JOIN {$prefix}service_bundle_items bi ON b.id = bi.bundle_id LEFT JOIN {$prefix}services sv ON bi.service_id = sv.id WHERE b.is_active = 1 GROUP BY b.id ORDER BY b.display_order");
+    while ($_b = $_bStmt->fetch(PDO::FETCH_ASSOC)) {
+        $_b['svc_id_list'] = $_b['svc_ids'] ? explode(',', $_b['svc_ids']) : [];
+        $now = date('Y-m-d H:i:s');
+        $_b['is_event'] = $_b['event_price'] && $_b['event_price'] > 0 && (!$_b['event_start'] || $_b['event_start'] <= $now) && (!$_b['event_end'] || $_b['event_end'] >= $now);
+        $_b['display_price'] = $_b['is_event'] ? $_b['event_price'] : $_b['bundle_price'];
+        if ($_b['image'] && !str_starts_with($_b['image'], 'http') && !str_starts_with($_b['image'], '/')) $_b['image'] = '/' . ltrim($_b['image'], '/');
+        $_createBundles[] = $_b;
+    }
+} catch (PDOException $e) {}
+
 $errors = $_SESSION['errors'] ?? [];
 $old = $_SESSION['old_input'] ?? [];
 unset($_SESSION['errors'], $_SESSION['old_input']);
@@ -32,6 +47,7 @@ include __DIR__ . '/_head.php';
 // 공용 예약 폼 컴포넌트
 $resForm = [
     'services'         => $services,
+    'bundles'          => $_createBundles,
     'adminUrl'         => $adminUrl,
     'csrfToken'        => $csrfToken,
     'currencySymbol'   => $currencySymbol,

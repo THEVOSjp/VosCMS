@@ -198,7 +198,8 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                                 <input type="text" id="fmContent" value="<?= htmlspecialchars($pageData['content'] ?? '') ?>" placeholder="https://... 또는 pages/custom.php" class="w-full px-3 py-2 border rounded-lg dark:bg-zinc-700 dark:border-zinc-600 dark:text-white text-sm focus:ring-2 focus:ring-blue-500">
                                 <p class="text-xs text-zinc-400 mt-1"><?= __('site.pages.external_url_desc') ?? '외부 URL(https://...)은 iframe으로, 내부 파일(.php/.html)은 include로 렌더링됩니다.' ?></p>
                                 <?php else: ?>
-                                <textarea id="fmContent" rows="10" class="w-full px-3 py-2 border rounded-lg dark:bg-zinc-700 dark:border-zinc-600 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 font-mono"><?= htmlspecialchars($pageData['content'] ?? '') ?></textarea>
+                                <div id="fmContentEditor"><?= $pageData['content'] ?? '' ?></div>
+                                <textarea id="fmContent" class="hidden"><?= htmlspecialchars($pageData['content'] ?? '') ?></textarea>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -253,6 +254,36 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
         </main>
     </div>
 
+<!-- jQuery & Summernote -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+<script>
+$(function() {
+    if ($('#fmContentEditor').length) {
+        $('#fmContentEditor').summernote({
+            height: 400,
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'italic', 'underline', 'strikethrough', 'clear']],
+                ['fontsize', ['fontsize']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link', 'picture', 'video', 'hr']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ],
+            callbacks: {
+                onChange: function(contents) {
+                    $('#fmContent').val(contents);
+                }
+            }
+        });
+        // 초기값 동기화
+        $('#fmContent').val($('#fmContentEditor').summernote('code'));
+    }
+});
+</script>
 <script>
 var PAGE_URL = '<?= $adminUrl ?>/site/pages/edit-content';
 var SLUG = '<?= htmlspecialchars($pageSlug) ?>';
@@ -276,6 +307,10 @@ function showMsg(type, msg) {
 }
 
 async function savePage() {
+    // Summernote 에디터 내용 동기화
+    if ($('#fmContentEditor').length && typeof $.fn.summernote !== 'undefined') {
+        $('#fmContent').val($('#fmContentEditor').summernote('code'));
+    }
     var data = await apiFetch({
         action: 'save',
         slug: SLUG,
@@ -312,6 +347,9 @@ async function switchLocale(locale) {
     if (data.success && data.data) {
         document.getElementById('fmTitle').value = data.data.title || '';
         document.getElementById('fmContent').value = data.data.content || '';
+        if ($('#fmContentEditor').length && $('#fmContentEditor').summernote) {
+            $('#fmContentEditor').summernote('code', data.data.content || '');
+        }
     }
     console.log('[PageSettings] locale:', locale);
 }

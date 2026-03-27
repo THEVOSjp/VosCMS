@@ -46,20 +46,12 @@ try {
     $calFirstDay = sprintf('%04d-%02d-01', $calYear, $calMonth);
     $calLastDay = date('Y-m-t', strtotime($calFirstDay));
 
-    try {
-        $calStmt = $pdo->prepare("SELECT r.*, (SELECT GROUP_CONCAT(rs.service_name ORDER BY rs.sort_order SEPARATOR ', ') FROM {$prefix}reservation_services rs WHERE rs.reservation_id = r.id) as service_name FROM {$prefix}reservations r WHERE r.reservation_date BETWEEN ? AND ? ORDER BY r.start_time ASC");
-        $calStmt->execute([$calFirstDay, $calLastDay]);
-        $calReservations = $calStmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        // service_name 컬럼 미존재 시 폴백 (마이그레이션 미적용 환경)
-        $calStmt = $pdo->prepare("SELECT r.* FROM {$prefix}reservations r WHERE r.reservation_date BETWEEN ? AND ? ORDER BY r.start_time ASC");
-        $calStmt->execute([$calFirstDay, $calLastDay]);
-        $calReservations = $calStmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    $calByDate = [];
-    foreach ($calReservations as $cr) {
-        $calByDate[$cr['reservation_date']][] = $cr;
-    }
+    // 공통 캘린더 로더 사용
+    $_calYear = $calYear;
+    $_calMonth = $calMonth;
+    include BASE_PATH . '/resources/views/admin/components/calendar-loader.php';
+    $calReservations = $cal['reservations'];
+    $calByDate = $cal['byDate'];
 
     // 통화 설정
     $currencySymbols = [
@@ -71,8 +63,9 @@ try {
     $dashCurrencySymbol = $currencySymbols[$dashCurrency] ?? $dashCurrency;
     $dashCurrencyPosition = $settings['service_currency_position'] ?? 'prefix';
 
-    // 서비스 목록 (빠른 예약 추가용)
-    $dashServices = $pdo->query("SELECT id, name, duration, price FROM {$prefix}services WHERE is_active = 1 ORDER BY sort_order ASC, name ASC")->fetchAll(PDO::FETCH_ASSOC);
+    // 서비스/번들은 calendar-loader에서 로드됨
+    $dashServices = $cal['services'] ?? [];
+    $dashBundles = $cal['bundles'] ?? [];
 
         // 미적용 마이그레이션 확인
     $pendingMigrations = [];
@@ -271,8 +264,8 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                         <svg class="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
-                        <span class="text-green-800 font-medium">시스템 정상 작동 중</span>
-                        <span class="text-green-600 ml-2 text-sm">데이터베이스 연결 성공</span>
+                        <span class="text-green-800 font-medium"><?= __('dashboard.system_running') ?></span>
+                        <span class="text-green-600 ml-2 text-sm"><?= __('dashboard.db_connected') ?></span>
                     </div>
                 </div>
                 <?php else: ?>
@@ -281,7 +274,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                         <svg class="w-5 h-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
                         </svg>
-                        <span class="text-red-800 font-medium">데이터베이스 연결 실패</span>
+                        <span class="text-red-800 font-medium"><?= __('dashboard.db_failed') ?></span>
                         <span class="text-red-600 ml-2 text-sm"><?php echo htmlspecialchars($dbError ?? ''); ?></span>
                     </div>
                 </div>
@@ -292,7 +285,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">오늘 예약</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('dashboard.today_reservations') ?></p>
                                 <p class="text-3xl font-bold text-zinc-900 dark:text-white mt-1"><?php echo $todayReservations ?? 0; ?></p>
                             </div>
                             <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
@@ -306,7 +299,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">전체 회원</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('dashboard.total_members') ?></p>
                                 <p class="text-3xl font-bold text-zinc-900 dark:text-white mt-1"><?php echo $totalUsers ?? 0; ?></p>
                             </div>
                             <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
@@ -320,7 +313,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">등록 서비스</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('dashboard.total_services') ?></p>
                                 <p class="text-3xl font-bold text-zinc-900 dark:text-white mt-1"><?php echo $totalServices ?? 0; ?></p>
                             </div>
                             <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
@@ -334,7 +327,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">시스템 버전</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('dashboard.system_version') ?></p>
                                 <?php
                                     $vj = json_decode(file_get_contents(BASE_PATH . '/version.json'), true);
                                     $curVer = $vj['version'] ?? '0.0.0';
@@ -352,55 +345,55 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
                 <!-- Quick Actions -->
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-8 transition-colors">
-                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">빠른 작업</h2>
+                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('dashboard.quick_actions') ?></h2>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <a href="<?php echo $adminUrl; ?>/reservations/new" class="flex items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition">
                             <svg class="w-6 h-6 text-blue-600 dark:text-blue-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                             </svg>
-                            <span class="font-medium text-zinc-900 dark:text-white">예약 등록</span>
+                            <span class="font-medium text-zinc-900 dark:text-white"><?= __('dashboard.new_reservation') ?></span>
                         </a>
                         <a href="<?php echo $adminUrl; ?>/services/new" class="flex items-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition">
                             <svg class="w-6 h-6 text-green-600 dark:text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                             </svg>
-                            <span class="font-medium text-zinc-900 dark:text-white">서비스 추가</span>
+                            <span class="font-medium text-zinc-900 dark:text-white"><?= __('dashboard.add_service') ?></span>
                         </a>
                         <a href="<?php echo $adminUrl; ?>/members" class="flex items-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition">
                             <svg class="w-6 h-6 text-purple-600 dark:text-purple-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                             </svg>
-                            <span class="font-medium text-zinc-900 dark:text-white">회원 관리</span>
+                            <span class="font-medium text-zinc-900 dark:text-white"><?= __('dashboard.manage_members') ?></span>
                         </a>
                         <a href="<?php echo $adminUrl; ?>/settings" class="flex items-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition">
                             <svg class="w-6 h-6 text-orange-600 dark:text-orange-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                             </svg>
-                            <span class="font-medium text-zinc-900 dark:text-white">시스템 설정</span>
+                            <span class="font-medium text-zinc-900 dark:text-white"><?= __('dashboard.system_settings') ?></span>
                         </a>
                     </div>
                 </div>
 
                 <!-- System Info -->
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
-                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">시스템 정보</h2>
+                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('dashboard.system_info') ?></h2>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
-                            <span class="text-zinc-500 dark:text-zinc-400">PHP 버전</span>
+                            <span class="text-zinc-500 dark:text-zinc-400"><?= __('dashboard.php_version') ?></span>
                             <p class="font-medium text-zinc-900 dark:text-white"><?php echo PHP_VERSION; ?></p>
                         </div>
                         <div>
-                            <span class="text-zinc-500 dark:text-zinc-400">환경</span>
+                            <span class="text-zinc-500 dark:text-zinc-400"><?= __('dashboard.environment') ?></span>
                             <p class="font-medium text-zinc-900 dark:text-white"><?php echo $_ENV['APP_ENV'] ?? 'local'; ?></p>
                         </div>
                         <div>
-                            <span class="text-zinc-500 dark:text-zinc-400">타임존</span>
+                            <span class="text-zinc-500 dark:text-zinc-400"><?= __('dashboard.timezone') ?></span>
                             <p class="font-medium text-zinc-900 dark:text-white"><?php echo $_ENV['APP_TIMEZONE'] ?? 'Asia/Seoul'; ?></p>
                         </div>
                         <div>
-                            <span class="text-zinc-500 dark:text-zinc-400">디버그 모드</span>
-                            <p class="font-medium text-zinc-900 dark:text-white"><?php echo ($_ENV['APP_DEBUG'] ?? 'false') === 'true' ? '활성화' : '비활성화'; ?></p>
+                            <span class="text-zinc-500 dark:text-zinc-400"><?= __('dashboard.debug_mode') ?></span>
+                            <p class="font-medium text-zinc-900 dark:text-white"><?php echo ($_ENV['APP_DEBUG'] ?? 'false') === 'true' ? __('dashboard.enabled') : __('dashboard.disabled'); ?></p>
                         </div>
                     </div>
                 </div>

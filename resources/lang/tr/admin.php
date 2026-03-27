@@ -44,6 +44,7 @@ return [
         'page_management' => 'Sayfa Yönetimi',
         'board_management' => 'Forum Yönetimi',
         'widget_management' => 'Widget Yönetimi',
+            'staff_admins' => 'Yönetici Yetkileri',
     ],
     'stats' => [
         'today_reservations' => 'Bugünkü Rezervasyonlar',

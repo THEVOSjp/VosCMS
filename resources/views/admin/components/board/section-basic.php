@@ -46,15 +46,7 @@ $_collapsed = $_collapsed ?? false;
             <?php endif; ?>
         </div>
 
-        <!-- 모듈 분류 -->
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.boards.field_category') ?></label>
-            <select name="category" class="px-3 py-2 text-sm bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200">
-                <?php foreach (['board', 'notice', 'qna', 'faq', 'gallery'] as $c): ?>
-                <option value="<?= $c ?>" <?= ($_b['category'] ?? 'board') === $c ? 'selected' : '' ?>><?= __('site.boards.cat_' . $c) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
+        <!-- 모듈 분류: 제거됨 (v1.18.0) -->
 
         <!-- 설명 -->
         <div class="mb-4">

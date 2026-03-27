@@ -13,8 +13,8 @@ function rzxCalFormatCurrency(amount) {
 }
 
 const rzxCalStatusLabels = {
-    pending: '대기중', confirmed: '확정', completed: '완료',
-    cancelled: '취소', no_show: '노쇼'
+    pending: '<?= __('reservations.cal_status_pending') ?>', confirmed: '<?= __('reservations.cal_status_confirmed') ?>', completed: '<?= __('reservations.cal_status_completed') ?>',
+    cancelled: '<?= __('reservations.cal_status_cancelled') ?>', no_show: '<?= __('reservations.cal_status_noshow') ?>'
 };
 const rzxCalStatusBadge = {
     pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
@@ -51,34 +51,34 @@ function rzxCalShowDetail(r) {
             </div>
             <div class="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400">일시</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('reservations.cal_detail_datetime') ?></p>
                     <p class="text-zinc-900 dark:text-white">${rzxCalEsc(r.reservation_date)} ${startTime}${endTime ? ' ~ ' + endTime : ''}</p>
                 </div>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400">서비스</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('reservations.cal_detail_service') ?></p>
                     <p class="text-zinc-900 dark:text-white">${rzxCalEsc(r.service_name || '-')}</p>
                 </div>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400">고객</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('reservations.cal_detail_customer') ?></p>
                     <p class="text-zinc-900 dark:text-white">${rzxCalEsc(r.customer_name)}</p>
                 </div>
                 <div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400">연락처</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('reservations.cal_detail_phone') ?></p>
                     <p class="text-zinc-900 dark:text-white">${rzxCalEsc(r.customer_phone || '-')}</p>
                 </div>
             </div>
             ${r.notes ? '<div class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900 p-2 rounded-lg">' + rzxCalEsc(r.notes) + '</div>' : ''}
         </div>`;
 
-    let actionsHtml = `<a href="${RzxCal.adminUrl}/reservations/${r.id}" class="flex-1 text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition">상세 보기</a>`;
+    let actionsHtml = `<a href="${RzxCal.adminUrl}/reservations/${r.id}" class="flex-1 text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition"><?= __('reservations.cal_detail_view') ?></a>`;
 
     if (r.status === 'pending') {
-        actionsHtml += `<button onclick="rzxCalChangeStatus('${r.id}', 'confirm')" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition">확정</button>`;
-        actionsHtml += `<button onclick="rzxCalChangeStatus('${r.id}', 'cancel')" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition">취소</button>`;
+        actionsHtml += `<button onclick="rzxCalChangeStatus('${r.id}', 'confirm')" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition"><?= __('reservations.cal_btn_confirm') ?></button>`;
+        actionsHtml += `<button onclick="rzxCalChangeStatus('${r.id}', 'cancel')" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition"><?= __('reservations.cal_btn_cancel') ?></button>`;
     } else if (r.status === 'confirmed') {
-        actionsHtml += `<button onclick="rzxCalChangeStatus('${r.id}', 'complete')" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition">완료</button>`;
-        actionsHtml += `<button onclick="rzxCalChangeStatus('${r.id}', 'cancel')" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition">취소</button>`;
-        actionsHtml += `<button onclick="rzxCalChangeStatus('${r.id}', 'no-show')" class="px-4 py-2 bg-zinc-500 hover:bg-zinc-600 text-white rounded-lg text-sm transition">노쇼</button>`;
+        actionsHtml += `<button onclick="rzxCalChangeStatus('${r.id}', 'complete')" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition"><?= __('reservations.cal_btn_complete') ?></button>`;
+        actionsHtml += `<button onclick="rzxCalChangeStatus('${r.id}', 'cancel')" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition"><?= __('reservations.cal_btn_cancel') ?></button>`;
+        actionsHtml += `<button onclick="rzxCalChangeStatus('${r.id}', 'no-show')" class="px-4 py-2 bg-zinc-500 hover:bg-zinc-600 text-white rounded-lg text-sm transition"><?= __('reservations.cal_btn_noshow') ?></button>`;
     }
 
     document.getElementById('rzxCalDetailActions').innerHTML = actionsHtml;
@@ -94,16 +94,16 @@ function rzxCalCloseDetail(e) {
 
 async function rzxCalChangeStatus(id, action) {
     const msgs = {
-        confirm: '이 예약을 확정하시겠습니까?',
-        cancel: '이 예약을 취소하시겠습니까?',
-        complete: '이 예약을 완료 처리하시겠습니까?',
-        'no-show': '이 예약을 노쇼 처리하시겠습니까?'
+        confirm: '<?= __('reservations.cal_confirm_confirm') ?>',
+        cancel: '<?= __('reservations.cal_confirm_cancel') ?>',
+        complete: '<?= __('reservations.cal_confirm_complete') ?>',
+        'no-show': '<?= __('reservations.cal_confirm_noshow') ?>'
     };
-    if (!confirm(msgs[action] || '진행하시겠습니까?')) return;
+    if (!confirm(msgs[action] || '<?= __('reservations.cal_confirm_default') ?>')) return;
 
     let reason = '';
     if (action === 'cancel') {
-        reason = prompt('취소 사유를 입력하세요:', '관리자에 의한 취소') || '';
+        reason = prompt('<?= __('reservations.cal_cancel_reason') ?>', '<?= __('reservations.cal_cancel_reason_default') ?>') || '';
     }
 
     try {
@@ -116,7 +116,7 @@ async function rzxCalChangeStatus(id, action) {
         const data = await resp.json();
         console.log('[RzxCal] Status result:', data);
         if (data.error) {
-            alert(data.message || '처리에 실패했습니다.');
+            alert(data.message || '<?= __('reservations.cal_error') ?>');
         } else {
             location.reload();
         }

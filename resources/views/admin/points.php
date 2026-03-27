@@ -34,6 +34,26 @@ try {
     // 회원 그룹 목록
     $groups = $pdo->query("SELECT id, name, slug, sort_order FROM {$prefix}member_grades ORDER BY sort_order")->fetchAll(PDO::FETCH_ASSOC);
 
+    // 등급명 다국어 적용
+    $_ptLocale = $config['locale'] ?? 'ko';
+    $_ptDefLocale = $siteSettings['default_language'] ?? 'ko';
+    $_ptChain = array_unique(array_filter([$_ptLocale, 'en', $_ptDefLocale]));
+    $_ptGradeTr = [];
+    try {
+        $_ptPH = implode(',', array_fill(0, count($_ptChain), '?'));
+        $_ptStmt = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations WHERE locale IN ({$_ptPH}) AND lang_key LIKE 'grade.%.name'");
+        $_ptStmt->execute(array_values($_ptChain));
+        while ($_pt = $_ptStmt->fetch(PDO::FETCH_ASSOC)) { $_ptGradeTr[$_pt['lang_key']][$_pt['locale']] = $_pt['content']; }
+    } catch (PDOException $e) {}
+
+    foreach ($groups as &$_g) {
+        $k = "grade.{$_g['id']}.name";
+        if (isset($_ptGradeTr[$k])) {
+            foreach ($_ptChain as $lc) { if (!empty($_ptGradeTr[$k][$lc])) { $_g['name'] = $_ptGradeTr[$k][$lc]; break; } }
+        }
+    }
+    unset($_g);
+
     // 레벨 포인트 목록
     $levelRows = $pdo->query("SELECT * FROM {$prefix}point_levels ORDER BY level")->fetchAll(PDO::FETCH_ASSOC);
     $levels = [];

@@ -490,4 +490,8 @@ return [
     'error_save' => 'Save failed',
     'error_image_type' => 'Invalid image format. (Only JPG, PNG, GIF, SVG, WebP allowed)',
     'logo_deleted' => 'Logo image has been deleted.',
+    'pwa_status_pending' => 'Pending',
+    'pwa_status_sending' => 'Sending',
+    'pwa_status_completed' => 'Completed',
+    'pwa_status_failed' => 'Failed',
 ];

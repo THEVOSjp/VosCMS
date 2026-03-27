@@ -267,4 +267,7 @@ return [
 
     'table_view' => '목록 보기',
     'card_view' => '카드 보기',
+
+    'selected' => '선택',
+    'unit' => ['items' => '개', 'minutes' => '분'],
 ];

@@ -50,6 +50,63 @@ $_bwT = function($cfg, $key, $default) {
     <!-- Step 1: 서비스 선택 -->
     <div id="bwStepService" class="bw-step-panel bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6 md:p-8">
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6"><?= __('booking.select_service') ?></h2>
+
+        <?php if (!empty($bundles)): ?>
+        <!-- 추천 패키지 -->
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-zinc-200 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                <?= is_array($bundleDisplayName) ? (_bwGetI18n(['n'=>$bundleDisplayName], 'n', '추천 패키지')) : htmlspecialchars($bundleDisplayName) ?>
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <?php foreach ($bundles as $bndl):
+                    $bName = _bwSvcTr($bndl['id'], 'name', $bndl['name'], $svcTranslations, $localeChain);
+                    $bDesc = _bwSvcTr($bndl['id'], 'description', $bndl['description'] ?? '', $svcTranslations, $localeChain);
+                    // bundle 번역은 bundle.{id}.name 키 사용
+                    $bNameKey = "bundle.{$bndl['id']}.name";
+                    $bDescKey = "bundle.{$bndl['id']}.description";
+                    if (isset($svcTranslations[$bNameKey])) {
+                        foreach ($localeChain as $_lc) { if (!empty($svcTranslations[$bNameKey][$_lc])) { $bName = $svcTranslations[$bNameKey][$_lc]; break; } }
+                    }
+                    if (isset($svcTranslations[$bDescKey])) {
+                        foreach ($localeChain as $_lc) { if (!empty($svcTranslations[$bDescKey][$_lc])) { $bDesc = $svcTranslations[$bDescKey][$_lc]; break; } }
+                    }
+                    $bImg = $bndl['image'] ?? '';
+                    $originalPrice = (float)$bndl['bundle_price'];
+                    $displayPrice = (float)$bndl['display_price'];
+                    $isEvent = $bndl['is_event'];
+                    $svcIdJson = htmlspecialchars(json_encode($bndl['svc_id_list']), ENT_QUOTES);
+                ?>
+                <div class="bw-bundle-card cursor-pointer rounded-xl border-2 border-gray-200 dark:border-zinc-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg transition-all overflow-hidden"
+                     data-services="<?= htmlspecialchars(implode(',', $bndl['svc_id_list'])) ?>" data-bundle-select="1">
+                    <?php if ($bImg): ?>
+                    <div class="relative h-32 bg-gray-100 dark:bg-zinc-700 overflow-hidden">
+                        <img src="<?= htmlspecialchars($bImg) ?>" alt="" class="w-full h-full object-cover">
+                        <?php if ($isEvent): ?>
+                        <span class="absolute top-2 right-2 px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full"><?= $bndl['event_label'] ?? 'SALE' ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
+                    <div class="p-4">
+                        <h4 class="font-semibold text-gray-900 dark:text-white text-sm"><?= htmlspecialchars($bName) ?></h4>
+                        <?php if ($bDesc): ?><p class="text-xs text-gray-500 dark:text-zinc-400 mt-1 line-clamp-2"><?= htmlspecialchars($bDesc) ?></p><?php endif; ?>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-xs text-gray-400"><?= $bndl['svc_count'] ?><?= __('booking.service_count') ?> · <?= $bndl['total_duration'] ?><?= __('booking.minutes') ?? '분' ?></span>
+                            <div class="text-right">
+                                <?php if ($isEvent && $originalPrice > $displayPrice): ?>
+                                <span class="text-xs text-gray-400 line-through"><?= $currencySymbol ?><?= number_format($originalPrice) ?></span>
+                                <?php endif; ?>
+                                <span class="text-sm font-bold text-blue-600 dark:text-blue-400"><?= $currencySymbol ?><?= number_format($displayPrice) ?></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <div class="border-b border-gray-200 dark:border-zinc-700 mt-6 mb-2"></div>
+        </div>
+        <?php endif; ?>
+
         <?php if (empty($services)): ?>
         <div class="text-center py-12"><p class="text-gray-500 dark:text-zinc-400"><?= __('booking.no_services') ?></p></div>
         <?php else: ?>
@@ -172,4 +229,4 @@ window.__bwConfig = {
     }
 };
 </script>
-<script src="<?= $baseUrl ?>/widgets/booking/booking.js"></script>
+<script src="<?= $baseUrl ?>/widgets/booking/booking.js?v=<?= time() ?>"></script>

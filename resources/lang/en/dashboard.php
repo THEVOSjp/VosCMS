@@ -1,0 +1,22 @@
+<?php
+return [
+    'system_running' => 'System Running',
+    'db_connected' => 'Database Connected',
+    'db_failed' => 'Database Connection Failed',
+    'today_reservations' => 'Today Reservations',
+    'total_members' => 'Total Members',
+    'total_services' => 'Registered Services',
+    'system_version' => 'System Version',
+    'quick_actions' => 'Quick Actions',
+    'new_reservation' => 'New Reservation',
+    'add_service' => 'Add Service',
+    'manage_members' => 'Manage Members',
+    'system_settings' => 'System Settings',
+    'system_info' => 'System Info',
+    'php_version' => 'PHP Version',
+    'environment' => 'Environment',
+    'timezone' => 'Timezone',
+    'debug_mode' => 'Debug Mode',
+    'enabled' => 'Enabled',
+    'disabled' => 'Disabled',
+];

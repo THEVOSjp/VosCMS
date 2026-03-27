@@ -58,7 +58,7 @@ include __DIR__ . '/_head.php';
     <div>
         <h2 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('reservations.list') ?></h2>
         <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-            <?= __('reservations.filter.today') ?>: <?= $todayTotal ?>건
+            <?= __('reservations.filter.today') ?>: <?= $todayTotal ?><?= __('common.unit.items') ?? '건' ?>
             <?php if (!empty($todayStats['pending'])): ?>
                 · <span class="text-yellow-600"><?= __('reservations.filter.pending') ?> <?= $todayStats['pending'] ?></span>
             <?php endif; ?>
@@ -85,12 +85,12 @@ include __DIR__ . '/_head.php';
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-4 mb-6">
     <form method="GET" class="flex flex-wrap items-end gap-3">
         <div>
-            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.filter.today') ?></label>
+            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.col_datetime') ?? '일시' ?></label>
             <input type="date" name="date" value="<?= htmlspecialchars($filterDate) ?>"
                    class="px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg text-sm text-zinc-900 dark:text-zinc-100">
         </div>
         <div>
-            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">상태</label>
+            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.col_status') ?? '상태' ?></label>
             <select name="status" class="px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg text-sm text-zinc-900 dark:text-zinc-100">
                 <option value=""><?= __('reservations.filter.all') ?></option>
                 <option value="pending" <?= $filterStatus === 'pending' ? 'selected' : '' ?>><?= __('reservations.filter.pending') ?></option>
@@ -101,7 +101,7 @@ include __DIR__ . '/_head.php';
             </select>
         </div>
         <div>
-            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">서비스</label>
+            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.col_service') ?? '서비스' ?></label>
             <select name="service_id" class="px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg text-sm text-zinc-900 dark:text-zinc-100">
                 <option value=""><?= __('reservations.filter.all') ?></option>
                 <?php foreach ($services as $svc): ?>
@@ -110,13 +110,13 @@ include __DIR__ . '/_head.php';
             </select>
         </div>
         <div>
-            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">검색</label>
-            <input type="text" name="q" value="<?= htmlspecialchars($filterSearch) ?>" placeholder="이름, 전화번호, 예약번호"
+            <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"><?= __('reservations.col_search') ?? '검색' ?></label>
+            <input type="text" name="q" value="<?= htmlspecialchars($filterSearch) ?>" placeholder="<?= __('reservations.search_placeholder') ?? '이름, 전화번호, 예약번호' ?>"
                    class="px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 w-48">
         </div>
-        <button type="submit" class="px-4 py-2 bg-zinc-800 dark:bg-zinc-600 text-white rounded-lg text-sm hover:bg-zinc-700 transition">검색</button>
+        <button type="submit" class="px-4 py-2 bg-zinc-800 dark:bg-zinc-600 text-white rounded-lg text-sm hover:bg-zinc-700 transition"><?= __('reservations.col_search') ?? '검색' ?></button>
         <?php if ($filterDate || $filterStatus || $filterService || $filterSearch): ?>
-        <a href="<?= $adminUrl ?>/reservations" class="px-4 py-2 text-zinc-500 hover:text-zinc-700 text-sm">초기화</a>
+        <a href="<?= $adminUrl ?>/reservations" class="px-4 py-2 text-zinc-500 hover:text-zinc-700 text-sm"><?= __('common.reset') ?? '초기화' ?></a>
         <?php endif; ?>
     </form>
 </div>
@@ -133,13 +133,13 @@ include __DIR__ . '/_head.php';
         <table class="w-full text-sm">
             <thead class="bg-zinc-50 dark:bg-zinc-900/50">
                 <tr class="text-left text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                    <th class="px-4 py-3">예약번호</th>
-                    <th class="px-4 py-3">고객</th>
-                    <th class="px-4 py-3">서비스</th>
-                    <th class="px-4 py-3">일시</th>
-                    <th class="px-4 py-3">금액</th>
-                    <th class="px-4 py-3">상태</th>
-                    <th class="px-4 py-3 text-right">액션</th>
+                    <th class="px-4 py-3"><?= __('reservations.col_number') ?? '예약번호' ?></th>
+                    <th class="px-4 py-3"><?= __('reservations.col_customer') ?? '고객' ?></th>
+                    <th class="px-4 py-3"><?= __('reservations.col_service') ?? '서비스' ?></th>
+                    <th class="px-4 py-3"><?= __('reservations.col_datetime') ?? '일시' ?></th>
+                    <th class="px-4 py-3"><?= __('reservations.col_amount') ?? '금액' ?></th>
+                    <th class="px-4 py-3"><?= __('reservations.col_status') ?? '상태' ?></th>
+                    <th class="px-4 py-3 text-right"><?= __('reservations.col_action') ?? '액션' ?></th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">

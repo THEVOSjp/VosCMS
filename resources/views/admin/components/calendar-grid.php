@@ -57,22 +57,22 @@ $uid = 'cal' . $cal['year'] . $cal['month']; // 고유 접두사
             <?php if (!$isFullscreen): ?>
             <svg class="w-5 h-5 mr-1.5 text-blue-600 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             <?php endif; ?>
-            <?= sprintf('%04d년 %02d월', $cal['year'], $cal['month']) ?><?= $isFullscreen ? '' : ' 예약 현황' ?>
+            <?= str_replace([':year', ':month'], [sprintf('%04d', $cal['year']), sprintf('%02d', $cal['month'])], __('reservations.cal_year_month')) ?><?= $isFullscreen ? '' : ' ' . __('reservations.cal_status') ?>
         </h2>
         <a href="<?= $cal['nextUrl'] ?>" class="p-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition">
             <svg class="w-4 h-4 text-zinc-600 dark:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </a>
-        <span class="text-sm text-zinc-500 dark:text-zinc-400 ml-2"><?= count($cal['reservations']) ?>건</span>
+        <span class="text-sm text-zinc-500 dark:text-zinc-400 ml-2"><?= str_replace(':count', count($cal['reservations']), __('reservations.cal_count')) ?></span>
     </div>
     <div class="flex items-center gap-3">
         <div class="flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-yellow-400"></span>대기</span>
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-blue-400"></span>확정</span>
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-green-400"></span>완료</span>
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-red-400"></span>취소</span>
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-zinc-400"></span>노쇼</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-yellow-400"></span><?= __('reservations.cal_legend_pending') ?></span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-blue-400"></span><?= __('reservations.cal_legend_confirmed') ?></span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-green-400"></span><?= __('reservations.cal_legend_completed') ?></span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-red-400"></span><?= __('reservations.cal_legend_cancelled') ?></span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-zinc-400"></span><?= __('reservations.cal_legend_noshow') ?></span>
         </div>
-        <a href="<?= $cal['adminUrl'] ?>/reservations/create" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition">+ 예약 등록</a>
+        <a href="<?= $cal['adminUrl'] ?>/reservations/create" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition">+ <?= __('reservations.cal_add') ?></a>
     </div>
 </div>
 
@@ -81,7 +81,10 @@ $uid = 'cal' . $cal['year'] . $cal['month']; // 고유 접두사
     <div class="rzx-cal-grid">
         <!-- 요일 헤더 -->
         <?php
-        $weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+        $_calLocale = $config['locale'] ?? 'ko';
+        $_calLangFile = BASE_PATH . '/resources/lang/' . $_calLocale . '/reservations.php';
+        $_calLang = file_exists($_calLangFile) ? (include $_calLangFile) : [];
+        $weekdays = $_calLang['cal_weekdays'] ?? ['일','월','화','수','목','금','토'];
         foreach ($weekdays as $i => $wd):
             $hColor = $i === 0 ? 'text-red-500' : ($i === 6 ? 'text-blue-500' : 'text-zinc-600 dark:text-zinc-400');
         ?>

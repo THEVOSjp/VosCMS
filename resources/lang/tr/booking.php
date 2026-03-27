@@ -191,4 +191,9 @@ return [
     'next' => 'İleri',
     'categories' => 'kategori',
     'service_count' => 'hizmet',
+    'expected_points' => 'Tahmini puan',
+    'reservation_complete' => 'Rezervasyon tamamlandı',
+    'reservation_complete_desc' => 'Lütfen rezervasyon detaylarını kontrol edin',
+    'reservation_number' => 'Rezervasyon No.',
+    'check_summary' => 'Detayları gör',
 ];

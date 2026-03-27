@@ -215,4 +215,9 @@ return [
     'next' => '다음',
     'categories' => '개 카테고리',
     'service_count' => '개 서비스',
+    'expected_points' => '예상 적립',
+    'reservation_complete' => '예약이 완료되었습니다',
+    'reservation_complete_desc' => '예약 내용을 확인해주세요',
+    'reservation_number' => '예약번호',
+    'check_summary' => '예약 내용 확인',
 ];

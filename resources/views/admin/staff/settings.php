@@ -321,7 +321,13 @@ $pageSubDesc = __('staff.settings.description');
                                     <div class="flex items-center gap-3 flex-1 pos-view" data-id="<?= $pos['id'] ?>">
                                         <input type="checkbox" name="active_positions[]" value="<?= $pos['id'] ?>" <?= $pos['is_active'] ? 'checked' : '' ?>
                                                class="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-blue-600 focus:ring-blue-500 dark:bg-zinc-700">
-                                        <span class="text-sm text-zinc-900 dark:text-white font-medium"><?= htmlspecialchars($pos['name']) ?></span>
+                                        <?php
+                                        $_posLocale = $config['locale'] ?? 'ko';
+                                        $_posName = $pos['name'];
+                                        if (!empty($i18n[$_posLocale])) $_posName = $i18n[$_posLocale];
+                                        elseif (!empty($i18n['en'])) $_posName = $i18n['en'];
+                                        ?>
+                                        <span class="text-sm text-zinc-900 dark:text-white font-medium"><?= htmlspecialchars($_posName) ?></span>
                                         <?php if ($pos['is_active']): ?>
                                         <span class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><?= __('staff.settings.position_active') ?></span>
                                         <?php endif; ?>

@@ -82,7 +82,46 @@ if (!function_exists('rzx_multilang_input')) {
         $extraClass = $opts['class'] ?? '';
         $modalType  = $opts['modal_type'] ?? '';
         $attrs      = $opts['attrs'] ?? '';
-        $safeValue  = htmlspecialchars($value, ENT_QUOTES);
+        // 현재 로케일 번역값이 있으면 input에 표시 (다국어 뷰)
+        $displayValue = $value;
+        if ($langKey && isset($GLOBALS['__pdo'])) {
+            // $GLOBALS['__pdo']가 없으면 직접 로드 시도
+        }
+        if ($langKey) {
+            try {
+                global $config, $siteSettings;
+                $_mlLocale = $config['locale'] ?? 'ko';
+                $_mlDefLocale = $siteSettings['default_language'] ?? 'ko';
+                $_mlChain = array_unique(array_filter([$_mlLocale, 'en', $_mlDefLocale]));
+                // Translator 사용
+                if (class_exists('\RzxLib\Core\I18n\Translator')) {
+                    $trFile = defined('BASE_PATH') ? BASE_PATH . '/resources/lang/' . $_mlLocale . '/translations_cache.php' : '';
+                    // DB에서 직접 조회
+                    $dbHost = $_ENV['DB_HOST'] ?? 'localhost';
+                    $dbName = $_ENV['DB_DATABASE'] ?? '';
+                    $dbUser = $_ENV['DB_USERNAME'] ?? 'root';
+                    $dbPass = $_ENV['DB_PASSWORD'] ?? '';
+                    $dbPrefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+                    if ($dbName) {
+                        static $_mlPdo = null;
+                        if ($_mlPdo === null) {
+                            try { $_mlPdo = new \PDO("mysql:host={$dbHost};dbname={$dbName};charset=utf8mb4", $dbUser, $dbPass); } catch (\Exception $e) { $_mlPdo = false; }
+                        }
+                        if ($_mlPdo) {
+                            $_mlPH = implode(',', array_fill(0, count($_mlChain), '?'));
+                            $_mlStmt = $_mlPdo->prepare("SELECT locale, content FROM {$dbPrefix}translations WHERE lang_key = ? AND locale IN ({$_mlPH})");
+                            $_mlStmt->execute(array_merge([$langKey], array_values($_mlChain)));
+                            $_mlData = [];
+                            while ($_ml = $_mlStmt->fetch(\PDO::FETCH_ASSOC)) { $_mlData[$_ml['locale']] = $_ml['content']; }
+                            foreach ($_mlChain as $lc) {
+                                if (!empty($_mlData[$lc])) { $displayValue = $_mlData[$lc]; break; }
+                            }
+                        }
+                    }
+                }
+            } catch (\Exception $e) {}
+        }
+        $safeValue  = htmlspecialchars($displayValue, ENT_QUOTES);
 
         // 모달 onclick
         $modalArg = $modalType ? ", '{$modalType}'" : '';

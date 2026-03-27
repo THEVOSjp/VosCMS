@@ -44,6 +44,7 @@ return [
         'page_management' => 'Seitenverwaltung',
         'board_management' => 'Forum-Verwaltung',
         'widget_management' => 'Widget-Verwaltung',
+            'staff_admins' => 'Admin-Rechte',
     ],
     'stats' => [
         'today_reservations' => 'Heutige Reservierungen',

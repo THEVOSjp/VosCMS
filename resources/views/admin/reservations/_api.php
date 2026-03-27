@@ -45,7 +45,13 @@ try {
         $source = $_POST['source'] ?? 'admin';
 
         if (!$customerName || !$customerPhone || !$reservationDate || !$startTime) {
-            $_SESSION['errors'] = ['필수 항목을 모두 입력해주세요.'];
+            $errMsg = __('reservations.error_required') ?? '필수 항목을 모두 입력해주세요.';
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['success' => false, 'message' => $errMsg]);
+                exit;
+            }
+            $_SESSION['errors'] = [$errMsg];
             $_SESSION['old_input'] = $_POST;
             header("Location: {$adminUrl}/reservations/create");
             exit;
@@ -116,6 +122,12 @@ try {
 
         $pdo->commit();
         console_log("[Reservations API] Created: {$reservationNumber} ({$idx} services)");
+
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => true, 'message' => __('reservations.created_success') ?? '예약이 등록되었습니다.', 'reservation_id' => $id, 'reservation_number' => $reservationNumber]);
+            exit;
+        }
 
         if ($source === 'walk_in') {
             header("Location: {$adminUrl}/reservations/pos");

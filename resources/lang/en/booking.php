@@ -191,4 +191,9 @@ return [
     'next' => 'Next',
     'categories' => 'categories',
     'service_count' => 'services',
+    'expected_points' => 'Expected Points',
+    'reservation_complete' => 'Reservation Complete',
+    'reservation_complete_desc' => 'Please check your reservation details',
+    'reservation_number' => 'Reservation No.',
+    'check_summary' => 'Check Details',
 ];

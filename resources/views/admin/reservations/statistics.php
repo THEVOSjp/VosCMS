@@ -12,7 +12,7 @@ $month = (int)($_GET['month'] ?? date('m'));
 if ($period === 'year') {
     $dateFrom = "$year-01-01";
     $dateTo = "$year-12-31";
-    $periodLabel = "{$year}년";
+    $periodLabel = sprintf(__('reservations.stat_year_format'), $year);
 } elseif ($period === 'week') {
     $baseDate = $_GET['date'] ?? date('Y-m-d');
     $ts = strtotime($baseDate);
@@ -23,7 +23,7 @@ if ($period === 'year') {
 } else {
     $dateFrom = sprintf('%04d-%02d-01', $year, $month);
     $dateTo = sprintf('%04d-%02d-%02d', $year, $month, (int)date('t', mktime(0, 0, 0, $month, 1, $year)));
-    $periodLabel = sprintf('%04d년 %02d월', $year, $month);
+    $periodLabel = sprintf(__('reservations.stat_month_format'), $year, $month);
 }
 
 // 전체 통계
@@ -92,6 +92,36 @@ try {
     $bundleStats = [];
 }
 
+// 서비스명/번들명 다국어 번역
+$_stLocale = $config['locale'] ?? 'ko';
+$_stDefLocale = $siteSettings['default_language'] ?? 'ko';
+$_stChain = array_unique(array_filter([$_stLocale, 'en', $_stDefLocale]));
+$_stTr = [];
+try {
+    $_stPH = implode(',', array_fill(0, count($_stChain), '?'));
+    $_stTrStmt = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations WHERE locale IN ({$_stPH}) AND (lang_key LIKE 'service.%.name' OR lang_key LIKE 'bundle.%.name')");
+    $_stTrStmt->execute(array_values($_stChain));
+    while ($_st = $_stTrStmt->fetch(PDO::FETCH_ASSOC)) { $_stTr[$_st['lang_key']][$_st['locale']] = $_st['content']; }
+} catch (PDOException $e) {}
+
+// 서비스명 번역 적용
+foreach ($serviceStats as &$_ss) {
+    $k = "service.{$_ss['service_id']}.name";
+    if (isset($_stTr[$k])) {
+        foreach ($_stChain as $lc) { if (!empty($_stTr[$k][$lc])) { $_ss['service_name'] = $_stTr[$k][$lc]; break; } }
+    }
+}
+unset($_ss);
+
+// 번들명 번역 적용
+foreach ($bundleStats as &$_bs) {
+    $k = "bundle.{$_bs['bundle_id']}.name";
+    if (isset($_stTr[$k])) {
+        foreach ($_stChain as $lc) { if (!empty($_stTr[$k][$lc])) { $_bs['bundle_name'] = $_stTr[$k][$lc]; break; } }
+    }
+}
+unset($_bs);
+
 // 일별 추이 (최근 30일 또는 기간 내)
 $stmt = $pdo->prepare("SELECT
     reservation_date as date,
@@ -135,15 +165,15 @@ include __DIR__ . '/_head.php';
     <div class="flex items-center gap-2 mb-6">
         <a href="<?= $adminUrl ?>/reservations/statistics?period=week&date=<?= date('Y-m-d') ?>"
            class="px-4 py-2 rounded-lg text-sm transition <?= $period === 'week' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-700' ?>">
-            이번 주
+            <?= __('reservations.stat_this_week') ?>
         </a>
         <a href="<?= $adminUrl ?>/reservations/statistics?period=month&year=<?= date('Y') ?>&month=<?= date('m') ?>"
            class="px-4 py-2 rounded-lg text-sm transition <?= $period === 'month' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-700' ?>">
-            이번 달
+            <?= __('reservations.stat_this_month') ?>
         </a>
         <a href="<?= $adminUrl ?>/reservations/statistics?period=year&year=<?= date('Y') ?>"
            class="px-4 py-2 rounded-lg text-sm transition <?= $period === 'year' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-700' ?>">
-            올해
+            <?= __('reservations.stat_this_year') ?>
         </a>
         <span class="ml-4 text-sm text-zinc-500 dark:text-zinc-400"><?= $periodLabel ?></span>
     </div>
@@ -152,10 +182,10 @@ include __DIR__ . '/_head.php';
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <?php
         $cards = [
-            ['전체 예약', $stats['total'], 'bg-zinc-600', '건'],
-            ['확정/완료', (int)$stats['confirmed'] + (int)$stats['completed'], 'bg-blue-600', '건'],
-            ['취소/노쇼', (int)$stats['cancelled'] + (int)$stats['no_show'], 'bg-red-600', '건'],
-            ['확정 매출', formatPrice((float)$stats['confirmed_revenue']), 'bg-green-600', ''],
+            [__('reservations.stat_total'), $stats['total'], 'bg-zinc-600', __('reservations.stat_unit')],
+            [__('reservations.stat_confirmed_completed'), (int)$stats['confirmed'] + (int)$stats['completed'], 'bg-blue-600', __('reservations.stat_unit')],
+            [__('reservations.stat_cancelled_noshow'), (int)$stats['cancelled'] + (int)$stats['no_show'], 'bg-red-600', __('reservations.stat_unit')],
+            [__('reservations.stat_confirmed_revenue'), formatPrice((float)$stats['confirmed_revenue']), 'bg-green-600', ''],
         ];
         foreach ($cards as [$label, $value, $color, $unit]):
         ?>
@@ -169,15 +199,15 @@ include __DIR__ . '/_head.php';
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <!-- 상태별 분포 -->
         <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
-            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">상태별 분포</h3>
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('reservations.stat_status_distribution') ?></h3>
             <?php
             $total = max((int)$stats['total'], 1);
             $statuses = [
-                ['대기중', (int)$stats['pending'], 'bg-yellow-400'],
-                ['확정', (int)$stats['confirmed'], 'bg-blue-400'],
-                ['완료', (int)$stats['completed'], 'bg-green-400'],
-                ['취소', (int)$stats['cancelled'], 'bg-red-400'],
-                ['노쇼', (int)$stats['no_show'], 'bg-zinc-400'],
+                [__('reservations.stat_pending'), (int)$stats['pending'], 'bg-yellow-400'],
+                [__('reservations.stat_confirmed'), (int)$stats['confirmed'], 'bg-blue-400'],
+                [__('reservations.stat_completed'), (int)$stats['completed'], 'bg-green-400'],
+                [__('reservations.stat_cancelled'), (int)$stats['cancelled'], 'bg-red-400'],
+                [__('reservations.stat_noshow'), (int)$stats['no_show'], 'bg-zinc-400'],
             ];
             ?>
             <!-- 바 차트 -->
@@ -186,7 +216,7 @@ include __DIR__ . '/_head.php';
                     $pct = round($count / $total * 100, 1);
                     if ($pct <= 0) continue;
                 ?>
-                <div class="<?= $color ?> relative" style="width: <?= $pct ?>%" title="<?= $label ?>: <?= $count ?>건 (<?= $pct ?>%)">
+                <div class="<?= $color ?> relative" style="width: <?= $pct ?>%" title="<?= $label ?>: <?= $count ?><?= __('reservations.stat_unit') ?> (<?= $pct ?>%)">
                     <?php if ($pct > 10): ?>
                     <span class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white"><?= $pct ?>%</span>
                     <?php endif; ?>
@@ -203,7 +233,7 @@ include __DIR__ . '/_head.php';
                         <span class="w-3 h-3 rounded <?= $color ?>"></span>
                         <span class="text-zinc-600 dark:text-zinc-400"><?= $label ?></span>
                     </span>
-                    <span class="text-zinc-900 dark:text-white font-medium"><?= $count ?>건 <span class="text-zinc-400 text-xs">(<?= $pct ?>%)</span></span>
+                    <span class="text-zinc-900 dark:text-white font-medium"><?= $count ?><?= __('reservations.stat_unit') ?> <span class="text-zinc-400 text-xs">(<?= $pct ?>%)</span></span>
                 </div>
                 <?php endforeach; ?>
             </div>
@@ -211,9 +241,9 @@ include __DIR__ . '/_head.php';
 
         <!-- 서비스별 통계 -->
         <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
-            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">서비스별 예약</h3>
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('reservations.stat_by_service') ?></h3>
             <?php if (empty($serviceStats)): ?>
-            <p class="text-sm text-zinc-500 text-center py-8">데이터가 없습니다.</p>
+            <p class="text-sm text-zinc-500 text-center py-8"><?= __('reservations.stat_no_data') ?></p>
             <?php else: ?>
             <div class="space-y-3">
                 <?php
@@ -223,8 +253,8 @@ include __DIR__ . '/_head.php';
                 ?>
                 <div>
                     <div class="flex items-center justify-between text-sm mb-1">
-                        <span class="text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars($ss['service_name'] ?? '미지정') ?></span>
-                        <span class="text-zinc-500"><?= $ss['count'] ?>건 / <?= formatPrice((float)$ss['revenue']) ?></span>
+                        <span class="text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars($ss['service_name'] ?? __('reservations.stat_unassigned')) ?></span>
+                        <span class="text-zinc-500"><?= $ss['count'] ?><?= __('reservations.stat_unit') ?> / <?= formatPrice((float)$ss['revenue']) ?></span>
                     </div>
                     <div class="h-2 bg-zinc-100 dark:bg-zinc-700 rounded-full overflow-hidden">
                         <div class="h-full bg-blue-500 rounded-full" style="width: <?= $barWidth ?>%"></div>
@@ -241,7 +271,7 @@ include __DIR__ . '/_head.php';
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6 mb-6">
         <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
             <svg class="w-5 h-5 inline -mt-0.5 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-            <?= __('bundles.nav') ?> <?= __('reservations.statistics') ?>
+            <?= __('reservations.stat_by_bundle') ?>
         </h3>
         <div class="space-y-3">
             <?php
@@ -252,7 +282,7 @@ include __DIR__ . '/_head.php';
             <div>
                 <div class="flex items-center justify-between text-sm mb-1">
                     <span class="text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars($bs['bundle_name']) ?></span>
-                    <span class="text-zinc-500"><?= $bs['count'] ?>건 / <?= formatPrice((float)$bs['revenue']) ?></span>
+                    <span class="text-zinc-500"><?= $bs['count'] ?><?= __('reservations.stat_unit') ?> / <?= formatPrice((float)$bs['revenue']) ?></span>
                 </div>
                 <div class="h-2 bg-zinc-100 dark:bg-zinc-700 rounded-full overflow-hidden">
                     <div class="h-full bg-purple-500 rounded-full" style="width: <?= $barWidth ?>%"></div>
@@ -265,48 +295,47 @@ include __DIR__ . '/_head.php';
 
     <!-- 시간대별 분포 -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6 mb-6">
-        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">시간대별 예약</h3>
+        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('reservations.stat_by_hour') ?></h3>
         <?php if (empty($hourlyStats)): ?>
-        <p class="text-sm text-zinc-500 text-center py-8">데이터가 없습니다.</p>
+        <p class="text-sm text-zinc-500 text-center py-8"><?= __('reservations.stat_no_data') ?></p>
         <?php else: ?>
-        <div class="flex items-end gap-1 h-40">
+        <div style="height:160px" class="flex items-end gap-1">
             <?php
             $hourMap = array_column($hourlyStats, 'count', 'hour');
             $maxHourly = max(array_values($hourMap) ?: [1]);
             for ($h = 0; $h < 24; $h++):
                 $count = $hourMap[$h] ?? 0;
-                $barH = $count > 0 ? max(round($count / $maxHourly * 100), 4) : 0;
+                $barPx = $count > 0 ? max(round($count / $maxHourly * 140), 4) : 0;
                 $isBusinessHour = ($h >= 9 && $h <= 18);
             ?>
-            <div class="flex-1 flex flex-col items-center gap-1">
-                <div class="w-full rounded-t relative" style="height: <?= $barH ?>%"
-                     title="<?= $h ?>시: <?= $count ?>건">
-                    <div class="absolute inset-0 <?= $isBusinessHour ? 'bg-blue-400 dark:bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-600' ?> rounded-t"></div>
-                </div>
+            <div class="flex-1 flex flex-col items-center justify-end" style="height:100%">
+                <div class="w-full <?= $isBusinessHour ? 'bg-blue-400 dark:bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-600' ?> rounded-t transition-all"
+                     style="height:<?= $barPx ?>px"
+                     title="<?= $h ?>:00 — <?= $count ?><?= __('reservations.stat_unit') ?? '건' ?>"></div>
                 <?php if ($h % 3 === 0): ?>
-                <span class="text-[9px] text-zinc-400"><?= $h ?></span>
+                <span class="text-[9px] text-zinc-400 mt-1"><?= $h ?></span>
                 <?php endif; ?>
             </div>
             <?php endfor; ?>
         </div>
-        <p class="text-xs text-zinc-400 mt-2 text-center">시간 (0~23시) · <span class="inline-block w-3 h-2 bg-blue-400 rounded"></span> 영업시간 · <span class="inline-block w-3 h-2 bg-zinc-300 rounded"></span> 기타</p>
+        <p class="text-xs text-zinc-400 mt-2 text-center"><?= __('reservations.stat_hour_range') ?> · <span class="inline-block w-3 h-2 bg-blue-400 rounded"></span> <?= __('reservations.stat_business_hours') ?> · <span class="inline-block w-3 h-2 bg-zinc-300 rounded"></span> <?= __('reservations.stat_other') ?></p>
         <?php endif; ?>
     </div>
 
     <!-- 일별 추이 -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
-        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">일별 예약 추이</h3>
+        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('reservations.stat_daily_trend') ?></h3>
         <?php if (empty($dailyStats)): ?>
-        <p class="text-sm text-zinc-500 text-center py-8">데이터가 없습니다.</p>
+        <p class="text-sm text-zinc-500 text-center py-8"><?= __('reservations.stat_no_data') ?></p>
         <?php else: ?>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-zinc-200 dark:border-zinc-700">
-                        <th class="py-2 text-left text-zinc-500 dark:text-zinc-400 font-medium">날짜</th>
-                        <th class="py-2 text-right text-zinc-500 dark:text-zinc-400 font-medium">예약 수</th>
-                        <th class="py-2 text-right text-zinc-500 dark:text-zinc-400 font-medium">매출</th>
-                        <th class="py-2 text-left pl-4 text-zinc-500 dark:text-zinc-400 font-medium">그래프</th>
+                        <th class="py-2 text-left text-zinc-500 dark:text-zinc-400 font-medium"><?= __('reservations.stat_date') ?></th>
+                        <th class="py-2 text-right text-zinc-500 dark:text-zinc-400 font-medium"><?= __('reservations.stat_reservation_count') ?></th>
+                        <th class="py-2 text-right text-zinc-500 dark:text-zinc-400 font-medium"><?= __('reservations.stat_revenue') ?></th>
+                        <th class="py-2 text-left pl-4 text-zinc-500 dark:text-zinc-400 font-medium"><?= __('reservations.stat_graph') ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -317,7 +346,7 @@ include __DIR__ . '/_head.php';
                     ?>
                     <tr class="border-b border-zinc-100 dark:border-zinc-700/50">
                         <td class="py-2 text-zinc-700 dark:text-zinc-300 font-mono"><?= $ds['date'] ?></td>
-                        <td class="py-2 text-right text-zinc-900 dark:text-white font-medium"><?= $ds['count'] ?>건</td>
+                        <td class="py-2 text-right text-zinc-900 dark:text-white font-medium"><?= $ds['count'] ?><?= __('reservations.stat_unit') ?></td>
                         <td class="py-2 text-right text-zinc-600 dark:text-zinc-400"><?= formatPrice((float)$ds['revenue']) ?></td>
                         <td class="py-2 pl-4">
                             <div class="h-4 bg-zinc-100 dark:bg-zinc-700 rounded-full overflow-hidden w-32">

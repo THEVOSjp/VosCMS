@@ -191,4 +191,9 @@ return [
     'next' => '下一步',
     'categories' => '個分類',
     'service_count' => '項服務',
+    'expected_points' => '預計積分',
+    'reservation_complete' => '預約已完成',
+    'reservation_complete_desc' => '請確認預約內容',
+    'reservation_number' => '預約編號',
+    'check_summary' => '查看詳情',
 ];

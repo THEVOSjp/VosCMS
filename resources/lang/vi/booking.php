@@ -191,4 +191,9 @@ return [
     'next' => 'Tiếp theo',
     'categories' => 'danh mục',
     'service_count' => 'dịch vụ',
+    'expected_points' => 'Điểm dự kiến',
+    'reservation_complete' => 'Đặt lịch hoàn tất',
+    'reservation_complete_desc' => 'Vui lòng kiểm tra thông tin đặt lịch',
+    'reservation_number' => 'Mã đặt lịch',
+    'check_summary' => 'Xem chi tiết',
 ];

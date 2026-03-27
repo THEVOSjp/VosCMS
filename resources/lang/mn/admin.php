@@ -44,6 +44,7 @@ return [
         'page_management' => 'Хуудасны удирдлага',
         'board_management' => 'Форумын удирдлага',
         'widget_management' => 'Виджет удирдлага',
+            'staff_admins' => 'Админ эрх',
     ],
     'stats' => [
         'today_reservations' => 'Өнөөдрийн захиалга',

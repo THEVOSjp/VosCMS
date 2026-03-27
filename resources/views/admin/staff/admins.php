@@ -8,9 +8,10 @@ if (!function_exists('__')) {
     require_once BASE_PATH . '/rzxlib/Core/Helpers/lang.php';
 }
 
-$pageTitle = '관리자 권한 관리 - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
+$pageTitle = __('staff.admins.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
+$basePath = parse_url($baseUrl, PHP_URL_PATH) ?: '';
 
 // 현재 로그인한 관리자 정보
 $currentAdmin = \RzxLib\Core\Auth\AdminAuth::current();
@@ -221,9 +222,9 @@ $permissionGroups = [
 
 // 역할 라벨
 $roleLabels = [
-    'master' => '슈퍼바이저',
-    'manager' => '매니저',
-    'staff' => '스태프',
+    'master' => __('staff.admins.role_supervisor'),
+    'manager' => __('staff.admins.role_manager'),
+    'staff' => __('staff.admins.role_staff'),
 ];
 $roleColors = [
     'master' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
@@ -241,7 +242,7 @@ $pageSubDesc = __('staff.admins.description');
             <div class="flex justify-end mb-6">
                 <button onclick="openAddModal()" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    관리자 추가
+                    <?= __('staff.admins.add_admin') ?>
                 </button>
             </div>
             <?php endif; ?>
@@ -251,26 +252,26 @@ $pageSubDesc = __('staff.admins.description');
                 <table class="w-full">
                     <thead class="bg-zinc-50 dark:bg-zinc-700/50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">관리자</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">역할</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">권한</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">상태</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">관리</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('staff.admins.col_admin') ?></th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('staff.admins.col_role') ?></th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('staff.admins.col_permissions') ?></th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('staff.admins.col_status') ?></th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= __('staff.admins.col_manage') ?></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                     <?php if (empty($adminList)): ?>
-                        <tr><td colspan="5" class="px-6 py-12 text-center text-zinc-400">등록된 관리자가 없습니다.</td></tr>
+                        <tr><td colspan="5" class="px-6 py-12 text-center text-zinc-400"><?= __('staff.admins.empty') ?></td></tr>
                     <?php else: foreach ($adminList as $admin):
                         $isSupervisor = ($admin['role'] === 'master');
                         $perms = json_decode($admin['permissions'] ?? '[]', true) ?: [];
-                        $permCount = $isSupervisor ? '전체' : count($perms) . '개';
+                        $permCount = $isSupervisor ? __('staff.admins.all_permissions') : count($perms) . __('staff.admins.perm_count_unit');
                     ?>
                         <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-700/30">
                             <td class="px-6 py-4">
                                 <div class="flex items-center">
                                     <?php if (!empty($admin['avatar'])): ?>
-                                    <img src="<?= htmlspecialchars($admin['avatar']) ?>" class="w-10 h-10 rounded-full object-cover mr-3">
+                                    <img src="<?= htmlspecialchars($basePath . $admin['avatar']) ?>" class="w-10 h-10 rounded-full object-cover mr-3">
                                     <?php else: ?>
                                     <div class="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-600 flex items-center justify-center mr-3">
                                         <span class="text-sm font-bold text-zinc-500 dark:text-zinc-300"><?= mb_substr($admin['name'], 0, 1) ?></span>
@@ -306,9 +307,9 @@ $pageSubDesc = __('staff.admins.description');
                             </td>
                             <td class="px-6 py-4">
                                 <?php if ($admin['status'] === 'active'): ?>
-                                <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium text-green-700 bg-green-100 dark:bg-green-900/30 dark:text-green-400 rounded-full">활성</span>
+                                <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium text-green-700 bg-green-100 dark:bg-green-900/30 dark:text-green-400 rounded-full"><?= __('staff.admins.status_active') ?></span>
                                 <?php else: ?>
-                                <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-700 dark:text-zinc-400 rounded-full">비활성</span>
+                                <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-700 dark:text-zinc-400 rounded-full"><?= __('staff.admins.status_inactive') ?></span>
                                 <?php endif; ?>
                             </td>
                             <td class="px-6 py-4 text-right">
@@ -329,7 +330,7 @@ $pageSubDesc = __('staff.admins.description');
                                     </button>
                                 </div>
                                 <?php elseif ($isSupervisor): ?>
-                                <span class="text-xs text-zinc-400">보호됨</span>
+                                <span class="text-xs text-zinc-400"><?= __('staff.admins.status_protected') ?></span>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -345,12 +346,12 @@ $pageSubDesc = __('staff.admins.description');
                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                     </svg>
                     <div class="text-sm text-blue-800 dark:text-blue-300">
-                        <p class="font-semibold mb-1">권한 안내</p>
+                        <p class="font-semibold mb-1"><?= __('staff.admins.guide_title') ?></p>
                         <ul class="space-y-0.5 text-xs text-blue-700 dark:text-blue-400">
-                            <li>• <strong>슈퍼바이저</strong>: 모든 메뉴에 접근 가능하며 삭제/비활성화가 불가합니다.</li>
-                            <li>• <strong>매니저</strong>: 지정된 권한 범위 내에서 관리 가능합니다.</li>
-                            <li>• <strong>스태프</strong>: 개별적으로 부여된 권한만 사용할 수 있습니다.</li>
-                            <li>• 관리자로 추가하려면 해당 스태프가 <strong>회원 연동</strong>이 되어있어야 합니다.</li>
+                            <li>• <?= __('staff.admins.guide_supervisor') ?></li>
+                            <li>• <?= __('staff.admins.guide_manager') ?></li>
+                            <li>• <?= __('staff.admins.guide_staff') ?></li>
+                            <li>• <?= __('staff.admins.guide_member_link') ?></li>
                         </ul>
                     </div>
                 </div>

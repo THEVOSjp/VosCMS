@@ -191,4 +191,9 @@ return [
     'next' => '次へ',
     'categories' => '件のカテゴリ',
     'service_count' => '件のサービス',
+    'expected_points' => '獲得予定',
+    'reservation_complete' => '予約が完了しました',
+    'reservation_complete_desc' => '予約内容をご確認ください',
+    'reservation_number' => '予約番号',
+    'check_summary' => '予約内容を確認',
 ];

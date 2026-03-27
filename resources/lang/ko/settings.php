@@ -534,4 +534,8 @@ return [
     'error_save' => '저장 실패',
     'error_image_type' => '허용되지 않는 이미지 형식입니다. (JPG, PNG, GIF, SVG, WebP만 가능)',
     'logo_deleted' => '로고 이미지가 삭제되었습니다.',
+    'pwa_status_pending' => '대기',
+    'pwa_status_sending' => '전송중',
+    'pwa_status_completed' => '완료',
+    'pwa_status_failed' => '실패',
 ];

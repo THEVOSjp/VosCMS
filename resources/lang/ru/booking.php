@@ -191,4 +191,9 @@ return [
     'next' => 'Далее',
     'categories' => 'категорий',
     'service_count' => 'услуг',
+    'expected_points' => 'Ожидаемые баллы',
+    'reservation_complete' => 'Бронирование завершено',
+    'reservation_complete_desc' => 'Пожалуйста, проверьте данные записи',
+    'reservation_number' => 'Номер записи',
+    'check_summary' => 'Проверить детали',
 ];

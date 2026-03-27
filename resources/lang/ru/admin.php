@@ -44,6 +44,7 @@ return [
         'page_management' => 'Управление страницами',
         'board_management' => 'Управление форумами',
         'widget_management' => 'Управление виджетами',
+            'staff_admins' => 'Права админа',
     ],
     'stats' => [
         'today_reservations' => 'Бронирования сегодня',
