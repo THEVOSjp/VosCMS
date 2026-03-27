@@ -81,7 +81,7 @@ function renderCard(b) {
     <div class="bg-white dark:bg-zinc-800 rounded-xl border dark:border-zinc-700 overflow-hidden hover:shadow-lg transition-shadow group flex flex-col h-full">
         <!-- 이미지 헤더 -->
         <div class="relative h-36 bg-gradient-to-br from-blue-500 to-indigo-600 overflow-hidden">
-            ${b.image ? `<img src="${b.image.startsWith('http') ? escHtml(b.image) : BASE_URL + '/' + escHtml(b.image).replace(/^\/+/, '')}" class="w-full h-full object-cover" onerror="this.closest('.relative').innerHTML='<div class=\"absolute inset-0 flex items-center justify-center\"><svg class=\"w-16 h-16 text-white/30\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4\"/></svg></div>'">` : `
+            ${b.image ? `<img src="${b.image.startsWith('http') ? escHtml(b.image) : BASE_URL + '/' + escHtml(b.image).replace(/^\/+/, '')}" class="w-full h-full object-cover">` : `
             <div class="absolute inset-0 flex items-center justify-center">
                 <svg class="w-16 h-16 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
             </div>`}
