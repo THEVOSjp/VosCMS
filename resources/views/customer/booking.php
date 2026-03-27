@@ -314,7 +314,7 @@ $seoContext = ['type' => 'sub', 'subpage_title' => __('common.nav.booking')];
 <?php if ($_bookingWidgetRenderer && $_bookingWidgetRenderer->hasWidgets()): ?>
 <?= $_bookingWidgetRenderer->renderAll() ?>
 <?php else: ?>
-    <div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="max-w-7xl mx-auto px-4 py-8">
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2"><?= __('common.nav.booking') ?></h1>
             <p class="text-gray-600 dark:text-zinc-400"><?= __('booking.select_service_datetime') ?></p>
