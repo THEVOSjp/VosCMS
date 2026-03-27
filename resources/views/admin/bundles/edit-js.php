@@ -5,8 +5,36 @@ const ADMIN_URL = '<?= $adminUrl ?>';
 const BASE_URL = '<?= $baseUrl ?>';
 const CURRENCY = '<?= $currency ?>';
 
+// === 설명 필드 Summernote 에디터 초기화 ===
+function initDescriptionEditor() {
+    if (typeof $ === 'undefined' || typeof $.fn.summernote === 'undefined') {
+        setTimeout(initDescriptionEditor, 100);
+        return;
+    }
+    const $desc = $('#fmDesc');
+    if ($desc.length && !$desc.hasClass('summernote-initialized')) {
+        $desc.summernote({
+            lang: 'ko-KR',
+            height: 250,
+            placeholder: '<?= __('bundles.desc') ?>',
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'italic', 'underline', 'strikethrough', 'clear']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['insert', ['link', 'table', 'hr']],
+                ['view', ['codeview', 'fullscreen', 'help']]
+            ],
+            callbacks: {
+                onInit: function() { console.log('[BundleEdit] Description editor initialized'); }
+            }
+        });
+        $desc.addClass('summernote-initialized');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[BundleEdit] init', BUNDLE_ID);
+    initDescriptionEditor();
 
     // 이미지 업로드
     document.getElementById('imageInput').addEventListener('change', uploadImage);

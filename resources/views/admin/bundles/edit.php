@@ -99,6 +99,26 @@ $pageHeaderTitle = __('bundles.edit_page');
 $currentLocale = $config['locale'] ?? 'ko';
 ?>
 <?php include __DIR__ . '/../reservations/_head.php'; ?>
+    <!-- Summernote CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+    <style>
+        .note-editor { border-radius: 0.5rem; overflow: hidden; }
+        .note-editor .note-toolbar { background: #f4f4f5; border-color: #d4d4d8; }
+        .note-editor .note-editing-area { background: #fff; }
+        .note-editor .note-editable { min-height: 200px; }
+        .note-editor .note-statusbar { background: #f4f4f5; border-color: #d4d4d8; }
+        .dark .note-editor { border-color: #52525b; }
+        .dark .note-editor .note-toolbar { background: #3f3f46; border-color: #52525b; }
+        .dark .note-editor .note-toolbar .note-btn { color: #a1a1aa; background: transparent; border-color: #52525b; }
+        .dark .note-editor .note-toolbar .note-btn:hover { color: #fff; background: #52525b; }
+        .dark .note-editor .note-editing-area { background: #3f3f46; }
+        .dark .note-editor .note-editable { color: #fff; background: #3f3f46; }
+        .dark .note-editor .note-statusbar { background: #3f3f46; border-color: #52525b; }
+        .dark .note-editor .note-codable { background: #27272a; color: #a1a1aa; }
+        .dark .note-dropdown-menu { background: #3f3f46; border-color: #52525b; }
+        .dark .note-dropdown-menu .note-dropdown-item { color: #a1a1aa; }
+        .dark .note-dropdown-menu .note-dropdown-item:hover { background: #52525b; color: #fff; }
+    </style>
             <!-- 브레드크럼 -->
             <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400 mb-4">
                 <a href="<?= $adminUrl ?>/bundles" class="hover:text-blue-600"><?= __('bundles.title') ?></a>
@@ -169,7 +189,7 @@ $currentLocale = $config['locale'] ?? 'ko';
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('bundles.desc') ?></label>
-                                <?php rzx_multilang_input('fmDesc', $bundle['description'] ?? '', 'bundle.' . $bundle['id'] . '.description', ['type' => 'textarea', 'rows' => 2]); ?>
+                                <?php rzx_multilang_input('fmDesc', $bundle['description'] ?? '', 'bundle.' . $bundle['id'] . '.description', ['type' => 'textarea', 'rows' => 2, 'modal_type' => 'editor']); ?>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
@@ -336,6 +356,12 @@ $currentLocale = $config['locale'] ?? 'ko';
 <?php include BASE_PATH . '/resources/views/admin/components/multilang-modal.php'; ?>
 <?php include BASE_PATH . '/resources/views/admin/partials/result-modal.php'; ?>
 <script src="<?= $baseUrl ?>/assets/js/result-modal.js"></script>
+
+<!-- jQuery + Summernote -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/lang/summernote-ko-KR.min.js"></script>
+
 <?php include __DIR__ . '/edit-js.php'; ?>
     </div>
     </main>
