@@ -89,7 +89,7 @@ $_bwT = function($cfg, $key, $default) {
                     <?php endif; ?>
                     <div class="p-4">
                         <h4 class="font-semibold text-gray-900 dark:text-white text-sm"><?= htmlspecialchars($bName) ?></h4>
-                        <?php if ($bDesc): ?><p class="text-xs text-gray-500 dark:text-zinc-400 mt-1 line-clamp-2"><?= htmlspecialchars($bDesc) ?></p><?php endif; ?>
+                        <?php if ($bDesc): ?><p class="text-xs text-gray-500 dark:text-zinc-400 mt-1 line-clamp-2"><?= htmlspecialchars(preg_replace('/<[^>]*>/', '', $bDesc)) ?></p><?php endif; ?>
                         <div class="flex items-center justify-between mt-3">
                             <span class="text-xs text-gray-400"><?= $bndl['svc_count'] ?><?= __('booking.service_count') ?> · <?= $bndl['total_duration'] ?><?= __('booking.minutes') ?? '분' ?></span>
                             <div class="text-right">
