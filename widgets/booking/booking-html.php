@@ -56,7 +56,7 @@ $_bwT = function($cfg, $key, $default) {
         <div class="mb-8">
             <h3 class="text-lg font-semibold text-gray-800 dark:text-zinc-200 mb-4 flex items-center gap-2">
                 <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-                <?= is_array($bundleDisplayName) ? (_bwGetI18n(['n'=>$bundleDisplayName], 'n', '추천 패키지')) : htmlspecialchars($bundleDisplayName) ?>
+                <?= htmlspecialchars(__('bundles.recommended') ?? (is_array($bundleDisplayName) ? _bwGetI18n(['n'=>$bundleDisplayName], 'n', '추천 패키지') : $bundleDisplayName)) ?>
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <?php foreach ($bundles as $bndl):
