@@ -29,7 +29,7 @@ $_bwT = function($cfg, $key, $default) {
 </style>
 
 <section class="py-8" id="bwRoot">
-<div class="max-w-4xl mx-auto px-4">
+<div class="max-w-7xl mx-auto px-4">
     <?php if ($wTitle || $wSubtitle): ?>
     <div class="text-center mb-8">
         <?php if ($wTitle): ?><h2 class="text-3xl font-bold text-gray-900 dark:text-white"><?= htmlspecialchars($_bwT($config, 'title', $wTitle)) ?></h2><?php endif; ?>

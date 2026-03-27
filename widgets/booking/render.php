@@ -218,7 +218,7 @@ if (!empty($GLOBALS['_rzx_widget_preview'])) {
     ob_start();
     ?>
     <section class="py-8">
-    <div class="max-w-4xl mx-auto px-4">
+    <div class="max-w-7xl mx-auto px-4">
         <div class="text-center mb-6">
             <h2 class="text-2xl font-bold text-gray-900"><?= __('common.nav.booking') ?? '예약하기' ?></h2>
             <p class="text-sm text-gray-500 mt-1"><?= $svcCount ?><?= __('booking.service_count') ?> · <?= $catCount ?><?= __('booking.categories') ?></p>
