@@ -361,7 +361,9 @@ $seoContext = ['type' => 'sub', 'subpage_title' => __('common.nav.booking')];
 <?php else: ?>
     <div class="<?= $_contentWidth ?> mx-auto px-4 py-8">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2 inline-flex items-center gap-2"><?= __('common.nav.booking') ?> <?= $_adminIcons ?></h1>
+            <div class="flex items-center justify-center mb-4">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white inline-flex items-center gap-2"><?= __('common.nav.booking') ?> <?= $_adminIcons ?></h1>
+            </div>
             <p class="text-gray-600 dark:text-zinc-400"><?= __('booking.select_service_datetime') ?></p>
             <p class="text-sm text-gray-500 dark:text-zinc-500 mt-1"><?= __('booking.staff_designation_guide') ?></p>
             <a href="<?= $baseUrl ?>/staff" class="inline-flex items-center gap-2 mt-3 px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition shadow-sm">
