@@ -33,6 +33,7 @@ return [
         'name' => 'Name',
         'name_placeholder' => 'Max Mustermann',
         'email' => 'E-Mail',
+        'email_placeholder' => 'beispiel@email.com',
         'phone' => 'Telefon',
         'phone_placeholder' => '+49 123 4567890',
         'phone_hint' => 'Waehlen Sie die Landesvorwahl und geben Sie Ihre Telefonnummer ein',

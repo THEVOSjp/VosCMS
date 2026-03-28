@@ -76,10 +76,27 @@ Translator::init($langPath);
 // 다국어 UI 헬퍼 (rzx_multilang_btn, rzx_multilang_input 등)
 require_once BASE_PATH . '/rzxlib/Core/Helpers/multilang.php';
 
+// 세션/쿠키에서 로케일 로드 (초기화 전)
+$_requestLocale = null;
+if (!empty($_SESSION['locale'])) {
+    $_requestLocale = $_SESSION['locale'];
+} elseif (!empty($_COOKIE['locale'])) {
+    $_requestLocale = $_COOKIE['locale'];
+}
+
 // URL 파라미터로 언어 변경 처리
 if (isset($_GET['lang'])) {
-    $newLang = $_GET['lang'];
-    Translator::setLocale($newLang);
+    $_requestLocale = $_GET['lang'];
+    Translator::setLocale($_requestLocale);
+
+    // 쿠키에 로케일 저장 (리다이렉트 전!)
+    setcookie('locale', $_requestLocale, [
+        'expires' => time() + 31536000,  // 1년
+        'path' => '/',
+        'samesite' => 'Lax'
+    ]);
+    $_COOKIE['locale'] = $_requestLocale;
+    $_SESSION['locale'] = $_requestLocale;
 
     // 현재 URL에서 lang 파라미터 제거 후 리다이렉트
     $currentUrl = strtok($_SERVER['REQUEST_URI'], '?');
@@ -90,6 +107,9 @@ if (isset($_GET['lang'])) {
 
     header('Location: ' . $redirectUrl);
     exit;
+} elseif ($_requestLocale) {
+    // 세션/쿠키에서 로드한 로케일 적용
+    Translator::setLocale($_requestLocale);
 }
 
 // 버전은 version.json에서 단일 소스로 관리
@@ -114,7 +134,9 @@ $config = [
 $siteSettings = [];
 try {
     $pdo = new PDO(
-        'mysql:host=' . ($_ENV['DB_HOST'] ?? 'localhost') . ';dbname=' . ($_ENV['DB_DATABASE'] ?? 'rezlyx'),
+        'mysql:host=' . ($_ENV['DB_HOST'] ?? 'localhost')
+        . ';dbname=' . ($_ENV['DB_DATABASE'] ?? 'rezlyx')
+        . ';charset=' . ($_ENV['DB_CHARSET'] ?? 'utf8mb4'),
         $_ENV['DB_USERNAME'] ?? 'root',
         $_ENV['DB_PASSWORD'] ?? '',
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true]
@@ -203,10 +225,10 @@ if (empty($path) || $path === 'index.php') {
 } elseif (preg_match('#^staff/([^/]+)$#', $path, $m) && !in_array($m[1], ['settings', 'edit'])) {
     $staffSlug = $m[1];
     $__pageFile = BASE_PATH . '/resources/views/customer/staff-detail.php';
-} elseif (preg_match('#^booking/detail/([A-Za-z0-9]+)$#', $path, $m)) {
+} elseif (preg_match('#^booking/detail/([A-Za-z0-9-]+)$#', $path, $m)) {
     $reservationNumber = $m[1];
     $__pageFile = BASE_PATH . '/resources/views/customer/booking/detail.php';
-} elseif (preg_match('#^booking/cancel/([A-Za-z0-9]+)$#', $path, $m)) {
+} elseif (preg_match('#^booking/cancel/([A-Za-z0-9-]+)$#', $path, $m)) {
     $reservationNumber = $m[1];
     $__pageFile = BASE_PATH . '/resources/views/customer/booking/cancel.php';
 } elseif ($path === $config['admin_path'] || str_starts_with($path, $config['admin_path'] . '/')) {

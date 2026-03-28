@@ -34,7 +34,7 @@ if ($post['is_secret'] && (!$currentUser || ($currentUser['id'] != $post['user_i
     if (!isset($secretVerified)) {
         $pageTitle = __('board.secret_post') . ' - ' . $board['title'];
         ?>
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-12 text-center">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12 text-center">
             <svg class="w-16 h-16 mx-auto mb-4 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
             <h2 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-2"><?= __('board.secret_post') ?></h2>
             <p class="text-sm text-zinc-500 mb-4"><?= __('board.enter_password') ?></p>
@@ -185,7 +185,7 @@ $seoContext = [
     'modified_at' => $post['updated_at'] ?? '',
 ];
 ?>
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <!-- 글 헤더 -->
         <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden">
             <div class="p-6 border-b border-zinc-100 dark:border-zinc-700">

@@ -143,11 +143,24 @@ return [
         'status' => 'Status',
         'booking_date' => 'Datum & Uhrzeit',
         'service' => 'Dienstleistung',
+        'services' => 'Dienstleistungen',
         'guests' => 'Gaeste',
         'total_price' => 'Gesamtpreis',
         'payment_status' => 'Zahlungsstatus',
         'notes' => 'Besondere Wuensche',
         'created_at' => 'Gebucht am',
+        'duration_unit' => 'Minuten',
+        'back_to_lookup' => 'Buchungssuche',
+        'payment' => 'Zahlungsdetails',
+        'total' => 'Zwischensumme',
+        'discount' => 'Rabatt',
+        'points_used' => 'Verwendete Punkte',
+        'final_amount' => 'Endbetrag',
+        'staff' => 'Personal',
+        'designation_fee' => 'Bezeichnungsgebuehr',
+        'cancel_info' => 'Stornierungsdetails',
+        'cancelled_at' => 'Storniert am',
+        'cancel_reason' => 'Stornierungsgrund',
     ],
 
     // Cancel
@@ -168,6 +181,14 @@ return [
         'cancelled' => 'Ihre Buchung wurde storniert.',
         'completed' => 'Dienstleistung abgeschlossen.',
         'no_show' => 'Als nicht erschienen markiert.',
+    ],
+
+    // Payment status
+    'payment' => [
+        'unpaid' => 'Unbezahlt',
+        'paid' => 'Bezahlt',
+        'partial' => 'Teilzahlung',
+        'refunded' => 'Rückgabe',
     ],
 
     // Error messages

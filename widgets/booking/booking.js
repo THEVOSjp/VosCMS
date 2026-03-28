@@ -12,7 +12,8 @@
 
     const selected = {
         services: [], date: '', time: '',
-        name: '', phone: '', email: '', notes: ''
+        name: '', phone: '', email: '', notes: '',
+        bundlePrice: 0, bundleName: ''
     };
 
     // === Progress Bar ===
@@ -85,6 +86,12 @@
     // === Service selection ===
     function updateServiceSelection() {
         selected.services = [];
+        // 번들이 아닌 직접 선택이면 번들 정보 초기화
+        var hasBundleSelection = document.querySelector('.bw-bundle-card.border-blue-500');
+        if (!hasBundleSelection) {
+            selected.bundlePrice = 0;
+            selected.bundleName = '';
+        }
         document.querySelectorAll('.bw-svc-card input[name="bw_service[]"]:checked').forEach(function(cb) {
             selected.services.push({
                 id: cb.value,
@@ -230,7 +237,13 @@
     }
 
     // === Helpers ===
-    function getTotalPrice() { return selected.services.reduce(function(s, v) { return s + v.price; }, 0); }
+    function getTotalPrice() {
+        // 번들이 선택된 경우 번들 가격 반환, 아니면 서비스 가격 합산
+        if (selected.bundlePrice > 0) {
+            return selected.bundlePrice;
+        }
+        return selected.services.reduce(function(s, v) { return s + v.price; }, 0);
+    }
     function getTotalDuration() { return selected.services.reduce(function(s, v) { return s + v.duration; }, 0); }
 
     // === Confirmation ===
@@ -239,17 +252,34 @@
         var cs = document.getElementById('bwConfirmService');
         if (cs) {
             var html = '';
-            selected.services.forEach(function(s) {
+            // 번들이 선택된 경우 번들 정보만 표시
+            if (selected.bundlePrice > 0 && selected.bundleName) {
                 var priceStr = '';
-                if (PD === 'show') priceStr = ' <span class="text-blue-600 dark:text-blue-400">' + CS + Number(s.price).toLocaleString() + '</span>';
-                html += '<div class="flex justify-between items-center text-sm"><span class="font-semibold text-gray-900 dark:text-white">' + s.name + ' <span class="text-gray-400 font-normal">(' + s.duration + (LB.minutes || '') + ')</span></span>' + priceStr + '</div>';
-            });
+                if (PD === 'show') priceStr = ' <span class="text-blue-600 dark:text-blue-400">' + CS + Number(selected.bundlePrice).toLocaleString() + '</span>';
+                html = '<div class="flex justify-between items-center text-sm"><span class="font-semibold text-gray-900 dark:text-white">' + selected.bundleName + ' (クーポン)</span>' + priceStr + '</div>';
+            } else {
+                // 일반 서비스 목록 표시
+                selected.services.forEach(function(s) {
+                    var priceStr = '';
+                    if (PD === 'show') priceStr = ' <span class="text-blue-600 dark:text-blue-400">' + CS + Number(s.price).toLocaleString() + '</span>';
+                    html += '<div class="flex justify-between items-center text-sm"><span class="font-semibold text-gray-900 dark:text-white">' + s.name + ' <span class="text-gray-400 font-normal">(' + s.duration + (LB.minutes || '') + ')</span></span>' + priceStr + '</div>';
+                });
+            }
             cs.innerHTML = html;
         }
         var cd = document.getElementById('bwConfirmDate'); if (cd) cd.textContent = selected.date;
         var ct = document.getElementById('bwConfirmTime'); if (ct) ct.textContent = selected.time + ' (' + getTotalDuration() + (LB.minutes || '') + ')';
         var cn = document.getElementById('bwConfirmName'); if (cn) cn.textContent = selected.name;
-        var cp = document.getElementById('bwConfirmPhone'); if (cp) cp.textContent = selected.phone;
+        var cp = document.getElementById('bwConfirmPhone');
+        if (cp) {
+            var custPhoneCountry = document.getElementById('bwCustPhone_country');
+            var custPhoneNumber = document.getElementById('bwCustPhone_number');
+            if (custPhoneCountry && custPhoneNumber && custPhoneNumber.value) {
+                cp.textContent = custPhoneCountry.value + ' ' + custPhoneNumber.value;
+            } else {
+                cp.textContent = selected.phone;
+            }
+        }
         var cprice = document.getElementById('bwConfirmPrice');
         if (cprice) {
             if (PD === 'show') cprice.textContent = CS + Number(getTotalPrice()).toLocaleString();
@@ -289,7 +319,97 @@
             if (data.success) {
                 document.querySelectorAll('.bw-step-panel').forEach(function(el) { el.classList.add('hidden'); });
                 var done = document.getElementById('bwStepDone'); if (done) done.classList.remove('hidden');
+
+                // 예약 정보 입력
                 var code = document.getElementById('bwDoneCode'); if (code) code.textContent = data.reservation_number || '';
+
+                // 서비스 목록
+                var svcDiv = document.getElementById('bwDoneService');
+                if (svcDiv) {
+                    svcDiv.innerHTML = '';
+                    // 번들이 선택된 경우 번들 정보만 표시
+                    if (selected.bundlePrice > 0 && selected.bundleName) {
+                        var bundleContainer = document.createElement('div');
+                        bundleContainer.className = 'flex justify-between items-center';
+
+                        var bundleNameSpan = document.createElement('span');
+                        bundleNameSpan.className = 'text-gray-900 dark:text-white';
+                        bundleNameSpan.textContent = selected.bundleName + ' (クーポン)';
+                        bundleContainer.appendChild(bundleNameSpan);
+
+                        var bundlePriceSpan = document.createElement('span');
+                        bundlePriceSpan.className = 'text-gray-600 dark:text-zinc-400 text-sm';
+                        bundlePriceSpan.textContent = CS + Number(selected.bundlePrice).toLocaleString();
+                        bundleContainer.appendChild(bundlePriceSpan);
+
+                        svcDiv.appendChild(bundleContainer);
+                    } else {
+                        // 일반 서비스 목록
+                        var checkedSvcs = document.querySelectorAll('input[name="bw_service[]"]:checked');
+                        checkedSvcs.forEach(function(inp) {
+                            var svcName = inp.dataset.name || '';
+                            var svcPrice = Number(inp.dataset.price || 0);
+                            var container = document.createElement('div');
+                            container.className = 'flex justify-between items-center';
+
+                            var nameSpan = document.createElement('span');
+                            nameSpan.className = 'text-gray-900 dark:text-white';
+                            nameSpan.textContent = svcName;
+                            container.appendChild(nameSpan);
+
+                            if (svcPrice > 0) {
+                                var priceSpan = document.createElement('span');
+                                priceSpan.className = 'text-gray-600 dark:text-zinc-400 text-sm';
+                                priceSpan.textContent = CS + svcPrice.toLocaleString();
+                                container.appendChild(priceSpan);
+                            }
+
+                            svcDiv.appendChild(container);
+                        });
+                    }
+                }
+
+                // 날짜 & 시간
+                var dateEl = document.getElementById('bwDoneDate');
+                if (dateEl) {
+                    var dateVal = selected.date || '';
+                    if (dateVal) dateEl.textContent = dateVal;
+                }
+
+                var timeEl = document.getElementById('bwDoneTime');
+                if (timeEl) {
+                    var timeVal = selected.time || '';
+                    if (timeVal) timeEl.textContent = timeVal;
+                }
+
+                // 고객 정보
+                var nameEl = document.getElementById('bwDoneName');
+                if (nameEl) {
+                    var custName = document.getElementById('bwCustName');
+                    if (custName) nameEl.textContent = custName.value;
+                }
+
+                var phoneEl = document.getElementById('bwDonePhone');
+                if (phoneEl) {
+                    var custPhoneCountry = document.getElementById('bwCustPhone_country');
+                    var custPhoneNumber = document.getElementById('bwCustPhone_number');
+                    if (custPhoneCountry && custPhoneNumber) {
+                        phoneEl.textContent = custPhoneCountry.value + ' ' + custPhoneNumber.value;
+                    } else {
+                        var custPhone = document.getElementById('bwCustPhone');
+                        if (custPhone) phoneEl.textContent = custPhone.value;
+                    }
+                }
+
+                // 가격
+                var priceEl = document.getElementById('bwDonePrice');
+                if (priceEl) {
+                    var priceDisplay = document.getElementById('bwTotalPrice');
+                    if (priceDisplay && priceDisplay.textContent) {
+                        priceEl.textContent = priceDisplay.textContent;
+                    }
+                }
+
                 var pb = document.getElementById('bwProgressBar'); if (pb) pb.style.display = 'none';
             } else {
                 alert(data.message || (LB.error || 'Error'));
@@ -353,6 +473,15 @@
         if (!svcIds.length) return;
         console.log('[BW] Bundle selected, services:', svcIds);
 
+        // 번들 카드 하이라이트 (먼저 클래스 추가 - updateServiceSelection이 이를 확인함)
+        document.querySelectorAll('.bw-bundle-card').forEach(function(c) { c.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200'); });
+        card.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
+
+        // 번들 가격 정보 저장
+        selected.bundlePrice = parseFloat(card.dataset.bundlePrice) || 0;
+        selected.bundleName = card.dataset.bundleName || '';
+        console.log('[BW] Bundle price:', selected.bundlePrice, 'Bundle name:', selected.bundleName);
+
         // 기존 선택 해제
         document.querySelectorAll('.bw-svc-card input[name="bw_service[]"]').forEach(function(cb) {
             cb.checked = false;
@@ -376,10 +505,6 @@
                 cb.dispatchEvent(new Event('change', { bubbles: true }));
             }
         });
-
-        // 번들 카드 하이라이트
-        document.querySelectorAll('.bw-bundle-card').forEach(function(c) { c.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200'); });
-        card.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
     }
 
     showStep(0);

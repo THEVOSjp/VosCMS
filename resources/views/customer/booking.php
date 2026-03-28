@@ -58,6 +58,26 @@ try {
         $businessHours[$bh['day_of_week']] = $bh;
     }
 
+    // 스태프 로드 (선택 가능한 스태프 목록)
+    $staffs = [];
+    $staffStmt = $pdo->query("SELECT id, name, avatar, designation_fee FROM {$prefix}staff WHERE is_active = 1 ORDER BY sort_order, name");
+    while ($staff = $staffStmt->fetch(PDO::FETCH_ASSOC)) {
+        $staffs[] = $staff;
+    }
+
+    // 번들 로드 (선택 가능한 번들 목록)
+    $bundles = [];
+    try {
+        $bundleStmt = $pdo->query("SELECT id, name, slug, description, price, image FROM {$prefix}bundles WHERE is_active = 1 ORDER BY sort_order, name");
+        if ($bundleStmt) {
+            while ($bundle = $bundleStmt->fetch(PDO::FETCH_ASSOC)) {
+                $bundles[] = $bundle;
+            }
+        }
+    } catch (PDOException $e) {
+        // 번들 테이블이 없는 경우 무시
+    }
+
     // POST 처리
     if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         header('Content-Type: application/json; charset=utf-8');
@@ -189,7 +209,8 @@ try {
             echo json_encode(['success' => false, 'message' => __('booking.error.required_fields')]);
             exit;
         }
-        $staffId = null; // 스태프 지명은 스태프 페이지에서만 가능
+        // 스태프 ID (booking 페이지에서도 선택 가능하도록 수정)
+        $staffId = (int)($input['staff_id'] ?? 0) ?: null;
         $date = $input['date'] ?? '';
         $time = $input['time'] ?? '';
         $name = trim($input['customer_name'] ?? '');
@@ -290,8 +311,8 @@ if (!function_exists('getBookingSvcTranslated')) {
     }
 }
 
-// 스텝 정의: 서비스 → 날짜/시간 → 고객정보 → 확인 (4단계)
-$totalSteps = 4;
+// 스텝 정의: 서비스 → 스태프 → 날짜/시간 → 고객정보 → 확인 (5단계)
+$totalSteps = 5;
 
 // headExtra에 booking 고유 스타일 추가
 $headExtra = '<style>
@@ -354,6 +375,36 @@ $seoContext = ['type' => 'sub', 'subpage_title' => __('common.nav.booking')];
                 <?php foreach ($bkCategories as $cid => $cname): ?>
                 <button type="button" class="bk-cat-btn px-4 py-1.5 text-xs font-medium rounded-full transition-all bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-600" data-cat="<?= htmlspecialchars($cid) ?>"><?= htmlspecialchars($cname) ?></button>
                 <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+
+            <!-- 번들 선택 (옵션) -->
+            <?php if (!empty($bundles)): ?>
+            <div class="mb-6 pb-6 border-b border-gray-200 dark:border-zinc-700">
+                <h3 class="text-sm font-medium text-gray-700 dark:text-zinc-300 mb-3"><?= __('booking.select_bundle') ?> (<?= __('common.optional') ?>)</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <?php foreach ($bundles as $bdl): ?>
+                    <label class="bundle-card cursor-pointer">
+                        <input type="radio" name="bundle" value="<?= $bdl['id'] ?>" class="hidden" data-bundle-id="<?= $bdl['id'] ?>">
+                        <div class="bundle-item relative rounded-xl border-2 border-gray-200 dark:border-zinc-700 hover:border-amber-400 dark:hover:border-amber-500 p-3 cursor-pointer transition-all overflow-hidden"
+                             style="<?php if ($bdl['image']): ?>background-image:url('<?= htmlspecialchars($baseUrl . '/' . $bdl['image']) ?>');background-size:cover;background-position:center<?php endif; ?>">
+                            <?php if (!$bdl['image']): ?>
+                            <div class="absolute inset-0 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40"></div>
+                            <?php endif; ?>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                            <div class="absolute top-2 right-2 w-5 h-5 rounded-full border-2 border-white/70 bg-black/20 flex items-center justify-center transition-all shadow-sm z-10 bundle-check">
+                                <svg class="w-3 h-3 text-white hidden bundle-check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </div>
+                            <div class="absolute bottom-0 left-0 right-0 p-2 z-10">
+                                <p class="text-xs font-bold text-white drop-shadow-sm"><?= htmlspecialchars($bdl['name']) ?></p>
+                                <p class="text-[10px] text-white/80 drop-shadow-sm"><?= __('common.bundle') ?></p>
+                            </div>
+                        </div>
+                    </label>
+                    <?php endforeach; ?>
+                </div>
             </div>
             <?php endif; ?>
 
@@ -430,6 +481,59 @@ $seoContext = ['type' => 'sub', 'subpage_title' => __('common.nav.booking')];
             <?php endif; ?>
         </div>
 
+        <!-- Step: 스태프 선택 (옵션) -->
+        <div id="stepStaff" class="step-panel bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6 md:p-8 hidden">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2"><?= __('booking.select_staff') ?></h2>
+            <p class="text-sm text-gray-600 dark:text-zinc-400 mb-6"><?= __('booking.staff_select_guide') ?></p>
+
+            <?php if (empty($staffs)): ?>
+            <div class="text-center py-12">
+                <p class="text-gray-500 dark:text-zinc-400"><?= __('booking.no_staff') ?></p>
+            </div>
+            <?php else: ?>
+            <div class="space-y-3">
+                <!-- 스태프 미선택 옵션 -->
+                <label class="staff-option flex items-center gap-4 p-4 rounded-lg border-2 border-gray-200 dark:border-zinc-700 hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer transition">
+                    <input type="radio" name="staff" value="" class="w-5 h-5" checked>
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-900 dark:text-white"><?= __('common.no_preference') ?></p>
+                        <p class="text-sm text-gray-500 dark:text-zinc-400"><?= __('booking.staff_auto_assign') ?></p>
+                    </div>
+                </label>
+
+                <!-- 스태프 목록 -->
+                <?php foreach ($staffs as $staff): ?>
+                <label class="staff-option flex items-center gap-4 p-4 rounded-lg border-2 border-gray-200 dark:border-zinc-700 hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer transition">
+                    <input type="radio" name="staff" value="<?= (int)$staff['id'] ?>" class="w-5 h-5">
+                    <div class="w-12 h-12 rounded-full shrink-0 bg-gray-300 dark:bg-zinc-700 overflow-hidden">
+                        <?php if ($staff['avatar']): ?>
+                        <img src="<?= htmlspecialchars($baseUrl . '/' . $staff['avatar']) ?>" alt="<?= htmlspecialchars($staff['name']) ?>" class="w-full h-full object-cover">
+                        <?php else: ?>
+                        <div class="w-full h-full flex items-center justify-center text-white bg-blue-500 font-bold"><?= mb_substr($staff['name'], 0, 1) ?></div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-900 dark:text-white"><?= htmlspecialchars($staff['name']) ?></p>
+                        <?php if ((float)$staff['designation_fee'] > 0): ?>
+                        <p class="text-sm text-amber-600 dark:text-amber-400"><?= __('booking.designation_fee') ?> +<?= $currencySymbol ?><?= number_format($staff['designation_fee']) ?></p>
+                        <?php else: ?>
+                        <p class="text-sm text-gray-500 dark:text-zinc-400"><?= __('booking.staff_available') ?></p>
+                        <?php endif; ?>
+                    </div>
+                </label>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+
+            <div class="flex justify-between mt-6">
+                <button type="button" onclick="prevStep()" class="px-6 py-3 border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-zinc-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-700 transition">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> <?= __('common.buttons.previous') ?>
+                </button>
+                <button type="button" onclick="nextStep()" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
+                    <?= __('common.buttons.next') ?> <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+        </div>
 
         <!-- Step: 날짜 & 시간 -->
         <div id="stepDatetime" class="step-panel bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6 md:p-8 hidden">
@@ -504,6 +608,10 @@ $seoContext = ['type' => 'sub', 'subpage_title' => __('common.nav.booking')];
                     <span class="text-gray-600 dark:text-zinc-400"><?= __('booking.service.title') ?></span>
                     <div id="confirmService" class="mt-2 space-y-1"></div>
                 </div>
+                <div id="confirmStaffSection" class="pb-4 border-b dark:border-zinc-600 hidden">
+                    <span class="text-gray-600 dark:text-zinc-400"><?= __('booking.select_staff') ?></span>
+                    <div id="confirmStaff" class="mt-2 font-semibold text-gray-900 dark:text-white">-</div>
+                </div>
                 <div class="flex justify-between items-center pb-4 border-b dark:border-zinc-600">
                     <span class="text-gray-600 dark:text-zinc-400"><?= __('booking.date_label') ?></span>
                     <span id="confirmDate" class="font-semibold text-gray-900 dark:text-white">-</span>
@@ -552,6 +660,27 @@ $seoContext = ['type' => 'sub', 'subpage_title' => __('common.nav.booking')];
             <a href="<?= $baseUrl ?>/" class="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"><?= __('common.nav.home') ?></a>
         </div>
     </div>
+
+<!-- 번들 데이터 (JavaScript에서 사용) -->
+<script>
+window.BUNDLE_DATA = {};
+<?php foreach ($bundles as $bdl): ?>
+    // 번들의 서비스 목록 로드
+    <?php
+    try {
+        $bundleServicesStmt = $pdo->prepare("SELECT bs.service_id FROM {$prefix}bundle_services bs WHERE bs.bundle_id = ? ORDER BY bs.sort_order");
+        $bundleServicesStmt->execute([$bdl['id']]);
+        $bundleServiceIds = [];
+        while ($bs = $bundleServicesStmt->fetch(PDO::FETCH_ASSOC)) {
+            $bundleServiceIds[] = $bs['service_id'];
+        }
+    } catch (PDOException $e) {
+        $bundleServiceIds = [];
+    }
+    ?>
+    window.BUNDLE_DATA['<?= $bdl['id'] ?>'] = <?= json_encode($bundleServiceIds, JSON_UNESCAPED_UNICODE) ?>;
+<?php endforeach; ?>
+</script>
 
 <?php include BASE_PATH . '/resources/views/customer/booking-js.php'; ?>
 <?php endif; ?>

@@ -143,11 +143,24 @@ return [
         'status' => 'Төлөв',
         'booking_date' => 'Огноо & Цаг',
         'service' => 'Үйлчилгээ',
+        'services' => 'Үйлчилгээнүүд',
         'guests' => 'Зочид',
         'total_price' => 'Нийт үнэ',
         'payment_status' => 'Төлбөрийн төлөв',
         'notes' => 'Тусгай хүсэлт',
         'created_at' => 'Захиалга өгсөн огноо',
+        'duration_unit' => 'минут',
+        'back_to_lookup' => 'Захиалга хайх',
+        'payment' => 'Төлбөрийн детайл',
+        'total' => 'Дэд нийт',
+        'discount' => 'Хөнгөлөлт',
+        'points_used' => 'Ашигласан оноо',
+        'final_amount' => 'Эцсийн дүн',
+        'staff' => 'Ажилтан',
+        'designation_fee' => 'Сонгох төлбөр',
+        'cancel_info' => 'Цуцлах дэлгэрэнгүй',
+        'cancelled_at' => 'Цуцлагдсан огноо',
+        'cancel_reason' => 'Цуцлах шалтгаан',
     ],
 
     // Cancel
@@ -168,6 +181,14 @@ return [
         'cancelled' => 'Таны захиалга цуцлагдлаа.',
         'completed' => 'Үйлчилгээ дууслаа.',
         'no_show' => 'Ирээгүй гэж тэмдэглэгдлээ.',
+    ],
+
+    // Payment status
+    'payment' => [
+        'unpaid' => 'Төлөгдөөгүй',
+        'paid' => 'Төлөгдсөн',
+        'partial' => 'Хэсэгчлэн төлөгдсөн',
+        'refunded' => 'Буцаасан',
     ],
 
     // Error messages

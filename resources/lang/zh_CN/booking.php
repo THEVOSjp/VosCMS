@@ -143,11 +143,24 @@ return [
         'status' => '状态',
         'booking_date' => '日期和时间',
         'service' => '服务',
+        'services' => '包含的服务',
         'guests' => '人数',
         'total_price' => '总价',
         'payment_status' => '支付状态',
         'notes' => '特殊要求',
         'created_at' => '预约时间',
+        'duration_unit' => '分',
+        'back_to_lookup' => '预约查询',
+        'payment' => '支付详情',
+        'total' => '小计',
+        'discount' => '折扣',
+        'points_used' => '使用的积分',
+        'final_amount' => '最终金额',
+        'staff' => '员工',
+        'designation_fee' => '指定费用',
+        'cancel_info' => '取消详情',
+        'cancelled_at' => '取消于',
+        'cancel_reason' => '取消原因',
     ],
 
     // Cancel
@@ -168,6 +181,14 @@ return [
         'cancelled' => '您的预约已取消。',
         'completed' => '服务已完成。',
         'no_show' => '标记为未到。',
+    ],
+
+    // Payment status
+    'payment' => [
+        'unpaid' => '未支付',
+        'paid' => '已支付',
+        'partial' => '部分支付',
+        'refunded' => '已退款',
     ],
 
     // Error messages

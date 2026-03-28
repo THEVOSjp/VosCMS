@@ -33,6 +33,7 @@ return [
         'name' => '姓名',
         'name_placeholder' => '王小明',
         'email' => '電子郵件',
+        'email_placeholder' => 'example@email.com',
         'phone' => '電話',
         'phone_placeholder' => '0912-345-678',
         'phone_hint' => '選擇國碼並輸入電話號碼',

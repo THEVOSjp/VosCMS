@@ -143,11 +143,24 @@ return [
         'status' => 'Статус',
         'booking_date' => 'Дата и время',
         'service' => 'Услуга',
+        'services' => 'Услуги',
         'guests' => 'Гости',
         'total_price' => 'Итоговая цена',
         'payment_status' => 'Статус оплаты',
         'notes' => 'Особые пожелания',
         'created_at' => 'Дата создания',
+        'duration_unit' => 'мин',
+        'back_to_lookup' => 'Поиск брони',
+        'payment' => 'Детали оплаты',
+        'total' => 'Промежуточный итог',
+        'discount' => 'Скидка',
+        'points_used' => 'Используемые баллы',
+        'final_amount' => 'Итоговая сумма',
+        'staff' => 'Сотрудник',
+        'designation_fee' => 'Плата за назначение',
+        'cancel_info' => 'Детали отмены',
+        'cancelled_at' => 'Отменено',
+        'cancel_reason' => 'Причина отмены',
     ],
 
     // Cancel
@@ -168,6 +181,14 @@ return [
         'cancelled' => 'Ваше бронирование отменено.',
         'completed' => 'Услуга оказана.',
         'no_show' => 'Отмечено как неявка.',
+    ],
+
+    // Payment status
+    'payment' => [
+        'unpaid' => 'Не оплачено',
+        'paid' => 'Оплачено',
+        'partial' => 'Частично оплачено',
+        'refunded' => 'Возврат средств',
     ],
 
     // Error messages

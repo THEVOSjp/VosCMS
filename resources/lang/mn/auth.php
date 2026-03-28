@@ -33,6 +33,7 @@ return [
         'name' => 'Нэр',
         'name_placeholder' => 'Бат Болд',
         'email' => 'И-мэйл',
+        'email_placeholder' => 'example@email.com',
         'phone' => 'Утас',
         'phone_placeholder' => '9911-2233',
         'phone_hint' => 'Улсын код сонгоод утасны дугаараа оруулна уу',

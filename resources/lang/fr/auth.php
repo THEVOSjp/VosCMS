@@ -33,6 +33,7 @@ return [
         'name' => 'Nom',
         'name_placeholder' => 'Jean Dupont',
         'email' => 'E-mail',
+        'email_placeholder' => 'exemple@email.com',
         'phone' => 'Telephone',
         'phone_placeholder' => '06 12 34 56 78',
         'phone_hint' => 'Selectionnez l\'indicatif pays et entrez votre numero',

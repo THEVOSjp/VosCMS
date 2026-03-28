@@ -33,6 +33,7 @@ return [
         'name' => 'Name',
         'name_placeholder' => 'John Doe',
         'email' => 'Email',
+        'email_placeholder' => 'example@email.com',
         'phone' => 'Phone',
         'phone_placeholder' => '010-1234-5678',
         'phone_hint' => 'Select country code and enter your phone number',

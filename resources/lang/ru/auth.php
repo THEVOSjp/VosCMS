@@ -33,6 +33,7 @@ return [
         'name' => 'Имя',
         'name_placeholder' => 'Иван Иванов',
         'email' => 'Эл. почта',
+        'email_placeholder' => 'example@email.com',
         'phone' => 'Телефон',
         'phone_placeholder' => '+7-999-123-4567',
         'phone_hint' => 'Выберите код страны и введите номер телефона',

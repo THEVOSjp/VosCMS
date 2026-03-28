@@ -33,6 +33,7 @@ return [
         'name' => 'Nombre',
         'name_placeholder' => 'Juan Perez',
         'email' => 'Correo electronico',
+        'email_placeholder' => 'ejemplo@correo.com',
         'phone' => 'Telefono',
         'phone_placeholder' => '+34 612 345 678',
         'phone_hint' => 'Seleccione el codigo de pais e ingrese su numero de telefono',

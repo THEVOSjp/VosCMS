@@ -8,11 +8,12 @@
     const SCHEDULE_ENABLED = <?= ($scheduleEnabled ?? false) ? 'true' : 'false' ?>;
     const SLOT_INTERVAL = <?= $slotInterval ?? 30 ?>;
 
-    // 스텝 순서: 서비스 → 날짜/시간 → 고객정보 → 확인
-    const stepOrder = ['stepService', 'stepDatetime', 'stepInfo', 'stepConfirm'];
+    // 스텝 순서: 서비스 → 스태프 → 날짜/시간 → 고객정보 → 확인
+    const stepOrder = ['stepService', 'stepStaff', 'stepDatetime', 'stepInfo', 'stepConfirm'];
 
     const stepLabels = [
         '<?= __('booking.select_service') ?>',
+        '<?= __('booking.select_staff') ?>',
         '<?= __('booking.select_datetime') ?>',
         '<?= __('booking.enter_info') ?>',
         '<?= __('booking.confirm_info') ?>'
@@ -23,6 +24,7 @@
     // 선택된 값 저장 (다중 서비스)
     const selected = {
         services: [],  // [{id, name, price, duration}, ...]
+        staff_id: null,
         date: '', time: '',
         name: '', phone: '', email: '', notes: ''
     };
@@ -69,6 +71,13 @@
         // 유효성 검사
         if (stepOrder[currentStep] === 'stepService' && selected.services.length === 0) return;
         if (stepOrder[currentStep] === 'stepDatetime' && (!selected.date || !selected.time)) return;
+
+        // 스태프 단계에서 다음
+        if (stepOrder[currentStep] === 'stepStaff') {
+            const staffRadio = document.querySelector('input[name="staff"]:checked');
+            selected.staff_id = staffRadio ? (staffRadio.value || null) : null;
+            console.log('[Booking] Selected staff:', selected.staff_id);
+        }
 
         // 고객정보 스텝에서 다음 → 확인 페이지 업데이트
         if (stepOrder[currentStep] === 'stepInfo') {
@@ -162,6 +171,38 @@
         cb.addEventListener('change', updateServiceSelection);
     });
 
+    // === 번들 선택 ===
+    document.querySelectorAll('.bundle-card input[name="bundle"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const bundleId = this.dataset.bundleId;
+            const serviceIds = window.BUNDLE_DATA && window.BUNDLE_DATA[bundleId] ? window.BUNDLE_DATA[bundleId] : [];
+
+            console.log('[Booking] Bundle selected:', bundleId, 'Services:', serviceIds);
+
+            // 모든 서비스 체크박스 순회
+            document.querySelectorAll('.service-card input[name="service[]"]').forEach(svc => {
+                const isInBundle = serviceIds.includes(svc.value);
+                svc.checked = isInBundle;
+            });
+
+            // 번들 카드의 체크 마크 업데이트
+            document.querySelectorAll('.bundle-card input[name="bundle"]').forEach(radio => {
+                const card = radio.parentElement;
+                const check = card.querySelector('.bundle-check-icon');
+                const isChecked = radio.checked;
+                if (isChecked) {
+                    card.querySelector('.bundle-item').classList.add('border-amber-400', 'dark:border-amber-500');
+                    if (check) check.classList.remove('hidden');
+                } else {
+                    card.querySelector('.bundle-item').classList.remove('border-amber-400', 'dark:border-amber-500');
+                    if (check) check.classList.add('hidden');
+                }
+            });
+
+            updateServiceSelection();
+        });
+    });
+
     // === 카테고리 필터 ===
     let bkActiveCat = '';
     const bkCatFilter = document.getElementById('bkCatFilter');
@@ -205,7 +246,7 @@
         const payload = {
             action: 'get_available_slots',
             date: selected.date,
-            staff_id: null,
+            staff_id: selected.staff_id || null,
             total_duration: totalDur
         };
 
@@ -283,6 +324,20 @@
             cs.innerHTML = html;
         }
 
+        // 스태프 정보
+        const staffSection = document.getElementById('confirmStaffSection');
+        const staffEl = document.getElementById('confirmStaff');
+        if (staffSection && staffEl && selected.staff_id) {
+            staffSection.classList.remove('hidden');
+            const staffRadio = document.querySelector('input[name="staff"][value="' + selected.staff_id + '"]');
+            if (staffRadio && staffRadio.parentElement) {
+                const staffName = staffRadio.parentElement.textContent.split('\n')[0].trim();
+                staffEl.textContent = staffName;
+            }
+        } else if (staffSection) {
+            staffSection.classList.add('hidden');
+        }
+
         const cd = document.getElementById('confirmDate');
         if (cd) cd.textContent = selected.date;
 
@@ -321,6 +376,7 @@
 
         const payload = {
             service_ids: selected.services.map(s => s.id),
+            staff_id: selected.staff_id || null,
             date: selected.date,
             time: selected.time,
             customer_name: selected.name,

@@ -33,6 +33,7 @@ return [
         'name' => '姓名',
         'name_placeholder' => '张三',
         'email' => '邮箱',
+        'email_placeholder' => 'example@email.com',
         'phone' => '电话',
         'phone_placeholder' => '138-0000-0000',
         'phone_hint' => '选择国家代码并输入电话号码',

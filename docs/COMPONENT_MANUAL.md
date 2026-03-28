@@ -8,14 +8,15 @@
 
 1. [UI 컴포넌트](#1-ui-컴포넌트)
 2. [번역 함수](#2-번역-함수)
-3. [경로 함수](#3-경로-함수)
-4. [인증 함수](#4-인증-함수)
-5. [데이터베이스 함수](#5-데이터베이스-함수)
-6. [유효성 검사 함수](#6-유효성-검사-함수)
-7. [암호화 함수](#7-암호화-함수)
-8. [로깅 함수](#8-로깅-함수)
-9. [유틸리티 함수](#9-유틸리티-함수)
-10. [클래스 레퍼런스](#10-클래스-레퍼런스)
+3. [포맷팅 함수](#3-포맷팅-함수)
+4. [경로 함수](#4-경로-함수)
+5. [인증 함수](#5-인증-함수)
+6. [데이터베이스 함수](#6-데이터베이스-함수)
+7. [유효성 검사 함수](#7-유효성-검사-함수)
+8. [암호화 함수](#8-암호화-함수)
+9. [로깅 함수](#9-로깅-함수)
+10. [유틸리티 함수](#10-유틸리티-함수)
+11. [클래스 레퍼런스](#11-클래스-레퍼런스)
 
 ---
 
@@ -387,7 +388,158 @@ $tagline = get_site_tagline();
 
 ---
 
-## 3. 경로 함수
+## 3. 포맷팅 함수
+
+### 3.1 `formatReservationDate()` - 다국어 날짜 포맷팅
+
+| 항목 | 내용 |
+|------|------|
+| **함수명** | `formatReservationDate($dateString, $locale)` |
+| **설명** | 날짜를 로케일에 맞게 포맷팅 (13개 언어 지원) |
+| **파일** | `resources/views/customer/booking/detail.php` (라인 44-95) |
+| **반환값** | `string` |
+
+#### 기능
+
+- **13개 언어 자동 포맷팅**: ko, en, ja, zh_CN, zh_TW, de, es, fr, id, mn, ru, tr, vi
+- **현재 로케일 자동 감지**: 파라미터 생략 시 현재 로케일 사용
+- **날짜 구성 요소**: 년/월/일 + 요일명 (현지화)
+- **폴백 처리**: 미지원 로케일은 영어(en) 형식으로 자동 전환
+
+#### 지원하는 날짜 형식
+
+| 언어 | 형식 | 예시 |
+|------|------|------|
+| **한국어(ko)** | `YYYY년 M월 D일 (요일)` | 2026년 3월 30일 (월) |
+| **일본어(ja)** | `YYYY年M月D日 (曜日)` | 2026年3月30日 (月) |
+| **영어(en)** | `Mon D, YYYY (Dayname)` | Mar 30, 2026 (Mon) |
+| **중국어 간체(zh_CN)** | `YYYY年M月D日 (曜日)` | 2026年3月30日 (一) |
+| **중국어 번체(zh_TW)** | `YYYY年M月D日 (曜日)` | 2026年3月30日 (一) |
+| **독일어(de)** | `D. Monthname YYYY (Dayname)` | 30. März 2026 (Mo) |
+| **스페인어(es)** | `D monthname YYYY (Dayname)` | 30 marzo 2026 (Lun) |
+| **프랑스어(fr)** | `D monthname YYYY (Dayname)` | 30 mars 2026 (Lun) |
+| **인도네시아어(id)** | `D Monthname YYYY (Dayname)` | 30 Maret 2026 (Sen) |
+| **몽골어(mn)** | `YYYY оны M сарын D (요일)` | 2026 оны 3 сарын 30 (Дав) |
+| **러시아어(ru)** | `D monthname YYYY (Dayname)` | 30 марта 2026 (Пн) |
+| **터키어(tr)** | `D Monthname YYYY (Dayname)` | 30 Mart 2026 (Pzt) |
+| **베트남어(vi)** | `Ngày D tháng M năm YYYY (Dayname)` | Ngày 30 tháng 3 năm 2026 (T2) |
+
+#### 사용법
+
+```php
+<?php
+// 현재 로케일 사용 (권장)
+$dateStr = formatReservationDate('2026-03-30', $currentLocale);
+// 출력 (로케일이 'ko'인 경우): "2026년 3월 30일 (월)"
+
+// 특정 로케일 지정
+$dateStr = formatReservationDate('2026-03-30', 'ja');
+// 출력: "2026年3月30日 (月)"
+
+// 영어
+$dateStr = formatReservationDate('2026-03-30', 'en');
+// 출력: "Mar 30, 2026 (Mon)"
+
+// 예약 상세 페이지에서 사용
+<p class="text-lg font-semibold">
+    <?= formatReservationDate($reservation['reservation_date'], $currentLocale) ?>
+</p>
+?>
+```
+
+#### 파라미터
+
+| 파라미터 | 타입 | 필수 | 설명 |
+|---------|------|------|------|
+| `$dateString` | string | O | 날짜 문자열 (YYYY-MM-DD 형식) |
+| `$locale` | string | O | 로케일 코드 (ko, en, ja, 등) |
+
+#### 반환값
+
+| 경우 | 반환값 | 예시 |
+|------|--------|------|
+| 유효한 날짜 + 지원 로케일 | 포맷된 날짜 | "2026년 3월 30일 (월)" |
+| 유효한 날짜 + 미지원 로케일 | 영어 형식 | "Mar 30, 2026 (Mon)" |
+| 유효하지 않은 날짜 | 공문자열 `''` | "" |
+
+#### 내부 구조
+
+**배열 기반 다국어 처리:**
+- 요일명 배열 (`dayNamesMap`) - 각 언어별 요일 약자
+- 월명 배열 (`monthNamesMap`) - 각 언어별 월명
+- switch 문으로 언어별 포맷팅 로직 분리
+
+**예시:**
+```php
+$dayNamesMap = [
+    'ko' => ['일', '월', '화', '수', '목', '금', '토'],
+    'en' => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    'ja' => ['日', '月', '火', '水', '木', '金', '土'],
+    // ... 나머지 10개 언어
+];
+```
+
+#### 통합 예제
+
+**예약 상세 페이지:**
+```php
+<?php
+// 예약 데이터 로드
+$reservation = $pdo->query("SELECT * FROM rzx_reservations WHERE id = ?")
+    ->fetch(PDO::FETCH_ASSOC);
+
+$currentLocale = current_locale();  // 현재 로케일 (ko, en, ja 등)
+
+// 날짜 포맷팅
+$formattedDate = formatReservationDate($reservation['reservation_date'], $currentLocale);
+?>
+
+<div class="booking-info">
+    <h2><?= __('booking.detail.title') ?></h2>
+
+    <!-- 예약 날짜 (다국어 적용) -->
+    <p class="date">
+        <?= formatReservationDate($reservation['reservation_date'], $currentLocale) ?>
+    </p>
+
+    <!-- 시간 정보 -->
+    <p class="time">
+        <?= date('H:i', strtotime($reservation['start_time'])) ?> ~
+        <?= date('H:i', strtotime($reservation['end_time'])) ?>
+    </p>
+</div>
+```
+
+#### 언어별 출력 예시
+
+동일한 날짜 `2026-03-30`을 다양한 언어로 표시:
+
+```
+한국어:     2026년 3월 30일 (월)
+영어:       Mar 30, 2026 (Mon)
+일본어:     2026年3月30日 (月)
+중국어:     2026年3月30日 (一)
+독일어:     30. März 2026 (Mo)
+스페인어:   30 marzo 2026 (Lun)
+프랑스어:   30 mars 2026 (Lun)
+```
+
+#### 주의사항
+
+- 입력 형식은 반드시 `YYYY-MM-DD` (ISO 8601)
+- 유효하지 않은 날짜는 빈 문자열 반환
+- 로케일 코드는 소문자 (예: 'en', 'ja')
+- 월과 일 앞의 0은 정수로 변환되어 제거 (3월 → `3월`, 09일 → `9일`)
+
+#### 관련 함수
+
+- `date()` - PHP 내장 함수로 기본 형식 제공
+- `current_locale()` - 현재 로케일 취득
+- `__()` - 다국어 번역 (라벨용)
+
+---
+
+## 4. 경로 함수
 
 ### 3.1 `base_path()`
 

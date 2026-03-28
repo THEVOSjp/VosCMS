@@ -60,7 +60,7 @@ if (empty($_skinCfg)) {
     }
 }
 $_showTitle = ($_skinCfg['show_title'] ?? '1') !== '0';
-$_contentWidth = $_skinCfg['content_width'] ?? 'max-w-5xl';
+$_contentWidth = $_skinCfg['content_width'] ?? 'max-w-7xl';
 $_contentBg = $_skinCfg['content_bg'] ?? 'transparent';
 $_showBreadcrumb = ($_skinCfg['show_breadcrumb'] ?? '0') !== '0';
 $_primaryColor = $_skinCfg['primary_color'] ?? '';
@@ -161,7 +161,7 @@ if ($_primaryColor) echo '<style>:root { --page-primary: ' . htmlspecialchars($_
 
 <?php elseif ($pageType === 'widget' || $pageType === 'system'): ?>
     <!-- 위젯 페이지: WidgetRenderer로 렌더링 -->
-    <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 py-6">
+    <div class="<?= in_array($pageSlug, ['staff', 'booking', 'lookup']) ? '' : $_contentWidth ?> <?= in_array($pageSlug, ['staff', 'booking', 'lookup']) ? '' : 'mx-auto' ?> px-4 sm:px-6 py-6">
         <?php if ($_showBreadcrumb && !$_hasTitleBg): ?>
         <nav class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
             <a href="<?= $config['app_url'] ?? '' ?>/" class="hover:text-blue-600"><?= __('common.home') ?? '홈' ?></a>

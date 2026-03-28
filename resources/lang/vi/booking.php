@@ -143,11 +143,24 @@ return [
         'status' => 'Trạng thái',
         'booking_date' => 'Ngày & Giờ',
         'service' => 'Dịch vụ',
+        'services' => 'Dịch vụ',
         'guests' => 'Số khách',
         'total_price' => 'Tổng tiền',
         'payment_status' => 'Trạng thái thanh toán',
         'notes' => 'Yêu cầu đặc biệt',
         'created_at' => 'Ngày đặt',
+        'duration_unit' => 'phút',
+        'back_to_lookup' => 'Tìm kiếm đặt chỗ',
+        'payment' => 'Chi tiết thanh toán',
+        'total' => 'Tổng phụ',
+        'discount' => 'Giảm giá',
+        'points_used' => 'Điểm được sử dụng',
+        'final_amount' => 'Số tiền cuối cùng',
+        'staff' => 'Nhân viên',
+        'designation_fee' => 'Phí chỉ định',
+        'cancel_info' => 'Chi tiết hủy',
+        'cancelled_at' => 'Bị hủy lúc',
+        'cancel_reason' => 'Lý do hủy',
     ],
 
     // Cancel
@@ -168,6 +181,14 @@ return [
         'cancelled' => 'Đặt chỗ của bạn đã bị hủy.',
         'completed' => 'Dịch vụ đã hoàn thành.',
         'no_show' => 'Đánh dấu là không đến.',
+    ],
+
+    // Payment status
+    'payment' => [
+        'unpaid' => 'Chưa thanh toán',
+        'paid' => 'Đã thanh toán',
+        'partial' => 'Thanh toán một phần',
+        'refunded' => 'Hoàn tiền',
     ],
 
     // Error messages

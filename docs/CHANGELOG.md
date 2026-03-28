@@ -4,6 +4,43 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [1.18.0] - 2026-03-29
+
+### Added
+- **다국어 날짜 포맷팅 함수** — `formatReservationDate($dateString, $locale)`
+  - 13개 언어 지원 (ko, en, ja, zh_CN, zh_TW, de, es, fr, id, mn, ru, tr, vi)
+  - 예약 상세 페이지에서 날짜/요일 자동 다국어 표시
+  - 폴백: 미지원 로케일 → 영어 형식
+
+### Changed
+- **예약 상세 페이지 다국어 처리**
+  - 서비스명, 스태프명, 번들명 다국어 적용 (DB translations 테이블 기반)
+  - 예약 날짜 포맷팅 함수 통합
+  - 결제 상태 라벨 다국어 처리 (payment_status 필드)
+- **결제 상태 다국어 지원**
+  - 모든 언어 파일(11개)에 `payment` 섹션 추가
+  - unpaid(미결제), paid(결제완료), partial(부분결제), refunded(환불) 번역
+
+### Fixed
+- 예약 상세 페이지: 다국어 미적용되던 스태프명, 서비스명 정상 표시
+- 결제 상태 라벨: 한국어로만 표시되던 문제 해결
+- `_tr()` 함수 기반 다국어 처리로 통일
+
+### Layout & UI
+- **페이지 폭 통일** (max-w-5xl → max-w-7xl)
+  - 게시판 (list, read, write): max-w-5xl → max-w-7xl
+  - 외부 페이지 (page.php): 기본값 및 DB 설정값 업데이트
+  - 예약 상세/예약 조회/스태프 페이지: DB 설정값 업데이트
+  - 결과: 모든 페이지 폭이 예약하기 페이지와 동일하게 통일
+
+### Documentation
+- COMPONENT_MANUAL.md에 `formatReservationDate()` 함수 상세 문서 추가
+  - 지원 언어 및 형식 테이블
+  - 사용 예제 및 내부 구조
+  - 주의사항 및 관련 함수
+
+---
+
 ## [1.16.0] - 2026-03-23
 
 ### Added

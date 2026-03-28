@@ -16,10 +16,19 @@
                            placeholder="<?= __('auth.register.name_placeholder') ?>">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1"><?= __('auth.register.phone') ?> <span class="text-red-500">*</span></label>
-                    <input type="tel" id="bwCustPhone" required value="<?= $isLoggedIn ? htmlspecialchars($currentUser['phone'] ?? '') : '' ?>"
-                           class="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
-                           placeholder="<?= __('auth.register.phone_placeholder') ?>">
+                    <?php
+                    $phoneInputConfig = [
+                        'name' => 'bwCustPhone',
+                        'id' => 'bwCustPhone',
+                        'label' => __('auth.register.phone'),
+                        'value' => $isLoggedIn ? htmlspecialchars($currentUser['phone'] ?? '') : '',
+                        'phone_number' => $isLoggedIn ? htmlspecialchars($currentUser['phone'] ?? '') : '',
+                        'required' => true,
+                        'placeholder' => __('auth.register.phone_placeholder'),
+                        'show_label' => true,
+                    ];
+                    include BASE_PATH . '/resources/views/components/phone-input.php';
+                    ?>
                 </div>
             </div>
             <div>
@@ -84,12 +93,60 @@
     </div>
 
     <!-- 완료 -->
-    <div id="bwStepDone" class="bw-step-panel bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-8 hidden text-center">
-        <div class="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
-            <svg class="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+    <div id="bwStepDone" class="bw-step-panel bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-8 hidden">
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
+                <svg class="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2"><?= __('booking.success') ?></h2>
+            <p class="text-gray-600 dark:text-zinc-400 mb-2"><?= __('booking.success_desc') ?></p>
+            <p class="text-lg font-mono font-bold text-blue-600 dark:text-blue-400 mb-6" id="bwDoneCode"></p>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2"><?= __('booking.success') ?></h2>
-        <p class="text-gray-600 dark:text-zinc-400 mb-2"><?= __('booking.success_desc') ?></p>
-        <p class="text-lg font-mono font-bold text-blue-600 dark:text-blue-400 mb-6" id="bwDoneCode"></p>
-        <a href="<?= $baseUrl ?>/" class="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"><?= __('common.nav.home') ?></a>
+
+        <!-- 예약 정보 -->
+        <div class="bg-gray-50 dark:bg-zinc-700/50 rounded-xl p-6 mb-8 text-left space-y-4">
+            <!-- 서비스 -->
+            <div class="pb-4 border-b dark:border-zinc-600">
+                <p class="text-sm font-medium text-gray-600 dark:text-zinc-400 mb-2"><?= __('booking.service.title') ?></p>
+                <div id="bwDoneService" class="space-y-1"></div>
+            </div>
+
+            <!-- 날짜 & 시간 -->
+            <div class="grid grid-cols-2 gap-4 pb-4 border-b dark:border-zinc-600">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-zinc-400 mb-1"><?= __('booking.date_label') ?></p>
+                    <p id="bwDoneDate" class="font-semibold text-gray-900 dark:text-white">-</p>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-zinc-400 mb-1"><?= __('booking.time_label') ?></p>
+                    <p id="bwDoneTime" class="font-semibold text-gray-900 dark:text-white">-</p>
+                </div>
+            </div>
+
+            <!-- 고객 정보 -->
+            <div class="pb-4 border-b dark:border-zinc-600">
+                <p class="text-sm font-medium text-gray-600 dark:text-zinc-400 mb-1"><?= __('booking.customer') ?></p>
+                <p id="bwDoneName" class="font-semibold text-gray-900 dark:text-white">-</p>
+            </div>
+
+            <!-- 연락처 -->
+            <div class="pb-4 border-b dark:border-zinc-600">
+                <p class="text-sm font-medium text-gray-600 dark:text-zinc-400 mb-1"><?= __('booking.phone') ?></p>
+                <p id="bwDonePhone" class="font-semibold text-gray-900 dark:text-white">-</p>
+            </div>
+
+            <!-- 가격 -->
+            <?php if ($priceDisplay === 'show'): ?>
+            <div class="pt-2">
+                <div class="flex justify-between items-center">
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white"><?= __('booking.total_price') ?></p>
+                    <p id="bwDonePrice" class="text-2xl font-bold text-blue-600 dark:text-blue-400">-</p>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+
+        <div class="text-center">
+            <a href="<?= $baseUrl ?>/" class="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"><?= __('common.nav.home') ?></a>
+        </div>
     </div>

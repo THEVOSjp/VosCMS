@@ -143,11 +143,25 @@ return [
         'status' => '予約状況',
         'booking_date' => '予約日時',
         'service' => 'サービス',
+        'services' => '含まれるサービス',
+        'bundle' => 'セット商品',
         'guests' => '人数',
         'total_price' => 'お支払い金額',
         'payment_status' => '支払い状況',
         'notes' => 'ご要望',
         'created_at' => '予約日時',
+        'duration_unit' => '分',
+        'back_to_lookup' => '予約照会',
+        'payment' => '支払い情報',
+        'total' => '小計',
+        'discount' => '割引',
+        'points_used' => 'ポイント使用',
+        'final_amount' => '最終支払い金額',
+        'staff' => '担当スタッフ',
+        'designation_fee' => '指名料',
+        'cancel_info' => 'キャンセル情報',
+        'cancelled_at' => 'キャンセル日時',
+        'cancel_reason' => 'キャンセル理由',
     ],
 
     // 予約キャンセル
@@ -168,6 +182,14 @@ return [
         'cancelled' => 'ご予約がキャンセルされました。',
         'completed' => 'ご利用が完了しました。',
         'no_show' => 'ノーショーとして処理されました。',
+    ],
+
+    // 支払い状況
+    'payment' => [
+        'unpaid' => '未払い',
+        'paid' => '支払い完了',
+        'partial' => '部分支払い',
+        'refunded' => '返金',
     ],
 
     // エラーメッセージ

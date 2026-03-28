@@ -33,6 +33,7 @@ return [
         'name' => 'Ad Soyad',
         'name_placeholder' => 'Ahmet Yılmaz',
         'email' => 'E-posta',
+        'email_placeholder' => 'ornek@email.com',
         'phone' => 'Telefon',
         'phone_placeholder' => '0532 123 4567',
         'phone_hint' => 'Ülke kodunu seçin ve telefon numaranızı girin',

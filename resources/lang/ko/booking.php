@@ -143,6 +143,8 @@ return [
         'status' => '예약 상태',
         'booking_date' => '예약 일시',
         'service' => '서비스',
+        'services' => '포함 서비스',
+        'bundle' => '번들 상품',
         'guests' => '인원',
         'total_price' => '결제 금액',
         'payment_status' => '결제 상태',
@@ -164,6 +166,7 @@ return [
         'cancelled_at' => '취소일시',
         'cancel_reason' => '취소 사유',
         'back_to_lookup' => '예약 조회',
+        'duration_unit' => '분',
     ],
     // 결제 상태
     'payment' => [

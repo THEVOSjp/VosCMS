@@ -143,11 +143,25 @@ return [
         'status' => 'Status',
         'booking_date' => 'Date & Time',
         'service' => 'Service',
+        'services' => 'Services',
+        'bundle' => 'Bundle Package',
         'guests' => 'Guests',
         'total_price' => 'Total Price',
         'payment_status' => 'Payment Status',
         'notes' => 'Special Requests',
         'created_at' => 'Booked On',
+        'duration_unit' => 'min',
+        'back_to_lookup' => 'Booking Lookup',
+        'payment' => 'Payment Details',
+        'total' => 'Subtotal',
+        'discount' => 'Discount',
+        'points_used' => 'Points Used',
+        'final_amount' => 'Final Amount',
+        'staff' => 'Staff',
+        'designation_fee' => 'Designation Fee',
+        'cancel_info' => 'Cancellation Details',
+        'cancelled_at' => 'Cancelled On',
+        'cancel_reason' => 'Cancellation Reason',
     ],
 
     // Cancel
@@ -168,6 +182,14 @@ return [
         'cancelled' => 'Your booking has been cancelled.',
         'completed' => 'Service completed.',
         'no_show' => 'Marked as no-show.',
+    ],
+
+    // Payment status
+    'payment' => [
+        'unpaid' => 'Unpaid',
+        'paid' => 'Paid',
+        'partial' => 'Partial',
+        'refunded' => 'Refunded',
     ],
 
     // Error messages

@@ -35,6 +35,7 @@ return [
         'furigana' => 'ふりがな',
         'furigana_placeholder' => 'やまだたろう',
         'email' => 'メールアドレス',
+        'email_placeholder' => 'example@email.com',
         'phone' => '電話番号',
         'phone_placeholder' => '090-1234-5678',
         'phone_hint' => '国コードを選択して電話番号を入力してください',

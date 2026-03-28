@@ -143,11 +143,24 @@ return [
         'status' => 'Statut',
         'booking_date' => 'Date et heure',
         'service' => 'Service',
+        'services' => 'Services',
         'guests' => 'Personnes',
         'total_price' => 'Prix total',
         'payment_status' => 'Statut du paiement',
         'notes' => 'Demandes speciales',
         'created_at' => 'Reserve le',
+        'duration_unit' => 'min',
+        'back_to_lookup' => 'Recherche de reservation',
+        'payment' => 'Details du paiement',
+        'total' => 'Sous-total',
+        'discount' => 'Remise',
+        'points_used' => 'Points utilises',
+        'final_amount' => 'Montant final',
+        'staff' => 'Personnel',
+        'designation_fee' => 'Frais de designation',
+        'cancel_info' => 'Details d\'annulation',
+        'cancelled_at' => 'Annule le',
+        'cancel_reason' => 'Motif d\'annulation',
     ],
 
     // Cancel
@@ -168,6 +181,14 @@ return [
         'cancelled' => 'Votre reservation a ete annulee.',
         'completed' => 'Service termine.',
         'no_show' => 'Marque comme absent.',
+    ],
+
+    // Payment status
+    'payment' => [
+        'unpaid' => 'Non payé',
+        'paid' => 'Payé',
+        'partial' => 'Partiellement payé',
+        'refunded' => 'Remboursé',
     ],
 
     // Error messages

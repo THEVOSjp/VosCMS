@@ -143,11 +143,24 @@ return [
         'status' => 'Durum',
         'booking_date' => 'Tarih ve Saat',
         'service' => 'Hizmet',
+        'services' => 'Hizmetler',
         'guests' => 'Kişi Sayısı',
         'total_price' => 'Toplam Fiyat',
         'payment_status' => 'Ödeme Durumu',
         'notes' => 'Özel İstekler',
         'created_at' => 'Rezervasyon Tarihi',
+        'duration_unit' => 'dakika',
+        'back_to_lookup' => 'Rezervasyon Arama',
+        'payment' => 'Ödeme Detayları',
+        'total' => 'Ara Toplam',
+        'discount' => 'İndirim',
+        'points_used' => 'Kullanılan Puanlar',
+        'final_amount' => 'Son Tutar',
+        'staff' => 'Personel',
+        'designation_fee' => 'Atama Ücreti',
+        'cancel_info' => 'İptal Detayları',
+        'cancelled_at' => 'İptal Tarihi',
+        'cancel_reason' => 'İptal Nedeni',
     ],
 
     // Cancel
@@ -168,6 +181,14 @@ return [
         'cancelled' => 'Rezervasyonunuz iptal edildi.',
         'completed' => 'Hizmet tamamlandı.',
         'no_show' => 'Gelmedi olarak işaretlendi.',
+    ],
+
+    // Payment status
+    'payment' => [
+        'unpaid' => 'Ödenmemiş',
+        'paid' => 'Ödendi',
+        'partial' => 'Kısmen ödenmiş',
+        'refunded' => 'İade edildi',
     ],
 
     // Error messages

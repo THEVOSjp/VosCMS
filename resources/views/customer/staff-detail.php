@@ -201,7 +201,7 @@ $days = $dayLabels[$currentLocale] ?? $dayLabels['en'];
 
 ?>
 
-    <main class="max-w-4xl mx-auto px-4 py-6">
+    <main class="max-w-7xl mx-auto px-4 py-6">
         <!-- Breadcrumb -->
         <nav class="text-sm text-gray-500 dark:text-zinc-400 mb-4">
             <a href="<?= $baseUrl ?>/staff" class="hover:text-blue-600 dark:hover:text-blue-400"><?= __('staff_page.back_to_list') ?></a>
@@ -290,14 +290,14 @@ $days = $dayLabels[$currentLocale] ?? $dayLabels['en'];
             if (!$_bundleName) $_bundleName = __('bundles.default_name') ?? '세트 서비스';
             ?>
             <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4"><?= __('bundles.recommended') ?? '추천' ?> <?= htmlspecialchars($_bundleName) ?></h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="sdBundleList">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="sdBundleList">
                 <?php foreach ($staffBundles as $bdl):
                     $bdlPrice = (float)$bdl['bundle_price'];
                     $origPrice = (float)$bdl['original_total'];
                     $discPct = $origPrice > 0 && $bdlPrice < $origPrice ? round((1 - $bdlPrice / $origPrice) * 100) : 0;
                     $svcIdList = $bdl['service_id_list'] ?? '';
                 ?>
-                <?php $bdlImage = $bdl['image'] ?? ''; if ($bdlImage && !str_starts_with($bdlImage, 'http')) $bdlImage = $baseUrl . $bdlImage; ?>
+                <?php $bdlImage = $bdl['image'] ?? ''; if ($bdlImage && !str_starts_with($bdlImage, 'http')) $bdlImage = $baseUrl . '/' . ltrim($bdlImage, '/'); ?>
                 <div class="sd-bundle-card cursor-pointer" data-bundle-id="<?= htmlspecialchars($bdl['id']) ?>" data-services="<?= htmlspecialchars($svcIdList) ?>" data-price="<?= $bdlPrice ?>" data-duration="<?= (int)$bdl['total_duration'] ?>" data-name="<?= htmlspecialchars($bdl['name']) ?>">
                     <div class="sd-bundle-inner relative rounded-xl border-2 border-gray-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-600 overflow-hidden transition-all bg-white dark:bg-zinc-800 hover:shadow-md">
                         <?php if ($bdlImage): ?>
@@ -398,7 +398,7 @@ $days = $dayLabels[$currentLocale] ?? $dayLabels['en'];
             </div>
             <?php endif; ?>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <?php foreach ($staffServices as $svc):
                     $svcName = htmlspecialchars($svc['name']);
                     $svcPrice = (float)$svc['price'];

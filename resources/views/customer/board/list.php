@@ -130,7 +130,7 @@ $startNo = $totalCount - $offset;
         .board-skin-wrap .skin-primary-text { color: var(--skin-primary); }
     </style>
 
-    <div class="board-skin-wrap max-w-5xl mx-auto px-4 sm:px-6 py-6">
+    <div class="board-skin-wrap max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <!-- 게시판 제목 (배경 이미지/동영상 지원) -->
         <?php require_once BASE_PATH . '/rzxlib/Core/Helpers/admin-icons.php'; ?>
         <?php if ($_hasTitleBg): ?>

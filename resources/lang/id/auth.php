@@ -33,6 +33,7 @@ return [
         'name' => 'Nama',
         'name_placeholder' => 'John Doe',
         'email' => 'Email',
+        'email_placeholder' => 'contoh@email.com',
         'phone' => 'Telepon',
         'phone_placeholder' => '081-234-567-890',
         'phone_hint' => 'Pilih kode negara dan masukkan nomor telepon Anda',

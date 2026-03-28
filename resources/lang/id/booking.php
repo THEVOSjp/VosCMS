@@ -143,11 +143,24 @@ return [
         'status' => 'Status',
         'booking_date' => 'Tanggal & Waktu',
         'service' => 'Layanan',
+        'services' => 'Layanan',
         'guests' => 'Tamu',
         'total_price' => 'Total Harga',
         'payment_status' => 'Status Pembayaran',
         'notes' => 'Permintaan Khusus',
         'created_at' => 'Dipesan Pada',
+        'duration_unit' => 'menit',
+        'back_to_lookup' => 'Pencarian Pemesanan',
+        'payment' => 'Detail Pembayaran',
+        'total' => 'Subtotal',
+        'discount' => 'Diskon',
+        'points_used' => 'Poin yang Digunakan',
+        'final_amount' => 'Jumlah Akhir',
+        'staff' => 'Staf',
+        'designation_fee' => 'Biaya Penunjukan',
+        'cancel_info' => 'Detail Pembatalan',
+        'cancelled_at' => 'Dibatalkan Pada',
+        'cancel_reason' => 'Alasan Pembatalan',
     ],
 
     // Cancel
@@ -168,6 +181,14 @@ return [
         'cancelled' => 'Pemesanan Anda telah dibatalkan.',
         'completed' => 'Layanan selesai.',
         'no_show' => 'Ditandai sebagai tidak hadir.',
+    ],
+
+    // Payment status
+    'payment' => [
+        'unpaid' => 'Belum dibayar',
+        'paid' => 'Sudah dibayar',
+        'partial' => 'Dibayar sebagian',
+        'refunded' => 'Dikembalikan',
     ],
 
     // Error messages

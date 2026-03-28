@@ -33,6 +33,7 @@ return [
         'name' => 'Họ tên',
         'name_placeholder' => 'Nguyễn Văn A',
         'email' => 'Email',
+        'email_placeholder' => 'example@email.com',
         'phone' => 'Số điện thoại',
         'phone_placeholder' => '0912-345-678',
         'phone_hint' => 'Chọn mã quốc gia và nhập số điện thoại',
