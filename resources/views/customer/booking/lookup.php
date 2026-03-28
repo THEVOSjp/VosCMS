@@ -76,11 +76,28 @@ function getStatusBadgeClass($status) {
     return $classes[$status] ?? $classes['pending'];
 }
 
+// 페이지 설정 로드 (page_config_lookup)
+$_prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+$_pgCfgKey = 'page_config_lookup';
+$_pgCfgStmt = $pdo->prepare("SELECT `value` FROM {$_prefix}settings WHERE `key` = ?");
+$_pgCfgStmt->execute([$_pgCfgKey]);
+$_pgCfg = json_decode($_pgCfgStmt->fetchColumn() ?: '{}', true) ?: [];
+$_skinCfg = $_pgCfg['skin_config'] ?? [];
+
+// 전체 스킨 설정 폴백
+if (empty($_skinCfg)) {
+    $_globalSkinKey = 'skin_detail_page_' . ($siteSettings['site_page_skin'] ?? 'default');
+    if (isset($siteSettings[$_globalSkinKey])) {
+        $_skinCfg = json_decode($siteSettings[$_globalSkinKey], true) ?: [];
+    }
+}
+$_contentWidth = $_skinCfg['content_width'] ?? 'max-w-2xl';
+
 $seoContext = ['type' => 'sub', 'subpage_title' => __('booking.lookup.title')];
 ?>
 
     <div class="min-h-screen py-12">
-        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 lg:px-8">
             <!-- 페이지 제목 -->
             <div class="text-center mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2"><?php echo __('booking.lookup.title'); ?></h1>
