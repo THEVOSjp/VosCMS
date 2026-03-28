@@ -311,6 +311,30 @@ if (!function_exists('getBookingSvcTranslated')) {
     }
 }
 
+// 페이지 설정 로드 (page_config_booking)
+$_prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+$_pgCfgKey = 'page_config_booking';
+$_pgCfgStmt = $pdo->prepare("SELECT `value` FROM {$_prefix}settings WHERE `key` = ?");
+$_pgCfgStmt->execute([$_pgCfgKey]);
+$_pgCfg = json_decode($_pgCfgStmt->fetchColumn() ?: '{}', true) ?: [];
+$_skinCfg = $_pgCfg['skin_config'] ?? [];
+
+// 전체 스킨 설정 폴백
+if (empty($_skinCfg)) {
+    $_globalSkinKey = 'skin_detail_page_' . ($siteSettings['site_page_skin'] ?? 'default');
+    if (isset($siteSettings[$_globalSkinKey])) {
+        $_skinCfg = json_decode($siteSettings[$_globalSkinKey], true) ?: [];
+    }
+}
+$_contentWidth = $_skinCfg['content_width'] ?? 'max-w-7xl';
+
+// 관리 아이콘 (설정 + 편집)
+require_once BASE_PATH . '/rzxlib/Core/Helpers/admin-icons.php';
+$_settingsUrl = ($config['app_url'] ?? '') . '/booking/settings';
+$_adminPath = $config['admin_path'] ?? 'theadmin';
+$_editUrl = ($config['app_url'] ?? '') . '/' . $_adminPath . '/site/pages/widget-builder?slug=booking';
+$_adminIcons = rzx_admin_icons($_settingsUrl, $_editUrl);
+
 // 스텝 정의: 서비스 → 스태프 → 날짜/시간 → 고객정보 → 확인 (5단계)
 $totalSteps = 5;
 
@@ -335,9 +359,9 @@ $seoContext = ['type' => 'sub', 'subpage_title' => __('common.nav.booking')];
 <?php if ($_bookingWidgetRenderer && $_bookingWidgetRenderer->hasWidgets()): ?>
 <?= $_bookingWidgetRenderer->renderAll() ?>
 <?php else: ?>
-    <div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="<?= $_contentWidth ?> mx-auto px-4 py-8">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2"><?= __('common.nav.booking') ?></h1>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2 inline-flex items-center gap-2"><?= __('common.nav.booking') ?> <?= $_adminIcons ?></h1>
             <p class="text-gray-600 dark:text-zinc-400"><?= __('booking.select_service_datetime') ?></p>
             <p class="text-sm text-gray-500 dark:text-zinc-500 mt-1"><?= __('booking.staff_designation_guide') ?></p>
             <a href="<?= $baseUrl ?>/staff" class="inline-flex items-center gap-2 mt-3 px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition shadow-sm">
