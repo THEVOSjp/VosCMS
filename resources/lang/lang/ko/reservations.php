@@ -428,4 +428,6 @@ return [
     'stat_graph' => '그래프',
     'pos_staff_busy' => '예약있음',
     'error_date_time_required' => '날짜와 시작 시간을 먼저 선택해주세요.',
+    'show_edit_datetime' => '일시 수정',
+    'show_edit_contact' => '연락처 수정',
 ];

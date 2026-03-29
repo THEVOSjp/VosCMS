@@ -173,6 +173,17 @@ return [
         'submit' => 'Buchung stornieren',
         'success' => 'Ihre Buchung wurde storniert.',
         'cannot_cancel' => 'Diese Buchung kann nicht storniert werden.',
+        'no_refund' => 'Keine Erstattung',
+        'no_payment' => 'Keine Zahlungshistorie',
+        'refund_processed' => 'Erstattung verarbeitet',
+        'partial_refund_notice' => 'Teilerstattung gemäß Stornierungsrichtlinie.',
+        'no_refund_notice' => 'Keine Erstattung gemäß Stornierungsrichtlinie.',
+        'paid_amount' => 'Gezahlter Betrag',
+        'refund_policy' => 'Angewandte Richtlinie',
+        'refund_amount' => 'Voraussichtliche Erstattung',
+        'policy_title' => 'Stornierungs- und Erstattungsrichtlinie',
+        'refund_detail' => 'Erstattungsdetails',
+        'refund_card_notice' => 'Erstattung erfolgt innerhalb von 3-5 Werktagen.',
     ],
 
     // Status messages
@@ -201,6 +212,9 @@ return [
         'retry' => 'Erneut bezahlen',
         'cancel_reservation' => 'Reservierung stornieren',
         'applied_price' => 'Angebotspreis',
+        'remaining_balance' => 'Restbetrag vor Ort',
+        'receipt' => 'Quittung',
+        'print' => 'Drucken',
     ],
 
     // Error messages

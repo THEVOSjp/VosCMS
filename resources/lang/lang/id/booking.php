@@ -173,6 +173,17 @@ return [
         'submit' => 'Batalkan Pemesanan',
         'success' => 'Pemesanan Anda telah dibatalkan.',
         'cannot_cancel' => 'Pemesanan ini tidak dapat dibatalkan.',
+        'no_refund' => 'Tidak ada pengembalian',
+        'no_payment' => 'Tidak ada riwayat pembayaran',
+        'refund_processed' => 'Pengembalian diproses',
+        'partial_refund_notice' => 'Pengembalian sebagian sesuai kebijakan pembatalan.',
+        'no_refund_notice' => 'Tidak ada pengembalian sesuai kebijakan.',
+        'paid_amount' => 'Jumlah dibayar',
+        'refund_policy' => 'Kebijakan diterapkan',
+        'refund_amount' => 'Perkiraan pengembalian',
+        'policy_title' => 'Kebijakan Pembatalan & Pengembalian',
+        'refund_detail' => 'Detail Pengembalian',
+        'refund_card_notice' => 'Pengembalian akan diproses dalam 3-5 hari kerja.',
     ],
 
     // Status messages
@@ -201,6 +212,9 @@ return [
         'retry' => 'Coba bayar lagi',
         'cancel_reservation' => 'Batalkan Reservasi',
         'applied_price' => 'harga terapan',
+        'remaining_balance' => 'Sisa pembayaran di tempat',
+        'receipt' => 'Kwitansi',
+        'print' => 'Cetak',
     ],
 
     // Error messages

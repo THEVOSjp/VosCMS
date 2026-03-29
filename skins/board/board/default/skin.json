@@ -1,0 +1,199 @@
+{
+  "title": { "ko": "기본 게시판 스킨", "en": "Default Board Skin", "ja": "デフォルト掲示板スキン" },
+  "description": { "ko": "RezlyX 기본 게시판 스킨입니다. 4가지 목록 유형, 다크모드, 반응형을 지원합니다.", "en": "RezlyX default board skin. Supports 4 list types, dark mode, and responsive design.", "ja": "RezlyXデフォルト掲示板スキン。4種類のリスト表示、ダークモード、レスポンシブ対応。" },
+  "version": "2.0.0",
+  "date": "2026-03-20",
+  "thumbnail": "thumbnail.png",
+  "author": { "name": "RezlyX", "url": "https://rezlyx.com", "email": "info@rezlyx.com" },
+  "vars": [
+    {
+      "section": { "ko": "기본 설정", "en": "Basic Settings", "ja": "基本設定" },
+      "name": "content_width",
+      "type": "select",
+      "title": { "ko": "콘텐츠 너비", "en": "Content width", "ja": "コンテンツ幅", "zh_CN": "内容宽度", "zh_TW": "內容寬度", "de": "Inhaltsbreite", "es": "Ancho del contenido", "fr": "Largeur du contenu", "id": "Lebar konten", "mn": "Агуулгын өргөн", "ru": "Ширина контента", "tr": "İçerik genişliği", "vi": "Chiều rộng nội dung" },
+      "options": [
+        { "value": "max-w-3xl", "label": { "ko": "좁게 (768px)", "en": "Narrow (768px)", "ja": "狭い (768px)", "zh_CN": "窄 (768px)", "zh_TW": "窄 (768px)", "de": "Schmal (768px)", "es": "Estrecho (768px)", "fr": "Étroit (768px)", "id": "Sempit (768px)", "mn": "Нарийн (768px)", "ru": "Узкий (768px)", "tr": "Dar (768px)", "vi": "Hẹp (768px)" } },
+        { "value": "max-w-5xl", "label": { "ko": "기본 (1024px)", "en": "Default (1024px)", "ja": "標準 (1024px)", "zh_CN": "默认 (1024px)", "zh_TW": "預設 (1024px)", "de": "Standard (1024px)", "es": "Predeterminado (1024px)", "fr": "Par défaut (1024px)", "id": "Default (1024px)", "mn": "Үндсэн (1024px)", "ru": "По умолчанию (1024px)", "tr": "Varsayılan (1024px)", "vi": "Mặc định (1024px)" } },
+        { "value": "max-w-7xl", "label": { "ko": "넓게 (1280px)", "en": "Wide (1280px)", "ja": "広い (1280px)", "zh_CN": "宽 (1280px)", "zh_TW": "寬 (1280px)", "de": "Breit (1280px)", "es": "Ancho (1280px)", "fr": "Large (1280px)", "id": "Lebar (1280px)", "mn": "Өргөн (1280px)", "ru": "Широкий (1280px)", "tr": "Geniş (1280px)", "vi": "Rộng (1280px)" } },
+        { "value": "max-w-full", "label": { "ko": "전체 너비", "en": "Full width", "ja": "全幅", "zh_CN": "全宽", "zh_TW": "全寬", "de": "Volle Breite", "es": "Ancho completo", "fr": "Pleine largeur", "id": "Lebar penuh", "mn": "Бүтэн өргөн", "ru": "Полная ширина", "tr": "Tam genişlik", "vi": "Toàn chiều rộng" } }
+      ],
+      "default": "max-w-7xl"
+    },
+    {
+      "name": "use_wizard",
+      "type": "radio",
+      "title": { "ko": "위저드 사용", "en": "Use wizard", "ja": "ウィザード使用" },
+      "description": { "ko": "스킨 설정을 할 수 있는 내비게이션을 게시판 브라우저 좌측에 출력합니다.", "en": "Display a navigation for skin settings on the left side of the board browser.", "ja": "スキン設定用ナビゲーションを掲示板ブラウザの左側に表示します。" },
+      "options": [
+        { "value": "admin", "label": { "ko": "관리자만(기본)", "en": "Admin only (default)", "ja": "管理者のみ（デフォルト）" } },
+        { "value": "none", "label": { "ko": "사용 안함", "en": "Disabled", "ja": "使用しない" } }
+      ],
+      "default": "admin"
+    },
+    {
+      "name": "font_awesome",
+      "type": "radio",
+      "title": { "ko": "폰트어썸 사용형태", "en": "Font Awesome usage", "ja": "Font Awesome使用形態" },
+      "description": { "ko": "웹폰트(폰트어썸) 적용 방법", "en": "How to apply web font (Font Awesome)", "ja": "ウェブフォント（Font Awesome）の適用方法" },
+      "options": [
+        { "value": "internal", "label": { "ko": "게시판에서 직접 사용(기본)", "en": "Use directly in board (default)", "ja": "掲示板で直接使用（デフォルト）" } },
+        { "value": "external", "label": { "ko": "외부(레이아웃등)에서 사용중", "en": "Used externally (layout, etc.)", "ja": "外部（レイアウト等）で使用中" } }
+      ],
+      "default": "internal"
+    },
+    {
+      "section": { "ko": "목록 설정", "en": "List Settings", "ja": "リスト設定" },
+      "name": "list_style",
+      "type": "radio",
+      "title": { "ko": "목록 유형", "en": "List type", "ja": "リストタイプ" },
+      "description": { "ko": "게시판 목록의 기본 표시 유형을 설정합니다.", "en": "Set the default display type for the board list.", "ja": "掲示板リストのデフォルト表示タイプを設定します。" },
+      "options": [
+        { "value": "table", "label": { "ko": "목록형", "en": "Table", "ja": "リスト型" } },
+        { "value": "webzine", "label": { "ko": "웹진형", "en": "Webzine", "ja": "ウェブマガジン型" } },
+        { "value": "gallery", "label": { "ko": "갤러리형", "en": "Gallery", "ja": "ギャラリー型" } },
+        { "value": "card", "label": { "ko": "카드형", "en": "Card", "ja": "カード型" } }
+      ],
+      "default": "table"
+    },
+    {
+      "name": "allow_style_switch",
+      "type": "checkbox",
+      "title": { "ko": "사용자 스타일 전환 허용", "en": "Allow user style switch", "ja": "ユーザースタイル切替許可" },
+      "description": { "ko": "사용자가 목록 우측 상단의 스타일 전환 버튼을 사용할 수 있습니다.", "en": "Allow users to switch styles using buttons at the top right.", "ja": "ユーザーがリスト右上のスタイル切替ボタンを使用できます。" },
+      "default": true
+    },
+    {
+      "name": "show_category",
+      "type": "checkbox",
+      "title": { "ko": "목록에 분류 표시", "en": "Show category in list", "ja": "リストにカテゴリ表示" },
+      "description": { "ko": "게시판 목록에 분류 컬럼을 표시합니다.", "en": "Show category column in board list.", "ja": "掲示板リストにカテゴリカラムを表示します。" },
+      "default": false
+    },
+    {
+      "name": "posts_per_row",
+      "type": "number",
+      "title": { "ko": "카드/갤러리형 한 줄 게시물 수", "en": "Cards per row", "ja": "カード/ギャラリー型1行あたりの投稿数" },
+      "description": { "ko": "카드형/갤러리형에서 한 줄에 표시할 게시물 수 (2~6)", "en": "Number of posts per row in card/gallery mode (2-6)", "ja": "カード型/ギャラリー型での1行あたりの投稿数（2〜6）" },
+      "default": 3,
+      "min": 2,
+      "max": 6
+    },
+    {
+      "section": { "ko": "링크 게시판", "en": "Link Board", "ja": "リンク掲示板" },
+      "name": "use_link_board",
+      "type": "radio",
+      "title": { "ko": "링크 게시판으로 사용", "en": "Use as link board", "ja": "リンク掲示板として使用" },
+      "description": { "ko": "게시판의 목록의 링크를 누르면 확장변수에서 입력한 사이트 주소로 이동합니다. 확장변수에서 'link_url' 항목을 등록하신 후 사용하세요.", "en": "Clicking a link in the board list redirects to the URL entered in the extra variable. Register 'link_url' in extra variables first.", "ja": "掲示板リストのリンクをクリックすると、拡張変数に入力したサイトアドレスに移動します。拡張変数で「link_url」項目を登録してからご利用ください。" },
+      "options": [
+        { "value": "none", "label": { "ko": "사용 안함(기본)", "en": "Disabled (default)", "ja": "使用しない（デフォルト）" } },
+        { "value": "use", "label": { "ko": "사용", "en": "Enabled", "ja": "使用する" } }
+      ],
+      "default": "none"
+    },
+    {
+      "name": "link_target",
+      "depends_on": "use_link_board",
+      "type": "radio",
+      "title": { "ko": "링크 게시판 사용시 타겟설정", "en": "Link target", "ja": "リンクターゲット設定" },
+      "description": { "ko": "링크 게시판 사용시 타겟설정을 지정합니다.", "en": "Set the link target when using link board.", "ja": "リンク掲示板使用時のターゲット設定を指定します。" },
+      "options": [
+        { "value": "_blank", "label": { "ko": "New 페이지(기본)", "en": "New page (default)", "ja": "新しいページ（デフォルト）" } },
+        { "value": "_self", "label": { "ko": "기존 페이지", "en": "Same page", "ja": "既存ページ" } }
+      ],
+      "default": "_blank"
+    },
+    {
+      "section": { "ko": "디자인 설정", "en": "Design Settings", "ja": "デザイン設定" },
+      "name": "primary_color",
+      "type": "color",
+      "title": { "ko": "메인 색상", "en": "Primary color", "ja": "メインカラー" },
+      "description": { "ko": "스킨의 메인 색상을 지정합니다. 제목, 데코레이션, 테두리 등의 색상을 결정합니다.", "en": "Set the primary color of the skin.", "ja": "スキンのメインカラーを指定します。" },
+      "default": "#3B82F6"
+    },
+    {
+      "name": "border_radius",
+      "type": "radio",
+      "title": { "ko": "내용영역 모서리 형태", "en": "Content area corner style", "ja": "コンテンツ領域の角の形" },
+      "description": { "ko": "내용영역 모서리를 직각 / 타원중에 설정", "en": "Set content area corners to square or rounded", "ja": "コンテンツ領域の角を直角/楕円に設定" },
+      "options": [
+        { "value": "square", "label": { "ko": "직각", "en": "Square", "ja": "直角" } },
+        { "value": "rounded", "label": { "ko": "타원(기본)", "en": "Rounded (default)", "ja": "楕円（デフォルト）" } }
+      ],
+      "default": "rounded"
+    },
+    {
+      "section": { "ko": "제목 배경", "en": "Title Background", "ja": "タイトル背景" },
+      "name": "title_bg_type",
+      "type": "radio",
+      "title": { "ko": "배경 타입", "en": "Background type", "ja": "背景タイプ" },
+      "options": [
+        { "value": "none", "label": { "ko": "없음", "en": "None", "ja": "なし" } },
+        { "value": "image", "label": { "ko": "이미지", "en": "Image", "ja": "画像" } },
+        { "value": "video", "label": { "ko": "동영상", "en": "Video", "ja": "動画" } }
+      ],
+      "default": "none"
+    },
+    {
+      "name": "title_bg_image",
+      "type": "image",
+      "title": { "ko": "배경 이미지", "en": "Background image", "ja": "背景画像" },
+      "description": { "ko": "게시판 제목 영역의 배경 이미지를 업로드합니다. (JPG, PNG, WebP)", "en": "Upload a background image for the board title area.", "ja": "掲示板タイトル領域の背景画像をアップロードします。" }
+    },
+    {
+      "name": "title_bg_video",
+      "type": "video",
+      "title": { "ko": "배경 동영상", "en": "Background video", "ja": "背景動画" },
+      "description": { "ko": "MP4, WebM 형식의 동영상을 업로드하거나 URL을 입력합니다. 자동 재생, 반복, 음소거 처리됩니다.", "en": "Upload MP4/WebM video or enter URL. Auto-play, loop, muted.", "ja": "MP4、WebM形式の動画をアップロードまたはURLを入力。自動再生、ループ、ミュート。" }
+    },
+    {
+      "name": "title_bg_height",
+      "type": "number",
+      "title": { "ko": "배경 높이(px)", "en": "Background height(px)", "ja": "背景高さ(px)" },
+      "description": { "ko": "제목 배경 영역의 높이 (기본: 200)", "en": "Height of the title background area (default: 200)", "ja": "タイトル背景領域の高さ（デフォルト: 200）" },
+      "default": 200,
+      "min": 100,
+      "max": 600
+    },
+    {
+      "name": "title_bg_overlay",
+      "type": "number",
+      "title": { "ko": "오버레이 투명도(%)", "en": "Overlay opacity(%)", "ja": "オーバーレイ透明度(％)" },
+      "description": { "ko": "배경 위에 어두운 오버레이를 적용합니다. 0=투명, 100=완전 어둡게", "en": "Apply dark overlay. 0=transparent, 100=fully dark", "ja": "暗いオーバーレイを適用。0=透明、100=完全に暗く" },
+      "default": 40,
+      "min": 0,
+      "max": 100
+    },
+    {
+      "name": "title_text_color",
+      "type": "radio",
+      "title": { "ko": "제목 텍스트 색상", "en": "Title text color", "ja": "タイトルテキスト色" },
+      "options": [
+        { "value": "auto", "label": { "ko": "자동(기본)", "en": "Auto (default)", "ja": "自動（デフォルト）" } },
+        { "value": "white", "label": { "ko": "흰색", "en": "White", "ja": "白" } },
+        { "value": "dark", "label": { "ko": "어두운색", "en": "Dark", "ja": "暗い色" } }
+      ],
+      "default": "auto"
+    },
+    {
+      "section": { "ko": "사용자 정의", "en": "Custom", "ja": "カスタム" },
+      "name": "custom_css",
+      "type": "textarea",
+      "title": { "ko": "사용자 정의 CSS", "en": "Custom CSS", "ja": "カスタムCSS" },
+      "description": { "ko": "이 게시판에만 적용되는 CSS를 입력합니다.", "en": "Enter CSS that applies only to this board.", "ja": "この掲示板にのみ適用されるCSSを入力します。" }
+    },
+    {
+      "name": "custom_html_header",
+      "type": "textarea",
+      "multilang": true,
+      "title": { "ko": "커스텀 헤더 HTML", "en": "Custom header HTML", "ja": "カスタムヘッダーHTML" },
+      "description": { "ko": "게시판 상단에 삽입할 HTML 코드", "en": "HTML code to insert at the top of the board", "ja": "掲示板上部に挿入するHTMLコード" }
+    },
+    {
+      "name": "custom_html_footer",
+      "type": "textarea",
+      "multilang": true,
+      "title": { "ko": "커스텀 푸터 HTML", "en": "Custom footer HTML", "ja": "カスタムフッターHTML" },
+      "description": { "ko": "게시판 하단에 삽입할 HTML 코드", "en": "HTML code to insert at the bottom of the board", "ja": "掲示板下部に挿入するHTMLコード" }
+    }
+  ]
+}

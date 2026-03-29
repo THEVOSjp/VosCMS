@@ -335,4 +335,6 @@ return [
     'stat_graph' => '图表',
     'pos_staff_busy' => '已预约',
     'error_date_time_required' => '请先选择日期和开始时间。',
+    'show_edit_datetime' => '修改日期时间',
+    'show_edit_contact' => '修改联系方式',
 ];

@@ -174,6 +174,17 @@ return [
         'submit' => 'Cancel Booking',
         'success' => 'Your booking has been cancelled.',
         'cannot_cancel' => 'This booking cannot be cancelled.',
+        'no_refund' => 'No refund',
+        'no_payment' => 'No payment record',
+        'refund_processed' => 'Refund processed',
+        'partial_refund_notice' => 'Partial refund per cancellation policy.',
+        'no_refund_notice' => 'No refund available per cancellation policy.',
+        'paid_amount' => 'Paid amount',
+        'refund_policy' => 'Applied policy',
+        'refund_amount' => 'Estimated refund',
+        'policy_title' => 'Cancellation & Refund Policy',
+        'refund_detail' => 'Refund Details',
+        'refund_card_notice' => 'Refund will be processed within 3-5 business days depending on card issuer.',
     ],
 
     // Status messages
@@ -202,6 +213,9 @@ return [
         'retry' => 'Retry Payment',
         'cancel_reservation' => 'Cancel Reservation',
         'applied_price' => 'applied price',
+        'remaining_balance' => 'Balance due on-site',
+        'receipt' => 'Receipt',
+        'print' => 'Print',
     ],
 
     // Error messages

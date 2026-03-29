@@ -173,6 +173,17 @@ return [
         'submit' => 'Hủy đặt chỗ',
         'success' => 'Đặt chỗ của bạn đã được hủy.',
         'cannot_cancel' => 'Không thể hủy đặt chỗ này.',
+        'no_refund' => 'Không hoàn tiền',
+        'no_payment' => 'Không có lịch sử thanh toán',
+        'refund_processed' => 'Hoàn tiền đã xử lý',
+        'partial_refund_notice' => 'Hoàn tiền một phần theo chính sách hủy.',
+        'no_refund_notice' => 'Không thể hoàn tiền theo chính sách hủy.',
+        'paid_amount' => 'Số tiền đã thanh toán',
+        'refund_policy' => 'Chính sách áp dụng',
+        'refund_amount' => 'Số tiền hoàn dự kiến',
+        'policy_title' => 'Chính sách hủy và hoàn tiền',
+        'refund_detail' => 'Chi tiết hoàn tiền',
+        'refund_card_notice' => 'Hoàn tiền sẽ được xử lý trong 3-5 ngày làm việc.',
     ],
 
     // Status messages
@@ -201,6 +212,9 @@ return [
         'retry' => 'Thanh toán lại',
         'cancel_reservation' => 'Hủy đặt lịch',
         'applied_price' => 'giá áp dụng',
+        'remaining_balance' => 'Số dư thanh toán tại chỗ',
+        'receipt' => 'Biên lai',
+        'print' => 'In',
     ],
 
     // Error messages

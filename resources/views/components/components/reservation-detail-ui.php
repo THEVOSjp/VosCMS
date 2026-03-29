@@ -14,7 +14,7 @@ try {
     $_payConf = json_decode($siteSettings['payment_config'] ?? '{}', true) ?: [];
     $_paymentEnabled = ($_payConf['enabled'] ?? '0') === '1' && !empty($_payConf['public_key']) && !empty($_payConf['secret_key']);
 } catch (\Throwable $e) {}
-$_needsPayment = $_paymentEnabled && in_array($reservation['payment_status'] ?? 'unpaid', ['unpaid', 'partial']);
+$_needsPayment = $_paymentEnabled && ($reservation['payment_status'] ?? 'unpaid') === 'unpaid';
 ?>
 
 <!-- 헤더 -->

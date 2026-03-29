@@ -174,6 +174,17 @@ return [
         'submit' => '予約をキャンセル',
         'success' => '予約がキャンセルされました。',
         'cannot_cancel' => 'この予約はキャンセルできません。',
+        'no_refund' => '返金不可',
+        'no_payment' => '決済履歴なし',
+        'refund_processed' => '返金処理完了',
+        'partial_refund_notice' => 'キャンセルポリシーに基づく部分返金です。',
+        'no_refund_notice' => 'キャンセルポリシーにより返金できません。',
+        'paid_amount' => '決済金額',
+        'refund_policy' => '適用ポリシー',
+        'refund_amount' => '返金予定額',
+        'policy_title' => 'キャンセル・返金ポリシー',
+        'refund_detail' => '返金詳細',
+        'refund_card_notice' => 'カード会社により3〜5営業日以内に返金されます。',
     ],
 
     // ステータスメッセージ
@@ -202,6 +213,9 @@ return [
         'retry' => '再度決済する',
         'cancel_reservation' => '予約をキャンセル',
         'applied_price' => '適用価格',
+        'remaining_balance' => '現地決済残額',
+        'receipt' => '領収書',
+        'print' => '印刷',
     ],
 
     // エラーメッセージ

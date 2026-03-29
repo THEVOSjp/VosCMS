@@ -7,6 +7,14 @@
  */
 $_backUrl = $backUrl ?? ($baseUrl . '/lookup');
 $_backLabel = $backLabel ?? __('booking.detail.back_to_lookup');
+
+// 결제 활성화 여부 확인
+$_paymentEnabled = false;
+try {
+    $_payConf = json_decode($siteSettings['payment_config'] ?? '{}', true) ?: [];
+    $_paymentEnabled = ($_payConf['enabled'] ?? '0') === '1' && !empty($_payConf['public_key']) && !empty($_payConf['secret_key']);
+} catch (\Throwable $e) {}
+$_needsPayment = $_paymentEnabled && ($reservation['payment_status'] ?? 'unpaid') === 'unpaid';
 ?>
 
 <!-- 헤더 -->
@@ -107,7 +115,7 @@ $_backLabel = $backLabel ?? __('booking.detail.back_to_lookup');
             <img src="<?= htmlspecialchars($baseUrl . '/' . $bundle['image']) ?>" alt="<?= htmlspecialchars($bundle['name']) ?>" class="w-20 h-20 rounded-lg object-cover shrink-0">
             <?php endif; ?>
             <div class="flex-1">
-                <p class="text-xs font-medium text-amber-600 dark:text-amber-400 mb-1"><?= htmlspecialchars($siteSettings['bundle_display_name'] ?? __('booking.detail.bundle')) ?></p>
+                <p class="text-xs font-medium text-amber-600 dark:text-amber-400 mb-1"><?= htmlspecialchars($bundleDisplayName) ?></p>
                 <p class="font-semibold text-zinc-800 dark:text-zinc-100"><?= htmlspecialchars($bundle['name']) ?></p>
                 <?php if ($bundle['description']): ?>
                 <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-1 line-clamp-2"><?= htmlspecialchars(strip_tags($bundle['description'])) ?></p>
@@ -172,11 +180,64 @@ $_backLabel = $backLabel ?? __('booking.detail.back_to_lookup');
 </div>
 <?php endif; ?>
 
+<!-- 환불 정책 안내 (취소 가능 상태일 때만) -->
+<?php if ($isCancellable):
+    $_rfPolicyStmt = $pdo->prepare("SELECT `key`, `value` FROM {$prefix}settings WHERE `key` LIKE 'refund_%'");
+    $_rfPolicyStmt->execute();
+    $_rfP = [];
+    while ($_rp = $_rfPolicyStmt->fetch(PDO::FETCH_ASSOC)) $_rfP[$_rp['key']] = $_rp['value'];
+    if (($_rfP['refund_enabled'] ?? '0') === '1'):
+        $_rfPUnit = $_rfP['refund_time_unit'] ?? 'hours';
+        $_rfPUnitLabel = $_rfPUnit === 'days' ? (__('services.settings.general.refund_unit_days') ?? '일') : (__('services.settings.general.refund_unit_hours') ?? '시간');
+        $_rfPFull = (int)($_rfP['refund_full_period'] ?? 24);
+?>
+<div class="bg-zinc-50 dark:bg-zinc-700/30 rounded-xl p-4 mb-6 border border-zinc-200 dark:border-zinc-700">
+    <h4 class="text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-2 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <?= __('booking.cancel.policy_title') ?? '취소 및 환불 안내' ?>
+    </h4>
+    <div class="text-xs space-y-1">
+        <p class="text-green-600 dark:text-green-400">✓ <?= $_rfPFull ?><?= $_rfPUnitLabel ?> <?= __('services.settings.general.refund_preview_full') ?? '전 → 전액 환불 (100%)' ?></p>
+        <?php for ($i = 1; $i <= 3; $i++):
+            if (($_rfP["refund_partial{$i}_enabled"] ?? '0') === '1'):
+        ?>
+        <p class="text-amber-600 dark:text-amber-400">△ <?= (int)($_rfP["refund_partial{$i}_period"] ?? 0) ?><?= $_rfPUnitLabel ?> <?= __('services.settings.general.refund_partial_suffix') ?? '전 취소 시' ?> <?= (int)($_rfP["refund_partial{$i}_rate"] ?? 0) ?>% <?= __('services.settings.general.refund_word') ?? '환불' ?></p>
+        <?php endif; endfor; ?>
+        <p class="text-red-600 dark:text-red-400">✕ <?= __('services.settings.general.refund_preview_none') ?? '그 외 → 환불 불가' ?></p>
+    </div>
+</div>
+<?php endif; endif; ?>
+
+<!-- 미결제 안내 + 결제 버튼 -->
+<?php if ($_needsPayment): ?>
+<div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800 p-6 mb-6">
+    <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <svg class="w-6 h-6 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+            <div>
+                <p class="text-sm font-medium text-amber-800 dark:text-amber-200"><?= __('booking.payment.needs_payment') ?? '결제가 필요합니다' ?></p>
+                <p class="text-xs text-amber-600 dark:text-amber-400"><?= __('booking.payment.needs_payment_desc') ?? '온라인 결제를 완료하면 예약이 확정됩니다.' ?></p>
+            </div>
+        </div>
+        <a href="<?= $baseUrl ?>/payment/checkout?reservation_id=<?= urlencode($reservation['id']) ?>"
+           class="px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shrink-0 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+            <?= __('booking.payment.pay_now') ?? '결제하기' ?>
+        </a>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- 버튼 -->
 <div class="flex items-center gap-2 flex-wrap">
     <a href="<?= htmlspecialchars($_backUrl) ?>" class="px-5 py-2.5 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition">
         <?= $_backLabel ?>
     </a>
+    <?php if ($_needsPayment): ?>
+    <a href="<?= $baseUrl ?>/payment/checkout?reservation_id=<?= urlencode($reservation['id']) ?>" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+        <?= __('booking.payment.pay_now') ?? '결제하기' ?>
+    </a>
+    <?php endif; ?>
     <?php if ($isCancellable): ?>
     <a href="<?= $baseUrl ?>/booking/cancel/<?= urlencode($reservation['reservation_number']) ?>" class="px-5 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 bg-white dark:bg-zinc-800 border border-red-300 dark:border-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition">
         <?= __('booking.cancel.title') ?>

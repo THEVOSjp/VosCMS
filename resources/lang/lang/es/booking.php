@@ -173,6 +173,17 @@ return [
         'submit' => 'Cancelar reserva',
         'success' => 'Su reserva ha sido cancelada.',
         'cannot_cancel' => 'Esta reserva no puede ser cancelada.',
+        'no_refund' => 'Sin reembolso',
+        'no_payment' => 'Sin registro de pago',
+        'refund_processed' => 'Reembolso procesado',
+        'partial_refund_notice' => 'Reembolso parcial según política de cancelación.',
+        'no_refund_notice' => 'Sin reembolso según política de cancelación.',
+        'paid_amount' => 'Monto pagado',
+        'refund_policy' => 'Política aplicada',
+        'refund_amount' => 'Reembolso estimado',
+        'policy_title' => 'Política de cancelación y reembolso',
+        'refund_detail' => 'Detalle del reembolso',
+        'refund_card_notice' => 'El reembolso se procesará en 3-5 días hábiles.',
     ],
 
     // Status messages
@@ -201,6 +212,9 @@ return [
         'retry' => 'Reintentar pago',
         'cancel_reservation' => 'Cancelar reserva',
         'applied_price' => 'precio aplicado',
+        'remaining_balance' => 'Saldo a pagar en sitio',
+        'receipt' => 'Recibo',
+        'print' => 'Imprimir',
     ],
 
     // Error messages

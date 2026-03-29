@@ -401,6 +401,56 @@ if (empty($path) || $path === 'index.php') {
     } elseif ($adminRoute === 'reservations/save-memo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $apiAction = 'save-memo'; $apiId = null;
         include BASE_PATH . '/resources/views/admin/reservations/_api.php';
+    } elseif (preg_match('#^reservations/([\w-]+)/update-contact$#', $adminRoute, $m) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        header('Content-Type: application/json');
+        $resId = $m[1];
+        $phone = trim($_POST['phone'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        if ($phone) {
+            try {
+                $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+                $pdo->prepare("UPDATE {$prefix}reservations SET customer_phone = ?, customer_email = ? WHERE id = ?")
+                    ->execute([$phone, $email ?: null, $resId]);
+                echo json_encode(['success' => true]);
+            } catch (\Throwable $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Phone required']);
+        }
+        exit;
+    } elseif (preg_match('#^reservations/([\w-]+)/update-datetime$#', $adminRoute, $m) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        header('Content-Type: application/json');
+        $resId = $m[1];
+        $date = $_POST['date'] ?? '';
+        $time = $_POST['time'] ?? '';
+        if ($date && $time) {
+            try {
+                $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+                // 기존 예약의 duration 계산
+                $rStmt = $pdo->prepare("SELECT start_time, end_time FROM {$prefix}reservations WHERE id = ?");
+                $rStmt->execute([$resId]);
+                $rData = $rStmt->fetch(PDO::FETCH_ASSOC);
+                if ($rData) {
+                    $oldStart = new DateTime('2000-01-01 ' . $rData['start_time']);
+                    $oldEnd = new DateTime('2000-01-01 ' . $rData['end_time']);
+                    $duration = ($oldEnd->getTimestamp() - $oldStart->getTimestamp()) / 60;
+                    $newStart = new DateTime("$date $time");
+                    $newEnd = clone $newStart;
+                    $newEnd->modify("+{$duration} minutes");
+                    $pdo->prepare("UPDATE {$prefix}reservations SET reservation_date = ?, start_time = ?, end_time = ? WHERE id = ?")
+                        ->execute([$date, $time . ':00', $newEnd->format('H:i:s'), $resId]);
+                    echo json_encode(['success' => true]);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Reservation not found']);
+                }
+            } catch (\Throwable $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Date and time required']);
+        }
+        exit;
     } elseif (preg_match('#^reservations/([\w-]+)/(confirm|cancel|complete|no-show|start-service|payment)$#', $adminRoute, $m) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $apiId = $m[1]; $apiAction = $m[2];
         include BASE_PATH . '/resources/views/admin/reservations/_api.php';
@@ -437,9 +487,6 @@ if (empty($path) || $path === 'index.php') {
         include BASE_PATH . '/resources/views/admin/reservations/statistics.php';
     } elseif ($adminRoute === 'reservations/create') {
         include BASE_PATH . '/resources/views/admin/reservations/create.php';
-    } elseif (preg_match('#^reservations/([\w-]+)/edit$#', $adminRoute, $m)) {
-        $reservationId = $m[1];
-        include BASE_PATH . '/resources/views/admin/reservations/edit.php';
     } elseif (preg_match('#^reservations/([\w-]+)$#', $adminRoute, $m)) {
         $reservationId = $m[1];
         include BASE_PATH . '/resources/views/admin/reservations/show.php';

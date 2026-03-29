@@ -425,4 +425,6 @@ return [
     'stat_graph' => 'Graph',
     'pos_staff_busy' => 'Busy',
     'error_date_time_required' => 'Please select date and start time first.',
+    'show_edit_datetime' => 'Edit Date/Time',
+    'show_edit_contact' => 'Edit Contact',
 ];

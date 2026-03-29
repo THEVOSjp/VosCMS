@@ -173,6 +173,17 @@ return [
         'submit' => 'Annuler la reservation',
         'success' => 'Votre reservation a ete annulee.',
         'cannot_cancel' => 'Cette reservation ne peut pas etre annulee.',
+        'no_refund' => 'Pas de remboursement',
+        'no_payment' => 'Aucun historique de paiement',
+        'refund_processed' => 'Remboursement traité',
+        'partial_refund_notice' => 'Remboursement partiel selon la politique d\'annulation.',
+        'no_refund_notice' => 'Pas de remboursement selon la politique d\'annulation.',
+        'paid_amount' => 'Montant payé',
+        'refund_policy' => 'Politique appliquée',
+        'refund_amount' => 'Remboursement estimé',
+        'policy_title' => 'Politique d\'annulation et de remboursement',
+        'refund_detail' => 'Détails du remboursement',
+        'refund_card_notice' => 'Le remboursement sera traité sous 3 à 5 jours ouvrables.',
     ],
 
     // Status messages
@@ -201,6 +212,9 @@ return [
         'retry' => 'Réessayer le paiement',
         'cancel_reservation' => 'Annuler la réservation',
         'applied_price' => 'prix appliqué',
+        'remaining_balance' => 'Solde à régler sur place',
+        'receipt' => 'Reçu',
+        'print' => 'Imprimer',
     ],
 
     // Error messages

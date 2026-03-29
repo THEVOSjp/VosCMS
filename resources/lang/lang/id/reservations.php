@@ -335,4 +335,6 @@ return [
     'stat_graph' => 'Grafik',
     'pos_staff_busy' => 'Sibuk',
     'error_date_time_required' => 'Silakan pilih tanggal dan waktu mulai terlebih dahulu.',
+    'show_edit_datetime' => 'Ubah Tanggal/Waktu',
+    'show_edit_contact' => 'Ubah Kontak',
 ];

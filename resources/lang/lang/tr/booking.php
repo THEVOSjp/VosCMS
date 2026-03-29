@@ -173,6 +173,17 @@ return [
         'submit' => 'Rezervasyonu İptal Et',
         'success' => 'Rezervasyonunuz iptal edildi.',
         'cannot_cancel' => 'Bu rezervasyon iptal edilemez.',
+        'no_refund' => 'İade yok',
+        'no_payment' => 'Ödeme kaydı yok',
+        'refund_processed' => 'İade işlendi',
+        'partial_refund_notice' => 'İptal politikasına göre kısmi iade.',
+        'no_refund_notice' => 'İptal politikasına göre iade yapılamaz.',
+        'paid_amount' => 'Ödenen tutar',
+        'refund_policy' => 'Uygulanan politika',
+        'refund_amount' => 'Tahmini iade',
+        'policy_title' => 'İptal ve İade Politikası',
+        'refund_detail' => 'İade Detayları',
+        'refund_card_notice' => 'İade, kart kuruluşuna bağlı olarak 3-5 iş günü içinde işlenir.',
     ],
 
     // Status messages
@@ -201,6 +212,9 @@ return [
         'retry' => 'Tekrar öde',
         'cancel_reservation' => 'Rezervasyonu iptal et',
         'applied_price' => 'uygulanan fiyat',
+        'remaining_balance' => 'Yerinde ödenecek bakiye',
+        'receipt' => 'Makbuz',
+        'print' => 'Yazdır',
     ],
 
     // Error messages

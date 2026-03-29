@@ -173,6 +173,17 @@ return [
         'submit' => '取消预约',
         'success' => '您的预约已取消。',
         'cannot_cancel' => '此预约无法取消。',
+        'no_refund' => '不可退款',
+        'no_payment' => '无支付记录',
+        'refund_processed' => '退款处理完成',
+        'partial_refund_notice' => '根据取消政策部分退款。',
+        'no_refund_notice' => '根据取消政策无法退款。',
+        'paid_amount' => '支付金额',
+        'refund_policy' => '适用政策',
+        'refund_amount' => '预计退款金额',
+        'policy_title' => '取消与退款政策',
+        'refund_detail' => '退款详情',
+        'refund_card_notice' => '根据发卡行，退款将在3-5个工作日内处理。',
     ],
 
     // Status messages
@@ -201,6 +212,9 @@ return [
         'retry' => '重新支付',
         'cancel_reservation' => '取消预约',
         'applied_price' => '优惠价',
+        'remaining_balance' => '现场支付余额',
+        'receipt' => '收据',
+        'print' => '打印',
     ],
 
     // Error messages

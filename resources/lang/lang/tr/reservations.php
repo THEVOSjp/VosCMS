@@ -331,4 +331,6 @@ return [
     'stat_graph' => 'Grafik',
     'pos_staff_busy' => 'Meşgul',
     'error_date_time_required' => 'Lütfen önce tarih ve başlangıç saatini seçin.',
+    'show_edit_datetime' => 'Tarih/Saat Düzenle',
+    'show_edit_contact' => 'İletişimi Düzenle',
 ];

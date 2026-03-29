@@ -331,4 +331,6 @@ return [
     'stat_graph' => 'График',
     'pos_staff_busy' => 'Завгүй',
     'error_date_time_required' => 'Эхлээд огноо, эхлэх цагийг сонгоно уу.',
+    'show_edit_datetime' => 'Огноо/цаг өөрчлөх',
+    'show_edit_contact' => 'Холбоо барих мэдээлэл засах',
 ];

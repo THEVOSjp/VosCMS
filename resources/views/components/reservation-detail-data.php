@@ -73,8 +73,20 @@ if (!function_exists('_rdFmtPhone')) {
             if (preg_match('/^(\d{2})(\d{3,4})(\d{4})$/', $l, $m)) return '+82 '.$m[1].'-'.$m[2].'-'.$m[3];
             return '+82 '.$l;
         }
-        if (str_starts_with($d, '82')) { $l=substr($d,2); if(preg_match('/^(10|11|16|17|18|19)(\d{4})(\d{4})$/',$l,$m)) return '+82 '.$m[1].'-'.$m[2].'-'.$m[3]; return '+82 '.$l; }
-        if (str_starts_with($d, '81')) { $l=substr($d,2); if(preg_match('/^(\d{2,3})(\d{4})(\d{4})$/',$l,$m)) return '+81 '.$m[1].'-'.$m[2].'-'.$m[3]; return '+81 '.$l; }
+        if (str_starts_with($d, '82')) {
+            $l = substr($d, 2);
+            if (str_starts_with($l, '0')) $l = substr($l, 1); // 82 뒤의 0 제거
+            if (preg_match('/^(10|11|16|17|18|19)(\d{4})(\d{4})$/', $l, $m)) return '+82 '.$m[1].'-'.$m[2].'-'.$m[3];
+            if (preg_match('/^(2)(\d{3,4})(\d{4})$/', $l, $m)) return '+82 '.$m[1].'-'.$m[2].'-'.$m[3];
+            if (preg_match('/^(\d{2})(\d{3,4})(\d{4})$/', $l, $m)) return '+82 '.$m[1].'-'.$m[2].'-'.$m[3];
+            return '+82 '.$l;
+        }
+        if (str_starts_with($d, '81')) {
+            $l = substr($d, 2);
+            if (str_starts_with($l, '0')) $l = substr($l, 1); // 81 뒤의 0 제거
+            if (preg_match('/^(\d{2,3})(\d{4})(\d{4})$/', $l, $m)) return '+81 '.$m[1].'-'.$m[2].'-'.$m[3];
+            return '+81 '.$l;
+        }
         return '+'.$d;
     }
 }
@@ -150,3 +162,12 @@ $currencySymbol = ['KRW'=>'₩','JPY'=>'¥','USD'=>'$','EUR'=>'€','CNY'=>'¥']
 $fmtPrice = function($a) use ($currencySymbol) { return $currencySymbol . number_format((float)$a); };
 
 $isCancellable = in_array($reservation['status'], ['pending', 'confirmed']);
+
+// 번들 표시명 다국어
+$bundleDisplayName = $siteSettings['bundle_display_name'] ?? (__('booking.detail.bundle') ?? '쿠폰');
+$_bdnTr = _rdTr($pdo, $prefix, 'bundle_display_name', '', $currentLocale);
+if ($_bdnTr) $bundleDisplayName = $_bdnTr;
+
+// 인쇄용 CSS
+$_printCss = '<style>@media print { nav, footer, header, .no-print, button, a[href] { display: none !important; } body { background: white !important; } .dark\:bg-zinc-800, .dark\:bg-zinc-700 { background: white !important; } .dark\:text-white, .dark\:text-zinc-100, .dark\:text-zinc-200, .dark\:text-zinc-300 { color: #1f2937 !important; } .shadow-sm, .shadow-lg { box-shadow: none !important; } .border { border-color: #e5e7eb !important; } @page { margin: 15mm; } }</style>';
+echo $_printCss;

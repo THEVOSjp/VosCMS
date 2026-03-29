@@ -335,4 +335,6 @@ return [
     'stat_graph' => 'Biểu đồ',
     'pos_staff_busy' => 'Bận',
     'error_date_time_required' => 'Vui lòng chọn ngày và giờ bắt đầu trước.',
+    'show_edit_datetime' => 'Sửa ngày/giờ',
+    'show_edit_contact' => 'Sửa liên hệ',
 ];

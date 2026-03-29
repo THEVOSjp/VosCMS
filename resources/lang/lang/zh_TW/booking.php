@@ -173,6 +173,17 @@ return [
         'submit' => '取消預約',
         'success' => '您的預約已取消。',
         'cannot_cancel' => '此預約無法取消。',
+        'no_refund' => '不可退款',
+        'no_payment' => '無付款記錄',
+        'refund_processed' => '退款處理完成',
+        'partial_refund_notice' => '根據取消政策部分退款。',
+        'no_refund_notice' => '根據取消政策無法退款。',
+        'paid_amount' => '付款金額',
+        'refund_policy' => '適用政策',
+        'refund_amount' => '預計退款金額',
+        'policy_title' => '取消與退款政策',
+        'refund_detail' => '退款詳情',
+        'refund_card_notice' => '根據發卡銀行，退款將在3-5個工作天內處理。',
     ],
 
     // Status messages
@@ -201,6 +212,9 @@ return [
         'retry' => '重新付款',
         'cancel_reservation' => '取消預約',
         'applied_price' => '優惠價',
+        'remaining_balance' => '現場付款餘額',
+        'receipt' => '收據',
+        'print' => '列印',
     ],
 
     // Error messages

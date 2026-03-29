@@ -335,4 +335,6 @@ return [
     'stat_graph' => 'Graphique',
     'pos_staff_busy' => 'Occupé',
     'error_date_time_required' => 'Veuillez sélectionner la date et l heure de début.',
+    'show_edit_datetime' => 'Modifier date/heure',
+    'show_edit_contact' => 'Modifier le contact',
 ];

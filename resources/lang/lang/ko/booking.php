@@ -186,6 +186,9 @@ return [
         'retry' => '다시 결제하기',
         'cancel_reservation' => '예약 취소하기',
         'applied_price' => '적용가',
+        'remaining_balance' => '현장 결제 잔액',
+        'receipt' => '영수증',
+        'print' => '인쇄',
     ],
 
     // 예약 취소
@@ -197,6 +200,17 @@ return [
         'submit' => '예약 취소',
         'success' => '예약이 취소되었습니다.',
         'cannot_cancel' => '이 예약은 취소할 수 없습니다.',
+        'no_refund' => '환불 불가',
+        'no_payment' => '결제 내역 없음',
+        'refund_processed' => '환불 처리 완료',
+        'partial_refund_notice' => '환불 정책에 따른 부분 환불입니다.',
+        'no_refund_notice' => '환불 정책에 따라 환불이 불가합니다.',
+        'paid_amount' => '결제 금액',
+        'refund_policy' => '적용 정책',
+        'refund_amount' => '환불 예정 금액',
+        'policy_title' => '취소 및 환불 안내',
+        'refund_detail' => '환불 상세',
+        'refund_card_notice' => '카드사에 따라 3~5영업일 내 환불됩니다.',
     ],
 
     // 상태 메시지
