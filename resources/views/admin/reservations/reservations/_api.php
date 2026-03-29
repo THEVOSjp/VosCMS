@@ -631,6 +631,7 @@ try {
     if ($apiAction === 'append-service') {
         $reservationId = trim($_POST['reservation_id'] ?? '');
         $serviceIds = $_POST['service_ids'] ?? [];
+        $appendBundleId = trim($_POST['bundle_id'] ?? '') ?: null;
 
         if (!$reservationId || empty($serviceIds)) {
             echo json_encode(['error' => true, 'message' => '필수 항목이 누락되었습니다.']);
@@ -669,15 +670,15 @@ try {
         $pdo->beginTransaction();
 
         try {
-            $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
+            $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order, bundle_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
             foreach ($services as $s) {
-                $rsStmt->execute([$reservationId, $s['id'], $s['name'], $s['price'], $s['duration'], $sortIdx++]);
+                $rsStmt->execute([$reservationId, $s['id'], $s['name'], $s['price'], $s['duration'], $sortIdx++, $appendBundleId]);
             }
         } catch (PDOException $e) {
             if (stripos($e->getMessage(), 'Unknown column') !== false) {
-                $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, price, duration) VALUES (?, ?, ?, ?)");
+                $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
                 foreach ($services as $s) {
-                    $rsStmt->execute([$reservationId, $s['id'], $s['price'], $s['duration']]);
+                    $rsStmt->execute([$reservationId, $s['id'], $s['name'], $s['price'], $s['duration'], $sortIdx++]);
                 }
             } else {
                 throw $e;
@@ -700,8 +701,20 @@ try {
             $newEndTime = null;
         }
 
+        // 번들 가격 조회
+        $newFinal = $newTotal;
+        if ($appendBundleId) {
+            try {
+                $bdlPrStmt = $pdo->prepare("SELECT bundle_price FROM {$prefix}service_bundles WHERE id = ?");
+                $bdlPrStmt->execute([$appendBundleId]);
+                $bdlPr = $bdlPrStmt->fetchColumn();
+                if ($bdlPr !== false) $newFinal = (float)$bdlPr;
+                $pdo->prepare("UPDATE {$prefix}reservations SET bundle_id = ?, bundle_price = ? WHERE id = ?")->execute([$appendBundleId, $bdlPr, $reservationId]);
+            } catch (\Throwable $e) {}
+        }
+
         $upd = $pdo->prepare("UPDATE {$prefix}reservations SET total_amount = ?, final_amount = ?, end_time = ?, updated_at = NOW() WHERE id = ?");
-        $upd->execute([$newTotal, $newTotal, $newEndTime, $reservationId]);
+        $upd->execute([$newTotal, $newFinal, $newEndTime, $reservationId]);
 
         $pdo->commit();
         console_log("[API] Appended " . count($services) . " services to reservation {$reservationId}");
@@ -739,9 +752,8 @@ try {
         $remainCount = (int)$remain->fetchColumn();
 
         if ($remainCount === 0) {
-            // 서비스가 모두 삭제되면 예약 자체도 삭제
-            $pdo->prepare("DELETE FROM {$prefix}reservations WHERE id = ?")->execute([$reservationId]);
-            console_log("[POS API] Reservation {$reservationId} deleted (no services left)");
+            // 서비스가 모두 삭제되어도 예약 유지 (금액 0으로 리셋)
+            $pdo->prepare("UPDATE {$prefix}reservations SET total_amount = 0, final_amount = 0 WHERE id = ?")->execute([$reservationId]);
         } else {
             // 남은 서비스 기준으로 금액/시간 재계산
             $recalc = $pdo->prepare("SELECT SUM(price) as total, SUM(duration) as dur FROM {$prefix}reservation_services WHERE reservation_id = ?");

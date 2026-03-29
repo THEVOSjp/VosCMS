@@ -50,6 +50,15 @@ try {
     // service_bundles 테이블 미존재 시 무시
 }
 
+// 번들 표시명 다국어
+$_bdnLabel = $siteSettings['bundle_display_name'] ?? (__('booking.detail.bundle') ?? '번들');
+try {
+    $_bdnTrStmt = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = 'bundle_display_name' AND locale = ?");
+    $_bdnTrStmt->execute([$_trLocale ?? ($config['locale'] ?? 'ko')]);
+    $_bdnTrVal = $_bdnTrStmt->fetchColumn();
+    if ($_bdnTrVal) $_bdnLabel = $_bdnTrVal;
+} catch (\Throwable $e) {}
+
 // 예약 서비스 상세 조회
 try {
     $rsSvcStmt = $pdo->prepare("
@@ -128,8 +137,24 @@ if (!empty($r['user_id'])) {
     $visitStats = $visitStmt->fetch(PDO::FETCH_ASSOC);
 }
 
-// 요일 계산
-$weekdays = __('reservations.weekdays');
+// 요일 계산 (다국어)
+$_wdMap = [
+    'ko' => ['일','월','화','수','목','금','토'],
+    'en' => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+    'ja' => ['日','月','火','水','木','金','土'],
+    'zh_CN' => ['日','一','二','三','四','五','六'],
+    'zh_TW' => ['日','一','二','三','四','五','六'],
+    'de' => ['So','Mo','Di','Mi','Do','Fr','Sa'],
+    'es' => ['Dom','Lun','Mar','Mié','Jue','Vie','Sab'],
+    'fr' => ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'],
+    'id' => ['Min','Sen','Sel','Rab','Kam','Jum','Sab'],
+    'mn' => ['Ня','Да','Мя','Лх','Пү','Ба','Бя'],
+    'ru' => ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'],
+    'tr' => ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'],
+    'vi' => ['CN','T2','T3','T4','T5','T6','T7'],
+];
+$_curLocale = $config['locale'] ?? 'ko';
+$weekdays = $_wdMap[$_curLocale] ?? $_wdMap['en'];
 $dateTs = strtotime($r['reservation_date']);
 $dayOfWeek = $weekdays[(int)date('w', $dateTs)];
 
@@ -302,17 +327,13 @@ include __DIR__ . '/_head.php';
                     };
                     ?>
                     <?php
-                    // 예약금 설정 확인
-                    $_admDepEnabled = ($settings['service_deposit_enabled'] ?? '0') === '1';
+                    $_admDepEnabled = ($siteSettings['service_deposit_enabled'] ?? '0') === '1';
                     if ($pSt === 'partial' && $_admDepEnabled && $paidAmt > 0): ?>
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                         <?= __('booking.payment.deposit') ?? '예약금' ?> <?= formatPrice($paidAmt) ?> <?= __('booking.payment.paid') ?? '결제' ?>
                     </span>
                     <?php else: ?>
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium <?= $pLabel[1] ?>"><?= $pLabel[0] ?></span>
-                    <?php if ($pSt === 'partial'): ?>
-                    <span class="text-xs text-zinc-400 ml-1"><?= formatPrice($paidAmt) ?> / <?= formatPrice($finalAmt) ?></span>
-                    <?php endif; ?>
                     <?php endif; ?>
                 </div>
             </div>
@@ -546,6 +567,33 @@ include __DIR__ . '/_head.php';
                 <h3 class="text-lg font-semibold text-zinc-900 dark:text-white"><?= __('reservations.show_service_detail') ?></h3>
                 <span id="showSvcSummary" class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('reservations.show_service_count_duration', ['count' => count($reservationServices), 'min' => $totalDuration]) ?></span>
             </div>
+            <?php if ($bundleInfo): ?>
+            <div class="mb-4 p-3 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-800/30 flex items-center gap-3">
+                <?php
+                $_bdlImg = null;
+                try { $_bdlImgStmt = $pdo->prepare("SELECT image FROM {$prefix}service_bundles WHERE name = ? LIMIT 1"); $_bdlImgStmt->execute([$bundleInfo['name']]); $_bdlImg = $_bdlImgStmt->fetchColumn(); } catch (\Throwable $e) {}
+                ?>
+                <?php if ($_bdlImg): ?>
+                <img src="<?= htmlspecialchars($appUrl . '/' . $_bdlImg) ?>" alt="" class="w-12 h-12 rounded-lg object-cover shrink-0">
+                <?php else: ?>
+                <div class="w-12 h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                </div>
+                <?php endif; ?>
+                <div class="flex-1">
+                    <p class="text-xs font-medium text-amber-600 dark:text-amber-400"><?= htmlspecialchars($_bdnLabel) ?></p>
+                    <p class="text-sm font-semibold text-zinc-900 dark:text-white"><?= htmlspecialchars($bundleInfo['name']) ?></p>
+                </div>
+                <span class="text-sm font-bold text-amber-600 dark:text-amber-400 mr-2"><?= formatPrice((float)$bundleInfo['bundle_price']) ?></span>
+                <?php if (in_array($r['status'], ['pending', 'confirmed'])): ?>
+                <button type="button" onclick="removeBundle('<?= htmlspecialchars($r['id']) ?>')"
+                        class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition shrink-0" title="<?= __('reservations.show_remove_bundle') ?? '번들 삭제' ?>">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+
             <?php if (empty($reservationServices)): ?>
             <p class="text-sm text-zinc-400 text-center py-4"><?= __('reservations.show_no_services') ?></p>
             <?php else: ?>
@@ -571,7 +619,7 @@ include __DIR__ . '/_head.php';
                             <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400 flex-shrink-0"><?= htmlspecialchars(translateDbName('category', $rs['category_id'] ?? null, $rs['category_name'], $_trCache, $_trLocaleChain)) ?></span>
                             <?php endif; ?>
                             <?php if ($isBundled): ?>
-                            <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 flex-shrink-0"><?= __('reservations.show_bundle') ?></span>
+                            <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 flex-shrink-0"><?= htmlspecialchars($_bdnLabel) ?></span>
                             <?php endif; ?>
                         </div>
                         <?php if (!empty($rs['service_description'])): ?>
@@ -585,7 +633,7 @@ include __DIR__ . '/_head.php';
                             <span class="font-semibold text-zinc-900 dark:text-white"><?= formatPrice((float)$rs['price']) ?></span>
                         </div>
                     </div>
-                    <?php if (in_array($r['status'], ['pending', 'confirmed'])): ?>
+                    <?php if (in_array($r['status'], ['pending', 'confirmed']) && !$isBundled): ?>
                     <button type="button" onclick="removeShowService('<?= htmlspecialchars($r['id']) ?>', '<?= htmlspecialchars($rs['service_id']) ?>', this)"
                             class="flex-shrink-0 p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition" title="<?= __('reservations.pos_remove_service') ?>">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -655,7 +703,7 @@ include __DIR__ . '/_head.php';
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
-                <div id="showAddServiceList" class="space-y-1.5 max-h-48 overflow-y-auto mb-3">
+                <div id="showAddServiceList" class="max-h-[420px] overflow-y-auto mb-3">
                     <div class="text-center py-3 text-zinc-400 text-xs"><?= __('reservations.show_staff_loading') ?></div>
                 </div>
                 <button type="button" id="showAddServiceBtn" onclick="submitShowAddService()" disabled
@@ -715,52 +763,115 @@ include __DIR__ . '/_head.php';
                     </button>
                 </div>
             </div>
-            <div class="space-y-3">
-                <!-- 서비스 항목별 금액 -->
-                <?php foreach ($reservationServices as $rs): ?>
-                <div class="flex justify-between text-sm">
+            <?php
+            $_payDesignFee = (float)($r['designation_fee'] ?? 0);
+            $_payBundlePrice = (float)($r['bundle_price'] ?? 0);
+            $_payTotalSvc = (float)($r['total_amount'] ?? 0);
+            $_payDiscount = (float)($r['discount_amount'] ?? 0);
+            $_payPoints = (float)($r['points_used'] ?? 0);
+            $_payPaidAmt = (float)($r['paid_amount'] ?? 0);
+            $_payFinal = (float)($r['final_amount'] ?? 0);
+            $_hasBundlePay = $bundleInfo && $_payBundlePrice > 0;
+
+            // 번들 포함 서비스와 개별 서비스 분리
+            $_bundledSvcs = [];
+            $_extraSvcs = [];
+            foreach ($reservationServices as $rs) {
+                if (!empty($rs['bundle_id'])) $_bundledSvcs[] = $rs;
+                else $_extraSvcs[] = $rs;
+            }
+            // 번들 서비스 소계
+            $_bundledTotal = 0;
+            foreach ($_bundledSvcs as $bs) $_bundledTotal += (float)$bs['price'];
+            ?>
+            <div class="space-y-2 text-sm">
+                <!-- 번들 포함 서비스 -->
+                <?php foreach ($_bundledSvcs as $rs): ?>
+                <div class="flex justify-between">
                     <span class="text-zinc-500 dark:text-zinc-400 truncate mr-2"><?= htmlspecialchars(translateDbName('service', $rs['service_id'] ?? null, $rs['service_name'], $_trCache, $_trLocaleChain)) ?></span>
                     <span class="text-zinc-900 dark:text-white flex-shrink-0"><?= formatPrice((float)$rs['price']) ?></span>
                 </div>
                 <?php endforeach; ?>
-                <?php if ((float)($r['designation_fee'] ?? 0) > 0): ?>
-                <div class="flex justify-between text-sm">
-                    <span class="text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                        <?= __('reservations.show_designation_fee') ?> (<?= htmlspecialchars($staffName) ?>)
-                    </span>
-                    <span class="text-blue-600 dark:text-blue-400 flex-shrink-0">+<?= formatPrice((float)$r['designation_fee']) ?></span>
-                </div>
-                <?php endif; ?>
-                <div class="border-t border-zinc-200 dark:border-zinc-700 pt-2 flex justify-between text-sm">
+
+                <?php if ($_hasBundlePay): ?>
+                <!-- 소계 + 쿠폰 적용가 -->
+                <div class="border-t border-zinc-200 dark:border-zinc-700 pt-2 flex justify-between">
                     <span class="text-zinc-500 dark:text-zinc-400"><?= __('reservations.show_subtotal') ?></span>
-                    <span class="text-zinc-900 dark:text-white"><?= formatPrice((float)$r['total_amount'] + (float)($r['designation_fee'] ?? 0)) ?></span>
+                    <span class="text-zinc-900 dark:text-white"><?= formatPrice($_bundledTotal) ?></span>
                 </div>
-                <?php if ((float)$r['discount_amount'] > 0): ?>
-                <div class="flex justify-between text-sm">
-                    <span class="text-zinc-500 dark:text-zinc-400">
-                        <?= __('reservations.show_member_discount') ?>
-                        <?php if ($userGrade && $userGrade['discount_rate'] > 0): ?>
-                        <span class="text-xs text-red-400">(<?= htmlspecialchars($userGrade['name']) ?> <?= $userGrade['discount_rate'] ?>%)</span>
-                        <?php endif; ?>
-                    </span>
-                    <span class="text-red-500 flex-shrink-0">-<?= formatPrice((float)$r['discount_amount']) ?></span>
+                <div class="flex justify-between font-semibold text-green-600 dark:text-green-400">
+                    <span><?= htmlspecialchars($_bdnLabel) ?> <?= __('booking.payment.applied_price') ?? '적용가' ?></span>
+                    <span><?= formatPrice($_payBundlePrice) ?></span>
                 </div>
-                <?php endif; ?>
-                <?php if ((float)$r['points_used'] > 0): ?>
-                <div class="flex justify-between text-sm">
-                    <span class="text-zinc-500 dark:text-zinc-400"><?= get_points_name() ?> <?= __('reservations.used') ?></span>
-                    <span class="text-red-500 flex-shrink-0">-<?= formatPrice((float)$r['points_used']) ?></span>
+                <?php else: ?>
+                <!-- 소계 (번들 없음) -->
+                <div class="border-t border-zinc-200 dark:border-zinc-700 pt-2 flex justify-between">
+                    <span class="text-zinc-500 dark:text-zinc-400"><?= __('reservations.show_subtotal') ?></span>
+                    <span class="text-zinc-900 dark:text-white"><?= formatPrice($_payTotalSvc) ?></span>
                 </div>
                 <?php endif; ?>
+
+                <!-- 개별 추가 서비스 (번들 외) -->
+                <?php if (!empty($_extraSvcs)): ?>
+                <div class="border-t border-zinc-200 dark:border-zinc-700 pt-2"></div>
+                <?php foreach ($_extraSvcs as $rs): ?>
+                <div class="flex justify-between">
+                    <span class="text-zinc-500 dark:text-zinc-400 truncate mr-2"><?= htmlspecialchars(translateDbName('service', $rs['service_id'] ?? null, $rs['service_name'], $_trCache, $_trLocaleChain)) ?></span>
+                    <span class="text-zinc-900 dark:text-white flex-shrink-0">+<?= formatPrice((float)$rs['price']) ?></span>
+                </div>
+                <?php endforeach; ?>
+                <?php endif; ?>
+
+                <!-- 지명료 -->
+                <?php if ($_payDesignFee > 0): ?>
+                <div class="flex justify-between text-amber-600 dark:text-amber-400">
+                    <span><?= __('reservations.show_designation_fee') ?></span>
+                    <span>+<?= formatPrice($_payDesignFee) ?></span>
+                </div>
+                <?php endif; ?>
+
+                <!-- 할인 -->
+                <?php if ($_payDiscount > 0): ?>
+                <div class="flex justify-between text-red-500">
+                    <span><?= __('reservations.show_member_discount') ?><?php if ($userGrade && $userGrade['discount_rate'] > 0): ?> <span class="text-xs">(<?= $userGrade['discount_rate'] ?>%)</span><?php endif; ?></span>
+                    <span>-<?= formatPrice($_payDiscount) ?></span>
+                </div>
+                <?php endif; ?>
+
+                <!-- 적립금 사용 -->
+                <?php if ($_payPoints > 0): ?>
+                <div class="flex justify-between text-red-500">
+                    <span><?= get_points_name() ?> <?= __('reservations.used') ?></span>
+                    <span>-<?= formatPrice($_payPoints) ?></span>
+                </div>
+                <?php endif; ?>
+
+                <!-- 예약금 결제 -->
+                <?php
+                $_admDepEn = ($siteSettings['service_deposit_enabled'] ?? '0') === '1';
+                if ($_admDepEn && $_payPaidAmt > 0 && $_payPaidAmt < $_payFinal): ?>
+                <div class="flex justify-between text-green-600 dark:text-green-400">
+                    <span><?= __('booking.payment.deposit') ?? '예약금' ?> <?= __('booking.payment.paid') ?? '결제' ?></span>
+                    <span>-<?= formatPrice($_payPaidAmt) ?></span>
+                </div>
+                <?php endif; ?>
+
+                <!-- 합계 -->
+                <div class="border-t border-zinc-200 dark:border-zinc-700 pt-2 flex justify-between">
+                    <span class="text-zinc-600 dark:text-zinc-300"><?= __('reservations.show_total') ?? '합계' ?></span>
+                    <span class="text-zinc-900 dark:text-white font-semibold"><?= formatPrice($_payFinal) ?></span>
+                </div>
+
+                <!-- 최종 결제 금액 -->
                 <div class="border-t border-zinc-200 dark:border-zinc-700 pt-3 flex justify-between">
                     <span class="font-semibold text-zinc-900 dark:text-white"><?= __('reservations.show_final_amount') ?></span>
-                    <span class="font-bold text-lg text-blue-600 dark:text-blue-400"><?= formatPrice((float)$r['final_amount']) ?></span>
+                    <span class="font-bold text-lg text-blue-600 dark:text-blue-400"><?= formatPrice($_payFinal) ?></span>
                 </div>
+
                 <?php if ($userGrade && $userGrade['point_rate'] > 0 && $r['status'] === 'completed'): ?>
                 <div class="mt-2 p-2 bg-green-50 dark:bg-green-900/10 rounded-lg flex justify-between text-xs">
                     <span class="text-green-600 dark:text-green-400"><?= __('reservations.estimated_points', ['name' => get_points_name()]) ?> (<?= $userGrade['point_rate'] ?>%)</span>
-                    <span class="text-green-600 dark:text-green-400 font-semibold">+<?= formatPrice((float)$r['final_amount'] * $userGrade['point_rate'] / 100) ?></span>
+                    <span class="text-green-600 dark:text-green-400 font-semibold">+<?= formatPrice((float)$_payFinal * $userGrade['point_rate'] / 100) ?></span>
                 </div>
                 <?php endif; ?>
             </div>

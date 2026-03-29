@@ -337,4 +337,6 @@ return [
     'error_date_time_required' => '请先选择日期和开始时间。',
     'show_edit_datetime' => '修改日期时间',
     'show_edit_contact' => '修改联系方式',
+    'show_remove_bundle' => '删除套餐',
+    'show_remove_bundle_confirm' => '删除套餐和所有包含的服务吗？',
 ];

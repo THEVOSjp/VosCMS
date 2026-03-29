@@ -337,4 +337,6 @@ return [
     'error_date_time_required' => 'Silakan pilih tanggal dan waktu mulai terlebih dahulu.',
     'show_edit_datetime' => 'Ubah Tanggal/Waktu',
     'show_edit_contact' => 'Ubah Kontak',
+    'show_remove_bundle' => 'Hapus Paket',
+    'show_remove_bundle_confirm' => 'Hapus paket dan semua layanan yang termasuk?',
 ];

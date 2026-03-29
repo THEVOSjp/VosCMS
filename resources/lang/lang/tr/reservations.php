@@ -333,4 +333,6 @@ return [
     'error_date_time_required' => 'Lütfen önce tarih ve başlangıç saatini seçin.',
     'show_edit_datetime' => 'Tarih/Saat Düzenle',
     'show_edit_contact' => 'İletişimi Düzenle',
+    'show_remove_bundle' => 'Paketi Kaldır',
+    'show_remove_bundle_confirm' => 'Paket ve dahil tüm hizmetler kaldırılsın mı?',
 ];

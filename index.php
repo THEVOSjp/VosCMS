@@ -372,10 +372,20 @@ if (empty($path) || $path === 'index.php') {
         // 활성 서비스 목록 JSON
         header('Content-Type: application/json; charset=utf-8');
         $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
-        $stmt = $pdo->query("SELECT s.id, s.name, s.price, s.duration, c.name as category_name FROM {$prefix}services s LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id WHERE s.is_active = 1 ORDER BY s.sort_order ASC, s.name ASC");
+        $stmt = $pdo->query("SELECT s.id, s.name, s.price, s.duration, s.image, c.name as category_name FROM {$prefix}services s LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id WHERE s.is_active = 1 ORDER BY s.sort_order ASC, s.name ASC");
         $services = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($services as &$sv) { $sv['price_formatted'] = number_format((float)$sv['price']); }
-        echo json_encode(['services' => $services]);
+        // 번들 목록
+        $bundles = [];
+        try {
+            $bStmt = $pdo->query("SELECT b.id, b.name, b.bundle_price, b.image, b.description, COUNT(bi.service_id) as service_count, GROUP_CONCAT(bi.service_id) as service_ids FROM {$prefix}service_bundles b LEFT JOIN {$prefix}service_bundle_items bi ON b.id = bi.bundle_id WHERE b.is_active = 1 GROUP BY b.id ORDER BY b.display_order");
+            while ($b = $bStmt->fetch(PDO::FETCH_ASSOC)) {
+                $b['price_formatted'] = number_format((float)$b['bundle_price']);
+                $b['service_ids'] = $b['service_ids'] ? explode(',', $b['service_ids']) : [];
+                $bundles[] = $b;
+            }
+        } catch (\Throwable $e) {}
+        echo json_encode(['services' => $services, 'bundles' => $bundles]);
         exit;
     } elseif ($adminRoute === 'reservations/customer-services' && $_SERVER['REQUEST_METHOD'] === 'GET') {
         $apiAction = 'customer-services'; $apiId = null;
@@ -395,6 +405,30 @@ if (empty($path) || $path === 'index.php') {
     } elseif ($adminRoute === 'reservations/assign-staff' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $apiAction = 'assign-staff'; $apiId = null;
         include BASE_PATH . '/resources/views/admin/reservations/_api.php';
+    } elseif ($adminRoute === 'reservations/remove-bundle' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        header('Content-Type: application/json');
+        $resId = trim($_POST['reservation_id'] ?? '');
+        if ($resId) {
+            try {
+                $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+                // 번들 포함 서비스 삭제
+                $pdo->prepare("DELETE FROM {$prefix}reservation_services WHERE reservation_id = ? AND bundle_id IS NOT NULL")->execute([$resId]);
+                // reservations에서 번들 정보 제거
+                $pdo->prepare("UPDATE {$prefix}reservations SET bundle_id = NULL, bundle_price = NULL WHERE id = ?")->execute([$resId]);
+                // 남은 서비스 기준 금액 재계산
+                $recalc = $pdo->prepare("SELECT COALESCE(SUM(price),0) as total, COALESCE(SUM(duration),0) as dur FROM {$prefix}reservation_services WHERE reservation_id = ?");
+                $recalc->execute([$resId]);
+                $sums = $recalc->fetch(PDO::FETCH_ASSOC);
+                $pdo->prepare("UPDATE {$prefix}reservations SET total_amount = ?, final_amount = ?, updated_at = NOW() WHERE id = ?")
+                    ->execute([(float)$sums['total'], (float)$sums['total'], $resId]);
+                echo json_encode(['success' => true]);
+            } catch (\Throwable $e) {
+                echo json_encode(['error' => true, 'message' => $e->getMessage()]);
+            }
+        } else {
+            echo json_encode(['error' => true, 'message' => 'Reservation ID required']);
+        }
+        exit;
     } elseif ($adminRoute === 'reservations/remove-service' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $apiAction = 'remove-service'; $apiId = null;
         include BASE_PATH . '/resources/views/admin/reservations/_api.php';

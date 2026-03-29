@@ -337,4 +337,6 @@ return [
     'error_date_time_required' => 'Bitte wählen Sie zuerst Datum und Startzeit.',
     'show_edit_datetime' => 'Datum/Zeit ändern',
     'show_edit_contact' => 'Kontakt bearbeiten',
+    'show_remove_bundle' => 'Bundle entfernen',
+    'show_remove_bundle_confirm' => 'Bundle und alle enthaltenen Services entfernen?',
 ];

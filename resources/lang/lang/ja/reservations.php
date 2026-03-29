@@ -396,4 +396,6 @@ return [
     'error_date_time_required' => '日付と開始時間を先に選択してください。',
     'show_edit_datetime' => '日時変更',
     'show_edit_contact' => '連絡先変更',
+    'show_remove_bundle' => 'バンドル削除',
+    'show_remove_bundle_confirm' => 'バンドルと含まれるサービスをすべて削除しますか？',
 ];

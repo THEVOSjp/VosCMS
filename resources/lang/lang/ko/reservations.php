@@ -430,4 +430,6 @@ return [
     'error_date_time_required' => '날짜와 시작 시간을 먼저 선택해주세요.',
     'show_edit_datetime' => '일시 수정',
     'show_edit_contact' => '연락처 수정',
+    'show_remove_bundle' => '번들 삭제',
+    'show_remove_bundle_confirm' => '번들과 포함된 서비스를 모두 삭제하시겠습니까?',
 ];

@@ -271,6 +271,31 @@ async function confirmStaffChange() {
     }
 }
 
+// ─── 번들 삭제 (포함 서비스 일괄 삭제) ───
+async function removeBundle(reservationId) {
+    var result = await showConfirmModal('<?= __('reservations.show_remove_bundle_confirm') ?? '번들과 포함된 서비스를 모두 삭제하시겠습니까?' ?>', 'red', false);
+    if (!result) return;
+    console.log('[Show] Removing bundle for reservation:', reservationId);
+    try {
+        var resp = await fetch(adminUrl + '/reservations/remove-bundle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+            body: '_token=' + csrfToken + '&reservation_id=' + encodeURIComponent(reservationId)
+        });
+        var data = await resp.json();
+        if (data.error) {
+            if (typeof showResultModal === 'function') showResultModal(false, data.message || 'Error');
+            else alert(data.message || 'Error');
+        } else {
+            if (typeof showResultModal === 'function') { showResultModal(true, ''); setTimeout(function(){ location.reload(); }, 1200); }
+            else location.reload();
+        }
+    } catch (err) {
+        console.error('[Show] Remove bundle error:', err);
+        alert('Error: ' + err.message);
+    }
+}
+
 // ─── 서비스 삭제 (상세 페이지) ───
 async function removeShowService(reservationId, serviceId, btnEl) {
     if (!confirm('<?= __('reservations.pos_remove_service_confirm') ?>')) return;
@@ -291,9 +316,8 @@ async function removeShowService(reservationId, serviceId, btnEl) {
         }
 
         if (data.remaining === 0) {
-            // 예약 자체가 삭제됨 → 목록으로 이동
-            alert('<?= __('reservations.show_all_services_removed') ?>');
-            location.href = adminUrl + '/reservations';
+            // 서비스 모두 삭제 → 페이지 새로고침 (서비스 추가 가능)
+            location.reload();
             return;
         }
 
@@ -362,17 +386,40 @@ async function loadShowAddServiceList() {
         const existingIds = new Set();
         document.querySelectorAll('[data-svc-row]').forEach(r => existingIds.add(String(r.dataset.svcId)));
 
-        list.innerHTML = data.services.map(s => {
-            const exists = existingIds.has(String(s.id));
-            return `<label class="flex items-center p-2 rounded-lg border transition cursor-pointer
-                ${exists ? 'border-zinc-200 dark:border-zinc-700 opacity-40' : 'border-zinc-200 dark:border-zinc-700 hover:bg-blue-50 dark:hover:bg-blue-900/20'}">
-                <input type="checkbox" name="showAddSvc" value="${s.id}" class="mr-2.5 text-blue-600 rounded" ${exists ? 'disabled' : ''} onchange="onShowAddSvcChange()">
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-zinc-900 dark:text-white">${escapeHtml(s.name)}${exists ? ' <span class=&quot;text-xs text-zinc-400&quot;><?= __('reservations.show_add_service_added') ?></span>' : ''}</p>
-                    <p class="text-xs text-zinc-500">${s.duration}분 · ${s.price_formatted || s.price}</p>
-                </div>
-            </label>`;
-        }).join('');
+        // 번들 서비스
+        var bundleHtml = '';
+        if (data.bundles && data.bundles.length) {
+            bundleHtml = '<div class="mb-3"><p class="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-2 flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><?= __('bundles.recommended') ?? '추천' ?> <?= htmlspecialchars($siteSettings['bundle_display_name'] ?? '') ?></p>'
+                + '<div class="grid grid-cols-3 gap-2">'
+                + data.bundles.map(b => {
+                    var imgUrl = b.image ? (b.image.startsWith('http') ? b.image : adminUrl.replace(/\/[^/]+$/, '') + '/' + b.image) : '';
+                    return '<label class="relative rounded-lg border-2 border-amber-200 dark:border-amber-700 hover:border-amber-400 transition cursor-pointer overflow-hidden bg-white dark:bg-zinc-800">'
+                        + '<input type="checkbox" name="showAddBundle" value="' + b.id + '" data-services="' + escapeHtml((b.service_ids || []).join(',')) + '" class="absolute top-2 right-2 text-amber-600 rounded z-10" onchange="onShowAddBundleChange(this)">'
+                        + (imgUrl ? '<div class="h-20 bg-zinc-100 dark:bg-zinc-700 overflow-hidden"><img src="' + escapeHtml(imgUrl) + '" class="w-full h-full object-cover"></div>' : '<div class="h-20 bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center"><svg class="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>')
+                        + '<div class="p-2"><p class="text-xs font-semibold text-zinc-900 dark:text-white truncate">' + escapeHtml(b.name) + '</p>'
+                        + '<p class="text-xs text-amber-600 font-bold">' + (b.price_formatted || b.bundle_price) + '</p>'
+                        + '<p class="text-[10px] text-zinc-400">' + (b.service_count || 0) + '<?= __('booking.service_count') ?? '개 서비스' ?></p>'
+                        + '</div></label>';
+                }).join('')
+                + '</div></div>';
+        }
+
+        // 개별 서비스 카드
+        var svcHtml = '<div class="grid grid-cols-4 gap-2">'
+            + data.services.map(s => {
+                var exists = existingIds.has(String(s.id));
+                var imgUrl = s.image ? (s.image.startsWith('http') ? s.image : adminUrl.replace(/\/[^/]+$/, '') + '/' + s.image) : '';
+                return '<label class="relative rounded-lg border transition cursor-pointer overflow-hidden '
+                    + (exists ? 'border-zinc-200 dark:border-zinc-700 opacity-40' : 'border-zinc-200 dark:border-zinc-700 hover:border-blue-400') + ' bg-white dark:bg-zinc-800">'
+                    + '<input type="checkbox" name="showAddSvc" value="' + s.id + '" class="absolute top-2 right-2 text-blue-600 rounded z-10" ' + (exists ? 'disabled' : '') + ' onchange="onShowAddSvcChange()">'
+                    + (imgUrl ? '<div class="h-16 bg-zinc-100 dark:bg-zinc-700 overflow-hidden"><img src="' + escapeHtml(imgUrl) + '" class="w-full h-full object-cover"></div>' : '<div class="h-16 bg-zinc-50 dark:bg-zinc-700 flex items-center justify-center"><svg class="w-6 h-6 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>')
+                    + '<div class="p-2"><p class="text-xs font-semibold text-zinc-900 dark:text-white truncate">' + escapeHtml(s.name) + (exists ? ' <span class="text-[10px] text-zinc-400"><?= __('reservations.show_add_service_added') ?? '추가됨' ?></span>' : '') + '</p>'
+                    + '<p class="text-[10px] text-zinc-500">' + s.duration + '분 · ' + (s.price_formatted || s.price) + '</p>'
+                    + '</div></label>';
+            }).join('')
+            + '</div>';
+
+        list.innerHTML = bundleHtml + svcHtml;
 
         _showAddServiceLoaded = true;
     } catch (err) {
@@ -382,9 +429,20 @@ async function loadShowAddServiceList() {
 }
 
 function onShowAddSvcChange() {
-    const checked = document.querySelectorAll('input[name="showAddSvc"]:checked');
-    const btn = document.getElementById('showAddServiceBtn');
+    var checked = document.querySelectorAll('input[name="showAddSvc"]:checked');
+    var btn = document.getElementById('showAddServiceBtn');
     if (btn) btn.disabled = checked.length === 0;
+}
+
+function onShowAddBundleChange(cb) {
+    var svcIds = (cb.dataset.services || '').split(',').filter(Boolean);
+    console.log('[Show] Bundle toggled, services:', svcIds, 'checked:', cb.checked);
+    // 번들 포함 서비스 자동 체크/해제
+    svcIds.forEach(function(id) {
+        var svcCb = document.querySelector('input[name="showAddSvc"][value="' + id + '"]');
+        if (svcCb && !svcCb.disabled) svcCb.checked = cb.checked;
+    });
+    onShowAddSvcChange();
 }
 
 async function submitShowAddService() {
@@ -398,10 +456,15 @@ async function submitShowAddService() {
     btn.textContent = '<?= __('reservations.show_add_service_adding') ?>';
     btn.disabled = true;
 
+    // 선택된 번들 ID
+    var bundleCb = document.querySelector('input[name="showAddBundle"]:checked');
+    var bundleId = bundleCb ? bundleCb.value : '';
+
     try {
         const body = new URLSearchParams();
         body.append('_token', csrfToken);
         body.append('reservation_id', resId);
+        if (bundleId) body.append('bundle_id', bundleId);
         serviceIds.forEach(id => body.append('service_ids[]', id));
 
         const resp = await fetch(adminUrl + '/reservations/append-service', {

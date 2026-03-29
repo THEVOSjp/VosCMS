@@ -337,4 +337,6 @@ return [
     'error_date_time_required' => 'Vui lòng chọn ngày và giờ bắt đầu trước.',
     'show_edit_datetime' => 'Sửa ngày/giờ',
     'show_edit_contact' => 'Sửa liên hệ',
+    'show_remove_bundle' => 'Xóa gói',
+    'show_remove_bundle_confirm' => 'Xóa gói và tất cả dịch vụ bao gồm?',
 ];

@@ -333,4 +333,6 @@ return [
     'error_date_time_required' => 'Эхлээд огноо, эхлэх цагийг сонгоно уу.',
     'show_edit_datetime' => 'Огноо/цаг өөрчлөх',
     'show_edit_contact' => 'Холбоо барих мэдээлэл засах',
+    'show_remove_bundle' => 'Багц устгах',
+    'show_remove_bundle_confirm' => 'Багц болон бүх үйлчилгээг устгах уу?',
 ];

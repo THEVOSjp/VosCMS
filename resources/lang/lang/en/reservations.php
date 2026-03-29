@@ -427,4 +427,6 @@ return [
     'error_date_time_required' => 'Please select date and start time first.',
     'show_edit_datetime' => 'Edit Date/Time',
     'show_edit_contact' => 'Edit Contact',
+    'show_remove_bundle' => 'Remove Bundle',
+    'show_remove_bundle_confirm' => 'Remove the bundle and all included services?',
 ];

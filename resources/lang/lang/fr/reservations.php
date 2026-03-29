@@ -337,4 +337,6 @@ return [
     'error_date_time_required' => 'Veuillez sélectionner la date et l heure de début.',
     'show_edit_datetime' => 'Modifier date/heure',
     'show_edit_contact' => 'Modifier le contact',
+    'show_remove_bundle' => 'Supprimer le forfait',
+    'show_remove_bundle_confirm' => 'Supprimer le forfait et tous les services inclus ?',
 ];

@@ -337,4 +337,6 @@ return [
     'error_date_time_required' => 'Сначала выберите дату и время начала.',
     'show_edit_datetime' => 'Изменить дату/время',
     'show_edit_contact' => 'Изменить контакт',
+    'show_remove_bundle' => 'Удалить пакет',
+    'show_remove_bundle_confirm' => 'Удалить пакет и все включённые услуги?',
 ];
