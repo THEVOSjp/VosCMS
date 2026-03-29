@@ -509,5 +509,13 @@ return [
         'key_saved' => 'Kunci tersimpan.',
         'status_ready' => 'Sistem pembayaran siap.',
         'status_incomplete' => 'Silakan masukkan kunci API.',
+        'region_global' => 'Global',
+        'region_kr' => 'Korea',
+        'region_jp' => 'Jepang',
+        'gateway_info' => 'Informasi Gateway Pembayaran',
+        'stripe_desc' => 'Pembayaran global — 46 negara, 135 mata uang',
+        'toss_desc' => 'Pembayaran Korea — Kartu, transfer',
+        'payjp_desc' => 'Pembayaran Jepang — Kartu, minimarket',
+        'portone_desc' => 'Pembayaran terpadu Korea — Multi-PG',
     ],
 ];

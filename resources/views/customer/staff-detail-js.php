@@ -509,6 +509,12 @@
             .then(function(data) {
                 console.log('[StaffDetail] Reservation result:', data);
                 if (data.success) {
+                    // 결제가 필요한 경우 즉시 결제 페이지로 이동
+                    if (data.needs_payment && data.payment_url) {
+                        console.log('[StaffDetail] Redirecting to payment:', data.payment_url);
+                        window.location.href = data.payment_url;
+                        return;
+                    }
                     // 성공: 모달로 완료 메시지 표시 (요약 내용 유지)
                     var resNum = data.reservation_number || '';
                     var modalHtml = '<div id="sdBookingModal" class="fixed inset-0 z-[9999] flex items-center justify-center" style="background:rgba(0,0,0,0.5)">' +
@@ -517,10 +523,17 @@
                             '<h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2"><?= addslashes(__('booking.reservation_complete') ?? '예약이 완료되었습니다') ?></h3>' +
                             '<p class="text-gray-500 dark:text-zinc-400 mb-4"><?= addslashes(__('booking.reservation_complete_desc') ?? '예약 내용을 확인해주세요') ?></p>' +
                             (resNum ? '<div class="bg-gray-50 dark:bg-zinc-700 rounded-lg px-4 py-3 mb-6"><p class="text-xs text-gray-500 dark:text-zinc-400"><?= addslashes(__('booking.reservation_number') ?? '예약번호') ?></p><p class="text-lg font-mono font-bold text-blue-600 dark:text-blue-400">' + resNum + '</p></div>' : '') +
-                            '<div class="flex gap-3">' +
-                                '<a href="' + CONFIG.baseUrl + '/" class="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-700 rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-600 transition"><?= addslashes(__('common.nav.home') ?? '홈으로') ?></a>' +
+                            '<div class="flex flex-col gap-3">' +
+                                <?php
+                                $_sdPayConf = json_decode($siteSettings['payment_config'] ?? '{}', true) ?: [];
+                                $_sdPayEnabled = ($_sdPayConf['enabled'] ?? '0') === '1' && !empty($_sdPayConf['public_key']) && !empty($_sdPayConf['secret_key']);
+                                if ($_sdPayEnabled): ?>
+                                (data.reservation_id ? '<a href="' + CONFIG.baseUrl + '/payment/checkout?reservation_id=' + encodeURIComponent(data.reservation_id) + '" class="w-full px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition text-center flex items-center justify-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg><?= addslashes(__('booking.payment.pay_now') ?? '결제하기') ?></a>' : '') +
+                                <?php endif; ?>
+                                '<div class="flex gap-3">' +
+                                '<a href="' + CONFIG.baseUrl + '/" class="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-700 rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-600 transition text-center"><?= addslashes(__('common.nav.home') ?? '홈으로') ?></a>' +
                                 '<button onclick="document.getElementById(\'sdBookingModal\').remove()" class="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition"><?= addslashes(__('booking.check_summary') ?? '예약 내용 확인') ?></button>' +
-                            '</div>' +
+                                '</div></div>' +
                         '</div></div>';
                     document.body.insertAdjacentHTML('beforeend', modalHtml);
                     // 버튼 비활성 유지 (중복 예약 방지)

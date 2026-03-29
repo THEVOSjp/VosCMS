@@ -506,5 +506,13 @@ return [
         'key_saved' => 'La clave está guardada.',
         'status_ready' => 'El sistema de pago está listo.',
         'status_incomplete' => 'Por favor ingrese las claves API.',
+        'region_global' => 'Global',
+        'region_kr' => 'Corea',
+        'region_jp' => 'Japón',
+        'gateway_info' => 'Información de pasarelas de pago',
+        'stripe_desc' => 'Pagos globales — 46 países, 135 monedas',
+        'toss_desc' => 'Pagos en Corea — Tarjeta, transferencia',
+        'payjp_desc' => 'Pagos en Japón — Tarjeta, tienda de conveniencia',
+        'portone_desc' => 'Pagos unificados Corea — Múltiples PG',
     ],
 ];

@@ -552,5 +552,13 @@ return [
         'key_saved' => '키가 저장되어 있습니다.',
         'status_ready' => '결제 시스템이 준비되었습니다.',
         'status_incomplete' => 'API 키를 입력해주세요.',
+        'region_global' => '글로벌',
+        'region_kr' => '한국',
+        'region_jp' => '일본',
+        'gateway_info' => '결제 대행사 안내',
+        'stripe_desc' => '글로벌 결제 — 46개국, 135개 통화 지원',
+        'toss_desc' => '한국 결제 — 카드, 계좌이체, 간편결제',
+        'payjp_desc' => '일본 결제 — 카드, 콘비니 결제',
+        'portone_desc' => '한국 통합결제 — 다양한 PG사 연동',
     ],
 ];

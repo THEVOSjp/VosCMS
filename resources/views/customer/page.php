@@ -38,6 +38,24 @@ if (!$pageData) {
 $pageType = $pageData['page_type'] ?? 'document';
 $pageTitle = $pageData['title'] ?? $pageSlug;
 $pageContent = $pageData['content'] ?? '';
+
+// POST+JSON 요청: 위젯 render.php AJAX 처리 (HTML 출력 전 실행)
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST'
+    && stripos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false
+    && in_array($pageType, ['widget', 'system'])) {
+    require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetLoader.php';
+    $locale = $currentLocale ?? 'ko';
+    $_ajaxWidgets = $pdo->prepare("SELECT pw.*, w.slug as widget_type FROM {$prefix}page_widgets pw LEFT JOIN {$prefix}widgets w ON pw.widget_id = w.id WHERE pw.page_slug = ? AND pw.is_active = 1 ORDER BY pw.sort_order");
+    $_ajaxWidgets->execute([$pageSlug]);
+    while ($_aw = $_ajaxWidgets->fetch(PDO::FETCH_ASSOC)) {
+        $_awType = $_aw['widget_type'] ?? ($_aw['widget_slug'] ?? '');
+        $_awFile = BASE_PATH . '/widgets/' . $_awType . '/render.php';
+        if (file_exists($_awFile)) {
+            $config = json_decode($_aw['config'] ?? '{}', true) ?: [];
+            include $_awFile; // render.php 내부에서 POST 처리 후 exit
+        }
+    }
+}
 $seoContext = [
     'type' => 'sub',
     'subpage_title' => $pageTitle,
@@ -61,6 +79,8 @@ if (empty($_skinCfg)) {
 }
 $_showTitle = ($_skinCfg['show_title'] ?? '1') !== '0';
 $_contentWidth = $_skinCfg['content_width'] ?? 'max-w-7xl';
+// === STRONG DEBUG FOR BOOKING PAGE ===
+if ($pageSlug === 'booking') error_log("BOOKING_DEBUG: pageType=$pageType, _showTitle=" . ($_showTitle ? 'true' : 'false') . ", _hasTitleBg=" . ($_hasTitleBg ?? 'UNDEF') . ", _adminIcons empty=" . (empty($_adminIcons) ? 'YES' : 'NO'));
 $_contentBg = $_skinCfg['content_bg'] ?? 'transparent';
 $_showBreadcrumb = ($_skinCfg['show_breadcrumb'] ?? '0') !== '0';
 $_primaryColor = $_skinCfg['primary_color'] ?? '';
@@ -95,6 +115,10 @@ if ($pageType === 'widget' || $pageType === 'system') {
     $_editUrl = ($config['app_url'] ?? '') . '/' . urlencode($pageSlug) . '/edit';
 }
 $_adminIcons = rzx_admin_icons($_settingsUrl, $_editUrl);
+// 진단: 모든 페이지의 admin 상태 로그
+if ($pageSlug === 'booking') {
+    error_log("=== BOOKING PAGE ADMIN DEBUG === admin_id=" . ($_SESSION['admin_id'] ?? 'NOT_SET') . " | session keys=" . implode(',', array_keys($_SESSION ?? [])) . " | icons_result=" . (strlen($_adminIcons ?? '') > 0 ? 'HAS_HTML' : 'EMPTY'));
+}
 ?>
 
 <?php
@@ -173,6 +197,7 @@ if ($_primaryColor) echo '<style>:root { --page-primary: ' . htmlspecialchars($_
         <?php if ($_showTitle && $_hasTitleBg): ?>
             <?php include __DIR__ . '/_page-title-bg.php'; ?>
         <?php elseif ($_showTitle): ?>
+        <!-- ADMIN_ID_VALUE: <?= $_SESSION['admin_id'] ?? 'NOT_SET' ?> | ICONS_EMPTY: <?= empty($_adminIcons) ? 'YES' : 'NO' ?> | ICONS_LEN: <?= strlen($_adminIcons ?? '') ?> -->
         <h1 class="text-2xl font-bold <?= $_titleTextClass ?> mb-4 inline-flex items-center gap-2"><?= htmlspecialchars($pageTitle) ?> <?= $_adminIcons ?></h1>
         <?php elseif ($_adminIcons): ?>
         <div class="flex justify-end mb-2 gap-2"><?= $_adminIcons ?></div>

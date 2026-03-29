@@ -191,6 +191,17 @@ return [
         'paid' => '支払い完了',
         'partial' => '部分支払い',
         'refunded' => '返金',
+        'needs_payment' => 'お支払いが必要です',
+        'needs_payment_desc' => 'オンライン決済完了後、予約が確定します。',
+        'pay_now' => '決済する',
+        'charge_amount' => 'お支払い金額',
+        'back_to_detail' => '予約詳細に戻る',
+        'loading' => '決済画面を読み込み中...',
+        'deposit' => '予約金',
+        'deposit_notice' => '残額はご来店時にお支払いください。',
+        'retry' => '再度決済する',
+        'cancel_reservation' => '予約をキャンセル',
+        'applied_price' => '適用価格',
     ],
 
     // エラーメッセージ

@@ -150,18 +150,29 @@ try {
                 exit;
             }
 
-            // 기존 예약 조회 (해당 날짜 + 스태프)
-            $bookedSlots = [];
-            $bkQuery = "SELECT start_time, end_time FROM {$prefix}reservations WHERE reservation_date = ? AND status NOT IN ('cancelled', 'no_show')";
-            $bkParams = [$reqDate];
-            if ($reqStaffId) {
-                $bkQuery .= " AND staff_id = ?";
-                $bkParams[] = $reqStaffId;
+            // 활성 스태프 수 조회 (지명 없는 예약의 수용 가능 인원)
+            $totalStaffCount = 1;
+            if (!$reqStaffId) {
+                $staffCountStmt = $pdo->query("SELECT COUNT(*) FROM {$prefix}staff WHERE is_active = 1 AND (is_visible = 1 OR is_visible IS NULL)");
+                $totalStaffCount = max(1, (int)$staffCountStmt->fetchColumn());
             }
-            $bkStmt = $pdo->prepare($bkQuery);
-            $bkStmt->execute($bkParams);
-            while ($bk = $bkStmt->fetch(PDO::FETCH_ASSOC)) {
-                $bookedSlots[] = ['start' => $bk['start_time'], 'end' => $bk['end_time']];
+
+            // 기존 예약 조회 (해당 날짜)
+            $bookedSlots = [];
+            if ($reqStaffId) {
+                // 스태프 지정: 해당 스태프 예약만
+                $bkStmt = $pdo->prepare("SELECT start_time, end_time FROM {$prefix}reservations WHERE reservation_date = ? AND staff_id = ? AND status NOT IN ('cancelled', 'no_show')");
+                $bkStmt->execute([$reqDate, $reqStaffId]);
+                while ($bk = $bkStmt->fetch(PDO::FETCH_ASSOC)) {
+                    $bookedSlots[] = ['start' => $bk['start_time'], 'end' => $bk['end_time']];
+                }
+            } else {
+                // 스태프 미지정: 시간대별 예약 건수를 조회하여 전체 스태프 대비 확인
+                $bkStmt = $pdo->prepare("SELECT start_time, end_time, staff_id FROM {$prefix}reservations WHERE reservation_date = ? AND status NOT IN ('cancelled', 'no_show')");
+                $bkStmt->execute([$reqDate]);
+                while ($bk = $bkStmt->fetch(PDO::FETCH_ASSOC)) {
+                    $bookedSlots[] = ['start' => $bk['start_time'], 'end' => $bk['end_time'], 'staff_id' => $bk['staff_id']];
+                }
             }
 
             // 슬롯 생성
@@ -184,14 +195,32 @@ try {
                 $slotStartFull = $slotTimeStr . ':00';
 
                 // 기존 예약과 충돌 확인
-                $conflict = false;
-                foreach ($bookedSlots as $booked) {
-                    if ($slotStartFull < $booked['end'] && $slotEndStr > $booked['start']) {
-                        $conflict = true;
-                        break;
+                if ($reqStaffId) {
+                    // 스태프 지정: 1건이라도 겹치면 불가
+                    $conflict = false;
+                    foreach ($bookedSlots as $booked) {
+                        if ($slotStartFull < $booked['end'] && $slotEndStr > $booked['start']) {
+                            $conflict = true;
+                            break;
+                        }
                     }
+                    if ($conflict) continue;
+                } else {
+                    // 스태프 미지정: 해당 시간에 겹치는 예약 수가 전체 스태프 수 이상이면 불가
+                    $conflictCount = 0;
+                    $conflictStaffIds = [];
+                    foreach ($bookedSlots as $booked) {
+                        if ($slotStartFull < $booked['end'] && $slotEndStr > $booked['start']) {
+                            // 같은 스태프의 예약은 1건으로 카운트
+                            $sid = $booked['staff_id'] ?? 'none_' . $conflictCount;
+                            if (!in_array($sid, $conflictStaffIds)) {
+                                $conflictStaffIds[] = $sid;
+                                $conflictCount++;
+                            }
+                        }
+                    }
+                    if ($conflictCount >= $totalStaffCount) continue;
                 }
-                if ($conflict) continue;
 
                 // 과거 시간 제외
                 if ($reqDate === date('Y-m-d') && $slotTimeStr <= date('H:i')) continue;
@@ -241,9 +270,19 @@ try {
             $totalDuration += (int)$s['duration'];
         }
 
-        // 이 페이지에서는 지명 예약 없음 (스태프 페이지에서 진행)
+        // 번들 처리
+        $bundleId = !empty($input['bundle_id']) ? $input['bundle_id'] : null;
+        $bundlePrice = null;
+        if ($bundleId) {
+            $bdlStmt = $pdo->prepare("SELECT bundle_price FROM {$prefix}service_bundles WHERE id = ? AND is_active = 1");
+            $bdlStmt->execute([$bundleId]);
+            $dbBundlePrice = $bdlStmt->fetchColumn();
+            if ($dbBundlePrice !== false) $bundlePrice = (float)$dbBundlePrice;
+        }
+
+        // 이 페이지에서는 지명 예약 없음
         $designationFee = 0;
-        $finalAmount = $totalPrice;
+        $finalAmount = ($bundlePrice !== null) ? $bundlePrice : $totalPrice;
 
         // 예약번호 생성
         $reservationNumber = 'RZX' . date('ymd') . strtoupper(bin2hex(random_bytes(3)));
@@ -256,32 +295,49 @@ try {
         $userId = $isLoggedIn ? ($currentUser['id'] ?? null) : null;
         $id = bin2hex(random_bytes(4)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(6));
 
-        // 메인 예약 (service_id 제거 → reservation_services로 관리)
+        // 온라인 결제 활성화 여부
+        $_bkPayStmt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'payment_config'");
+        $_bkPayStmt->execute();
+        $_bkPayConf = json_decode($_bkPayStmt->fetchColumn() ?: '{}', true) ?: [];
+        $_bkPayEnabled = ($_bkPayConf['enabled'] ?? '0') === '1' && !empty($_bkPayConf['public_key']) && !empty($_bkPayConf['secret_key']);
+
+        $paymentStatus = $_bkPayEnabled ? 'unpaid' : 'paid';
+        $paidAmount = $_bkPayEnabled ? 0 : $finalAmount;
+
+        // 메인 예약
         $sql = "INSERT INTO {$prefix}reservations
-            (id, reservation_number, user_id, staff_id, customer_name, customer_phone, customer_email,
-             reservation_date, start_time, end_time, total_amount, final_amount, designation_fee, status, source, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'online', ?)";
+            (id, reservation_number, user_id, staff_id, bundle_id, bundle_price, customer_name, customer_phone, customer_email,
+             reservation_date, start_time, end_time, total_amount, final_amount, designation_fee,
+             payment_status, paid_amount, status, source, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'online', ?)";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
             $id, $reservationNumber, $userId,
-            $staffId ?: null,
+            $staffId ?: null, $bundleId, $bundlePrice,
             $name, $phone, $email ?: null,
             $date, $time . ':00', $endDt->format('H:i:s'),
-            $totalPrice, $finalAmount, $designationFee, $notes ?: null,
+            $totalPrice, $finalAmount, $designationFee,
+            $paymentStatus, $paidAmount, $notes ?: null,
         ]);
 
-        // 예약-서비스 관계 저장 (service_name 스냅샷 포함)
-        $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
+        // 예약-서비스 관계 저장 (서비스 원래 가격, bundle_id 기록)
+        $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order, bundle_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $sortIdx = 0;
         foreach ($selectedServices as $s) {
-            $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $sortIdx++]);
+            $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $sortIdx++, $bundleId]);
         }
 
-        echo json_encode([
+        $response = [
             'success' => true,
             'message' => __('booking.success'),
             'reservation_number' => $reservationNumber,
-        ], JSON_UNESCAPED_UNICODE);
+            'reservation_id' => $id,
+        ];
+        if ($_bkPayEnabled) {
+            $response['needs_payment'] = true;
+            $response['payment_url'] = ($config['app_url'] ?? '') . '/payment/checkout?reservation_id=' . urlencode($id);
+        }
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit;
     }
 

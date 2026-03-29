@@ -507,5 +507,13 @@ return [
         'key_saved' => 'Schlüssel ist gespeichert.',
         'status_ready' => 'Zahlungssystem ist bereit.',
         'status_incomplete' => 'Bitte API-Schlüssel eingeben.',
+        'region_global' => 'Global',
+        'region_kr' => 'Korea',
+        'region_jp' => 'Japan',
+        'gateway_info' => 'Zahlungsanbieter-Info',
+        'stripe_desc' => 'Globale Zahlungen — 46 Länder, 135 Währungen',
+        'toss_desc' => 'Korea-Zahlungen — Karte, Überweisung',
+        'payjp_desc' => 'Japan-Zahlungen — Karte, Convenience Store',
+        'portone_desc' => 'Korea-Zahlungen — Multi-PG-Integration',
     ],
 ];

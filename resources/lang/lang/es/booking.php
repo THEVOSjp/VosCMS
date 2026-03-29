@@ -190,6 +190,17 @@ return [
         'paid' => 'Pagado',
         'partial' => 'Parcial',
         'refunded' => 'Reembolsado',
+        'needs_payment' => 'Pago requerido',
+        'needs_payment_desc' => 'Su reserva se confirmará después del pago.',
+        'pay_now' => 'Pagar ahora',
+        'charge_amount' => 'Monto a pagar',
+        'back_to_detail' => 'Volver a los detalles de la reserva',
+        'loading' => 'Cargando pago...',
+        'deposit' => 'Depósito',
+        'deposit_notice' => 'El saldo restante se paga en el lugar.',
+        'retry' => 'Reintentar pago',
+        'cancel_reservation' => 'Cancelar reserva',
+        'applied_price' => 'precio aplicado',
     ],
 
     // Error messages

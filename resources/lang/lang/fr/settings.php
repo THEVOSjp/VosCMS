@@ -510,5 +510,13 @@ return [
         'key_saved' => 'La clé est enregistrée.',
         'status_ready' => 'Le système de paiement est prêt.',
         'status_incomplete' => 'Veuillez entrer les clés API.',
+        'region_global' => 'Global',
+        'region_kr' => 'Corée',
+        'region_jp' => 'Japon',
+        'gateway_info' => 'Informations sur les passerelles de paiement',
+        'stripe_desc' => 'Paiements globaux — 46 pays, 135 devises',
+        'toss_desc' => 'Paiements Corée — Carte, virement',
+        'payjp_desc' => 'Paiements Japon — Carte, konbini',
+        'portone_desc' => 'Paiements unifiés Corée — Multi-PG',
     ],
 ];

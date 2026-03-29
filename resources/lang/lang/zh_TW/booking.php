@@ -190,6 +190,17 @@ return [
         'paid' => '已支付',
         'partial' => '部分支付',
         'refunded' => '已退款',
+        'needs_payment' => '需要付款',
+        'needs_payment_desc' => '完成線上付款後預約將被確認。',
+        'pay_now' => '立即付款',
+        'charge_amount' => '付款金額',
+        'back_to_detail' => '返回預約詳情',
+        'loading' => '正在載入付款頁面...',
+        'deposit' => '訂金',
+        'deposit_notice' => '餘額請到店付款。',
+        'retry' => '重新付款',
+        'cancel_reservation' => '取消預約',
+        'applied_price' => '優惠價',
     ],
 
     // Error messages

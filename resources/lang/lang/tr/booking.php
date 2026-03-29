@@ -190,6 +190,17 @@ return [
         'paid' => 'Ödendi',
         'partial' => 'Kısmen ödenmiş',
         'refunded' => 'İade edildi',
+        'needs_payment' => 'Ödeme gerekli',
+        'needs_payment_desc' => 'Ödeme tamamlandıktan sonra rezervasyonunuz onaylanacaktır.',
+        'pay_now' => 'Şimdi öde',
+        'charge_amount' => 'Ödenecek Tutar',
+        'back_to_detail' => 'Rezervasyon detaylarına dön',
+        'loading' => 'Ödeme yükleniyor...',
+        'deposit' => 'Kapora',
+        'deposit_notice' => 'Kalan tutar yerinde ödenecektir.',
+        'retry' => 'Tekrar öde',
+        'cancel_reservation' => 'Rezervasyonu iptal et',
+        'applied_price' => 'uygulanan fiyat',
     ],
 
     // Error messages

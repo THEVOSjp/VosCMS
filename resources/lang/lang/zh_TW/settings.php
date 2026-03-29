@@ -509,5 +509,13 @@ return [
         'key_saved' => '金鑰已儲存。',
         'status_ready' => '付款系統已就緒。',
         'status_incomplete' => '請輸入API金鑰。',
+        'region_global' => '全球',
+        'region_kr' => '韓國',
+        'region_jp' => '日本',
+        'gateway_info' => '付款閘道資訊',
+        'stripe_desc' => '全球付款 — 46個國家，135種貨幣',
+        'toss_desc' => '韓國付款 — 信用卡、轉帳、便捷付款',
+        'payjp_desc' => '日本付款 — 信用卡、超商付款',
+        'portone_desc' => '韓國統一付款 — 多PG整合',
     ],
 ];

@@ -190,6 +190,17 @@ return [
         'paid' => 'Bezahlt',
         'partial' => 'Teilzahlung',
         'refunded' => 'Rückgabe',
+        'needs_payment' => 'Zahlung erforderlich',
+        'needs_payment_desc' => 'Ihre Reservierung wird nach der Zahlung bestätigt.',
+        'pay_now' => 'Jetzt bezahlen',
+        'charge_amount' => 'Zahlungsbetrag',
+        'back_to_detail' => 'Zurück zu den Reservierungsdetails',
+        'loading' => 'Zahlung wird geladen...',
+        'deposit' => 'Anzahlung',
+        'deposit_notice' => 'Der Restbetrag wird vor Ort bezahlt.',
+        'retry' => 'Erneut bezahlen',
+        'cancel_reservation' => 'Reservierung stornieren',
+        'applied_price' => 'Angebotspreis',
     ],
 
     // Error messages

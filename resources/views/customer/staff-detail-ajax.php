@@ -226,9 +226,17 @@ if ($action === 'create_reservation') {
 
     $finalAmount = $totalPrice + $designationFee - $discountAmount - $pointsUsed;
 
+    // 온라인 결제 활성화 여부 확인
+    $_payConf = json_decode($siteSettings['payment_config'] ?? '{}', true) ?: [];
+    $_onlinePayEnabled = ($_payConf['enabled'] ?? '0') === '1' && !empty($_payConf['public_key']) && !empty($_payConf['secret_key']);
+
     // 예약금 설정에 따른 결제 금액 결정
     $depositEnabled = ($config['service_deposit_enabled'] ?? '0') === '1';
-    if ($depositEnabled) {
+    if ($_onlinePayEnabled) {
+        // 온라인 결제 활성화: 미결제 상태로 생성 (결제 후 확정)
+        $paidAmount = 0;
+        $paymentStatus = 'unpaid';
+    } elseif ($depositEnabled) {
         $depositType = $config['service_deposit_type'] ?? 'fixed';
         if ($depositType === 'percent') {
             $paidAmount = ceil($finalAmount * (float)($config['service_deposit_percent'] ?? 0) / 100);
@@ -237,7 +245,7 @@ if ($action === 'create_reservation') {
         }
         $paymentStatus = ($paidAmount >= $finalAmount) ? 'paid' : 'partial';
     } else {
-        // 예약금 미사용: 전액 결제
+        // 예약금 미사용, 온라인 결제 미사용: 현장 결제
         $paidAmount = $finalAmount;
         $paymentStatus = 'paid';
     }
@@ -271,8 +279,11 @@ if ($action === 'create_reservation') {
             $discountAmount = floor($baseAmount * $discountRate / 100);
         }
         $finalAmount = $baseAmount + $designationFee - $discountAmount - $pointsUsed;
-        // 예약금 재계산
-        if ($depositEnabled) {
+        // 예약금 재계산 (온라인 결제 활성화 시 unpaid 유지)
+        if ($_onlinePayEnabled) {
+            $paidAmount = 0;
+            $paymentStatus = 'unpaid';
+        } elseif ($depositEnabled) {
             if (($config['service_deposit_type'] ?? 'fixed') === 'percent') {
                 $paidAmount = ceil($finalAmount * (float)($config['service_deposit_percent'] ?? 0) / 100);
             } else {
@@ -316,11 +327,17 @@ if ($action === 'create_reservation') {
         $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $sortIdx++, $bundleId]);
     }
 
-    echo json_encode([
+    $response = [
         'success' => true,
         'message' => __('booking.success'),
         'reservation_number' => $reservationNumber,
-    ], JSON_UNESCAPED_UNICODE);
+        'reservation_id' => $id,
+    ];
+    if ($_onlinePayEnabled) {
+        $response['needs_payment'] = true;
+        $response['payment_url'] = ($config['app_url'] ?? '') . '/payment/checkout?reservation_id=' . urlencode($id);
+    }
+    echo json_encode($response, JSON_UNESCAPED_UNICODE);
     exit;
 }
 

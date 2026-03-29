@@ -191,6 +191,17 @@ return [
         'paid' => 'Paid',
         'partial' => 'Partial',
         'refunded' => 'Refunded',
+        'needs_payment' => 'Payment required',
+        'needs_payment_desc' => 'Your reservation will be confirmed after payment.',
+        'pay_now' => 'Pay Now',
+        'charge_amount' => 'Amount to Pay',
+        'back_to_detail' => 'Back to reservation details',
+        'loading' => 'Loading payment...',
+        'deposit' => 'Deposit',
+        'deposit_notice' => 'Remaining balance will be paid on-site.',
+        'retry' => 'Retry Payment',
+        'cancel_reservation' => 'Cancel Reservation',
+        'applied_price' => 'applied price',
     ],
 
     // Error messages

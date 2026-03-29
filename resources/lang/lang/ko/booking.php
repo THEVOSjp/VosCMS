@@ -175,6 +175,17 @@ return [
         'paid' => '결제완료',
         'partial' => '부분결제',
         'refunded' => '환불',
+        'needs_payment' => '결제가 필요합니다',
+        'needs_payment_desc' => '온라인 결제를 완료하면 예약이 확정됩니다.',
+        'pay_now' => '결제하기',
+        'charge_amount' => '결제 금액',
+        'back_to_detail' => '예약 상세로 돌아가기',
+        'loading' => '결제 화면을 불러오는 중...',
+        'deposit' => '예약금',
+        'deposit_notice' => '잔액은 방문 시 현장에서 결제합니다.',
+        'retry' => '다시 결제하기',
+        'cancel_reservation' => '예약 취소하기',
+        'applied_price' => '적용가',
     ],
 
     // 예약 취소

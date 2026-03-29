@@ -508,5 +508,13 @@ return [
         'key_saved' => 'キーが保存されています。',
         'status_ready' => '決済システムの準備が完了しました。',
         'status_incomplete' => 'APIキーを入力してください。',
+        'region_global' => 'グローバル',
+        'region_kr' => '韓国',
+        'region_jp' => '日本',
+        'gateway_info' => '決済代行会社のご案内',
+        'stripe_desc' => 'グローバル決済 — 46カ国、135通貨対応',
+        'toss_desc' => '韓国決済 — カード、口座振替、簡単決済',
+        'payjp_desc' => '日本決済 — カード、コンビニ決済',
+        'portone_desc' => '韓国統合決済 — 多様なPG連携',
     ],
 ];

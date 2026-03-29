@@ -190,6 +190,17 @@ return [
         'paid' => 'Sudah dibayar',
         'partial' => 'Dibayar sebagian',
         'refunded' => 'Dikembalikan',
+        'needs_payment' => 'Pembayaran diperlukan',
+        'needs_payment_desc' => 'Reservasi Anda akan dikonfirmasi setelah pembayaran.',
+        'pay_now' => 'Bayar sekarang',
+        'charge_amount' => 'Jumlah Pembayaran',
+        'back_to_detail' => 'Kembali ke detail reservasi',
+        'loading' => 'Memuat pembayaran...',
+        'deposit' => 'Uang Muka',
+        'deposit_notice' => 'Sisa pembayaran dilakukan di tempat.',
+        'retry' => 'Coba bayar lagi',
+        'cancel_reservation' => 'Batalkan Reservasi',
+        'applied_price' => 'harga terapan',
     ],
 
     // Error messages

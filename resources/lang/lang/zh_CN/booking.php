@@ -190,6 +190,17 @@ return [
         'paid' => '已支付',
         'partial' => '部分支付',
         'refunded' => '已退款',
+        'needs_payment' => '需要付款',
+        'needs_payment_desc' => '完成在线支付后预约将被确认。',
+        'pay_now' => '立即支付',
+        'charge_amount' => '支付金额',
+        'back_to_detail' => '返回预约详情',
+        'loading' => '正在加载支付页面...',
+        'deposit' => '预约金',
+        'deposit_notice' => '余额请到店支付。',
+        'retry' => '重新支付',
+        'cancel_reservation' => '取消预约',
+        'applied_price' => '优惠价',
     ],
 
     // Error messages

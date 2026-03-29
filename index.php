@@ -231,6 +231,15 @@ if (empty($path) || $path === 'index.php') {
 } elseif (preg_match('#^booking/cancel/([A-Za-z0-9-]+)$#', $path, $m)) {
     $reservationNumber = $m[1];
     $__pageFile = BASE_PATH . '/resources/views/customer/booking/cancel.php';
+} elseif ($path === 'payment/checkout') {
+    $__pageFile = BASE_PATH . '/resources/views/customer/payment/checkout.php';
+} elseif ($path === 'payment/success') {
+    $__pageFile = BASE_PATH . '/resources/views/customer/payment/success.php';
+} elseif ($path === 'payment/cancel') {
+    $__pageFile = BASE_PATH . '/resources/views/customer/payment/cancel.php';
+} elseif ($path === 'payment/webhook' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    include BASE_PATH . '/resources/views/customer/payment/webhook.php';
+    exit;
 } elseif ($path === $config['admin_path'] || str_starts_with($path, $config['admin_path'] . '/')) {
     $adminRoute = substr($path, strlen($config['admin_path']));
     $adminRoute = trim($adminRoute, '/') ?: 'dashboard';

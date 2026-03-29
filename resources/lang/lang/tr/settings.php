@@ -383,5 +383,13 @@ return [
         'key_saved' => 'Anahtar kaydedildi.',
         'status_ready' => 'Ödeme sistemi hazır.',
         'status_incomplete' => 'Lütfen API anahtarlarını girin.',
+        'region_global' => 'Küresel',
+        'region_kr' => 'Kore',
+        'region_jp' => 'Japonya',
+        'gateway_info' => 'Ödeme Ağ Geçidi Bilgileri',
+        'stripe_desc' => 'Küresel ödemeler — 46 ülke, 135 para birimi',
+        'toss_desc' => 'Kore ödemeleri — Kart, havale',
+        'payjp_desc' => 'Japonya ödemeleri — Kart, konbini',
+        'portone_desc' => 'Kore birleşik ödemeler — Çoklu PG',
     ],
 ];

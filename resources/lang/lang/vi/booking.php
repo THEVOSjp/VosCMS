@@ -190,6 +190,17 @@ return [
         'paid' => 'Đã thanh toán',
         'partial' => 'Thanh toán một phần',
         'refunded' => 'Hoàn tiền',
+        'needs_payment' => 'Cần thanh toán',
+        'needs_payment_desc' => 'Đặt lịch sẽ được xác nhận sau khi thanh toán.',
+        'pay_now' => 'Thanh toán ngay',
+        'charge_amount' => 'Số tiền thanh toán',
+        'back_to_detail' => 'Quay lại chi tiết đặt lịch',
+        'loading' => 'Đang tải thanh toán...',
+        'deposit' => 'Tiền đặt cọc',
+        'deposit_notice' => 'Số dư còn lại sẽ thanh toán tại cửa hàng.',
+        'retry' => 'Thanh toán lại',
+        'cancel_reservation' => 'Hủy đặt lịch',
+        'applied_price' => 'giá áp dụng',
     ],
 
     // Error messages

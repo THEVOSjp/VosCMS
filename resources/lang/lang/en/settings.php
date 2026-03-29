@@ -508,5 +508,13 @@ return [
         'key_saved' => 'Key is saved.',
         'status_ready' => 'Payment system is ready.',
         'status_incomplete' => 'Please enter API keys.',
+        'region_global' => 'Global',
+        'region_kr' => 'Korea',
+        'region_jp' => 'Japan',
+        'gateway_info' => 'Payment Gateway Information',
+        'stripe_desc' => 'Global payments — 46 countries, 135 currencies',
+        'toss_desc' => 'Korea payments — Card, bank transfer, easy pay',
+        'payjp_desc' => 'Japan payments — Card, convenience store',
+        'portone_desc' => 'Korea unified payments — Multiple PG integration',
     ],
 ];

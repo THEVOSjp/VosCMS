@@ -509,5 +509,13 @@ return [
         'key_saved' => '密钥已保存。',
         'status_ready' => '支付系统已就绪。',
         'status_incomplete' => '请输入API密钥。',
+        'region_global' => '全球',
+        'region_kr' => '韩国',
+        'region_jp' => '日本',
+        'gateway_info' => '支付网关信息',
+        'stripe_desc' => '全球支付 — 46个国家，135种货币',
+        'toss_desc' => '韩国支付 — 银行卡、转账、便捷支付',
+        'payjp_desc' => '日本支付 — 银行卡、便利店支付',
+        'portone_desc' => '韩国统一支付 — 多PG集成',
     ],
 ];
