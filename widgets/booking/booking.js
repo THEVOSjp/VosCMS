@@ -13,7 +13,7 @@
     const selected = {
         services: [], date: '', time: '',
         name: '', phone: '', email: '', notes: '',
-        bundlePrice: 0, bundleName: ''
+        bundlePrice: 0, bundleName: '', bundleId: null
     };
 
     // === Progress Bar ===
@@ -91,6 +91,7 @@
         if (!hasBundleSelection) {
             selected.bundlePrice = 0;
             selected.bundleName = '';
+            selected.bundleId = null;
         }
         document.querySelectorAll('.bw-svc-card input[name="bw_service[]"]:checked').forEach(function(cb) {
             selected.services.push({
@@ -299,6 +300,8 @@
 
         var payload = {
             service_ids: selected.services.map(function(s) { return s.id; }),
+            bundle_id: selected.bundleId || null,
+            bundle_price: selected.bundlePrice || 0,
             date: selected.date,
             time: selected.time,
             customer_name: selected.name,
@@ -480,7 +483,8 @@
         // 번들 가격 정보 저장
         selected.bundlePrice = parseFloat(card.dataset.bundlePrice) || 0;
         selected.bundleName = card.dataset.bundleName || '';
-        console.log('[BW] Bundle price:', selected.bundlePrice, 'Bundle name:', selected.bundleName);
+        selected.bundleId = card.dataset.bundleId || null;
+        console.log('[BW] Bundle id:', selected.bundleId, 'price:', selected.bundlePrice, 'name:', selected.bundleName);
 
         // 기존 선택 해제
         document.querySelectorAll('.bw-svc-card input[name="bw_service[]"]').forEach(function(cb) {

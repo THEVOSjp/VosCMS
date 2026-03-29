@@ -1,0 +1,22 @@
+<?php
+return [
+    'system_running' => 'Sistem calisiyor',
+    'db_connected' => 'Veritabani bagli',
+    'db_failed' => 'Veritabani baglanti hatasi',
+    'today_reservations' => 'Bugunku rezervasyonlar',
+    'total_members' => 'Toplam uyeler',
+    'total_services' => 'Kayitli hizmetler',
+    'system_version' => 'Sistem versiyonu',
+    'quick_actions' => 'Hizli islemler',
+    'new_reservation' => 'Yeni rezervasyon',
+    'add_service' => 'Hizmet ekle',
+    'manage_members' => 'Uye yonetimi',
+    'system_settings' => 'Sistem ayarlari',
+    'system_info' => 'Sistem bilgisi',
+    'php_version' => 'PHP surumu',
+    'environment' => 'Ortam',
+    'timezone' => 'Saat dilimi',
+    'debug_mode' => 'Hata ayiklama',
+    'enabled' => 'Etkin',
+    'disabled' => 'Devre disi',
+];

@@ -1,0 +1,22 @@
+<?php
+return [
+    'system_running' => 'He thong dang chay',
+    'db_connected' => 'Ket noi CSDL thanh cong',
+    'db_failed' => 'Ket noi CSDL that bai',
+    'today_reservations' => 'Dat lich hom nay',
+    'total_members' => 'Tong thanh vien',
+    'total_services' => 'Dich vu dang ky',
+    'system_version' => 'Phien ban he thong',
+    'quick_actions' => 'Thao tac nhanh',
+    'new_reservation' => 'Dat lich moi',
+    'add_service' => 'Them dich vu',
+    'manage_members' => 'Quan ly thanh vien',
+    'system_settings' => 'Cai dat he thong',
+    'system_info' => 'Thong tin he thong',
+    'php_version' => 'Phien ban PHP',
+    'environment' => 'Moi truong',
+    'timezone' => 'Mui gio',
+    'debug_mode' => 'Che do debug',
+    'enabled' => 'Bat',
+    'disabled' => 'Tat',
+];

@@ -1,0 +1,22 @@
+<?php
+return [
+    'system_running' => 'Система работает',
+    'db_connected' => 'БД подключена',
+    'db_failed' => 'Ошибка подключения к БД',
+    'today_reservations' => 'Записи сегодня',
+    'total_members' => 'Всего участников',
+    'total_services' => 'Зарегистрировано услуг',
+    'system_version' => 'Версия системы',
+    'quick_actions' => 'Быстрые действия',
+    'new_reservation' => 'Новая запись',
+    'add_service' => 'Добавить услугу',
+    'manage_members' => 'Управление',
+    'system_settings' => 'Настройки',
+    'system_info' => 'О системе',
+    'php_version' => 'Версия PHP',
+    'environment' => 'Окружение',
+    'timezone' => 'Часовой пояс',
+    'debug_mode' => 'Отладка',
+    'enabled' => 'Включен',
+    'disabled' => 'Выключен',
+];

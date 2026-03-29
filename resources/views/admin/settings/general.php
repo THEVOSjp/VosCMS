@@ -56,6 +56,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if ($action === 'update_payment') {
+        $pgw = trim($_POST['payment_gateway'] ?? 'stripe');
+        $pubKey = trim($_POST['payment_public_key'] ?? '');
+        $secKey = trim($_POST['payment_secret_key'] ?? '');
+        $testMode = isset($_POST['payment_test_mode']) ? '1' : '0';
+        $enabled = isset($_POST['payment_enabled']) ? '1' : '0';
+        try {
+            $paymentConfig = json_encode([
+                'gateway' => $pgw,
+                'public_key' => $pubKey,
+                'secret_key' => $secKey,
+                'test_mode' => $testMode,
+                'enabled' => $enabled,
+            ], JSON_UNESCAPED_UNICODE);
+            $stmt = $pdo->prepare("INSERT INTO rzx_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+            $stmt->execute(['payment_config', $paymentConfig]);
+            $settings['payment_config'] = $paymentConfig;
+            $message = __('settings.success');
+            $messageType = 'success';
+        } catch (PDOException $e) {
+            $message = __('settings.error_save') . ': ' . $e->getMessage();
+            $messageType = 'error';
+        }
+    }
+
     if ($action === 'update_admin_path') {
         $newAdminPath = trim($_POST['admin_path'] ?? '');
 
@@ -270,6 +295,132 @@ ob_start();
         </div>
     </form>
 </div>
+
+<?php
+// 결제 설정 로드
+$_payConf = json_decode($settings['payment_config'] ?? '{}', true) ?: [];
+$_payGateway = $_payConf['gateway'] ?? 'stripe';
+$_payPubKey = $_payConf['public_key'] ?? '';
+$_paySecKey = $_payConf['secret_key'] ?? '';
+$_payTestMode = ($_payConf['test_mode'] ?? '1') === '1';
+$_payEnabled = ($_payConf['enabled'] ?? '0') === '1';
+$_payMaskedSec = $_paySecKey ? str_repeat('•', 12) . substr($_paySecKey, -8) : '';
+?>
+
+<!-- 온라인 결제 설정 -->
+<div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6 mt-6">
+    <div class="flex items-center gap-3 mb-2">
+        <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+        <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-100"><?= __('settings.payment_config.title') ?? '온라인 결제 설정' ?></h3>
+    </div>
+    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4"><?= __('settings.payment_config.description') ?? '온라인 결제를 위한 PG사 API 키를 설정합니다.' ?></p>
+
+    <form method="POST" class="space-y-4" id="paymentSettingsForm">
+        <input type="hidden" name="action" value="update_payment">
+
+        <!-- 결제 활성화 -->
+        <div class="flex items-center justify-between py-3 border-b dark:border-zinc-700">
+            <div>
+                <p class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('settings.payment_config.enabled') ?? '온라인 결제 활성화' ?></p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('settings.payment_config.enabled_hint') ?? '활성화하면 고객이 예약 시 온라인 결제를 할 수 있습니다.' ?></p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="payment_enabled" value="1" <?= $_payEnabled ? 'checked' : '' ?> class="sr-only peer">
+                <div class="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-zinc-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+        </div>
+
+        <!-- PG사 선택 -->
+        <div>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.payment_config.gateway') ?? 'PG사 선택' ?></label>
+            <select name="payment_gateway" id="payment_gateway"
+                    class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="stripe" <?= $_payGateway === 'stripe' ? 'selected' : '' ?>>Stripe (글로벌)</option>
+                <option value="toss" <?= $_payGateway === 'toss' ? 'selected' : '' ?>>토스페이먼츠 (한국)</option>
+                <option value="payjp" <?= $_payGateway === 'payjp' ? 'selected' : '' ?>>PAY.JP (일본)</option>
+                <option value="portone" <?= $_payGateway === 'portone' ? 'selected' : '' ?>>포트원 (한국)</option>
+            </select>
+        </div>
+
+        <!-- 테스트 모드 -->
+        <div class="flex items-center justify-between py-3 border-b dark:border-zinc-700">
+            <div>
+                <p class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('settings.payment_config.test_mode') ?? '테스트 모드' ?></p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('settings.payment_config.test_mode_hint') ?? '테스트 모드에서는 실제 결제가 이루어지지 않습니다.' ?></p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="payment_test_mode" value="1" <?= $_payTestMode ? 'checked' : '' ?> class="sr-only peer">
+                <div class="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-zinc-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+            </label>
+        </div>
+
+        <!-- API 키 -->
+        <div>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                <span id="pubKeyLabel">Publishable Key</span>
+            </label>
+            <input type="text" name="payment_public_key" value="<?= htmlspecialchars($_payPubKey) ?>"
+                   placeholder="pk_test_..."
+                   class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                <span id="secKeyLabel">Secret Key</span>
+            </label>
+            <div class="relative">
+                <input type="password" name="payment_secret_key" id="paySecKeyInput"
+                       value="<?= htmlspecialchars($_paySecKey) ?>"
+                       placeholder="sk_test_..."
+                       class="w-full px-3 py-2 pr-10 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm">
+                <button type="button" onclick="var i=document.getElementById('paySecKeyInput');i.type=i.type==='password'?'text':'password';console.log('[Payment] Toggle key visibility');"
+                        class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                </button>
+            </div>
+            <?php if ($_paySecKey): ?>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.payment_config.key_saved') ?? '키가 저장되어 있습니다.' ?> (<?= $_payMaskedSec ?>)</p>
+            <?php endif; ?>
+        </div>
+
+        <!-- 상태 표시 -->
+        <?php if ($_payEnabled && $_payPubKey && $_paySecKey): ?>
+        <div class="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="text-sm text-green-700 dark:text-green-300"><?= __('settings.payment_config.status_ready') ?? '결제 시스템이 준비되었습니다.' ?> (<?= $_payTestMode ? __('settings.payment_config.test_mode') ?? '테스트 모드' : __('settings.payment_config.live_mode') ?? '라이브 모드' ?>)</span>
+        </div>
+        <?php elseif ($_payEnabled): ?>
+        <div class="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+            <span class="text-sm text-amber-700 dark:text-amber-300"><?= __('settings.payment_config.status_incomplete') ?? 'API 키를 입력해주세요.' ?></span>
+        </div>
+        <?php endif; ?>
+
+        <div class="flex items-center justify-end pt-4 border-t dark:border-zinc-700">
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                <?= __('common.buttons.save') ?>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+console.log('[Payment Settings] Initialized');
+document.getElementById('payment_gateway').addEventListener('change', function() {
+    var gw = this.value;
+    var labels = {
+        stripe: ['Publishable Key', 'Secret Key', 'pk_test_...', 'sk_test_...'],
+        toss: ['클라이언트 키', '시크릿 키', 'test_ck_...', 'test_sk_...'],
+        payjp: ['公開鍵', '秘密鍵', 'pk_test_...', 'sk_test_...'],
+        portone: ['가맹점 식별코드', 'API Secret', 'imp_...', 'secret_...']
+    };
+    var l = labels[gw] || labels.stripe;
+    document.getElementById('pubKeyLabel').textContent = l[0];
+    document.getElementById('secKeyLabel').textContent = l[1];
+    document.querySelector('[name=payment_public_key]').placeholder = l[2];
+    document.getElementById('paySecKeyInput').placeholder = l[3];
+    console.log('[Payment Settings] Gateway changed to:', gw);
+});
+</script>
 
 <?php
 $pageContent = ob_get_clean();

@@ -253,15 +253,47 @@ if ($action === 'create_reservation') {
     $userId = $isLoggedIn ? ($currentUser['id'] ?? null) : null;
     $id = bin2hex(random_bytes(4)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(6));
 
+    // 번들 정보
+    $bundleId = !empty($input['bundle_id']) ? $input['bundle_id'] : null;
+    $bundlePrice = null;
+    if ($bundleId) {
+        $bdlStmt = $pdo->prepare("SELECT bundle_price FROM {$prefix}service_bundles WHERE id = ? AND is_active = 1");
+        $bdlStmt->execute([$bundleId]);
+        $dbBundlePrice = $bdlStmt->fetchColumn();
+        if ($dbBundlePrice !== false) $bundlePrice = (float)$dbBundlePrice;
+    }
+
+    // total_amount = 서비스 원래 가격 합계, final_amount = 번들 가격(또는 원래 합계) + 지명료 - 할인 - 적립금
+    if ($bundlePrice !== null) {
+        $baseAmount = $bundlePrice;
+        // 할인 재계산 (번들 가격 기준)
+        if ($discountEnabled && ($discountRate ?? 0) > 0) {
+            $discountAmount = floor($baseAmount * $discountRate / 100);
+        }
+        $finalAmount = $baseAmount + $designationFee - $discountAmount - $pointsUsed;
+        // 예약금 재계산
+        if ($depositEnabled) {
+            if (($config['service_deposit_type'] ?? 'fixed') === 'percent') {
+                $paidAmount = ceil($finalAmount * (float)($config['service_deposit_percent'] ?? 0) / 100);
+            } else {
+                $paidAmount = min((float)($config['service_deposit_amount'] ?? 0), $finalAmount);
+            }
+            $paymentStatus = ($paidAmount >= $finalAmount) ? 'paid' : 'partial';
+        } else {
+            $paidAmount = $finalAmount;
+            $paymentStatus = 'paid';
+        }
+    }
+
     $sql = "INSERT INTO {$prefix}reservations
-        (id, reservation_number, user_id, staff_id, customer_name, customer_phone, customer_email,
+        (id, reservation_number, user_id, staff_id, bundle_id, bundle_price, customer_name, customer_phone, customer_email,
          reservation_date, start_time, end_time, total_amount, final_amount, designation_fee, discount_amount, points_used,
          paid_amount, payment_status, status, source, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'designation', ?)";
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'designation', ?)";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
         $id, $reservationNumber, $userId,
-        $staffId,
+        $staffId, $bundleId, $bundlePrice,
         $name, $phone, $email ?: null,
         $date, $time . ':00', $endDt->format('H:i:s'),
         $totalPrice, $finalAmount, $designationFee, $discountAmount, $pointsUsed,
@@ -277,68 +309,11 @@ if ($action === 'create_reservation') {
             ->execute([$txId, $currentUser['id'], $pointsUsed, $newBal, $id, '예약 적립금 사용 (' . $reservationNumber . ')']);
     }
 
-    // 번들 ID (있는 경우)
-    $bundleId = !empty($input['bundle_id']) ? $input['bundle_id'] : null;
-
-    // 예약-서비스 관계 (service_name 스냅샷 + bundle_id 포함)
+    // 예약-서비스 관계: 서비스 원래 가격 그대로, bundle_id 기록
     $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order, bundle_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
     $sortIdx = 0;
-
-    // 번들 선택 시: 번들에 포함된 서비스는 bundle_id 기록, 번들 가격을 첫 서비스에 배분
-    if ($bundleId) {
-        $bdlStmt = $pdo->prepare("SELECT bundle_price FROM {$prefix}service_bundles WHERE id = ? AND is_active = 1");
-        $bdlStmt->execute([$bundleId]);
-        $bundlePrice = (float)($bdlStmt->fetchColumn() ?: 0);
-
-        $bdlItemStmt = $pdo->prepare("SELECT service_id FROM {$prefix}service_bundle_items WHERE bundle_id = ?");
-        $bdlItemStmt->execute([$bundleId]);
-        $bundleServiceIds = $bdlItemStmt->fetchAll(PDO::FETCH_COLUMN);
-
-        // 번들 가격을 서비스 수로 균등 배분
-        $bundleSvcCount = 0;
-        foreach ($selectedServices as $s) {
-            if (in_array($s['id'], $bundleServiceIds)) $bundleSvcCount++;
-        }
-        $perSvcPrice = $bundleSvcCount > 0 ? round($bundlePrice / $bundleSvcCount, 2) : 0;
-
-        // total/final 재계산: 번들가격 + 비번들서비스 합계
-        $totalPrice = $bundlePrice;
-        foreach ($selectedServices as $s) {
-            if (!in_array($s['id'], $bundleServiceIds)) {
-                $totalPrice += (float)$s['price'];
-            }
-        }
-        // 할인 재계산 (번들 가격 기준)
-        if ($discountAmount > 0) {
-            $discountAmount = floor($totalPrice * ($discountEnabled ? ($discountRate ?? 0) : 0) / 100);
-        }
-        $finalAmount = $totalPrice + $designationFee - $discountAmount - $pointsUsed;
-
-        // 예약금 재계산 (번들 가격 기준)
-        if ($depositEnabled) {
-            if (($config['service_deposit_type'] ?? 'fixed') === 'percent') {
-                $paidAmount = ceil($finalAmount * (float)($config['service_deposit_percent'] ?? 0) / 100);
-            } else {
-                $paidAmount = min((float)($config['service_deposit_amount'] ?? 0), $finalAmount);
-            }
-            $paymentStatus = ($paidAmount >= $finalAmount) ? 'paid' : 'partial';
-        } else {
-            $paidAmount = $finalAmount;
-            $paymentStatus = 'paid';
-        }
-
-        // UPDATE reservations with recalculated amounts
-        $pdo->prepare("UPDATE {$prefix}reservations SET total_amount = ?, final_amount = ?, discount_amount = ?, paid_amount = ?, payment_status = ? WHERE id = ?")->execute([$totalPrice, $finalAmount, $discountAmount, $paidAmount, $paymentStatus, $id]);
-
-        foreach ($selectedServices as $s) {
-            $isBundled = in_array($s['id'], $bundleServiceIds);
-            $svcPrice = $isBundled ? $perSvcPrice : (float)$s['price'];
-            $rsStmt->execute([$id, $s['id'], $s['name'], $svcPrice, $s['duration'], $sortIdx++, $isBundled ? $bundleId : null]);
-        }
-    } else {
-        foreach ($selectedServices as $s) {
-            $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $sortIdx++, null]);
-        }
+    foreach ($selectedServices as $s) {
+        $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $sortIdx++, $bundleId]);
     }
 
     echo json_encode([

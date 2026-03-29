@@ -1,0 +1,22 @@
+<?php
+return [
+    'system_running' => 'Sistem berjalan',
+    'db_connected' => 'Database terhubung',
+    'db_failed' => 'Koneksi database gagal',
+    'today_reservations' => 'Reservasi hari ini',
+    'total_members' => 'Total anggota',
+    'total_services' => 'Layanan terdaftar',
+    'system_version' => 'Versi sistem',
+    'quick_actions' => 'Aksi cepat',
+    'new_reservation' => 'Reservasi baru',
+    'add_service' => 'Tambah layanan',
+    'manage_members' => 'Kelola anggota',
+    'system_settings' => 'Pengaturan sistem',
+    'system_info' => 'Info sistem',
+    'php_version' => 'Versi PHP',
+    'environment' => 'Lingkungan',
+    'timezone' => 'Zona waktu',
+    'debug_mode' => 'Mode debug',
+    'enabled' => 'Aktif',
+    'disabled' => 'Nonaktif',
+];

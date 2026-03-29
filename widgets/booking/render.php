@@ -38,7 +38,12 @@ try {
 
     // 번들(추천 패키지) 로드
     $bundles = [];
+    // bundle_display_name 다국어 처리
     $bundleDisplayName = $siteSettings['bundle_display_name'] ?? '';
+    if (function_exists('db_trans')) {
+        $_bdnTr = db_trans('bundle_display_name', $currentLocale);
+        if ($_bdnTr) $bundleDisplayName = $_bdnTr;
+    }
     if (!$bundleDisplayName || $bundleDisplayName === '') $bundleDisplayName = __('bundles.recommended') ?? '추천 패키지';
     $bStmt = $pdo->query("SELECT b.*, GROUP_CONCAT(bi.service_id) as svc_ids, COUNT(bi.service_id) as svc_count, SUM(s.duration) as total_duration
         FROM {$prefix}service_bundles b
@@ -155,6 +160,8 @@ try {
             $phone = trim($input['customer_phone'] ?? '');
             $email = trim($input['customer_email'] ?? '');
             $notes = trim($input['notes'] ?? '');
+            $bundleId = !empty($input['bundle_id']) ? $input['bundle_id'] : null;
+            $bundlePrice = $bundleId ? (float)($input['bundle_price'] ?? 0) : null;
             if (!$date||!$time||!$name||!$phone) { echo json_encode(['success'=>false,'message'=>__('booking.error.required_fields')]); exit; }
 
             $ph = implode(',', array_fill(0, count($serviceIds), '?'));
@@ -163,8 +170,20 @@ try {
             $selSvcs = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
             if (empty($selSvcs)) { echo json_encode(['success'=>false,'message'=>__('booking.error.invalid_service')]); exit; }
 
+            // total_amount = 서비스 원래 가격 합계, final_amount = 번들 가격 또는 원래 합계
             $totalPrice=$totalDuration=0;
             foreach ($selSvcs as $s) { $totalPrice+=(float)$s['price']; $totalDuration+=(int)$s['duration']; }
+
+            // 번들이 있으면 DB에서 번들 가격 검증
+            if ($bundleId) {
+                $bdlStmt = $pdo->prepare("SELECT bundle_price FROM {$prefix}service_bundles WHERE id = ? AND is_active = 1");
+                $bdlStmt->execute([$bundleId]);
+                $dbBundlePrice = $bdlStmt->fetchColumn();
+                if ($dbBundlePrice !== false) {
+                    $bundlePrice = (float)$dbBundlePrice;
+                }
+            }
+            $finalAmount = $bundleId && $bundlePrice !== null ? $bundlePrice : $totalPrice;
 
             $resNum = 'RZX'.date('ymd').strtoupper(bin2hex(random_bytes(3)));
             $startDt = new DateTime("$date $time");
@@ -172,12 +191,13 @@ try {
             $userId = $isLoggedIn ? ($currentUser['id'] ?? null) : null;
             $id = bin2hex(random_bytes(4)).'-'.bin2hex(random_bytes(2)).'-'.bin2hex(random_bytes(2)).'-'.bin2hex(random_bytes(2)).'-'.bin2hex(random_bytes(6));
 
-            $sql = "INSERT INTO {$prefix}reservations (id,reservation_number,user_id,staff_id,customer_name,customer_phone,customer_email,reservation_date,start_time,end_time,total_amount,final_amount,designation_fee,status,source,notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'pending','online',?)";
+            $sql = "INSERT INTO {$prefix}reservations (id,reservation_number,user_id,staff_id,bundle_id,bundle_price,customer_name,customer_phone,customer_email,reservation_date,start_time,end_time,total_amount,final_amount,designation_fee,status,source,notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending','online',?)";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$id,$resNum,$userId,null,$name,$phone,$email?:null,$date,$time.':00',$endDt->format('H:i:s'),$totalPrice,$totalPrice,0,$notes?:null]);
+            $stmt->execute([$id,$resNum,$userId,null,$bundleId,$bundlePrice,$name,$phone,$email?:null,$date,$time.':00',$endDt->format('H:i:s'),$totalPrice,$finalAmount,0,$notes?:null]);
 
-            $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id,service_id,service_name,price,duration,sort_order) VALUES (?,?,?,?,?,?)");
-            $si=0; foreach ($selSvcs as $s) { $rsStmt->execute([$id,$s['id'],$s['name'],$s['price'],$s['duration'],$si++]); }
+            // reservation_services: 서비스 원래 가격 그대로, bundle_id 기록
+            $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id,service_id,service_name,price,duration,sort_order,bundle_id) VALUES (?,?,?,?,?,?,?)");
+            $si=0; foreach ($selSvcs as $s) { $rsStmt->execute([$id,$s['id'],$s['name'],$s['price'],$s['duration'],$si++,$bundleId]); }
 
             echo json_encode(['success'=>true,'message'=>__('booking.success'),'reservation_number'=>$resNum], JSON_UNESCAPED_UNICODE); exit;
         }

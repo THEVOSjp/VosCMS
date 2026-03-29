@@ -62,7 +62,7 @@ $_bwT = function($cfg, $key, $default) {
         <div class="mb-8">
             <h3 class="text-lg font-semibold text-gray-800 dark:text-zinc-200 mb-4 flex items-center gap-2">
                 <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-                <?= htmlspecialchars(__('bundles.recommended') ?? (is_array($bundleDisplayName) ? _bwGetI18n(['n'=>$bundleDisplayName], 'n', '추천 패키지') : $bundleDisplayName)) ?> クーポン
+                <?= __('bundles.recommended') ?> <?= htmlspecialchars($bundleDisplayName) ?>
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <?php foreach ($bundles as $bndl):
@@ -84,7 +84,7 @@ $_bwT = function($cfg, $key, $default) {
                     $svcIdJson = htmlspecialchars(json_encode($bndl['svc_id_list']), ENT_QUOTES);
                 ?>
                 <div class="bw-bundle-card cursor-pointer rounded-xl border-2 border-gray-200 dark:border-zinc-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg transition-all overflow-hidden"
-                     data-services="<?= htmlspecialchars(implode(',', $bndl['svc_id_list'])) ?>" data-bundle-select="1" data-bundle-price="<?= $displayPrice ?>" data-bundle-name="<?= htmlspecialchars($bName) ?>">
+                     data-services="<?= htmlspecialchars(implode(',', $bndl['svc_id_list'])) ?>" data-bundle-select="1" data-bundle-id="<?= htmlspecialchars($bndl['id']) ?>" data-bundle-price="<?= $displayPrice ?>" data-bundle-name="<?= htmlspecialchars($bName) ?>">
                     <?php if ($bImg): ?>
                     <div class="relative h-32 bg-gray-100 dark:bg-zinc-700 overflow-hidden">
                         <img src="<?= htmlspecialchars($bImg) ?>" alt="" class="w-full h-full object-cover">
@@ -97,7 +97,7 @@ $_bwT = function($cfg, $key, $default) {
                         <h4 class="font-semibold text-gray-900 dark:text-white text-sm"><?= htmlspecialchars($bName) ?></h4>
                         <?php if ($bDesc): ?><p class="text-xs text-gray-500 dark:text-zinc-400 mt-1 line-clamp-2"><?= htmlspecialchars(preg_replace('/<[^>]*>/', '', $bDesc)) ?></p><?php endif; ?>
                         <div class="flex items-center justify-between mt-3">
-                            <span class="text-xs text-gray-400"><?= $bndl['svc_count'] ?><?= __('booking.service_count') ?> · <?= $bndl['total_duration'] ?><?= __('booking.minutes') ?? '분' ?></span>
+                            <span class="text-xs text-gray-400"><?= $bndl['svc_count'] ?><?= __('booking.service_count') ?> · <?= $bndl['total_duration'] ?><?= __('common.minutes') ?></span>
                             <div class="text-right">
                                 <?php if ($isEvent && $originalPrice > $displayPrice): ?>
                                 <span class="text-xs text-gray-400 line-through"><?= $currencySymbol ?><?= number_format($originalPrice) ?></span>
