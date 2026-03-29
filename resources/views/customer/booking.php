@@ -327,6 +327,29 @@ if (empty($_skinCfg)) {
     }
 }
 $_contentWidth = $_skinCfg['content_width'] ?? 'max-w-7xl';
+$_showTitle = ($_skinCfg['show_title'] ?? '1') !== '0';
+$_showBreadcrumb = ($_skinCfg['show_breadcrumb'] ?? '0') !== '0';
+$_primaryColor = $_skinCfg['primary_color'] ?? '';
+$_customCss = $_skinCfg['custom_css'] ?? '';
+$_customHeader = $_skinCfg['custom_header_html'] ?? '';
+$_customFooter = $_skinCfg['custom_footer_html'] ?? '';
+// 제목 배경 설정
+$_titleBgType = $_skinCfg['title_bg_type'] ?? 'none';
+$_titleBgImage = $_skinCfg['title_bg_image'] ?? '';
+$_titleBgVideo = $_skinCfg['title_bg_video'] ?? '';
+$_titleBgHeight = (int)($_skinCfg['title_bg_height'] ?? 200);
+$_titleBgOverlay = (int)($_skinCfg['title_bg_overlay'] ?? 40);
+$_titleTextColor = $_skinCfg['title_text_color'] ?? 'auto';
+$_hasTitleBg = $_showTitle && $_titleBgType !== 'none' && (($_titleBgType === 'image' && $_titleBgImage) || ($_titleBgType === 'video' && $_titleBgVideo));
+$_titleTextClass = 'text-zinc-800 dark:text-zinc-100';
+if ($_hasTitleBg) {
+    $_titleTextClass = $_titleTextColor === 'dark' ? 'text-zinc-900' : 'text-white';
+} elseif ($_titleTextColor === 'white') {
+    $_titleTextClass = 'text-white';
+} elseif ($_titleTextColor === 'dark') {
+    $_titleTextClass = 'text-zinc-900';
+}
+$pageTitle = __('common.nav.booking');
 
 // 관리 아이콘 (설정 + 편집)
 require_once BASE_PATH . '/rzxlib/Core/Helpers/admin-icons.php';
@@ -356,8 +379,32 @@ try {
 $seoContext = ['type' => 'sub', 'subpage_title' => __('common.nav.booking')];
 ?>
 
+<?php
+if ($_customCss) echo '<style>' . $_customCss . '</style>';
+if ($_primaryColor) echo '<style>:root { --page-primary: ' . htmlspecialchars($_primaryColor) . '; }</style>';
+?>
+
 <?php if ($_bookingWidgetRenderer && $_bookingWidgetRenderer->hasWidgets()): ?>
+<div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 py-6">
+    <?php if ($_showBreadcrumb && !$_hasTitleBg): ?>
+    <nav class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+        <a href="<?= $config['app_url'] ?? '' ?>/" class="hover:text-blue-600"><?= __('common.home') ?? '홈' ?></a>
+        <span class="mx-1">/</span>
+        <span class="text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($pageTitle) ?></span>
+    </nav>
+    <?php endif; ?>
+    <?php if ($_customHeader): ?><div class="mb-4"><?= $_customHeader ?></div><?php endif; ?>
+    <?php if ($_showTitle && $_hasTitleBg): ?>
+        <?php include BASE_PATH . '/resources/views/customer/_page-title-bg.php'; ?>
+    <?php elseif ($_showTitle): ?>
+    <h1 class="text-2xl font-bold <?= $_titleTextClass ?> mb-4 inline-flex items-center gap-2"><?= htmlspecialchars($pageTitle) ?> <?= $_adminIcons ?></h1>
+    <?php elseif ($_adminIcons): ?>
+    <div class="flex justify-end mb-2 gap-2"><?= $_adminIcons ?></div>
+    <?php endif; ?>
+<?php $GLOBALS['_rzx_page_title_shown'] = $_showTitle; ?>
 <?= $_bookingWidgetRenderer->renderAll() ?>
+    <?php if ($_customFooter): ?><div class="mt-4"><?= $_customFooter ?></div><?php endif; ?>
+</div>
 <?php else: ?>
     <div class="<?= $_contentWidth ?> mx-auto px-4 py-8">
         <div class="text-center mb-8">

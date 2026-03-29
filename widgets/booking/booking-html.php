@@ -20,6 +20,7 @@ if (!function_exists('_bwGetI18n')) {
 $_bwT = function($cfg, $key, $default) {
     return _bwGetI18n($cfg, $key, $default);
 };
+
 ?>
 <style>
 .bw-step-active{background-color:#2563eb;color:#fff}
@@ -30,10 +31,15 @@ $_bwT = function($cfg, $key, $default) {
 
 <section class="py-8" id="bwRoot">
 <div class="max-w-7xl mx-auto px-4">
-    <?php if ($wTitle || $wSubtitle): ?>
+    <?php $_pageTitleShown = !empty($GLOBALS['_rzx_page_title_shown']); ?>
+    <?php if (($wTitle || $wSubtitle) && !$_pageTitleShown): ?>
     <div class="text-center mb-8">
         <?php if ($wTitle): ?><h2 class="text-3xl font-bold text-gray-900 dark:text-white"><?= htmlspecialchars($_bwT($config, 'title', $wTitle)) ?></h2><?php endif; ?>
         <?php if ($wSubtitle): ?><p class="text-gray-600 dark:text-zinc-400 mt-2"><?= htmlspecialchars($_bwT($config, 'subtitle', $wSubtitle)) ?></p><?php endif; ?>
+    </div>
+    <?php elseif ($wSubtitle && $_pageTitleShown): ?>
+    <div class="text-center mb-8">
+        <p class="text-gray-600 dark:text-zinc-400 mt-2"><?= htmlspecialchars($_bwT($config, 'subtitle', $wSubtitle)) ?></p>
     </div>
     <?php endif; ?>
 
