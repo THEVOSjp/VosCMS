@@ -108,10 +108,16 @@ unset($_s);
 // 스태프
 $staff = null;
 if ($reservation['staff_id']) {
-    $_rdStStmt = $pdo->prepare("SELECT id, name, avatar, greeting_before, greeting_after, designation_fee FROM {$prefix}staff WHERE id = ?");
+    $_rdStStmt = $pdo->prepare("SELECT id, name, name_i18n, avatar, greeting_before, greeting_after, designation_fee FROM {$prefix}staff WHERE id = ?");
     $_rdStStmt->execute([$reservation['staff_id']]);
     $staff = $_rdStStmt->fetch(PDO::FETCH_ASSOC);
-    if ($staff) $staff['name'] = _rdTr($pdo, $prefix, 'staff.'.$staff['id'].'.name', $staff['name'], $currentLocale);
+    if ($staff && !empty($staff['name_i18n'])) {
+        $_stI18n = is_string($staff['name_i18n']) ? json_decode($staff['name_i18n'], true) : $staff['name_i18n'];
+        if (is_array($_stI18n)) {
+            if (!empty($_stI18n[$currentLocale])) $staff['name'] = $_stI18n[$currentLocale];
+            elseif (!empty($_stI18n['en'])) $staff['name'] = $_stI18n['en'];
+        }
+    }
 }
 
 // 번들

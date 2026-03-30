@@ -339,4 +339,23 @@ return [
     'show_edit_contact' => 'Modifier le contact',
     'show_remove_bundle' => 'Supprimer le forfait',
     'show_remove_bundle_confirm' => 'Supprimer le forfait et tous les services inclus ?',
+
+    // Paiement
+    'pay_cash' => 'Espèces',
+    'pay_card' => 'Carte',
+    'pay_amount' => 'Montant',
+    'pay_received' => 'Reçu',
+    'pay_change' => 'Monnaie',
+    'pay_short' => 'Manquant',
+    'pay_confirm' => 'Confirmer le paiement',
+    'pay_points_balance' => 'Solde',
+    'pay_points_use' => 'Utiliser',
+    'pay_points_all' => 'Tout',
+    'pay_card_amount' => 'Montant carte',
+    'pos_visit' => 'Visites',
+    'pos_visit_count' => '',
+    'pos_noshow' => 'No-show',
+    'pos_memo_placeholder' => 'Saisir un mémo...',
+    'pos_no_memo' => 'Aucun mémo',
+    'pos_memo_member_only' => 'Seuls les membres peuvent enregistrer des mémos.',
 ];

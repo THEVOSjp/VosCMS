@@ -339,4 +339,23 @@ return [
     'show_edit_contact' => '修改联系方式',
     'show_remove_bundle' => '删除套餐',
     'show_remove_bundle_confirm' => '删除套餐和所有包含的服务吗？',
+
+    // 支付
+    'pay_cash' => '现金支付',
+    'pay_card' => '刷卡支付',
+    'pay_amount' => '支付金额',
+    'pay_received' => '收到金额',
+    'pay_change' => '找零',
+    'pay_short' => '不足金额',
+    'pay_confirm' => '完成支付',
+    'pay_points_balance' => '余额',
+    'pay_points_use' => '使用',
+    'pay_points_all' => '全部',
+    'pay_card_amount' => '刷卡金额',
+    'pos_visit' => '到店',
+    'pos_visit_count' => '次',
+    'pos_noshow' => '未到',
+    'pos_memo_placeholder' => '输入备注...',
+    'pos_no_memo' => '无备注',
+    'pos_memo_member_only' => '仅会员可保存备注。',
 ];

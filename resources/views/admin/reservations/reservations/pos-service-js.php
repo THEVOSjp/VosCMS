@@ -36,7 +36,7 @@ Object.assign(POS, {
                                 <span id="posCustBadges" class="flex items-center gap-1"></span>
                             </div>
                             <div class="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                                <span>${this.escHtml(r.customer_phone)}</span>
+                                <span class="font-mono">${fmtPhone(r.customer_phone)}</span>
                                 <span>${this.escHtml(r.reservation_date)}</span>
                             </div>
                             <div id="posCustStats" class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"></div>
@@ -136,7 +136,7 @@ Object.assign(POS, {
     },
 
     renderCustomerProfile(c, memos) {
-        const genderLabel = { male: '남', female: '여', other: '기타' };
+        const genderLabel = { male: '<?= __('reservations.show_customer_gender_male') ?>', female: '<?= __('reservations.show_customer_gender_female') ?>', other: '<?= __('reservations.show_customer_gender_other') ?>' };
 
         // 프로필 이미지 업데이트 (w-20 h-20)
         if (c.profile_image) {
@@ -146,20 +146,20 @@ Object.assign(POS, {
         // 뱃지: 회원/비회원, 등급
         let badges = '';
         if (c.is_member) {
-            badges += `<span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">회원</span>`;
+            badges += `<span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"><?= __('reservations.show_customer_member') ?></span>`;
             if (c.grade_name) {
                 badges += `<span class="px-1.5 py-0.5 rounded-full text-[10px] font-semibold text-white" style="background:${c.grade_color || '#6B7280'}">${this.escHtml(c.grade_name)}</span>`;
             }
         } else {
-            badges += `<span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400">비회원</span>`;
+            badges += `<span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400"><?= __('reservations.show_customer_guest') ?></span>`;
         }
         document.getElementById('posCustBadges').innerHTML = badges;
 
         // 통계: 방문횟수
         let stats = '';
         if (c.is_member) {
-            stats = `방문 <b class="text-zinc-700 dark:text-zinc-300">${c.visit_completed}</b>회`;
-            if (c.visit_no_show > 0) stats += ` · <span class="text-red-400">노쇼 ${c.visit_no_show}</span>`;
+            stats = `<?= __('reservations.pos_visit') ?? '방문' ?> <b class="text-zinc-700 dark:text-zinc-300">${c.visit_completed}</b><?= __('reservations.pos_visit_count') ?? '회' ?>`;
+            if (c.visit_no_show > 0) stats += ` · <span class="text-red-400"><?= __('reservations.pos_noshow') ?? '노쇼' ?> ${c.visit_no_show}</span>`;
         }
         document.getElementById('posCustStats').innerHTML = stats;
 
@@ -169,15 +169,26 @@ Object.assign(POS, {
         // 고객 정보 테이블
         if (c.is_member) {
             let age = '';
-            if (c.birth_date) age = (new Date().getFullYear() - parseInt(c.birth_date.substring(0, 4))) + '세';
+            <?php
+            $_posAgeLabel = ['ko'=>'세','en'=>'y/o','ja'=>'歳','zh_CN'=>'岁','zh_TW'=>'歲','de'=>'J.','es'=>'años','fr'=>'ans','id'=>'thn','mn'=>'нас','ru'=>'лет','tr'=>'yaş','vi'=>'tuổi'];
+            $_posAgeUnit = $_posAgeLabel[$config['locale'] ?? 'ko'] ?? 'y/o';
+            $_posCustLabels = [
+                'info' => __('reservations.show_customer_info'),
+                'age' => __('reservations.show_customer_birth'),
+                'gender' => __('reservations.show_customer_gender'),
+                'discount' => __('reservations.show_member_discount'),
+                'joined' => __('reservations.show_customer_joined'),
+            ];
+            ?>
+            if (c.birth_date) age = (new Date().getFullYear() - parseInt(c.birth_date.substring(0, 4))) + '<?= $_posAgeUnit ?>';
             detailHtml += `<div>
-                <p class="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">고객 정보</p>
+                <p class="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5"><?= $_posCustLabels['info'] ?></p>
                 <div class="space-y-1 text-xs">
-                    ${age ? `<div class="flex justify-between"><span class="text-zinc-500">나이</span><span class="text-zinc-900 dark:text-white">${age}</span></div>` : ''}
-                    ${c.gender ? `<div class="flex justify-between"><span class="text-zinc-500">성별</span><span class="text-zinc-900 dark:text-white">${genderLabel[c.gender] || ''}</span></div>` : ''}
-                    ${c.discount_rate > 0 ? `<div class="flex justify-between"><span class="text-zinc-500">할인율</span><span class="text-red-500">${c.discount_rate}%</span></div>` : ''}
+                    ${age ? `<div class="flex justify-between"><span class="text-zinc-500"><?= $_posCustLabels['age'] ?></span><span class="text-zinc-900 dark:text-white">${age}</span></div>` : ''}
+                    ${c.gender ? `<div class="flex justify-between"><span class="text-zinc-500"><?= $_posCustLabels['gender'] ?></span><span class="text-zinc-900 dark:text-white">${genderLabel[c.gender] || ''}</span></div>` : ''}
+                    ${c.discount_rate > 0 ? `<div class="flex justify-between"><span class="text-zinc-500"><?= $_posCustLabels['discount'] ?></span><span class="text-red-500">${c.discount_rate}%</span></div>` : ''}
                     ${c.points_balance > 0 ? `<div class="flex justify-between"><span class="text-zinc-500"><?= get_points_name() ?></span><span class="text-emerald-600">${this.fmtCurrency(c.points_balance)}</span></div>` : ''}
-                    ${c.member_since ? `<div class="flex justify-between"><span class="text-zinc-500">가입</span><span class="text-zinc-700 dark:text-zinc-300">${c.member_since.substring(0,10)}</span></div>` : ''}
+                    ${c.member_since ? `<div class="flex justify-between"><span class="text-zinc-500"><?= $_posCustLabels['joined'] ?></span><span class="text-zinc-700 dark:text-zinc-300">${c.member_since.substring(0,10)}</span></div>` : ''}
                 </div>
             </div>`;
         }
@@ -187,7 +198,7 @@ Object.assign(POS, {
             detailHtml += `<div class="p-2.5 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-800/30">
                 <p class="text-[10px] font-semibold text-amber-600 dark:text-amber-400 mb-0.5 flex items-center gap-1">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
-                    고객 요구사항</p>
+                    <?= __('reservations.show_customer_request') ?? '고객 요구사항' ?></p>
                 <p class="text-xs text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap">${this.escHtml(c.notes)}</p>
             </div>`;
         }
@@ -195,7 +206,7 @@ Object.assign(POS, {
         // 관리자 메모 (admin_notes)
         if (c.admin_notes) {
             detailHtml += `<div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700">
-                <p class="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 mb-0.5">관리자 메모 (예약건)</p>
+                <p class="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 mb-0.5"><?= __('reservations.show_admin_notes') ?? '관리자 메모' ?></p>
                 <p class="text-xs text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap">${this.escHtml(c.admin_notes)}</p>
             </div>`;
         }
@@ -210,7 +221,7 @@ Object.assign(POS, {
                     <p class="text-xs text-zinc-700 dark:text-zinc-300">${this.escHtml(m.content)}</p>
                     <p class="text-[10px] text-zinc-400">${(m.created_at || '').substring(0,16)} · ${this.escHtml(m.admin_name || '')}</p>
                 </div>`).join('')
-                : '<p class="text-xs text-zinc-400 text-center">메모 없음</p>';
+                : '<p class="text-xs text-zinc-400 text-center"><?= __('reservations.pos_no_memo') ?? '메모 없음' ?></p>';
             document.getElementById('posMemoList').innerHTML = memoHtml;
         }
     },
@@ -304,7 +315,28 @@ Object.assign(POS, {
         if (isHidden) {
             area.classList.remove('hidden');
             document.getElementById('posAssignStaffArea').classList.add('hidden');
-            const html = posAllServices.map(s => {
+
+            // 번들 목록
+            let bundleHtml = '';
+            if (typeof posAllBundles !== 'undefined' && posAllBundles.length > 0) {
+                bundleHtml = '<div class="mb-3 pb-3 border-b border-zinc-200 dark:border-zinc-700">'
+                    + '<p class="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-2"><?= __('bundles.recommended') ?> <?= htmlspecialchars($_bdnLabel ?? '') ?></p>'
+                    + posAllBundles.map(b => {
+                        const svcIds = (b.service_ids || []).join(',');
+                        return `<label class="flex items-center p-2.5 rounded-lg border-2 border-amber-200 dark:border-amber-700 cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-900/10 mb-1.5">
+                            <input type="checkbox" value="${b.id}" data-bundle="1" data-services="${svcIds}" class="pos-add-bundle-check mr-3 rounded text-amber-600" onchange="POS.onAddBundleCheck(this)">
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold text-zinc-900 dark:text-white">${this.escHtml(b.name)}</p>
+                                <p class="text-xs text-zinc-500">${b.service_count || 0}<?= __('booking.service_count') ?></p>
+                            </div>
+                            <span class="text-sm font-bold text-amber-600">${this.fmtCurrency(b.bundle_price)}</span>
+                        </label>`;
+                    }).join('')
+                    + '</div>';
+            }
+
+            // 개별 서비스 목록
+            const svcHtml = posAllServices.map(s => {
                 const already = this._existingServiceIds.includes(String(s.id));
                 return `<label class="flex items-center p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 ${already ? 'opacity-40' : 'cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700/50'}">
                     <input type="checkbox" value="${s.id}" class="pos-add-svc-check mr-3 rounded text-blue-600" ${already ? 'disabled' : ''} onchange="POS.onAddServiceCheck()">
@@ -315,7 +347,7 @@ Object.assign(POS, {
                     <span class="text-sm font-bold text-zinc-700 dark:text-zinc-300">${this.fmtCurrency(s.price)}</span>
                 </label>`;
             }).join('');
-            document.getElementById('posAddServiceList').innerHTML = html;
+            document.getElementById('posAddServiceList').innerHTML = bundleHtml + svcHtml;
             document.getElementById('posAddServiceBtn').disabled = true;
         } else {
             area.classList.add('hidden');
@@ -323,9 +355,20 @@ Object.assign(POS, {
     },
 
     onAddServiceCheck() {
-        const checked = document.querySelectorAll('.pos-add-svc-check:checked');
-        document.getElementById('posAddServiceBtn').disabled = checked.length === 0;
-        console.log('[POS] Add service checked:', checked.length);
+        const svcChecked = document.querySelectorAll('.pos-add-svc-check:checked');
+        const bdlChecked = document.querySelectorAll('.pos-add-bundle-check:checked');
+        document.getElementById('posAddServiceBtn').disabled = svcChecked.length === 0 && bdlChecked.length === 0;
+        console.log('[POS] Add service checked:', svcChecked.length, 'bundles:', bdlChecked.length);
+    },
+
+    onAddBundleCheck(cb) {
+        const svcIds = (cb.dataset.services || '').split(',').filter(Boolean);
+        console.log('[POS] Bundle toggled, services:', svcIds, 'checked:', cb.checked);
+        svcIds.forEach(function(id) {
+            const svcCb = document.querySelector('.pos-add-svc-check[value="' + id + '"]');
+            if (svcCb && !svcCb.disabled) svcCb.checked = cb.checked;
+        });
+        this.onAddServiceCheck();
     },
 
     async submitAddService() {
@@ -465,7 +508,7 @@ Object.assign(POS, {
         const content = (input.value || '').trim();
         if (!content) return;
         const c = this._svcCustomer;
-        if (!c.user_id) { alert('비회원은 메모를 저장할 수 없습니다.'); return; }
+        if (!c.user_id) { alert('<?= __('reservations.pos_memo_member_only') ?? '회원만 메모를 저장할 수 있습니다.' ?>'); return; }
 
         const rIds = c.reservation_ids || [];
         const body = new URLSearchParams();

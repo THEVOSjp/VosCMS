@@ -37,6 +37,12 @@ try {
         $currency = $siteSettings['service_currency'] ?? $config['currency'] ?? 'JPY';
         $sym = ['KRW'=>'₩','JPY'=>'¥','USD'=>'$','EUR'=>'€'][$currency] ?? $currency;
         ?>
+        <?php // iframe 내에서 결제 완료 시 부모에 알림 ?>
+        <script>
+        if (window.parent !== window) {
+            window.parent.postMessage('payment_complete', '*');
+        }
+        </script>
         <div class="max-w-lg mx-auto px-4 py-16 text-center">
             <svg class="w-20 h-20 text-green-500 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>

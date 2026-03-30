@@ -429,4 +429,23 @@ return [
     'show_edit_contact' => 'Edit Contact',
     'show_remove_bundle' => 'Remove Bundle',
     'show_remove_bundle_confirm' => 'Remove the bundle and all included services?',
+
+    // Payment
+    'pay_cash' => 'Cash',
+    'pay_card' => 'Card',
+    'pay_amount' => 'Amount',
+    'pay_received' => 'Received',
+    'pay_change' => 'Change',
+    'pay_short' => 'Short',
+    'pay_confirm' => 'Complete Payment',
+    'pay_points_balance' => 'Balance',
+    'pay_points_use' => 'Use',
+    'pay_points_all' => 'Use All',
+    'pay_card_amount' => 'Card Payment Amount',
+    'pos_visit' => 'Visits',
+    'pos_visit_count' => '',
+    'pos_noshow' => 'No-show',
+    'pos_memo_placeholder' => 'Enter memo...',
+    'pos_no_memo' => 'No memos',
+    'pos_memo_member_only' => 'Only members can save memos.',
 ];

@@ -38,11 +38,17 @@ if (!$reservation) {
     return;
 }
 
-// 이미 결제 완료인 경우
-if ($reservation['payment_status'] === 'paid') {
+// 이미 결제 완료인 경우 (관리자 모드는 제외)
+if ($reservation['payment_status'] === 'paid' && empty($_GET['admin'])) {
     header('Location: ' . $baseUrl . '/booking/detail/' . urlencode($reservation['reservation_number']));
     exit;
 }
+
+// 관리자 모드: 예약금 무시, 지정 금액 결제
+$_isAdminPay = !empty($_GET['admin']);
+$_overrideAmount = $_isAdminPay && isset($_GET['amount']) ? (int)$_GET['amount'] : null;
+$_adminPointsUsed = $_isAdminPay && isset($_GET['points_used']) ? (int)$_GET['points_used'] : 0;
+$_adminDepositPaid = (float)($reservation['paid_amount'] ?? 0);
 
 // 결제금액 계산: 예약금 설정 확인
 $finalAmount = (float)$reservation['final_amount'];
@@ -57,7 +63,11 @@ $depositEnabled = ($_depSettings['service_deposit_enabled'] ?? '0') === '1';
 $chargeAmount = $finalAmount; // 기본: 전액
 $isDeposit = false;
 
-if ($depositEnabled) {
+// 관리자 모드: 지정 금액으로 결제 (예약금 무시)
+if ($_overrideAmount !== null) {
+    $chargeAmount = $_overrideAmount;
+    $depositEnabled = false;
+} elseif ($depositEnabled) {
     $depositType = $_depSettings['service_deposit_type'] ?? 'fixed';
     if ($depositType === 'percent') {
         $depositPercent = (float)($_depSettings['service_deposit_percent'] ?? 0);
@@ -212,9 +222,23 @@ $pageTitle = __('booking.payment.pay_now') ?? '결제하기';
                 <!-- 최종 결제금액 -->
                 <div class="mt-3 pt-3 border-t dark:border-zinc-700 space-y-2">
                     <div class="flex justify-between items-center">
-                        <span class="text-sm font-semibold text-zinc-800 dark:text-zinc-100"><?= __('booking.detail.final_amount') ?? '최종 결제금액' ?></span>
+                        <span class="text-sm font-semibold text-zinc-800 dark:text-zinc-100"><?= __('reservations.show_final_amount') ?? '최종 결제 금액' ?></span>
                         <span class="text-lg font-bold text-zinc-800 dark:text-zinc-200"><?= $currencySymbol ?><?= number_format($finalAmount) ?></span>
                     </div>
+
+                    <?php if ($_adminPointsUsed > 0): ?>
+                    <div class="flex justify-between text-green-600 dark:text-green-400 text-sm">
+                        <span><?= __('reservations.pay_points_use') ?? '적립금 사용' ?></span>
+                        <span class="font-medium">-<?= $currencySymbol ?><?= number_format($_adminPointsUsed) ?></span>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if ($_adminDepositPaid > 0): ?>
+                    <div class="flex justify-between text-zinc-500 text-sm">
+                        <span><?= __('booking.payment.deposit') ?? '예약금' ?> <?= __('booking.payment.paid') ?? '결제' ?></span>
+                        <span class="font-medium">-<?= $currencySymbol ?><?= number_format($_adminDepositPaid) ?></span>
+                    </div>
+                    <?php endif; ?>
 
                     <?php if ($isDeposit): ?>
                     <div class="flex justify-between text-blue-600 dark:text-blue-400 font-semibold text-sm">

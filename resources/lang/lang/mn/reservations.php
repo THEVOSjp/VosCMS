@@ -335,4 +335,23 @@ return [
     'show_edit_contact' => 'Холбоо барих мэдээлэл засах',
     'show_remove_bundle' => 'Багц устгах',
     'show_remove_bundle_confirm' => 'Багц болон бүх үйлчилгээг устгах уу?',
+
+    // Төлбөр
+    'pay_cash' => 'Бэлэн мөнгө',
+    'pay_card' => 'Карт',
+    'pay_amount' => 'Дүн',
+    'pay_received' => 'Хүлээн авсан',
+    'pay_change' => 'Хариулт',
+    'pay_short' => 'Дутуу',
+    'pay_confirm' => 'Төлбөр баталгаажуулах',
+    'pay_points_balance' => 'Үлдэгдэл',
+    'pay_points_use' => 'Ашиглах',
+    'pay_points_all' => 'Бүгд',
+    'pay_card_amount' => 'Картын дүн',
+    'pos_visit' => 'Зочилсон',
+    'pos_visit_count' => 'удаа',
+    'pos_noshow' => 'Ирээгүй',
+    'pos_memo_placeholder' => 'Тэмдэглэл...',
+    'pos_no_memo' => 'Тэмдэглэл байхгүй',
+    'pos_memo_member_only' => 'Зөвхөн гишүүд тэмдэглэл хадгалах боломжтой.',
 ];

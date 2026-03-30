@@ -339,4 +339,23 @@ return [
     'show_edit_contact' => 'Sửa liên hệ',
     'show_remove_bundle' => 'Xóa gói',
     'show_remove_bundle_confirm' => 'Xóa gói và tất cả dịch vụ bao gồm?',
+
+    // Thanh toán
+    'pay_cash' => 'Tiền mặt',
+    'pay_card' => 'Thẻ',
+    'pay_amount' => 'Số tiền',
+    'pay_received' => 'Đã nhận',
+    'pay_change' => 'Tiền thừa',
+    'pay_short' => 'Thiếu',
+    'pay_confirm' => 'Hoàn tất thanh toán',
+    'pay_points_balance' => 'Số dư',
+    'pay_points_use' => 'Sử dụng',
+    'pay_points_all' => 'Tất cả',
+    'pay_card_amount' => 'Số tiền thẻ',
+    'pos_visit' => 'Lượt đến',
+    'pos_visit_count' => 'lần',
+    'pos_noshow' => 'Vắng mặt',
+    'pos_memo_placeholder' => 'Nhập ghi chú...',
+    'pos_no_memo' => 'Không có ghi chú',
+    'pos_memo_member_only' => 'Chỉ thành viên mới có thể lưu ghi chú.',
 ];

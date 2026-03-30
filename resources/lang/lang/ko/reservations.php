@@ -375,7 +375,7 @@ return [
     'show_payment_info' => '결제 정보',
     'show_subtotal' => '소계',
     'show_member_discount' => '회원 할인',
-    'show_final_amount' => '최종 금액',
+    'show_final_amount' => '최종 결제 금액',
     // 기타 정보
     'show_etc_info' => '기타 정보',
     'show_etc_source' => '예약 경로',
@@ -432,4 +432,23 @@ return [
     'show_edit_contact' => '연락처 수정',
     'show_remove_bundle' => '번들 삭제',
     'show_remove_bundle_confirm' => '번들과 포함된 서비스를 모두 삭제하시겠습니까?',
+
+    // 결제
+    'pay_cash' => '현금 결제',
+    'pay_card' => '카드 결제',
+    'pay_amount' => '결제 금액',
+    'pay_received' => '받은 금액',
+    'pay_change' => '거스름돈',
+    'pay_short' => '부족 금액',
+    'pay_confirm' => '결제 완료',
+    'pay_points_balance' => '잔액',
+    'pay_points_use' => '사용',
+    'pay_points_all' => '전액',
+    'pay_card_amount' => '카드 결제 금액',
+    'pos_visit' => '방문',
+    'pos_visit_count' => '회',
+    'pos_noshow' => '노쇼',
+    'pos_memo_placeholder' => '메모 입력...',
+    'pos_no_memo' => '메모 없음',
+    'pos_memo_member_only' => '회원만 메모를 저장할 수 있습니다.',
 ];

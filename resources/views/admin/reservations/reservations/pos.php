@@ -6,6 +6,18 @@
  */
 include __DIR__ . '/_init.php';
 
+// 국제전화 포맷 함수
+if (!function_exists('_admFmtPhone')) {
+    function _admFmtPhone($phone) {
+        if (empty($phone)) return '-';
+        $d = preg_replace('/\D/', '', $phone);
+        if (str_starts_with($d, '0')) { $l = substr($d, 1); if (preg_match('/^(10|11|16|17|18|19)(\d{4})(\d{4})$/', $l, $m)) return '+82 '.$m[1].'-'.$m[2].'-'.$m[3]; if (preg_match('/^(2)(\d{3,4})(\d{4})$/', $l, $m)) return '+82 '.$m[1].'-'.$m[2].'-'.$m[3]; if (preg_match('/^(\d{2})(\d{3,4})(\d{4})$/', $l, $m)) return '+82 '.$m[1].'-'.$m[2].'-'.$m[3]; return '+82 '.$l; }
+        if (str_starts_with($d, '82')) { $l = substr($d, 2); if (str_starts_with($l, '0')) $l = substr($l, 1); if (preg_match('/^(10|11|16|17|18|19)(\d{4})(\d{4})$/', $l, $m)) return '+82 '.$m[1].'-'.$m[2].'-'.$m[3]; return '+82 '.$l; }
+        if (str_starts_with($d, '81')) { $l = substr($d, 2); if (str_starts_with($l, '0')) $l = substr($l, 1); if (preg_match('/^(\d{2,3})(\d{4})(\d{4})$/', $l, $m)) return '+81 '.$m[1].'-'.$m[2].'-'.$m[3]; return '+81 '.$l; }
+        return '+'.$d;
+    }
+}
+
 $services = getServices($pdo, $prefix);
 $pageTitle = __('reservations.pos') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $today = date('Y-m-d');
@@ -56,7 +68,8 @@ $stmtToday = $pdo->prepare("
         mg.discount_rate as grade_discount_rate,
         mg.point_rate as grade_point_rate,
         mg.color as grade_color,
-        st.name as staff_name
+        st.name as staff_name,
+        st.name_i18n as staff_name_i18n
     FROM {$prefix}reservations r
     LEFT JOIN {$prefix}users u ON r.user_id = u.id
     LEFT JOIN {$prefix}member_grades mg ON u.grade_id = mg.id
@@ -66,6 +79,91 @@ $stmtToday = $pdo->prepare("
 ");
 $stmtToday->execute([$today]);
 $todayAll = $stmtToday->fetchAll(PDO::FETCH_ASSOC);
+
+// 다국어 적용 (스태프명, 서비스명)
+$_posLocale = $config['locale'] ?? 'ko';
+// 서비스명 번역 캐시
+$_posTrMap = [];
+try {
+    $_posLcChain = array_unique([$_posLocale, 'en']);
+    $_posLcPh = implode(',', array_fill(0, count($_posLcChain), '?'));
+    $_posTrSt = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations WHERE locale IN ({$_posLcPh}) AND lang_key LIKE 'service.%.name'");
+    $_posTrSt->execute(array_values($_posLcChain));
+    while ($_pt = $_posTrSt->fetch(PDO::FETCH_ASSOC)) $_posTrMap[$_pt['lang_key']][$_pt['locale']] = $_pt['content'];
+} catch (\Throwable $e) {}
+
+foreach ($todayAll as &$_tr) {
+    // 스태프명 다국어 (name_i18n)
+    if (!empty($_tr['staff_name_i18n'])) {
+        $_stI18n = is_string($_tr['staff_name_i18n']) ? json_decode($_tr['staff_name_i18n'], true) : $_tr['staff_name_i18n'];
+        if (is_array($_stI18n)) {
+            if (!empty($_stI18n[$_posLocale])) $_tr['staff_name'] = $_stI18n[$_posLocale];
+            elseif (!empty($_stI18n['en'])) $_tr['staff_name'] = $_stI18n['en'];
+        }
+    }
+    // 서비스명 다국어 (reservation_services의 개별 서비스)
+    // service_name은 GROUP_CONCAT이므로 개별 번역 불가 → 개별 서비스 조회
+}
+unset($_tr);
+
+// 개별 서비스 목록에 다국어 적용 (카드에서 사용)
+$_posSvcByRes = [];
+try {
+    $_posSvcSt = $pdo->prepare("SELECT rs.reservation_id, rs.service_id, rs.service_name, rs.price, rs.duration FROM {$prefix}reservation_services rs WHERE rs.reservation_id IN (SELECT id FROM {$prefix}reservations WHERE reservation_date = ?) ORDER BY rs.sort_order");
+    $_posSvcSt->execute([$today]);
+    while ($_ps = $_posSvcSt->fetch(PDO::FETCH_ASSOC)) {
+        // 서비스명 번역
+        $_sKey = 'service.' . $_ps['service_id'] . '.name';
+        if (isset($_posTrMap[$_sKey])) {
+            if (!empty($_posTrMap[$_sKey][$_posLocale])) $_ps['service_name'] = $_posTrMap[$_sKey][$_posLocale];
+            elseif (!empty($_posTrMap[$_sKey]['en'])) $_ps['service_name'] = $_posTrMap[$_sKey]['en'];
+        }
+        $_posSvcByRes[$_ps['reservation_id']][] = $_ps;
+    }
+} catch (\Throwable $e) {}
+
+// todayAll에 번역된 서비스 목록 주입
+foreach ($todayAll as &$_tr) {
+    if (isset($_posSvcByRes[$_tr['id']])) {
+        $_tr['service_name'] = implode(', ', array_map(fn($s) => $s['service_name'], $_posSvcByRes[$_tr['id']]));
+    }
+}
+unset($_tr);
+
+// calServices 다국어 적용
+foreach ($calServices as &$_cs) {
+    $_csKey = 'service.' . $_cs['id'] . '.name';
+    if (isset($_posTrMap[$_csKey])) {
+        if (!empty($_posTrMap[$_csKey][$_posLocale])) $_cs['name'] = $_posTrMap[$_csKey][$_posLocale];
+        elseif (!empty($_posTrMap[$_csKey]['en'])) $_cs['name'] = $_posTrMap[$_csKey]['en'];
+    }
+}
+unset($_cs);
+
+// 번들 목록 로드 + 다국어
+$posBundles = [];
+try {
+    $_posBdnTrMap = [];
+    try {
+        $_bdnLcPh = implode(',', array_fill(0, count(array_unique([$_posLocale, 'en'])), '?'));
+        $_bdnTrSt = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations WHERE locale IN ({$_bdnLcPh}) AND lang_key LIKE 'bundle.%.name'");
+        $_bdnTrSt->execute(array_values(array_unique([$_posLocale, 'en'])));
+        while ($_bt = $_bdnTrSt->fetch(PDO::FETCH_ASSOC)) $_posBdnTrMap[$_bt['lang_key']][$_bt['locale']] = $_bt['content'];
+    } catch (\Throwable $e) {}
+
+    $bStmt = $pdo->query("SELECT b.id, b.name, b.bundle_price, b.image, COUNT(bi.service_id) as service_count, GROUP_CONCAT(bi.service_id) as service_ids FROM {$prefix}service_bundles b LEFT JOIN {$prefix}service_bundle_items bi ON b.id = bi.bundle_id WHERE b.is_active = 1 GROUP BY b.id ORDER BY b.display_order");
+    while ($b = $bStmt->fetch(PDO::FETCH_ASSOC)) {
+        // 번들명 다국어
+        $_bKey = 'bundle.' . $b['id'] . '.name';
+        if (isset($_posBdnTrMap[$_bKey])) {
+            if (!empty($_posBdnTrMap[$_bKey][$_posLocale])) $b['name'] = $_posBdnTrMap[$_bKey][$_posLocale];
+            elseif (!empty($_posBdnTrMap[$_bKey]['en'])) $b['name'] = $_posBdnTrMap[$_bKey]['en'];
+        }
+        $b['price_formatted'] = number_format((float)$b['bundle_price']);
+        $b['service_ids'] = $b['service_ids'] ? explode(',', $b['service_ids']) : [];
+        $posBundles[] = $b;
+    }
+} catch (\Throwable $e) {}
 
 // 업종별 POS 어댑터 로드
 require_once BASE_PATH . '/rzxlib/Core/Modules/BusinessType/PosAdapterInterface.php';
@@ -89,9 +187,20 @@ $waitingList     = $posData['tab_data']['waiting'];
 $completedCount  = $posData['completed'];
 
 // 스태프 목록 (배정용)
-$posStaffList = $pdo->prepare("SELECT id, name, avatar FROM {$prefix}staff WHERE is_active = 1 AND (is_visible = 1 OR is_visible IS NULL) ORDER BY sort_order");
+$posStaffList = $pdo->prepare("SELECT id, name, name_i18n, avatar, designation_fee FROM {$prefix}staff WHERE is_active = 1 AND (is_visible = 1 OR is_visible IS NULL) ORDER BY sort_order");
 $posStaffList->execute();
 $posStaffList = $posStaffList->fetchAll(PDO::FETCH_ASSOC);
+foreach ($posStaffList as &$_psl) {
+    if (!empty($_psl['name_i18n'])) {
+        $_pslI18n = is_string($_psl['name_i18n']) ? json_decode($_psl['name_i18n'], true) : $_psl['name_i18n'];
+        if (is_array($_pslI18n)) {
+            if (!empty($_pslI18n[$_posLocale])) $_psl['name'] = $_pslI18n[$_posLocale];
+            elseif (!empty($_pslI18n['en'])) $_psl['name'] = $_pslI18n['en'];
+        }
+    }
+    unset($_psl['name_i18n']);
+}
+unset($_psl);
 
 $pageHeaderTitle = 'POS';
 include __DIR__ . '/_head.php';
@@ -279,10 +388,8 @@ if (posConfig.autoRefresh && posConfig.refreshInterval > 0) {
 // POS 모드 및 전체 서비스 목록
 const posMode = '<?= $posMode ?>';
 const posAllServices = <?= json_encode($calServices, JSON_UNESCAPED_UNICODE) ?>;
-const posAllStaff = <?= json_encode(
-    $pdo->query("SELECT id, name, avatar, designation_fee FROM ${prefix}staff WHERE is_active = 1 AND (is_visible = 1 OR is_visible IS NULL) ORDER BY sort_order ASC, name ASC")->fetchAll(PDO::FETCH_ASSOC),
-    JSON_UNESCAPED_UNICODE
-) ?>;
+const posAllBundles = <?= json_encode($posBundles ?? [], JSON_UNESCAPED_UNICODE) ?>;
+const posAllStaff = <?= json_encode($posStaffList, JSON_UNESCAPED_UNICODE) ?>;
 </script>
 
 <?php include BASE_PATH . '/resources/views/admin/components/reservation-form-js.php'; ?>

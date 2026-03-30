@@ -372,14 +372,38 @@ if (empty($path) || $path === 'index.php') {
         // 활성 서비스 목록 JSON
         header('Content-Type: application/json; charset=utf-8');
         $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
-        $stmt = $pdo->query("SELECT s.id, s.name, s.price, s.duration, s.image, c.name as category_name FROM {$prefix}services s LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id WHERE s.is_active = 1 ORDER BY s.sort_order ASC, s.name ASC");
+        $_locale = $config['locale'] ?? 'ko';
+        // 서비스/번들/카테고리 번역 캐시 로드
+        $_trMap = [];
+        try {
+            $_lcChain = array_unique([$_locale, 'en']);
+            $_lcPh = implode(',', array_fill(0, count($_lcChain), '?'));
+            $_trSt = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations WHERE locale IN ({$_lcPh}) AND (lang_key LIKE 'service.%.name' OR lang_key LIKE 'bundle.%.name' OR lang_key LIKE 'category.%.name')");
+            $_trSt->execute(array_values($_lcChain));
+            while ($_t = $_trSt->fetch(PDO::FETCH_ASSOC)) $_trMap[$_t['lang_key']][$_t['locale']] = $_t['content'];
+        } catch (\Throwable $e) {}
+        $_trGet = function($type, $id, $fallback) use ($_trMap, $_locale) {
+            $key = "{$type}.{$id}.name";
+            if (isset($_trMap[$key])) {
+                if (!empty($_trMap[$key][$_locale])) return $_trMap[$key][$_locale];
+                if (!empty($_trMap[$key]['en'])) return $_trMap[$key]['en'];
+            }
+            return $fallback;
+        };
+
+        $stmt = $pdo->query("SELECT s.id, s.name, s.price, s.duration, s.image, s.category_id, c.name as category_name FROM {$prefix}services s LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id WHERE s.is_active = 1 ORDER BY s.sort_order ASC, s.name ASC");
         $services = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($services as &$sv) { $sv['price_formatted'] = number_format((float)$sv['price']); }
+        foreach ($services as &$sv) {
+            $sv['name'] = $_trGet('service', $sv['id'], $sv['name']);
+            if ($sv['category_name']) $sv['category_name'] = $_trGet('category', $sv['category_id'], $sv['category_name']);
+            $sv['price_formatted'] = number_format((float)$sv['price']);
+        }
         // 번들 목록
         $bundles = [];
         try {
             $bStmt = $pdo->query("SELECT b.id, b.name, b.bundle_price, b.image, b.description, COUNT(bi.service_id) as service_count, GROUP_CONCAT(bi.service_id) as service_ids FROM {$prefix}service_bundles b LEFT JOIN {$prefix}service_bundle_items bi ON b.id = bi.bundle_id WHERE b.is_active = 1 GROUP BY b.id ORDER BY b.display_order");
             while ($b = $bStmt->fetch(PDO::FETCH_ASSOC)) {
+                $b['name'] = $_trGet('bundle', $b['id'], $b['name']);
                 $b['price_formatted'] = number_format((float)$b['bundle_price']);
                 $b['service_ids'] = $b['service_ids'] ? explode(',', $b['service_ids']) : [];
                 $bundles[] = $b;
@@ -785,9 +809,14 @@ if ($__pageFile && !$__noLayout) {
     include $__pageFile;
     $__content = ob_get_clean();
 
-    // no_layout=1: 외부 iframe / 미리보기용 → 콘텐츠만 출력
+    // no_layout=1: 외부 iframe / 미리보기용 → 콘텐츠만 출력 (CSS 포함)
     if (!empty($_GET['no_layout'])) {
+        echo '<!DOCTYPE html><html lang="' . ($config['locale'] ?? 'ko') . '"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">';
+        echo '<link href="' . ($config['app_url'] ?? '') . '/assets/css/app.css" rel="stylesheet">';
+        echo '<script src="https://cdn.tailwindcss.com"></script>';
+        echo '</head><body class="bg-white dark:bg-zinc-900">';
         echo $__content;
+        echo '</body></html>';
     } else {
         // 항상 사이트 레이아웃 적용 (페이지별 "사용 안함"이어도 사이트 레이아웃 사용)
         $__siteLayout = $siteSettings['site_layout'] ?? 'default';

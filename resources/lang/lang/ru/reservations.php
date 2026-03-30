@@ -339,4 +339,23 @@ return [
     'show_edit_contact' => 'Изменить контакт',
     'show_remove_bundle' => 'Удалить пакет',
     'show_remove_bundle_confirm' => 'Удалить пакет и все включённые услуги?',
+
+    // Оплата
+    'pay_cash' => 'Наличные',
+    'pay_card' => 'Карта',
+    'pay_amount' => 'Сумма',
+    'pay_received' => 'Получено',
+    'pay_change' => 'Сдача',
+    'pay_short' => 'Недостаточно',
+    'pay_confirm' => 'Завершить оплату',
+    'pay_points_balance' => 'Баланс',
+    'pay_points_use' => 'Использовать',
+    'pay_points_all' => 'Всё',
+    'pay_card_amount' => 'Сумма по карте',
+    'pos_visit' => 'Визиты',
+    'pos_visit_count' => '',
+    'pos_noshow' => 'Неявка',
+    'pos_memo_placeholder' => 'Введите заметку...',
+    'pos_no_memo' => 'Нет заметок',
+    'pos_memo_member_only' => 'Только участники могут сохранять заметки.',
 ];

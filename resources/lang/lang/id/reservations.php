@@ -339,4 +339,23 @@ return [
     'show_edit_contact' => 'Ubah Kontak',
     'show_remove_bundle' => 'Hapus Paket',
     'show_remove_bundle_confirm' => 'Hapus paket dan semua layanan yang termasuk?',
+
+    // Pembayaran
+    'pay_cash' => 'Tunai',
+    'pay_card' => 'Kartu',
+    'pay_amount' => 'Jumlah',
+    'pay_received' => 'Diterima',
+    'pay_change' => 'Kembalian',
+    'pay_short' => 'Kurang',
+    'pay_confirm' => 'Selesai Bayar',
+    'pay_points_balance' => 'Saldo',
+    'pay_points_use' => 'Gunakan',
+    'pay_points_all' => 'Semua',
+    'pay_card_amount' => 'Jumlah kartu',
+    'pos_visit' => 'Kunjungan',
+    'pos_visit_count' => 'x',
+    'pos_noshow' => 'No-show',
+    'pos_memo_placeholder' => 'Masukkan memo...',
+    'pos_no_memo' => 'Tidak ada memo',
+    'pos_memo_member_only' => 'Hanya anggota yang dapat menyimpan memo.',
 ];

@@ -339,4 +339,23 @@ return [
     'show_edit_contact' => 'Editar contacto',
     'show_remove_bundle' => 'Eliminar paquete',
     'show_remove_bundle_confirm' => '¿Eliminar el paquete y todos los servicios incluidos?',
+
+    // Pago
+    'pay_cash' => 'Efectivo',
+    'pay_card' => 'Tarjeta',
+    'pay_amount' => 'Monto',
+    'pay_received' => 'Recibido',
+    'pay_change' => 'Cambio',
+    'pay_short' => 'Faltante',
+    'pay_confirm' => 'Completar pago',
+    'pay_points_balance' => 'Saldo',
+    'pay_points_use' => 'Usar',
+    'pay_points_all' => 'Todo',
+    'pay_card_amount' => 'Monto con tarjeta',
+    'pos_visit' => 'Visitas',
+    'pos_visit_count' => '',
+    'pos_noshow' => 'No-show',
+    'pos_memo_placeholder' => 'Escribir nota...',
+    'pos_no_memo' => 'Sin notas',
+    'pos_memo_member_only' => 'Solo los miembros pueden guardar notas.',
 ];

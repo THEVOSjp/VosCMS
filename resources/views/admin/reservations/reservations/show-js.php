@@ -271,6 +271,188 @@ async function confirmStaffChange() {
     }
 }
 
+// ─── 현금 결제 모달 ───
+function openCashPayModal(amount) {
+    var sym = '<?= $currencySymbol ?? '¥' ?>';
+    var html = '<div id="cashPayOverlay" class="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">'
+        + '<div class="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl w-full max-w-sm p-6">'
+        + '<h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-2"><svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg><?= __('reservations.pay_cash') ?? '현금 결제' ?></h3>'
+        + '<div class="space-y-3">'
+        + '<div class="flex justify-between text-sm"><span class="text-zinc-500"><?= __('reservations.pay_amount') ?? '결제 금액' ?></span><span class="font-bold text-lg text-zinc-900 dark:text-white">' + sym + Number(amount).toLocaleString() + '</span></div>'
+        + '<div><label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1"><?= __('reservations.pay_received') ?? '받은 금액' ?></label>'
+        + '<input type="number" id="cashReceived" value="" min="0" class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg text-lg font-mono text-right" oninput="calcChange(' + amount + ')" autofocus></div>'
+        + '<div id="cashChangeRow" class="hidden flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg"><span class="text-sm text-blue-700 dark:text-blue-300"><?= __('reservations.pay_change') ?? '거스름돈' ?></span><span id="cashChangeAmt" class="text-xl font-bold text-blue-600 dark:text-blue-400"></span></div>'
+        + '<div id="cashShortRow" class="hidden flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg"><span class="text-sm text-red-700 dark:text-red-300"><?= __('reservations.pay_short') ?? '부족 금액' ?></span><span id="cashShortAmt" class="text-xl font-bold text-red-600 dark:text-red-400"></span></div>'
+        + '</div>'
+        + '<div class="flex gap-3 mt-5">'
+        + '<button onclick="document.getElementById(\'cashPayOverlay\').remove()" class="flex-1 px-4 py-2.5 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 rounded-lg hover:bg-zinc-200 transition"><?= __('common.buttons.cancel') ?? '취소' ?></button>'
+        + '<button id="cashPayBtn" onclick="submitCashPay(' + amount + ')" disabled class="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition disabled:opacity-50"><?= __('reservations.pay_confirm') ?? '결제 완료' ?></button>'
+        + '</div></div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.getElementById('cashReceived').focus();
+    console.log('[Show] Cash pay modal opened, amount:', amount);
+}
+
+function calcChange(amount) {
+    var received = parseFloat(document.getElementById('cashReceived').value) || 0;
+    var sym = '<?= $currencySymbol ?? '¥' ?>';
+    var changeRow = document.getElementById('cashChangeRow');
+    var shortRow = document.getElementById('cashShortRow');
+    var btn = document.getElementById('cashPayBtn');
+    if (received >= amount) {
+        var change = received - amount;
+        document.getElementById('cashChangeAmt').textContent = sym + Number(change).toLocaleString();
+        changeRow.classList.remove('hidden');
+        shortRow.classList.add('hidden');
+        btn.disabled = false;
+    } else if (received > 0) {
+        var short = amount - received;
+        document.getElementById('cashShortAmt').textContent = sym + Number(short).toLocaleString();
+        shortRow.classList.remove('hidden');
+        changeRow.classList.add('hidden');
+        btn.disabled = true;
+    } else {
+        changeRow.classList.add('hidden');
+        shortRow.classList.add('hidden');
+        btn.disabled = true;
+    }
+}
+
+async function submitCashPay(amount) {
+    console.log('[Show] Cash payment:', amount);
+    try {
+        var resp = await fetch(adminUrl + '/reservations/' + resId + '/payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+            body: '_token=' + csrfToken + '&amount=' + amount + '&method=cash'
+        });
+        var data = await resp.json();
+        document.getElementById('cashPayOverlay').remove();
+        if (data.success || !data.error) {
+            if (typeof showResultModal === 'function') { showResultModal(true, ''); setTimeout(function(){ location.reload(); }, 1200); }
+            else location.reload();
+        } else {
+            if (typeof showResultModal === 'function') showResultModal(false, data.message || 'Error');
+            else alert(data.message || 'Error');
+        }
+    } catch (err) {
+        document.getElementById('cashPayOverlay').remove();
+        alert('Error: ' + err.message);
+    }
+}
+
+// ─── 카드 결제 모달 ───
+function openCardPayModal(amount) {
+    var sym = '<?= $currencySymbol ?? '¥' ?>';
+    var isMember = <?= !empty($r['user_id']) ? 'true' : 'false' ?>;
+    var pointsBalance = <?= (int)($userDetail['points_balance'] ?? 0) ?>;
+    var pointsName = '<?= addslashes(get_points_name()) ?>';
+
+    var pointsHtml = '';
+    if (isMember && pointsBalance > 0) {
+        pointsHtml = '<div class="mt-3 p-3 bg-zinc-50 dark:bg-zinc-700/30 rounded-lg">'
+            + '<div class="flex justify-between text-xs text-zinc-500 mb-2"><span>' + pointsName + ' <?= __('reservations.pay_points_balance') ?? '잔액' ?></span><span>' + sym + Number(pointsBalance).toLocaleString() + '</span></div>'
+            + '<div><label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">' + pointsName + ' <?= __('reservations.pay_points_use') ?? '사용' ?></label>'
+            + '<div class="flex gap-2"><input type="number" id="cardPointsInput" value="0" min="0" max="' + Math.min(pointsBalance, amount) + '" class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg text-sm font-mono text-right" oninput="calcCardPay(' + amount + ')">'
+            + '<button type="button" onclick="document.getElementById(\'cardPointsInput\').value=' + Math.min(pointsBalance, amount) + ';calcCardPay(' + amount + ')" class="px-3 py-2 text-xs font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 transition"><?= __('reservations.pay_points_all') ?? '전액' ?></button></div></div>'
+            + '</div>';
+    }
+
+    var html = '<div id="cardPayOverlay" class="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">'
+        + '<div class="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl w-full max-w-sm p-6">'
+        + '<h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-2"><svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg><?= __('reservations.pay_card') ?? '카드 결제' ?></h3>'
+        + '<div class="space-y-2">'
+        + '<div class="flex justify-between text-sm"><span class="text-zinc-500"><?= __('reservations.show_final_amount') ?></span><span class="font-semibold text-zinc-900 dark:text-white">' + sym + Number(amount).toLocaleString() + '</span></div>'
+        + pointsHtml
+        + '<div class="border-t border-zinc-200 dark:border-zinc-700 pt-3 mt-3 text-center">'
+        + '<p class="text-xs text-zinc-500 mb-1"><?= __('reservations.pay_card_amount') ?? '카드 결제 금액' ?></p>'
+        + '<p id="cardPayAmount" class="text-3xl font-bold text-blue-600 dark:text-blue-400">' + sym + Number(amount).toLocaleString() + '</p>'
+        + '</div></div>'
+        + '<div class="flex gap-3 mt-5">'
+        + '<button onclick="document.getElementById(\'cardPayOverlay\').remove()" class="flex-1 px-4 py-2.5 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 rounded-lg hover:bg-zinc-200 transition"><?= __('common.buttons.cancel') ?? '취소' ?></button>'
+        + '<button onclick="submitCardPay(' + amount + ')" class="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition"><?= __('reservations.pay_confirm') ?? '결제 완료' ?></button>'
+        + '</div></div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+    console.log('[Show] Card pay modal opened, amount:', amount, 'member:', isMember, 'points:', pointsBalance);
+}
+
+function calcCardPay(totalAmount) {
+    var sym = '<?= $currencySymbol ?? '¥' ?>';
+    var points = parseInt(document.getElementById('cardPointsInput')?.value || 0) || 0;
+    var cardAmount = Math.max(0, totalAmount - points);
+    document.getElementById('cardPayAmount').textContent = sym + Number(cardAmount).toLocaleString();
+}
+
+async function submitCardPay(amount) {
+    var pointsUsed = parseInt(document.getElementById('cardPointsInput')?.value || 0) || 0;
+    var cardAmount = amount - pointsUsed;
+    console.log('[Show] Card payment, total:', amount, 'points:', pointsUsed, 'card:', cardAmount);
+    document.getElementById('cardPayOverlay').remove();
+
+    if (cardAmount > 0) {
+        // Stripe 결제를 모달 iframe으로 표시 (적립금은 결제 성공 후 처리)
+        var appUrl = adminUrl.replace(/\/[^/]+$/, '');
+        var checkoutUrl = appUrl + '/payment/checkout?reservation_id=' + encodeURIComponent(resId) + '&admin=1&amount=' + cardAmount + '&points_used=' + pointsUsed + '&no_layout=1';
+        openStripeModal(checkoutUrl, pointsUsed);
+    } else if (pointsUsed > 0) {
+        // 적립금으로 전액 결제
+        try {
+            await fetch(adminUrl + '/reservations/' + resId + '/payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                body: '_token=' + csrfToken + '&amount=' + pointsUsed + '&method=points&points_used=' + pointsUsed
+            });
+        } catch (err) {}
+        if (typeof showResultModal === 'function') { showResultModal(true, ''); setTimeout(function(){ location.reload(); }, 1200); }
+        else location.reload();
+    }
+}
+
+// ─── Stripe 결제 모달 (iframe) ───
+function openStripeModal(url, pointsUsed) {
+    var _pendingPoints = pointsUsed || 0;
+    var html = '<div id="stripePayModal" class="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4">'
+        + '<div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">'
+        + '<div class="flex items-center justify-between px-5 py-3 border-b border-zinc-200 dark:border-zinc-700">'
+        + '<h3 class="text-base font-semibold text-zinc-900 dark:text-white flex items-center gap-2"><svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg><?= __('reservations.pay_card') ?? '카드 결제' ?></h3>'
+        + '<button onclick="closeStripeModal()" class="p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition"><svg class="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>'
+        + '</div>'
+        + '<iframe id="stripePayFrame" src="' + url + '" class="flex-1 w-full" style="min-height:800px;border:none;"></iframe>'
+        + '</div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+
+    // iframe 내 결제 완료 감지 (postMessage)
+    window._stripePayListener = async function(e) {
+        if (e.data === 'payment_complete') {
+            closeStripeModal();
+            // 카드 결제 성공 후 적립금 차감
+            if (_pendingPoints > 0) {
+                try {
+                    await fetch(adminUrl + '/reservations/' + resId + '/payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: '_token=' + csrfToken + '&amount=' + _pendingPoints + '&method=points&points_used=' + _pendingPoints
+                    });
+                    console.log('[Show] Points deducted after card payment:', _pendingPoints);
+                } catch (err) { console.error('[Show] Points deduction error:', err); }
+            }
+            if (typeof showResultModal === 'function') { showResultModal(true, ''); setTimeout(function(){ location.reload(); }, 1200); }
+            else location.reload();
+        }
+    };
+    window.addEventListener('message', window._stripePayListener);
+    console.log('[Show] Stripe modal opened:', url);
+}
+
+function closeStripeModal() {
+    var modal = document.getElementById('stripePayModal');
+    if (modal) modal.remove();
+    if (window._stripePayListener) {
+        window.removeEventListener('message', window._stripePayListener);
+        window._stripePayListener = null;
+    }
+}
+
 // ─── 번들 삭제 (포함 서비스 일괄 삭제) ───
 async function removeBundle(reservationId) {
     var result = await showConfirmModal('<?= __('reservations.show_remove_bundle_confirm') ?? '번들과 포함된 서비스를 모두 삭제하시겠습니까?' ?>', 'red', false);
@@ -298,7 +480,8 @@ async function removeBundle(reservationId) {
 
 // ─── 서비스 삭제 (상세 페이지) ───
 async function removeShowService(reservationId, serviceId, btnEl) {
-    if (!confirm('<?= __('reservations.pos_remove_service_confirm') ?>')) return;
+    var result = await showConfirmModal('<?= __('reservations.pos_remove_service_confirm') ?>', 'red', false);
+    if (!result) return;
     console.log('[Show] Removing service:', reservationId, serviceId);
 
     try {
@@ -389,7 +572,7 @@ async function loadShowAddServiceList() {
         // 번들 서비스
         var bundleHtml = '';
         if (data.bundles && data.bundles.length) {
-            bundleHtml = '<div class="mb-3"><p class="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-2 flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><?= __('bundles.recommended') ?? '추천' ?> <?= htmlspecialchars($siteSettings['bundle_display_name'] ?? '') ?></p>'
+            bundleHtml = '<div class="mb-3"><p class="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-2 flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><?= __('bundles.recommended') ?? '추천' ?> <?= htmlspecialchars($_bdnLabel ?? ($siteSettings['bundle_display_name'] ?? '')) ?></p>'
                 + '<div class="grid grid-cols-3 gap-2">'
                 + data.bundles.map(b => {
                     var imgUrl = b.image ? (b.image.startsWith('http') ? b.image : adminUrl.replace(/\/[^/]+$/, '') + '/' + b.image) : '';
@@ -414,7 +597,7 @@ async function loadShowAddServiceList() {
                     + '<input type="checkbox" name="showAddSvc" value="' + s.id + '" class="absolute top-2 right-2 text-blue-600 rounded z-10" ' + (exists ? 'disabled' : '') + ' onchange="onShowAddSvcChange()">'
                     + (imgUrl ? '<div class="h-16 bg-zinc-100 dark:bg-zinc-700 overflow-hidden"><img src="' + escapeHtml(imgUrl) + '" class="w-full h-full object-cover"></div>' : '<div class="h-16 bg-zinc-50 dark:bg-zinc-700 flex items-center justify-center"><svg class="w-6 h-6 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>')
                     + '<div class="p-2"><p class="text-xs font-semibold text-zinc-900 dark:text-white truncate">' + escapeHtml(s.name) + (exists ? ' <span class="text-[10px] text-zinc-400"><?= __('reservations.show_add_service_added') ?? '추가됨' ?></span>' : '') + '</p>'
-                    + '<p class="text-[10px] text-zinc-500">' + s.duration + '분 · ' + (s.price_formatted || s.price) + '</p>'
+                    + '<p class="text-[10px] text-zinc-500">' + s.duration + '<?= __('common.minutes') ?> · ' + (s.price_formatted || s.price) + '</p>'
                     + '</div></label>';
             }).join('')
             + '</div>';

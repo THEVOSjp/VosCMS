@@ -1,5 +1,36 @@
 <script>
 console.log('[POS] Page loaded');
+
+// 국제전화 포맷 함수
+function fmtPhone(phone) {
+    if (!phone) return '-';
+    var d = phone.replace(/\D/g, '');
+    if (d.startsWith('0')) {
+        var l = d.substring(1);
+        var m = l.match(/^(10|11|16|17|18|19)(\d{4})(\d{4})$/);
+        if (m) return '+82 ' + m[1] + '-' + m[2] + '-' + m[3];
+        m = l.match(/^(2)(\d{3,4})(\d{4})$/);
+        if (m) return '+82 ' + m[1] + '-' + m[2] + '-' + m[3];
+        m = l.match(/^(\d{2})(\d{3,4})(\d{4})$/);
+        if (m) return '+82 ' + m[1] + '-' + m[2] + '-' + m[3];
+        return '+82 ' + l;
+    }
+    if (d.startsWith('82')) {
+        var l = d.substring(2);
+        if (l.startsWith('0')) l = l.substring(1);
+        var m = l.match(/^(10|11|16|17|18|19)(\d{4})(\d{4})$/);
+        if (m) return '+82 ' + m[1] + '-' + m[2] + '-' + m[3];
+        return '+82 ' + l;
+    }
+    if (d.startsWith('81')) {
+        var l = d.substring(2);
+        if (l.startsWith('0')) l = l.substring(1);
+        var m = l.match(/^(\d{2,3})(\d{4})(\d{4})$/);
+        if (m) return '+81 ' + m[1] + '-' + m[2] + '-' + m[3];
+        return '+81 ' + l;
+    }
+    return '+' + d;
+}
 // 기본 탭 설정 적용
 if (typeof posConfig !== 'undefined' && posConfig.defaultTab && posConfig.defaultTab !== 'cards') {
     const tabMap = { 'waiting': 'waiting', 'reservations': 'reservations' };
@@ -88,7 +119,7 @@ const POS = {
                     </div>
                     <div>
                         <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('reservations.pos_phone') ?></p>
-                        <p class="text-zinc-900 dark:text-white">${this.escHtml(r.customer_phone || '-')}</p>
+                        <p class="text-zinc-900 dark:text-white font-mono">${fmtPhone(r.customer_phone)}</p>
                     </div>
                 </div>
                 ${r.notes ? '<div class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900 p-2 rounded-lg">' + this.escHtml(r.notes) + '</div>' : ''}

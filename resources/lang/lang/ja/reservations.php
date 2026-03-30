@@ -398,4 +398,23 @@ return [
     'show_edit_contact' => '連絡先変更',
     'show_remove_bundle' => 'バンドル削除',
     'show_remove_bundle_confirm' => 'バンドルと含まれるサービスをすべて削除しますか？',
+
+    // 決済
+    'pay_cash' => '現金決済',
+    'pay_card' => 'カード決済',
+    'pay_amount' => '決済金額',
+    'pay_received' => '受取金額',
+    'pay_change' => 'お釣り',
+    'pay_short' => '不足金額',
+    'pay_confirm' => '決済完了',
+    'pay_points_balance' => '残高',
+    'pay_points_use' => '使用',
+    'pay_points_all' => '全額',
+    'pay_card_amount' => 'カード決済金額',
+    'pos_visit' => '来店',
+    'pos_visit_count' => '回',
+    'pos_noshow' => 'ノーショー',
+    'pos_memo_placeholder' => 'メモ入力...',
+    'pos_no_memo' => 'メモなし',
+    'pos_memo_member_only' => '会員のみメモを保存できます。',
 ];

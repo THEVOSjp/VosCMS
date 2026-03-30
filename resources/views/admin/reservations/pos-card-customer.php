@@ -79,7 +79,7 @@ $pointsBalance = $pointsEnabled ? ($g['points_balance'] ?? 0) : 0;
                         <?php endif; ?>
                     </div>
                     <?php if ($_posShowPhone): ?>
-                    <p class="text-xs <?= $hasServiceBg ? 'text-white/70' : 'text-zinc-400 dark:text-zinc-500' ?>"><?= htmlspecialchars($g['customer_phone']) ?></p>
+                    <p class="text-xs font-mono <?= $hasServiceBg ? 'text-white/70' : 'text-zinc-400 dark:text-zinc-500' ?>"><?= _admFmtPhone($g['customer_phone']) ?></p>
                     <?php endif; ?>
                 </div>
             </div>

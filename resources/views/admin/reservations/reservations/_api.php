@@ -429,7 +429,7 @@ try {
                 SELECT r.id as reservation_id, r.status, r.start_time, r.end_time,
                        r.paid_amount as reservation_paid, r.payment_status, r.source,
                        r.designation_fee, r.staff_id,
-                       st.name as staff_name, st.avatar as staff_avatar,
+                       st.name as staff_name, st.name_i18n as staff_name_i18n, st.avatar as staff_avatar,
                        rs.service_id, COALESCE(rs.service_name, s2.name) as service_name, rs.price, rs.duration as service_duration,
                        rs.sort_order, s2.image as service_image
                 FROM {$prefix}reservations r
@@ -460,10 +460,40 @@ try {
             $services = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
+        // 다국어 적용 (스태프명, 서비스명)
+        $_apiLocale = $config['locale'] ?? 'ko';
+        $_apiTrMap = [];
+        try {
+            $_apiLc = array_unique([$_apiLocale, 'en']);
+            $_apiLcPh = implode(',', array_fill(0, count($_apiLc), '?'));
+            $_apiTrSt = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations WHERE locale IN ({$_apiLcPh}) AND lang_key LIKE 'service.%.name'");
+            $_apiTrSt->execute(array_values($_apiLc));
+            while ($_at = $_apiTrSt->fetch(PDO::FETCH_ASSOC)) $_apiTrMap[$_at['lang_key']][$_at['locale']] = $_at['content'];
+        } catch (\Throwable $e) {}
+
+        foreach ($services as &$_sv) {
+            // 스태프명
+            if (!empty($_sv['staff_name_i18n'])) {
+                $_si = is_string($_sv['staff_name_i18n']) ? json_decode($_sv['staff_name_i18n'], true) : $_sv['staff_name_i18n'];
+                if (is_array($_si)) {
+                    if (!empty($_si[$_apiLocale])) $_sv['staff_name'] = $_si[$_apiLocale];
+                    elseif (!empty($_si['en'])) $_sv['staff_name'] = $_si['en'];
+                }
+            }
+            unset($_sv['staff_name_i18n']);
+            // 서비스명
+            $_sKey = 'service.' . $_sv['service_id'] . '.name';
+            if (isset($_apiTrMap[$_sKey])) {
+                if (!empty($_apiTrMap[$_sKey][$_apiLocale])) $_sv['service_name'] = $_apiTrMap[$_sKey][$_apiLocale];
+                elseif (!empty($_apiTrMap[$_sKey]['en'])) $_sv['service_name'] = $_apiTrMap[$_sKey]['en'];
+            }
+        }
+        unset($_sv);
+
         // 고객 상세 정보 (첫 번째 예약 기준)
         $firstR = $pdo->prepare("SELECT r.notes, r.admin_notes, r.source, r.user_id, r.designation_fee,
                 u.name as user_name, u.profile_image, u.birth_date, u.gender, u.created_at as member_since,
-                g.name as grade_name, g.color as grade_color, g.discount_rate, g.point_rate,
+                u.grade_id, g.name as grade_name, g.color as grade_color, g.discount_rate, g.point_rate,
                 u.points_balance
             FROM {$prefix}reservations r
             LEFT JOIN {$prefix}users u ON r.user_id = u.id
@@ -471,6 +501,23 @@ try {
             WHERE r.id = ?");
         $firstR->execute([$ids[0]]);
         $custInfo = $firstR->fetch(PDO::FETCH_ASSOC) ?: [];
+
+        // 등급명 다국어
+        if (!empty($custInfo['grade_id']) && !empty($custInfo['grade_name'])) {
+            $_gKey = 'grade.' . $custInfo['grade_id'] . '.name';
+            if (isset($_apiTrMap[$_gKey])) {
+                if (!empty($_apiTrMap[$_gKey][$_apiLocale])) $custInfo['grade_name'] = $_apiTrMap[$_gKey][$_apiLocale];
+                elseif (!empty($_apiTrMap[$_gKey]['en'])) $custInfo['grade_name'] = $_apiTrMap[$_gKey]['en'];
+            } else {
+                // 개별 조회
+                try {
+                    $_gTrSt = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = ? AND locale = ?");
+                    $_gTrSt->execute([$_gKey, $_apiLocale]);
+                    $_gTrVal = $_gTrSt->fetchColumn();
+                    if ($_gTrVal) $custInfo['grade_name'] = $_gTrVal;
+                } catch (\Throwable $e) {}
+            }
+        }
 
         // 방문 통계
         $visitStats = null;

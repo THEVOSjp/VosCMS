@@ -335,4 +335,23 @@ return [
     'show_edit_contact' => 'İletişimi Düzenle',
     'show_remove_bundle' => 'Paketi Kaldır',
     'show_remove_bundle_confirm' => 'Paket ve dahil tüm hizmetler kaldırılsın mı?',
+
+    // Ödeme
+    'pay_cash' => 'Nakit',
+    'pay_card' => 'Kart',
+    'pay_amount' => 'Tutar',
+    'pay_received' => 'Alınan',
+    'pay_change' => 'Para üstü',
+    'pay_short' => 'Eksik',
+    'pay_confirm' => 'Ödemeyi Tamamla',
+    'pay_points_balance' => 'Bakiye',
+    'pay_points_use' => 'Kullan',
+    'pay_points_all' => 'Tümü',
+    'pay_card_amount' => 'Kart tutarı',
+    'pos_visit' => 'Ziyaret',
+    'pos_visit_count' => '',
+    'pos_noshow' => 'Gelmedi',
+    'pos_memo_placeholder' => 'Not girin...',
+    'pos_no_memo' => 'Not yok',
+    'pos_memo_member_only' => 'Yalnızca üyeler not kaydedebilir.',
 ];

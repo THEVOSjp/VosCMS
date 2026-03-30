@@ -339,4 +339,23 @@ return [
     'show_edit_contact' => 'Kontakt bearbeiten',
     'show_remove_bundle' => 'Bundle entfernen',
     'show_remove_bundle_confirm' => 'Bundle und alle enthaltenen Services entfernen?',
+
+    // Zahlung
+    'pay_cash' => 'Barzahlung',
+    'pay_card' => 'Kartenzahlung',
+    'pay_amount' => 'Betrag',
+    'pay_received' => 'Erhalten',
+    'pay_change' => 'Rückgeld',
+    'pay_short' => 'Fehlbetrag',
+    'pay_confirm' => 'Zahlung abschließen',
+    'pay_points_balance' => 'Guthaben',
+    'pay_points_use' => 'Verwenden',
+    'pay_points_all' => 'Alles',
+    'pay_card_amount' => 'Kartenbetrag',
+    'pos_visit' => 'Besuche',
+    'pos_visit_count' => '',
+    'pos_noshow' => 'No-Show',
+    'pos_memo_placeholder' => 'Notiz eingeben...',
+    'pos_no_memo' => 'Keine Notizen',
+    'pos_memo_member_only' => 'Nur Mitglieder können Notizen speichern.',
 ];

@@ -183,10 +183,10 @@
                     <!-- 메모 입력 -->
                     <div id="posMemoArea" class="px-4 pb-4 hidden">
                         <div class="flex gap-2">
-                            <input type="text" id="posMemoInput" placeholder="메모 입력..."
+                            <input type="text" id="posMemoInput" placeholder="<?= __('reservations.pos_memo_placeholder') ?? '메모 입력...' ?>"
                                    class="flex-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg text-xs text-zinc-900 dark:text-zinc-100"
                                    onkeydown="if(event.key==='Enter'){POS.submitMemo();event.preventDefault();}">
-                            <button onclick="POS.submitMemo()" class="px-3 py-2 bg-zinc-800 dark:bg-zinc-600 text-white rounded-lg text-xs hover:bg-zinc-700 transition flex-shrink-0">저장</button>
+                            <button onclick="POS.submitMemo()" class="px-3 py-2 bg-zinc-800 dark:bg-zinc-600 text-white rounded-lg text-xs hover:bg-zinc-700 transition flex-shrink-0"><?= __('common.buttons.save') ?? '저장' ?></button>
                         </div>
                         <div id="posMemoList" class="mt-3 space-y-2 max-h-40 overflow-y-auto"></div>
                     </div>
