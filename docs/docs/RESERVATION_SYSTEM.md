@@ -565,3 +565,62 @@ class AdminReservationController extends Controller
 | `rzxlib/Reservation/Models/Reservation.php` | 예약 모델 |
 | `rzxlib/Reservation/Services/ReservationService.php` | 예약 서비스 |
 | `database/migrations/001_create_reservation_tables.sql` | DB 마이그레이션 |
+
+---
+
+## 번들(세트) 서비스 저장 규칙
+
+### 원칙: 예약 시점 스냅샷 저장 (B 방식)
+
+번들 예약 생성 시, 번들 포함 서비스 **전체를 `reservation_services`에 저장**한다.
+`service_bundle_items` 테이블에서 조회하지 않고, 예약 당시의 스냅샷을 보존한다.
+
+### 이유: 번들 구성 변경으로부터 과거 예약 보호
+
+**예시:**
+
+```
+[3월 30일] 고객이 "크림바스(헤드스파)" 번들 예약
+- 포함 서비스: 두피케어, 트리트먼트, 샴푸&블로, 헤어상담, 어깨마사지, 헤드스파 (6건)
+- 번들 가격: ¥20,000
+
+[4월 15일] 관리자가 번들 구성 변경
+- "어깨마사지" 제거, "네일케어" 추가
+- 가격: ¥22,000으로 변경
+```
+
+| 방식 | 3월 30일 예약 조회 시 | 문제 |
+|------|---------------------|------|
+| A (미저장, 실시간 조회) | 변경된 목록(네일케어 포함) + ¥22,000 | **고객이 받은 서비스와 다름, 금액 불일치** |
+| B (스냅샷 저장) | 원래 목록(어깨마사지 포함) + ¥20,000 | 없음 ✅ |
+
+### DB 구조
+
+```
+reservations
+├── bundle_id        → 번들 상품 ID (NULL이면 번들 없음)
+├── bundle_price     → 예약 시점의 번들 가격 (스냅샷)
+├── total_amount     → 서비스 원래 가격 합계
+└── final_amount     → 번들 가격 + 지명료 - 할인 - 적립금
+
+reservation_services
+├── service_id       → 서비스 ID
+├── service_name     → 서비스명 (스냅샷)
+├── price            → 서비스 원래 가격 (스냅샷)
+├── duration         → 소요시간 (스냅샷)
+└── bundle_id        → 번들 소속 여부 (NULL이면 개별 서비스)
+```
+
+### 저장 시점
+
+번들 예약 생성 시:
+1. `service_bundle_items`에서 포함 서비스 목록 조회
+2. 각 서비스의 `name`, `price`, `duration`을 `services` 테이블에서 조회
+3. `reservation_services`에 **전체 저장** (`bundle_id` 포함)
+4. `reservations.bundle_id`, `reservations.bundle_price` 저장
+
+### 주의사항
+
+- `reservation_services.price`는 서비스 **원래 가격** 유지 (번들 가격으로 배분하지 않음)
+- `reservations.bundle_price`가 실제 결제 기준 가격
+- 번들 삭제 시 `reservation_services`의 해당 `bundle_id` 서비스 일괄 삭제

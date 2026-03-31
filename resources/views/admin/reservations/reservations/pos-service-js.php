@@ -21,7 +21,7 @@ Object.assign(POS, {
         this._svcCustomer = { name: r.customer_name, phone: r.customer_phone, email: r.customer_email || '', date: r.reservation_date, source: r.source || 'walk_in', user_id: r.user_id || '', reservation_ids: r.reservation_ids || [] };
 
         // 헤더: 고객 프로필 (왼쪽) + 스태프 (오른쪽, API 후 갱신)
-        document.getElementById('posServiceTitle').innerHTML = '<?= __('reservations.pos_service_detail') ?>';
+        document.getElementById('posServiceTitle').innerHTML = '<?= __('reservations.pos_service_detail') ?>' + (r.reservation_number ? ' <span class="text-xs font-mono font-normal text-zinc-400 ml-2">' + this.escHtml(r.reservation_number) + '</span>' : '');
         document.getElementById('posServiceCustomer').innerHTML = `
             <div class="px-5 py-3 border-b border-zinc-100 dark:border-zinc-700">
                 <div class="flex items-center justify-between">
@@ -32,14 +32,14 @@ Object.assign(POS, {
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2">
-                                <span class="text-base font-bold text-zinc-900 dark:text-white">${this.escHtml(r.customer_name)}</span>
+                                <span class="text-base font-bold text-white drop-shadow-sm">${this.escHtml(r.customer_name)}</span>
                                 <span id="posCustBadges" class="flex items-center gap-1"></span>
                             </div>
-                            <div class="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                            <div class="flex items-center gap-3 text-xs text-white/70 mt-1">
                                 <span class="font-mono">${fmtPhone(r.customer_phone)}</span>
                                 <span>${this.escHtml(r.reservation_date)}</span>
                             </div>
-                            <div id="posCustStats" class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"></div>
+                            <div id="posCustStats" class="text-xs text-white/70 mt-0.5"></div>
                         </div>
                     </div>
                     <!-- 오른쪽: 배정/지명 스태프 (API 후 갱신) -->
@@ -88,6 +88,7 @@ Object.assign(POS, {
                 }
                 this.renderCustomerProfile(data.customer || {}, data.memos || []);
                 this.renderStaffHeader(data.data, data.customer || {});
+                this._bundleData = data.bundle || null;
                 this.renderServiceList(data.data);
             } else {
                 document.getElementById('posServiceList').innerHTML = '<p class="text-center text-red-500 text-sm py-4">' + (data.message || 'Error') + '</p>';
@@ -243,64 +244,165 @@ Object.assign(POS, {
         let totalDesignationFee = 0;
         const seenReservations = {};
         let totalPaid = 0;
+        let totalFinalAmount = 0;
 
-        const html = services.map(s => {
+        // 번들/개별 서비스 분리
+        const bundledSvcs = [], extraSvcs = [];
+        let bundleInfo = null, bundleResId = null;
+        services.forEach(s => {
             const price = parseFloat(s.price || 0);
             const dur = parseInt(s.service_duration || 0);
             totalAmount += price;
             totalDuration += dur;
-
             if (!seenReservations[s.reservation_id]) {
                 seenReservations[s.reservation_id] = true;
                 totalPaid += parseFloat(s.reservation_paid || 0);
                 totalDesignationFee += parseFloat(s.designation_fee || 0);
+                totalFinalAmount += parseFloat(s.final_amount || 0);
             }
+            if (s.bundle_id) {
+                bundledSvcs.push(s);
+                if (!bundleInfo && s.bundle_price) { bundleInfo = { price: parseFloat(s.bundle_price), resId: s.reservation_id }; bundleResId = s.reservation_id; }
+            } else {
+                extraSvcs.push(s);
+            }
+        });
 
+        const bundledTotal = bundledSvcs.reduce((a, s) => a + parseFloat(s.price || 0), 0);
+
+        const renderSvc = (s, showDelete) => {
+            const price = parseFloat(s.price || 0);
+            const dur = parseInt(s.service_duration || 0);
             const badge = statusCls[s.status] || 'bg-zinc-100 text-zinc-700';
             const label = statusLabel[s.status] || s.status;
             const startT = (s.start_time || '').substring(0, 5);
             const endT = (s.end_time || '').substring(0, 5);
-
-            return `<div class="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg group">
+            return `<div class="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 mb-1">
                         <span class="text-sm font-semibold text-zinc-900 dark:text-white truncate">${this.escHtml(s.service_name || '-')}</span>
                         <span class="px-1.5 py-0.5 rounded text-[10px] font-medium flex-shrink-0 ${badge}">${label}</span>
+                        ${s.bundle_id ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"><?= htmlspecialchars($_bdnLabel ?? '') ?></span>' : ''}
                     </div>
                     <div class="text-xs text-zinc-500">${startT}${endT ? ' ~ ' + endT : ''} · ${dur}<?= __('reservations.pos_min') ?>${s.staff_name ? ' · <span class="text-violet-600 dark:text-violet-400">' + this.escHtml(s.staff_name) + '</span>' : ''}</div>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0 ml-2">
                     <span class="text-sm font-bold text-zinc-900 dark:text-white">${this.fmtCurrency(price)}</span>
-                    <button type="button" onclick="POS.removeService('${this.escHtml(s.reservation_id)}','${this.escHtml(s.service_id)}')"
-                        class="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition"
-                        title="<?= __('reservations.pos_remove_service') ?>">
+                    ${showDelete ? `<button type="button" onclick="POS.removeService('${this.escHtml(s.reservation_id)}','${this.escHtml(s.service_id)}')"
+                        class="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>` : ''}
+                </div>
+            </div>`;
+        };
+
+        let listHtml = '';
+
+        // 번들 상품 (API의 bundle 데이터 사용)
+        const bundle = this._bundleData;
+        if (bundle && bundle.items && bundle.items.length > 0) {
+            listHtml += `<div class="mb-2 p-3 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-800/30">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <p class="text-xs font-medium text-amber-600 dark:text-amber-400"><?= htmlspecialchars($_bdnLabel ?? '') ?></p>
+                        <p class="text-sm font-bold text-zinc-900 dark:text-white">${this.escHtml(bundle.name)}</p>
+                        <p class="text-xs text-zinc-500">${bundle.items.length}<?= __('booking.service_count') ?> · ${this.fmtCurrency(bundle.price)}</p>
+                    </div>
+                    <button type="button" onclick="POS.removeBundle('${bundleResId || ''}')"
+                        class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition shrink-0">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </button>
                 </div>
-            </div>`;
+                <div class="space-y-1">` +
+                bundle.items.map(bi => {
+                    return `<div class="flex items-center justify-between py-1.5 px-2 bg-white/60 dark:bg-zinc-800/60 rounded">
+                        <span class="text-xs text-zinc-700 dark:text-zinc-300 truncate">${this.escHtml(bi.name || '-')}</span>
+                        <span class="text-xs text-zinc-500 shrink-0 ml-2">${bi.duration || 0}<?= __('reservations.pos_min') ?> · ${this.fmtCurrency(parseFloat(bi.price || 0))}</span>
+                    </div>`;
+                }).join('') +
+            `</div></div>`;
+        }
+
+        // 이용 서비스 목록 (번들 서비스는 삭제 불가, 추가 서비스는 삭제 가능)
+        const allSvcsHtml = services.map(s => {
+            const isBundled = !!s.bundle_id;
+            return renderSvc(s, !isBundled); // 번들이면 삭제 없음, 아니면 삭제 있음
         }).join('');
+        if (allSvcsHtml) listHtml += allSvcsHtml;
 
-        document.getElementById('posServiceList').innerHTML = html || '<p class="text-center text-zinc-400 text-sm py-4"><?= __('reservations.pos_no_services') ?></p>';
+        // 타이틀에 예약번호 업데이트
+        if (services.length > 0 && services[0].reservation_number) {
+            document.getElementById('posServiceTitle').innerHTML = '<?= __('reservations.pos_service_detail') ?> <span class="text-xs font-mono font-normal text-zinc-400 ml-2">' + this.escHtml(services[0].reservation_number) + '</span>';
+        }
 
-        const grandTotal = totalAmount + totalDesignationFee;
-        const remaining = grandTotal - totalPaid;
-        document.getElementById('posServiceTotal').innerHTML = `
-            <div class="flex items-center justify-between py-2 text-sm">
-                <span class="text-zinc-500"><?= __('reservations.pos_pay_total') ?> (${services.length}<?= __('reservations.pos_service_count') ?>) · ${totalDuration}<?= __('reservations.pos_min') ?></span>
-                <span class="font-bold text-zinc-900 dark:text-white">${this.fmtCurrency(totalAmount)}</span>
-            </div>
-            ${totalDesignationFee > 0 ? `<div class="flex items-center justify-between pb-2 text-sm">
-                <span class="text-violet-600 dark:text-violet-400"><?= __('reservations.pos_pay_designation') ?></span>
-                <span class="font-medium text-violet-600 dark:text-violet-400">${this.fmtCurrency(totalDesignationFee)}</span>
-            </div>` : ''}
-            ${totalPaid > 0 ? `<div class="flex items-center justify-between pb-2 text-sm">
-                <span class="text-zinc-500"><?= __('reservations.pos_pay_paid') ?></span>
+        document.getElementById('posServiceList').innerHTML = listHtml || '<p class="text-center text-zinc-400 text-sm py-4"><?= __('reservations.pos_no_services') ?></p>';
+
+        // 최종 금액: DB의 final_amount 합계 사용 (번들/할인/적립금 반영된 정확한 값)
+        const finalTotal = totalFinalAmount > 0 ? totalFinalAmount : (totalAmount + totalDesignationFee);
+        const remaining = Math.max(0, finalTotal - totalPaid);
+
+        const extraTotal = extraSvcs.reduce((a, s) => a + parseFloat(s.price || 0), 0);
+
+        let totalHtml = '';
+
+        // 소계 (서비스 합계)
+        totalHtml += `<div class="flex items-center justify-between py-2 text-sm">
+            <span class="text-zinc-500"><?= __('reservations.pos_pay_total') ?> (${services.length}<?= __('reservations.pos_service_count') ?>) · ${totalDuration}<?= __('reservations.pos_min') ?></span>
+            <span class="font-bold text-zinc-900 dark:text-white">${this.fmtCurrency(totalAmount)}</span>
+        </div>`;
+
+        // 번들 적용가
+        if (bundleInfo && bundleInfo.price > 0) {
+            totalHtml += `<div class="flex items-center justify-between pb-1 text-sm font-semibold text-green-600 dark:text-green-400">
+                <span><?= htmlspecialchars($_bdnLabel ?? '') ?> <?= __('booking.payment.applied_price') ?? '적용가' ?></span>
+                <span>${this.fmtCurrency(bundleInfo.price)}</span>
+            </div>`;
+        }
+
+        // 추가 서비스 (번들 외)
+        if (extraTotal > 0 && bundleInfo) {
+            totalHtml += `<div class="flex items-center justify-between pb-1 text-sm">
+                <span class="text-zinc-500"><?= __('reservations.show_add_service') ?? '추가 서비스' ?></span>
+                <span class="text-zinc-900 dark:text-white">+${this.fmtCurrency(extraTotal)}</span>
+            </div>`;
+        }
+
+        // 지명료
+        if (totalDesignationFee > 0) {
+            totalHtml += `<div class="flex items-center justify-between pb-1 text-sm">
+                <span class="text-amber-600 dark:text-amber-400"><?= __('reservations.pos_pay_designation') ?></span>
+                <span class="text-amber-600 dark:text-amber-400">+${this.fmtCurrency(totalDesignationFee)}</span>
+            </div>`;
+        }
+
+        // 최종 결제 금액
+        totalHtml += `<div class="flex items-center justify-between py-2 border-t border-zinc-200 dark:border-zinc-700 text-sm font-semibold">
+            <span class="text-zinc-900 dark:text-white"><?= __('reservations.show_final_amount') ?></span>
+            <span class="text-zinc-900 dark:text-white">${this.fmtCurrency(finalTotal)}</span>
+        </div>`;
+
+        // 결제 완료
+        if (totalPaid > 0) {
+            totalHtml += `<div class="flex items-center justify-between pb-1 text-sm">
+                <span class="text-emerald-600"><?= __('reservations.pos_pay_paid') ?></span>
+                <span class="text-emerald-600">-${this.fmtCurrency(totalPaid)}</span>
+            </div>`;
+        }
+
+        // 잔액
+        if (remaining > 0) {
+            totalHtml += `<div class="flex items-center justify-between pt-1 text-sm font-bold">
+                <span class="text-red-600"><?= __('reservations.pos_pay_remaining') ?></span>
+                <span class="text-red-600">${this.fmtCurrency(remaining)}</span>
+            </div>`;
+        } else if (totalPaid > 0) {
+            totalHtml += `<div class="flex items-center justify-between pt-1 text-sm font-bold">
+                <span class="text-emerald-600"><?= __('reservations.pos_pay_paid') ?></span>
                 <span class="text-emerald-600">${this.fmtCurrency(totalPaid)}</span>
-            </div>` : ''}
-            ${remaining > 0 ? `<div class="flex items-center justify-between pb-2 text-sm">
-                <span class="font-medium text-zinc-700 dark:text-zinc-300"><?= __('reservations.pos_pay_remaining') ?></span>
-                <span class="font-bold text-violet-600">${this.fmtCurrency(remaining)}</span>
-            </div>` : ''}`;
+            </div>`;
+        }
+
+        document.getElementById('posServiceTotal').innerHTML = totalHtml;
 
         this._existingServiceIds = services.map(s => String(s.service_id));
         this._currentStaffId = services.length > 0 ? String(services[0].staff_id || '') : '';
@@ -372,8 +474,9 @@ Object.assign(POS, {
     },
 
     async submitAddService() {
-        const checked = document.querySelectorAll('.pos-add-svc-check:checked');
-        if (checked.length === 0) return;
+        const svcChecked = document.querySelectorAll('.pos-add-svc-check:checked');
+        const bdlChecked = document.querySelectorAll('.pos-add-bundle-check:checked');
+        if (svcChecked.length === 0 && bdlChecked.length === 0) return;
         const btn = document.getElementById('posAddServiceBtn');
         btn.disabled = true;
         btn.textContent = '<?= __('admin.messages.processing') ?>';
@@ -387,9 +490,21 @@ Object.assign(POS, {
         body.append('reservation_date', c.date);
         body.append('source', c.source);
         if (c.user_id) body.append('user_id', c.user_id);
-        checked.forEach(cb => body.append('service_ids[]', cb.value));
 
-        console.log('[POS] Adding services:', [...checked].map(cb => cb.value));
+        // 번들 선택 시: 번들 ID + 번들 포함 서비스
+        let bundleId = '';
+        if (bdlChecked.length > 0) {
+            bundleId = bdlChecked[0].value;
+            body.append('bundle_id', bundleId);
+            const bdlSvcIds = (bdlChecked[0].dataset.services || '').split(',').filter(Boolean);
+            bdlSvcIds.forEach(id => body.append('service_ids[]', id));
+        }
+        // 추가 개별 서비스 (번들에 포함 안 된 것만)
+        svcChecked.forEach(cb => {
+            if (!cb.disabled) body.append('service_ids[]', cb.value);
+        });
+
+        console.log('[POS] Adding services, bundle:', bundleId, 'svcs:', [...svcChecked].map(cb => cb.value));
         try {
             const resp = await fetch(`${this.adminUrl}/reservations/add-service`, { method: 'POST', body });
             const data = await resp.json();
@@ -409,6 +524,7 @@ Object.assign(POS, {
                 const d2 = await r2.json();
                 console.log('[POS] Refreshed services after add:', d2);
                 if (d2.success) {
+                    this._bundleData = d2.bundle || null;
                     this.renderStaffHeader(d2.data, d2.customer || {});
                     this.renderServiceList(d2.data);
                 }
@@ -540,6 +656,28 @@ Object.assign(POS, {
 
     // ─── 서비스 삭제 ───
     _serviceData: [],
+
+    async removeBundle(reservationId) {
+        if (!confirm('<?= __('reservations.show_remove_bundle_confirm') ?? '번들과 포함된 서비스를 모두 삭제하시겠습니까?' ?>')) return;
+        console.log('[POS] Remove bundle for reservation:', reservationId);
+        try {
+            const body = new URLSearchParams();
+            body.append('_token', '<?= $csrfToken ?? '' ?>');
+            body.append('reservation_id', reservationId);
+            const resp = await fetch(`${this.adminUrl}/reservations/remove-bundle`, { method: 'POST', body });
+            const data = await resp.json();
+            if (data.error) { alert(data.message || 'Error'); return; }
+            // 서비스 목록 새로고침
+            const ids = this._svcCustomer.reservation_ids.join(',');
+            const r2 = await fetch(`${this.adminUrl}/reservations/customer-services?ids=${encodeURIComponent(ids)}&_t=${Date.now()}`, { cache: 'no-store' });
+            const d2 = await r2.json();
+            if (d2.success) {
+                this._bundleData = d2.bundle || null;
+                this.renderServiceList(d2.data || []);
+                this.renderStaffHeader(d2.data || [], d2.customer || {});
+            }
+        } catch (err) { console.error('[POS] Remove bundle error:', err); alert('Error'); }
+    },
 
     async removeService(reservationId, serviceId) {
         if (!confirm('<?= __('reservations.pos_remove_service_confirm') ?>')) return;

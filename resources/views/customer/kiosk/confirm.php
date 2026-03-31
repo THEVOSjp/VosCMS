@@ -155,10 +155,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'check
         ]);
 
         // 서비스 관계 저장
-        $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
-        $idx = 0;
-        foreach ($services as $s) {
-            $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $idx++]);
+        try {
+            $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order, bundle_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $idx = 0;
+            foreach ($services as $s) {
+                $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $idx++, null]);
+            }
+        } catch (PDOException $e) {
+            $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
+            $idx = 0;
+            foreach ($services as $s) {
+                $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $idx++]);
+            }
         }
 
         $pdo->commit();

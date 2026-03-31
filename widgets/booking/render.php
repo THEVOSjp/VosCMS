@@ -164,10 +164,17 @@ try {
             $bundlePrice = $bundleId ? (float)($input['bundle_price'] ?? 0) : null;
             if (!$date||!$time||!$name||!$phone) { echo json_encode(['success'=>false,'message'=>__('booking.error.required_fields')]); exit; }
 
-            $ph = implode(',', array_fill(0, count($serviceIds), '?'));
-            $svcStmt = $pdo->prepare("SELECT id,name,price,duration FROM {$prefix}services WHERE id IN ({$ph}) AND is_active=1");
-            $svcStmt->execute(array_values($serviceIds));
-            $selSvcs = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
+            // 번들이면 service_bundle_items에서 전체 서비스 조회 (스냅샷)
+            if ($bundleId) {
+                $svcStmt = $pdo->prepare("SELECT s.id, s.name, s.price, s.duration FROM {$prefix}service_bundle_items bi JOIN {$prefix}services s ON bi.service_id = s.id WHERE bi.bundle_id = ? ORDER BY bi.sort_order");
+                $svcStmt->execute([$bundleId]);
+                $selSvcs = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
+            } else {
+                $ph = implode(',', array_fill(0, count($serviceIds), '?'));
+                $svcStmt = $pdo->prepare("SELECT id,name,price,duration FROM {$prefix}services WHERE id IN ({$ph}) AND is_active=1");
+                $svcStmt->execute(array_values($serviceIds));
+                $selSvcs = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
+            }
             if (empty($selSvcs)) { echo json_encode(['success'=>false,'message'=>__('booking.error.invalid_service')]); exit; }
 
             // total_amount = 서비스 원래 가격 합계, final_amount = 번들 가격 또는 원래 합계
@@ -199,7 +206,17 @@ try {
             $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id,service_id,service_name,price,duration,sort_order,bundle_id) VALUES (?,?,?,?,?,?,?)");
             $si=0; foreach ($selSvcs as $s) { $rsStmt->execute([$id,$s['id'],$s['name'],$s['price'],$s['duration'],$si++,$bundleId]); }
 
-            echo json_encode(['success'=>true,'message'=>__('booking.success'),'reservation_number'=>$resNum], JSON_UNESCAPED_UNICODE); exit;
+            // 온라인 결제 활성화 여부 확인 (DB에서 직접 조회)
+            $_bwPayStmt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'payment_config'");
+            $_bwPayStmt->execute();
+            $_bwPayConf = json_decode($_bwPayStmt->fetchColumn() ?: '{}', true) ?: [];
+            $_bwPayEnabled = ($_bwPayConf['enabled'] ?? '0') === '1' && !empty($_bwPayConf['public_key']) && !empty($_bwPayConf['secret_key']);
+            $response = ['success'=>true,'message'=>__('booking.success'),'reservation_number'=>$resNum,'reservation_id'=>$id];
+            if ($_bwPayEnabled) {
+                $response['needs_payment'] = true;
+                $response['payment_url'] = $baseUrl . '/payment/checkout?reservation_id=' . urlencode($id);
+            }
+            echo json_encode($response, JSON_UNESCAPED_UNICODE); exit;
         }
     }
 

@@ -174,11 +174,20 @@ if ($action === 'create_reservation') {
         exit;
     }
 
-    // 서비스 조회
-    $ph = implode(',', array_fill(0, count($serviceIds), '?'));
-    $svcStmt = $pdo->prepare("SELECT id, name, price, duration FROM {$prefix}services WHERE id IN ({$ph}) AND is_active = 1");
-    $svcStmt->execute(array_values($serviceIds));
-    $selectedServices = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
+    // 번들 ID
+    $_stBundleId = !empty($input['bundle_id']) ? $input['bundle_id'] : null;
+
+    // 번들이면 service_bundle_items에서 전체 서비스 조회 (스냅샷)
+    if ($_stBundleId) {
+        $svcStmt = $pdo->prepare("SELECT s.id, s.name, s.price, s.duration FROM {$prefix}service_bundle_items bi JOIN {$prefix}services s ON bi.service_id = s.id WHERE bi.bundle_id = ? ORDER BY bi.sort_order");
+        $svcStmt->execute([$_stBundleId]);
+        $selectedServices = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $ph = implode(',', array_fill(0, count($serviceIds), '?'));
+        $svcStmt = $pdo->prepare("SELECT id, name, price, duration FROM {$prefix}services WHERE id IN ({$ph}) AND is_active = 1");
+        $svcStmt->execute(array_values($serviceIds));
+        $selectedServices = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
+    }
     if (empty($selectedServices)) {
         echo json_encode(['success' => false, 'message' => __('booking.error.invalid_service')]);
         exit;
