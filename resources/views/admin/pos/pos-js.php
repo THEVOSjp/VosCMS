@@ -55,6 +55,45 @@ const POS = {
         return d.innerHTML;
     },
 
+    // ─── 모달 알림/확인 (alert/confirm 대체) ───
+    _modalAlert(msg, type) {
+        const colors = { error: 'text-red-600', success: 'text-emerald-600', info: 'text-blue-600' };
+        const icons = {
+            error: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>',
+            success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+            info: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+        };
+        const t = type || 'info';
+        const html = `<div id="posAlertModal" class="fixed inset-0 bg-black/50 z-[80] flex items-center justify-center p-4" onclick="document.getElementById('posAlertModal').remove()">
+            <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl w-full max-w-sm p-6 text-center" onclick="event.stopPropagation()">
+                <svg class="w-12 h-12 mx-auto mb-3 ${colors[t]}" fill="none" stroke="currentColor" viewBox="0 0 24 24">${icons[t]}</svg>
+                <p class="text-sm text-zinc-800 dark:text-zinc-200 mb-5 whitespace-pre-wrap">${this.escHtml(msg)}</p>
+                <button onclick="document.getElementById('posAlertModal').remove()"
+                    class="px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">OK</button>
+            </div>
+        </div>`;
+        document.getElementById('posAlertModal')?.remove();
+        document.body.insertAdjacentHTML('beforeend', html);
+    },
+
+    _modalConfirm(msg, onConfirm) {
+        const html = `<div id="posConfirmModal" class="fixed inset-0 bg-black/50 z-[80] flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl w-full max-w-sm p-6 text-center" onclick="event.stopPropagation()">
+                <svg class="w-12 h-12 mx-auto mb-3 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <p class="text-sm text-zinc-800 dark:text-zinc-200 mb-5 whitespace-pre-wrap">${this.escHtml(msg)}</p>
+                <div class="flex gap-3">
+                    <button onclick="document.getElementById('posConfirmModal').remove()"
+                        class="flex-1 px-4 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 rounded-lg hover:bg-zinc-200 transition"><?= __('common.buttons.cancel') ?? '취소' ?></button>
+                    <button id="posConfirmOk" onclick="document.getElementById('posConfirmModal').remove()"
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">OK</button>
+                </div>
+            </div>
+        </div>`;
+        document.getElementById('posConfirmModal')?.remove();
+        document.body.insertAdjacentHTML('beforeend', html);
+        document.getElementById('posConfirmOk').addEventListener('click', onConfirm);
+    },
+
     // ─── 탭 전환 ───
     switchTab(tab) {
         console.log('[POS] Switch tab:', tab);
@@ -182,7 +221,7 @@ const POS = {
     // ─── 스태프 배정 ───
     async assignStaff(reservationId) {
         const staffId = document.getElementById('assignStaffSelect')?.value;
-        if (!staffId) { alert('<?= __('reservations.pos_select_staff') ?>'); return; }
+        if (!staffId) { this._modalAlert('<?= __('reservations.pos_select_staff') ?>', 'info'); return; }
         console.log('[POS] Assign staff:', reservationId, staffId);
         try {
             const body = new URLSearchParams();
@@ -195,9 +234,9 @@ const POS = {
                 this.closeDetail();
                 location.reload();
             } else {
-                alert(data.message || 'Error');
+                POS._modalAlert(data.message || 'Error', 'error');
             }
-        } catch (err) { console.error('[POS] Assign error:', err); alert('Error'); }
+        } catch (err) { console.error('[POS] Assign error:', err); POS._modalAlert('Error', 'error'); }
     },
 
     // ─── 서비스 시작 (대기 → 이용중) ───
@@ -211,7 +250,7 @@ const POS = {
             });
             const data = await resp.json();
             console.log('[POS] Start service result:', data);
-            if (data.error) { alert(data.message || '처리 실패'); }
+            if (data.error) { POS._modalAlert(data.message || '처리 실패', 'error'); }
             else { location.reload(); }
         } catch (err) {
             console.error('[POS] Start service error:', err);
@@ -236,36 +275,37 @@ const POS = {
     },
 
     // ─── 그룹 단위 일괄 취소 ───
-    async cancelAllServices(group) {
-        if (!confirm('<?= __('reservations.cancel_msg') ?>')) return;
-        const ids = group.reservation_ids || [];
-        const reason = prompt('<?= __('reservations.cancel_reason') ?>:', '') || '';
-        for (const id of ids) {
-            try {
-                await fetch(`${this.adminUrl}/reservations/${id}/cancel`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
-                    body: `_token=${encodeURIComponent(this.csrfToken)}&reason=${encodeURIComponent(reason)}`
-                });
-            } catch (e) { console.error('[POS] Cancel error:', id, e); }
-        }
-        location.reload();
+    cancelAllServices(group) {
+        this._modalConfirm('<?= __('reservations.cancel_msg') ?>', async () => {
+            const ids = group.reservation_ids || [];
+            for (const id of ids) {
+                try {
+                    await fetch(`${POS.adminUrl}/reservations/${id}/cancel`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: `_token=${encodeURIComponent(POS.csrfToken)}`
+                    });
+                } catch (e) { console.error('[POS] Cancel error:', id, e); }
+            }
+            location.reload();
+        });
     },
 
     // ─── 그룹 단위 일괄 완료 ───
-    async completeAllServices(group) {
-        if (!confirm('<?= __('reservations.complete_msg') ?>')) return;
-        const ids = group.reservation_ids || [];
-        for (const id of ids) {
-            try {
-                await fetch(`${this.adminUrl}/reservations/${id}/complete`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
-                    body: `_token=${encodeURIComponent(this.csrfToken)}`
-                });
-            } catch (e) { console.error('[POS] Complete error:', id, e); }
-        }
-        location.reload();
+    completeAllServices(group) {
+        this._modalConfirm('<?= __('reservations.complete_msg') ?>', async () => {
+            const ids = group.reservation_ids || [];
+            for (const id of ids) {
+                try {
+                    await fetch(`${POS.adminUrl}/reservations/${id}/complete`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: `_token=${encodeURIComponent(POS.csrfToken)}`
+                    });
+                } catch (e) { console.error('[POS] Complete error:', id, e); }
+            }
+            location.reload();
+        });
     },
 
     // ─── 그룹 단위 결제 ───
@@ -423,11 +463,11 @@ const POS = {
             });
             const data = await resp.json();
             console.log('[POS] Payment result:', data);
-            if (data.error) { alert(data.message || '결제 처리 실패'); }
+            if (data.error) { POS._modalAlert(data.message || '결제 처리 실패', 'error'); }
             else { location.reload(); }
         } catch (err) {
             console.error('[POS] Payment error:', err);
-            alert('결제 처리 중 오류가 발생했습니다.');
+            POS._modalAlert('결제 처리 중 오류가 발생했습니다.', 'error');
         }
     },
 
@@ -711,12 +751,12 @@ const POS = {
             const data = await resp.json();
             console.log('[POS] Payment result:', data);
             document.getElementById('posPayOverlay')?.remove();
-            if (data.error) { alert(data.message || '결제 처리 실패'); }
+            if (data.error) { POS._modalAlert(data.message || '결제 처리 실패', 'error'); }
             else { location.reload(); }
         } catch (err) {
             console.error('[POS] Payment error:', err);
             document.getElementById('posPayOverlay')?.remove();
-            alert('오류가 발생했습니다.');
+            POS._modalAlert('오류가 발생했습니다.', 'error');
         }
     },
 
@@ -818,7 +858,7 @@ const POS = {
         console.log('[POS] Print receipt formatted');
         const svcData = this._serviceData || (typeof POS._serviceData !== 'undefined' ? POS._serviceData : null);
         const customer = this._svcCustomer;
-        if (!svcData || svcData.length === 0) { alert('서비스 데이터가 없습니다.'); return; }
+        if (!svcData || svcData.length === 0) { this._modalAlert('서비스 데이터가 없습니다.', 'info'); return; }
 
         const sym = this.currency.symbol;
         const fmt = (n) => sym + Number(n).toLocaleString();
@@ -847,6 +887,26 @@ const POS = {
         const finalAmount = parseFloat(svcData[0].final_amount) || subtotal + designationFee;
         const paidAmount = parseFloat(svcData[0].reservation_paid) || 0;
         const remaining = finalAmount - paidAmount;
+
+        // 결제 정보 (payments API 데이터)
+        const payments = this._paymentData || [];
+        const methodLabels = { card: '<?= __('reservations.pay_card') ?? '카드' ?>', cash: '<?= __('reservations.pay_cash') ?? '현금' ?>', mixed: '<?= __('reservations.pay_card') ?? '카드' ?>+<?= __('reservations.pay_cash') ?? '현금' ?>', points: '<?= get_points_name() ?>', transfer: '<?= __('reservations.pay_transfer') ?? '이체' ?>' };
+        let payInfoHtml = '';
+        if (payments.length > 0) {
+            payInfoHtml = '<div class="divider"></div><table>';
+            payments.forEach(p => {
+                const mLabel = methodLabels[p.method] || p.method || '-';
+                const detail = p.method_detail || {};
+                let desc = mLabel;
+                if (detail.brand) desc += ' ' + detail.brand.toUpperCase();
+                if (detail.last4) desc += ' ****' + detail.last4;
+                if (detail.installment && detail.installment > 1) desc += ' (' + detail.installment + '<?= __('reservations.pos_pay_months') ?? '개월' ?>)';
+                const paidAt = (p.paid_at || '').substring(0, 16);
+                payInfoHtml += '<tr><td class="label" style="font-size:10px;">' + this.escHtml(desc) + '</td><td class="right" style="font-size:10px;">' + fmt(parseFloat(p.amount || 0)) + '</td></tr>';
+                if (paidAt) payInfoHtml += '<tr><td colspan="2" style="font-size:9px;color:#999;">' + paidAt + '</td></tr>';
+            });
+            payInfoHtml += '</table>';
+        }
 
         const printWin = window.open('', '_blank', 'width=400,height=700');
         printWin.document.write(`<!DOCTYPE html>
@@ -906,6 +966,8 @@ const POS = {
     ${remaining <= 0 && paidAmount > 0 ? `<tr class="total-row"><td style="color:green;"><?= __('reservations.pos_pay_paid') ?? '결제 완료' ?></td><td class="right" style="color:green;">✓</td></tr>` : ''}
 </table>
 
+${payInfoHtml}
+
 <div class="double-divider"></div>
 
 <div class="center footer">
@@ -926,27 +988,23 @@ const POS = {
             complete: '<?= __('reservations.complete_msg') ?>',
             'no-show': '<?= __('reservations.noshow_msg') ?>'
         };
-        if (!confirm(msgs[action] || '진행하시겠습니까?')) return;
-
-        let reason = '';
-        if (action === 'cancel') {
-            reason = prompt('취소 사유:', '') || '';
-        }
-        try {
-            console.log('[POS] Changing status:', id, action);
-            const resp = await fetch(`${this.adminUrl}/reservations/${id}/${action}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
-                body: `_token=${encodeURIComponent(this.csrfToken)}&reason=${encodeURIComponent(reason)}`
-            });
-            const data = await resp.json();
-            console.log('[POS] Status result:', data);
-            if (data.error) { alert(data.message || '처리 실패'); }
-            else { location.reload(); }
-        } catch (err) {
-            console.error('[POS] Error:', err);
-            location.reload();
-        }
+        this._modalConfirm(msgs[action] || '진행하시겠습니까?', async () => {
+            try {
+                console.log('[POS] Changing status:', id, action);
+                const resp = await fetch(`${POS.adminUrl}/reservations/${id}/${action}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: `_token=${encodeURIComponent(POS.csrfToken)}`
+                });
+                const data = await resp.json();
+                console.log('[POS] Status result:', data);
+                if (data.error) { POS._modalAlert(data.message || '처리 실패', 'error'); }
+                else { location.reload(); }
+            } catch (err) {
+                console.error('[POS] Error:', err);
+                location.reload();
+            }
+        });
     }
 };
 

@@ -95,6 +95,7 @@ Object.assign(POS, {
                 this.renderCustomerProfile(this._customerInfo, data.memos || []);
                 this.renderStaffHeader(data.data, this._customerInfo);
                 this._bundleData = data.bundle || null;
+                this._paymentData = data.payments || [];
                 this.renderServiceList(data.data);
                 // 영수증 영역: 결제 완료 시 표시
                 const _firstSvc = (data.data || [])[0];
@@ -620,13 +621,13 @@ Object.assign(POS, {
                 btn.disabled = false;
                 btn.textContent = '<?= __('reservations.pos_add_service_submit') ?>';
             } else {
-                alert(data.message || '서비스 추가 실패');
+                POS._modalAlert(data.message || '서비스 추가 실패', 'error');
                 btn.disabled = false;
                 btn.textContent = '<?= __('reservations.pos_add_service_submit') ?>';
             }
         } catch (err) {
             console.error('[POS] Add service error:', err);
-            alert('오류가 발생했습니다.');
+            POS._modalAlert('오류가 발생했습니다.', 'error');
             btn.disabled = false;
             btn.textContent = '<?= __('reservations.pos_add_service_submit') ?>';
         }
@@ -695,13 +696,13 @@ Object.assign(POS, {
                 // 서비스 목록 새로 불러오기
                 this.showServices(this._svcCustomer);
             } else {
-                alert(data.message || '스태프 배정 실패');
+                POS._modalAlert(data.message || '스태프 배정 실패', 'error');
                 btn.disabled = false;
                 btn.textContent = '<?= __('reservations.pos_assign_staff_submit') ?>';
             }
         } catch (err) {
             console.error('[POS] Assign staff error:', err);
-            alert('오류가 발생했습니다.');
+            POS._modalAlert('오류가 발생했습니다.', 'error');
             btn.disabled = false;
             btn.textContent = '<?= __('reservations.pos_assign_staff_submit') ?>';
         }
@@ -714,7 +715,7 @@ Object.assign(POS, {
         if (!content) return;
         const c = this._svcCustomer;
         const rIds = c.reservation_ids || [];
-        if (!c.user_id && rIds.length === 0) { alert('메모를 저장할 대상이 없습니다.'); return; }
+        if (!c.user_id && rIds.length === 0) { POS._modalAlert('메모를 저장할 대상이 없습니다.', 'info'); return; }
 
         const body = new URLSearchParams();
         body.append('_token', this.csrfToken);
@@ -736,7 +737,7 @@ Object.assign(POS, {
                 </div>`;
                 list.innerHTML = newHtml + list.innerHTML.replace('메모 없음', '');
             } else {
-                alert(data.message || '메모 저장 실패');
+                POS._modalAlert(data.message || '메모 저장 실패', 'error');
             }
         } catch (err) {
             console.error('[POS] Save memo error:', err);
@@ -755,7 +756,7 @@ Object.assign(POS, {
             body.append('reservation_id', reservationId);
             const resp = await fetch(`${this.adminUrl}/reservations/remove-bundle`, { method: 'POST', body });
             const data = await resp.json();
-            if (data.error) { alert(data.message || 'Error'); return; }
+            if (data.error) { POS._modalAlert(data.message || 'Error', 'error'); return; }
             // 서비스 목록 새로고침
             const ids = this._svcCustomer.reservation_ids.join(',');
             const r2 = await fetch(`${this.adminUrl}/reservations/customer-services?ids=${encodeURIComponent(ids)}&_t=${Date.now()}`, { cache: 'no-store' });
@@ -765,7 +766,7 @@ Object.assign(POS, {
                 this.renderServiceList(d2.data || []);
                 this.renderStaffHeader(d2.data || [], d2.customer || {});
             }
-        } catch (err) { console.error('[POS] Remove bundle error:', err); alert('Error'); }
+        } catch (err) { console.error('[POS] Remove bundle error:', err); POS._modalAlert('Error', 'error'); }
     },
 
     async removeService(reservationId, serviceId) {
@@ -795,11 +796,11 @@ Object.assign(POS, {
                 // DOM 직접 갱신
                 this.renderServiceList(this._serviceData);
             } else {
-                alert(data.message || '삭제 실패');
+                POS._modalAlert(data.message || '삭제 실패', 'error');
             }
         } catch (err) {
             console.error('[POS] Remove service error:', err);
-            alert('오류가 발생했습니다: ' + err.message);
+            POS._modalAlert('오류가 발생했습니다: ' + err.message, 'error');
         }
     },
 

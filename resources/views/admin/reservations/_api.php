@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 $method = $_POST['_method'] ?? $_SERVER['REQUEST_METHOD'];
+require_once BASE_PATH . '/rzxlib/Core/Helpers/ReservationHelper.php';
 
 try {
     // ─── 예약 생성 ───
@@ -58,91 +59,23 @@ try {
             exit;
         }
 
-        // 서비스 조회 (번들이면 service_bundle_items에서 전체 조회)
-        if ($formBundleId) {
-            $svcStmt = $pdo->prepare("SELECT s.id, s.name, s.price, s.duration FROM {$prefix}service_bundle_items bi JOIN {$prefix}services s ON bi.service_id = s.id WHERE bi.bundle_id = ? ORDER BY bi.sort_order");
-            $svcStmt->execute([$formBundleId]);
-            $services = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
-        } else {
-            $ph = implode(',', array_fill(0, count($serviceIds), '?'));
-            $svcStmt = $pdo->prepare("SELECT id, name, price, duration FROM {$prefix}services WHERE id IN ({$ph})");
-            $svcStmt->execute(array_values($serviceIds));
-            $services = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
-        }
-        if (empty($services)) {
-            echo json_encode(['error' => true, 'message' => '유효한 서비스가 없습니다.']);
-            exit;
-        }
-
-        $totalAmount = 0;
-        $totalDuration = 0;
-        foreach ($services as $s) {
-            $totalAmount += (float)$s['price'];
-            $totalDuration += (int)$s['duration'];
-        }
-
-        // end_time 계산
-        if (!$endTime) {
-            $startParts = explode(':', $startTime);
-            $endMinutes = ((int)$startParts[0]) * 60 + ((int)($startParts[1] ?? 0)) + $totalDuration;
-            $endTime = sprintf('%02d:%02d', floor($endMinutes / 60) % 24, $endMinutes % 60);
-        }
-
-        // 회원 매칭: 폼에서 전달된 user_id 우선, 없으면 전화번호 자동 매칭
         $formUserId = trim($_POST['user_id'] ?? '');
         $matchedUserId = !empty($formUserId) ? $formUserId : findUserByPhone($pdo, $prefix, $customerPhone);
 
-        $pdo->beginTransaction();
-
-        $id = bin2hex(random_bytes(18));
-        $reservationNumber = 'RZX' . date('YmdHis') . strtoupper(substr(bin2hex(random_bytes(2)), 0, 4));
-
-        // 번들 가격 조회
-        $formBundlePrice = null;
-        $finalAmount = $totalAmount + $designationFee;
-        if ($formBundleId) {
-            try {
-                $_fbpStmt = $pdo->prepare("SELECT bundle_price FROM {$prefix}service_bundles WHERE id = ?");
-                $_fbpStmt->execute([$formBundleId]);
-                $_fbp = $_fbpStmt->fetchColumn();
-                if ($_fbp !== false) {
-                    $formBundlePrice = (float)$_fbp;
-                    $finalAmount = $formBundlePrice + $designationFee;
-                }
-            } catch (\Throwable $e) {}
-        }
-
-        $insertStmt = $pdo->prepare("INSERT INTO {$prefix}reservations
-            (id, reservation_number, user_id, staff_id, bundle_id, bundle_price, designation_fee, customer_name, customer_phone, customer_email,
-             reservation_date, start_time, end_time, total_amount, final_amount, status, source, notes, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, NOW(), NOW())");
-        $insertStmt->execute([
-            $id, $reservationNumber, $matchedUserId, $staffId ?: null, $formBundleId, $formBundlePrice, $designationFee,
-            $customerName, $customerPhone, $customerEmail,
-            $reservationDate, $startTime, $endTime,
-            $totalAmount, $finalAmount, $source, $notes
-        ]);
-
-        // 서비스 관계 저장
-        $idx = 0;
         try {
-            $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order, bundle_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            foreach ($services as $s) {
-                $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $idx++, $formBundleId]);
-            }
-        } catch (PDOException $e) {
-            if (stripos($e->getMessage(), 'Unknown column') !== false) {
-                $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
-                foreach ($services as $s) {
-                    $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $idx++]);
-                }
-            } else {
-                throw $e;
-            }
+            $result = \RzxLib\Core\Helpers\ReservationHelper::create($pdo, $prefix, [
+                'customer_name' => $customerName, 'customer_phone' => $customerPhone, 'customer_email' => $customerEmail,
+                'reservation_date' => $reservationDate, 'start_time' => $startTime, 'end_time' => $endTime ?: null,
+                'staff_id' => $staffId, 'designation_fee' => $designationFee,
+                'bundle_id' => $formBundleId, 'service_ids' => $serviceIds,
+                'user_id' => $matchedUserId, 'source' => $source, 'notes' => $notes,
+            ]);
+            $id = $result['id'];
+            $reservationNumber = $result['reservation_number'];
+        } catch (\Throwable $e) {
+            echo json_encode(['error' => true, 'message' => $e->getMessage()]); exit;
         }
-
-        $pdo->commit();
-        console_log("[Reservations API] Created: {$reservationNumber} ({$idx} services)");
+        console_log("[Reservations API] Created: {$reservationNumber} (via ReservationHelper)");
 
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
             header('Content-Type: application/json; charset=utf-8');
@@ -592,7 +525,23 @@ try {
             $ms = $pdo->prepare("SELECT m.content, m.created_at, a.name as admin_name FROM {$prefix}admin_memos m LEFT JOIN {$prefix}admins a ON m.admin_id = a.id WHERE m.user_id = ? ORDER BY m.created_at DESC LIMIT 3");
             $ms->execute([$custInfo['user_id']]);
             $recentMemos = $ms->fetchAll(PDO::FETCH_ASSOC);
+        } elseif (!empty($ids)) {
+            $memoPh2 = implode(',', array_fill(0, count($ids), '?'));
+            $ms = $pdo->prepare("SELECT m.content, m.created_at, a.name as admin_name FROM {$prefix}admin_memos m LEFT JOIN {$prefix}admins a ON m.admin_id = a.id WHERE m.reservation_id IN ({$memoPh2}) ORDER BY m.created_at DESC LIMIT 3");
+            $ms->execute(array_values($ids));
+            $recentMemos = $ms->fetchAll(PDO::FETCH_ASSOC);
         }
+
+        // 결제 정보 조회
+        $paymentInfo = [];
+        try {
+            $payStmt = $pdo->prepare("SELECT method, method_detail, amount, status, paid_at FROM {$prefix}payments WHERE reservation_id IN ({$ph}) AND status = 'paid' ORDER BY paid_at DESC");
+            $payStmt->execute(array_values($ids));
+            while ($payRow = $payStmt->fetch(PDO::FETCH_ASSOC)) {
+                $payRow['method_detail'] = $payRow['method_detail'] ? json_decode($payRow['method_detail'], true) : null;
+                $paymentInfo[] = $payRow;
+            }
+        } catch (\Throwable $e) {}
 
         echo json_encode([
             'success' => true,
@@ -617,6 +566,7 @@ try {
                 'visit_no_show' => (int)($visitStats['no_show'] ?? 0),
             ],
             'memos' => $recentMemos,
+            'payments' => $paymentInfo,
             'bundle' => $_bundleId ? [
                 'id' => $_bundleId,
                 'name' => $_bundleName,
@@ -665,204 +615,54 @@ try {
 
     // ─── 서비스 추가 (POS 현장) ───
     if ($apiAction === 'add-service') {
-        $serviceIds = $_POST['service_ids'] ?? [];
         $customerName = trim($_POST['customer_name'] ?? '');
         $customerPhone = trim($_POST['customer_phone'] ?? '');
         $customerEmail = trim($_POST['customer_email'] ?? '');
-        $reservationDate = $_POST['reservation_date'] ?? date('Y-m-d');
         $source = $_POST['source'] ?? 'walk_in';
         $addBundleId = trim($_POST['bundle_id'] ?? '') ?: null;
+        $serviceIds = $_POST['service_ids'] ?? [];
 
         if (!$customerName || !$customerPhone) {
             echo json_encode(['error' => true, 'message' => '필수 항목을 입력해주세요.']);
             exit;
         }
-
-        // 번들이 있으면 service_bundle_items에서 전체 서비스 조회 (스냅샷 저장)
-        if ($addBundleId) {
-            $svcStmt = $pdo->prepare("SELECT s.id, s.name, s.price, s.duration FROM {$prefix}service_bundle_items bi JOIN {$prefix}services s ON bi.service_id = s.id WHERE bi.bundle_id = ? ORDER BY bi.sort_order");
-            $svcStmt->execute([$addBundleId]);
-            $services = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
-        } else {
-            if (empty($serviceIds)) {
-                echo json_encode(['error' => true, 'message' => '서비스를 선택해주세요.']);
-                exit;
-            }
-            $ph = implode(',', array_fill(0, count($serviceIds), '?'));
-            $svcStmt = $pdo->prepare("SELECT id, name, price, duration FROM {$prefix}services WHERE id IN ({$ph})");
-            $svcStmt->execute(array_values($serviceIds));
-            $services = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
-        }
-        if (empty($services)) {
-            echo json_encode(['error' => true, 'message' => '유효한 서비스가 없습니다.']);
-            exit;
-        }
-
-        $totalAmount = 0;
-        $totalDuration = 0;
-        foreach ($services as $s) {
-            $totalAmount += (float)$s['price'];
-            $totalDuration += (int)$s['duration'];
-        }
-
-        $nowTime = date('H:i:s');
-        $endMinutes = intval(date('H')) * 60 + intval(date('i')) + $totalDuration;
-        $endTime = sprintf('%02d:%02d:00', floor($endMinutes / 60) % 24, $endMinutes % 60);
-
-        // 회원 매칭: 폼에서 전달된 user_id 우선, 없으면 전화번호 자동 매칭
         $formUserId = trim($_POST['user_id'] ?? '');
         $matchedUserId = !empty($formUserId) ? $formUserId : findUserByPhone($pdo, $prefix, $customerPhone);
 
-        $pdo->beginTransaction();
-
-        $id = bin2hex(random_bytes(18));
-        $resNum = 'RZX' . date('YmdHis') . strtoupper(substr(bin2hex(random_bytes(2)), 0, 4));
-
-        // 번들 가격 조회
-        $addBundlePrice = null;
-        $finalAmount = $totalAmount;
-        if ($addBundleId) {
-            try {
-                $bdlPrStmt = $pdo->prepare("SELECT bundle_price FROM {$prefix}service_bundles WHERE id = ? AND is_active = 1");
-                $bdlPrStmt->execute([$addBundleId]);
-                $dbBdlPr = $bdlPrStmt->fetchColumn();
-                if ($dbBdlPr !== false) {
-                    $addBundlePrice = (float)$dbBdlPr;
-                    $finalAmount = $addBundlePrice; // 번들 가격으로 설정
-                }
-            } catch (\Throwable $e) {}
-        }
-
-        $insertStmt = $pdo->prepare("INSERT INTO {$prefix}reservations
-            (id, reservation_number, user_id, bundle_id, bundle_price, customer_name, customer_phone, customer_email,
-             reservation_date, start_time, end_time, total_amount, final_amount, status, source, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, NOW(), NOW())");
-        $insertStmt->execute([
-            $id, $resNum, $matchedUserId, $addBundleId, $addBundlePrice, $customerName, $customerPhone, $customerEmail,
-            $reservationDate, $nowTime, $endTime, $totalAmount, $finalAmount, $source
-        ]);
-
-        $idx = 0;
         try {
-            $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order, bundle_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            foreach ($services as $s) {
-                $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $idx++, $addBundleId]);
-            }
-        } catch (PDOException $e) {
-            if (stripos($e->getMessage(), 'Unknown column') !== false) {
-                $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
-                foreach ($services as $s) {
-                    $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $idx++]);
-                }
-            } else {
-                throw $e;
-            }
+            $result = \RzxLib\Core\Helpers\ReservationHelper::create($pdo, $prefix, [
+                'customer_name' => $customerName, 'customer_phone' => $customerPhone, 'customer_email' => $customerEmail,
+                'reservation_date' => $_POST['reservation_date'] ?? date('Y-m-d'),
+                'start_time' => date('H:i:s'),
+                'bundle_id' => $addBundleId, 'service_ids' => $serviceIds,
+                'user_id' => $matchedUserId, 'source' => $source,
+            ]);
+            console_log("[POS API] Added services via ReservationHelper (reservation: {$result['id']})");
+            echo json_encode(['success' => true, 'message' => '서비스가 추가되었습니다.', 'ids' => [$result['id']]]);
+        } catch (\Throwable $e) {
+            echo json_encode(['error' => true, 'message' => $e->getMessage()]);
         }
-
-        $pdo->commit();
-        console_log("[POS API] Added {$idx} services for {$customerName} (reservation: {$id}, bundle: " . ($addBundleId ?? 'none') . ")");
-        echo json_encode(['success' => true, 'message' => '서비스가 추가되었습니다.', 'ids' => [$id]]);
         exit;
     }
 
     // ─── 기존 예약에 서비스 추가 ───
     if ($apiAction === 'append-service') {
         $reservationId = trim($_POST['reservation_id'] ?? '');
-        $serviceIds = $_POST['service_ids'] ?? [];
         $appendBundleId = trim($_POST['bundle_id'] ?? '') ?: null;
+        $serviceIds = $_POST['service_ids'] ?? [];
 
         if (!$reservationId || (empty($serviceIds) && !$appendBundleId)) {
             echo json_encode(['error' => true, 'message' => '필수 항목이 누락되었습니다.']);
             exit;
         }
 
-        // 예약 존재 확인
-        $resCheck = $pdo->prepare("SELECT id, start_time FROM {$prefix}reservations WHERE id = ?");
-        $resCheck->execute([$reservationId]);
-        $resRow = $resCheck->fetch(PDO::FETCH_ASSOC);
-        if (!$resRow) {
-            echo json_encode(['error' => true, 'message' => '예약을 찾을 수 없습니다.']);
-            exit;
-        }
-
-        // 서비스 조회 (번들이면 service_bundle_items에서 전체 조회)
-        if ($appendBundleId) {
-            $svcStmt = $pdo->prepare("SELECT s.id, s.name, s.price, s.duration FROM {$prefix}service_bundle_items bi JOIN {$prefix}services s ON bi.service_id = s.id WHERE bi.bundle_id = ? ORDER BY bi.sort_order");
-            $svcStmt->execute([$appendBundleId]);
-            $services = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
-        } else {
-            $ph = implode(',', array_fill(0, count($serviceIds), '?'));
-            $svcStmt = $pdo->prepare("SELECT id, name, price, duration FROM {$prefix}services WHERE id IN ({$ph})");
-            $svcStmt->execute(array_values($serviceIds));
-            $services = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
-        }
-        if (empty($services)) {
-            echo json_encode(['error' => true, 'message' => '유효한 서비스가 없습니다.']);
-            exit;
-        }
-
-        // 현재 최대 sort_order
-        $sortIdx = 0;
         try {
-            $maxSort = $pdo->prepare("SELECT COALESCE(MAX(sort_order), -1) FROM {$prefix}reservation_services WHERE reservation_id = ?");
-            $maxSort->execute([$reservationId]);
-            $sortIdx = (int)$maxSort->fetchColumn() + 1;
-        } catch (PDOException $e) {
-            // sort_order 컬럼 미존재 시 무시
+            $result = \RzxLib\Core\Helpers\ReservationHelper::appendServices($pdo, $prefix, $reservationId, $appendBundleId, $serviceIds);
+            console_log("[API] Appended {$result['count']} services via ReservationHelper to {$reservationId}");
+            echo json_encode(['success' => true, 'message' => '서비스가 추가되었습니다.']);
+        } catch (\Throwable $e) {
+            echo json_encode(['error' => true, 'message' => $e->getMessage()]);
         }
-
-        $pdo->beginTransaction();
-
-        try {
-            $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order, bundle_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            foreach ($services as $s) {
-                $rsStmt->execute([$reservationId, $s['id'], $s['name'], $s['price'], $s['duration'], $sortIdx++, $appendBundleId]);
-            }
-        } catch (PDOException $e) {
-            if (stripos($e->getMessage(), 'Unknown column') !== false) {
-                $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
-                foreach ($services as $s) {
-                    $rsStmt->execute([$reservationId, $s['id'], $s['name'], $s['price'], $s['duration'], $sortIdx++]);
-                }
-            } else {
-                throw $e;
-            }
-        }
-
-        // 금액/시간 재계산
-        $recalc = $pdo->prepare("SELECT SUM(price) as total, SUM(duration) as dur FROM {$prefix}reservation_services WHERE reservation_id = ?");
-        $recalc->execute([$reservationId]);
-        $sums = $recalc->fetch(PDO::FETCH_ASSOC);
-        $newTotal = (float)($sums['total'] ?? 0);
-        $newDur = (int)($sums['dur'] ?? 0);
-
-        $startTime = $resRow['start_time'];
-        if ($startTime) {
-            $parts = explode(':', $startTime);
-            $endMin = ((int)$parts[0]) * 60 + ((int)$parts[1]) + $newDur;
-            $newEndTime = sprintf('%02d:%02d:00', floor($endMin / 60) % 24, $endMin % 60);
-        } else {
-            $newEndTime = null;
-        }
-
-        // 번들 가격 조회
-        $newFinal = $newTotal;
-        if ($appendBundleId) {
-            try {
-                $bdlPrStmt = $pdo->prepare("SELECT bundle_price FROM {$prefix}service_bundles WHERE id = ?");
-                $bdlPrStmt->execute([$appendBundleId]);
-                $bdlPr = $bdlPrStmt->fetchColumn();
-                if ($bdlPr !== false) $newFinal = (float)$bdlPr;
-                $pdo->prepare("UPDATE {$prefix}reservations SET bundle_id = ?, bundle_price = ? WHERE id = ?")->execute([$appendBundleId, $bdlPr, $reservationId]);
-            } catch (\Throwable $e) {}
-        }
-
-        $upd = $pdo->prepare("UPDATE {$prefix}reservations SET total_amount = ?, final_amount = ?, end_time = ?, updated_at = NOW() WHERE id = ?");
-        $upd->execute([$newTotal, $newFinal, $newEndTime, $reservationId]);
-
-        $pdo->commit();
-        console_log("[API] Appended " . count($services) . " services to reservation {$reservationId}");
-        echo json_encode(['success' => true, 'message' => '서비스가 추가되었습니다.']);
         exit;
     }
 
@@ -936,7 +736,7 @@ try {
         $content = trim($_POST['content'] ?? '');
         $adminId = $_SESSION['admin_id'] ?? '';
 
-        if (!$userId || !$content || !$adminId) {
+        if ((!$userId && !$reservationId) || !$content || !$adminId) {
             echo json_encode(['error' => true, 'message' => '필수 항목이 누락되었습니다.']);
             exit;
         }
@@ -964,18 +764,31 @@ try {
     // ─── 고객 메모 목록 조회 ───
     if ($apiAction === 'customer-memos' && $_SERVER['REQUEST_METHOD'] === 'GET') {
         $userId = trim($_GET['user_id'] ?? '');
-        if (!$userId) {
+        $memoResIds = trim($_GET['reservation_ids'] ?? '');
+        if (!$userId && !$memoResIds) {
             echo json_encode(['success' => true, 'memos' => []]);
             exit;
         }
 
-        $stmt = $pdo->prepare("SELECT m.id, m.content, m.reservation_id, m.reservation_number, m.admin_id, m.created_at, a.name as admin_name
-            FROM {$prefix}admin_memos m
-            LEFT JOIN {$prefix}admins a ON m.admin_id = a.id
-            WHERE m.user_id = ?
-            ORDER BY m.created_at DESC
-            LIMIT 50");
-        $stmt->execute([$userId]);
+        if ($userId) {
+            $stmt = $pdo->prepare("SELECT m.id, m.content, m.reservation_id, m.reservation_number, m.admin_id, m.created_at, a.name as admin_name
+                FROM {$prefix}admin_memos m
+                LEFT JOIN {$prefix}admins a ON m.admin_id = a.id
+                WHERE m.user_id = ?
+                ORDER BY m.created_at DESC
+                LIMIT 50");
+            $stmt->execute([$userId]);
+        } else {
+            $memoIdArr = array_filter(array_map('trim', explode(',', $memoResIds)));
+            $memoPh = implode(',', array_fill(0, count($memoIdArr), '?'));
+            $stmt = $pdo->prepare("SELECT m.id, m.content, m.reservation_id, m.reservation_number, m.admin_id, m.created_at, a.name as admin_name
+                FROM {$prefix}admin_memos m
+                LEFT JOIN {$prefix}admins a ON m.admin_id = a.id
+                WHERE m.reservation_id IN ({$memoPh})
+                ORDER BY m.created_at DESC
+                LIMIT 50");
+            $stmt->execute(array_values($memoIdArr));
+        }
         $memos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         echo json_encode(['success' => true, 'memos' => $memos]);
