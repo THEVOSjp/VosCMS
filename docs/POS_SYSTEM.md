@@ -5,10 +5,48 @@
 POS(Point of Sale)는 RezlyX의 당일 현장 관리 화면이다. 관리자가 매장에서 실시간으로 이용중/대기 고객을 카드 형태로 관리하고, 당일 접수 / 서비스 시작 / 결제 / 완료를 처리한다.
 
 **핵심 특징:**
+- **플러그인 구조** — `resources/views/admin/pos/` 디렉토리 존재 시 자동 활성화
 - 업종별 어댑터 패턴 (CustomerBasedAdapter / SpaceBasedAdapter)
 - 1고객 = 1카드, 다중 서비스 그룹핑
 - 서비스 이미지 배경 카드, 회원 등급 할인/적립 연동
 - 실시간 시계, 자동 새로고침, 진행률 바, 초과시간 표시
+- **통합 결제** — 적립금 + 현금 + 카드 복합 결제, 할부 지원
+
+---
+
+## 1.1 플러그인 구조
+
+POS는 RezlyX의 독립 플러그인으로, `pos/` 디렉토리 유무로 활성화/비활성화된다.
+
+**활성화 조건:** `is_dir(BASE_PATH . '/resources/views/admin/pos')`
+
+| 체크 위치 | 동작 |
+|-----------|------|
+| `index.php` 라우팅 | `pos/` 없으면 POS 라우트 비활성화 (404) |
+| `admin-sidebar.php` | `pos/` 없으면 POS 메뉴 숨김 |
+
+**디렉토리 구조:**
+```
+resources/views/admin/pos/
+├── _init.php              ← 예약 공통 _init.php 위임
+├── pos.php                ← POS 메인 화면
+├── pos-js.php             ← 핵심 JS (결제, 상태변경, 접수)
+├── pos-service-js.php     ← 서비스 상세 모달 JS
+├── pos-modals.php         ← 모달 HTML 템플릿
+├── pos-card-customer.php  ← 고객 중심 카드 뷰
+├── pos-card-space.php     ← 공간 중심 카드 뷰
+├── pos-space-js.php       ← 공간 모드 JS
+└── pos-settings.php       ← POS 설정 페이지
+```
+
+**의존성:**
+- `reservations/_init.php` — DB, 인증, CSRF, 다국어, 헬퍼 함수 공유
+- `reservations/_head.php`, `_foot.php` — 관리자 레이아웃 공유 (BASE_PATH 기반 참조)
+- `reservations/_api.php` — POS API 엔드포인트 (URL: `/admin/reservations/*`)
+- `rzxlib/Core/Modules/BusinessType/` — 업종별 어댑터
+
+**설치:** `pos/` 디렉토리를 `resources/views/admin/`에 복사하면 즉시 활성화.
+**제거:** `pos/` 디렉토리 삭제 시 POS 기능 완전 비활성화 (본체에 영향 없음).
 
 ---
 
@@ -16,25 +54,25 @@ POS(Point of Sale)는 RezlyX의 당일 현장 관리 화면이다. 관리자가 
 
 | URL | 파일 | 설명 |
 |-----|------|------|
-| `/admin/reservations/pos` | `pos.php` | POS 메인 화면 |
-| `/admin/pos/settings` | `pos-settings.php` | POS 설정 페이지 |
-| `POST /admin/reservations/store` | `_api.php` | 예약 생성 |
-| `POST /admin/reservations/{id}/start-service` | `_api.php` | 서비스 시작 |
-| `POST /admin/reservations/{id}/payment` | `_api.php` | 결제 처리 |
-| `POST /admin/reservations/{id}/complete` | `_api.php` | 완료 처리 |
-| `POST /admin/reservations/{id}/cancel` | `_api.php` | 취소 처리 |
-| `POST /admin/reservations/{id}/confirm` | `_api.php` | 확정 처리 |
-| `POST /admin/reservations/{id}/no-show` | `_api.php` | 노쇼 처리 |
-| `GET /admin/reservations/customer-services` | `_api.php` | 고객 서비스 내역 조회 |
-| `POST /admin/reservations/assign-staff` | `_api.php` | 스태프 배정 |
-| `POST /admin/reservations/add-service` | `_api.php` | 서비스 추가 (새 예약) |
-| `POST /admin/reservations/append-service` | `_api.php` | 기존 예약에 서비스 추가 |
-| `POST /admin/reservations/remove-service` | `_api.php` | 서비스 삭제 |
-| `GET /admin/reservations/user-points` | `_api.php` | 회원 적립금 조회 |
-| `GET /admin/reservations/search-customers` | `_api.php` | 고객 검색 (자동완성) |
-| `GET /admin/reservations/available-staff` | `_api.php` | 가용 스태프 조회 |
-| `POST /admin/reservations/save-memo` | `_api.php` | 관리자 메모 저장 |
-| `GET /admin/reservations/customer-memos` | `_api.php` | 고객 메모 목록 조회 |
+| `/admin/reservations/pos` | `pos/pos.php` | POS 메인 화면 |
+| `/admin/pos/settings` | `pos/pos-settings.php` | POS 설정 페이지 |
+| `POST /admin/reservations/store` | `reservations/_api.php` | 예약 생성 |
+| `POST /admin/reservations/{id}/start-service` | `reservations/_api.php` | 서비스 시작 |
+| `POST /admin/reservations/{id}/payment` | `reservations/_api.php` | 결제 처리 |
+| `POST /admin/reservations/{id}/complete` | `reservations/_api.php` | 완료 처리 |
+| `POST /admin/reservations/{id}/cancel` | `reservations/_api.php` | 취소 처리 |
+| `POST /admin/reservations/{id}/confirm` | `reservations/_api.php` | 확정 처리 |
+| `POST /admin/reservations/{id}/no-show` | `reservations/_api.php` | 노쇼 처리 |
+| `GET /admin/reservations/customer-services` | `reservations/_api.php` | 고객 서비스 내역 조회 |
+| `POST /admin/reservations/assign-staff` | `reservations/_api.php` | 스태프 배정 |
+| `POST /admin/reservations/add-service` | `reservations/_api.php` | 서비스 추가 (새 예약) |
+| `POST /admin/reservations/append-service` | `reservations/_api.php` | 기존 예약에 서비스 추가 |
+| `POST /admin/reservations/remove-service` | `reservations/_api.php` | 서비스 삭제 |
+| `GET /admin/reservations/user-points` | `reservations/_api.php` | 회원 적립금 조회 |
+| `GET /admin/reservations/search-customers` | `reservations/_api.php` | 고객 검색 (자동완성) |
+| `GET /admin/reservations/available-staff` | `reservations/_api.php` | 가용 스태프 조회 |
+| `POST /admin/reservations/save-memo` | `reservations/_api.php` | 관리자 메모 저장 |
+| `GET /admin/reservations/customer-memos` | `reservations/_api.php` | 고객 메모 목록 조회 |
 
 ---
 
@@ -53,10 +91,13 @@ POS(Point of Sale)는 RezlyX의 당일 현장 관리 화면이다. 관리자가 
 | `pos_show_phone` | `1` | 카드에 전화번호 표시 |
 | `pos_default_tab` | `cards` | 기본 탭 (cards/waiting/reservations) |
 
-**카드 크기별 그리드:**
-- small: `grid-cols-2 md:3 lg:4`
-- medium: `grid-cols-1 md:2 lg:3`
-- large: `grid-cols-1 md:2`
+**카드 크기 (flex-wrap 고정 크기, 자동 줄바꿈):**
+
+| 크기 | 너비 | 높이 |
+|------|------|------|
+| small | 260px | 200px |
+| medium (기본) | 320px | 240px |
+| large | 380px | 280px |
 
 ### 3.2 자동화 설정
 
@@ -125,8 +166,8 @@ expected_points    — 적립 예정 포인트
 
 **히어로 영역:**
 - 대표 서비스 이미지를 배경으로 표시 (블러 오버레이)
-- 고객 프로필: 이름, 뱃지(회원/비회원, 등급), 전화번호, 방문통계
-- 스태프 헤더: 아바타, 이름, 지명/배정 뱃지, 지명비
+- 고객 프로필: 이름, 뱃지(회원/비회원, 등급), 전화번호, 방문통계, 적립금 잔액
+- 스태프 헤더: 아바타, 배정/지명 뱃지 + 이름 (같은 줄), 지명비
 
 **왼쪽 (3/5):**
 - 서비스 목록: 각 서비스별 이름, 상태뱃지, 시간, 소요시간, 스태프, 금액, 삭제 버튼
@@ -135,6 +176,7 @@ expected_points    — 적립 예정 포인트
 - [스태프 배정/변경] 버튼 (토글)
 
 **오른쪽 (2/5):**
+- 영수증/인쇄 버튼 (결제 완료 시 표시, 고객 정보 위)
 - 고객 정보 (나이, 성별, 할인율, 적립금, 가입일)
 - 고객 요구사항 (notes)
 - 관리자 메모 (admin_notes)
@@ -219,30 +261,58 @@ expected_points    — 적립 예정 포인트
 
 ## 7. 결제 시스템
 
-### 7.1 결제 모달 (posPaymentModal)
+### 7.1 통합 결제 모달 (openUnifiedPay)
 
-그룹 단위(`openGroupPayment`) 또는 개별 건(`openPayment`)으로 열린다.
+서비스 상세 모달의 [결제 진행] 버튼으로 열린다. 적립금 + 현금 + 카드를 동시에 사용할 수 있는 복합 결제를 지원한다.
 
-**표시 내용:**
-- 서비스 상세 내역 (비동기 로드)
-- 금액 내역: 서비스 합계, 지명비, 등급 할인, 기결제
-- 적립금 사용 (회원만, 잔액 표시, 전액 사용 버튼)
-- 결제 잔액
-- 결제 금액 입력
-- 결제 방법 선택 (카드/현금/계좌이체)
+**결제 수단:**
 
-### 7.2 적립금 처리
+| 수단 | 설명 |
+|------|------|
+| 적립금 | 회원 적립금 잔액에서 차감 (전액 사용 버튼) |
+| 현금 | 금액 수동 입력 |
+| 카드 | 금액 수동 입력 + "잔액 전체" 자동 입력 버튼 |
+| 할부 | 카드 결제 시 일시불 / 2~12개월 선택 |
+
+**실시간 계산:**
+- 합계: 적립금 + 현금 + 카드 합산
+- 거스름돈: 합계 > 결제 금액일 때 (현금이 있는 경우만)
+- 부족: 합계 < 결제 금액일 때 → 결제 버튼 비활성화
+
+**결제 method 결정:**
+- 현금만 → `cash`
+- 카드만 → `card`
+- 현금 + 카드 → `mixed`
+- 적립금만 → `points`
+
+### 7.2 Stripe 복합 결제 처리
+
+카드 결제가 있고 Stripe가 활성화된 경우:
+1. Stripe checkout iframe 표시 (카드 금액만)
+2. Stripe 결제 **성공 후** 현금/적립금 처리 (API 호출)
+3. Stripe 결제 **취소 시** 현금/적립금도 처리되지 않음 (안전)
+
+### 7.3 적립금 처리
 
 - `GET /admin/reservations/user-points` → 회원 적립금 잔액 조회
-- 적립금 입력 시 `POS.recalcPayment()`로 잔액 실시간 재계산
+- 서비스 상세 모달 헤더에 적립금 잔액 상시 표시 (잔액 0이어도 표시)
 - 결제 시 적립금 차감: `rzx_users.points_balance` 감소, `rzx_point_transactions` 기록
 
-### 7.3 결제 처리 API
+### 7.4 결제 처리 API
 
 `POST /admin/reservations/{id}/payment`
-- 파라미터: amount, method, points_used, user_id
-- 결제 상태: paid (전액) / partial (부분) / unpaid
-- 적립금 사용 시 `final_amount` 재계산
+
+| 파라미터 | 설명 |
+|----------|------|
+| `amount` | 현금+카드 결제 금액 |
+| `method` | cash / card / mixed / points |
+| `cash_amount` | 현금 금액 (mixed 시) |
+| `card_amount` | 카드 금액 (mixed 시) |
+| `installment` | 할부 개월 수 (1=일시불) |
+| `points_used` | 적립금 사용액 |
+| `user_id` | 회원 ID (적립금 차감용) |
+
+결제 상태: `paid` (전액) / `partial` (부분) / `unpaid` (미결제)
 
 ---
 
@@ -302,14 +372,25 @@ DB 구조: `rzx_reservations` 1건 + `rzx_reservation_services` N건 (junction t
 
 ## 10. 관련 파일
 
+### POS 플러그인 (`resources/views/admin/pos/`)
+
 | 파일 | 역할 |
 |------|------|
+| `_init.php` | POS 초기화 (예약 공통 _init.php 위임) |
 | `pos.php` | POS 메인 (데이터 조회, 레이아웃, 어댑터 연동) |
-| `pos-js.php` | POS 핵심 JS (탭, 모달, 상태변경, 결제, 접수) |
+| `pos-js.php` | POS 핵심 JS (탭, 통합결제, 상태변경, 접수) |
 | `pos-service-js.php` | 서비스 상세 모달 JS (렌더링, 추가/삭제, 배정, 메모) |
 | `pos-modals.php` | 모달 HTML (상세, 접수, 결제, 서비스) |
-| `pos-card-customer.php` | 고객 중심 카드 뷰 |
+| `pos-card-customer.php` | 고객 중심 카드 뷰 (고정 크기, flex-wrap) |
+| `pos-card-space.php` | 공간 중심 카드 뷰 |
+| `pos-space-js.php` | 공간 모드 JS |
 | `pos-settings.php` | POS 설정 페이지 |
-| `_api.php` | 예약 API 핸들러 |
-| `_init.php` | 공통 초기화 (CSRF, 헬퍼, 통화) |
-| `CustomerBasedAdapter.php` | 고객 중심 어댑터 (그룹핑, 카드 데이터, 상태 흐름) |
+
+### 공유 파일 (본체)
+
+| 파일 | 역할 |
+|------|------|
+| `reservations/_api.php` | 예약/POS 공용 API 핸들러 |
+| `reservations/_init.php` | 공통 초기화 (DB, 인증, CSRF, 헬퍼, 통화) |
+| `reservations/_head.php`, `_foot.php` | 관리자 레이아웃 |
+| `rzxlib/Core/Modules/BusinessType/` | 업종별 어댑터 (CustomerBased, SpaceBased) |

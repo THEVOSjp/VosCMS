@@ -123,7 +123,14 @@ const POS = {
                     </div>
                 </div>
                 ${r.notes ? '<div class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900 p-2 rounded-lg">' + this.escHtml(r.notes) + '</div>' : ''}
-                ${!r.staff_id ? `<div class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                ${r.status === 'cancelled' && (r.cancel_reason || r.cancelled_at) ? `<div class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg space-y-1">
+                    <p class="text-xs font-medium text-red-700 dark:text-red-400"><?= __('reservations.show_cancel_reason') ?></p>
+                    ${r.cancel_reason ? '<p class="text-xs text-red-600 dark:text-red-300">' + this.escHtml(r.cancel_reason) + '</p>' : '<p class="text-xs text-zinc-400"><?= __('reservations.no_reason') ?? '사유 없음' ?></p>'}
+                    ${r.cancelled_at ? '<p class="text-[10px] text-red-400">' + this.escHtml(r.cancelled_at) + '</p>' : ''}
+                </div>` : ''}
+                ${(r.status === 'cancelled' || r.status === 'no_show')
+                    ? (r.staff_name ? `<div class="text-xs text-zinc-500"><span class="text-zinc-400"><?= __('reservations.pos_staff') ?>:</span> ${this.escHtml(r.staff_name)}</div>` : '')
+                    : (!r.staff_id ? `<div class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                     <p class="text-xs font-medium text-amber-700 dark:text-amber-300 mb-2"><?= __('reservations.pos_assign_staff') ?></p>
                     <div class="flex gap-2">
                         <select id="assignStaffSelect" class="flex-1 px-2 py-1.5 text-xs bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 rounded-lg text-zinc-800 dark:text-zinc-200">
@@ -134,7 +141,7 @@ const POS = {
                         </select>
                         <button onclick="POS.assignStaff('${r.id}')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs transition"><?= __('reservations.pos_assign') ?></button>
                     </div>
-                </div>` : `<div class="text-xs text-zinc-500"><span class="text-zinc-400"><?= __('reservations.pos_staff') ?>:</span> ${this.escHtml(r.staff_name || '-')}</div>`}
+                </div>` : `<div class="text-xs text-zinc-500"><span class="text-zinc-400"><?= __('reservations.pos_staff') ?>:</span> ${this.escHtml(r.staff_name || '-')}</div>`)}
             </div>`;
 
         this._detailData = r;
@@ -422,6 +429,316 @@ const POS = {
             console.error('[POS] Payment error:', err);
             alert('결제 처리 중 오류가 발생했습니다.');
         }
+    },
+
+    // ─── 서비스 상세 모달 내 현금 결제 ───
+    // ─── 통합 결제 모달 (적립금 + 현금 + 카드 + 할부) ───
+    _uPay: { resId: '', total: 0, points: 0, pointsBal: 0, cash: 0, card: 0, installment: 1 },
+
+    openUnifiedPay(resId, amount) {
+        console.log('[POS] Open unified pay:', resId, amount);
+        this._uPay = { resId, total: amount, points: 0, pointsBal: 0, cash: 0, card: 0, installment: 1 };
+        const sym = '<?= $currencySymbol ?? '¥' ?>';
+        const html = `<div id="posPayOverlay" class="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl w-full max-w-md p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                        <?= __('reservations.pos_pay_proceed') ?? '결제 진행' ?>
+                    </h3>
+                    <button onclick="document.getElementById('posPayOverlay').remove()" class="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg">
+                        <svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <div class="space-y-3">
+                    <!-- 결제 금액 -->
+                    <div class="flex justify-between items-center text-sm bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
+                        <span class="text-zinc-500 font-medium"><?= __('reservations.pay_amount') ?? '결제 금액' ?></span>
+                        <span class="font-bold text-xl text-zinc-900 dark:text-white">${sym}${Number(amount).toLocaleString()}</span>
+                    </div>
+
+                    <!-- ① 적립금 -->
+                    <div id="uPayPointsRow" class="hidden border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-yellow-700 dark:text-yellow-400 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                                <?= get_points_name() ?>
+                            </span>
+                            <span id="uPayPointsBal" class="text-[10px] text-yellow-600 dark:text-yellow-400"></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="uPayPointsInput" value="0" min="0" max="0"
+                                   class="flex-1 px-2 py-1.5 border border-yellow-300 dark:border-yellow-700 dark:bg-zinc-700 dark:text-white rounded text-sm font-mono text-right"
+                                   oninput="POS._uPayRecalc()">
+                            <button type="button" onclick="document.getElementById('uPayPointsInput').value=document.getElementById('uPayPointsInput').max;POS._uPayRecalc()"
+                                class="px-2 py-1.5 text-[10px] font-medium text-yellow-700 bg-yellow-200 hover:bg-yellow-300 dark:bg-yellow-800 dark:text-yellow-300 rounded transition"><?= __('reservations.pos_pay_use_all') ?? '전액' ?></button>
+                        </div>
+                    </div>
+
+                    <!-- ② 현금 -->
+                    <div class="border border-green-200 dark:border-green-800 rounded-lg p-3 space-y-2">
+                        <label class="text-xs font-semibold text-green-700 dark:text-green-400 flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            <?= __('reservations.pay_cash') ?? '현금' ?>
+                        </label>
+                        <input type="number" id="uPayCashInput" value="0" min="0"
+                               class="w-full px-2 py-1.5 border border-green-300 dark:border-green-700 dark:bg-zinc-700 dark:text-white rounded text-sm font-mono text-right"
+                               oninput="POS._uPayRecalc()">
+                    </div>
+
+                    <!-- ③ 카드 -->
+                    <div class="border border-blue-200 dark:border-blue-800 rounded-lg p-3 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-semibold text-blue-700 dark:text-blue-400 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                <?= __('reservations.pay_card') ?? '카드' ?>
+                            </label>
+                            <button type="button" onclick="POS._uPayFillCard()" class="px-2 py-0.5 text-[10px] font-medium text-blue-600 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 rounded transition"><?= __('reservations.pos_pay_remainder') ?? '잔액 전체' ?></button>
+                        </div>
+                        <input type="number" id="uPayCardInput" value="0" min="0"
+                               class="w-full px-2 py-1.5 border border-blue-300 dark:border-blue-700 dark:bg-zinc-700 dark:text-white rounded text-sm font-mono text-right"
+                               oninput="POS._uPayRecalc()">
+                        <!-- 할부 -->
+                        <div class="flex items-center gap-2 mt-1">
+                            <label class="text-[10px] text-zinc-500 dark:text-zinc-400 whitespace-nowrap"><?= __('reservations.pos_pay_installment') ?? '할부' ?></label>
+                            <select id="uPayInstallment" class="flex-1 px-2 py-1 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded text-xs">
+                                <option value="1"><?= __('reservations.pos_pay_lump_sum') ?? '일시불' ?></option>
+                                <option value="2">2<?= __('reservations.pos_pay_months') ?? '개월' ?></option>
+                                <option value="3">3<?= __('reservations.pos_pay_months') ?? '개월' ?></option>
+                                <option value="4">4<?= __('reservations.pos_pay_months') ?? '개월' ?></option>
+                                <option value="5">5<?= __('reservations.pos_pay_months') ?? '개월' ?></option>
+                                <option value="6">6<?= __('reservations.pos_pay_months') ?? '개월' ?></option>
+                                <option value="10">10<?= __('reservations.pos_pay_months') ?? '개월' ?></option>
+                                <option value="12">12<?= __('reservations.pos_pay_months') ?? '개월' ?></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 정산 요약 -->
+                    <div id="uPaySummary" class="bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3 space-y-1 text-sm"></div>
+
+                    <!-- 거스름돈/부족 -->
+                    <div id="uPayChangeRow" class="hidden flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <span class="text-sm text-blue-700 dark:text-blue-300"><?= __('reservations.pay_change') ?? '거스름돈' ?></span>
+                        <span id="uPayChangeAmt" class="text-lg font-bold text-blue-600 dark:text-blue-400"></span>
+                    </div>
+                    <div id="uPayShortRow" class="hidden flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                        <span class="text-sm text-red-700 dark:text-red-300"><?= __('reservations.pos_pay_short') ?? '부족' ?></span>
+                        <span id="uPayShortAmt" class="text-lg font-bold text-red-600 dark:text-red-400"></span>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-5">
+                    <button onclick="document.getElementById('posPayOverlay').remove()"
+                        class="flex-1 px-4 py-2.5 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 rounded-lg hover:bg-zinc-200 transition">
+                        <?= __('common.buttons.cancel') ?? '취소' ?>
+                    </button>
+                    <button id="uPaySubmitBtn" onclick="POS._uPaySubmit()" disabled
+                        class="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition disabled:opacity-50">
+                        <?= __('reservations.pay_confirm') ?? '결제 완료' ?>
+                    </button>
+                </div>
+            </div>
+        </div>`;
+        document.body.insertAdjacentHTML('beforeend', html);
+        this._uPayInitPoints();
+    },
+
+    async _uPayInitPoints() {
+        const userId = this._svcCustomer?.user_id || '';
+        if (!userId) { this._uPayRecalc(); return; }
+        try {
+            const resp = await fetch(`${this.adminUrl}/reservations/user-points?user_id=${encodeURIComponent(userId)}`);
+            const data = await resp.json();
+            if (data.success && data.points_balance > 0) {
+                this._uPay.pointsBal = parseFloat(data.points_balance);
+                const maxPts = Math.min(this._uPay.pointsBal, this._uPay.total);
+                const sym = '<?= $currencySymbol ?? '¥' ?>';
+                document.getElementById('uPayPointsBal').textContent = '<?= __('booking.points_balance') ?? '잔액' ?>: ' + sym + Number(this._uPay.pointsBal).toLocaleString();
+                document.getElementById('uPayPointsInput').max = maxPts;
+                document.getElementById('uPayPointsRow').classList.remove('hidden');
+            }
+        } catch (e) { console.error('[POS] Load points error:', e); }
+        this._uPayRecalc();
+    },
+
+    _uPayFillCard() {
+        const pts = Math.max(0, Math.min(parseInt(document.getElementById('uPayPointsInput')?.value) || 0, parseInt(document.getElementById('uPayPointsInput')?.max) || 0));
+        const cash = Math.max(0, parseFloat(document.getElementById('uPayCashInput').value) || 0);
+        const remain = Math.max(0, this._uPay.total - pts - cash);
+        document.getElementById('uPayCardInput').value = remain;
+        this._uPayRecalc();
+    },
+
+    _uPayRecalc() {
+        const sym = '<?= $currencySymbol ?? '¥' ?>';
+        const total = this._uPay.total;
+
+        // 적립금
+        let pts = Math.max(0, parseInt(document.getElementById('uPayPointsInput')?.value) || 0);
+        const maxPts = Math.min(this._uPay.pointsBal, total);
+        if (pts > maxPts) { pts = maxPts; if (document.getElementById('uPayPointsInput')) document.getElementById('uPayPointsInput').value = pts; }
+        this._uPay.points = pts;
+
+        // 현금
+        const cash = Math.max(0, parseFloat(document.getElementById('uPayCashInput').value) || 0);
+        this._uPay.cash = cash;
+
+        // 카드
+        const card = Math.max(0, parseFloat(document.getElementById('uPayCardInput').value) || 0);
+        this._uPay.card = card;
+
+        // 할부
+        this._uPay.installment = parseInt(document.getElementById('uPayInstallment')?.value) || 1;
+
+        const paid = pts + cash + card;
+        const diff = paid - total;
+
+        // 요약
+        let summary = '';
+        if (pts > 0) summary += `<div class="flex justify-between"><span class="text-yellow-600"><?= get_points_name() ?></span><span class="text-yellow-600">-${sym}${Number(pts).toLocaleString()}</span></div>`;
+        if (cash > 0) summary += `<div class="flex justify-between"><span class="text-green-600"><?= __('reservations.pay_cash') ?? '현금' ?></span><span class="text-green-600">${sym}${Number(cash).toLocaleString()}</span></div>`;
+        if (card > 0) {
+            let cardLabel = '<?= __('reservations.pay_card') ?? '카드' ?>';
+            if (this._uPay.installment > 1) cardLabel += ` (${this._uPay.installment}<?= __('reservations.pos_pay_months') ?? '개월' ?>)`;
+            summary += `<div class="flex justify-between"><span class="text-blue-600">${cardLabel}</span><span class="text-blue-600">${sym}${Number(card).toLocaleString()}</span></div>`;
+        }
+        if (summary) {
+            summary += `<div class="flex justify-between pt-1 mt-1 border-t border-zinc-200 dark:border-zinc-700 font-bold"><span><?= __('reservations.pos_pay_total_pay') ?? '합계' ?></span><span>${sym}${Number(paid).toLocaleString()}</span></div>`;
+        }
+        document.getElementById('uPaySummary').innerHTML = summary;
+
+        // 거스름돈/부족
+        const changeRow = document.getElementById('uPayChangeRow');
+        const shortRow = document.getElementById('uPayShortRow');
+        const btn = document.getElementById('uPaySubmitBtn');
+
+        if (diff >= 0 && paid > 0) {
+            if (diff > 0 && cash > 0) {
+                document.getElementById('uPayChangeAmt').textContent = sym + Number(diff).toLocaleString();
+                changeRow.classList.remove('hidden');
+            } else {
+                changeRow.classList.add('hidden');
+            }
+            shortRow.classList.add('hidden');
+            btn.disabled = false;
+        } else if (paid > 0 && diff < 0) {
+            document.getElementById('uPayShortAmt').textContent = sym + Number(Math.abs(diff)).toLocaleString();
+            shortRow.classList.remove('hidden');
+            changeRow.classList.add('hidden');
+            btn.disabled = true;
+        } else {
+            changeRow.classList.add('hidden');
+            shortRow.classList.add('hidden');
+            btn.disabled = true;
+        }
+    },
+
+    async _uPaySubmit() {
+        const u = this._uPay;
+        const btn = document.getElementById('uPaySubmitBtn');
+        btn.disabled = true; btn.textContent = '<?= __('admin.messages.processing') ?? '처리중...' ?>';
+        console.log('[POS] Unified payment:', u);
+
+        // 결제 method 결정
+        let method = 'cash';
+        if (u.cash > 0 && u.card > 0) method = 'mixed';
+        else if (u.card > 0) method = 'card';
+        else if (u.cash > 0) method = 'cash';
+        else if (u.points > 0) method = 'points';
+
+        // 카드 결제가 있고 Stripe 활성화 → Stripe checkout (현금/적립금은 Stripe 성공 후 처리)
+        if (u.card > 0 && typeof posStripeEnabled !== 'undefined' && posStripeEnabled) {
+            document.getElementById('posPayOverlay')?.remove();
+            // Stripe checkout URL (카드 금액만)
+            const appUrl = this.adminUrl.replace(/\/[^/]+$/, '');
+            const checkoutUrl = appUrl + '/payment/checkout?reservation_id=' + encodeURIComponent(u.resId) + '&admin=1&amount=' + u.card + '&points_used=0&installment=' + u.installment + '&no_layout=1';
+            // 현금/적립금 정보를 저장해두고 Stripe 성공 후 처리
+            this._pendingCashAfterStripe = { resId: u.resId, cash: u.cash, points: u.points, userId: this._svcCustomer?.user_id || '' };
+            this._openStripeModal(checkoutUrl);
+            return;
+        }
+
+        // Stripe 없음 → API로 직접 처리
+        try {
+            const body = `_token=${encodeURIComponent(this.csrfToken)}&amount=${u.cash + u.card}&method=${method}&cash_amount=${u.cash}&card_amount=${u.card}&installment=${u.installment}&points_used=${u.points}&user_id=${encodeURIComponent(this._svcCustomer?.user_id || '')}`;
+            const resp = await fetch(`${this.adminUrl}/reservations/${u.resId}/payment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                body
+            });
+            const data = await resp.json();
+            console.log('[POS] Payment result:', data);
+            document.getElementById('posPayOverlay')?.remove();
+            if (data.error) { alert(data.message || '결제 처리 실패'); }
+            else { location.reload(); }
+        } catch (err) {
+            console.error('[POS] Payment error:', err);
+            document.getElementById('posPayOverlay')?.remove();
+            alert('오류가 발생했습니다.');
+        }
+    },
+
+    _openStripeModal(url) {
+        console.log('[POS] Stripe modal:', url);
+        const html = `<div id="posStripeOverlay" class="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl overflow-hidden" style="width:1030px;max-width:95vw;max-height:90vh;">
+                <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-zinc-700">
+                    <span class="text-sm font-semibold text-zinc-900 dark:text-white"><?= __('reservations.pay_card') ?? '카드 결제' ?></span>
+                    <button onclick="document.getElementById('posStripeOverlay').remove()" class="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg">
+                        <svg class="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <iframe src="${url}" class="w-full" style="height:800px;border:none;"></iframe>
+            </div>
+        </div>`;
+        document.body.insertAdjacentHTML('beforeend', html);
+        // 결제 완료 메시지 감지
+        window.addEventListener('message', async function _posStripeHandler(e) {
+            if (e.data === 'payment_complete' || e.data === 'payment_success' || e.data?.type === 'payment_success') {
+                console.log('[POS] Stripe payment success');
+                document.getElementById('posStripeOverlay')?.remove();
+                window.removeEventListener('message', _posStripeHandler);
+                // Stripe 성공 후 현금/적립금 처리
+                const pending = POS._pendingCashAfterStripe;
+                if (pending && (pending.cash > 0 || pending.points > 0)) {
+                    try {
+                        await fetch(`${POS.adminUrl}/reservations/${pending.resId}/payment`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                            body: `_token=${encodeURIComponent(POS.csrfToken)}&amount=${pending.cash}&method=cash&points_used=${pending.points}&user_id=${encodeURIComponent(pending.userId)}`
+                        });
+                    } catch (e) { console.error('[POS] Post-stripe cash/points error:', e); }
+                    POS._pendingCashAfterStripe = null;
+                }
+                location.reload();
+            }
+        });
+    },
+
+    _pendingCashAfterStripe: null,
+
+    // ─── 영수증 인쇄 (현재 서비스 상세 모달 내용) ───
+    printReceipt() {
+        console.log('[POS] Print service detail modal');
+        const modal = document.querySelector('#posServiceModal .bg-white, #posServiceModal .dark\\:bg-zinc-800');
+        if (!modal) { window.print(); return; }
+        const printWin = window.open('', '_blank', 'width=800,height=900');
+        const isDark = document.documentElement.classList.contains('dark');
+        printWin.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title><?= __('reservations.show_print') ?? '인쇄' ?></title>
+            <style>
+                * { margin:0; padding:0; box-sizing:border-box; }
+                body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; padding:20px; color:#1a1a1a; font-size:13px; }
+                img { max-width:100%; }
+                .dark-bg { display:none; }
+                button, [onclick], #posAddServiceToggle, #posAssignStaffToggle, #posAddServiceArea, #posAssignStaffArea, #posMemoArea { display:none !important; }
+                @media print { body { padding:10px; } }
+            </style>
+            <link rel="stylesheet" href="/assets/css/tailwind.min.css">
+        </head><body>${modal.innerHTML}</body></html>`);
+        printWin.document.close();
+        printWin.onload = () => { setTimeout(() => { printWin.print(); printWin.close(); }, 300); };
     },
 
     // ─── 상태 변경 ───

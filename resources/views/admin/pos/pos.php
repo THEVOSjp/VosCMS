@@ -39,11 +39,16 @@ $posSoundNotify = ($posSettings['pos_sound_notification'] ?? '0') === '1';
 $posRequireStaff = ($posSettings['pos_require_staff'] ?? '1') === '1';
 $posAutoAssign = ($posSettings['pos_auto_assign'] ?? '0') === '1';
 
-// 카드 크기별 그리드
-$posGridClass = match($posCardSize) {
-    'small' => 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
-    'large' => 'grid-cols-1 md:grid-cols-2',
-    default => 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
+// 카드 크기별 고정 너비/높이 (flex-wrap 자동 줄바꿈)
+$posCardWidth = match($posCardSize) {
+    'small' => '260px',
+    'large' => '380px',
+    default => '320px',
+};
+$posCardHeight = match($posCardSize) {
+    'small' => '200px',
+    'large' => '280px',
+    default => '240px',
 };
 
 // 서비스 목록 (접수 컴포넌트용)
@@ -165,6 +170,20 @@ try {
     }
 } catch (\Throwable $e) {}
 
+// 당일 접수 모달용 번들 (reservation-form.php 형식)
+$posCheckinBundles = [];
+try {
+    $_pcbStmt = $pdo->query("SELECT b.*, GROUP_CONCAT(bi.service_id) as svc_ids, COUNT(bi.service_id) as svc_count, SUM(sv.duration) as total_duration FROM {$prefix}service_bundles b LEFT JOIN {$prefix}service_bundle_items bi ON b.id = bi.bundle_id LEFT JOIN {$prefix}services sv ON bi.service_id = sv.id WHERE b.is_active = 1 GROUP BY b.id ORDER BY b.display_order");
+    while ($_pcb = $_pcbStmt->fetch(PDO::FETCH_ASSOC)) {
+        $_pcb['svc_id_list'] = $_pcb['svc_ids'] ? explode(',', $_pcb['svc_ids']) : [];
+        $now = date('Y-m-d H:i:s');
+        $_pcb['is_event'] = $_pcb['event_price'] && $_pcb['event_price'] > 0 && (!$_pcb['event_start'] || $_pcb['event_start'] <= $now) && (!$_pcb['event_end'] || $_pcb['event_end'] >= $now);
+        $_pcb['display_price'] = $_pcb['is_event'] ? $_pcb['event_price'] : $_pcb['bundle_price'];
+        if ($_pcb['image'] && !str_starts_with($_pcb['image'], 'http') && !str_starts_with($_pcb['image'], '/')) $_pcb['image'] = '/' . ltrim($_pcb['image'], '/');
+        $posCheckinBundles[] = $_pcb;
+    }
+} catch (\Throwable $e) {}
+
 // 업종별 POS 어댑터 로드
 require_once BASE_PATH . '/rzxlib/Core/Modules/BusinessType/PosAdapterInterface.php';
 require_once BASE_PATH . '/rzxlib/Core/Modules/BusinessType/CustomerBasedAdapter.php';
@@ -203,7 +222,7 @@ foreach ($posStaffList as &$_psl) {
 unset($_psl);
 
 $pageHeaderTitle = 'POS';
-include __DIR__ . '/_head.php';
+include BASE_PATH . '/resources/views/admin/reservations/_head.php';
 ?>
 
 <!-- ═══ 상단: 메뉴 및 버튼 영역 ═══ -->
@@ -251,7 +270,7 @@ include __DIR__ . '/_head.php';
         </div>
         <?php else: ?>
         <div class="flex-1 overflow-y-auto pr-1">
-            <div class="grid <?= $posGridClass ?> gap-3">
+            <div class="flex flex-wrap gap-3 content-start">
                 <?php foreach ($allCards as $g):
                     // 어댑터를 통한 카드 데이터 준비 + 모드별 카드 뷰 include
                     $cd = $posAdapter->prepareCardData($g, $nowTime);
@@ -390,6 +409,13 @@ const posMode = '<?= $posMode ?>';
 const posAllServices = <?= json_encode($calServices, JSON_UNESCAPED_UNICODE) ?>;
 const posAllBundles = <?= json_encode($posBundles ?? [], JSON_UNESCAPED_UNICODE) ?>;
 const posAllStaff = <?= json_encode($posStaffList, JSON_UNESCAPED_UNICODE) ?>;
+<?php
+// Stripe 설정 여부
+$_posPayConf = [];
+try { $_ppSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'payment_config'"); $_ppSt->execute(); $_posPayConf = json_decode($_ppSt->fetchColumn() ?: '{}', true) ?: []; } catch (\Throwable $e) {}
+$_posStripeEnabled = (($_posPayConf['enabled'] ?? '0') === '1' && !empty($_posPayConf['public_key']) && !empty($_posPayConf['secret_key']));
+?>
+const posStripeEnabled = <?= $_posStripeEnabled ? 'true' : 'false' ?>;
 </script>
 
 <?php include BASE_PATH . '/resources/views/admin/components/reservation-form-js.php'; ?>
@@ -402,4 +428,4 @@ if ($extraJs && file_exists($extraJs)) {
     include $extraJs;
 }
 ?>
-<?php include __DIR__ . '/_foot.php'; ?>
+<?php include BASE_PATH . '/resources/views/admin/reservations/_foot.php'; ?>

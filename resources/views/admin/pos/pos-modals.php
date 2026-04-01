@@ -28,6 +28,7 @@
             <?php
             $resForm = [
                 'services'         => $calServices,
+                'bundles'          => $posCheckinBundles ?? [],
                 'adminUrl'         => $adminUrl,
                 'csrfToken'        => $csrfToken,
                 'currencySymbol'   => $currencySymbol,
@@ -179,6 +180,19 @@
                 </div>
                 <!-- 오른쪽: 고객 상세 + 요구사항 + 메모 (2/5) -->
                 <div class="md:col-span-2 border-t md:border-t-0 border-zinc-200 dark:border-zinc-700">
+                    <!-- 영수증/인쇄 -->
+                    <div id="posReceiptArea" class="px-4 pt-3 pb-1 hidden">
+                        <div class="flex gap-2">
+                            <a id="posReceiptLink" href="#" target="_blank" class="flex-1 h-9 flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800 transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                <?= __('reservations.show_receipt') ?? '영수증' ?>
+                            </a>
+                            <button onclick="POS.printReceipt()" class="flex-1 h-9 flex items-center justify-center gap-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 rounded-lg border border-zinc-200 dark:border-zinc-600 transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                <?= __('reservations.show_print') ?? '인쇄' ?>
+                            </button>
+                        </div>
+                    </div>
                     <div id="posCustomerDetail" class="p-4 space-y-3"></div>
                     <!-- 메모 입력 -->
                     <div id="posMemoArea" class="px-4 pb-4 hidden">

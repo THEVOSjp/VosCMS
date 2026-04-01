@@ -100,8 +100,8 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
             </svg>
             <span class="sidebar-text"><?= __('admin.nav.dashboard') ?></span>
         </a>
-        <!-- POS 독립 메뉴 -->
-        <?php if (\RzxLib\Core\Auth\AdminAuth::can('reservations')): ?>
+        <!-- POS 플러그인 메뉴 (pos/ 디렉토리 존재 시에만 표시) -->
+        <?php if (\RzxLib\Core\Auth\AdminAuth::can('reservations') && is_dir(BASE_PATH . '/resources/views/admin/pos')): ?>
         <a href="<?php echo $adminUrl; ?>/reservations/pos" class="flex items-center px-6 py-3 <?php echo $isPosMainPage ? 'text-white bg-blue-600' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="POS">
             <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>

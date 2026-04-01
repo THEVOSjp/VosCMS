@@ -18,7 +18,8 @@ Object.assign(POS, {
 
     async showServices(r) {
         console.log('[POS] Show services for:', r.customer_name, r.customer_phone);
-        this._svcCustomer = { name: r.customer_name, phone: r.customer_phone, email: r.customer_email || '', date: r.reservation_date, source: r.source || 'walk_in', user_id: r.user_id || '', reservation_ids: r.reservation_ids || [] };
+        const resIds = r.reservation_ids || (r.id ? [r.id] : []);
+        this._svcCustomer = { name: r.customer_name, phone: r.customer_phone, email: r.customer_email || '', date: r.reservation_date, source: r.source || 'walk_in', user_id: r.user_id || '', reservation_ids: resIds };
 
         // 헤더: 고객 프로필 (왼쪽) + 스태프 (오른쪽, API 후 갱신)
         document.getElementById('posServiceTitle').innerHTML = '<?= __('reservations.pos_service_detail') ?>' + (r.reservation_number ? ' <span class="text-xs font-mono font-normal text-zinc-400 ml-2">' + this.escHtml(r.reservation_number) + '</span>' : '');
@@ -54,10 +55,14 @@ Object.assign(POS, {
         document.getElementById('posAddServiceArea').classList.add('hidden');
         document.getElementById('posAssignStaffArea').classList.add('hidden');
         document.getElementById('posMemoArea').classList.add('hidden');
+        // 취소/노쇼 예약은 서비스 추가/스태프 배정 버튼 숨김
+        const _isClosed = (r.status === 'cancelled' || r.status === 'no_show' || r.status === 'completed');
+        document.getElementById('posAddServiceToggle').style.display = _isClosed ? 'none' : '';
+        document.getElementById('posAssignStaffToggle').style.display = _isClosed ? 'none' : '';
         document.getElementById('posServiceModal').classList.remove('hidden');
 
         try {
-            const ids = (r.reservation_ids || []).join(',');
+            const ids = resIds.join(',');
             const resp = await fetch(`${this.adminUrl}/reservations/customer-services?ids=${encodeURIComponent(ids)}&_t=${Date.now()}`);
             const data = await resp.json();
             console.log('[POS] Customer services:', data);
@@ -90,6 +95,20 @@ Object.assign(POS, {
                 this.renderStaffHeader(data.data, data.customer || {});
                 this._bundleData = data.bundle || null;
                 this.renderServiceList(data.data);
+                // 영수증 영역: 결제 완료 시 표시
+                const _firstSvc = (data.data || [])[0];
+                const _isPaid = _firstSvc && (_firstSvc.payment_status === 'paid' || parseFloat(_firstSvc.reservation_paid || 0) > 0);
+                const receiptArea = document.getElementById('posReceiptArea');
+                if (_isPaid && receiptArea) {
+                    receiptArea.classList.remove('hidden');
+                    const receiptLink = document.getElementById('posReceiptLink');
+                    if (receiptLink && _firstSvc) {
+                        const appUrl = this.adminUrl.replace(/\/[^/]+$/, '');
+                        receiptLink.href = appUrl + '/booking/detail/' + encodeURIComponent(_firstSvc.reservation_number || '');
+                    }
+                } else if (receiptArea) {
+                    receiptArea.classList.add('hidden');
+                }
             } else {
                 document.getElementById('posServiceList').innerHTML = '<p class="text-center text-red-500 text-sm py-4">' + (data.message || 'Error') + '</p>';
             }
@@ -127,8 +146,10 @@ Object.assign(POS, {
                 <div class="w-16 h-16 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center border-2 ${borderColor} mb-1.5">
                     ${avatarHtml}
                 </div>
-                <span class="text-sm font-semibold text-zinc-900 dark:text-white">${this.escHtml(s.staff_name)}</span>
-                <div class="mt-1">${typeBadge}</div>
+                <div class="flex items-center gap-1">
+                    ${typeBadge}
+                    <span class="text-sm font-semibold text-zinc-900 dark:text-white">${this.escHtml(s.staff_name)}</span>
+                </div>
                 ${isDesignation ? `<span class="text-[10px] text-violet-500 mt-0.5">${this.fmtCurrency(customer.designation_fee)}</span>` : ''}
                 ${changeBtn}
             </div>`;
@@ -156,11 +177,12 @@ Object.assign(POS, {
         }
         document.getElementById('posCustBadges').innerHTML = badges;
 
-        // 통계: 방문횟수
+        // 통계: 방문횟수 + 적립금
         let stats = '';
         if (c.is_member) {
             stats = `<?= __('reservations.pos_visit') ?? '방문' ?> <b class="text-zinc-700 dark:text-zinc-300">${c.visit_completed}</b><?= __('reservations.pos_visit_count') ?? '회' ?>`;
             if (c.visit_no_show > 0) stats += ` · <span class="text-red-400"><?= __('reservations.pos_noshow') ?? '노쇼' ?> ${c.visit_no_show}</span>`;
+            stats += ` · <span class="text-yellow-300"><?= get_points_name() ?> ${this.fmtCurrency(c.points_balance || 0)}</span>`;
         }
         document.getElementById('posCustStats').innerHTML = stats;
 
@@ -214,8 +236,8 @@ Object.assign(POS, {
 
         document.getElementById('posCustomerDetail').innerHTML = detailHtml;
 
-        // 메모 영역 (회원만)
-        if (c.is_member) {
+        // 메모 영역 (회원/비회원 모두)
+        {
             document.getElementById('posMemoArea').classList.remove('hidden');
             const memoHtml = memos.length > 0
                 ? memos.map(m => `<div class="border-l-2 border-zinc-300 dark:border-zinc-600 pl-2 py-0.5">
@@ -229,6 +251,8 @@ Object.assign(POS, {
 
     renderServiceList(services) {
         this._serviceData = services;
+        const _resStatus = services.length > 0 ? (services[0].status || '') : '';
+        const _isClosed = (_resStatus === 'cancelled' || _resStatus === 'no_show' || _resStatus === 'completed');
         const statusCls = {
             pending: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
             confirmed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -323,12 +347,11 @@ Object.assign(POS, {
             `</div></div>`;
         }
 
-        // 이용 서비스 목록 (번들 서비스는 삭제 불가, 추가 서비스는 삭제 가능)
-        const allSvcsHtml = services.map(s => {
-            const isBundled = !!s.bundle_id;
-            return renderSvc(s, !isBundled); // 번들이면 삭제 없음, 아니면 삭제 있음
-        }).join('');
-        if (allSvcsHtml) listHtml += allSvcsHtml;
+        // 추가 서비스 목록 (번들 카드가 있으면 번들 외만, 없으면 전체 표시)
+        const hasBundleCard = bundle && bundle.items && bundle.items.length > 0;
+        const visibleSvcs = hasBundleCard ? services.filter(s => !s.bundle_id) : services;
+        const visibleHtml = visibleSvcs.map(s => renderSvc(s, !s.bundle_id && !_isClosed)).join('');
+        if (visibleHtml) listHtml += visibleHtml;
 
         // 타이틀에 예약번호 업데이트
         if (services.length > 0 && services[0].reservation_number) {
@@ -342,43 +365,69 @@ Object.assign(POS, {
         const remaining = Math.max(0, finalTotal - totalPaid);
 
         const extraTotal = extraSvcs.reduce((a, s) => a + parseFloat(s.price || 0), 0);
+        const bundleName = (bundle && bundle.name) ? bundle.name : '';
+        const hasBundleDiscount = bundleInfo && bundleInfo.price > 0;
+        // 번들 원가: bundle.items 합계 (원본 서비스 가격 기준)
+        const bundleOriginalTotal = (bundle && bundle.items) ? bundle.items.reduce((a, bi) => a + parseFloat(bi.price || 0), 0) : 0;
+        // 전체 서비스 원가 합계 = 번들 원가 + 추가 서비스
+        const displayTotal = hasBundleDiscount ? (bundleOriginalTotal + extraTotal) : totalAmount;
+        // 전체 건수 = 번들 items 수 + 추가 서비스 수
+        const displayCount = hasBundleDiscount ? ((bundle && bundle.items ? bundle.items.length : 0) + extraSvcs.length) : services.length;
+        // 전체 소요시간 = 번들 items 시간 + 추가 서비스 시간
+        const bundleOriginalDur = (bundle && bundle.items) ? bundle.items.reduce((a, bi) => a + parseInt(bi.duration || 0), 0) : 0;
+        const extraDur = extraSvcs.reduce((a, s) => a + parseInt(s.service_duration || 0), 0);
+        const displayDuration = hasBundleDiscount ? (bundleOriginalDur + extraDur) : totalDuration;
+        // 번들 적용 후 소계 = 번들가 + 추가 서비스
+        const subtotalAfterBundle = hasBundleDiscount ? (bundleInfo.price + extraTotal) : totalAmount;
 
         let totalHtml = '';
+        const divider = '<div class="border-t border-zinc-200 dark:border-zinc-700 my-1"></div>';
 
-        // 소계 (서비스 합계)
+        // 소계 (전체 서비스 원가 합계)
         totalHtml += `<div class="flex items-center justify-between py-2 text-sm">
-            <span class="text-zinc-500"><?= __('reservations.pos_pay_total') ?> (${services.length}<?= __('reservations.pos_service_count') ?>) · ${totalDuration}<?= __('reservations.pos_min') ?></span>
-            <span class="font-bold text-zinc-900 dark:text-white">${this.fmtCurrency(totalAmount)}</span>
+            <span class="text-zinc-500"><?= __('reservations.pos_pay_total') ?> (${displayCount}<?= __('reservations.pos_service_count') ?>) · ${displayDuration}<?= __('reservations.pos_min') ?></span>
+            <span class="font-bold text-zinc-900 dark:text-white">${this.fmtCurrency(displayTotal)}</span>
         </div>`;
 
-        // 번들 적용가
-        if (bundleInfo && bundleInfo.price > 0) {
-            totalHtml += `<div class="flex items-center justify-between pb-1 text-sm font-semibold text-green-600 dark:text-green-400">
-                <span><?= htmlspecialchars($_bdnLabel ?? '') ?> <?= __('booking.payment.applied_price') ?? '적용가' ?></span>
+        // 번들 적용 영역
+        if (hasBundleDiscount) {
+            totalHtml += divider;
+
+            // [번들명] 적용가
+            totalHtml += `<div class="flex items-center justify-between py-1 text-sm font-semibold text-green-600 dark:text-green-400">
+                <span>${this.escHtml(bundleName)} <?= __('booking.payment.applied_price') ?? '적용가' ?></span>
                 <span>${this.fmtCurrency(bundleInfo.price)}</span>
             </div>`;
-        }
 
-        // 추가 서비스 (번들 외)
-        if (extraTotal > 0 && bundleInfo) {
-            totalHtml += `<div class="flex items-center justify-between pb-1 text-sm">
-                <span class="text-zinc-500"><?= __('reservations.show_add_service') ?? '추가 서비스' ?></span>
-                <span class="text-zinc-900 dark:text-white">+${this.fmtCurrency(extraTotal)}</span>
+            // 추가 서비스 (번들 외)
+            if (extraTotal > 0) {
+                totalHtml += `<div class="flex items-center justify-between py-1 text-sm">
+                    <span class="text-zinc-500"><?= __('reservations.show_add_service') ?? '추가 서비스' ?></span>
+                    <span class="text-zinc-900 dark:text-white">+${this.fmtCurrency(extraTotal)}</span>
+                </div>`;
+            }
+
+            // 소계 (번들가 + 추가)
+            totalHtml += divider;
+            totalHtml += `<div class="flex items-center justify-between py-1 text-sm">
+                <span class="text-zinc-500"><?= __('reservations.pos_pay_total') ?> (${displayCount}<?= __('reservations.pos_service_count') ?>) · ${displayDuration}<?= __('reservations.pos_min') ?></span>
+                <span class="font-bold text-zinc-900 dark:text-white">${this.fmtCurrency(subtotalAfterBundle)}</span>
             </div>`;
         }
 
         // 지명료
         if (totalDesignationFee > 0) {
-            totalHtml += `<div class="flex items-center justify-between pb-1 text-sm">
+            totalHtml += `<div class="flex items-center justify-between py-1 text-sm">
                 <span class="text-amber-600 dark:text-amber-400"><?= __('reservations.pos_pay_designation') ?></span>
                 <span class="text-amber-600 dark:text-amber-400">+${this.fmtCurrency(totalDesignationFee)}</span>
             </div>`;
         }
 
         // 최종 결제 금액
-        totalHtml += `<div class="flex items-center justify-between py-2 border-t border-zinc-200 dark:border-zinc-700 text-sm font-semibold">
+        totalHtml += divider;
+        totalHtml += `<div class="flex items-center justify-between py-2 text-sm font-semibold">
             <span class="text-zinc-900 dark:text-white"><?= __('reservations.show_final_amount') ?></span>
-            <span class="text-zinc-900 dark:text-white">${this.fmtCurrency(finalTotal)}</span>
+            <span class="text-lg text-zinc-900 dark:text-white">${this.fmtCurrency(finalTotal)}</span>
         </div>`;
 
         // 결제 완료
@@ -399,6 +448,18 @@ Object.assign(POS, {
             totalHtml += `<div class="flex items-center justify-between pt-1 text-sm font-bold">
                 <span class="text-emerald-600"><?= __('reservations.pos_pay_paid') ?></span>
                 <span class="text-emerald-600">${this.fmtCurrency(totalPaid)}</span>
+            </div>`;
+        }
+
+        // 결제 버튼 (잔액이 있고 활성 예약일 때만 표시)
+        if (remaining > 0 && !_isClosed) {
+            const resId = services.length > 0 ? services[0].reservation_id : '';
+            totalHtml += `<div class="mt-3">
+                <button type="button" onclick="POS.openUnifiedPay('${resId}', ${remaining})"
+                    class="w-full h-11 flex items-center justify-center gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    <?= __('reservations.pos_pay_proceed') ?? '결제 진행' ?>  (${this.fmtCurrency(remaining)})
+                </button>
             </div>`;
         }
 
@@ -484,12 +545,23 @@ Object.assign(POS, {
         const c = this._svcCustomer;
         const body = new URLSearchParams();
         body.append('_token', this.csrfToken);
-        body.append('customer_name', c.name);
-        body.append('customer_phone', c.phone);
-        body.append('customer_email', c.email);
-        body.append('reservation_date', c.date);
-        body.append('source', c.source);
-        if (c.user_id) body.append('user_id', c.user_id);
+
+        // 기존 예약이 있으면 append-service, 없으면 add-service (새 예약)
+        const existingResId = (c.reservation_ids && c.reservation_ids.length > 0) ? c.reservation_ids[0] : '';
+        const apiEndpoint = existingResId ? 'append-service' : 'add-service';
+
+        if (existingResId) {
+            // 기존 예약에 서비스 추가
+            body.append('reservation_id', existingResId);
+        } else {
+            // 새 예약 생성
+            body.append('customer_name', c.name);
+            body.append('customer_phone', c.phone);
+            body.append('customer_email', c.email);
+            body.append('reservation_date', c.date);
+            body.append('source', c.source);
+            if (c.user_id) body.append('user_id', c.user_id);
+        }
 
         // 번들 선택 시: 번들 ID + 번들 포함 서비스
         let bundleId = '';
@@ -504,9 +576,9 @@ Object.assign(POS, {
             if (!cb.disabled) body.append('service_ids[]', cb.value);
         });
 
-        console.log('[POS] Adding services, bundle:', bundleId, 'svcs:', [...svcChecked].map(cb => cb.value));
+        console.log('[POS] Adding services via', apiEndpoint, 'resId:', existingResId, 'bundle:', bundleId, 'svcs:', [...svcChecked].map(cb => cb.value));
         try {
-            const resp = await fetch(`${this.adminUrl}/reservations/add-service`, { method: 'POST', body });
+            const resp = await fetch(`${this.adminUrl}/reservations/${apiEndpoint}`, { method: 'POST', body });
             const data = await resp.json();
             console.log('[POS] Add service result:', data);
             if (data.success) {
@@ -624,12 +696,12 @@ Object.assign(POS, {
         const content = (input.value || '').trim();
         if (!content) return;
         const c = this._svcCustomer;
-        if (!c.user_id) { alert('<?= __('reservations.pos_memo_member_only') ?? '회원만 메모를 저장할 수 있습니다.' ?>'); return; }
-
         const rIds = c.reservation_ids || [];
+        if (!c.user_id && rIds.length === 0) { alert('메모를 저장할 대상이 없습니다.'); return; }
+
         const body = new URLSearchParams();
         body.append('_token', this.csrfToken);
-        body.append('user_id', c.user_id);
+        if (c.user_id) body.append('user_id', c.user_id);
         body.append('content', content);
         if (rIds.length > 0) body.append('reservation_id', rIds[0]);
 

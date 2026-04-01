@@ -8,8 +8,9 @@ if (!function_exists('__')) {
     require_once BASE_PATH . '/rzxlib/Core/Helpers/lang.php';
 }
 
-$baseUrl = $config['app_url'] ?? '';
-$adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
+// JS fetch URL은 상대경로 사용 → baseUrl은 빈 문자열
+$baseUrl = '';
+$adminUrl = '/' . ($config['admin_path'] ?? 'admin');
 $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
 
 // CSRF 토큰

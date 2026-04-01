@@ -31,7 +31,7 @@ $expectedPts = $pointsEnabled ? ($g['expected_points'] ?? 0) : 0;
 $pointsBalance = $pointsEnabled ? ($g['points_balance'] ?? 0) : 0;
 ?>
 <div class="pos-card rounded-xl border-2 <?= $borderCls ?> shadow-sm relative overflow-hidden hover:shadow-md transition flex flex-col"
-     style="min-height:200px;<?php if ($hasServiceBg): ?>background-image:url('<?= htmlspecialchars($appUrl . '/' . $svcImg) ?>');background-size:cover;background-position:center<?php endif; ?>">
+     style="width:<?= $posCardWidth ?? '260px' ?>;height:<?= $posCardHeight ?? '260px' ?>;<?php if ($hasServiceBg): ?>background-image:url('<?= htmlspecialchars($appUrl . '/' . $svcImg) ?>');background-size:cover;background-position:center<?php endif; ?>">
 
     <?php if ($hasServiceBg): ?>
     <?php
@@ -52,7 +52,7 @@ $pointsBalance = $pointsEnabled ? ($g['points_balance'] ?? 0) : 0;
     <?php endif; ?>
 
     <!-- 카드 상단: 고객 + 서비스 목록 (클릭 → 서비스 상세) -->
-    <div class="relative z-10 p-4 pb-2 cursor-pointer flex-1 flex flex-col" onclick="POS.showServices(<?= $cardJson ?>)">
+    <div class="relative z-10 p-3 pb-2 cursor-pointer flex-1 flex flex-col overflow-hidden" onclick="POS.showServices(<?= $cardJson ?>)">
         <div class="flex items-start justify-between mb-2">
             <div class="flex items-center gap-2.5">
                 <?php if ($isMember): ?>
@@ -105,12 +105,12 @@ $pointsBalance = $pointsEnabled ? ($g['points_balance'] ?? 0) : 0;
         </div>
 
         <!-- 서비스 목록 -->
-        <div class="mb-2 space-y-0.5">
-            <?php foreach (array_slice($g['services'], 0, 3) as $s): ?>
+        <div class="mb-1 space-y-0.5 flex-shrink overflow-hidden">
+            <?php foreach (array_slice($g['services'], 0, 2) as $s): ?>
             <p class="text-sm font-semibold <?= $hasServiceBg ? 'text-blue-300 drop-shadow-sm' : 'text-blue-600 dark:text-blue-400' ?> truncate"><?= htmlspecialchars($s['service_name'] ?? '') ?></p>
             <?php endforeach; ?>
-            <?php if ($svcCount > 3): ?>
-            <p class="text-xs <?= $hasServiceBg ? 'text-white/60' : 'text-zinc-400' ?>">+<?= $svcCount - 3 ?><?= __('reservations.pos_service_count') ?></p>
+            <?php if ($svcCount > 2): ?>
+            <p class="text-xs <?= $hasServiceBg ? 'text-white/60' : 'text-zinc-400' ?>">+<?= $svcCount - 2 ?><?= __('reservations.pos_service_count') ?></p>
             <?php endif; ?>
         </div>
 
@@ -158,7 +158,7 @@ $pointsBalance = $pointsEnabled ? ($g['points_balance'] ?? 0) : 0;
     </div>
 
     <!-- 카드 하단: 액션 버튼 -->
-    <div class="relative z-10 px-3 pb-3 pt-1 flex gap-2 <?= $hasServiceBg ? 'bg-black/30 backdrop-blur-sm' : '' ?>">
+    <div class="relative z-10 px-3 pb-2 pt-1 flex gap-2 flex-shrink-0 <?= $hasServiceBg ? 'bg-black/30 backdrop-blur-sm' : '' ?>">
         <?php if ($g['has_pending'] && !$g['has_in_service']): ?>
             <?php if (empty($g['staff_id']) && $_posRequireStaff): ?>
             <button disabled

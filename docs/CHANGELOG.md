@@ -4,6 +4,65 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [1.25.0] - 2026-04-01
+
+### Architecture — POS 플러그인 분리
+- **POS를 독립 플러그인 구조로 분리**
+  - `resources/views/admin/reservations/pos-*.php` → `resources/views/admin/pos/` 디렉토리로 이동
+  - `pos/` 디렉토리 존재 여부로 POS 기능 자동 활성화/비활성화 (`is_dir()` 체크)
+  - 사이드바 메뉴: `pos/` 디렉토리 없으면 POS 메뉴 자동 숨김
+  - `index.php` 라우팅: `pos/` 디렉토리 없으면 POS 라우트 비활성화
+  - `pos/_init.php` → 예약 공통 `_init.php` 위임 (DB, 인증, 다국어 공유)
+  - API 엔드포인트는 `reservations/_api.php`에 유지 (호환성 보장)
+
+### Added — POS 통합 결제 시스템
+- **통합 결제 모달** — 적립금 + 현금 + 카드 동시 사용 가능 (복합 결제)
+  - 적립금: 잔액 조회, 수동 입력 또는 전액 사용
+  - 현금: 금액 입력
+  - 카드: 금액 입력 + "잔액 전체" 자동 입력 버튼
+  - 할부: 일시불 / 2~12개월 선택
+  - 실시간 합계, 거스름돈, 부족 금액 자동 계산
+  - Stripe 카드 결제 시 현금/적립금은 결제 성공 후에만 처리 (취소 시 안전)
+- **서비스 상세 모달 — 적립금 표시**
+  - 헤더 영역에 회원 적립금 잔액 상시 표시 (잔액 0이어도 표시)
+- **서비스 상세 모달 — 스태프 배지 개선**
+  - 배정/지명 배지를 스태프 이름 앞에 표시 (기존: 이름 아래)
+- **영수증/인쇄 버튼 위치 이동**
+  - 고객 상세 정보 위로 이동, 영수증(좌) + 인쇄(우) 배치
+- **인쇄 기능 개선**
+  - 외부 페이지가 아닌 현재 서비스 상세 모달 내용을 인쇄
+
+### Changed — POS UI 개선
+- **카드 레이아웃** — grid 기반 → flex-wrap 기반 고정 크기 카드
+  - 카드 크기 고정: 기본 320×240px (small: 260×200, large: 380×280)
+  - 화면 크기에 따라 카드 크기 변하지 않고 자동 줄바꿈
+- **카드 결제 모달** — 폭 1030px, 높이 800px로 확대
+
+### Fixed
+- **API cross-origin 오류 해결**
+  - `$baseUrl`이 `.env`의 `APP_URL`로 고정되어 다른 호스트/HTTPS 접속 시 fetch 실패
+  - 대시보드: fetch URL을 상대 경로(`/update-api.php`)로 변경
+  - 예약 `_init.php`: `$baseUrl`을 빈 문자열로 변경하여 모든 fetch가 상대 경로 사용
+  - Cloudflare HTTPS 프록시 환경에서 mixed content 문제 완전 해결
+- **DB 마이그레이션 실행 오류** — "Failed to fetch" 해결 (cross-origin 문제)
+- **Stripe 복합결제 취소 시 현금 선결제 버그**
+  - 기존: 현금 먼저 결제 → 카드 결제 취소 시 현금이 이미 처리됨
+  - 수정: Stripe 카드 결제 성공 후에만 현금/적립금 처리
+
+### i18n — 다국어 추가 (13개 언어)
+- `pos_pay_after_points` — 적립금 적용 후 금액
+- `pos_pay_proceed` — 결제 진행
+- `pos_pay_remainder` — 잔액 전체
+- `pos_pay_installment` — 할부
+- `pos_pay_lump_sum` — 일시불
+- `pos_pay_months` — 개월
+- `pos_pay_total_pay` — 합계
+- `pos_pay_short` — 부족
+- `show_receipt` — 영수증
+- `show_print` — 인쇄
+
+---
+
 ## [1.18.0] - 2026-03-29
 
 ### Added
