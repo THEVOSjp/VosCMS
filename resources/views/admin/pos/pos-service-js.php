@@ -91,8 +91,9 @@ Object.assign(POS, {
                     overlayEl.style.background = '';
                     overlayEl.style.backdropFilter = '';
                 }
-                this.renderCustomerProfile(data.customer || {}, data.memos || []);
-                this.renderStaffHeader(data.data, data.customer || {});
+                this._customerInfo = data.customer || {};
+                this.renderCustomerProfile(this._customerInfo, data.memos || []);
+                this.renderStaffHeader(data.data, this._customerInfo);
                 this._bundleData = data.bundle || null;
                 this.renderServiceList(data.data);
                 // 영수증 영역: 결제 완료 시 표시
@@ -360,9 +361,8 @@ Object.assign(POS, {
 
         document.getElementById('posServiceList').innerHTML = listHtml || '<p class="text-center text-zinc-400 text-sm py-4"><?= __('reservations.pos_no_services') ?></p>';
 
-        // 최종 금액: DB의 final_amount 합계 사용 (번들/할인/적립금 반영된 정확한 값)
-        const finalTotal = totalFinalAmount > 0 ? totalFinalAmount : (totalAmount + totalDesignationFee);
-        const remaining = Math.max(0, finalTotal - totalPaid);
+        // 최종 금액은 할인 적용 후 아래에서 계산 (calcFinal)
+        const _dbFinalTotal = totalFinalAmount > 0 ? totalFinalAmount : (totalAmount + totalDesignationFee);
 
         const extraTotal = extraSvcs.reduce((a, s) => a + parseFloat(s.price || 0), 0);
         const bundleName = (bundle && bundle.name) ? bundle.name : '';
@@ -423,12 +423,29 @@ Object.assign(POS, {
             </div>`;
         }
 
-        // 최종 결제 금액
+        // 회원 할인
+        const custInfo = this._customerInfo || {};
+        const discountRate = parseFloat(custInfo.discount_rate || 0);
+        let discountAmount = 0;
+        if (discountRate > 0) {
+            discountAmount = Math.round(totalAmount * discountRate / 100);
+            totalHtml += `<div class="flex items-center justify-between py-1 text-sm">
+                <span class="text-red-500"><?= __('reservations.pos_discount') ?? '회원 할인' ?> (${discountRate}%)</span>
+                <span class="text-red-500">-${this.fmtCurrency(discountAmount)}</span>
+            </div>`;
+        }
+
+        // 최종 결제 금액 (DB final_amount - 할인)
+        const calcFinal = _dbFinalTotal > 0
+            ? (_dbFinalTotal - discountAmount)
+            : (subtotalAfterBundle + totalDesignationFee - discountAmount);
         totalHtml += divider;
         totalHtml += `<div class="flex items-center justify-between py-2 text-sm font-semibold">
             <span class="text-zinc-900 dark:text-white"><?= __('reservations.show_final_amount') ?></span>
-            <span class="text-lg text-zinc-900 dark:text-white">${this.fmtCurrency(finalTotal)}</span>
+            <span class="text-lg text-zinc-900 dark:text-white">${this.fmtCurrency(calcFinal)}</span>
         </div>`;
+
+        const calcRemaining = Math.max(0, calcFinal - totalPaid);
 
         // 결제 완료
         if (totalPaid > 0) {
@@ -438,27 +455,27 @@ Object.assign(POS, {
             </div>`;
         }
 
-        // 잔액
-        if (remaining > 0) {
+        // 잔액 또는 결제 완료 표시
+        if (calcRemaining > 0) {
             totalHtml += `<div class="flex items-center justify-between pt-1 text-sm font-bold">
                 <span class="text-red-600"><?= __('reservations.pos_pay_remaining') ?></span>
-                <span class="text-red-600">${this.fmtCurrency(remaining)}</span>
+                <span class="text-red-600">${this.fmtCurrency(calcRemaining)}</span>
             </div>`;
         } else if (totalPaid > 0) {
             totalHtml += `<div class="flex items-center justify-between pt-1 text-sm font-bold">
-                <span class="text-emerald-600"><?= __('reservations.pos_pay_paid') ?></span>
+                <span class="text-emerald-600">✓ <?= __('reservations.pos_pay_paid') ?></span>
                 <span class="text-emerald-600">${this.fmtCurrency(totalPaid)}</span>
             </div>`;
         }
 
-        // 결제 버튼 (잔액이 있고 활성 예약일 때만 표시)
-        if (remaining > 0 && !_isClosed) {
+        // 결제 버튼 (잔액이 있고 활성 예약이고 결제 미완료일 때만)
+        if (calcRemaining > 0 && !_isClosed) {
             const resId = services.length > 0 ? services[0].reservation_id : '';
             totalHtml += `<div class="mt-3">
-                <button type="button" onclick="POS.openUnifiedPay('${resId}', ${remaining})"
+                <button type="button" onclick="POS.openUnifiedPay('${resId}', ${calcRemaining}, ${calcFinal}, ${totalPaid})"
                     class="w-full h-11 flex items-center justify-center gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                    <?= __('reservations.pos_pay_proceed') ?? '결제 진행' ?>  (${this.fmtCurrency(remaining)})
+                    <?= __('reservations.pos_pay_proceed') ?? '결제 진행' ?>  (${this.fmtCurrency(calcRemaining)})
                 </button>
             </div>`;
         }

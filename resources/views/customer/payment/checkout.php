@@ -120,13 +120,14 @@ try {
         'user_id' => $reservation['user_id'],
         'customer_email' => $reservation['customer_email'],
         'customer_name' => $reservation['customer_name'],
-        'success_url' => $baseUrl . '/payment/success',
-        'cancel_url' => $baseUrl . '/payment/cancel?reservation_id=' . urlencode($reservationId),
+        'success_url' => ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/payment/success',
+        'cancel_url' => ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/payment/cancel?reservation_id=' . urlencode($reservationId),
         'metadata' => [
             'reservation_number' => $reservation['reservation_number'],
             'is_deposit' => $isDeposit ? '1' : '0',
             'locale' => $currentLocale,
         ],
+        'installment' => (int)($_GET['installment'] ?? 1),
     ]);
 
     $session = $paymentService->prepare($request);
@@ -278,13 +279,15 @@ $pageTitle = __('booking.payment.pay_now') ?? '결제하기';
                 <div id="checkout-element" class="w-full hidden"></div>
             </div>
 
-            <!-- 취소 버튼 -->
+            <!-- 취소 버튼 (POS 관리자 모드에서는 숨김) -->
+            <?php if (!$_isAdminPay): ?>
             <div class="mt-4 text-center">
                 <a href="<?= $baseUrl ?>/booking/detail/<?= urlencode($reservation['reservation_number']) ?>"
                    class="text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 transition">
                     &larr; <?= __('booking.payment.back_to_detail') ?? '예약 상세로 돌아가기' ?>
                 </a>
             </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

@@ -47,6 +47,18 @@ class StripeGateway implements PaymentGatewayInterface
             $params['customer_email'] = $request->customerEmail;
         }
 
+        // 할부 결제 (일본 Stripe 계정 + JPY만 지원)
+        if ($request->installment > 1 && strtolower($request->currency) === 'jpy') {
+            // 특정 할부 개월 수 지정
+            $params['payment_method_options[card][installments][enabled]'] = 'true';
+            $params['payment_method_options[card][installments][plan][type]'] = 'fixed_count';
+            $params['payment_method_options[card][installments][plan][count]'] = $request->installment;
+            $params['payment_method_options[card][installments][plan][interval]'] = 'month';
+        } elseif ($request->installment === 1 && strtolower($request->currency) === 'jpy') {
+            // 일시불이지만 할부 선택 UI 표시 (고객이 선택 가능)
+            $params['payment_method_options[card][installments][enabled]'] = 'true';
+        }
+
         // Stripe 로케일 매핑
         $localeMap = ['ko'=>'ko','en'=>'en','ja'=>'ja','zh_CN'=>'zh','zh_TW'=>'zh-TW','de'=>'de','es'=>'es','fr'=>'fr','id'=>'id','ru'=>'ru','tr'=>'tr','vi'=>'vi'];
         $stripeLocale = $localeMap[$request->metadata['locale'] ?? ''] ?? 'auto';
@@ -108,11 +120,13 @@ class StripeGateway implements PaymentGatewayInterface
             $method = $pm['type'] ?? 'card';
             if ($method === 'card') {
                 $card = $pm['card'] ?? [];
+                $installmentPlan = $card['installments']['plan'] ?? null;
                 $methodDetail = [
                     'brand' => $card['brand'] ?? '',
                     'last4' => $card['last4'] ?? '',
                     'exp_month' => $card['exp_month'] ?? '',
                     'exp_year' => $card['exp_year'] ?? '',
+                    'installment' => $installmentPlan ? (int)($installmentPlan['count'] ?? 1) : 1,
                 ];
             }
         }

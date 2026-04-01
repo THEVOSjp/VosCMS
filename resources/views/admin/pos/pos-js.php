@@ -431,13 +431,27 @@ const POS = {
         }
     },
 
-    // ─── 서비스 상세 모달 내 현금 결제 ───
+    // ─── 카드에서 결제 버튼 클릭 시 통합 결제 모달 ───
+    openUnifiedPayFromCard(group) {
+        console.log('[POS] Open unified pay from card:', group);
+        const finalAmount = parseFloat(group.final_amount || 0);
+        const paidAmount = parseFloat(group.paid_amount || 0);
+        const remaining = Math.max(0, finalAmount - paidAmount);
+        const resId = (group.reservation_ids || [group.id])[0];
+        // 고객 정보 저장 (적립금 조회용)
+        this._svcCustomer = { name: group.customer_name, phone: group.customer_phone, email: group.customer_email || '', user_id: group.user_id || '' };
+        this.openUnifiedPay(resId, remaining, finalAmount, paidAmount);
+    },
+
     // ─── 통합 결제 모달 (적립금 + 현금 + 카드 + 할부) ───
     _uPay: { resId: '', total: 0, points: 0, pointsBal: 0, cash: 0, card: 0, installment: 1 },
 
-    openUnifiedPay(resId, amount) {
-        console.log('[POS] Open unified pay:', resId, amount);
-        this._uPay = { resId, total: amount, points: 0, pointsBal: 0, cash: 0, card: 0, installment: 1 };
+    openUnifiedPay(resId, amount, finalTotal, totalPaid) {
+        console.log('[POS] Open unified pay:', resId, amount, 'final:', finalTotal, 'paid:', totalPaid);
+        finalTotal = finalTotal || amount;
+        totalPaid = totalPaid || 0;
+        // total을 전체 금액(finalTotal)으로 설정 — 현금/카드란이 전체 금액을 배분
+        this._uPay = { resId, total: finalTotal, finalTotal, totalPaid, remaining: amount, points: 0, pointsBal: 0, cash: 0, card: 0, installment: 1 };
         const sym = '<?= $currencySymbol ?? '¥' ?>';
         const html = `<div id="posPayOverlay" class="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
             <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl w-full max-w-md p-6">
@@ -453,9 +467,9 @@ const POS = {
 
                 <div class="space-y-3">
                     <!-- 결제 금액 -->
-                    <div class="flex justify-between items-center text-sm bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
-                        <span class="text-zinc-500 font-medium"><?= __('reservations.pay_amount') ?? '결제 금액' ?></span>
-                        <span class="font-bold text-xl text-zinc-900 dark:text-white">${sym}${Number(amount).toLocaleString()}</span>
+                    <div class="flex justify-between items-center bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
+                        <span class="text-sm text-zinc-500 font-medium"><?= __('reservations.show_final_amount') ?? '최종 결제 금액' ?></span>
+                        <span class="font-bold text-xl text-zinc-900 dark:text-white">${sym}${Number(finalTotal).toLocaleString()}</span>
                     </div>
 
                     <!-- ① 적립금 -->
@@ -470,35 +484,35 @@ const POS = {
                         <div class="flex items-center gap-2">
                             <input type="number" id="uPayPointsInput" value="0" min="0" max="0"
                                    class="flex-1 px-2 py-1.5 border border-yellow-300 dark:border-yellow-700 dark:bg-zinc-700 dark:text-white rounded text-sm font-mono text-right"
-                                   oninput="POS._uPayRecalc()">
-                            <button type="button" onclick="document.getElementById('uPayPointsInput').value=document.getElementById('uPayPointsInput').max;POS._uPayRecalc()"
+                                   oninput="POS._uPayRecalc('points')">
+                            <button type="button" onclick="document.getElementById('uPayPointsInput').value=document.getElementById('uPayPointsInput').max;POS._uPayRecalc('points')"
                                 class="px-2 py-1.5 text-[10px] font-medium text-yellow-700 bg-yellow-200 hover:bg-yellow-300 dark:bg-yellow-800 dark:text-yellow-300 rounded transition"><?= __('reservations.pos_pay_use_all') ?? '전액' ?></button>
                         </div>
                     </div>
 
                     <!-- ② 현금 -->
                     <div class="border border-green-200 dark:border-green-800 rounded-lg p-3 space-y-2">
-                        <label class="text-xs font-semibold text-green-700 dark:text-green-400 flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                            <?= __('reservations.pay_cash') ?? '현금' ?>
-                        </label>
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-semibold text-green-700 dark:text-green-400 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                <?= __('reservations.pay_cash') ?? '현금' ?>
+                            </label>
+                            <button type="button" onclick="POS._uPayFillCash()" class="px-2 py-0.5 text-[10px] font-medium text-green-600 bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 rounded transition"><?= __('reservations.pos_pay_use_all') ?? '전액' ?></button>
+                        </div>
                         <input type="number" id="uPayCashInput" value="0" min="0"
                                class="w-full px-2 py-1.5 border border-green-300 dark:border-green-700 dark:bg-zinc-700 dark:text-white rounded text-sm font-mono text-right"
-                               oninput="POS._uPayRecalc()">
+                               oninput="POS._uPayRecalc('cash')">
                     </div>
 
                     <!-- ③ 카드 -->
                     <div class="border border-blue-200 dark:border-blue-800 rounded-lg p-3 space-y-2">
-                        <div class="flex items-center justify-between">
-                            <label class="text-xs font-semibold text-blue-700 dark:text-blue-400 flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                                <?= __('reservations.pay_card') ?? '카드' ?>
-                            </label>
-                            <button type="button" onclick="POS._uPayFillCard()" class="px-2 py-0.5 text-[10px] font-medium text-blue-600 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 rounded transition"><?= __('reservations.pos_pay_remainder') ?? '잔액 전체' ?></button>
-                        </div>
+                        <label class="text-xs font-semibold text-blue-700 dark:text-blue-400 flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                            <?= __('reservations.pay_card') ?? '카드' ?>
+                        </label>
                         <input type="number" id="uPayCardInput" value="0" min="0"
                                class="w-full px-2 py-1.5 border border-blue-300 dark:border-blue-700 dark:bg-zinc-700 dark:text-white rounded text-sm font-mono text-right"
-                               oninput="POS._uPayRecalc()">
+                               oninput="POS._uPayRecalc('card')">
                         <!-- 할부 -->
                         <div class="flex items-center gap-2 mt-1">
                             <label class="text-[10px] text-zinc-500 dark:text-zinc-400 whitespace-nowrap"><?= __('reservations.pos_pay_installment') ?? '할부' ?></label>
@@ -545,9 +559,18 @@ const POS = {
         this._uPayInitPoints();
     },
 
+    _uPaySetDefaults() {
+        if (this._uPay.totalPaid > 0) {
+            document.getElementById('uPayCashInput').value = this._uPay.totalPaid;
+            document.getElementById('uPayCardInput').value = this._uPay.remaining;
+        } else {
+            document.getElementById('uPayCardInput').value = this._uPay.total;
+        }
+    },
+
     async _uPayInitPoints() {
         const userId = this._svcCustomer?.user_id || '';
-        if (!userId) { this._uPayRecalc(); return; }
+        if (!userId) { this._uPaySetDefaults(); this._uPayRecalc(); return; }
         try {
             const resp = await fetch(`${this.adminUrl}/reservations/user-points?user_id=${encodeURIComponent(userId)}`);
             const data = await resp.json();
@@ -560,18 +583,19 @@ const POS = {
                 document.getElementById('uPayPointsRow').classList.remove('hidden');
             }
         } catch (e) { console.error('[POS] Load points error:', e); }
+
+        this._uPaySetDefaults();
         this._uPayRecalc();
     },
 
-    _uPayFillCard() {
+    _uPayFillCash() {
         const pts = Math.max(0, Math.min(parseInt(document.getElementById('uPayPointsInput')?.value) || 0, parseInt(document.getElementById('uPayPointsInput')?.max) || 0));
-        const cash = Math.max(0, parseFloat(document.getElementById('uPayCashInput').value) || 0);
-        const remain = Math.max(0, this._uPay.total - pts - cash);
-        document.getElementById('uPayCardInput').value = remain;
-        this._uPayRecalc();
+        const total = this._uPay.total;
+        document.getElementById('uPayCashInput').value = Math.max(0, total - pts);
+        this._uPayRecalc('cash');
     },
 
-    _uPayRecalc() {
+    _uPayRecalc(source) {
         const sym = '<?= $currencySymbol ?? '¥' ?>';
         const total = this._uPay.total;
 
@@ -584,6 +608,12 @@ const POS = {
         // 현금
         const cash = Math.max(0, parseFloat(document.getElementById('uPayCashInput').value) || 0);
         this._uPay.cash = cash;
+
+        // 현금 또는 적립금 수정 시 → 카드 금액 자동 연동
+        if (source === 'cash' || source === 'points') {
+            const autoCard = Math.max(0, total - pts - cash);
+            document.getElementById('uPayCardInput').value = autoCard;
+        }
 
         // 카드
         const card = Math.max(0, parseFloat(document.getElementById('uPayCardInput').value) || 0);
@@ -639,30 +669,40 @@ const POS = {
         const u = this._uPay;
         const btn = document.getElementById('uPaySubmitBtn');
         btn.disabled = true; btn.textContent = '<?= __('admin.messages.processing') ?? '처리중...' ?>';
-        console.log('[POS] Unified payment:', u);
+
+        // 실제 결제할 금액 = 입력 금액 - 기결제 금액 (차액만 결제)
+        const actualCash = Math.max(0, u.cash - u.totalPaid);  // 현금 추가분
+        const actualCard = u.card;  // 카드는 전액 신규
+        const actualAmount = actualCash + actualCard;
+        console.log('[POS] Unified payment:', u, 'actual cash:', actualCash, 'actual card:', actualCard);
+
+        // 이미 전액 결제된 경우
+        if (actualAmount <= 0 && u.points <= 0) {
+            document.getElementById('posPayOverlay')?.remove();
+            location.reload();
+            return;
+        }
 
         // 결제 method 결정
         let method = 'cash';
-        if (u.cash > 0 && u.card > 0) method = 'mixed';
-        else if (u.card > 0) method = 'card';
-        else if (u.cash > 0) method = 'cash';
+        if (actualCash > 0 && actualCard > 0) method = 'mixed';
+        else if (actualCard > 0) method = 'card';
+        else if (actualCash > 0) method = 'cash';
         else if (u.points > 0) method = 'points';
 
-        // 카드 결제가 있고 Stripe 활성화 → Stripe checkout (현금/적립금은 Stripe 성공 후 처리)
-        if (u.card > 0 && typeof posStripeEnabled !== 'undefined' && posStripeEnabled) {
+        // 카드 결제가 있고 Stripe 활성화 → Stripe checkout
+        if (actualCard > 0 && typeof posStripeEnabled !== 'undefined' && posStripeEnabled) {
             document.getElementById('posPayOverlay')?.remove();
-            // Stripe checkout URL (카드 금액만)
             const appUrl = this.adminUrl.replace(/\/[^/]+$/, '');
-            const checkoutUrl = appUrl + '/payment/checkout?reservation_id=' + encodeURIComponent(u.resId) + '&admin=1&amount=' + u.card + '&points_used=0&installment=' + u.installment + '&no_layout=1';
-            // 현금/적립금 정보를 저장해두고 Stripe 성공 후 처리
-            this._pendingCashAfterStripe = { resId: u.resId, cash: u.cash, points: u.points, userId: this._svcCustomer?.user_id || '' };
+            const checkoutUrl = appUrl + '/payment/checkout?reservation_id=' + encodeURIComponent(u.resId) + '&admin=1&amount=' + actualCard + '&points_used=0&installment=' + u.installment + '&no_layout=1';
+            this._pendingCashAfterStripe = { resId: u.resId, cash: actualCash, points: u.points, userId: this._svcCustomer?.user_id || '' };
             this._openStripeModal(checkoutUrl);
             return;
         }
 
         // Stripe 없음 → API로 직접 처리
         try {
-            const body = `_token=${encodeURIComponent(this.csrfToken)}&amount=${u.cash + u.card}&method=${method}&cash_amount=${u.cash}&card_amount=${u.card}&installment=${u.installment}&points_used=${u.points}&user_id=${encodeURIComponent(this._svcCustomer?.user_id || '')}`;
+            const body = `_token=${encodeURIComponent(this.csrfToken)}&amount=${actualAmount}&method=${method}&cash_amount=${actualCash}&card_amount=${actualCard}&installment=${u.installment}&points_used=${u.points}&user_id=${encodeURIComponent(this._svcCustomer?.user_id || '')}`;
             const resp = await fetch(`${this.adminUrl}/reservations/${u.resId}/payment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
@@ -719,26 +759,163 @@ const POS = {
 
     _pendingCashAfterStripe: null,
 
-    // ─── 영수증 인쇄 (현재 서비스 상세 모달 내용) ───
+    // ─── 영수증 인쇄 (현재 모달 화면 그대로 새 창에 복제) ───
     printReceipt() {
         console.log('[POS] Print service detail modal');
-        const modal = document.querySelector('#posServiceModal .bg-white, #posServiceModal .dark\\:bg-zinc-800');
-        if (!modal) { window.print(); return; }
-        const printWin = window.open('', '_blank', 'width=800,height=900');
-        const isDark = document.documentElement.classList.contains('dark');
-        printWin.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title><?= __('reservations.show_print') ?? '인쇄' ?></title>
-            <style>
-                * { margin:0; padding:0; box-sizing:border-box; }
-                body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; padding:20px; color:#1a1a1a; font-size:13px; }
-                img { max-width:100%; }
-                .dark-bg { display:none; }
-                button, [onclick], #posAddServiceToggle, #posAssignStaffToggle, #posAddServiceArea, #posAssignStaffArea, #posMemoArea { display:none !important; }
-                @media print { body { padding:10px; } }
-            </style>
-            <link rel="stylesheet" href="/assets/css/tailwind.min.css">
-        </head><body>${modal.innerHTML}</body></html>`);
+        const modalContent = document.querySelector('#posServiceModal > div');
+        if (!modalContent) { window.print(); return; }
+
+        // 모달 내용 복제
+        const clone = modalContent.cloneNode(true);
+
+        // 불필요 요소 제거
+        clone.querySelectorAll('#posAddServiceToggle, #posAssignStaffToggle, #posAddServiceArea, #posAssignStaffArea, #posMemoArea, #posReceiptArea, #posCustomerDetail').forEach(el => el.remove());
+        clone.querySelectorAll('button[onclick*="closeServiceModal"], button[onclick*="removeService"], button[onclick*="openUnifiedPay"]').forEach(el => el.remove());
+
+        // 현재 페이지의 모든 스타일시트 수집
+        let styles = '';
+        document.querySelectorAll('style, link[rel="stylesheet"]').forEach(el => {
+            styles += el.outerHTML;
+        });
+
+        const printWin = window.open('', '_blank', 'width=900,height=1000');
+        printWin.document.write(`<!DOCTYPE html>
+<html class="${document.documentElement.className}">
+<head>
+    <meta charset="utf-8">
+    <title><?= __('reservations.show_print') ?? '인쇄' ?></title>
+    ${styles}
+    <style>
+        body { margin: 0; padding: 0; background: white; }
+        .print-wrap {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            overflow: visible;
+            max-height: none;
+            border-radius: 0;
+            box-shadow: none;
+        }
+        .print-wrap .overflow-y-auto,
+        .print-wrap .overflow-hidden { overflow: visible !important; max-height: none !important; }
+        .print-wrap .max-h-\\[90vh\\] { max-height: none !important; }
+        @media print {
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-wrap">${clone.innerHTML}</div>
+</body>
+</html>`);
         printWin.document.close();
-        printWin.onload = () => { setTimeout(() => { printWin.print(); printWin.close(); }, 300); };
+        printWin.onload = () => { setTimeout(() => { printWin.print(); }, 500); };
+    },
+
+    // ─── 영수증 출력 (영수증 형식) ───
+    printReceiptFormatted() {
+        console.log('[POS] Print receipt formatted');
+        const svcData = this._serviceData || (typeof POS._serviceData !== 'undefined' ? POS._serviceData : null);
+        const customer = this._svcCustomer;
+        if (!svcData || svcData.length === 0) { alert('서비스 데이터가 없습니다.'); return; }
+
+        const sym = this.currency.symbol;
+        const fmt = (n) => sym + Number(n).toLocaleString();
+        const now = new Date();
+        const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+        const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+        const storeName = '<?= htmlspecialchars($config['app_name'] ?? 'RezlyX') ?>';
+        const resNum = svcData[0].reservation_number || '';
+        const staffName = svcData[0].staff_name || '';
+
+        // 서비스 항목
+        let svcRows = '';
+        let subtotal = 0;
+        svcData.forEach(s => {
+            const price = parseFloat(s.price) || 0;
+            subtotal += price;
+            svcRows += `<tr>
+                <td style="padding:4px 0;border-bottom:1px dotted #ddd;">${this.escHtml(s.service_name)}</td>
+                <td style="padding:4px 0;border-bottom:1px dotted #ddd;text-align:right;white-space:nowrap;">${fmt(price)}</td>
+            </tr>`;
+        });
+
+        // 금액 계산
+        const designationFee = parseFloat(svcData[0].designation_fee) || 0;
+        const finalAmount = parseFloat(svcData[0].final_amount) || subtotal + designationFee;
+        const paidAmount = parseFloat(svcData[0].reservation_paid) || 0;
+        const remaining = finalAmount - paidAmount;
+
+        const printWin = window.open('', '_blank', 'width=400,height=700');
+        printWin.document.write(`<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title><?= __('reservations.show_receipt') ?? '영수증' ?></title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Courier New',monospace; width:300px; margin:0 auto; padding:20px 10px; color:#000; font-size:12px; }
+    .center { text-align:center; }
+    .right { text-align:right; }
+    .bold { font-weight:bold; }
+    .store-name { font-size:18px; font-weight:bold; margin-bottom:4px; }
+    .divider { border-top:1px dashed #000; margin:8px 0; }
+    .double-divider { border-top:2px solid #000; margin:8px 0; }
+    table { width:100%; border-collapse:collapse; }
+    td { padding:3px 0; vertical-align:top; }
+    .label { color:#555; }
+    .total-row td { padding:6px 0; font-weight:bold; font-size:18px; }
+    .footer { margin-top:15px; font-size:10px; color:#888; }
+    @media print {
+        body { width:100%; padding:5px; }
+        @page { margin:5mm; }
+    }
+</style>
+</head><body>
+
+<div class="center">
+    <div class="store-name">${this.escHtml(storeName)}</div>
+    <div style="font-size:10px;color:#888;"><?= __('reservations.show_receipt') ?? '영수증' ?></div>
+</div>
+
+<div class="double-divider"></div>
+
+<table>
+    <tr><td class="label"><?= __('reservations.receipt_number') ?? '번호' ?></td><td class="right" style="font-size:11px;">${this.escHtml(resNum)}</td></tr>
+    <tr><td class="label"><?= __('reservations.receipt_date') ?? '일시' ?></td><td class="right">${dateStr} ${timeStr}</td></tr>
+    <tr><td class="label"><?= __('reservations.receipt_customer') ?? '고객' ?></td><td class="right">${this.escHtml(customer?.name || '')}</td></tr>
+    ${staffName ? `<tr><td class="label"><?= __('reservations.receipt_staff') ?? '담당' ?></td><td class="right">${this.escHtml(staffName)}</td></tr>` : ''}
+</table>
+
+<div class="double-divider"></div>
+
+<table>${svcRows}</table>
+
+<div class="divider"></div>
+
+<table>
+    <tr><td class="label"><?= __('reservations.pos_pay_total') ?? '합계' ?></td><td class="right">${fmt(subtotal)}</td></tr>
+    ${designationFee > 0 ? `<tr><td class="label"><?= __('reservations.pos_pay_designation') ?? '지명비' ?></td><td class="right">+${fmt(designationFee)}</td></tr>` : ''}
+</table>
+
+<div class="double-divider"></div>
+
+<table>
+    <tr class="total-row"><td><?= __('reservations.show_final_amount') ?? '최종 금액' ?></td><td class="right">${fmt(finalAmount)}</td></tr>
+    ${paidAmount > 0 ? `<tr class="total-row"><td><?= __('reservations.pos_pay_paid') ?? '결제 완료' ?></td><td class="right">${fmt(paidAmount)}</td></tr>` : ''}
+    ${remaining > 0 ? `<tr class="total-row"><td style="color:red;"><?= __('reservations.pos_pay_remaining') ?? '잔액' ?></td><td class="right" style="color:red;">${fmt(remaining)}</td></tr>` : ''}
+    ${remaining <= 0 && paidAmount > 0 ? `<tr class="total-row"><td style="color:green;"><?= __('reservations.pos_pay_paid') ?? '결제 완료' ?></td><td class="right" style="color:green;">✓</td></tr>` : ''}
+</table>
+
+<div class="double-divider"></div>
+
+<div class="center footer">
+    <p><?= __('reservations.receipt_thanks') ?? '이용해 주셔서 감사합니다' ?></p>
+    <p style="margin-top:4px;">${this.escHtml(storeName)}</p>
+</div>
+
+</body></html>`);
+        printWin.document.close();
+        printWin.onload = () => { setTimeout(() => { printWin.print(); }, 300); };
     },
 
     // ─── 상태 변경 ───

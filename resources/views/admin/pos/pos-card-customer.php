@@ -179,7 +179,7 @@ $pointsBalance = $pointsEnabled ? ($g['points_balance'] ?? 0) : 0;
             </button>
         <?php else: ?>
             <?php if ($pSt !== 'paid'): ?>
-            <button onclick="event.stopPropagation();POS.openGroupPayment(<?= $cardJson ?>)"
+            <button onclick="event.stopPropagation();POS.openUnifiedPayFromCard(<?= $cardJson ?>)"
                     class="flex-1 h-11 flex items-center justify-center gap-1.5 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white rounded-lg text-sm font-bold transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                 <?= __('reservations.pos_btn_payment') ?>

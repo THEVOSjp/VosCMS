@@ -37,14 +37,14 @@ class CustomerBasedAdapter implements PosAdapterInterface
             $src = $r['source'] ?? 'online';
 
             // 탭 분류 (개별 건 기준)
-            if ($src !== 'walk_in' && $st !== 'cancelled' && $st !== 'no_show') {
+            if ($src !== 'walk_in') {
                 $reservationList[] = $r;
             }
             if ($src === 'walk_in' && ($st === 'pending' || $st === 'confirmed')) {
                 $waitingList[] = $r;
             }
             if ($st === 'completed') { $completedCount++; continue; }
-            if ($st === 'cancelled' || $st === 'no_show') continue;
+            if ($st === 'cancelled') continue;
 
             // 예약번호 기준 그룹핑 (1예약 = 1카드)
             $key = $r['id'];
@@ -57,6 +57,7 @@ class CustomerBasedAdapter implements PosAdapterInterface
                     'source'           => $src,
                     'services'         => [],
                     'total_amount'     => 0,
+                    'db_final_amount'  => 0,
                     'designation_fee'  => 0,
                     'paid_amount'      => 0,
                     'has_in_service'   => false,
@@ -100,7 +101,8 @@ class CustomerBasedAdapter implements PosAdapterInterface
             }
             $g = &$customerGroups[$key];
             $g['services'][] = $r;
-            $g['total_amount'] += (float)($r['final_amount'] ?? $r['total_amount'] ?? 0);
+            $g['total_amount'] += (float)($r['total_amount'] ?? 0);
+            $g['db_final_amount'] += (float)($r['final_amount'] ?? $r['total_amount'] ?? 0);
             $g['designation_fee'] += (float)($r['designation_fee'] ?? 0);
             $g['paid_amount']  += (float)($r['paid_amount'] ?? 0);
 
@@ -127,14 +129,16 @@ class CustomerBasedAdapter implements PosAdapterInterface
         $allCards = [];
         foreach ($customerGroups as $g) {
             $g['group_status'] = $g['has_in_service'] ? 'in_service' : 'waiting';
-            // 회원 등급 할인율 적용
+            // 회원 등급 할인율 적용 (서비스 원가 기준으로 할인, DB final_amount에서 차감)
             $discountRate = $g['grade_discount_rate'] ?? 0;
-            if ($discountRate > 0 && $g['total_amount'] > 0) {
-                $g['discount_amount'] = round($g['total_amount'] * $discountRate / 100);
-                $g['final_amount'] = $g['total_amount'] - $g['discount_amount'];
+            $baseForDiscount = $g['total_amount']; // 서비스 원가 합계 (지명비 미포함)
+            $dbFinal = $g['db_final_amount']; // DB final_amount 합계 (번들/지명비 반영)
+            if ($discountRate > 0 && $baseForDiscount > 0) {
+                $g['discount_amount'] = round($baseForDiscount * $discountRate / 100);
+                $g['final_amount'] = $dbFinal - $g['discount_amount'];
             } else {
                 $g['discount_amount'] = 0;
-                $g['final_amount'] = $g['total_amount'];
+                $g['final_amount'] = $dbFinal;
             }
             // 적립 예정 포인트
             $pointRate = $g['grade_point_rate'] ?? 0;
