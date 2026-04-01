@@ -173,8 +173,12 @@ $pointsBalance = $pointsEnabled ? ($g['points_balance'] ?? 0) : 0;
                 <?= __('reservations.pos_btn_start') ?>
             </button>
             <?php endif; ?>
+            <button onclick="event.stopPropagation();POS.noShowAllServices(<?= $cardJson ?>)"
+                    class="h-11 px-3 flex items-center justify-center bg-zinc-200/90 hover:bg-zinc-300 active:bg-zinc-400 dark:bg-zinc-700/90 dark:hover:bg-zinc-600 text-zinc-600 dark:text-zinc-300 rounded-lg text-sm transition" title="<?= __('reservations.actions.no_show') ?>">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+            </button>
             <button onclick="event.stopPropagation();POS.cancelAllServices(<?= $cardJson ?>)"
-                    class="h-11 px-3 flex items-center justify-center bg-zinc-200/90 hover:bg-zinc-300 active:bg-zinc-400 dark:bg-zinc-700/90 dark:hover:bg-zinc-600 text-zinc-600 dark:text-zinc-300 rounded-lg text-sm transition">
+                    class="h-11 px-3 flex items-center justify-center bg-red-100 hover:bg-red-200 active:bg-red-300 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded-lg text-sm transition" title="<?= __('reservations.actions.cancel') ?>">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         <?php else: ?>

@@ -189,10 +189,27 @@ function rzxCalConfirmModal(message, color, showReason) {
 // ─── 예약 추가 모달 ───
 
 function rzxCalQuickAdd(dateStr, e) {
-    console.log('[RzxCal] Quick add for date:', dateStr);
+    // 클릭 위치에서 시간 계산 (주간/일별 뷰: 가로=시간축, data-* 속성 기반)
+    let time = null;
+    if (e && e.currentTarget) {
+        const el = e.currentTarget.closest('.rzx-time-row') || e.currentTarget;
+        const pxPerHour = parseFloat(el.dataset.pxPerHour);
+        const offsetHour = parseInt(el.dataset.offsetHour);
+        if (pxPerHour && !isNaN(offsetHour)) {
+            const rect = el.getBoundingClientRect();
+            const scrollEl = el.closest('.overflow-auto, .overflow-x-auto');
+            const scrollLeft = scrollEl ? scrollEl.scrollLeft : 0;
+            const x = e.clientX - rect.left + scrollLeft;
+            const totalMin = Math.max(0, x / pxPerHour * 60 + offsetHour * 60);
+            const h = Math.floor(totalMin / 60);
+            const m = Math.floor(totalMin / 15) * 15 % 60; // 15분 단위 스냅
+            time = String(Math.min(h, 23)).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+        }
+    }
+    console.log('[RzxCal] Quick add for date:', dateStr, 'time:', time);
     // 공용 폼 리셋 함수 호출 (reservation-form-js.php에서 등록)
     if (window['resetResForm_rzxCalAddForm']) {
-        window['resetResForm_rzxCalAddForm'](dateStr);
+        window['resetResForm_rzxCalAddForm'](dateStr, time);
     }
     document.getElementById('rzxCalAddModal').classList.remove('hidden');
 }

@@ -56,6 +56,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if ($action === 'update_business_hours') {
+        $bhStart = trim($_POST['business_hour_start'] ?? '09:00');
+        $bhEnd   = trim($_POST['business_hour_end'] ?? '22:00');
+        try {
+            $stmt = $pdo->prepare("INSERT INTO rzx_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+            $stmt->execute(['business_hour_start', $bhStart]);
+            $stmt->execute(['business_hour_end', $bhEnd]);
+            $settings['business_hour_start'] = $bhStart;
+            $settings['business_hour_end'] = $bhEnd;
+            $message = __('settings.success');
+            $messageType = 'success';
+        } catch (PDOException $e) {
+            $message = __('settings.error_save') . ': ' . $e->getMessage();
+            $messageType = 'error';
+        }
+    }
+
     if ($action === 'update_payment') {
         $pgw = trim($_POST['payment_gateway'] ?? 'stripe');
         $pubKey = trim($_POST['payment_public_key'] ?? '');
@@ -296,6 +313,44 @@ ob_start();
     </form>
 </div>
 
+<!-- Business Hours Settings -->
+<div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
+    <?php
+    $headerIcon = 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z';
+    $headerTitle = __('settings.business_hours_title');
+    $headerDescription = __('settings.business_hours_desc');
+    $headerIconColor = ''; $headerActions = '';
+    include __DIR__ . '/../components/settings-header.php';
+    ?>
+
+    <?php
+    $bhStart = $settings['business_hour_start'] ?? '09:00';
+    $bhEnd   = $settings['business_hour_end'] ?? '22:00';
+    ?>
+
+    <form method="POST" class="space-y-4">
+        <input type="hidden" name="action" value="update_business_hours">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="business_hour_start" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.business_hour_start') ?></label>
+                <input type="time" name="business_hour_start" id="business_hour_start" value="<?= htmlspecialchars($bhStart) ?>"
+                       class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="business_hour_end" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.business_hour_end') ?></label>
+                <input type="time" name="business_hour_end" id="business_hour_end" value="<?= htmlspecialchars($bhEnd) ?>"
+                       class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+        </div>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= __('settings.business_hours_hint') ?></p>
+        <div class="flex items-center justify-end pt-4 border-t dark:border-zinc-700">
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                <?= __('common.buttons.save') ?>
+            </button>
+        </div>
+    </form>
+</div>
+
 <?php
 // 결제 설정 로드
 $_payConf = json_decode($settings['payment_config'] ?? '{}', true) ?: [];
@@ -335,10 +390,10 @@ $_payMaskedSec = $_paySecKey ? str_repeat('•', 12) . substr($_paySecKey, -8) :
             <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.payment_config.gateway') ?? 'PG사 선택' ?></label>
             <select name="payment_gateway" id="payment_gateway"
                     class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="stripe" <?= $_payGateway === 'stripe' ? 'selected' : '' ?>>Stripe (글로벌)</option>
-                <option value="toss" <?= $_payGateway === 'toss' ? 'selected' : '' ?>>토스페이먼츠 (한국)</option>
-                <option value="payjp" <?= $_payGateway === 'payjp' ? 'selected' : '' ?>>PAY.JP (일본)</option>
-                <option value="portone" <?= $_payGateway === 'portone' ? 'selected' : '' ?>>포트원 (한국)</option>
+                <option value="stripe" <?= $_payGateway === 'stripe' ? 'selected' : '' ?>>Stripe (<?= __('settings.payment_config.region_global') ?? 'Global' ?>)</option>
+                <option value="toss" <?= $_payGateway === 'toss' ? 'selected' : '' ?>>Toss Payments (<?= __('settings.payment_config.region_kr') ?? '한국' ?>)</option>
+                <option value="payjp" <?= $_payGateway === 'payjp' ? 'selected' : '' ?>>PAY.JP (<?= __('settings.payment_config.region_jp') ?? '日本' ?>)</option>
+                <option value="portone" <?= $_payGateway === 'portone' ? 'selected' : '' ?>>PortOne (<?= __('settings.payment_config.region_kr') ?? '한국' ?>)</option>
             </select>
         </div>
 
@@ -401,6 +456,53 @@ $_payMaskedSec = $_paySecKey ? str_repeat('•', 12) . substr($_paySecKey, -8) :
             </button>
         </div>
     </form>
+
+    <!-- PG사 안내 -->
+    <div class="mt-6 pt-4 border-t dark:border-zinc-700">
+        <h4 class="text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-3"><?= __('settings.payment_config.gateway_info') ?? '결제 대행사 안내' ?></h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <a href="https://stripe.com" target="_blank" class="flex items-center gap-3 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-600 transition group">
+                <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center shrink-0">
+                    <span class="text-indigo-600 dark:text-indigo-400 font-bold text-sm">S</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-blue-600">Stripe</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 truncate"><?= __('settings.payment_config.stripe_desc') ?? '글로벌 결제 — 46개국, 135개 통화 지원' ?></p>
+                </div>
+                <svg class="w-4 h-4 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            </a>
+            <a href="https://www.tosspayments.com" target="_blank" class="flex items-center gap-3 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-600 transition group">
+                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center shrink-0">
+                    <span class="text-blue-600 dark:text-blue-400 font-bold text-sm">T</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-blue-600">Toss Payments</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 truncate"><?= __('settings.payment_config.toss_desc') ?? '한국 결제 — 카드, 계좌이체, 간편결제' ?></p>
+                </div>
+                <svg class="w-4 h-4 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            </a>
+            <a href="https://pay.jp" target="_blank" class="flex items-center gap-3 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-600 transition group">
+                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center shrink-0">
+                    <span class="text-green-600 dark:text-green-400 font-bold text-sm">P</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-blue-600">PAY.JP</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 truncate"><?= __('settings.payment_config.payjp_desc') ?? '일본 결제 — 카드, 콘비니 결제' ?></p>
+                </div>
+                <svg class="w-4 h-4 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            </a>
+            <a href="https://portone.io" target="_blank" class="flex items-center gap-3 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-600 transition group">
+                <div class="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center shrink-0">
+                    <span class="text-orange-600 dark:text-orange-400 font-bold text-sm">P</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-blue-600">PortOne</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 truncate"><?= __('settings.payment_config.portone_desc') ?? '한국 통합결제 — 다양한 PG사 연동' ?></p>
+                </div>
+                <svg class="w-4 h-4 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            </a>
+        </div>
+    </div>
 </div>
 
 <script>

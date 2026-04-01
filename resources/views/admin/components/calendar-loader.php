@@ -25,8 +25,22 @@ $_calPrevMonth = $_calMonth == 1  ? 12 : $_calMonth - 1;
 $_calNextYear  = $_calMonth == 12 ? $_calYear + 1  : $_calYear;
 $_calNextMonth = $_calMonth == 12 ? 1  : $_calMonth + 1;
 
-$_calDateFrom = sprintf('%04d-%02d-01', $_calYear, $_calMonth);
-$_calDateTo   = sprintf('%04d-%02d-%02d', $_calYear, $_calMonth, $_calDaysInMonth);
+// 뷰 모드에 따른 날짜 범위 결정
+$_calView = $_calView ?? ($_GET['view'] ?? 'month');
+$_calDay  = $_calDay ?? (int)($_GET['day'] ?? date('j'));
+if ($_calView === 'week') {
+    $_calCurrentTs = mktime(0, 0, 0, $_calMonth, $_calDay, $_calYear);
+    $_calWeekStartTs = $_calCurrentTs - (date('w', $_calCurrentTs) * 86400);
+    $_calWeekEndTs   = $_calWeekStartTs + (6 * 86400);
+    $_calDateFrom = date('Y-m-d', $_calWeekStartTs);
+    $_calDateTo   = date('Y-m-d', $_calWeekEndTs);
+} elseif ($_calView === 'day') {
+    $_calDateFrom = sprintf('%04d-%02d-%02d', $_calYear, $_calMonth, $_calDay);
+    $_calDateTo   = $_calDateFrom;
+} else {
+    $_calDateFrom = sprintf('%04d-%02d-01', $_calYear, $_calMonth);
+    $_calDateTo   = sprintf('%04d-%02d-%02d', $_calYear, $_calMonth, $_calDaysInMonth);
+}
 
 // ── 예약 데이터 조회 ──
 $_calReservations = [];

@@ -30,6 +30,69 @@ function kioskPrice(float $amount, string $symbol, string $position): string {
     return $position === 'suffix' ? $formatted . $symbol : $symbol . $formatted;
 }
 
+// ─── 번들 조회 ───
+if ($type === 'designation' && $staffId) {
+    // 지명 모드: 해당 스태프에 연동된 번들만
+    $bundleStmt = $pdo->prepare("
+        SELECT b.id, b.name, b.description, b.bundle_price, b.image,
+               b.event_price, b.event_start, b.event_end, b.event_label
+        FROM {$prefix}service_bundles b
+        INNER JOIN {$prefix}staff_bundles sb ON b.id = sb.bundle_id AND sb.staff_id = ?
+        WHERE b.is_active = 1
+        ORDER BY b.display_order ASC, b.created_at DESC
+    ");
+    $bundleStmt->execute([$staffId]);
+    $bundles = $bundleStmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $bundles = $pdo->query("
+        SELECT id, name, description, bundle_price, image,
+               event_price, event_start, event_end, event_label
+        FROM {$prefix}service_bundles
+        WHERE is_active = 1
+        ORDER BY display_order ASC, created_at DESC
+    ")->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// 번들별 포함 서비스 + 다국어 + 이벤트 처리
+$now = date('Y-m-d H:i:s');
+foreach ($bundles as &$bdl) {
+    // 포함 서비스 목록
+    $biStmt = $pdo->prepare("
+        SELECT bi.service_id, s.name, s.price, s.duration
+        FROM {$prefix}service_bundle_items bi
+        JOIN {$prefix}services s ON bi.service_id = s.id
+        WHERE bi.bundle_id = ?
+        ORDER BY bi.sort_order
+    ");
+    $biStmt->execute([$bdl['id']]);
+    $bdl['services'] = $biStmt->fetchAll(PDO::FETCH_ASSOC);
+    $bdl['original_price'] = array_sum(array_column($bdl['services'], 'price'));
+    $bdl['total_duration'] = array_sum(array_column($bdl['services'], 'duration'));
+    $bdl['service_ids'] = array_column($bdl['services'], 'service_id');
+
+    // 이벤트 가격 적용
+    $bdl['effective_price'] = (float)$bdl['bundle_price'];
+    $bdl['is_event'] = false;
+    if (!empty($bdl['event_price']) && !empty($bdl['event_start']) && !empty($bdl['event_end'])
+        && $bdl['event_start'] <= $now && $bdl['event_end'] >= $now) {
+        $bdl['effective_price'] = (float)$bdl['event_price'];
+        $bdl['is_event'] = true;
+    }
+
+    // 다국어 이름
+    $trName = kioskTranslation($pdo, $prefix, 'bundle.' . $bdl['id'] . '.name', $currentLocale);
+    if ($trName) $bdl['name'] = $trName;
+
+    // 포함 서비스 이름 다국어
+    $svcNames = [];
+    foreach ($bdl['services'] as $bs) {
+        $sn = kioskTranslation($pdo, $prefix, 'service.' . $bs['service_id'] . '.name', $currentLocale);
+        $svcNames[] = $sn ?: $bs['name'];
+    }
+    $bdl['service_names_str'] = implode(', ', $svcNames);
+}
+unset($bdl);
+
 // 카테고리 조회
 $categories = $pdo->query("
     SELECT id, name FROM {$prefix}service_categories
@@ -143,6 +206,13 @@ if ($type === 'designation' && $staffId) {
         .svc-scroll::-webkit-scrollbar { width: 6px; }
         .svc-scroll::-webkit-scrollbar-track { background: transparent; }
         .svc-scroll::-webkit-scrollbar-thumb { background: <?= $isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.15)' ?>; border-radius: 3px; }
+        .bundle-card { transition: all 0.2s ease; }
+        .bundle-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+        .bundle-card.selected { border-color: #f59e0b !important; <?= $isLight ? 'background: rgba(245,158,11,0.08);' : 'background: rgba(245,158,11,0.15);' ?> }
+        .bundle-card.selected .bundle-check { display: flex; }
+        .bundle-check { display: none; }
+        .bundle-badge { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .bundle-event-badge { background: linear-gradient(135deg, #ef4444, #dc2626); }
     </style>
 </head>
 <body class="<?= $kioskBgType === 'gradient' ? 'bg-animated' : '' ?> flex flex-col h-screen select-none">
@@ -206,6 +276,69 @@ if ($type === 'designation' && $staffId) {
 
         <!-- 서비스 목록 -->
         <div class="flex-1 overflow-y-auto svc-scroll px-8 pb-32">
+
+            <?php if (!empty($bundles)): ?>
+            <!-- 번들(세트) 서비스 -->
+            <div class="max-w-6xl mx-auto mb-6" id="bundleSection">
+                <h3 class="text-sm font-semibold <?= $subTextColor ?> uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    <?= __('reservations.kiosk_bundle_title') ?>
+                </h3>
+                <div class="grid grid-cols-3 gap-4">
+                    <?php foreach ($bundles as $bdl):
+                        $bdlImgUrl = $bdl['image'] ? ($baseUrl . '/' . ltrim($bdl['image'], '/')) : '';
+                        $discountPct = $bdl['original_price'] > 0 ? round((1 - $bdl['effective_price'] / $bdl['original_price']) * 100) : 0;
+                    ?>
+                    <button type="button" onclick="toggleBundle(this, '<?= $bdl['id'] ?>')"
+                            class="bundle-card relative flex flex-col rounded-2xl backdrop-blur-sm border <?= $btnBg ?> overflow-hidden text-left"
+                            data-id="<?= $bdl['id'] ?>"
+                            data-price="<?= $bdl['effective_price'] ?>"
+                            data-duration="<?= $bdl['total_duration'] ?>"
+                            data-services='<?= json_encode($bdl['service_ids']) ?>'>
+                        <!-- 체크 표시 -->
+                        <div class="bundle-check absolute top-3 right-3 w-7 h-7 rounded-full bg-amber-500 items-center justify-center z-10">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                        <!-- 배지 -->
+                        <div class="absolute top-3 left-3 z-10 flex gap-1">
+                            <span class="bundle-badge px-2 py-0.5 text-white text-[10px] font-bold rounded-full uppercase tracking-wide">SET</span>
+                            <?php if ($bdl['is_event'] && !empty($bdl['event_label'])): ?>
+                            <span class="bundle-event-badge px-2 py-0.5 text-white text-[10px] font-bold rounded-full"><?= htmlspecialchars($bdl['event_label']) ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <!-- 이미지 -->
+                        <?php if ($bdlImgUrl): ?>
+                            <div class="w-full h-32 overflow-hidden">
+                                <img src="<?= htmlspecialchars($bdlImgUrl) ?>" alt="<?= htmlspecialchars($bdl['name']) ?>" class="w-full h-full object-cover">
+                            </div>
+                        <?php else: ?>
+                            <div class="w-full h-32 flex items-center justify-center <?= $isLight ? 'bg-amber-50' : 'bg-amber-900/20' ?>">
+                                <svg class="w-10 h-10 <?= $isLight ? 'text-amber-300' : 'text-amber-500/40' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                </svg>
+                            </div>
+                        <?php endif; ?>
+                        <!-- 정보 -->
+                        <div class="p-4 flex-1 flex flex-col gap-1">
+                            <span class="<?= $btnText ?> text-sm font-bold leading-tight"><?= htmlspecialchars($bdl['name']) ?></span>
+                            <span class="<?= $subTextColor ?> text-[11px] leading-tight line-clamp-2"><?= htmlspecialchars($bdl['service_names_str']) ?></span>
+                            <div class="flex items-center gap-2 mt-auto pt-1">
+                                <span class="<?= $isLight ? 'text-amber-600' : 'text-amber-400' ?> text-sm font-bold"><?= kioskPrice($bdl['effective_price'], $currencySymbol, $currencyPosition) ?></span>
+                                <?php if ($discountPct > 0): ?>
+                                <span class="<?= $subTextColor ?> text-[11px] line-through"><?= kioskPrice((float)$bdl['original_price'], $currencySymbol, $currencyPosition) ?></span>
+                                <span class="text-[10px] font-bold text-red-500">-<?= $discountPct ?>%</span>
+                                <?php endif; ?>
+                            </div>
+                            <span class="<?= $subTextColor ?> text-xs"><?= $bdl['total_duration'] ?><?= __('reservations.pos_min') ?> · <?= count($bdl['services']) ?><?= __('reservations.kiosk_bundle_count') ?></span>
+                        </div>
+                    </button>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-6xl mx-auto" id="serviceGrid">
                 <?php foreach ($services as $svc):
                     $svcName = kioskTr($translations, 'service.' . $svc['id'] . '.name', $svc['name']);
@@ -284,6 +417,7 @@ console.log('[Kiosk] Service selection page loaded');
 console.log('[Kiosk] Type:', '<?= $type ?>', 'Staff:', '<?= $staffId ?>');
 
 const selectedServices = new Map();
+const selectedBundles = new Map(); // { bundleId: { price, duration, serviceIds: [] } }
 const currencySymbol = '<?= $currencySymbol ?>';
 const currencyPosition = '<?= $currencyPosition ?>';
 
@@ -292,7 +426,48 @@ function formatPrice(amount) {
     return currencyPosition === 'suffix' ? formatted + currencySymbol : currencySymbol + formatted;
 }
 
+function toggleBundle(el, id) {
+    if (selectedBundles.has(id)) {
+        // 번들 해제 → 포함 서비스도 해제
+        const bundle = selectedBundles.get(id);
+        bundle.serviceIds.forEach(svcId => {
+            selectedServices.delete(svcId);
+            const card = document.querySelector('.svc-card[data-id="' + svcId + '"]');
+            if (card) card.classList.remove('selected');
+        });
+        selectedBundles.delete(id);
+        el.classList.remove('selected');
+        console.log('[Kiosk] Bundle deselected:', id);
+    } else {
+        const serviceIds = JSON.parse(el.dataset.services);
+        selectedBundles.set(id, {
+            price: parseFloat(el.dataset.price),
+            duration: parseInt(el.dataset.duration),
+            serviceIds: serviceIds
+        });
+        // 포함 서비스 자동 선택 (개별 가격=0으로 설정, 번들 가격으로 대체)
+        serviceIds.forEach(svcId => {
+            const card = document.querySelector('.svc-card[data-id="' + svcId + '"]');
+            if (card) {
+                selectedServices.set(svcId, { price: 0, duration: 0, bundled: true });
+                card.classList.add('selected');
+            }
+        });
+        el.classList.add('selected');
+        console.log('[Kiosk] Bundle selected:', id, 'services:', serviceIds);
+    }
+    updateSelectionBar();
+}
+
 function toggleService(el, id) {
+    // 번들에 포함된 서비스는 개별 토글 불가
+    for (const [, bundle] of selectedBundles) {
+        if (bundle.serviceIds.includes(id)) {
+            console.log('[Kiosk] Service is part of a bundle, cannot toggle individually');
+            return;
+        }
+    }
+
     if (selectedServices.has(id)) {
         selectedServices.delete(id);
         el.classList.remove('selected');
@@ -300,7 +475,8 @@ function toggleService(el, id) {
     } else {
         selectedServices.set(id, {
             price: parseFloat(el.dataset.price),
-            duration: parseInt(el.dataset.duration)
+            duration: parseInt(el.dataset.duration),
+            bundled: false
         });
         el.classList.add('selected');
         console.log('[Kiosk] Service selected:', id);
@@ -309,17 +485,21 @@ function toggleService(el, id) {
 }
 
 function updateSelectionBar() {
-    const count = selectedServices.size;
-    let totalPrice = 0, totalDuration = 0;
-    selectedServices.forEach(s => { totalPrice += s.price; totalDuration += s.duration; });
+    // 번들 가격 합산
+    let totalPrice = 0, totalDuration = 0, totalCount = 0;
+    selectedBundles.forEach(b => { totalPrice += b.price; totalDuration += b.duration; totalCount++; });
+    // 개별 서비스 가격 합산 (번들에 포함되지 않은 것만)
+    selectedServices.forEach(s => {
+        if (!s.bundled) { totalPrice += s.price; totalDuration += s.duration; totalCount++; }
+    });
 
-    document.getElementById('selectedCount').textContent = count;
+    document.getElementById('selectedCount').textContent = totalCount;
     document.getElementById('totalPrice').textContent = formatPrice(totalPrice);
     document.getElementById('totalDuration').textContent = totalDuration;
 
     const bar = document.getElementById('selectionBar');
     const footer = document.getElementById('footerText');
-    if (count > 0) {
+    if (totalCount > 0 || selectedBundles.size > 0) {
         bar.classList.remove('translate-y-full');
         footer.classList.add('hidden');
     } else {
@@ -339,15 +519,17 @@ function filterCategory(catId) {
 }
 
 function confirmSelection() {
-    if (selectedServices.size === 0) return;
+    if (selectedServices.size === 0 && selectedBundles.size === 0) return;
     const serviceIds = Array.from(selectedServices.keys()).join(',');
-    console.log('[Kiosk] Confirming services:', serviceIds);
+    const bundleIds = Array.from(selectedBundles.keys()).join(',');
+    console.log('[Kiosk] Confirming services:', serviceIds, 'bundles:', bundleIds);
     const adminUrl = '<?= $adminUrl ?>';
     const lang = '<?= $lang ?>';
     const type = '<?= $type ?>';
     const staff = '<?= $staffId ?>';
-    // TODO: 다음 단계 (예약 확인/접수)
-    window.location.href = adminUrl + '/kiosk/run/confirm?lang=' + lang + '&type=' + type + '&staff=' + staff + '&services=' + serviceIds;
+    let url = adminUrl + '/kiosk/run/confirm?lang=' + lang + '&type=' + type + '&staff=' + staff + '&services=' + serviceIds;
+    if (bundleIds) url += '&bundles=' + bundleIds;
+    window.location.href = url;
 }
 
 function goBack() {

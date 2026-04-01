@@ -187,9 +187,9 @@ include __DIR__ . '/_head.php';
 <!-- 상단 헤더 -->
 <div class="flex items-center justify-between mb-6">
     <div class="flex items-center gap-3">
-        <a href="<?= $adminUrl ?>/reservations" class="p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition">
+        <button type="button" onclick="history.back()" class="p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        </a>
+        </button>
         <div>
             <h2 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= __('reservations.detail') ?></h2>
             <p class="text-sm text-zinc-500 font-mono"><?= htmlspecialchars($r['reservation_number'] ?? '') ?></p>

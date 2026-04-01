@@ -188,6 +188,7 @@ const POS = {
         if (r.status === 'pending') {
             actions += `<button onclick="POS.changeStatus('${r.id}','confirm')" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition"><?= __('reservations.actions.confirm') ?></button>`;
             actions += `<button onclick="POS.changeStatus('${r.id}','cancel')" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition"><?= __('reservations.actions.cancel') ?></button>`;
+            actions += `<button onclick="POS.changeStatus('${r.id}','no-show')" class="px-4 py-2 bg-zinc-500 hover:bg-zinc-600 text-white rounded-lg text-sm transition"><?= __('reservations.actions.no_show') ?></button>`;
         } else if (r.status === 'confirmed') {
             actions += `<button onclick="POS.changeStatus('${r.id}','complete')" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition"><?= __('reservations.actions.complete') ?></button>`;
             actions += `<button onclick="POS.changeStatus('${r.id}','cancel')" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition"><?= __('reservations.actions.cancel') ?></button>`;
@@ -206,6 +207,10 @@ const POS = {
     openCheckinModal() {
         console.log('[POS] Open checkin modal');
         document.getElementById('posCheckinModal').classList.remove('hidden');
+        // 전화번호 입력 컴포넌트 초기화 (모달 내 동적 로드)
+        if (typeof PhoneInput !== 'undefined') {
+            setTimeout(() => PhoneInput.init(document.getElementById('posCheckinModal')), 100);
+        }
     },
 
     closeCheckinModal(e) {
@@ -286,6 +291,23 @@ const POS = {
                         body: `_token=${encodeURIComponent(POS.csrfToken)}`
                     });
                 } catch (e) { console.error('[POS] Cancel error:', id, e); }
+            }
+            location.reload();
+        });
+    },
+
+    // ─── 그룹 단위 일괄 노쇼 ───
+    noShowAllServices(group) {
+        this._modalConfirm('<?= __('reservations.noshow_msg') ?? '노쇼 처리하시겠습니까?' ?>', async () => {
+            const ids = group.reservation_ids || [];
+            for (const id of ids) {
+                try {
+                    await fetch(`${POS.adminUrl}/reservations/${id}/no-show`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: `_token=${encodeURIComponent(POS.csrfToken)}`
+                    });
+                } catch (e) { console.error('[POS] No-show error:', id, e); }
             }
             location.reload();
         });

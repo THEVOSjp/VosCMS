@@ -201,9 +201,11 @@ $posMode = $posAdapter->getMode();
 $posData = $posAdapter->groupReservations($todayAll, $nowTime);
 $allCards       = $posData['cards'];
 $counts         = $posData['counts'];
-$reservationList = $posData['tab_data']['reservations'];
-$waitingList     = $posData['tab_data']['waiting'];
+$checkinList     = $posData['tab_data']['checkin'] ?? [];
+$reservationList = $posData['tab_data']['reservations'] ?? [];
 $completedCount  = $posData['completed'];
+$cancelledCount  = $posData['cancelled'] ?? 0;
+$noShowCount     = $posData['no_show'] ?? 0;
 
 // 스태프 목록 (배정용)
 $posStaffList = $pdo->prepare("SELECT id, name, name_i18n, avatar, designation_fee FROM {$prefix}staff WHERE is_active = 1 AND (is_visible = 1 OR is_visible IS NULL) ORDER BY sort_order");
@@ -244,6 +246,19 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
         <span class="px-2.5 py-1 bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 rounded-lg font-medium">
             <?= __('reservations.pos_waiting') ?> <?= $counts['waiting'] ?>
         </span>
+        <span class="px-2.5 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 rounded-lg font-medium">
+            <?= __('reservations.pos_done') ?> <?= $completedCount ?>
+        </span>
+        <?php if ($cancelledCount > 0): ?>
+        <span class="px-2.5 py-1 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 rounded-lg font-medium">
+            <?= __('reservations.cal_legend_cancelled') ?> <?= $cancelledCount ?>
+        </span>
+        <?php endif; ?>
+        <?php if ($noShowCount > 0): ?>
+        <span class="px-2.5 py-1 bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300 rounded-lg font-medium">
+            <?= __('reservations.cal_legend_noshow') ?> <?= $noShowCount ?>
+        </span>
+        <?php endif; ?>
         <span class="px-2.5 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-lg font-medium">
             <?= __('reservations.pos_total_count') ?> <?= $counts['total'] ?>
         </span>
@@ -284,31 +299,65 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
     </div>
 
     <!-- ━━━ 오른쪽 1/4: 탭 패널 ━━━ -->
+    <?php
+    // 리스트 행 렌더 헬퍼
+    function posListRow(array $r, string $nowTime): string {
+        $st = $r['status'] ?? 'pending';
+        $sTime = $r['start_time'] ?? '';
+        $eTime = $r['end_time'] ?? '23:59:59';
+        $crossesMidnight = ($eTime < $sTime);
+        $isInSvc = ($st === 'confirmed' && $sTime <= $nowTime && ($crossesMidnight || $eTime >= $nowTime));
+        $isDone = in_array($st, ['completed', 'cancelled', 'no_show']);
+        $opacity = $isDone ? 'opacity-50' : '';
+        $json = htmlspecialchars(json_encode($r, JSON_UNESCAPED_UNICODE), ENT_QUOTES);
+        $name = htmlspecialchars($r['customer_name'] ?? '');
+        $svc  = htmlspecialchars($r['service_name'] ?? '');
+        $time = substr($sTime, 0, 5);
+        $dot  = $isInSvc ? '<div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse flex-shrink-0"></div>' : '';
+        $unassigned = empty($r['staff_id']) && !$isDone
+            ? ' <span class="px-1 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded text-[9px] font-medium">' . (__('reservations.pos_unassigned') ?? '미배정') . '</span>' : '';
+        $badge = statusBadge($st);
+        return <<<HTML
+        <div class="flex items-center justify-between px-3 py-2 border-b border-zinc-100 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 cursor-pointer transition {$opacity}"
+             onclick="POS.showDetail({$json})">
+            <div class="flex items-center gap-2 min-w-0">
+                <span class="text-[11px] font-mono text-zinc-400 w-9 flex-shrink-0">{$time}</span>
+                {$dot}
+                <div class="min-w-0">
+                    <p class="text-xs font-medium text-zinc-900 dark:text-white truncate">{$name}</p>
+                    <p class="text-[10px] text-zinc-400 truncate">{$svc}{$unassigned}</p>
+                </div>
+            </div>
+            {$badge}
+        </div>
+HTML;
+    }
+    ?>
     <div class="w-1/4 flex flex-col bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+        <!-- 탭 헤더 -->
         <div class="flex border-b border-zinc-200 dark:border-zinc-700">
             <button onclick="POS.switchTab('checkin')" class="pos-tab flex-1 py-2.5 text-xs font-bold text-center border-b-2 border-blue-500 text-blue-600 dark:text-blue-400" data-tab="checkin">
-                <?= __('reservations.pos_tab_checkin') ?>
+                <?= __('reservations.pos_tab_checkin_new') ?>
             </button>
             <button onclick="POS.switchTab('waiting')" class="pos-tab flex-1 py-2.5 text-xs font-bold text-center border-b-2 border-transparent text-zinc-400 hover:text-zinc-600" data-tab="waiting">
-                <?= __('reservations.pos_tab_waiting') ?>
-                <span class="ml-1 px-1 py-0.5 bg-amber-200 dark:bg-amber-800 text-amber-700 dark:text-amber-300 rounded text-[10px]"><?= $counts['waiting'] ?></span>
+                <?= __('reservations.pos_tab_checkin_list') ?>
+                <span class="ml-1 px-1 py-0.5 bg-amber-200 dark:bg-amber-800 text-amber-700 dark:text-amber-300 rounded text-[10px]"><?= $counts['checkin'] ?></span>
             </button>
             <button onclick="POS.switchTab('reservations')" class="pos-tab flex-1 py-2.5 text-xs font-bold text-center border-b-2 border-transparent text-zinc-400 hover:text-zinc-600" data-tab="reservations">
-                <?= __('reservations.pos_tab_reservations') ?>
+                <?= __('reservations.pos_tab_reserve_list') ?>
                 <span class="ml-1 px-1 py-0.5 bg-zinc-200 dark:bg-zinc-600 text-zinc-600 dark:text-zinc-300 rounded text-[10px]"><?= $counts['reservations'] ?></span>
             </button>
         </div>
 
         <div class="flex-1 overflow-hidden relative">
 
-            <!-- 탭1: 당일 접수 (예약 접수 모달 버튼) -->
+            <!-- 탭1: 접수 (새 접수 버튼 + 요약) -->
             <div id="posTabCheckin" class="pos-tab-pane absolute inset-0 flex flex-col items-center justify-center p-4">
                 <button onclick="POS.openCheckinModal()" class="w-full py-10 bg-blue-50 dark:bg-blue-900/20 border-2 border-dashed border-blue-300 dark:border-blue-600 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition group">
                     <svg class="w-12 h-12 mx-auto text-blue-400 group-hover:text-blue-600 transition mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    <p class="text-sm font-bold text-blue-600 dark:text-blue-400"><?= __('reservations.pos_tab_checkin') ?></p>
+                    <p class="text-sm font-bold text-blue-600 dark:text-blue-400"><?= __('reservations.pos_tab_checkin_new') ?></p>
                     <p class="text-xs text-zinc-400 mt-1"><?= __('reservations.pos_walk_in') ?></p>
                 </button>
-                <!-- 오늘 요약 -->
                 <div class="w-full mt-4 space-y-2 text-xs">
                     <div class="flex justify-between text-zinc-500"><span><?= __('reservations.pos_in_service') ?></span><span class="font-bold text-emerald-600"><?= $counts['in_service'] ?></span></div>
                     <div class="flex justify-between text-zinc-500"><span><?= __('reservations.pos_waiting') ?></span><span class="font-bold text-amber-600"><?= $counts['waiting'] ?></span></div>
@@ -317,58 +366,25 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                 </div>
             </div>
 
-            <!-- 탭2: 대기자 명단 -->
+            <!-- 탭2: 접수 명단 (walk_in, pos, kiosk, admin) — 모든 상태 -->
             <div id="posTabWaiting" class="pos-tab-pane absolute inset-0 hidden overflow-y-auto">
-                <?php if (empty($waitingList)): ?>
+                <?php if (empty($checkinList)): ?>
                     <div class="flex items-center justify-center h-full">
                         <p class="text-xs text-zinc-400"><?= __('reservations.pos_no_waiting') ?></p>
                     </div>
                 <?php else: ?>
-                    <?php $wIdx = 1; foreach ($waitingList as $r): $st = $r['status'] ?? 'pending'; ?>
-                    <div class="flex items-center justify-between px-3 py-2.5 border-b border-zinc-100 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 cursor-pointer transition"
-                         onclick="POS.showDetail(<?= htmlspecialchars(json_encode($r, JSON_UNESCAPED_UNICODE)) ?>)">
-                        <div class="flex items-center gap-2.5">
-                            <span class="w-6 h-6 flex items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-bold flex-shrink-0"><?= $wIdx ?></span>
-                            <div>
-                                <p class="text-xs font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($r['customer_name'] ?? '') ?></p>
-                                <p class="text-[10px] text-zinc-400">
-                                    <?= substr($r['start_time'] ?? '', 0, 5) ?> · <?= htmlspecialchars($r['service_name'] ?? '') ?>
-                                    <?php if (empty($r['staff_id'])): ?>
-                                    <span class="ml-1 px-1 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded text-[9px] font-medium"><?= __('reservations.pos_unassigned') ?></span>
-                                    <?php endif; ?>
-                                </p>
-                            </div>
-                        </div>
-                        <?= statusBadge($st) ?>
-                    </div>
-                    <?php $wIdx++; endforeach; ?>
+                    <?php foreach ($checkinList as $r) echo posListRow($r, $nowTime); ?>
                 <?php endif; ?>
             </div>
 
-            <!-- 탭3: 예약자 리스트 -->
-            <div id="posTabReservations" class="pos-tab-pane absolute inset-0 hidden overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-700">
+            <!-- 탭3: 예약자 (phone, online) — 모든 상태 -->
+            <div id="posTabReservations" class="pos-tab-pane absolute inset-0 hidden overflow-y-auto">
                 <?php if (empty($reservationList)): ?>
                     <div class="flex items-center justify-center h-full">
                         <p class="text-xs text-zinc-400"><?= __('reservations.pos_no_reservations') ?></p>
                     </div>
                 <?php else: ?>
-                    <?php foreach ($reservationList as $r):
-                        $st = $r['status'] ?? 'pending';
-                        $isInSvc = ($st === 'confirmed' && ($r['start_time'] ?? '') <= $nowTime && (($r['end_time'] ?? '23:59:59') >= $nowTime));
-                    ?>
-                    <div class="flex items-center justify-between px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 cursor-pointer transition"
-                         onclick="POS.showDetail(<?= htmlspecialchars(json_encode($r, JSON_UNESCAPED_UNICODE)) ?>)">
-                        <div class="flex items-center gap-2 min-w-0">
-                            <span class="text-[11px] font-mono text-zinc-400 w-9 flex-shrink-0"><?= substr($r['start_time'] ?? '', 0, 5) ?></span>
-                            <?php if ($isInSvc): ?><div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse flex-shrink-0"></div><?php endif; ?>
-                            <div class="min-w-0">
-                                <p class="text-xs font-medium text-zinc-900 dark:text-white truncate"><?= htmlspecialchars($r['customer_name'] ?? '') ?></p>
-                                <p class="text-[10px] text-zinc-400 truncate"><?= htmlspecialchars($r['service_name'] ?? '') ?></p>
-                            </div>
-                        </div>
-                        <?= statusBadge($st) ?>
-                    </div>
-                    <?php endforeach; ?>
+                    <?php foreach ($reservationList as $r) echo posListRow($r, $nowTime); ?>
                 <?php endif; ?>
             </div>
 
@@ -418,6 +434,7 @@ $_posStripeEnabled = (($_posPayConf['enabled'] ?? '0') === '1' && !empty($_posPa
 const posStripeEnabled = <?= $_posStripeEnabled ? 'true' : 'false' ?>;
 </script>
 
+<script src="/assets/js/phone-input.js"></script>
 <?php include BASE_PATH . '/resources/views/admin/components/reservation-form-js.php'; ?>
 <?php include __DIR__ . '/pos-js.php'; ?>
 <?php include __DIR__ . '/pos-service-js.php'; ?>

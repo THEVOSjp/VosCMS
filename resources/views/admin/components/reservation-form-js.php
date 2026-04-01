@@ -143,8 +143,8 @@
         const start = startInput.value;
         if (!start) return;
         const [h, m] = start.split(':').map(Number);
-        const endMin = h * 60 + m + duration;
-        endInput.value = String(Math.floor(endMin / 60) % 24).padStart(2, '0') + ':' +
+        const endMin = Math.min(h * 60 + m + duration, 23 * 60 + 59); // 23:59 상한
+        endInput.value = String(Math.floor(endMin / 60)).padStart(2, '0') + ':' +
                          String(endMin % 60).padStart(2, '0');
     }
 
@@ -363,7 +363,7 @@
     window['recalcResForm_' + fId] = recalc;
 
     // 외부에서 폼 리셋 시 사용할 전역 함수
-    window['resetResForm_' + fId] = function(date) {
+    window['resetResForm_' + fId] = function(date, time) {
         checks.forEach(cb => {
             cb.checked = false;
             styleCard(cb.closest('.rf-card'), false);
@@ -375,8 +375,16 @@
         if (nameInput) nameInput.value = '';
         if (phoneInput) phoneInput.value = '';
         if (userIdInput) userIdInput.value = '';
-        startInput.value = '09:00';
-        endInput.value = '10:00';
+        if (time) {
+            startInput.value = time;
+            // 종료 시간: 시작 +1시간 (최대 23:59)
+            const [hh, mm] = time.split(':').map(Number);
+            const eh = Math.min(hh + 1, 23);
+            endInput.value = String(eh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+        } else {
+            startInput.value = '09:00';
+            endInput.value = '10:00';
+        }
         form.querySelectorAll('textarea').forEach(t => t.value = '');
         form.querySelectorAll('input[type="email"]').forEach(t => t.value = '');
         if (searchInput) searchInput.value = '';
@@ -389,12 +397,12 @@
         }
         cards.forEach(c => c.style.display = '');
         recalc();
-        console.log('[ResForm] Reset:', fId, 'date:', date);
+        console.log('[ResForm] Reset:', fId, 'date:', date, 'time:', time);
     };
     // 폼 리셋 시 스태프도 초기화
     const origReset = window['resetResForm_' + fId];
-    window['resetResForm_' + fId] = function(date) {
-        origReset(date);
+    window['resetResForm_' + fId] = function(date, time) {
+        origReset(date, time);
         if (window.ResFormStaff) ResFormStaff.clear(fId);
     };
 })();

@@ -26,25 +26,36 @@ class CustomerBasedAdapter implements PosAdapterInterface
     public function groupReservations(array $reservations, string $nowTime): array
     {
         $customerGroups = [];
-        $reservationList = [];
-        $waitingList = [];
+        $checkinList = [];  // 접수 명단: walk_in, pos, kiosk, admin
+        $reserveList = [];  // 예약자: phone, online
         $completedCount = 0;
+        $cancelledCount = 0;
+        $noShowCount = 0;
         $inServiceCount = 0;
         $waitingCount = 0;
+        $walkinCount = 0;
+
+        // 상태 정렬 우선순위: 대기 → 확정 → 이용중(confirmed+시간내) → 완료 → 노쇼 → 취소
+        $statusOrder = ['pending' => 0, 'confirmed' => 1, 'completed' => 3, 'no_show' => 4, 'cancelled' => 5];
 
         foreach ($reservations as $r) {
             $st = $r['status'] ?? 'pending';
             $src = $r['source'] ?? 'online';
 
-            // 탭 분류 (개별 건 기준)
-            if ($src !== 'walk_in') {
-                $reservationList[] = $r;
+            // 접수 vs 예약 분류 (모든 상태 포함)
+            if (in_array($src, ['walk_in', 'pos', 'kiosk', 'admin'])) {
+                $checkinList[] = $r;
+                if ($st === 'pending' || $st === 'confirmed') $walkinCount++;
+            } else {
+                $reserveList[] = $r;
             }
-            if ($src === 'walk_in' && ($st === 'pending' || $st === 'confirmed')) {
-                $waitingList[] = $r;
-            }
-            if ($st === 'completed') { $completedCount++; continue; }
-            if ($st === 'cancelled') continue;
+
+            if ($st === 'completed') $completedCount++;
+            if ($st === 'cancelled') $cancelledCount++;
+            if ($st === 'no_show') $noShowCount++;
+
+            // 카드 그룹핑은 활성 상태만
+            if (in_array($st, ['completed', 'cancelled', 'no_show'])) continue;
 
             // 예약번호 기준 그룹핑 (1예약 = 1카드)
             $key = $r['id'];
@@ -106,16 +117,17 @@ class CustomerBasedAdapter implements PosAdapterInterface
             $g['designation_fee'] += (float)($r['designation_fee'] ?? 0);
             $g['paid_amount']  += (float)($r['paid_amount'] ?? 0);
 
-            $isInSvc = ($st === 'confirmed'
-                && ($r['start_time'] ?? '') <= $nowTime
-                && (($r['end_time'] ?? '23:59:59') >= $nowTime));
+            // 이용중 판정: confirmed 상태이고, 현재 시간이 start~end 범위 안
+            // end_time이 start_time보다 작으면 자정 넘김 (예: 22:00~02:00)
+            $sTime = $r['start_time'] ?? '';
+            $eTime = $r['end_time'] ?? '23:59:59';
+            $crossesMidnight = ($eTime < $sTime);
+            $isInSvc = ($st === 'confirmed' && $sTime <= $nowTime)
+                && ($crossesMidnight || $eTime >= $nowTime);
             if ($isInSvc) { $g['has_in_service'] = true; $inServiceCount++; }
             if ($st === 'pending' || ($st === 'confirmed' && !$isInSvc)) {
                 $g['has_pending'] = true;
-                // 대기자 카운트는 워크인(현장접수)만 집계 (예약자는 별도 탭)
-                if ($src === 'walk_in') {
-                    $waitingCount++;
-                }
+                $waitingCount++;
             }
 
             $sTime = substr($r['start_time'] ?? '23:59', 0, 5);
@@ -150,24 +162,52 @@ class CustomerBasedAdapter implements PosAdapterInterface
                 : (($g['paid_amount'] > 0) ? 'partial' : 'unpaid');
             $allCards[] = $g;
         }
-        // 이용중 먼저, 대기 다음
+        // 카드: 이용중 먼저, 대기 다음
         usort($allCards, fn($a, $b) =>
             ($a['group_status'] === 'in_service' ? 0 : 1) - ($b['group_status'] === 'in_service' ? 0 : 1)
         );
+
+        // 탭 리스트 정렬: 대기 → 확정(이용중) → 완료 → 노쇼 → 취소, 같은 상태는 시간순
+        $sortList = function(array &$list) use ($nowTime) {
+            usort($list, function($a, $b) use ($nowTime) {
+                $order = ['pending' => 0, 'confirmed' => 1, 'completed' => 3, 'no_show' => 4, 'cancelled' => 5];
+                $stA = $a['status'] ?? 'pending';
+                $stB = $b['status'] ?? 'pending';
+                // confirmed 중 이용중(시간 내)은 2로 분류
+                $oA = $order[$stA] ?? 9;
+                $oB = $order[$stB] ?? 9;
+                if ($stA === 'confirmed') {
+                    $sA = $a['start_time'] ?? ''; $eA = $a['end_time'] ?? '23:59:59';
+                    if ($sA <= $nowTime && ($eA >= $nowTime || $eA < $sA)) $oA = 2; // 이용중
+                }
+                if ($stB === 'confirmed') {
+                    $sB = $b['start_time'] ?? ''; $eB = $b['end_time'] ?? '23:59:59';
+                    if ($sB <= $nowTime && ($eB >= $nowTime || $eB < $sB)) $oB = 2;
+                }
+                if ($oA !== $oB) return $oA - $oB;
+                return strcmp($a['start_time'] ?? '', $b['start_time'] ?? '');
+            });
+        };
+        $sortList($checkinList);
+        $sortList($reserveList);
 
         return [
             'cards'     => $allCards,
             'counts'    => [
                 'in_service'   => $inServiceCount,
                 'waiting'      => $waitingCount,
-                'reservations' => count($reservationList),
+                'walkin'       => $walkinCount,
+                'checkin'      => count($checkinList),
+                'reservations' => count($reserveList),
                 'total'        => count($reservations),
             ],
             'tab_data'  => [
-                'reservations' => $reservationList,
-                'waiting'      => $waitingList,
+                'checkin'      => $checkinList,
+                'reservations' => $reserveList,
             ],
             'completed' => $completedCount,
+            'cancelled' => $cancelledCount,
+            'no_show'   => $noShowCount,
         ];
     }
 

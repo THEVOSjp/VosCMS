@@ -29,7 +29,8 @@ try {
         if (empty($serviceIds)) {
             $serviceIds = !empty($_POST['service_id']) ? [$_POST['service_id']] : [];
         }
-        if (empty($serviceIds)) {
+        $formBundleId = trim($_POST['bundle_id'] ?? '') ?: null;
+        if (empty($serviceIds) && !$formBundleId) {
             echo json_encode(['error' => true, 'message' => '서비스를 선택해주세요.']);
             exit;
         }
@@ -44,7 +45,6 @@ try {
         $designationFee = (float)($_POST['designation_fee'] ?? 0);
         $notes = trim($_POST['notes'] ?? '');
         $source = $_POST['source'] ?? 'admin';
-        $formBundleId = trim($_POST['bundle_id'] ?? '') ?: null;
 
         if (!$customerName || !$customerPhone || !$reservationDate || !$startTime) {
             $errMsg = __('reservations.error_required') ?? '필수 항목을 모두 입력해주세요.';
@@ -69,6 +69,7 @@ try {
                 'staff_id' => $staffId, 'designation_fee' => $designationFee,
                 'bundle_id' => $formBundleId, 'service_ids' => $serviceIds,
                 'user_id' => $matchedUserId, 'source' => $source, 'notes' => $notes,
+                'payment_status' => 'unpaid', 'paid_amount' => 0,
             ]);
             $id = $result['id'];
             $reservationNumber = $result['reservation_number'];
@@ -155,7 +156,8 @@ try {
         $totalDuration = (int)$durStmt->fetchColumn();
 
         $endMinutes = intval(date('H')) * 60 + intval(date('i')) + $totalDuration;
-        $endTime = sprintf('%02d:%02d:00', floor($endMinutes / 60) % 24, $endMinutes % 60);
+        $endMinutes = min($endMinutes, 23 * 60 + 59); // 23:59 상한
+        $endTime = sprintf('%02d:%02d:00', floor($endMinutes / 60), $endMinutes % 60);
 
         $updateStmt = $pdo->prepare("UPDATE {$prefix}reservations SET status = 'confirmed', start_time = ?, end_time = ?, updated_at = NOW() WHERE id = ?");
         $updateStmt->execute([$nowTime, $endTime, $apiId]);
@@ -618,6 +620,12 @@ try {
         $customerName = trim($_POST['customer_name'] ?? '');
         $customerPhone = trim($_POST['customer_phone'] ?? '');
         $customerEmail = trim($_POST['customer_email'] ?? '');
+        $reservationDate = $_POST['reservation_date'] ?? date('Y-m-d');
+        $startTime = $_POST['start_time'] ?? date('H:i');
+        $endTime = $_POST['end_time'] ?? '';
+        $staffId = $_POST['staff_id'] ?? null;
+        $designationFee = (float)($_POST['designation_fee'] ?? 0);
+        $notes = trim($_POST['notes'] ?? '');
         $source = $_POST['source'] ?? 'walk_in';
         $addBundleId = trim($_POST['bundle_id'] ?? '') ?: null;
         $serviceIds = $_POST['service_ids'] ?? [];
@@ -626,16 +634,20 @@ try {
             echo json_encode(['error' => true, 'message' => '필수 항목을 입력해주세요.']);
             exit;
         }
+        if (empty($serviceIds) && !$addBundleId) {
+            echo json_encode(['error' => true, 'message' => '서비스를 선택해주세요.']);
+            exit;
+        }
         $formUserId = trim($_POST['user_id'] ?? '');
         $matchedUserId = !empty($formUserId) ? $formUserId : findUserByPhone($pdo, $prefix, $customerPhone);
 
         try {
             $result = \RzxLib\Core\Helpers\ReservationHelper::create($pdo, $prefix, [
                 'customer_name' => $customerName, 'customer_phone' => $customerPhone, 'customer_email' => $customerEmail,
-                'reservation_date' => $_POST['reservation_date'] ?? date('Y-m-d'),
-                'start_time' => date('H:i:s'),
+                'reservation_date' => $reservationDate, 'start_time' => $startTime, 'end_time' => $endTime ?: null,
+                'staff_id' => $staffId, 'designation_fee' => $designationFee,
                 'bundle_id' => $addBundleId, 'service_ids' => $serviceIds,
-                'user_id' => $matchedUserId, 'source' => $source,
+                'user_id' => $matchedUserId, 'source' => $source, 'notes' => $notes,
             ]);
             console_log("[POS API] Added services via ReservationHelper (reservation: {$result['id']})");
             echo json_encode(['success' => true, 'message' => '서비스가 추가되었습니다.', 'ids' => [$result['id']]]);

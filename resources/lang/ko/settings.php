@@ -532,10 +532,40 @@ return [
 
     'success' => '사이트 설정이 저장되었습니다.',
     'error_save' => '저장 실패',
+
+    // 영업시간
+    'business_hours_title' => '영업 시간',
+    'business_hours_desc' => '캘린더 및 예약 시스템에서 사용할 영업 시간을 설정합니다.',
+    'business_hour_start' => '영업 시작 시간',
+    'business_hour_end' => '영업 종료 시간',
+    'business_hours_hint' => '캘린더 주간/일별 뷰의 기본 시간 범위에 적용됩니다. 영업시간 외 예약이 있으면 자동으로 범위가 확장됩니다.',
     'error_image_type' => '허용되지 않는 이미지 형식입니다. (JPG, PNG, GIF, SVG, WebP만 가능)',
     'logo_deleted' => '로고 이미지가 삭제되었습니다.',
     'pwa_status_pending' => '대기',
     'pwa_status_sending' => '전송중',
     'pwa_status_completed' => '완료',
     'pwa_status_failed' => '실패',
+
+    // 온라인 결제 설정
+    'payment_config' => [
+        'title' => '온라인 결제 설정',
+        'description' => '온라인 결제를 위한 PG사 API 키를 설정합니다.',
+        'enabled' => '온라인 결제 활성화',
+        'enabled_hint' => '활성화하면 고객이 예약 시 온라인 결제를 할 수 있습니다.',
+        'gateway' => 'PG사 선택',
+        'test_mode' => '테스트 모드',
+        'test_mode_hint' => '테스트 모드에서는 실제 결제가 이루어지지 않습니다.',
+        'live_mode' => '라이브 모드',
+        'key_saved' => '키가 저장되어 있습니다.',
+        'status_ready' => '결제 시스템이 준비되었습니다.',
+        'status_incomplete' => 'API 키를 입력해주세요.',
+        'region_global' => '글로벌',
+        'region_kr' => '한국',
+        'region_jp' => '일본',
+        'gateway_info' => '결제 대행사 안내',
+        'stripe_desc' => '글로벌 결제 — 46개국, 135개 통화 지원',
+        'toss_desc' => '한국 결제 — 카드, 계좌이체, 간편결제',
+        'payjp_desc' => '일본 결제 — 카드, 콘비니 결제',
+        'portone_desc' => '한국 통합결제 — 다양한 PG사 연동',
+    ],
 ];

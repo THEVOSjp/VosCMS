@@ -100,14 +100,15 @@ class ReservationHelper
         $pointsUsed = (float)($data['points_used'] ?? 0);
         $finalAmount -= ($discountAmount + $pointsUsed);
 
-        // end_time 계산
+        // end_time 계산 (자정 넘김 방지: 최대 23:59)
         $startTime = $data['start_time'];
         if (!empty($data['end_time'])) {
             $endTime = $data['end_time'];
         } else {
             $parts = explode(':', $startTime);
             $endMin = ((int)$parts[0]) * 60 + ((int)($parts[1] ?? 0)) + $totalDuration;
-            $endTime = sprintf('%02d:%02d:00', floor($endMin / 60) % 24, $endMin % 60);
+            $endMin = min($endMin, 23 * 60 + 59); // 23:59 상한
+            $endTime = sprintf('%02d:%02d:00', floor($endMin / 60), $endMin % 60);
         }
 
         // 온라인 결제 활성화 여부 확인
@@ -218,11 +219,20 @@ class ReservationHelper
             $newTotal = (float)($sums['total'] ?? 0);
             $newDur = (int)($sums['dur'] ?? 0);
 
-            // final_amount: 번들이면 번들 가격 기준
+            // final_amount: 번들이면 번들가 + 번들외 추가서비스 + 지명비
             $effectiveBundlePrice = $resolved['bundle_price'] ?? (float)($resRow['bundle_price'] ?? 0);
-            $newFinal = ($bundleId || $resRow['bundle_id']) && $effectiveBundlePrice > 0
-                ? $effectiveBundlePrice
-                : $newTotal;
+            $effectiveBundleId = $bundleId ?: ($resRow['bundle_id'] ?? null);
+            if ($effectiveBundleId && $effectiveBundlePrice > 0) {
+                // 번들 외 추가 서비스 금액
+                $extraStmt = $pdo->prepare("SELECT COALESCE(SUM(price), 0) FROM {$prefix}reservation_services WHERE reservation_id = ? AND (bundle_id IS NULL OR bundle_id = '')");
+                $extraStmt->execute([$reservationId]);
+                $extraTotal = (float)$extraStmt->fetchColumn();
+                $designationFee = (float)($resRow['designation_fee'] ?? 0);
+                $newFinal = $effectiveBundlePrice + $extraTotal + $designationFee;
+            } else {
+                $designationFee = (float)($resRow['designation_fee'] ?? 0);
+                $newFinal = $newTotal + $designationFee;
+            }
 
             // end_time 재계산
             $startTime = $resRow['start_time'];
@@ -249,6 +259,14 @@ class ReservationHelper
     /**
      * reservation_services에 서비스 저장 (내부 공용)
      */
+    /**
+     * 외부에서 서비스 저장만 호출 (staff-detail-ajax 등)
+     */
+    public static function saveServicesPublic(\PDO $pdo, string $prefix, string $reservationId, array $services, ?string $bundleId, int $startIdx = 0): void
+    {
+        self::saveServices($pdo, $prefix, $reservationId, $services, $bundleId, $startIdx);
+    }
+
     private static function saveServices(\PDO $pdo, string $prefix, string $reservationId, array $services, ?string $bundleId, int $startIdx = 0): void
     {
         $idx = $startIdx;
