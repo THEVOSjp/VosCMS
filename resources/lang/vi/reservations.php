@@ -111,7 +111,7 @@ return [
     'pos_checkin_placeholder_name' => 'Tên',
     'pos_checkin_placeholder_phone' => 'Số điện thoại',
     'pos_no_waiting' => 'Không có ai chờ.',
-    'pos_waiting_number' => 'STT',
+    'pos_waiting_number' => 'Số tiếp nhận',
     'pos_walk_in' => 'Khách vãng lai',
     'pos_notes' => 'Ghi chú',
     'pos_btn_confirm' => 'Xác nhận',

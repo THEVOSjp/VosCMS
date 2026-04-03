@@ -100,7 +100,6 @@ $skinMeta = $skinRenderer->getMeta();
 
     <!-- 버튼 -->
     <div class="flex items-center justify-end gap-3">
-        <span id="saveStatus" class="text-sm text-green-600 dark:text-green-400 hidden"></span>
         <button type="submit" class="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition"><?= __('admin.buttons.save') ?></button>
     </div>
     <?php else: ?>
@@ -134,13 +133,10 @@ document.getElementById('boardSkinForm')?.addEventListener('submit', async funct
             body: fd
         });
         const data = await resp.json();
-        const status = document.getElementById('saveStatus');
-        status.textContent = data.success ? '<?= __('admin.common.saved') ?>' : (data.message || 'Error');
-        status.classList.remove('hidden');
-        setTimeout(() => status.classList.add('hidden'), 3000);
+        showResultModal(data.success, data.success ? '' : (data.message || 'Error'));
     } catch (err) {
         console.error('[BoardSkin] 에러:', err);
-        alert('Error: ' + err.message);
+        showResultModal(false, err.message);
     }
 });
 </script>

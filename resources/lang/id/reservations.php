@@ -111,7 +111,7 @@ return [
     'pos_checkin_placeholder_name' => 'Nama',
     'pos_checkin_placeholder_phone' => 'Nomor telepon',
     'pos_no_waiting' => 'Tidak ada yang menunggu.',
-    'pos_waiting_number' => 'No.',
+    'pos_waiting_number' => 'No. Penerimaan',
     'pos_walk_in' => 'Walk-in',
     'pos_notes' => 'Catatan',
     'pos_btn_confirm' => 'Konfirmasi',

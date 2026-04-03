@@ -111,7 +111,7 @@ return [
     'pos_checkin_placeholder_name' => '姓名',
     'pos_checkin_placeholder_phone' => '電話號碼',
     'pos_no_waiting' => '沒有等候的客戶。',
-    'pos_waiting_number' => '號碼',
+    'pos_waiting_number' => '接待號',
     'pos_walk_in' => '現場客',
     'pos_notes' => '備註',
     'pos_btn_confirm' => '確認',

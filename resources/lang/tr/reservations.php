@@ -107,7 +107,7 @@ return [
     'pos_checkin_placeholder_name' => 'İsim',
     'pos_checkin_placeholder_phone' => 'Telefon',
     'pos_no_waiting' => 'Bekleyen yok.',
-    'pos_waiting_number' => 'No.',
+    'pos_waiting_number' => 'Kabul No.',
     'pos_walk_in' => 'Randevusuz',
     'pos_notes' => 'Notlar',
     'pos_btn_confirm' => 'Onayla',

@@ -185,7 +185,8 @@ $seoContext = [
     'modified_at' => $post['updated_at'] ?? '',
 ];
 ?>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+    <?php $_skinContentWidth = $skinConfig['content_width'] ?? 'max-w-7xl'; ?>
+    <div class="<?= $_skinContentWidth ?> mx-auto px-4 sm:px-6 py-6">
         <!-- 글 헤더 -->
         <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden">
             <div class="p-6 border-b border-zinc-100 dark:border-zinc-700">

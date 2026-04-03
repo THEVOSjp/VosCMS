@@ -369,4 +369,27 @@ return [
             'datetime' => 'Oluşturma/değiştirme zamanını göster',
         ],
     ],
+
+    // Çevrimiçi Ödeme Ayarları
+    'payment_config' => [
+        'title' => 'Çevrimiçi Ödeme Ayarları',
+        'description' => 'Çevrimiçi ödemeler için PG API anahtarlarını yapılandırın.',
+        'enabled' => 'Çevrimiçi Ödemeyi Etkinleştir',
+        'enabled_hint' => 'Etkinleştirildiğinde müşteriler rezervasyon yaparken çevrimiçi ödeme yapabilir.',
+        'gateway' => 'Ödeme Ağ Geçidi',
+        'test_mode' => 'Test Modu',
+        'test_mode_hint' => 'Test modunda gerçek ücret alınmaz.',
+        'live_mode' => 'Canlı Mod',
+        'key_saved' => 'Anahtar kaydedildi.',
+        'status_ready' => 'Ödeme sistemi hazır.',
+        'status_incomplete' => 'Lütfen API anahtarlarını girin.',
+        'region_global' => 'Küresel',
+        'region_kr' => 'Kore',
+        'region_jp' => 'Japonya',
+        'gateway_info' => 'Ödeme Ağ Geçidi Bilgileri',
+        'stripe_desc' => 'Küresel ödemeler — 46 ülke, 135 para birimi',
+        'toss_desc' => 'Kore ödemeleri — Kart, havale',
+        'payjp_desc' => 'Japonya ödemeleri — Kart, konbini',
+        'portone_desc' => 'Kore birleşik ödemeler — Çoklu PG',
+    ],
 ];

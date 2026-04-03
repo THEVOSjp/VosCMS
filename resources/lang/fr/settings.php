@@ -496,4 +496,27 @@ return [
     'pwa_status_sending' => 'Envoi',
     'pwa_status_completed' => 'Terminé',
     'pwa_status_failed' => 'Échoué',
+
+    // Paramètres de paiement en ligne
+    'payment_config' => [
+        'title' => 'Paramètres de paiement en ligne',
+        'description' => 'Configurez les clés API PG pour les paiements en ligne.',
+        'enabled' => 'Activer le paiement en ligne',
+        'enabled_hint' => 'Une fois activé, les clients peuvent payer en ligne lors de la réservation.',
+        'gateway' => 'Passerelle de paiement',
+        'test_mode' => 'Mode test',
+        'test_mode_hint' => 'Aucun frais réel n\'est facturé en mode test.',
+        'live_mode' => 'Mode production',
+        'key_saved' => 'La clé est enregistrée.',
+        'status_ready' => 'Le système de paiement est prêt.',
+        'status_incomplete' => 'Veuillez entrer les clés API.',
+        'region_global' => 'Global',
+        'region_kr' => 'Corée',
+        'region_jp' => 'Japon',
+        'gateway_info' => 'Informations sur les passerelles de paiement',
+        'stripe_desc' => 'Paiements globaux — 46 pays, 135 devises',
+        'toss_desc' => 'Paiements Corée — Carte, virement',
+        'payjp_desc' => 'Paiements Japon — Carte, konbini',
+        'portone_desc' => 'Paiements unifiés Corée — Multi-PG',
+    ],
 ];

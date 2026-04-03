@@ -495,4 +495,27 @@ return [
     'pwa_status_sending' => 'Mengirim',
     'pwa_status_completed' => 'Selesai',
     'pwa_status_failed' => 'Gagal',
+
+    // Pengaturan Pembayaran Online
+    'payment_config' => [
+        'title' => 'Pengaturan Pembayaran Online',
+        'description' => 'Konfigurasikan kunci API PG untuk pembayaran online.',
+        'enabled' => 'Aktifkan Pembayaran Online',
+        'enabled_hint' => 'Jika diaktifkan, pelanggan dapat membayar secara online saat membuat reservasi.',
+        'gateway' => 'Gateway Pembayaran',
+        'test_mode' => 'Mode Uji Coba',
+        'test_mode_hint' => 'Tidak ada tagihan nyata dalam mode uji coba.',
+        'live_mode' => 'Mode Produksi',
+        'key_saved' => 'Kunci tersimpan.',
+        'status_ready' => 'Sistem pembayaran siap.',
+        'status_incomplete' => 'Silakan masukkan kunci API.',
+        'region_global' => 'Global',
+        'region_kr' => 'Korea',
+        'region_jp' => 'Jepang',
+        'gateway_info' => 'Informasi Gateway Pembayaran',
+        'stripe_desc' => 'Pembayaran global — 46 negara, 135 mata uang',
+        'toss_desc' => 'Pembayaran Korea — Kartu, transfer',
+        'payjp_desc' => 'Pembayaran Jepang — Kartu, minimarket',
+        'portone_desc' => 'Pembayaran terpadu Korea — Multi-PG',
+    ],
 ];

@@ -111,7 +111,7 @@ return [
     'pos_checkin_placeholder_name' => 'Name',
     'pos_checkin_placeholder_phone' => 'Telefonnummer',
     'pos_no_waiting' => 'Niemand wartet.',
-    'pos_waiting_number' => 'Nr.',
+    'pos_waiting_number' => 'Empfangs-Nr.',
     'pos_walk_in' => 'Laufkunde',
     'pos_notes' => 'Notizen',
     'pos_btn_confirm' => 'Bestätigen',

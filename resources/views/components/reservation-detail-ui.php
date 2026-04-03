@@ -180,34 +180,6 @@ $_needsPayment = $_paymentEnabled && ($reservation['payment_status'] ?? 'unpaid'
 </div>
 <?php endif; ?>
 
-<!-- 환불 정책 안내 (취소 가능 상태일 때만) -->
-<?php if ($isCancellable):
-    $_rfPolicyStmt = $pdo->prepare("SELECT `key`, `value` FROM {$prefix}settings WHERE `key` LIKE 'refund_%'");
-    $_rfPolicyStmt->execute();
-    $_rfP = [];
-    while ($_rp = $_rfPolicyStmt->fetch(PDO::FETCH_ASSOC)) $_rfP[$_rp['key']] = $_rp['value'];
-    if (($_rfP['refund_enabled'] ?? '0') === '1'):
-        $_rfPUnit = $_rfP['refund_time_unit'] ?? 'hours';
-        $_rfPUnitLabel = $_rfPUnit === 'days' ? (__('services.settings.general.refund_unit_days') ?? '일') : (__('services.settings.general.refund_unit_hours') ?? '시간');
-        $_rfPFull = (int)($_rfP['refund_full_period'] ?? 24);
-?>
-<div class="bg-zinc-50 dark:bg-zinc-700/30 rounded-xl p-4 mb-6 border border-zinc-200 dark:border-zinc-700">
-    <h4 class="text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-2 flex items-center gap-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <?= __('booking.cancel.policy_title') ?? '취소 및 환불 안내' ?>
-    </h4>
-    <div class="text-xs space-y-1">
-        <p class="text-green-600 dark:text-green-400">✓ <?= $_rfPFull ?><?= $_rfPUnitLabel ?> <?= __('services.settings.general.refund_preview_full') ?? '전 → 전액 환불 (100%)' ?></p>
-        <?php for ($i = 1; $i <= 3; $i++):
-            if (($_rfP["refund_partial{$i}_enabled"] ?? '0') === '1'):
-        ?>
-        <p class="text-amber-600 dark:text-amber-400">△ <?= (int)($_rfP["refund_partial{$i}_period"] ?? 0) ?><?= $_rfPUnitLabel ?> <?= __('services.settings.general.refund_partial_suffix') ?? '전 취소 시' ?> <?= (int)($_rfP["refund_partial{$i}_rate"] ?? 0) ?>% <?= __('services.settings.general.refund_word') ?? '환불' ?></p>
-        <?php endif; endfor; ?>
-        <p class="text-red-600 dark:text-red-400">✕ <?= __('services.settings.general.refund_preview_none') ?? '그 외 → 환불 불가' ?></p>
-    </div>
-</div>
-<?php endif; endif; ?>
-
 <!-- 미결제 안내 + 결제 버튼 -->
 <?php if ($_needsPayment): ?>
 <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800 p-6 mb-6">

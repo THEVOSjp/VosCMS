@@ -493,4 +493,27 @@ return [
     'pwa_status_sending' => 'Wird gesendet',
     'pwa_status_completed' => 'Abgeschlossen',
     'pwa_status_failed' => 'Fehlgeschlagen',
+
+    // Online-Zahlungseinstellungen
+    'payment_config' => [
+        'title' => 'Online-Zahlungseinstellungen',
+        'description' => 'Konfigurieren Sie PG-API-Schlüssel für Online-Zahlungen.',
+        'enabled' => 'Online-Zahlung aktivieren',
+        'enabled_hint' => 'Wenn aktiviert, können Kunden bei der Reservierung online bezahlen.',
+        'gateway' => 'Zahlungsanbieter',
+        'test_mode' => 'Testmodus',
+        'test_mode_hint' => 'Im Testmodus werden keine echten Zahlungen durchgeführt.',
+        'live_mode' => 'Live-Modus',
+        'key_saved' => 'Schlüssel ist gespeichert.',
+        'status_ready' => 'Zahlungssystem ist bereit.',
+        'status_incomplete' => 'Bitte API-Schlüssel eingeben.',
+        'region_global' => 'Global',
+        'region_kr' => 'Korea',
+        'region_jp' => 'Japan',
+        'gateway_info' => 'Zahlungsanbieter-Info',
+        'stripe_desc' => 'Globale Zahlungen — 46 Länder, 135 Währungen',
+        'toss_desc' => 'Korea-Zahlungen — Karte, Überweisung',
+        'payjp_desc' => 'Japan-Zahlungen — Karte, Convenience Store',
+        'portone_desc' => 'Korea-Zahlungen — Multi-PG-Integration',
+    ],
 ];

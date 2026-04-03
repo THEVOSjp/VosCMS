@@ -495,4 +495,27 @@ return [
     'pwa_status_sending' => '傳送中',
     'pwa_status_completed' => '已完成',
     'pwa_status_failed' => '失敗',
+
+    // 線上付款設定
+    'payment_config' => [
+        'title' => '線上付款設定',
+        'description' => '設定線上付款的PG API金鑰。',
+        'enabled' => '啟用線上付款',
+        'enabled_hint' => '啟用後，客戶在預約時可以線上付款。',
+        'gateway' => '付款閘道',
+        'test_mode' => '測試模式',
+        'test_mode_hint' => '測試模式下不會產生實際扣款。',
+        'live_mode' => '正式模式',
+        'key_saved' => '金鑰已儲存。',
+        'status_ready' => '付款系統已就緒。',
+        'status_incomplete' => '請輸入API金鑰。',
+        'region_global' => '全球',
+        'region_kr' => '韓國',
+        'region_jp' => '日本',
+        'gateway_info' => '付款閘道資訊',
+        'stripe_desc' => '全球付款 — 46個國家，135種貨幣',
+        'toss_desc' => '韓國付款 — 信用卡、轉帳、便捷付款',
+        'payjp_desc' => '日本付款 — 信用卡、超商付款',
+        'portone_desc' => '韓國統一付款 — 多PG整合',
+    ],
 ];

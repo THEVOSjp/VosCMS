@@ -155,23 +155,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'check
         ]);
 
         // 서비스 관계 저장
-        try {
-            $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order, bundle_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $idx = 0;
-            foreach ($services as $s) {
-                $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $idx++, null]);
-            }
-        } catch (PDOException $e) {
-            $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
-            $idx = 0;
-            foreach ($services as $s) {
-                $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $idx++]);
-            }
-        }
+        require_once BASE_PATH . '/rzxlib/Core/Helpers/ReservationHelper.php';
+        \RzxLib\Core\Helpers\ReservationHelper::saveServicesPublic($pdo, $prefix, $id, $services, null);
 
         $pdo->commit();
 
-        // 오늘 대기번호 계산
+        // 오늘 접수번호 계산 (당일 발권 순번)
         $wSt = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}reservations WHERE reservation_date = ? AND source IN ('walk_in','designation','kiosk')");
         $wSt->execute([$reservationDate]);
         $resultWaiting = (int)$wSt->fetchColumn();

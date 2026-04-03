@@ -495,4 +495,27 @@ return [
     'pwa_status_sending' => '发送中',
     'pwa_status_completed' => '已完成',
     'pwa_status_failed' => '失败',
+
+    // 在线支付设置
+    'payment_config' => [
+        'title' => '在线支付设置',
+        'description' => '配置在线支付的PG API密钥。',
+        'enabled' => '启用在线支付',
+        'enabled_hint' => '启用后，客户在预约时可以在线支付。',
+        'gateway' => '支付网关',
+        'test_mode' => '测试模式',
+        'test_mode_hint' => '测试模式下不会产生实际扣款。',
+        'live_mode' => '正式模式',
+        'key_saved' => '密钥已保存。',
+        'status_ready' => '支付系统已就绪。',
+        'status_incomplete' => '请输入API密钥。',
+        'region_global' => '全球',
+        'region_kr' => '韩国',
+        'region_jp' => '日本',
+        'gateway_info' => '支付网关信息',
+        'stripe_desc' => '全球支付 — 46个国家，135种货币',
+        'toss_desc' => '韩国支付 — 银行卡、转账、便捷支付',
+        'payjp_desc' => '日本支付 — 银行卡、便利店支付',
+        'portone_desc' => '韩国统一支付 — 多PG集成',
+    ],
 ];

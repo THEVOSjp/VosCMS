@@ -174,31 +174,18 @@ if ($action === 'create_reservation') {
         exit;
     }
 
-    // 번들 ID
     $_stBundleId = !empty($input['bundle_id']) ? $input['bundle_id'] : null;
 
-    // 번들이면 service_bundle_items에서 전체 서비스 조회 (스냅샷)
-    if ($_stBundleId) {
-        $svcStmt = $pdo->prepare("SELECT s.id, s.name, s.price, s.duration FROM {$prefix}service_bundle_items bi JOIN {$prefix}services s ON bi.service_id = s.id WHERE bi.bundle_id = ? ORDER BY bi.sort_order");
-        $svcStmt->execute([$_stBundleId]);
-        $selectedServices = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
-    } else {
-        $ph = implode(',', array_fill(0, count($serviceIds), '?'));
-        $svcStmt = $pdo->prepare("SELECT id, name, price, duration FROM {$prefix}services WHERE id IN ({$ph}) AND is_active = 1");
-        $svcStmt->execute(array_values($serviceIds));
-        $selectedServices = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+    // 서비스 조회 (ReservationHelper 사용)
+    require_once BASE_PATH . '/rzxlib/Core/Helpers/ReservationHelper.php';
+    $resolved = \RzxLib\Core\Helpers\ReservationHelper::resolveServices($pdo, $prefix, $_stBundleId, $serviceIds);
+    $selectedServices = $resolved['services'];
     if (empty($selectedServices)) {
         echo json_encode(['success' => false, 'message' => __('booking.error.invalid_service')]);
         exit;
     }
-
-    $totalPrice = 0;
-    $totalDuration = 0;
-    foreach ($selectedServices as $s) {
-        $totalPrice += (float)$s['price'];
-        $totalDuration += (int)$s['duration'];
-    }
+    $totalPrice = $resolved['total_amount'];
+    $totalDuration = $resolved['total_duration'];
 
     // 지명비
     $designationFee = 0;
@@ -270,15 +257,8 @@ if ($action === 'create_reservation') {
     $userId = $isLoggedIn ? ($currentUser['id'] ?? null) : null;
     $id = bin2hex(random_bytes(4)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(6));
 
-    // 번들 정보
-    $bundleId = !empty($input['bundle_id']) ? $input['bundle_id'] : null;
-    $bundlePrice = null;
-    if ($bundleId) {
-        $bdlStmt = $pdo->prepare("SELECT bundle_price FROM {$prefix}service_bundles WHERE id = ? AND is_active = 1");
-        $bdlStmt->execute([$bundleId]);
-        $dbBundlePrice = $bdlStmt->fetchColumn();
-        if ($dbBundlePrice !== false) $bundlePrice = (float)$dbBundlePrice;
-    }
+    $bundleId = $_stBundleId;
+    $bundlePrice = $resolved['bundle_price'];
 
     // total_amount = 서비스 원래 가격 합계, final_amount = 번들 가격(또는 원래 합계) + 지명료 - 할인 - 적립금
     if ($bundlePrice !== null) {
@@ -329,12 +309,8 @@ if ($action === 'create_reservation') {
             ->execute([$txId, $currentUser['id'], $pointsUsed, $newBal, $id, '예약 적립금 사용 (' . $reservationNumber . ')']);
     }
 
-    // 예약-서비스 관계: 서비스 원래 가격 그대로, bundle_id 기록
-    $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order, bundle_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $sortIdx = 0;
-    foreach ($selectedServices as $s) {
-        $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $sortIdx++, $bundleId]);
-    }
+    // 예약-서비스 관계 저장 (ReservationHelper)
+    \RzxLib\Core\Helpers\ReservationHelper::saveServicesPublic($pdo, $prefix, $id, $selectedServices, $bundleId);
 
     $response = [
         'success' => true,

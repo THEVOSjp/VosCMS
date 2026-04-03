@@ -101,7 +101,7 @@ return [
     'pos_checkin_placeholder_name' => '이름',
     'pos_checkin_placeholder_phone' => '전화번호',
     'pos_no_waiting' => '대기중인 고객이 없습니다.',
-    'pos_waiting_number' => '대기번호',
+    'pos_waiting_number' => '접수번호',
     'pos_walk_in' => '워크인',
     // POS 카드 버튼
     'pos_btn_confirm' => '확정',

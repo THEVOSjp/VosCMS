@@ -293,7 +293,7 @@ $router->group(['prefix' => '/admin', 'middleware' => ['auth', 'admin']], functi
         $config = app()->getConfig();
         $bundleId = $id;
         include BASE_PATH . '/resources/views/admin/bundles/edit.php';
-    })->where('id', '\d+')->name('admin.bundles.edit');
+    })->name('admin.bundles.edit');
 
     // 카테고리 관리
     $router->resource('categories', 'Admin\\CategoryController');

@@ -493,4 +493,27 @@ return [
     'pwa_status_sending' => 'Đang gửi',
     'pwa_status_completed' => 'Hoàn thành',
     'pwa_status_failed' => 'Thất bại',
+
+    // Cài đặt thanh toán trực tuyến
+    'payment_config' => [
+        'title' => 'Cài đặt thanh toán trực tuyến',
+        'description' => 'Cấu hình khóa API PG để thanh toán trực tuyến.',
+        'enabled' => 'Bật thanh toán trực tuyến',
+        'enabled_hint' => 'Khi bật, khách hàng có thể thanh toán trực tuyến khi đặt lịch.',
+        'gateway' => 'Cổng thanh toán',
+        'test_mode' => 'Chế độ thử nghiệm',
+        'test_mode_hint' => 'Không có khoản phí thực tế trong chế độ thử nghiệm.',
+        'live_mode' => 'Chế độ thực',
+        'key_saved' => 'Khóa đã được lưu.',
+        'status_ready' => 'Hệ thống thanh toán đã sẵn sàng.',
+        'status_incomplete' => 'Vui lòng nhập khóa API.',
+        'region_global' => 'Toàn cầu',
+        'region_kr' => 'Hàn Quốc',
+        'region_jp' => 'Nhật Bản',
+        'gateway_info' => 'Thông tin cổng thanh toán',
+        'stripe_desc' => 'Thanh toán toàn cầu — 46 quốc gia, 135 loại tiền',
+        'toss_desc' => 'Thanh toán Hàn Quốc — Thẻ, chuyển khoản',
+        'payjp_desc' => 'Thanh toán Nhật Bản — Thẻ, cửa hàng tiện lợi',
+        'portone_desc' => 'Thanh toán hợp nhất Hàn Quốc — Đa PG',
+    ],
 ];

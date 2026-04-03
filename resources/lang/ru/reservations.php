@@ -111,7 +111,7 @@ return [
     'pos_checkin_placeholder_name' => 'Имя',
     'pos_checkin_placeholder_phone' => 'Телефон',
     'pos_no_waiting' => 'Никто не ожидает.',
-    'pos_waiting_number' => '№',
+    'pos_waiting_number' => '№ приёма',
     'pos_walk_in' => 'Без записи',
     'pos_notes' => 'Заметки',
     'pos_btn_confirm' => 'Подтвердить',

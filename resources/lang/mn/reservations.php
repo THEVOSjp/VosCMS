@@ -107,7 +107,7 @@ return [
     'pos_checkin_placeholder_name' => 'Нэр',
     'pos_checkin_placeholder_phone' => 'Утасны дугаар',
     'pos_no_waiting' => 'Хүлээж буй хүн байхгүй.',
-    'pos_waiting_number' => 'Дугаар',
+    'pos_waiting_number' => 'Бүртгэлийн дугаар',
     'pos_walk_in' => 'Шууд',
     'pos_notes' => 'Тэмдэглэл',
     'pos_btn_confirm' => 'Баталгаажуулах',

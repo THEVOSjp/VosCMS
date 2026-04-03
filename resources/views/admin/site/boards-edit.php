@@ -210,6 +210,7 @@ $headerActions .= '<a href="' . $adminUrl . '/site/boards" class="px-4 py-2 text
     </div>
     <?php endif; ?>
     <?php include __DIR__ . '/../components/multilang-modal.php'; ?>
+    <?php include __DIR__ . '/../partials/result-modal.php'; ?>
 <?php if (!$embedMode): ?>
 </body>
 </html>

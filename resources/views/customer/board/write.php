@@ -62,7 +62,8 @@ if ($editMode) {
 }
 
 ?>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+    <?php $_skinContentWidth = $skinConfig['content_width'] ?? 'max-w-7xl'; ?>
+    <div class="<?= $_skinContentWidth ?> mx-auto px-4 sm:px-6 py-6">
         <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mb-4"><?= htmlspecialchars($board['title']) ?></h1>
 
         <?php if ($editMode && ($post['original_locale'] ?? 'ko') !== ($currentLocale ?? 'ko')): ?>

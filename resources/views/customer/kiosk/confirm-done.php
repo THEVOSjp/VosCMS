@@ -20,13 +20,13 @@
                     <p class="<?= $subTextColor ?> text-sm mt-2"><?= __('reservations.kiosk_checkin_done_desc') ?></p>
                 </div>
 
-                <!-- 대기번호 -->
+                <!-- 접수번호 -->
                 <div class="p-6 rounded-2xl backdrop-blur-sm border <?= $btnBg ?>">
                     <p class="<?= $subTextColor ?> text-sm mb-2"><?= __('reservations.pos_waiting_number') ?></p>
                     <p class="text-6xl font-black <?= $isLight ? 'text-blue-600' : 'text-blue-400' ?>"><?= $resultWaiting ?></p>
                 </div>
 
-                <!-- 접수 번호 -->
+                <!-- 예약 번호 -->
                 <div class="p-4 rounded-xl backdrop-blur-sm border <?= $btnBg ?>">
                     <p class="<?= $subTextColor ?> text-xs mb-1"><?= __('reservations.kiosk_receipt_number') ?></p>
                     <p class="<?= $textColor ?> text-sm font-mono tracking-wider"><?= htmlspecialchars($resultNumber) ?></p>

@@ -494,4 +494,27 @@ return [
     'pwa_status_sending' => 'Sending',
     'pwa_status_completed' => 'Completed',
     'pwa_status_failed' => 'Failed',
+
+    // Online Payment Settings
+    'payment_config' => [
+        'title' => 'Online Payment Settings',
+        'description' => 'Configure PG API keys for online payments.',
+        'enabled' => 'Enable Online Payment',
+        'enabled_hint' => 'When enabled, customers can pay online when making reservations.',
+        'gateway' => 'Payment Gateway',
+        'test_mode' => 'Test Mode',
+        'test_mode_hint' => 'No real charges are made in test mode.',
+        'live_mode' => 'Live Mode',
+        'key_saved' => 'Key is saved.',
+        'status_ready' => 'Payment system is ready.',
+        'status_incomplete' => 'Please enter API keys.',
+        'region_global' => 'Global',
+        'region_kr' => 'Korea',
+        'region_jp' => 'Japan',
+        'gateway_info' => 'Payment Gateway Information',
+        'stripe_desc' => 'Global payments — 46 countries, 135 currencies',
+        'toss_desc' => 'Korea payments — Card, bank transfer, easy pay',
+        'payjp_desc' => 'Japan payments — Card, convenience store',
+        'portone_desc' => 'Korea unified payments — Multiple PG integration',
+    ],
 ];

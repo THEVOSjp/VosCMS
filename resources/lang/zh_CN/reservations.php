@@ -111,7 +111,7 @@ return [
     'pos_checkin_placeholder_name' => '姓名',
     'pos_checkin_placeholder_phone' => '电话号码',
     'pos_no_waiting' => '没有等候的客户。',
-    'pos_waiting_number' => '号码',
+    'pos_waiting_number' => '接待号',
     'pos_walk_in' => '现场客',
     'pos_notes' => '备注',
     'pos_btn_confirm' => '确认',

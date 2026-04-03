@@ -93,6 +93,7 @@ $startNo = $totalCount - $offset;
 ?>
     <?php
     // 스킨 설정 적용
+    $_skinContentWidth = $skinConfig['content_width'] ?? 'max-w-7xl';
     $_skinPrimaryColor = $skinConfig['primary_color'] ?? '#3B82F6';
     $_skinBgColor = $skinConfig['board_bg_color'] ?? '';
     $_skinBorderRadius = ($skinConfig['border_radius'] ?? 'rounded') === 'square' ? 'rounded-none' : 'rounded-xl';
@@ -130,7 +131,7 @@ $startNo = $totalCount - $offset;
         .board-skin-wrap .skin-primary-text { color: var(--skin-primary); }
     </style>
 
-    <div class="board-skin-wrap max-w-7xl mx-auto px-4 sm:px-6 py-6">
+    <div class="board-skin-wrap <?= $_skinContentWidth ?> mx-auto px-4 sm:px-6 py-6">
         <!-- 게시판 제목 (배경 이미지/동영상 지원) -->
         <?php require_once BASE_PATH . '/rzxlib/Core/Helpers/admin-icons.php'; ?>
         <?php if ($_hasTitleBg): ?>
@@ -151,7 +152,7 @@ $startNo = $totalCount - $offset;
             <!-- 오버레이 -->
             <div class="absolute inset-0 bg-black" style="opacity:<?= $_skinTitleBgOverlay / 100 ?>"></div>
             <!-- 제목 콘텐츠 -->
-            <div class="relative z-10 flex flex-col justify-end h-full p-6">
+            <div class="relative z-10 flex flex-col justify-center items-center h-full p-6 text-center">
                 <h1 class="text-2xl font-bold <?= $_txtColorClass ?> inline-flex items-center gap-2 drop-shadow-sm">
                     <?= htmlspecialchars($board['title']) ?>
                     <?= rzx_admin_icons($baseUrl . '/board/' . htmlspecialchars($board['slug']) . '/settings', '') ?>

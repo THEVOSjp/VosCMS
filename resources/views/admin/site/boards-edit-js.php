@@ -32,19 +32,18 @@ const boardId = <?= $boardId ?>;
             const data = await resp.json();
             console.log('[BoardEdit] 응답:', data);
 
-            if (data.success) {
+            if (typeof showResultModal === 'function') {
+                showResultModal(data.success, data.success ? '' : (data.message || 'Error'));
+            } else if (data.success) {
                 const status = document.getElementById('saveStatus');
-                if (status) {
-                    status.textContent = data.message || '<?= __('site.boards.saved') ?>';
-                    status.classList.remove('hidden');
-                    setTimeout(() => status.classList.add('hidden'), 3000);
-                }
+                if (status) { status.textContent = data.message || '<?= __('site.boards.saved') ?>'; status.classList.remove('hidden'); setTimeout(() => status.classList.add('hidden'), 3000); }
             } else {
                 alert(data.message || 'Error');
             }
         } catch (err) {
             console.error('[BoardEdit] 에러:', err);
-            alert('Error: ' + err.message);
+            if (typeof showResultModal === 'function') showResultModal(false, err.message);
+            else alert('Error: ' + err.message);
         }
     });
 });

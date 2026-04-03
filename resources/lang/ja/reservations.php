@@ -111,7 +111,7 @@ return [
     'pos_checkin_placeholder_name' => '名前',
     'pos_checkin_placeholder_phone' => '電話番号',
     'pos_no_waiting' => '待機中のお客様はいません。',
-    'pos_waiting_number' => '番号',
+    'pos_waiting_number' => '受付番号',
     'pos_walk_in' => 'ウォークイン',
     'pos_notes' => 'メモ',
     'pos_btn_confirm' => '確定',

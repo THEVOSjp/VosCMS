@@ -494,4 +494,27 @@ return [
     'pwa_status_sending' => '送信中',
     'pwa_status_completed' => '完了',
     'pwa_status_failed' => '失敗',
+
+    // オンライン決済設定
+    'payment_config' => [
+        'title' => 'オンライン決済設定',
+        'description' => 'オンライン決済のためのPG APIキーを設定します。',
+        'enabled' => 'オンライン決済を有効化',
+        'enabled_hint' => '有効にすると、お客様が予約時にオンライン決済ができます。',
+        'gateway' => '決済代行会社',
+        'test_mode' => 'テストモード',
+        'test_mode_hint' => 'テストモードでは実際の課金は発生しません。',
+        'live_mode' => '本番モード',
+        'key_saved' => 'キーが保存されています。',
+        'status_ready' => '決済システムの準備が完了しました。',
+        'status_incomplete' => 'APIキーを入力してください。',
+        'region_global' => 'グローバル',
+        'region_kr' => '韓国',
+        'region_jp' => '日本',
+        'gateway_info' => '決済代行会社のご案内',
+        'stripe_desc' => 'グローバル決済 — 46カ国、135通貨対応',
+        'toss_desc' => '韓国決済 — カード、口座振替、簡単決済',
+        'payjp_desc' => '日本決済 — カード、コンビニ決済',
+        'portone_desc' => '韓国統合決済 — 多様なPG連携',
+    ],
 ];
