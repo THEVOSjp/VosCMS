@@ -8,6 +8,11 @@
  * - $config: 앱 설정 배열
  */
 
+// $adminUrl 보장
+if (!isset($adminUrl)) {
+    $adminUrl = '/' . ($config['admin_path'] ?? 'admin');
+}
+
 // 현재 페이지 경로 확인
 $currentPath = $_SERVER['REQUEST_URI'] ?? '';
 $adminPath = $config['admin_path'] ?? 'admin';
@@ -69,7 +74,8 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
     #adminSidebar.sidebar-collapsed .p-6 { padding: 1rem 0.5rem; justify-content: center; }
     #adminSidebar.sidebar-collapsed #sidebarToggleBtn { margin: 0 auto; }
     #adminSidebar.sidebar-collapsed .sidebar-text { display: none; }
-    #adminSidebar.sidebar-collapsed [id$="SubMenu"] { display: none; }
+    #adminSidebar.sidebar-collapsed [id$="SubMenu"],
+    #adminSidebar.sidebar-collapsed [id^="pluginMenu"] { display: none; }
     #adminSidebar.sidebar-collapsed #sidebarToggleIcon { transform: rotate(180deg); }
     /* 페이지 로드 시 깜빡임 방지: html 클래스 기반 즉시 적용 */
     .sidebar-is-collapsed #adminSidebar { width: 4rem !important; }
@@ -100,47 +106,10 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
             </svg>
             <span class="sidebar-text"><?= __('admin.nav.dashboard') ?></span>
         </a>
-        <!-- POS 플러그인 메뉴 (pos/ 디렉토리 존재 시에만 표시) -->
-        <?php if (\RzxLib\Core\Auth\AdminAuth::can('reservations') && is_dir(BASE_PATH . '/resources/views/admin/pos')): ?>
-        <a href="<?php echo $adminUrl; ?>/reservations/pos" class="flex items-center px-6 py-3 <?php echo $isPosMainPage ? 'text-white bg-blue-600' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="POS">
-            <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-            </svg>
-            <span class="sidebar-text">POS</span>
-        </a>
-        <?php endif; ?>
-        <!-- Kiosk 메뉴 (서브메뉴 포함) -->
-        <?php if (\RzxLib\Core\Auth\AdminAuth::can('reservations')): ?>
-        <div class="kiosk-menu has-submenu" data-submenu="kioskSubMenu">
-            <button onclick="toggleKioskMenu()" class="flex items-center justify-between w-full px-6 py-3 <?php echo $isKioskPage ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="<?= __('reservations.kiosk') ?>">
-                <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                    </svg>
-                    <span class="sidebar-text"><?= __('reservations.kiosk') ?></span>
-                </div>
-                <svg id="kioskMenuArrow" class="w-4 h-4 transition-transform sidebar-text <?php echo $isKioskPage ? 'rotate-180' : ''; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
-            </button>
-            <div id="kioskSubMenu" class="<?php echo $isKioskPage ? '' : 'hidden'; ?> bg-zinc-900">
-                <a href="<?php echo $adminUrl; ?>/kiosk" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isKioskMainPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                    </svg>
-                    <span class="sidebar-text"><?= __('reservations.kiosk') ?></span>
-                </a>
-                <a href="<?php echo $adminUrl; ?>/kiosk/settings" class="flex items-center px-6 py-2.5 pl-14 <?php echo $isKioskSettingsPage ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    <span class="sidebar-text"><?= __('reservations.kiosk_settings') ?></span>
-                </a>
-            </div>
-        </div>
-        <?php endif; ?>
-        <?php if (\RzxLib\Core\Auth\AdminAuth::can('reservations')): ?>
+        <!-- POS 메뉴: 플러그인 시스템에서 자동 주입 (plugin.json menus.admin) -->
+        <!-- 예약/서비스/스태프: vos-salon 플러그인에서 자동 주입 -->
+        <!-- 아래 코어 메뉴 계속: 회원 관리 -->
+        <?php if (false): // 삭제됨 — vos-salon 플러그인 메뉴로 대체 ?>
         <div class="reservations-management-menu has-submenu" data-submenu="reservationsSubMenu">
             <button onclick="toggleReservationsMenu()" class="flex items-center justify-between w-full px-6 py-3 <?php echo $isReservationsPage ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="<?= __('admin.nav.reservations') ?>">
                 <div class="flex items-center">
@@ -181,8 +150,8 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
             </div>
         </div>
         <?php endif; ?>
-        <!-- 서비스 관리 메뉴 -->
-        <?php if (\RzxLib\Core\Auth\AdminAuth::can('services')): ?>
+        <!-- 서비스 관리 메뉴: vos-salon 플러그인으로 이전 -->
+        <?php if (false): ?>
         <div class="services-management-menu has-submenu" data-submenu="servicesSubMenu">
             <button onclick="toggleServicesMenu()" class="flex items-center justify-between w-full px-6 py-3 <?php echo $isServicesPage ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="<?= __('admin.nav.services') ?>">
                 <div class="flex items-center">
@@ -218,8 +187,8 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
             </div>
         </div>
         <?php endif; ?>
-        <!-- 스태프(디자이너) 관리 메뉴 -->
-        <?php if (\RzxLib\Core\Auth\AdminAuth::can('staff')): ?>
+        <!-- 스태프 관리 메뉴: vos-salon 플러그인으로 이전 -->
+        <?php if (false): ?>
         <div class="staff-management-menu has-submenu" data-submenu="staffSubMenu">
             <button onclick="toggleStaffMenu()" class="flex items-center justify-between w-full px-6 py-3 <?php echo $isStaffPage ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'; ?>" title="<?= __('admin.nav.staff') ?>">
                 <div class="flex items-center">
@@ -360,6 +329,77 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
             </div>
         </div>
         <?php endif; ?>
+        <!-- 플러그인 동적 메뉴 (서브메뉴 지원) -->
+        <?php
+        if (isset($pluginManager)) {
+            $locale = current_locale();
+            $_pmIdx = 0;
+            foreach ($pluginManager->getAdminMenus() as $_pm) {
+                $_pmTitle = is_array($_pm['title'] ?? '') ? ($_pm['title'][$locale] ?? $_pm['title']['en'] ?? '') : ($_pm['title'] ?? '');
+                $_pmIcon = $_pm['icon'] ?? 'M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z';
+                $_pmItems = $_pm['items'] ?? [];
+                $_pmId = 'pluginMenu' . $_pmIdx++;
+
+                // 서브메뉴 중 하나라도 현재 페이지면 활성
+                $_pmActive = false;
+                foreach ($_pmItems as $_mi) {
+                    if (isActiveMenu('/' . ($_mi['route'] ?? ''), $currentPath)) { $_pmActive = true; break; }
+                }
+
+                if (count($_pmItems) <= 1) {
+                    // 단일 항목: 서브메뉴 없이 바로 링크
+                    $_mi = $_pmItems[0] ?? [];
+                    $_miTitle = is_array($_mi['title'] ?? '') ? ($_mi['title'][$locale] ?? $_mi['title']['en'] ?? $_pmTitle) : ($_mi['title'] ?? $_pmTitle);
+                    $_miRoute = $_mi['route'] ?? '';
+        ?>
+                <a href="<?= $adminUrl ?>/<?= $_miRoute ?>" class="flex items-center px-6 py-3 <?= $_pmActive ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white' ?>" title="<?= htmlspecialchars($_miTitle) ?>">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $_pmIcon ?>"/>
+                    </svg>
+                    <span class="sidebar-text"><?= htmlspecialchars($_miTitle) ?></span>
+                </a>
+        <?php
+                } else {
+                    // 서브메뉴 있음
+        ?>
+                <div class="has-submenu" data-submenu="<?= $_pmId ?>">
+                    <button onclick="document.getElementById('<?= $_pmId ?>').classList.toggle('hidden');this.querySelector('.pm-arrow').classList.toggle('rotate-180')" class="flex items-center justify-between w-full px-6 py-3 <?= $_pmActive ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white' ?>">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $_pmIcon ?>"/>
+                            </svg>
+                            <span class="sidebar-text"><?= htmlspecialchars($_pmTitle) ?></span>
+                        </div>
+                        <svg class="w-4 h-4 transition-transform sidebar-text pm-arrow <?= $_pmActive ? 'rotate-180' : '' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div id="<?= $_pmId ?>" class="<?= $_pmActive ? '' : 'hidden' ?> bg-zinc-900">
+                        <?php foreach ($_pmItems as $_mi):
+                            $_miTitle = is_array($_mi['title'] ?? '') ? ($_mi['title'][$locale] ?? $_mi['title']['en'] ?? '') : ($_mi['title'] ?? '');
+                            $_miRoute = $_mi['route'] ?? '';
+                            $_miActive = isActiveMenu('/' . $_miRoute, $currentPath);
+                        ?>
+                        <a href="<?= $adminUrl ?>/<?= $_miRoute ?>" class="flex items-center px-6 py-2.5 pl-14 <?= $_miActive ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white' ?> text-sm">
+                            <?= htmlspecialchars($_miTitle) ?>
+                        </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+        <?php
+                }
+            }
+        }
+        ?>
+
+        <!-- 플러그인 관리 -->
+        <a href="<?= $adminUrl ?>/plugins" class="flex items-center px-6 py-3 <?= isActiveMenu('/plugins', $currentPath) ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white' ?>" title="<?= __('admin.nav.plugins') ?>">
+            <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+            </svg>
+            <span class="sidebar-text"><?= __('admin.nav.plugins') ?></span>
+        </a>
+
         <!-- 설정 메뉴 -->
         <?php if (\RzxLib\Core\Auth\AdminAuth::can('settings')): ?>
         <div class="settings-menu has-submenu" data-submenu="settingsSubMenu">

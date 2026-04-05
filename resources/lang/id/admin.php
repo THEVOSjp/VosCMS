@@ -44,6 +44,7 @@ return [
         'page_management' => 'Manajemen Halaman',
         'board_management' => 'Manajemen Forum',
         'widget_management' => 'Manajemen Widget',
+        'plugins' => 'Plugin',
             'staff_admins' => 'Izin Admin',
     ],
     'stats' => [

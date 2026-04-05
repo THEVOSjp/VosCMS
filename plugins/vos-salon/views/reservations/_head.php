@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="<?= $config['locale'] ?? 'ko' ?>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= htmlspecialchars($pageTitle) ?></title>
+    <?php include BASE_PATH . '/resources/views/admin/partials/pwa-head.php'; ?>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
+    <script>
+        if (localStorage.getItem('darkMode') === 'true' ||
+            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</head>
+<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
+<div class="flex">
+    <?php include BASE_PATH . '/resources/views/admin/partials/admin-sidebar.php'; ?>
+    <main class="flex-1 ml-64">
+        <?php
+        if (!isset($pageHeaderTitle)) $pageHeaderTitle = __('reservations.title');
+        include BASE_PATH . '/resources/views/admin/partials/admin-topbar.php';
+        ?>
+        <div class="p-6">
+<?php if (!empty($pageSubTitle)): ?>
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= htmlspecialchars($pageSubTitle) ?></h1>
+                <?php if (!empty($pageSubDesc)): ?>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= htmlspecialchars($pageSubDesc) ?></p>
+                <?php endif; ?>
+            </div>
+<?php endif; ?>

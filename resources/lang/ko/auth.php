@@ -33,6 +33,7 @@ return [
         'name' => '이름',
         'name_placeholder' => '홍길동',
         'email' => '이메일',
+        'email_placeholder' => 'example@email.com',
         'phone' => '전화번호',
         'phone_placeholder' => '010-1234-5678',
         'phone_hint' => '국가코드를 선택하고 전화번호를 입력해주세요',

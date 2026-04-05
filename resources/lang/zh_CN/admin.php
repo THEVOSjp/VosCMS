@@ -44,6 +44,7 @@ return [
         'page_management' => '页面管理',
         'board_management' => '论坛管理',
         'widget_management' => '小部件管理',
+        'plugins' => '插件',
             'staff_admins' => '管理员权限',
     ],
     'stats' => [

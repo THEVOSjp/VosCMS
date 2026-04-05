@@ -155,7 +155,7 @@ $pageSubDesc = __('site.widgets.description');
                     <p class="text-zinc-500 dark:text-zinc-400"><?= __('site.widgets.no_widgets') ?></p>
                 </div>
                 <?php else: ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                     <?php foreach ($widgets as $w):
                         $slug = $w['slug'];
                         $isFileBased = isset($fileWidgets[$slug]);

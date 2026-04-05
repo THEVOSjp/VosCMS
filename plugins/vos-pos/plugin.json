@@ -1,0 +1,46 @@
+{
+  "id": "vos-pos",
+  "name": {
+    "ko": "POS 시스템",
+    "en": "POS System",
+    "ja": "POSシステム"
+  },
+  "description": {
+    "ko": "매장 판매/결제 관리 시스템",
+    "en": "Point of Sale management system",
+    "ja": "店舗販売・決済管理システム"
+  },
+  "version": "1.0.0",
+  "author": {
+    "name": "VosCMS",
+    "url": "https://voscms.com"
+  },
+  "license": "proprietary",
+  "category": "business",
+  "tags": ["pos", "payment", "sales"],
+
+  "requires": {
+    "php": ">=8.1"
+  },
+
+  "routes": {
+    "admin": [
+      { "path": "reservations/pos", "view": "pos.php", "title": "POS" },
+      { "path": "pos/settings", "view": "pos-settings.php", "title": "POS Settings" }
+    ]
+  },
+
+  "menus": {
+    "admin": [
+      {
+        "section": "business",
+        "title": { "ko": "POS", "en": "POS", "ja": "POS", "de": "POS", "es": "POS", "fr": "POS", "id": "POS", "mn": "POS", "ru": "POS", "tr": "POS", "vi": "POS", "zh_CN": "POS", "zh_TW": "POS" },
+        "icon": "M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z",
+        "items": [
+          { "title": { "ko": "POS", "en": "POS", "ja": "POS", "de": "POS", "es": "POS", "fr": "POS", "id": "POS", "mn": "POS", "ru": "POS", "tr": "POS", "vi": "POS", "zh_CN": "POS", "zh_TW": "POS" }, "route": "reservations/pos" },
+          { "title": { "ko": "POS 설정", "en": "POS Settings", "ja": "POS設定", "de": "POS-Einstellungen", "es": "Configuración POS", "fr": "Paramètres POS", "id": "Pengaturan POS", "mn": "POS тохиргоо", "ru": "Настройки POS", "tr": "POS Ayarları", "vi": "Cài đặt POS", "zh_CN": "POS设置", "zh_TW": "POS設定" }, "route": "pos/settings" }
+        ]
+      }
+    ]
+  }
+}

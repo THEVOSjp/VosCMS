@@ -194,6 +194,24 @@ if (isset($pdo)) {
     unset($migrationFlag, $codeVersion, $flagValid, $migrator, $migResult, $_vm);
 }
 
+/*
+|--------------------------------------------------------------------------
+| Initialize Plugin System
+|--------------------------------------------------------------------------
+*/
+require_once BASE_PATH . '/rzxlib/Core/Plugin/Hook.php';
+require_once BASE_PATH . '/rzxlib/Core/Plugin/PluginManager.php';
+
+$pluginManager = null;
+if (isset($pdo)) {
+    $pluginManager = \RzxLib\Core\Plugin\PluginManager::init($pdo, BASE_PATH . '/plugins', $_ENV['DB_PREFIX'] ?? 'rzx_');
+    try {
+        $pluginManager->loadAll();
+    } catch (\Exception $e) {
+        if ($config['debug']) error_log('Plugin load error: ' . $e->getMessage());
+    }
+}
+
 // Parse request
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 
@@ -262,20 +280,13 @@ if (empty($path) || $path === 'index.php') {
     }
 
     // 키오스크 실행 (인증 불필요)
-    if (str_starts_with($adminRoute, 'kiosk/run')) {
-        $kioskPages = [
-            'kiosk/run' => 'customer/kiosk/index.php',
-            'kiosk/run/choose' => 'customer/kiosk/choose.php',
-            'kiosk/run/staff' => 'customer/kiosk/staff.php',
-            'kiosk/run/service' => 'customer/kiosk/service.php',
-            'kiosk/run/confirm' => 'customer/kiosk/confirm.php',
-            'kiosk/run/confirm-form' => 'customer/kiosk/confirm-form.php',
-            'kiosk/run/confirm-done' => 'customer/kiosk/confirm-done.php',
-        ];
-        $kioskFile = $kioskPages[$adminRoute] ?? null;
-        if ($kioskFile) {
-            include BASE_PATH . '/resources/views/' . $kioskFile;
-            exit;
+    // 키오스크 실행 (로그인 불필요 — 플러그인 라우트 우선)
+    if (str_starts_with($adminRoute, 'kiosk/run') && isset($pluginManager)) {
+        foreach ($pluginManager->getRoutes() as $_pr) {
+            if ($_pr['type'] === 'admin' && $adminRoute === $_pr['path'] && file_exists($_pr['view_path'])) {
+                include $_pr['view_path'];
+                exit;
+            }
         }
     }
 
@@ -314,40 +325,17 @@ if (empty($path) || $path === 'index.php') {
         }
     }
 
-    // 서비스 설정 서브페이지 처리 (services/settings/*)
+    // 서비스 설정 (정규식 라우트 — 플러그인에서 직접 처리)
     if (preg_match('#^services/settings(?:/(\w+))?$#', $adminRoute, $m)) {
         $settingsTab = $m[1] ?? 'general';
-        if (!in_array($settingsTab, ['general', 'categories', 'holidays'])) {
-            $settingsTab = 'general';
-        }
-        include BASE_PATH . '/resources/views/admin/services/settings.php';
-    // 스태프 관리
-    } elseif ($adminRoute === 'staff') {
-        include BASE_PATH . '/resources/views/admin/staff/index.php';
-    // 스태프 스케줄 관리
-    } elseif ($adminRoute === 'staff/schedule') {
-        include BASE_PATH . '/resources/views/admin/staff/schedule.php';
-    // 관리자 권한 관리
-    } elseif ($adminRoute === 'staff/admins') {
-        include BASE_PATH . '/resources/views/admin/staff/admins.php';
-    // 스태프 설정 서브페이지 처리 (staff/settings)
-    } elseif ($adminRoute === 'staff/settings') {
-        include BASE_PATH . '/resources/views/admin/staff/settings.php';
-    } elseif ($adminRoute === 'staff/attendance') {
-        include BASE_PATH . '/resources/views/admin/staff/attendance.php';
-    } elseif ($adminRoute === 'staff/attendance/history') {
-        include BASE_PATH . '/resources/views/admin/staff/attendance-history.php';
-    } elseif ($adminRoute === 'staff/attendance/dashboard') {
-        include BASE_PATH . '/resources/views/admin/staff/attendance-dashboard.php';
-    } elseif ($adminRoute === 'staff/attendance/kiosk') {
-        include BASE_PATH . '/resources/views/admin/staff/attendance-kiosk.php';
-    } elseif ($adminRoute === 'staff/attendance/report') {
-        include BASE_PATH . '/resources/views/admin/staff/attendance-report.php';
+        if (!in_array($settingsTab, ['general', 'categories', 'holidays'])) $settingsTab = 'general';
+        $_sf = BASE_PATH . '/plugins/vos-salon/views/services/settings.php';
+        if (file_exists($_sf)) { include $_sf; } else { include BASE_PATH . '/resources/views/admin/dashboard.php'; }
+    // 근태 개인 리포트 (정규식 라우트)
     } elseif (preg_match('#^staff/attendance/report/personal(?:/(\d+))?$#', $adminRoute, $m)) {
         $reportStaffId = $m[1] ?? null;
-        include BASE_PATH . '/resources/views/admin/staff/attendance-report-personal.php';
-    } elseif ($adminRoute === 'staff/attendance/report/stats') {
-        include BASE_PATH . '/resources/views/admin/staff/attendance-report-stats.php';
+        $_prFile = BASE_PATH . '/plugins/vos-attendance/views/attendance-report-personal.php';
+        if (file_exists($_prFile)) { include $_prFile; } else { include BASE_PATH . '/resources/views/admin/dashboard.php'; }
     // 페이지 관리 - 데이터 관리 가이드 편집
     } elseif ($adminRoute === 'site/pages/compliance') {
         include BASE_PATH . '/resources/views/admin/site/pages-compliance.php';
@@ -364,101 +352,17 @@ if (empty($path) || $path === 'index.php') {
     } elseif ($adminRoute === 'site/pages/widget-builder') {
         include BASE_PATH . '/resources/views/admin/site/pages-widget-builder.php';
     // 위젯 관리
-    // 예약 관리 — POST API (상태변경, 생성, 수정)
+    // 예약/서비스/스태프 관리: vos-salon 플러그인으로 이전됨
+    // 예약 API 라우트 (POST, 정규식 라우트 — 플러그인 라우트 시스템으로 처리 불가하므로 직접 참조)
     } elseif ($adminRoute === 'reservations' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $apiAction = 'store'; $apiId = null;
-        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
-    } elseif ($adminRoute === 'services/list-json' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-        // 활성 서비스 목록 JSON
-        header('Content-Type: application/json; charset=utf-8');
-        $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
-        $_locale = $config['locale'] ?? 'ko';
-        // 서비스/번들/카테고리 번역 캐시 로드
-        $_trMap = [];
-        try {
-            $_lcChain = array_unique([$_locale, 'en']);
-            $_lcPh = implode(',', array_fill(0, count($_lcChain), '?'));
-            $_trSt = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations WHERE locale IN ({$_lcPh}) AND (lang_key LIKE 'service.%.name' OR lang_key LIKE 'bundle.%.name' OR lang_key LIKE 'category.%.name')");
-            $_trSt->execute(array_values($_lcChain));
-            while ($_t = $_trSt->fetch(PDO::FETCH_ASSOC)) $_trMap[$_t['lang_key']][$_t['locale']] = $_t['content'];
-        } catch (\Throwable $e) {}
-        $_trGet = function($type, $id, $fallback) use ($_trMap, $_locale) {
-            $key = "{$type}.{$id}.name";
-            if (isset($_trMap[$key])) {
-                if (!empty($_trMap[$key][$_locale])) return $_trMap[$key][$_locale];
-                if (!empty($_trMap[$key]['en'])) return $_trMap[$key]['en'];
-            }
-            return $fallback;
-        };
-
-        $stmt = $pdo->query("SELECT s.id, s.name, s.price, s.duration, s.image, s.category_id, c.name as category_name FROM {$prefix}services s LEFT JOIN {$prefix}service_categories c ON s.category_id = c.id WHERE s.is_active = 1 ORDER BY s.sort_order ASC, s.name ASC");
-        $services = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($services as &$sv) {
-            $sv['name'] = $_trGet('service', $sv['id'], $sv['name']);
-            if ($sv['category_name']) $sv['category_name'] = $_trGet('category', $sv['category_id'], $sv['category_name']);
-            $sv['price_formatted'] = number_format((float)$sv['price']);
-        }
-        // 번들 목록
-        $bundles = [];
-        try {
-            $bStmt = $pdo->query("SELECT b.id, b.name, b.bundle_price, b.image, b.description, COUNT(bi.service_id) as service_count, GROUP_CONCAT(bi.service_id) as service_ids FROM {$prefix}service_bundles b LEFT JOIN {$prefix}service_bundle_items bi ON b.id = bi.bundle_id WHERE b.is_active = 1 GROUP BY b.id ORDER BY b.display_order");
-            while ($b = $bStmt->fetch(PDO::FETCH_ASSOC)) {
-                $b['name'] = $_trGet('bundle', $b['id'], $b['name']);
-                $b['price_formatted'] = number_format((float)$b['bundle_price']);
-                $b['service_ids'] = $b['service_ids'] ? explode(',', $b['service_ids']) : [];
-                $bundles[] = $b;
-            }
-        } catch (\Throwable $e) {}
-        echo json_encode(['services' => $services, 'bundles' => $bundles]);
-        exit;
-    } elseif ($adminRoute === 'reservations/customer-services' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-        $apiAction = 'customer-services'; $apiId = null;
-        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
-    } elseif ($adminRoute === 'reservations/search-customers' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-        $apiAction = 'search-customers'; $apiId = null;
-        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
-    } elseif ($adminRoute === 'reservations/available-staff' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-        $apiAction = 'available-staff'; $apiId = null;
-        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
-    } elseif ($adminRoute === 'reservations/add-service' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        $apiAction = 'add-service'; $apiId = null;
-        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
-    } elseif ($adminRoute === 'reservations/append-service' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        $apiAction = 'append-service'; $apiId = null;
-        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
-    } elseif ($adminRoute === 'reservations/assign-staff' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        $apiAction = 'assign-staff'; $apiId = null;
-        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
-    } elseif ($adminRoute === 'reservations/remove-bundle' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        header('Content-Type: application/json');
-        $resId = trim($_POST['reservation_id'] ?? '');
-        if ($resId) {
-            try {
-                $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
-                // 번들 포함 서비스 삭제
-                $pdo->prepare("DELETE FROM {$prefix}reservation_services WHERE reservation_id = ? AND bundle_id IS NOT NULL")->execute([$resId]);
-                // reservations에서 번들 정보 제거
-                $pdo->prepare("UPDATE {$prefix}reservations SET bundle_id = NULL, bundle_price = NULL WHERE id = ?")->execute([$resId]);
-                // 남은 서비스 기준 금액 재계산
-                $recalc = $pdo->prepare("SELECT COALESCE(SUM(price),0) as total, COALESCE(SUM(duration),0) as dur FROM {$prefix}reservation_services WHERE reservation_id = ?");
-                $recalc->execute([$resId]);
-                $sums = $recalc->fetch(PDO::FETCH_ASSOC);
-                $pdo->prepare("UPDATE {$prefix}reservations SET total_amount = ?, final_amount = ?, updated_at = NOW() WHERE id = ?")
-                    ->execute([(float)$sums['total'], (float)$sums['total'], $resId]);
-                echo json_encode(['success' => true]);
-            } catch (\Throwable $e) {
-                echo json_encode(['error' => true, 'message' => $e->getMessage()]);
-            }
-        } else {
-            echo json_encode(['error' => true, 'message' => 'Reservation ID required']);
-        }
-        exit;
-    } elseif ($adminRoute === 'reservations/remove-service' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        $apiAction = 'remove-service'; $apiId = null;
-        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
-    } elseif ($adminRoute === 'reservations/save-memo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        $apiAction = 'save-memo'; $apiId = null;
-        include BASE_PATH . '/resources/views/admin/reservations/_api.php';
+        include BASE_PATH . '/plugins/vos-salon/views/reservations/_api.php';
+    } elseif (preg_match('#^reservations/(customer-services|search-customers|available-staff)$#', $adminRoute, $m) && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $apiAction = $m[1]; $apiId = null;
+        include BASE_PATH . '/plugins/vos-salon/views/reservations/_api.php';
+    } elseif (preg_match('#^reservations/(add-service|append-service|assign-staff|remove-service|save-memo)$#', $adminRoute, $m) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $apiAction = $m[1]; $apiId = null;
+        include BASE_PATH . '/plugins/vos-salon/views/reservations/_api.php';
     } elseif (preg_match('#^reservations/([\w-]+)/update-contact$#', $adminRoute, $m) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Content-Type: application/json');
         $resId = $m[1];
@@ -516,44 +420,28 @@ if (empty($path) || $path === 'index.php') {
         $apiId = $m[1]; $apiAction = 'update';
         include BASE_PATH . '/resources/views/admin/reservations/_api.php';
     // 예약 관리 — GET 페이지
-    // 키오스크 관리
-    } elseif ($adminRoute === 'kiosk') {
-        include BASE_PATH . '/resources/views/admin/reservations/kiosk.php';
-    } elseif ($adminRoute === 'kiosk/settings') {
-        include BASE_PATH . '/resources/views/admin/reservations/kiosk-settings.php';
-    } elseif ($adminRoute === 'kiosk/run') {
-        include BASE_PATH . '/resources/views/customer/kiosk/index.php';
-    } elseif ($adminRoute === 'kiosk/run/choose') {
-        include BASE_PATH . '/resources/views/customer/kiosk/choose.php';
-    } elseif ($adminRoute === 'kiosk/run/staff') {
-        include BASE_PATH . '/resources/views/customer/kiosk/staff.php';
-    } elseif ($adminRoute === 'kiosk/run/service') {
-        include BASE_PATH . '/resources/views/customer/kiosk/service.php';
-    } elseif ($adminRoute === 'kiosk/run/confirm') {
-        include BASE_PATH . '/resources/views/customer/kiosk/confirm.php';
-    } elseif ($adminRoute === 'kiosk/upload' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        include BASE_PATH . '/resources/views/admin/reservations/kiosk-upload.php';
-    } elseif ($adminRoute === 'reservations/pos' && is_dir(BASE_PATH . '/resources/views/admin/pos')) {
-        include BASE_PATH . '/resources/views/admin/pos/pos.php';
-    } elseif ($adminRoute === 'pos/settings' && is_dir(BASE_PATH . '/resources/views/admin/pos')) {
-        include BASE_PATH . '/resources/views/admin/pos/pos-settings.php';
-    } elseif ($adminRoute === 'reservations') {
-        include BASE_PATH . '/resources/views/admin/reservations/index.php';
-    } elseif ($adminRoute === 'reservations/calendar') {
-        include BASE_PATH . '/resources/views/admin/reservations/calendar.php';
-    } elseif ($adminRoute === 'reservations/statistics') {
-        include BASE_PATH . '/resources/views/admin/reservations/statistics.php';
-    } elseif ($adminRoute === 'reservations/create') {
-        include BASE_PATH . '/resources/views/admin/reservations/create.php';
+    // 예약/번들: vos-salon 플러그인으로 이전
     } elseif (preg_match('#^reservations/([\w-]+)$#', $adminRoute, $m)) {
-        $reservationId = $m[1];
-        include BASE_PATH . '/resources/views/admin/reservations/show.php';
-    // 묶음서비스(번들) 관리
-    } elseif ($adminRoute === 'bundles') {
-        include BASE_PATH . '/resources/views/admin/bundles/index.php';
+        // 플러그인 라우트 우선 (POS 등), 없으면 예약 상세
+        $_pluginHit = false;
+        if (isset($pluginManager)) {
+            foreach ($pluginManager->getRoutes() as $_pr) {
+                if ($_pr['type'] === 'admin' && $adminRoute === $_pr['path'] && file_exists($_pr['view_path'])) {
+                    include $_pr['view_path'];
+                    $_pluginHit = true;
+                    break;
+                }
+            }
+        }
+        if (!$_pluginHit) {
+            $reservationId = $m[1];
+            $_sf = BASE_PATH . '/plugins/vos-salon/views/reservations/show.php';
+            if (file_exists($_sf)) { include $_sf; } else { include BASE_PATH . '/resources/views/admin/dashboard.php'; }
+        }
     } elseif (preg_match('#^bundles/([\w-]+)$#', $adminRoute, $m)) {
         $bundleId = $m[1];
-        include BASE_PATH . '/resources/views/admin/bundles/edit.php';
+        $_sf = BASE_PATH . '/plugins/vos-salon/views/bundles/edit.php';
+        if (file_exists($_sf)) { include $_sf; } else { include BASE_PATH . '/resources/views/admin/dashboard.php'; }
     // 게시판 관리
     } elseif ($adminRoute === 'site/boards') {
         include BASE_PATH . '/resources/views/admin/site/boards.php';
@@ -572,12 +460,32 @@ if (empty($path) || $path === 'index.php') {
         include BASE_PATH . '/resources/views/admin/site/widgets-create.php';
     } elseif ($adminRoute === 'site/widgets/marketplace') {
         include BASE_PATH . '/resources/views/admin/site/widgets-marketplace.php';
+    } elseif ($adminRoute === 'plugins') {
+        include BASE_PATH . '/resources/views/admin/plugins.php';
+    } elseif ($adminRoute === 'plugins/api') {
+        $__noLayout = true;
+        include BASE_PATH . '/resources/views/admin/plugins-api.php';
     } else {
-        $adminView = BASE_PATH . '/resources/views/admin/' . $adminRoute . '.php';
-        if (file_exists($adminView)) {
-            include $adminView;
-        } else {
-            include BASE_PATH . '/resources/views/admin/dashboard.php';
+        // 플러그인 라우트 매칭
+        $_pluginRouteMatch = false;
+        if (isset($pluginManager)) {
+            foreach ($pluginManager->getRoutes() as $_pr) {
+                if ($_pr['type'] === 'admin' && $adminRoute === $_pr['path']) {
+                    if (file_exists($_pr['view_path'])) {
+                        include $_pr['view_path'];
+                        $_pluginRouteMatch = true;
+                    }
+                    break;
+                }
+            }
+        }
+        if (!$_pluginRouteMatch) {
+            $adminView = BASE_PATH . '/resources/views/admin/' . $adminRoute . '.php';
+            if (file_exists($adminView)) {
+                include $adminView;
+            } else {
+                include BASE_PATH . '/resources/views/admin/dashboard.php';
+            }
         }
     }
 } else {
@@ -614,28 +522,7 @@ if (empty($path) || $path === 'index.php') {
     } elseif ($path === 'board/api/og') {
         $__noLayout = true;
         include BASE_PATH . '/resources/views/customer/board/api-og.php';
-    // 키오스크 고객용 라우트
-    } elseif ($path === 'kiosk' || $path === 'kiosk/index') {
-        $__noLayout = true;
-        include BASE_PATH . '/resources/views/customer/kiosk/index.php';
-    } elseif ($path === 'kiosk/choose') {
-        $__noLayout = true;
-        include BASE_PATH . '/resources/views/customer/kiosk/choose.php';
-    } elseif ($path === 'kiosk/staff') {
-        $__noLayout = true;
-        include BASE_PATH . '/resources/views/customer/kiosk/staff.php';
-    } elseif ($path === 'kiosk/service') {
-        $__noLayout = true;
-        include BASE_PATH . '/resources/views/customer/kiosk/service.php';
-    } elseif ($path === 'kiosk/confirm') {
-        $__noLayout = true;
-        include BASE_PATH . '/resources/views/customer/kiosk/confirm.php';
-    } elseif (preg_match('#^kiosk/confirm-form$#', $path)) {
-        $__noLayout = true;
-        include BASE_PATH . '/resources/views/customer/kiosk/confirm-form.php';
-    } elseif (preg_match('#^kiosk/confirm-done$#', $path)) {
-        $__noLayout = true;
-        include BASE_PATH . '/resources/views/customer/kiosk/confirm-done.php';
+    // 키오스크: 플러그인 프론트 라우트로 이전됨 (vos-kiosk)
     // 마이페이지 라우트
     } elseif ($path === 'mypage') {
         $__pageFile = BASE_PATH . '/resources/views/customer/mypage/profile.php';
@@ -737,9 +624,25 @@ if (empty($path) || $path === 'index.php') {
                         $pageSlug = $path;
                         $__pageFile = BASE_PATH . '/resources/views/customer/page.php';
                     } else {
-                        http_response_code(404);
-                        $__noLayout = true;
-                        include BASE_PATH . '/resources/views/customer/404.php';
+                        // 플러그인 프론트/API 라우트 매칭
+                        $_pluginFrontMatch = false;
+                        if (isset($pluginManager)) {
+                            foreach ($pluginManager->getRoutes() as $_pr) {
+                                if (in_array($_pr['type'], ['front', 'api']) && $path === $_pr['path']) {
+                                    if (file_exists($_pr['view_path'])) {
+                                        if ($_pr['type'] === 'api') $__noLayout = true;
+                                        $__pageFile = $_pr['view_path'];
+                                        $_pluginFrontMatch = true;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        if (!$_pluginFrontMatch) {
+                            http_response_code(404);
+                            $__noLayout = true;
+                            include BASE_PATH . '/resources/views/customer/404.php';
+                        }
                     }
                 }
             }

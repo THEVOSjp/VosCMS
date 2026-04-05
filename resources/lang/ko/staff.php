@@ -119,11 +119,11 @@ return [
         'no_staff' => '등록된 스태프가 없습니다', 'no_records' => '기록이 없습니다',
         'stats' => [
             'total' => '전체 스태프', 'working' => '근무중', 'on_break' => '외출중',
-            'on_outside' => '외근중', 'completed' => '퇴근', 'absent' => '미출근',
+            'on_outside' => '외근중', 'completed' => '퇴근', 'absent' => '결근',
         ],
         'status' => [
             'working' => '근무중', 'break' => '외출중', 'outside' => '외근중', 'completed' => '퇴근',
-            'absent' => '미출근', 'late' => '지각', 'early_leave' => '조퇴',
+            'absent' => '결근', 'late' => '지각', 'early_leave' => '조퇴',
         ],
         'filter_staff' => '스태프', 'filter_from' => '시작일', 'filter_to' => '종료일',
         'all_staff' => '전체 스태프', 'search' => '조회',

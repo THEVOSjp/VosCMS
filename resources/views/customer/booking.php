@@ -252,85 +252,30 @@ try {
             exit;
         }
 
-        // 번들이면 service_bundle_items에서 전체 서비스 조회 (스냅샷)
-        if ($bundleId) {
-            $svcStmt = $pdo->prepare("SELECT s.id, s.name, s.price, s.duration FROM {$prefix}service_bundle_items bi JOIN {$prefix}services s ON bi.service_id = s.id WHERE bi.bundle_id = ? ORDER BY bi.sort_order");
-            $svcStmt->execute([$bundleId]);
-            $selectedServices = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
-        } else {
-            $ph = implode(',', array_fill(0, count($serviceIds), '?'));
-            $svcStmt = $pdo->prepare("SELECT id, name, price, duration FROM {$prefix}services WHERE id IN ({$ph}) AND is_active = 1");
-            $svcStmt->execute(array_values($serviceIds));
-            $selectedServices = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
-        }
-        if (empty($selectedServices)) {
-            echo json_encode(['success' => false, 'message' => __('booking.error.invalid_service')]);
+        require_once BASE_PATH . '/rzxlib/Core/Helpers/ReservationHelper.php';
+        use RzxLib\Core\Helpers\ReservationHelper;
+
+        try {
+            $result = ReservationHelper::create($pdo, $prefix, [
+                'customer_name' => $name,
+                'customer_phone' => $phone,
+                'customer_email' => $email,
+                'reservation_date' => $date,
+                'start_time' => $time . ':00',
+                'staff_id' => $staffId,
+                'bundle_id' => $bundleId,
+                'service_ids' => $serviceIds,
+                'user_id' => $isLoggedIn ? ($currentUser['id'] ?? null) : null,
+                'source' => 'online',
+                'notes' => $notes,
+                'check_online_payment' => true,
+            ]);
+            $id = $result['id'];
+            $reservationNumber = $result['reservation_number'];
+            $finalAmount = $result['final_amount'];
+        } catch (\Throwable $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             exit;
-        }
-
-        // 합산
-        $totalPrice = 0;
-        $totalDuration = 0;
-        foreach ($selectedServices as $s) {
-            $totalPrice += (float)$s['price'];
-            $totalDuration += (int)$s['duration'];
-        }
-
-        // 번들 처리
-        $bundleId = !empty($input['bundle_id']) ? $input['bundle_id'] : null;
-        $bundlePrice = null;
-        if ($bundleId) {
-            $bdlStmt = $pdo->prepare("SELECT bundle_price FROM {$prefix}service_bundles WHERE id = ? AND is_active = 1");
-            $bdlStmt->execute([$bundleId]);
-            $dbBundlePrice = $bdlStmt->fetchColumn();
-            if ($dbBundlePrice !== false) $bundlePrice = (float)$dbBundlePrice;
-        }
-
-        // 이 페이지에서는 지명 예약 없음
-        $designationFee = 0;
-        $finalAmount = ($bundlePrice !== null) ? $bundlePrice : $totalPrice;
-
-        // 예약번호 생성
-        $reservationNumber = 'RZX' . date('ymd') . strtoupper(bin2hex(random_bytes(3)));
-
-        // end_time 계산 (합산 duration)
-        $startDt = new DateTime("$date $time");
-        $endDt = clone $startDt;
-        $endDt->modify("+{$totalDuration} minutes");
-
-        $userId = $isLoggedIn ? ($currentUser['id'] ?? null) : null;
-        $id = bin2hex(random_bytes(4)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(6));
-
-        // 온라인 결제 활성화 여부
-        $_bkPayStmt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'payment_config'");
-        $_bkPayStmt->execute();
-        $_bkPayConf = json_decode($_bkPayStmt->fetchColumn() ?: '{}', true) ?: [];
-        $_bkPayEnabled = ($_bkPayConf['enabled'] ?? '0') === '1' && !empty($_bkPayConf['public_key']) && !empty($_bkPayConf['secret_key']);
-
-        $paymentStatus = $_bkPayEnabled ? 'unpaid' : 'paid';
-        $paidAmount = $_bkPayEnabled ? 0 : $finalAmount;
-
-        // 메인 예약
-        $sql = "INSERT INTO {$prefix}reservations
-            (id, reservation_number, user_id, staff_id, bundle_id, bundle_price, customer_name, customer_phone, customer_email,
-             reservation_date, start_time, end_time, total_amount, final_amount, designation_fee,
-             payment_status, paid_amount, status, source, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'online', ?)";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            $id, $reservationNumber, $userId,
-            $staffId ?: null, $bundleId, $bundlePrice,
-            $name, $phone, $email ?: null,
-            $date, $time . ':00', $endDt->format('H:i:s'),
-            $totalPrice, $finalAmount, $designationFee,
-            $paymentStatus, $paidAmount, $notes ?: null,
-        ]);
-
-        // 예약-서비스 관계 저장 (서비스 원래 가격, bundle_id 기록)
-        $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id, service_id, service_name, price, duration, sort_order, bundle_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $sortIdx = 0;
-        foreach ($selectedServices as $s) {
-            $rsStmt->execute([$id, $s['id'], $s['name'], $s['price'], $s['duration'], $sortIdx++, $bundleId]);
         }
 
         $response = [

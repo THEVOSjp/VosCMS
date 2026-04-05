@@ -44,6 +44,7 @@ return [
         'page_management' => 'Sayfa Yönetimi',
         'board_management' => 'Forum Yönetimi',
         'widget_management' => 'Widget Yönetimi',
+        'plugins' => 'Eklentiler',
             'staff_admins' => 'Yönetici Yetkileri',
     ],
     'stats' => [

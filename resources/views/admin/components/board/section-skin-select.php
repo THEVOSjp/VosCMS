@@ -36,9 +36,19 @@ foreach (glob($_skinsDir . '/*/board/skin.json') as $_sjf) {
                 <div class="p-4 rounded-xl border-2 transition
                     peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20
                     border-zinc-200 dark:border-zinc-600 hover:border-zinc-300 dark:hover:border-zinc-500">
-                    <div class="h-16 bg-zinc-100 dark:bg-zinc-700 rounded-lg mb-2 flex items-center justify-center text-zinc-400">
+                    <?php
+                    $_thumbFile = $_skinsDir . '/' . $_slug . '/board/' . ($_meta['thumbnail'] ?? 'thumbnail.png');
+                    $_thumbUrl = ($config['app_url'] ?? '') . '/skins/' . $_slug . '/board/' . ($_meta['thumbnail'] ?? 'thumbnail.png');
+                    ?>
+                    <?php if (file_exists($_thumbFile)): ?>
+                    <div class="h-24 bg-zinc-100 dark:bg-zinc-700 rounded-lg mb-2 overflow-hidden">
+                        <img src="<?= $_thumbUrl ?>" alt="<?= htmlspecialchars($_meta['title']) ?>" class="w-full h-full object-cover">
+                    </div>
+                    <?php else: ?>
+                    <div class="h-24 bg-zinc-100 dark:bg-zinc-700 rounded-lg mb-2 flex items-center justify-center text-zinc-400">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
                     </div>
+                    <?php endif; ?>
                     <p class="text-sm font-medium text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($_meta['title']) ?></p>
                     <?php if ($_meta['version']): ?>
                     <span class="text-xs text-zinc-400">v<?= htmlspecialchars($_meta['version']) ?></span>

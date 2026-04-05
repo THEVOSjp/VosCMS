@@ -125,16 +125,30 @@ try {
                 }
             } elseif ($menuType === 'external') {
                 // 외부 페이지: URL 또는 파일 경로를 content에 저장
-                $externalUrl = $url; // 입력된 URL이 외부 주소 또는 파일 경로
+                $externalUrl = $url;
                 $slug = makeSlug($title) ?: 'ext-' . time();
-                // 메뉴 URL을 slug로 변경 (프론트에서 접근 가능하도록)
                 $pdo->prepare("UPDATE rzx_menu_items SET url = ? WHERE id = ?")->execute([$slug, $newMenuId]);
-                // 페이지 생성
                 $pdo->prepare("INSERT INTO rzx_page_contents (page_slug, page_type, locale, title, content, is_system, is_active) VALUES (?, 'external', ?, ?, ?, 0, 1)")
                     ->execute([$slug, $defaultLocale, $title, $externalUrl]);
+            } elseif ($menuType === 'board') {
+                // 게시판 자동 생성
+                $boardSlug = preg_replace('/[^a-z0-9_-]/', '', strtolower($url)) ?: makeSlug($title) ?: 'board-' . time();
+                // slug 중복 체크
+                $chk = $pdo->prepare("SELECT id FROM rzx_boards WHERE slug = ?");
+                $chk->execute([$boardSlug]);
+                if (!$chk->fetch()) {
+                    // 게시판 생성
+                    $pdo->prepare(
+                        "INSERT INTO rzx_boards (slug, title, category, skin, per_page, list_columns, perm_list, perm_read, perm_write, perm_comment, perm_manage, is_active)
+                         VALUES (?, ?, 'board', 'default', 20, ?, 'all', 'all', 'member', 'member', 'admin', 1)"
+                    )->execute([$boardSlug, $title, json_encode(['no', 'title', 'nick_name', 'created_at', 'view_count'])]);
+                }
+                // 메뉴 URL을 게시판 slug로 설정
+                $pdo->prepare("UPDATE rzx_menu_items SET url = ? WHERE id = ?")->execute([$boardSlug, $newMenuId]);
             }
 
-            echo json_encode(['success' => true, 'id' => $newMenuId, 'page_created' => in_array($menuType, ['page', 'widget'])]);
+            $boardCreated = ($menuType === 'board');
+            echo json_encode(['success' => true, 'id' => $newMenuId, 'page_created' => in_array($menuType, ['page', 'widget']), 'board_created' => $boardCreated]);
             break;
 
         case 'update_menu_item':

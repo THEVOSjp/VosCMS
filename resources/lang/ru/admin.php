@@ -44,6 +44,7 @@ return [
         'page_management' => 'Управление страницами',
         'board_management' => 'Управление форумами',
         'widget_management' => 'Управление виджетами',
+        'plugins' => 'Плагины',
             'staff_admins' => 'Права админа',
     ],
     'stats' => [

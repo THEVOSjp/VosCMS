@@ -1,7 +1,8 @@
 {
-    "version": "1.26.1",
+    "version": "2.0.0",
     "name": "RezlyX",
-    "release_date": "2026-04-01",
+    "codename": "VosCMS",
+    "release_date": "2026-04-05",
     "commit": null,
     "channel": "dev",
     "github": {

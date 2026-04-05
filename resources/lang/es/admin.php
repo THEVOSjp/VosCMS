@@ -44,6 +44,7 @@ return [
         'page_management' => 'Gestion de paginas',
         'board_management' => 'Gestión de Foros',
         'widget_management' => 'Gestión de widgets',
+        'plugins' => 'Plugins',
             'staff_admins' => 'Permisos de admin',
     ],
     'stats' => [
