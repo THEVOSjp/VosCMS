@@ -1,282 +1,174 @@
-# RezlyX
+# VosCMS
 
-**현대적인 예약 관리 시스템**
+**Value Of Style CMS** — 플러그인 기반 범용 콘텐츠 관리 시스템
 
-> *"예약을 넘어, 세계로"*
-> *"Beyond reservation. To the world."*
+[![PHP](https://img.shields.io/badge/PHP-8.1+-blue.svg)](https://php.net)
+[![MySQL](https://img.shields.io/badge/MySQL-5.7+-orange.svg)](https://mysql.com)
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)]()
 
 ---
 
 ## 소개
 
-RezlyX는 PHP 8.0+ 기반의 현대적인 예약 관리 시스템입니다. 레거시 ReservationX 시스템을 완전히 새롭게 재구축하여, 모바일 친화적이고 확장 가능한 아키텍처를 제공합니다.
+VosCMS는 어떤 스타일의 웹사이트든 만들 수 있는 범용 CMS입니다.
+코어는 가볍고, 플러그인으로 기능을 확장합니다.
 
-### 주요 특징
-
-- **PWA 지원**: 모바일 앱처럼 설치 및 오프라인 사용 가능
-- **웹푸시 알림**: VAPID 기반 푸시 알림 및 사용자 인박스
-- **다국어 지원**: 한국어, 영어, 일본어 (추가 언어 확장 가능)
-- **반응형 디자인**: 모바일, 태블릿, 데스크톱 완벽 지원
-- **실시간 예약**: 즉각적인 예약 확인 및 알림
-- **다양한 결제 수단**: 국내외 PG사 연동 (토스, Stripe 등)
-- **회원 관리**: 등급 시스템, 적립금, 소셜 로그인, 메시지 인박스
-- **쉬운 설치**: EC-CUBE 스타일의 웹 설치 마법사
+- **기업 홈페이지** → 코어만 설치
+- **미용실/살롱** → 코어 + 살롱 번들 플러그인
+- **쇼핑몰** → 코어 + 커머스 플러그인 (예정)
+- **클리닉** → 코어 + 클리닉 번들 플러그인 (예정)
 
 ---
 
-## 시스템 요구사항
+## 코어 기능
 
-### 필수 요구사항
-
-| 항목 | 최소 버전 |
-|------|----------|
-| PHP | 8.0 이상 |
-| MySQL | 5.7 이상 / MariaDB 10.3 이상 |
-| Composer | 2.0 이상 |
-| Node.js | 18.0 이상 (빌드 시) |
-
-### PHP 확장 모듈
-
-- PDO, PDO_MySQL
-- mbstring
-- json
-- openssl
-- curl (권장)
-- gd (권장)
+| 기능 | 설명 |
+|------|------|
+| 📄 **페이지 관리** | 문서, 위젯, 외부 페이지 |
+| 📋 **메뉴 관리** | 계층 메뉴, 사이트맵, 6가지 메뉴 타입 |
+| 📝 **게시판** | 4종 스킨, 카테고리, 확장변수, 투표, 댓글 |
+| 🧩 **위젯 빌더** | 드래그&드롭 배치 |
+| 👥 **회원 관리** | 가입/로그인, 등급, 소셜 로그인 |
+| 🌐 **다국어** | 13개국어 지원 (ko, ja, en, zh_CN, zh_TW, de, es, fr, id, mn, ru, tr, vi) |
+| 🎨 **스킨/레이아웃** | 테마 시스템 |
+| 🔌 **플러그인** | plugin.json 기반 설치/활성화/비활성화/삭제 |
+| ⭐ **포인트** | 적립/사용/등급 |
+| 🔔 **푸시 알림** | 웹 푸시 |
 
 ---
 
-## 설치 방법
+## 플러그인
 
-### 1. 파일 업로드
+플러그인으로 기능을 확장합니다. `plugins/` 디렉토리에 설치.
+
+### 공식 플러그인
+
+| 플러그인 | 설명 |
+|----------|------|
+| [vos-salon](https://github.com/THEVOSjp) | 살롱 번들 (예약 + 서비스 + 스태프 + 번들) |
+| [vos-pos](https://github.com/THEVOSjp) | POS 시스템 |
+| [vos-kiosk](https://github.com/THEVOSjp) | 셀프 체크인 키오스크 |
+| [vos-attendance](https://github.com/THEVOSjp) | 직원 근태 관리 |
+
+### plugin.json 예시
+
+```json
+{
+  "id": "vos-salon",
+  "name": { "ko": "살롱 관리", "en": "Salon Management" },
+  "version": "1.0.0",
+  "routes": {
+    "admin": [
+      { "path": "reservations", "view": "reservations/index.php" }
+    ]
+  },
+  "menus": {
+    "admin": [{
+      "title": { "ko": "예약 관리", "en": "Reservations" },
+      "icon": "SVG path",
+      "items": [
+        { "title": { "ko": "예약 관리" }, "route": "reservations" },
+        { "title": { "ko": "캘린더" }, "route": "reservations/calendar" }
+      ]
+    }]
+  }
+}
+```
+
+---
+
+## 요구사항
+
+- PHP 8.1+
+- MySQL 5.7+ / MariaDB 10.3+
+- PDO, mbstring, json, openssl, fileinfo
+
+---
+
+## 설치
+
+### 1. 소스 다운로드
 
 ```bash
-# Git clone
-git clone https://github.com/your-org/rezlyx.git
-
-# 또는 압축 파일 해제 후 웹 서버에 업로드
+git clone https://github.com/THEVOSjp/VosCMS.git
+cd VosCMS
 ```
 
-### 2. Composer 패키지 설치
+### 2. 의존성 설치
 
 ```bash
-cd rezlyx
-composer install --optimize-autoloader --no-dev
+composer install
 ```
 
-### 3. 프론트엔드 빌드 (개발 환경)
+### 3. 웹 브라우저로 설치
 
-```bash
-npm install
-npm run build
+```
+https://your-domain.com/install.php
 ```
 
-### 4. 웹 설치 마법사
-
-브라우저에서 사이트 접속:
-```
-http://your-domain.com/install/
-```
-
-설치 마법사를 따라 진행:
-1. 시스템 요구사항 확인
+5단계 설치 마법사:
+1. 환경 체크 (PHP/확장모듈/권한)
 2. 데이터베이스 설정
-3. 관리자 계정 생성
-4. 설치 완료
+3. 테이블 생성
+4. 사이트 설정 + 관리자 계정
+5. 완료
 
-### 5. 설치 후 보안 조치
+### 4. 플러그인 설치 (선택)
 
-```bash
-# install 폴더 삭제 또는 접근 차단
-rm -rf install/
-
-# .env 파일 권한 설정
-chmod 600 .env
-```
+`plugins/` 디렉토리에 플러그인을 복사한 후
+관리자 > 플러그인 페이지에서 설치/활성화
 
 ---
 
 ## 디렉토리 구조
 
 ```
-rezlyx/
+VosCMS/
+├── index.php                 # 엔트리 포인트
+├── install.php               # 설치 마법사
+├── .env                      # 환경 설정 (설치 시 생성)
+├── config/                   # 앱 설정
 ├── database/
-│   └── migrations/         # 데이터베이스 마이그레이션
-├── docs/                   # 프로젝트 문서
-├── routes/                 # 라우트 정의
-│   ├── web.php             # 웹 라우트
-│   └── api.php             # API 라우트
-├── rzxlib/                 # 코어 라이브러리
-│   ├── Core/
-│   │   ├── Auth/           # 인증 시스템
-│   │   ├── Database/       # 데이터베이스 추상화
-│   │   ├── Helpers/        # 헬퍼 함수
-│   │   ├── Http/           # HTTP Request/Response
-│   │   ├── Middleware/     # 미들웨어
-│   │   ├── Routing/        # 라우팅 시스템
-│   │   └── Validation/     # 유효성 검사
-│   ├── Http/
-│   │   └── Controllers/    # 컨트롤러
-│   │       ├── Admin/      # 관리자 컨트롤러
-│   │       └── Api/        # API 컨트롤러
-│   └── Reservation/
-│       ├── Models/         # 예약 모델
-│       └── Services/       # 비즈니스 로직
-├── skins/                  # 테마/스킨
-│   └── default/            # 기본 테마
-├── .env                    # 환경 설정
-├── composer.json           # PHP 의존성
-└── package.json            # Node.js 의존성
+│   └── migrations/
+│       └── core/             # 코어 마이그레이션 (5개)
+├── rzxlib/                   # 코어 라이브러리
+│   └── Core/
+│       ├── Auth/             # 인증
+│       ├── I18n/             # 다국어
+│       ├── Plugin/           # PluginManager, Hook
+│       └── Skin/             # 스킨 시스템
+├── resources/
+│   ├── views/
+│   │   ├── admin/            # 관리자 UI
+│   │   └── customer/         # 프론트 UI
+│   └── lang/                 # 13개 언어 파일
+├── plugins/                  # 플러그인 디렉토리
+├── skins/                    # 스킨
+├── layouts/                  # 레이아웃
+├── widgets/                  # 위젯
+├── storage/                  # 업로드/캐시
+└── docs/                     # 문서
 ```
 
 ---
 
-## 설정
+## 브랜드
 
-### 환경 설정 (.env)
-
-주요 설정 항목:
-
-```env
-APP_NAME="RezlyX"
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://your-domain.com
-
-DB_HOST=127.0.0.1
-DB_DATABASE=rezlyx
-DB_USERNAME=your_user
-DB_PASSWORD=your_password
-
-ADMIN_PATH=admin
-```
-
-### 관리자 경로 변경
-
-보안을 위해 관리자 경로를 변경하는 것을 권장합니다:
-
-```env
-ADMIN_PATH=your-custom-admin-path
-```
+| 항목 | 값 |
+|------|-----|
+| 이름 | VosCMS |
+| 풀네임 | Value Of Style CMS |
+| 도메인 | voscms.com |
+| 계보 | THE VOS (THE Value Of Style) |
 
 ---
 
-## 개발 가이드
+## 관련 프로젝트
 
-### 로컬 개발 환경 설정
-
-```bash
-# 환경 설정 파일 복사
-cp .env.example .env
-
-# 의존성 설치
-composer install
-npm install
-
-# 개발 서버 실행 (루트 디렉토리에서)
-php -S localhost:8000
-
-# CSS 변경 감시 (별도 터미널)
-npm run css:watch
-```
-
-### 코딩 스타일
-
-```bash
-# 코드 스타일 검사
-composer run cs-check
-
-# 자동 수정
-composer run cs-fix
-
-# 정적 분석
-composer run analyse
-```
-
-### 테스트 실행
-
-```bash
-composer run test
-```
-
----
-
-## 기여하기
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+- **[RezlyX](https://github.com/THEVOSjp/RezlyX)** — VosCMS + 살롱 번들 + POS + 키오스크 + 근태. 미용실/살롱 특화 올인원 솔루션.
 
 ---
 
 ## 라이선스
 
-이 프로젝트는 독점 소프트웨어입니다. 자세한 라이선스 정보는 LICENSE 파일을 참조하세요.
-
----
-
-## 지원
-
-- **문서**: [docs.rezlyx.com](https://docs.rezlyx.com) (준비 중)
-- **이슈**: GitHub Issues
-- **이메일**: support@rezlyx.com
-
----
-
-## 문서
-
-| 문서 | 설명 |
-|------|------|
-| [ROUTING_HTTP.md](docs/ROUTING_HTTP.md) | 라우팅 및 HTTP 시스템 |
-| [RESERVATION_SYSTEM.md](docs/RESERVATION_SYSTEM.md) | 예약 시스템 가이드 |
-| [API_REFERENCE.md](docs/API_REFERENCE.md) | REST API 레퍼런스 |
-| [CODING_CONVENTIONS.md](docs/CODING_CONVENTIONS.md) | 코딩 컨벤션 |
-
----
-
-## 빠른 시작
-
-### 예약 생성
-
-```php
-use RzxLib\Reservation\Services\ReservationService;
-
-$service = new ReservationService();
-$reservation = $service->create([
-    'service_id' => 1,
-    'customer_name' => '홍길동',
-    'customer_email' => 'hong@example.com',
-    'booking_date' => '2025-03-01',
-    'start_time' => '10:00',
-]);
-
-echo $reservation->booking_code; // RZ250301ABC123
-```
-
-### API 사용
-
-```bash
-# 가용 시간 조회
-curl "http://localhost/api/services/1/available-slots?date=2025-03-01"
-
-# 예약 생성
-curl -X POST "http://localhost/api/reservations" \
-  -H "Content-Type: application/json" \
-  -d '{"service_id":1,"customer_name":"홍길동","customer_email":"hong@example.com","booking_date":"2025-03-01","start_time":"10:00"}'
-```
-
----
-
-## 버전 이력
-
-| 버전 | 날짜 | 변경 내용 |
-|------|------|----------|
-| 1.0.0 | 2026-02-27 | 최초 릴리스 |
-| 1.1.0 | 2026-03-01 | 라우팅, 예약 시스템, API 추가 |
-| 1.2.0 | 2026-03-02 | PWA 서브메뉴 구성, 웹푸시 알림, 사용자 메시지 인박스 |
-
----
-
-*RezlyX - 예약을 재정의하다*
+Proprietary. © 2026 THE VOS Inc.
