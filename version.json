@@ -1,13 +1,12 @@
 {
-    "version": "2.0.0",
-    "name": "RezlyX",
-    "codename": "VosCMS",
+    "version": "1.0.0",
+    "name": "VosCMS",
+    "codename": "Value Of Style CMS",
     "release_date": "2026-04-05",
-    "commit": null,
-    "channel": "dev",
+    "channel": "stable",
     "github": {
         "owner": "THEVOSjp",
-        "repo": "RezlyX",
+        "repo": "VosCMS",
         "branch": "main"
     }
 }

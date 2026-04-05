@@ -343,36 +343,68 @@ CREATE TABLE rzx_plugin_settings (
 
 ## 7. 개발 로드맵
 
-### Phase 1: 플러그인 인프라 구축
-- [ ] `PluginManager` 클래스 (로드/활성화/비활성화/설치/삭제)
-- [ ] `Hook` 클래스 (이벤트 트리거/리스너)
-- [ ] `rzx_plugins` + `rzx_plugin_migrations` + `rzx_plugin_settings` 테이블
-- [ ] 코어 라우터에 플러그인 라우트 자동 등록
-- [ ] 관리자 사이드바에 플러그인 메뉴 자동 주입
-- [ ] 관리자 > 플러그인 관리 페이지
+### Phase 1: 플러그인 인프라 구축 ✅ 완료 (v2.0.0)
+- [x] `PluginManager` 클래스 (로드/활성화/비활성화/설치/삭제)
+- [x] `Hook` 클래스 (이벤트 on/trigger/filter)
+- [x] `rzx_plugins` + `rzx_plugin_migrations` + `rzx_plugin_settings` 테이블
+- [x] 코어 라우터에 플러그인 라우트 자동 등록
+- [x] 관리자 사이드바에 플러그인 메뉴 자동 주입 (서브메뉴 + 커스텀 아이콘)
+- [x] 관리자 > 플러그인 관리 페이지 + API
 
-### Phase 2: 첫 번째 플러그인 전환
-- [ ] POS를 `plugins/vos-pos/`로 이전 (가장 독립적)
-- [ ] plugin.json 작성
-- [ ] 기존 코드에서 POS 직접 참조 제거
-- [ ] 플러그인 설치/제거 테스트
+### Phase 2: 플러그인 전환 ✅ 완료 (v2.0.0)
+- [x] vos-pos: POS 시스템
+- [x] vos-kiosk: 키오스크
+- [x] vos-attendance: 근태 관리
+- [x] vos-salon: 예약 + 서비스 + 스태프 + 번들 (살롱 번들)
 
-### Phase 3: 나머지 플러그인 전환
-- [ ] 근태 관리 → `plugins/vos-attendance/`
-- [ ] 예약 시스템 → `plugins/vos-reservation/` (코어와 가장 밀접, 마지막)
-- [ ] 키오스크 → `plugins/vos-kiosk/`
+### Phase 3: 설치 스크립트 + 배포 테스트 ← **현재 단계**
 
-### Phase 4: 마켓플레이스
-- [ ] 플러그인 패키징 (zip)
-- [ ] 마켓플레이스 API (목록/검색/다운로드/설치/업데이트)
+#### Step 3-1: 설치 스크립트 개발
+- [ ] `install.php` — 웹 기반 설치 마법사
+  - DB 연결 설정 입력 (호스트/DB명/사용자/비밀번호)
+  - `.env` 파일 자동 생성
+  - 코어 DB 테이블 생성 (마이그레이션 실행)
+  - 관리자 계정 생성 (이메일/비밀번호)
+  - 기본 메뉴/페이지/설정 초기화
+  - 설치 완료 후 install.php 자동 비활성화
+
+#### Step 3-2: rezlyx.com 코어 테스트
+- [ ] 기존 rezlyx.com 내용 제거
+- [ ] VosCMS 코어만 설치 (플러그인 없음)
+- [ ] 페이지/메뉴/게시판/회원 동작 확인
+- [ ] **목적: 코어가 플러그인 없이 독립 동작하는지 검증**
+
+#### Step 3-3: rezlyx.com 플러그인 설치 테스트
+- [ ] 플러그인 관리 페이지에서 vos-salon 설치
+- [ ] 예약/서비스/스태프 동작 확인
+- [ ] vos-pos/vos-kiosk/vos-attendance 추가 설치
+- [ ] **목적: 플러그인 설치 플로우 검증**
+
+#### Step 3-4: voscms.com 도메인 + 공식 사이트
+- [ ] voscms.com 도메인 구매 + DNS/SSL 설정
+- [ ] VosCMS로 VosCMS 공식 사이트 구축
+- [ ] 마켓플레이스 페이지 준비
+- [ ] 문서/가이드 페이지
+
+#### Step 3-5: salon.rezlyx.com 데모 사이트
+- [ ] VosCMS + vos-salon + vos-pos + vos-kiosk + vos-attendance 설치
+- [ ] 실제 살롱 데모 사이트로 운영
+- [ ] **목적: 살롱 번들 데모/쇼케이스**
+
+### Phase 4: 마켓플레이스 개발
+- [ ] vos-marketplace 플러그인 개발
+- [ ] voscms.com 마켓플레이스 API (목록/검색/다운로드/설치/업데이트)
+- [ ] 플러그인 패키징 (zip 압축 + 버전 관리)
+- [ ] 원격 설치 (관리자에서 마켓플레이스 검색 → 원클릭 설치)
 - [ ] 테마 마켓플레이스
 - [ ] 라이선스/과금 (무료/유료/구독)
 - [ ] 리뷰/평점
 
-### Phase 5: 코어 분리
+### Phase 5: 코어 분리 + 제품화
 - [ ] VosCMS 코어를 별도 Git 레포로 분리
-- [ ] RezlyX = VosCMS + 예약/POS/키오스크 플러그인 번들
-- [ ] voscms.com 사이트 구축
+- [ ] RezlyX = VosCMS + 살롱 번들 + POS + 키오스크 + 근태 (패키지 제품)
+- [ ] 업종별 번들 추가 개발 (clinic, restaurant, academy 등)
+- [ ] 공식 출시
 
 ---
 
