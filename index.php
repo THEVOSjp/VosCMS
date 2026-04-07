@@ -7,6 +7,13 @@
  */
 
 define('REZLYX_START', microtime(true));
+
+// VosCMS 설치 체크 — .env가 없으면 설치 마법사로 리다이렉트
+if (!file_exists(__DIR__ . '/.env') && file_exists(__DIR__ . '/install.php')) {
+    header('Location: /install.php');
+    exit;
+}
+
 header('X-Frame-Options: SAMEORIGIN');
 header("Content-Security-Policy: frame-ancestors 'self'");
 date_default_timezone_set('Asia/Seoul'); // 기본값, DB 설정 로드 후 재설정
@@ -239,7 +246,10 @@ $__noLayout = false; // API, 로그인 등 자체 레이아웃 페이지
 
 // Route to appropriate handler
 if (empty($path) || $path === 'index.php') {
-    $__pageFile = BASE_PATH . '/resources/views/customer/home.php';
+    // home_page 설정에 따라 동적 페이지 렌더링
+    $homeSlug = $siteSettings['home_page'] ?? 'index';
+    $pageSlug = $homeSlug;
+    $__pageFile = BASE_PATH . '/resources/views/customer/page.php';
 } elseif (preg_match('#^staff/([^/]+)$#', $path, $m) && !in_array($m[1], ['settings', 'edit'])) {
     $staffSlug = $m[1];
     $__pageFile = BASE_PATH . '/resources/views/customer/staff-detail.php';
@@ -336,6 +346,14 @@ if (empty($path) || $path === 'index.php') {
         $reportStaffId = $m[1] ?? null;
         $_prFile = BASE_PATH . '/plugins/vos-attendance/views/attendance-report-personal.php';
         if (file_exists($_prFile)) { include $_prFile; } else { include BASE_PATH . '/resources/views/admin/dashboard.php'; }
+    // 관리자 권한 관리 (코어)
+    } elseif ($adminRoute === 'staff/admins') {
+        include BASE_PATH . '/resources/views/admin/staff/admins.php';
+    // 업소 관리 (vos-shop 플러그인 — 존재 시만)
+    } elseif (file_exists(BASE_PATH . '/plugins/vos-shop/plugin.json') && $adminRoute === 'shops/consultations') {
+        include BASE_PATH . '/plugins/vos-shop/views/admin/consultations.php';
+    } elseif (file_exists(BASE_PATH . '/plugins/vos-shop/plugin.json') && ($adminRoute === 'shops' || str_starts_with($adminRoute, 'shops/'))) {
+        include BASE_PATH . '/plugins/vos-shop/views/admin/shops.php';
     // 페이지 관리 - 데이터 관리 가이드 편집
     } elseif ($adminRoute === 'site/pages/compliance') {
         include BASE_PATH . '/resources/views/admin/site/pages-compliance.php';
@@ -539,6 +557,34 @@ if (empty($path) || $path === 'index.php') {
         $__pageFile = BASE_PATH . '/resources/views/customer/mypage/withdraw.php';
     } elseif ($path === 'mypage/messages') {
         $__pageFile = BASE_PATH . '/resources/views/customer/mypage/messages.php';
+    // 업소 라우트 (vos-shop 플러그인 — 존재 시만)
+    } elseif (file_exists(BASE_PATH . '/plugins/vos-shop/plugin.json') && $path === 'shop/my') {
+        // 내 사업장으로 리다이렉트
+        require_once BASE_PATH . '/rzxlib/Core/Auth/Auth.php';
+        $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+        if (\RzxLib\Core\Auth\Auth::check()) {
+            $_myUser = \RzxLib\Core\Auth\Auth::user();
+            $_myShop = $pdo->prepare("SELECT slug FROM {$prefix}shops WHERE user_id = ? ORDER BY created_at DESC LIMIT 1");
+            $_myShop->execute([$_myUser['id']]);
+            $_mySlug = $_myShop->fetchColumn();
+            if ($_mySlug) {
+                header('Location: ' . ($config['app_url'] ?? '') . '/shop/' . $_mySlug . '/edit');
+                exit;
+            }
+        }
+        header('Location: ' . ($config['app_url'] ?? '') . '/shop/register');
+        exit;
+    } elseif (file_exists(BASE_PATH . '/plugins/vos-shop/plugin.json') && $path === 'shop/register') {
+        $__pageFile = BASE_PATH . '/plugins/vos-shop/views/customer/shop/register.php';
+    } elseif (file_exists(BASE_PATH . '/plugins/vos-shop/plugin.json') && preg_match('#^shop/([a-zA-Z0-9_-]+)/edit$#', $path, $m)) {
+        $shopSlug = $m[1];
+        $__pageFile = BASE_PATH . '/plugins/vos-shop/views/customer/shop/edit.php';
+    } elseif (file_exists(BASE_PATH . '/plugins/vos-shop/plugin.json') && preg_match('#^shop/([a-zA-Z0-9_-]+)$#', $path, $m)) {
+        $shopSlug = $m[1];
+        $__pageFile = BASE_PATH . '/plugins/vos-shop/views/customer/shop/detail.php';
+    } elseif (file_exists(BASE_PATH . '/plugins/vos-shop/plugin.json') && ($path === 'shops' || preg_match('#^shops/([a-zA-Z0-9_-]+)$#', $path, $m))) {
+        $shopCategory = $m[1] ?? '';
+        $__pageFile = BASE_PATH . '/plugins/vos-shop/views/customer/shop/list.php';
     // 동적 라우트: staff/{id}
     } elseif (preg_match('#^staff/(\d+)$#', $path, $m)) {
         $routeParams = ['id' => $m[1]];

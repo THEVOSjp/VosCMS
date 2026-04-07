@@ -227,6 +227,7 @@ return [
         'col_email' => 'Email',
         'col_phone' => 'Telepon',
         'col_grade' => 'Grade',
+        'col_role' => 'Peran',
         'col_status' => 'Status',
         'col_joined' => 'Bergabung',
         'col_actions' => 'Aksi',

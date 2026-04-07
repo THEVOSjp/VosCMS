@@ -36,6 +36,7 @@ return [
         'col_email' => 'Имэйл',
         'col_phone' => 'Утас',
         'col_grade' => 'Зэрэг',
+        'col_role' => 'Үүрэг',
         'col_status' => 'Төлөв',
         'col_joined' => 'Бүртгүүлсэн',
         'col_actions' => 'Үйлдэл',

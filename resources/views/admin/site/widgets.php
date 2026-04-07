@@ -88,7 +88,7 @@ if ($filterCategory !== 'all') {
     $sql .= " AND category = ?";
     $params[] = $filterCategory;
 }
-$sql .= " ORDER BY type ASC, name ASC";
+$sql .= " ORDER BY category ASC, title ASC";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $widgets = $stmt->fetchAll(PDO::FETCH_ASSOC);

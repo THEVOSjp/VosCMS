@@ -105,21 +105,49 @@ if ($_hasTitleBg) {
     $_titleTextClass = 'text-zinc-900';
 }
 
-// 관리자 아이콘 (설정 + 편집)
-require_once BASE_PATH . '/rzxlib/Core/Helpers/admin-icons.php';
-$_settingsUrl = ($config['app_url'] ?? '') . '/' . urlencode($pageSlug) . '/settings';
-$_adminPath = $config['admin_path'] ?? 'theadmin';
-if ($pageType === 'widget' || $pageType === 'system') {
-    $_editUrl = ($config['app_url'] ?? '') . '/' . $_adminPath . '/site/pages/widget-builder?slug=' . urlencode($pageSlug);
-} else {
-    $_editUrl = ($config['app_url'] ?? '') . '/' . urlencode($pageSlug) . '/edit';
-}
-$_adminIcons = rzx_admin_icons($_settingsUrl, $_editUrl);
-// 진단: 모든 페이지의 admin 상태 로그
-if ($pageSlug === 'booking') {
-    error_log("=== BOOKING PAGE ADMIN DEBUG === admin_id=" . ($_SESSION['admin_id'] ?? 'NOT_SET') . " | session keys=" . implode(',', array_keys($_SESSION ?? [])) . " | icons_result=" . (strlen($_adminIcons ?? '') > 0 ? 'HAS_HTML' : 'EMPTY'));
-}
+// 홈페이지 여부 판단
+$_homeSlug = $siteSettings['home_page'] ?? 'index';
+$_isHomePage = ($pageSlug === $_homeSlug);
+
+// 관리자 아이콘 — 모든 페이지 공통 (헤더 아래 고정 바)
+$_editUrl = ($config['app_url'] ?? '') . '/' . urlencode($pageSlug) . '/edit';
+$_settingsUrl = ($pageType !== 'widget' && $pageType !== 'system')
+    ? ($config['app_url'] ?? '') . '/' . urlencode($pageSlug) . '/settings' : '';
+$_adminIcons = ''; // 제목 옆 아이콘은 사용하지 않음
 ?>
+
+<?php // 관리자 전용: 헤더 아래 가운데 편집/설정 고정 바
+if (!empty($_SESSION['admin_id'])): ?>
+<div id="rzxAdminBar" class="fixed left-1/2 -translate-x-1/2 z-[9999]" style="top:0">
+    <div class="flex items-center gap-2">
+        <a href="<?= htmlspecialchars($_editUrl) ?>" class="inline-flex items-center gap-1 px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-[11px] font-medium rounded-full transition">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            <?= __('common.edit') ?? '편집' ?>
+        </a>
+        <?php if ($_settingsUrl): ?>
+        <a href="<?= htmlspecialchars($_settingsUrl) ?>" class="inline-flex items-center gap-1 px-3 py-1 bg-zinc-600 hover:bg-zinc-500 text-white text-[11px] font-medium rounded-full transition">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <?= __('common.settings') ?? '설정' ?>
+        </a>
+        <?php endif; ?>
+    </div>
+</div>
+<script>
+(function(){
+    var bar = document.getElementById('rzxAdminBar');
+    if (!bar) return;
+    var header = document.querySelector('header');
+    function pos() {
+        var top = header ? header.getBoundingClientRect().bottom : 0;
+        if (top < 0) top = 0;
+        bar.style.top = Math.round(top + 4) + 'px';
+    }
+    pos();
+    window.addEventListener('scroll', pos, {passive:true});
+    window.addEventListener('resize', pos);
+})();
+</script>
+<?php endif; ?>
 
 <?php
 // 공통 스킨 스타일 출력 (모든 페이지 타입)
@@ -185,23 +213,28 @@ if ($_primaryColor) echo '<style>:root { --page-primary: ' . htmlspecialchars($_
 
 <?php elseif ($pageType === 'widget' || $pageType === 'system'): ?>
     <!-- 위젯 페이지: WidgetRenderer로 렌더링 -->
-    <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 py-6">
-        <?php if ($_showBreadcrumb && !$_hasTitleBg): ?>
+    <?php
+    // 전체폭 위젯 타입 (컨테이너 밖에서 렌더링)
+    $_fullWidthTypes = ['hero', 'hero-slider', 'cta', 'cta001', 'stats', 'testimonials', 'shop-map'];
+    ?>
+    <?php if ($_showBreadcrumb && !$_hasTitleBg): ?>
+    <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 pt-6">
         <nav class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
             <a href="<?= $config['app_url'] ?? '' ?>/" class="hover:text-blue-600"><?= __('common.home') ?? '홈' ?></a>
             <span class="mx-1">/</span>
             <span class="text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($pageTitle) ?></span>
         </nav>
-        <?php endif; ?>
-        <?php if ($_customHeader): ?><div class="mb-4"><?= $_customHeader ?></div><?php endif; ?>
-        <?php if ($_showTitle && $_hasTitleBg): ?>
-            <?php include __DIR__ . '/_page-title-bg.php'; ?>
-        <?php elseif ($_showTitle): ?>
-        <!-- ADMIN_ID_VALUE: <?= $_SESSION['admin_id'] ?? 'NOT_SET' ?> | ICONS_EMPTY: <?= empty($_adminIcons) ? 'YES' : 'NO' ?> | ICONS_LEN: <?= strlen($_adminIcons ?? '') ?> -->
+    </div>
+    <?php endif; ?>
+    <?php if ($_customHeader): ?><div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6"><div class="mb-4"><?= $_customHeader ?></div></div><?php endif; ?>
+    <?php if ($_isHomePage): ?>
+    <?php elseif ($_showTitle && $_hasTitleBg): ?>
+        <?php include __DIR__ . '/_page-title-bg.php'; ?>
+    <?php elseif ($_showTitle): ?>
+    <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 pt-6">
         <h1 class="text-2xl font-bold <?= $_titleTextClass ?> mb-4 inline-flex items-center gap-2"><?= htmlspecialchars($pageTitle) ?> <?= $_adminIcons ?></h1>
-        <?php elseif ($_adminIcons): ?>
-        <div class="flex justify-end mb-2 gap-2"><?= $_adminIcons ?></div>
-        <?php endif; ?>
+    </div>
+    <?php endif; ?>
     <?php
     require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetLoader.php';
     require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetRenderer.php';
@@ -211,28 +244,32 @@ if ($_primaryColor) echo '<style>:root { --page-primary: ' . htmlspecialchars($_
     $widgetList = $widgets->fetchAll(PDO::FETCH_ASSOC);
 
     if (!empty($widgetList)) {
-        $_savedConfig = $config; // 사이트 설정 백업
-        $locale = $currentLocale ?? 'ko'; // 위젯에서 사용할 로케일
+        $_savedConfig = $config;
+        $locale = $currentLocale ?? 'ko';
         foreach ($widgetList as $w) {
             $config = json_decode($w['config'] ?? '{}', true) ?: [];
             $widgetType = $w['widget_type'] ?? ($w['widget_slug'] ?? 'text');
             $renderFile = BASE_PATH . '/widgets/' . $widgetType . '/render.php';
+            $_isFullWidth = in_array($widgetType, $_fullWidthTypes);
+            if (!$_isFullWidth) echo '<div class="' . $_contentWidth . ' mx-auto px-4 sm:px-6 py-2">';
             if (file_exists($renderFile)) {
                 try {
                     $__wOut = include $renderFile;
-                    if (is_string($__wOut)) echo $__wOut;
+                    if (is_string($__wOut)) {
+                        echo $__wOut;
+                    }
                 } catch (\Throwable $__wErr) {
                     echo '<!-- WIDGET_ERROR[' . $widgetType . ']: ' . htmlspecialchars($__wErr->getMessage()) . ' at ' . $__wErr->getFile() . ':' . $__wErr->getLine() . ' -->';
                 }
             }
+            if (!$_isFullWidth) echo '</div>';
         }
-        $config = $_savedConfig; // 사이트 설정 복원
+        $config = $_savedConfig;
     } else {
         echo '<div class="py-16 text-center text-zinc-400">위젯이 아직 추가되지 않았습니다.</div>';
     }
     ?>
-        <?php if ($_customFooter): ?><div class="mt-4"><?= $_customFooter ?></div><?php endif; ?>
-    </div>
+    <?php if ($_customFooter): ?><div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6"><div class="mt-4"><?= $_customFooter ?></div></div><?php endif; ?>
 
 <?php else: ?>
     <!-- 문서 페이지: HTML 콘텐츠 렌더링 (스킨 설정 적용) -->

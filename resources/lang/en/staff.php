@@ -109,7 +109,7 @@ return [
         'card_number_desc' => 'Used for RFID/NFC card reader attendance tracking.',
     ],
     'admins' => [
-        'title' => 'Admin Management', 'description' => 'Manage system administrator accounts.',
+        'title' => 'Admin Permissions', 'page_title' => 'Admin Permission Management', 'description' => 'Manage system administrator accounts.',
         'add_admin' => 'Add Admin',
         'col_admin' => 'Admin', 'col_role' => 'Role', 'col_permissions' => 'Permissions', 'col_status' => 'Status', 'col_manage' => 'Manage',
         'role_supervisor' => 'Supervisor', 'role_manager' => 'Manager', 'role_staff' => 'Staff',

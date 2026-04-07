@@ -227,6 +227,7 @@ return [
         'col_email' => '邮箱',
         'col_phone' => '电话',
         'col_grade' => '等级',
+        'col_role' => '角色',
         'col_status' => '状态',
         'col_joined' => '注册日期',
         'col_actions' => '操作',

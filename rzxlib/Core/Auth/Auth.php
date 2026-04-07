@@ -70,7 +70,10 @@ class Auth
             $pdo = self::getPdo();
             $table = self::$prefix . 'users';
 
-            $stmt = $pdo->prepare("SELECT * FROM {$table} WHERE email = ? AND status = 'active' LIMIT 1");
+            $hasStatus = false;
+            try { $cols = $pdo->query("SHOW COLUMNS FROM {$table} LIKE 'status'")->fetchAll(); $hasStatus = count($cols) > 0; } catch (\PDOException $e) {}
+            $activeWhere = $hasStatus ? "status = 'active'" : "is_active = 1";
+            $stmt = $pdo->prepare("SELECT * FROM {$table} WHERE email = ? AND {$activeWhere} LIMIT 1");
             $stmt->execute([$email]);
             $user = $stmt->fetch();
 
@@ -122,22 +125,16 @@ class Auth
         $_SESSION['user_name'] = $user['name'];
         $_SESSION['user_logged_in_at'] = time();
 
-        // 관리자 여부 체크: rzx_admins 테이블에 존재하면 admin 세션도 설정
-        try {
-            $pdo = self::getPdo();
-            $adminTable = self::$prefix . 'admins';
-            $adminStmt = $pdo->prepare("SELECT id, role, name, email, permissions FROM {$adminTable} WHERE email = ? LIMIT 1");
-            $adminStmt->execute([$user['email']]);
-            $admin = $adminStmt->fetch(\PDO::FETCH_ASSOC);
-            if ($admin) {
-                $_SESSION['admin_id'] = $admin['id'];
-                $_SESSION['admin_role'] = $admin['role'] ?? 'admin';
-                $_SESSION['admin_name'] = $admin['name'];
-                $_SESSION['admin_email'] = $admin['email'];
-                $_SESSION['admin_permissions'] = $admin['permissions'] ?? '[]';
-            }
-        } catch (\Exception $e) {
-            // 관리자 테이블 없어도 로그인은 정상 진행
+        // v2.1 통합: rzx_users의 role로 관리자 여부 판단
+        $role = $user['role'] ?? 'member';
+        if ($role === 'admin') $role = 'supervisor';
+        if ($role === 'user') $role = 'member';
+        if (in_array($role, ['staff', 'manager', 'supervisor'])) {
+            $_SESSION['admin_id'] = $user['id'];
+            $_SESSION['admin_role'] = $role;
+            $_SESSION['admin_name'] = $user['name'] ?? '';
+            $_SESSION['admin_email'] = $user['email'];
+            $_SESSION['admin_permissions'] = $user['permissions'] ?? '[]';
         }
 
         // 로그인 상태 유지 (Remember Me)
@@ -222,7 +219,7 @@ class Auth
             $stmt = $pdo->prepare("
                 SELECT u.* FROM {$userTable} u
                 INNER JOIN {$tokenTable} t ON u.id = t.user_id
-                WHERE t.token = ? AND t.expires_at > NOW() AND u.status = 'active'
+                WHERE t.token = ? AND t.expires_at > NOW() AND (u.status = 'active' OR u.is_active = 1)
                 LIMIT 1
             ");
             $stmt->execute([$hashedToken]);
@@ -266,7 +263,11 @@ class Auth
             $pdo = self::getPdo();
             $table = self::$prefix . 'users';
 
-            $stmt = $pdo->prepare("SELECT * FROM {$table} WHERE id = ? AND status = 'active' LIMIT 1");
+            // status/is_active 호환: 컬럼 자동 감지
+            $hasStatus = false;
+            try { $cols = $pdo->query("SHOW COLUMNS FROM {$table} LIKE 'status'")->fetchAll(); $hasStatus = count($cols) > 0; } catch (\PDOException $e) {}
+            $activeWhere = $hasStatus ? "status = 'active'" : "is_active = 1";
+            $stmt = $pdo->prepare("SELECT * FROM {$table} WHERE id = ? AND {$activeWhere} LIMIT 1");
             $stmt->execute([$_SESSION['user_id']]);
             self::$user = $stmt->fetch() ?: null;
 
@@ -327,11 +328,17 @@ class Auth
             ]);
         }
 
-        // 세션 데이터 삭제
+        // 세션 데이터 삭제 (프론트 + 관리자 모두)
         unset($_SESSION['user_id']);
         unset($_SESSION['user_email']);
         unset($_SESSION['user_name']);
         unset($_SESSION['user_logged_in_at']);
+        unset($_SESSION['admin_id']);
+        unset($_SESSION['admin_role']);
+        unset($_SESSION['admin_name']);
+        unset($_SESSION['admin_email']);
+        unset($_SESSION['admin_permissions']);
+        unset($_SESSION['admin_logged_in_at']);
 
         // 캐시 초기화
         self::$user = null;
@@ -1003,7 +1010,7 @@ HTML;
             error_log("[Auth] createPasswordResetToken - Table: {$userTable}, Email: {$email}");
 
             // 사용자 확인 (대소문자 무시)
-            $stmt = $pdo->prepare("SELECT id, email, name FROM {$userTable} WHERE LOWER(email) = LOWER(?) AND status = 'active' LIMIT 1");
+            $stmt = $pdo->prepare("SELECT id, email, name FROM {$userTable} WHERE LOWER(email) = LOWER(?) AND (status = 'active' OR is_active = 1) LIMIT 1");
             $stmt->execute([$email]);
             $user = $stmt->fetch();
 
@@ -1059,7 +1066,7 @@ HTML;
             }
 
             // 사용자 찾기
-            $userStmt = $pdo->prepare("SELECT * FROM {$userTable} WHERE email = ? AND status = 'active' LIMIT 1");
+            $userStmt = $pdo->prepare("SELECT * FROM {$userTable} WHERE email = ? AND (status = 'active' OR is_active = 1) LIMIT 1");
             $userStmt->execute([$reset['email']]);
             $user = $userStmt->fetch();
 

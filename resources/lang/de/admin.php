@@ -44,6 +44,9 @@ return [
         'page_management' => 'Seitenverwaltung',
         'board_management' => 'Forum-Verwaltung',
         'widget_management' => 'Widget-Verwaltung',
+        'shops' => 'Geschäftsverwaltung',
+        'shops_list' => 'Unternehmenliste',
+        'shops_consultations' => '1:1 Beratung',
         'plugins' => 'Plugins',
             'staff_admins' => 'Admin-Rechte',
     ],
@@ -127,4 +130,5 @@ return [
         'update' => 'Aktualisieren',
         'later' => 'Später',
     ],
+    'shops' => ['title' => 'Geschäftsverwaltung', 'description' => 'Registrierte Geschäfte verwalten und genehmigen.'],
 ];

@@ -243,6 +243,20 @@ class Translator
     /**
      * 로케일 설정 (사용자가 명시적으로 언어 변경 시)
      */
+    /**
+     * 플러그인 번역을 현재 로케일에 병합
+     * loadTranslations와 동일한 캐시 키 형식 사용: "{locale}.{group}"
+     */
+    public static function merge(string $prefix, array $translations): void
+    {
+        $locale = self::$locale ?: 'ko';
+        $cacheKey = "{$locale}.{$prefix}";
+        self::$translations[$cacheKey] = array_replace_recursive(
+            self::$translations[$cacheKey] ?? [],
+            $translations
+        );
+    }
+
     public static function setLocale(string $locale): void
     {
         if (in_array($locale, self::$supportedLocales)) {

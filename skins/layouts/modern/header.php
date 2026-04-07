@@ -106,10 +106,11 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 <?= $_seo['meta_tags'] ?>    <?php if (isset($headExtra)) echo $headExtra; ?>
 </head>
 <body class="bg-gray-50 dark:bg-zinc-900 min-h-screen flex flex-col transition-colors duration-200">
-    <!-- Header -->
+    <!-- Header (Modern: 2단 구조) -->
     <header class="bg-white dark:bg-zinc-800 shadow-sm dark:shadow-zinc-900/50 sticky top-0 z-50 transition-colors duration-200">
+        <!-- 상단: 로고 + 유틸리티 -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
+            <div class="flex items-center justify-between h-14">
                 <a href="<?= $baseUrl ?>/" class="flex items-center text-xl font-bold text-blue-600 dark:text-blue-400">
                     <?php if ($logoType === 'image' && $logoImage): ?>
                         <img src="<?= $baseUrl . htmlspecialchars($logoImage) ?>" alt="<?= htmlspecialchars($siteName) ?>" class="h-10 object-contain">
@@ -120,32 +121,6 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
                         <span><?= htmlspecialchars($siteName) ?></span>
                     <?php endif; ?>
                 </a>
-                <nav class="hidden lg:flex items-center space-x-1">
-                    <?php foreach ($mainMenu as $__mi):
-                        $__href = rzxMenuUrl($__mi, $baseUrl);
-                        $__active = rzxIsActive($__mi, $currentPath, $baseUrl);
-                        $__hasKids = !empty($__mi['children']);
-                        $__cls = $__active ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400';
-                    ?>
-                    <?php if ($__hasKids): ?>
-                    <div class="relative group">
-                        <a href="<?= htmlspecialchars($__href) ?>" class="px-3 py-2 font-medium inline-flex items-center gap-1 <?= $__cls ?>">
-                            <?= htmlspecialchars($__mi['title']) ?>
-                            <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </a>
-                        <div class="absolute left-0 top-full pt-1 hidden group-hover:block z-50">
-                            <div class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg py-1 min-w-[180px]">
-                                <?php foreach ($__mi['children'] as $__ch): ?>
-                                <a href="<?= htmlspecialchars(rzxMenuUrl($__ch, $baseUrl)) ?>" class="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"><?= htmlspecialchars($__ch['title']) ?></a>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    </div>
-                    <?php else: ?>
-                    <a href="<?= htmlspecialchars($__href) ?>" class="px-3 py-2 font-medium <?= $__cls ?>"><?= htmlspecialchars($__mi['title']) ?></a>
-                    <?php endif; ?>
-                    <?php endforeach; ?>
-                </nav>
                 <div class="flex items-center space-x-3">
                     <?php include BASE_PATH . '/resources/views/components/language-selector.php'; ?>
                     <button id="darkModeBtn" class="p-2 text-gray-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700">
@@ -167,7 +142,19 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
                                 <p class="text-xs text-gray-500 dark:text-zinc-400"><?= htmlspecialchars($currentUser['email'] ?? '') ?></p>
                             </div>
                             <a href="<?= $baseUrl ?>/mypage" class="block px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700"><?= __('common.nav.mypage') ?></a>
+                            <?php if (file_exists(BASE_PATH . '/plugins/vos-salon/plugin.json')): ?>
                             <a href="<?= $baseUrl ?>/mypage/reservations" class="block px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700"><?= __('auth.mypage.menu.reservations') ?></a>
+                            <?php endif; ?>
+                            <?php if (file_exists(BASE_PATH . '/plugins/vos-shop/plugin.json')):
+                                $_shopLangHeader = @include(BASE_PATH . '/plugins/vos-shop/lang/' . ($config['locale'] ?? 'ko') . '/shop.php');
+                                if (!is_array($_shopLangHeader)) $_shopLangHeader = @include(BASE_PATH . '/plugins/vos-shop/lang/ko/shop.php');
+                                $_myShopLabel = $_shopLangHeader['nav']['my_shop'] ?? '내 사업장';
+                            ?>
+                            <a href="<?= $baseUrl ?>/shop/my" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                <?= $_myShopLabel ?>
+                            </a>
+                            <?php endif; ?>
                             <?php if (!empty($_SESSION['admin_id'])): ?>
                             <div class="border-t dark:border-zinc-700"></div>
                             <a href="<?= $baseUrl ?>/<?= $config['admin_path'] ?? 'admin' ?>" class="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20">
@@ -186,6 +173,67 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
                 </div>
             </div>
         </div>
+        <!-- 하단: 메뉴 내비게이션 (좌우 스크롤) -->
+        <div class="hidden lg:block border-t border-zinc-100 dark:border-zinc-700/50 bg-zinc-50/50 dark:bg-zinc-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative" id="menuNavWrap">
+                <!-- 좌측 화살표 -->
+                <button id="menuNavLeft" class="hidden absolute left-0 top-0 bottom-0 z-10 w-8 bg-gradient-to-r from-zinc-50 dark:from-zinc-800 to-transparent flex items-center justify-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition" onclick="scrollMenuNav(-200)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <!-- 메뉴 스크롤 영역 -->
+                <nav id="menuNavScroll" class="flex items-center h-11 overflow-x-auto scrollbar-hide" style="scrollbar-width:none;-ms-overflow-style:none">
+                    <?php foreach ($mainMenu as $__mi):
+                        $__href = rzxMenuUrl($__mi, $baseUrl);
+                        $__active = rzxIsActive($__mi, $currentPath, $baseUrl);
+                        $__hasKids = !empty($__mi['children']);
+                        $__cls = $__active
+                            ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                            : 'text-gray-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 border-b-2 border-transparent hover:border-zinc-300 dark:hover:border-zinc-500';
+                    ?>
+                    <?php if ($__hasKids): ?>
+                    <div class="relative group h-full flex items-center flex-shrink-0">
+                        <a href="<?= htmlspecialchars($__href) ?>" class="px-4 h-full flex items-center text-sm font-medium gap-1 transition whitespace-nowrap <?= $__cls ?>">
+                            <?= htmlspecialchars($__mi['title']) ?>
+                            <svg class="w-3 h-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </a>
+                        <div class="absolute left-0 top-full hidden group-hover:block z-50">
+                            <div class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg py-1 min-w-[180px] mt-0">
+                                <?php foreach ($__mi['children'] as $__ch): ?>
+                                <a href="<?= htmlspecialchars(rzxMenuUrl($__ch, $baseUrl)) ?>" class="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 whitespace-nowrap"><?= htmlspecialchars($__ch['title']) ?></a>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <a href="<?= htmlspecialchars($__href) ?>" class="px-4 h-full flex items-center text-sm font-medium transition whitespace-nowrap flex-shrink-0 <?= $__cls ?>"><?= htmlspecialchars($__mi['title']) ?></a>
+                    <?php endif; ?>
+                    <?php endforeach; ?>
+                </nav>
+                <!-- 우측 화살표 -->
+                <button id="menuNavRight" class="hidden absolute right-0 top-0 bottom-0 z-10 w-8 bg-gradient-to-l from-zinc-50 dark:from-zinc-800 to-transparent flex items-center justify-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition" onclick="scrollMenuNav(200)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+        </div>
+        <style>#menuNavScroll::-webkit-scrollbar{display:none}</style>
+        <script>
+        (function(){
+            var nav = document.getElementById('menuNavScroll');
+            var left = document.getElementById('menuNavLeft');
+            var right = document.getElementById('menuNavRight');
+            if (!nav || !left || !right) return;
+            function update() {
+                left.classList.toggle('hidden', nav.scrollLeft <= 0);
+                right.classList.toggle('hidden', nav.scrollLeft + nav.clientWidth >= nav.scrollWidth - 1);
+            }
+            window.scrollMenuNav = function(px) {
+                nav.scrollBy({left: px, behavior: 'smooth'});
+            };
+            nav.addEventListener('scroll', update);
+            window.addEventListener('resize', update);
+            setTimeout(update, 100);
+        })();
+        </script>
     </header>
 
     <main class="flex-1">

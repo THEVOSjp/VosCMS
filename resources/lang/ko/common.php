@@ -114,6 +114,8 @@ return [
     'minutes' => '분',
 
     // 버튼
+    'days' => ['mon' => '월', 'tue' => '화', 'wed' => '수', 'thu' => '목', 'fri' => '금', 'sat' => '토', 'sun' => '일'],
+    'select' => '선택',
     'buttons' => [
         'login' => '로그인',
         'logout' => '로그아웃',

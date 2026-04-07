@@ -44,6 +44,9 @@ return [
         'page_management' => 'Quản lý trang',
         'board_management' => 'Quản lý Diễn đàn',
         'widget_management' => 'Quản lý widget',
+        'shops' => 'Quản lý Cửa hàng',
+        'shops_list' => 'Danh sách cơ sở',
+        'shops_consultations' => 'Tư vấn 1:1',
         'plugins' => 'Plugin',
             'staff_admins' => 'Quyền quản trị',
     ],
@@ -127,4 +130,5 @@ return [
         'update' => 'Cập nhật',
         'later' => 'Để sau',
     ],
+    'shops' => ['title' => 'Quản lý Cửa hàng', 'description' => 'Quản lý và phê duyệt cửa hàng đã đăng ký.'],
 ];

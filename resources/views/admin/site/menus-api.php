@@ -67,7 +67,7 @@ try {
             if (!$sitemapId || !$title) { jsonError('Sitemap ID and title are required'); }
 
             $parentId   = !empty($input['parent_id']) ? intval($input['parent_id']) : null;
-            $url        = trim($input['url'] ?? '');
+            $url        = trim(trim($input['url'] ?? ''), '/');
             $target     = in_array($input['target'] ?? '', ['_self', '_blank']) ? $input['target'] : '_self';
             $icon       = trim($input['icon'] ?? '');
             $cssClass   = trim($input['css_class'] ?? '');
@@ -156,7 +156,7 @@ try {
             $title = trim($input['title'] ?? '');
             if (!$id || !$title) { jsonError('ID and title are required'); }
 
-            $url        = trim($input['url'] ?? '');
+            $url        = trim(trim($input['url'] ?? ''), '/');
             $target     = in_array($input['target'] ?? '', ['_self', '_blank']) ? $input['target'] : '_self';
             $icon       = trim($input['icon'] ?? '');
             $cssClass   = trim($input['css_class'] ?? '');

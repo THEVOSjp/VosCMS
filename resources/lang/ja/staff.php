@@ -109,7 +109,7 @@ return [
     ],
     'card_number_desc' => 'RFID/NFCカードリーダーの勤怠記録に使用されます。',
     'admins' => [
-        'title' => '管理者管理', 'description' => 'システム管理者アカウントを管理します。',
+        'title' => '管理者権限', 'page_title' => '管理者権限管理', 'description' => 'システム管理者アカウントを管理します。',
         'add_admin' => '管理者追加',
         'col_admin' => '管理者', 'col_role' => '役割', 'col_permissions' => '権限', 'col_status' => 'ステータス', 'col_manage' => '管理',
         'role_supervisor' => 'スーパーバイザー', 'role_manager' => 'マネージャー', 'role_staff' => 'スタッフ',

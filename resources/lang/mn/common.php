@@ -114,6 +114,8 @@ return [
     ],
 
     // Buttons
+    'days' => ['mon' => 'Дав', 'tue' => 'Мяг', 'wed' => 'Лха', 'thu' => 'Пүр', 'fri' => 'Баа', 'sat' => 'Бям', 'sun' => 'Ням'],
+    'select' => 'Сонгох',
     'buttons' => [
         'login' => 'Нэвтрэх',
         'logout' => 'Гарах',

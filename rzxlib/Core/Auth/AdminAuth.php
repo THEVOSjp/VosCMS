@@ -1,9 +1,13 @@
 <?php
 /**
- * RezlyX 관리자 인증 및 권한 시스템
+ * VosCMS v2.1 — 관리자 인증 및 권한 시스템 (통합)
  *
- * 3중 연동 구조: rzx_users ↔ rzx_staff ↔ rzx_admins
- * 슈퍼바이저(master)는 삭제/해제/비활성화 완전 차단
+ * rzx_users 테이블에서 직접 인증 (rzx_admins 제거)
+ * role: member / staff / manager / supervisor
+ * - supervisor: 전체 권한 (삭제 불가)
+ * - manager: 대부분 권한 (설정 제외 가능)
+ * - staff: 제한적 권한 (배정된 권한만)
+ * - member: 관리자 접근 불가
  */
 
 namespace RzxLib\Core\Auth;
@@ -11,6 +15,9 @@ namespace RzxLib\Core\Auth;
 class AdminAuth
 {
     private static ?\PDO $pdo = null;
+
+    /** 관리자 접근 가능한 role 목록 */
+    private const ADMIN_ROLES = ['staff', 'manager', 'supervisor'];
 
     public static function init(\PDO $pdo): void
     {
@@ -20,44 +27,57 @@ class AdminAuth
     // ===== 로그인/로그아웃 =====
 
     /**
-     * 관리자 로그인 시도
-     * @return array|string 성공 시 admin 배열, 실패 시 에러 메시지
+     * 관리자 로그인 시도 (rzx_users에서 직접 인증)
+     * @return array|string 성공 시 user 배열, 실패 시 에러 메시지
      */
     public static function attempt(string $email, string $password): array|string
     {
-        $stmt = self::$pdo->prepare("
-            SELECT a.*, s.is_active as staff_active, u.status as user_status
-            FROM rzx_admins a
-            LEFT JOIN rzx_staff s ON a.staff_id = s.id
-            LEFT JOIN rzx_users u ON a.user_id = u.id
-            WHERE a.email = ?
-        ");
+        $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+
+        // users 테이블의 is_active/status 자동 감지
+        $hasStatus = false;
+        try { $cols = self::$pdo->query("SHOW COLUMNS FROM {$prefix}users LIKE 'status'")->fetchAll(); $hasStatus = count($cols) > 0; } catch (\PDOException $e) {}
+
+        $activeCondition = $hasStatus ? "u.status = 'active'" : "u.is_active = 1";
+
+        $stmt = self::$pdo->prepare("SELECT u.* FROM {$prefix}users u WHERE u.email = ?");
         $stmt->execute([$email]);
-        $admin = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $user = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if (!$admin) return 'invalid_credentials';
-        if (!password_verify($password, $admin['password'])) return 'invalid_credentials';
-        if ($admin['status'] !== 'active') return 'account_inactive';
+        if (!$user) return 'invalid_credentials';
+        if (!password_verify($password, $user['password'])) return 'invalid_credentials';
 
-        // 3중 연동 검증 (master는 연동 없어도 로그인 가능 - 초기 설치 호환)
-        if ($admin['role'] !== 'master') {
-            if ($admin['user_id'] && $admin['user_status'] !== 'active') return 'user_inactive';
-            if ($admin['staff_id'] && !$admin['staff_active']) return 'staff_inactive';
-        }
+        // 활성 상태 확인
+        $isActive = $hasStatus ? (($user['status'] ?? 'active') === 'active') : (($user['is_active'] ?? 1) == 1);
+        if (!$isActive) return 'account_inactive';
 
-        // 세션 설정
-        $_SESSION['admin_id'] = $admin['id'];
-        $_SESSION['admin_role'] = $admin['role'];
-        $_SESSION['admin_name'] = $admin['name'];
-        $_SESSION['admin_email'] = $admin['email'];
-        $_SESSION['admin_permissions'] = $admin['permissions'];
+        // role 확인: member는 관리자 접근 불가
+        $role = $user['role'] ?? 'member';
+
+        // 하위 호환: 기존 'admin' role → 'supervisor', 'user' role → 'member'
+        if ($role === 'admin') $role = 'supervisor';
+        if ($role === 'user') $role = 'member';
+
+        if (!in_array($role, self::ADMIN_ROLES)) return 'not_admin';
+
+        // 세션 설정 (admin_id = user id로 통합)
+        $_SESSION['admin_id'] = $user['id'];
+        $_SESSION['admin_role'] = $role;
+        $_SESSION['admin_name'] = $user['name'] ?? '';
+        $_SESSION['admin_email'] = $user['email'];
+        $_SESSION['admin_permissions'] = $user['permissions'] ?? '[]';
         $_SESSION['admin_logged_in_at'] = date('c');
 
-        // last_login_at 업데이트
-        self::$pdo->prepare("UPDATE rzx_admins SET last_login_at = NOW() WHERE id = ?")
-            ->execute([$admin['id']]);
+        // 프론트엔드 세션도 동시 설정 (로그인 통합)
+        $_SESSION['user_id'] = $user['id'];
 
-        return $admin;
+        // last_login_at 업데이트
+        try {
+            self::$pdo->prepare("UPDATE {$prefix}users SET last_login_at = NOW() WHERE id = ?")
+                ->execute([$user['id']]);
+        } catch (\PDOException $e) {}
+
+        return $user;
     }
 
     /**
@@ -73,21 +93,17 @@ class AdminAuth
             $_SESSION['admin_permissions'],
             $_SESSION['admin_logged_in_at']
         );
+        // 프론트엔드 세션도 해제 (통합 로그아웃)
+        unset($_SESSION['user_id']);
     }
 
     // ===== 상태 확인 =====
 
-    /**
-     * 관리자 로그인 여부
-     */
     public static function check(): bool
     {
         return !empty($_SESSION['admin_id']);
     }
 
-    /**
-     * 현재 로그인된 관리자 정보
-     */
     public static function current(): ?array
     {
         if (!self::check()) return null;
@@ -101,20 +117,16 @@ class AdminAuth
     }
 
     /**
-     * 현재 관리자가 master인지 확인
+     * 현재 관리자가 supervisor인지 확인 (구 master)
      */
     public static function isMaster(): bool
     {
-        return ($_SESSION['admin_role'] ?? '') === 'master';
+        $role = $_SESSION['admin_role'] ?? '';
+        return $role === 'supervisor' || $role === 'master';
     }
 
     // ===== 권한 확인 =====
 
-    /**
-     * 현재 관리자가 특정 권한을 가지고 있는지 확인
-     * master는 항상 true
-     * 상위 권한이 있으면 하위도 접근 가능 (staff → staff.schedule)
-     */
     public static function can(string $permission): bool
     {
         if (!self::check()) return false;
@@ -132,53 +144,43 @@ class AdminAuth
 
     // ===== 슈퍼바이저 보호 =====
 
-    /**
-     * 해당 user_id가 슈퍼바이저에 연결되어 있는지 확인
-     */
     public static function isSupervisorUser(string $userId): bool
     {
-        $stmt = self::$pdo->prepare("SELECT id FROM rzx_admins WHERE user_id = ? AND role = 'master'");
+        $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+        $stmt = self::$pdo->prepare("SELECT id FROM {$prefix}users WHERE id = ? AND role IN ('supervisor','admin','master')");
         $stmt->execute([$userId]);
         return (bool)$stmt->fetch();
     }
 
-    /**
-     * 해당 staff_id가 슈퍼바이저에 연결되어 있는지 확인
-     */
     public static function isSupervisorStaff(int $staffId): bool
     {
-        $stmt = self::$pdo->prepare("SELECT id FROM rzx_admins WHERE staff_id = ? AND role = 'master'");
-        $stmt->execute([$staffId]);
-        return (bool)$stmt->fetch();
+        $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+        // staff 테이블에서 user_id를 찾고, 해당 user가 supervisor인지 확인
+        try {
+            $stmt = self::$pdo->prepare("SELECT u.id FROM {$prefix}staff s JOIN {$prefix}users u ON s.user_id = u.id WHERE s.id = ? AND u.role IN ('supervisor','admin','master')");
+            $stmt->execute([$staffId]);
+            return (bool)$stmt->fetch();
+        } catch (\PDOException $e) {
+            return false;
+        }
     }
 
-    /**
-     * 해당 admin_id가 슈퍼바이저인지 확인
-     */
     public static function isSupervisorAdmin(string $adminId): bool
     {
-        $stmt = self::$pdo->prepare("SELECT id FROM rzx_admins WHERE id = ? AND role = 'master'");
-        $stmt->execute([$adminId]);
-        return (bool)$stmt->fetch();
+        // v2.1: admin_id = user_id이므로 동일
+        return self::isSupervisorUser($adminId);
     }
 
-    /**
-     * master 계정 수 반환 (최소 1명 유지용)
-     */
     public static function masterCount(): int
     {
-        return (int)self::$pdo->query("SELECT COUNT(*) FROM rzx_admins WHERE role = 'master'")->fetchColumn();
+        $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+        return (int)self::$pdo->query("SELECT COUNT(*) FROM {$prefix}users WHERE role IN ('supervisor','admin','master')")->fetchColumn();
     }
 
     // ===== 라우트 → 권한 매핑 =====
 
-    /**
-     * 관리자 경로에 필요한 권한 반환
-     * null이면 로그인만 필요 (권한 체크 불필요)
-     */
     public static function getRequiredPermission(string $adminRoute): ?string
     {
-        // 대시보드는 로그인만 필요
         if ($adminRoute === '' || $adminRoute === '/') return null;
 
         $map = [
@@ -198,7 +200,6 @@ class AdminAuth
             'settings'           => 'settings',
         ];
 
-        // 가장 구체적인 경로부터 매칭
         foreach ($map as $prefix => $perm) {
             if ($adminRoute === $prefix || str_starts_with($adminRoute, $prefix . '/')) {
                 return $perm;

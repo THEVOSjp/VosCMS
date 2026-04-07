@@ -3,6 +3,7 @@ namespace RzxLib\Modules\Payment;
 
 use RzxLib\Modules\Payment\Contracts\PaymentGatewayInterface;
 use RzxLib\Modules\Payment\Gateways\StripeGateway;
+use RzxLib\Modules\Payment\Gateways\PayjpGateway;
 
 /**
  * 결제 게이트웨이 관리자
@@ -61,7 +62,9 @@ class PaymentManager
         switch ($gw) {
             case 'stripe':
                 return new StripeGateway($c['secret_key'] ?? '', $c['public_key'] ?? '');
-            // TODO: toss, payjp, portone
+            case 'payjp':
+                return new PayjpGateway($c['secret_key'] ?? '', $c['public_key'] ?? '');
+            // TODO: toss, portone
             default:
                 throw new \RuntimeException("Unsupported payment gateway: {$gw}");
         }

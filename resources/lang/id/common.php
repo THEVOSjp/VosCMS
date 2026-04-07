@@ -115,6 +115,8 @@ return [
     ],
 
     // Buttons
+    'days' => ['mon' => 'Sen', 'tue' => 'Sel', 'wed' => 'Rab', 'thu' => 'Kam', 'fri' => 'Jum', 'sat' => 'Sab', 'sun' => 'Min'],
+    'select' => 'Pilih',
     'buttons' => [
         'login' => 'Masuk',
         'logout' => 'Keluar',

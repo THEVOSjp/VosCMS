@@ -184,6 +184,14 @@ var WB = (function() {
         if (activeCategoryEl) { activeCategoryEl.classList.remove('active'); activeCategoryEl = null; }
     });
 
+    // 캔버스 클릭 시 플라이아웃 닫기
+    canvas.addEventListener('click', function() {
+        if (!flyout.classList.contains('hidden')) {
+            flyout.classList.add('hidden');
+            if (activeCategoryEl) { activeCategoryEl.classList.remove('active'); activeCategoryEl = null; }
+        }
+    });
+
     // ===== 팔레트 클릭 → 위젯 추가 (hidden store 데이터에서) =====
     document.querySelectorAll('#widgetDataStore .widget-palette-item').forEach(function(item) {
         item.addEventListener('click', function() {
@@ -220,7 +228,7 @@ var WB = (function() {
                         '<button class="btn-up p-1 hover:bg-blue-500 rounded transition" title="Up"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg></button>' +
                         '<button class="btn-down p-1 hover:bg-blue-500 rounded transition" title="Down"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>' +
                         '<span class="w-px h-4 bg-blue-400/50 mx-1"></span>' +
-                        '<button class="btn-edit p-1 hover:bg-blue-500 rounded transition" title="Inline Edit"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>' +
+                        '<button class="btn-edit hidden p-1 hover:bg-blue-500 rounded transition" title="Inline Edit"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>' +
                         '<button class="btn-config p-1 hover:bg-blue-500 rounded transition" title="Settings"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>' +
                         '<button class="btn-remove p-1 hover:bg-red-500 rounded transition" title="Delete"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>' +
                     '</div></div></div>' +
@@ -289,9 +297,17 @@ var WB = (function() {
                 iframe.onload = function() {
                     loading.classList.add('hidden');
                     iframe.classList.remove('hidden');
+                    // TailwindCSS CDN 비동기 로드 대기 — 여러 시점에서 높이 재계산
                     adjustIframeHeight(iframe);
-                    setTimeout(function() { adjustIframeHeight(iframe); }, 600);
-                    setTimeout(function() { adjustIframeHeight(iframe); }, 1500);
+                    [300, 800, 1500, 3000, 5000].forEach(function(ms) {
+                        setTimeout(function() { adjustIframeHeight(iframe); }, ms);
+                    });
+                    // MutationObserver로 iframe 내부 변화 감지
+                    try {
+                        var obs = new MutationObserver(function() { adjustIframeHeight(iframe); });
+                        obs.observe(iframe.contentDocument.body, { childList: true, subtree: true, attributes: true });
+                        setTimeout(function() { obs.disconnect(); }, 10000);
+                    } catch(e) {}
                 };
             } else {
                 block.querySelector('.widget-loading').innerHTML = '<span class="text-xs text-zinc-400">Empty widget</span>';
@@ -308,12 +324,19 @@ var WB = (function() {
         return '<!DOCTYPE html><html class="' + (isDark ? 'dark' : '') + '"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">' +
             '<script src="https://cdn.tailwindcss.com"><\/script><script>tailwind.config={darkMode:"class"}<\/script>' +
             '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">' +
-            '<style>*{margin:0;padding:0}body{overflow:hidden;font-family:"Pretendard",-apple-system,sans-serif}</style>' +
+            '<style>*{margin:0;padding:0;box-sizing:border-box}body{overflow:hidden;font-family:"Pretendard",-apple-system,sans-serif}img,video{max-width:100%;height:auto}</style>' +
             '</head><body class="' + (isDark ? 'dark bg-zinc-900' : 'bg-white') + '">' + html + '</body></html>';
     }
 
     function adjustIframeHeight(iframe) {
-        try { var h = iframe.contentDocument.documentElement.scrollHeight; if (h > 20) iframe.style.height = h + 'px'; } catch(e) {}
+        try {
+            var doc = iframe.contentDocument || iframe.contentWindow.document;
+            var h = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, doc.body.offsetHeight);
+            if (h > 30) {
+                iframe.style.height = h + 'px';
+                iframe.style.minHeight = h + 'px';
+            }
+        } catch(e) {}
     }
 
     // ===== 레이아웃 저장 =====

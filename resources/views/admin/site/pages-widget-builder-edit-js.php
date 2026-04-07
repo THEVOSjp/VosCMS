@@ -79,10 +79,15 @@ var WBEdit = (function() {
     function renderEditFields(fields) {
         var html = '';
         var i18nFields = fields.filter(function(f) { return f.i18n; });
-        var commonFields = fields.filter(function(f) { return !f.i18n && f.type !== 'buttons' && f.type !== 'hero_images' && f.type !== 'feature_items'; });
+        var commonFields = fields.filter(function(f) { return !f.i18n && f.type !== 'buttons' && f.type !== 'hero_images' && f.type !== 'feature_items' && f.type !== 'service_items' && f.type !== 'hero_slides' && f.type !== 'nav_items' && f.type !== 'slider_items' && f.type !== 'grid_cells'; });
         var buttonsField = fields.find(function(f) { return f.type === 'buttons'; });
         var heroImagesField = fields.find(function(f) { return f.type === 'hero_images'; });
         var featureItemsField = fields.find(function(f) { return f.type === 'feature_items'; });
+        var serviceItemsField = fields.find(function(f) { return f.type === 'service_items'; });
+        var heroSlidesField = fields.find(function(f) { return f.type === 'hero_slides'; });
+        var navItemsField = fields.find(function(f) { return f.type === 'nav_items'; });
+        var sliderItemsField = fields.find(function(f) { return f.type === 'slider_items'; });
+        var gridCellsField = fields.find(function(f) { return f.type === 'grid_cells'; });
 
         if (i18nFields.length > 0) {
             html += '<div class="space-y-3">';
@@ -101,6 +106,13 @@ var WBEdit = (function() {
         if (heroImagesField && WBEdit.renderHeroImagesSection) html += WBEdit.renderHeroImagesSection();
         if (buttonsField && WBEdit.renderButtonsSection) html += WBEdit.renderButtonsSection();
         if (featureItemsField && WBEdit.renderFeatureItemsSection) html += WBEdit.renderFeatureItemsSection();
+        if (serviceItemsField && WBEdit.renderServiceItemsSection) html += WBEdit.renderServiceItemsSection();
+        if (sliderItemsField && WBEdit.renderSliderItemsSection) html += WBEdit.renderSliderItemsSection();
+        if (gridCellsField && WBEdit.renderGridCellsSection) html += WBEdit.renderGridCellsSection();
+        else {
+            if (heroSlidesField && WBEdit.renderHeroSlidesSection) html += WBEdit.renderHeroSlidesSection();
+            if (navItemsField && WBEdit.renderNavItemsSection) html += WBEdit.renderNavItemsSection();
+        }
 
         editPanelFields.innerHTML = html;
         bindImageUploads();
@@ -112,6 +124,10 @@ var WBEdit = (function() {
         if (heroImagesField && WBEdit.bindHeroImagesEvents) WBEdit.bindHeroImagesEvents();
         if (buttonsField && WBEdit.bindButtonsEvents) WBEdit.bindButtonsEvents();
         if (featureItemsField && WBEdit.bindFeatureItemsEvents) WBEdit.bindFeatureItemsEvents();
+        if (serviceItemsField && WBEdit.bindServiceItemsEvents) WBEdit.bindServiceItemsEvents();
+        if (sliderItemsField && WBEdit.bindSliderItemsEvents) WBEdit.bindSliderItemsEvents();
+        if (gridCellsField && WBEdit.bindGridCellsEvents) WBEdit.bindGridCellsEvents();
+        else if ((heroSlidesField || navItemsField) && WBEdit.bindHeroSlidesEvents) WBEdit.bindHeroSlidesEvents();
     }
 
     // ===== i18n 필드 =====
@@ -168,8 +184,22 @@ var WBEdit = (function() {
         switch (f.type) {
             case 'number': h += '<input type="number" class="edit-field w-full px-3 py-2 border border-zinc-200 dark:border-zinc-600 rounded-lg text-xs bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white" data-key="' + f.key + '" value="' + esc(String(val)) + '">'; break;
             case 'color': h += '<div class="flex items-center gap-2"><input type="color" class="edit-field w-10 h-8 rounded-lg cursor-pointer border border-zinc-200 dark:border-zinc-600" data-key="' + f.key + '" value="' + esc(String(val || '#000000')) + '"><span class="color-label text-xs text-zinc-500">' + esc(String(val || '#000000')) + '</span></div>'; break;
+            case 'color_transparent':
+                var isTransparent = (!val || val === 'transparent');
+                h += '<div class="flex items-center gap-2">';
+                h += '<label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" class="ct-transparent-chk rounded border-zinc-300 dark:border-zinc-600 text-blue-600 focus:ring-blue-500" data-key="' + f.key + '"' + (isTransparent ? ' checked' : '') + '><span class="text-[11px] text-zinc-500">Transparent</span></label>';
+                h += '<input type="color" class="ct-color-pick w-8 h-7 rounded cursor-pointer border border-zinc-200 dark:border-zinc-600' + (isTransparent ? ' opacity-30 pointer-events-none' : '') + '" data-key="' + f.key + '" value="' + esc(isTransparent ? '#f9fafb' : String(val)) + '">';
+                h += '<input type="hidden" class="edit-field" data-key="' + f.key + '" value="' + esc(String(val || 'transparent')) + '">';
+                h += '</div>'; break;
             case 'toggle': var chk = (val === 1 || val === '1' || val === true) ? 'checked' : ''; h += '<label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="edit-field sr-only peer" data-key="' + f.key + '" ' + chk + '><div class="w-9 h-5 bg-zinc-200 rounded-full peer dark:bg-zinc-600 peer-checked:after:translate-x-full after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div></label>'; break;
             case 'select': h += '<select class="edit-field w-full px-3 py-2 border border-zinc-200 dark:border-zinc-600 rounded-lg text-xs bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white" data-key="' + f.key + '">'; (f.options || []).forEach(function(o) { h += '<option value="' + esc(String(o.value)) + '"' + (String(o.value) === String(val) ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }); h += '</select>'; break;
+            case 'board_select':
+                var boardList = window._boardList || [];
+                h += '<select class="edit-field w-full px-3 py-2 border border-zinc-200 dark:border-zinc-600 rounded-lg text-xs bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white" data-key="' + f.key + '">';
+                h += '<option value="">-- Select Board --</option>';
+                boardList.forEach(function(b) { h += '<option value="' + esc(b.slug) + '"' + (b.slug === String(val) ? ' selected' : '') + '>' + esc(b.title) + ' (' + esc(b.slug) + ')</option>'; });
+                h += '</select>';
+                break;
             case 'image': var imgUrl = String(val || ''); h += '<div class="image-upload-wrap" data-key="' + f.key + '">'; if (imgUrl) h += '<div class="relative mb-2 inline-block"><img src="' + esc(imgUrl) + '" class="h-20 rounded-lg object-cover border border-zinc-200 dark:border-zinc-600"><button type="button" class="img-remove absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600">&times;</button></div>'; h += '<div class="flex gap-2"><label class="px-2.5 py-1.5 bg-blue-600 text-white text-[11px] rounded-lg cursor-pointer hover:bg-blue-700 transition inline-flex items-center"><svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Upload<input type="file" class="img-file-input hidden" accept="image/*"></label><input type="text" class="edit-field flex-1 px-2 py-1.5 border border-zinc-200 dark:border-zinc-600 rounded-lg text-[11px] bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white" data-key="' + f.key + '" value="' + esc(imgUrl) + '" placeholder="or paste URL"></div></div>'; break;
             case 'video':
                 var vidUrl = String(val || '');
@@ -246,6 +276,24 @@ var WBEdit = (function() {
     function bindRangeInputs() {
         editPanel.querySelectorAll('.range-input').forEach(function(r) { r.addEventListener('input', function() { var s = r.parentElement.querySelector('.range-val'); if (s) s.textContent = r.value + '%'; }); });
         editPanel.querySelectorAll('input[type="color"].edit-field').forEach(function(c) { c.addEventListener('input', function() { var s = c.parentElement.querySelector('.color-label'); if (s) s.textContent = c.value; }); });
+        // color_transparent 바인딩
+        editPanel.querySelectorAll('.ct-transparent-chk').forEach(function(chk) {
+            var key = chk.dataset.key;
+            var pick = chk.closest('div').querySelector('.ct-color-pick[data-key="' + key + '"]');
+            var hidden = chk.closest('div').querySelector('.edit-field[data-key="' + key + '"]');
+            chk.addEventListener('change', function() {
+                if (chk.checked) {
+                    hidden.value = 'transparent';
+                    pick.classList.add('opacity-30', 'pointer-events-none');
+                } else {
+                    hidden.value = pick.value;
+                    pick.classList.remove('opacity-30', 'pointer-events-none');
+                }
+            });
+            pick.addEventListener('input', function() {
+                if (!chk.checked) hidden.value = pick.value;
+            });
+        });
     }
 
     // ===== Code Editor (Tab 지원) =====
@@ -460,7 +508,10 @@ var WBEdit = (function() {
         if (WBEdit.saveButtonsToTemp) WBEdit.saveButtonsToTemp();
         if (WBEdit.saveHeroImagesToTemp) WBEdit.saveHeroImagesToTemp();
         if (WBEdit.saveFeatureItemsToTemp) WBEdit.saveFeatureItemsToTemp();
-        // richtext values are now in regular textareas, picked up by .edit-field above
+        if (WBEdit.saveServiceItemsToTemp) WBEdit.saveServiceItemsToTemp();
+        if (WBEdit.saveSliderItemsToTemp) WBEdit.saveSliderItemsToTemp();
+        if (WBEdit.saveGridCellsToTemp) WBEdit.saveGridCellsToTemp();
+        else if (WBEdit.saveHeroSlidesToTemp) WBEdit.saveHeroSlidesToTemp();
     }
 
     // ===== 이벤트 =====
@@ -497,11 +548,27 @@ var WBEdit = (function() {
         bindVideoUploads: null,
         renderFeatureItemsSection: null,
         bindFeatureItemsEvents: null,
-        saveFeatureItemsToTemp: null
+        saveFeatureItemsToTemp: null,
+        renderServiceItemsSection: null,
+        bindServiceItemsEvents: null,
+        saveServiceItemsToTemp: null,
+        renderHeroSlidesSection: null,
+        renderNavItemsSection: null,
+        bindHeroSlidesEvents: null,
+        saveHeroSlidesToTemp: null,
+        renderSliderItemsSection: null,
+        bindSliderItemsEvents: null,
+        saveSliderItemsToTemp: null,
+        renderGridCellsSection: null,
+        bindGridCellsEvents: null,
+        saveGridCellsToTemp: null
     };
 })();
 </script>
 <?php include __DIR__ . '/pages-widget-builder-edit-items-js.php'; ?>
 <?php include __DIR__ . '/pages-widget-builder-edit-features-js.php'; ?>
+<?php include __DIR__ . '/pages-widget-builder-edit-services-js.php'; ?>
+<?php include __DIR__ . '/pages-widget-builder-edit-slider-js.php'; ?>
+<?php include __DIR__ . '/pages-widget-builder-edit-grid-js.php'; ?>
 <?php include __DIR__ . '/pages-widget-builder-inline-js.php'; ?>
 <?php include __DIR__ . '/pages-widget-builder-grid-js.php'; ?>

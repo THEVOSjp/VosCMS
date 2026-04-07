@@ -141,6 +141,7 @@ CREATE TABLE IF NOT EXISTS `rzx_board_extra_vars` (
     `description` TEXT DEFAULT NULL,
     `is_required` TINYINT(1) DEFAULT 0,
     `is_searchable` TINYINT(1) DEFAULT 0,
+    `is_active` TINYINT(1) DEFAULT 1,
     `sort_order` INT DEFAULT 0,
     `options` JSON DEFAULT NULL,
     `default_value` VARCHAR(500) DEFAULT NULL,

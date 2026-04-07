@@ -44,6 +44,9 @@ return [
         'page_management' => 'Хуудасны удирдлага',
         'board_management' => 'Форумын удирдлага',
         'widget_management' => 'Виджет удирдлага',
+        'shops' => 'Дэлгүүр удирдлага',
+        'shops_list' => 'Байгууллагын жагсаалт',
+        'shops_consultations' => '1:1 Зөвлөгөө',
         'plugins' => 'Плагин',
             'staff_admins' => 'Админ эрх',
     ],
@@ -124,4 +127,5 @@ return [
         'update' => 'Шинэчлэх',
         'later' => 'Дараа',
     ],
+    'shops' => ['title' => 'Дэлгүүр удирдлага', 'description' => 'Бүртгэгдсэн дэлгүүрийг удирдаж зөвшөөрнө.'],
 ];

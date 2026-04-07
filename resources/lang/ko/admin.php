@@ -53,6 +53,9 @@ return [
         'page_management' => '페이지 관리',
         'board_management' => '게시판 관리',
         'widget_management' => '위젯 관리',
+        'shops' => '사업장 관리',
+        'shops_list' => '사업장 목록',
+        'shops_consultations' => '1:1 상담',
         'plugins' => '플러그인',
             'staff_admins' => '관리자 권한',
     ],
@@ -126,4 +129,5 @@ return [
         'update' => '업데이트',
         'later' => '나중에',
     ],
+    'shops' => ['title' => '사업장 관리', 'description' => '등록된 사업장을 관리하고 승인합니다.'],
 ];

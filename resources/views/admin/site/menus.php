@@ -89,8 +89,8 @@ function getMenuTranslatedTitle($itemId, $field, $default) {
 // 메뉴 항목 렌더링 함수
 function renderMenuItem($item, $sitemapId, $depth = 0) {
     global $menuAllTranslations, $menuLocaleChain;
-    $isHome = $item['is_home'] ? 1 : 0;
-    $homeIcon = $item['is_home'] ? ' <span class="text-amber-500" title="Home">&#9751;</span>' : '';
+    $isHome = ($item['is_home'] ?? 0) ? 1 : 0;
+    $homeIcon = $isHome ? ' <span class="text-amber-500" title="Home">&#9751;</span>' : '';
     $translatedTitle = getMenuTranslatedTitle($item['id'], 'title', $item['title']);
     ?>
     <div class="tree-item flex items-center px-3 py-1.5 rounded text-sm text-zinc-700 dark:text-zinc-300"
@@ -168,8 +168,8 @@ $pageSubDesc = __('site.menus.description');
         .tree-item[draggable="true"] { cursor: grab; }
         .tree-item[draggable="true"]:active { cursor: grabbing; }
         .tree-item.dragging { opacity: 0.4; }
-        .tree-item.drag-over-top { box-shadow: 0 -2px 0 0 #3b82f6 inset; }
-        .tree-item.drag-over-bottom { box-shadow: 0 2px 0 0 #3b82f6 inset; }
+        .tree-item.drag-over-top { box-shadow: 0 -2px 0 0 #3b82f6; }
+        .tree-item.drag-over-bottom { box-shadow: 0 2px 0 0 #3b82f6; }
         .tree-item.drag-over-inside { background-color: rgba(59,130,246,0.18); outline: 2px dashed #3b82f6; outline-offset: -2px; }
         .drag-handle { cursor: grab; opacity: 0.35; flex-shrink: 0; margin-right: 4px; }
         .tree-item:hover .drag-handle { opacity: 0.7; }

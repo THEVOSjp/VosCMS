@@ -227,6 +227,7 @@ return [
         'col_email' => 'Email',
         'col_phone' => 'Phone',
         'col_grade' => 'Grade',
+        'col_role' => 'Role',
         'col_status' => 'Status',
         'col_joined' => 'Joined',
         'col_actions' => 'Actions',

@@ -44,6 +44,9 @@ return [
         'page_management' => 'Page Management',
         'board_management' => 'Board Management',
         'widget_management' => 'Widget Management',
+        'shops' => 'Shop Management',
+        'shops_list' => 'Business List',
+        'shops_consultations' => '1:1 Consultation',
         'plugins' => 'Plugins',
             'staff_admins' => 'Admin Permissions',
     ],
@@ -127,4 +130,5 @@ return [
         'update' => 'Update',
         'later' => 'Later',
     ],
+    'shops' => ['title' => 'Shop Management', 'description' => 'Manage and approve registered shops.'],
 ];

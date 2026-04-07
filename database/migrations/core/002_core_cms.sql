@@ -57,14 +57,18 @@ CREATE TABLE IF NOT EXISTS `rzx_page_widgets` (
 CREATE TABLE IF NOT EXISTS `rzx_widgets` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `slug` VARCHAR(100) NOT NULL,
-    `title` VARCHAR(200) NOT NULL,
+    `name` VARCHAR(200) NOT NULL,
+    `title` VARCHAR(200) DEFAULT NULL,
     `description` TEXT DEFAULT NULL,
+    `type` VARCHAR(20) DEFAULT 'builtin',
     `category` VARCHAR(50) DEFAULT 'general',
+    `icon` VARCHAR(100) DEFAULT NULL,
     `version` VARCHAR(20) DEFAULT '1.0.0',
     `author` VARCHAR(200) DEFAULT NULL,
     `is_active` TINYINT(1) DEFAULT 1,
     `config_schema` JSON DEFAULT NULL,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY `uk_slug` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

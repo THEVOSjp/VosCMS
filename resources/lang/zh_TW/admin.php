@@ -44,6 +44,9 @@ return [
         'page_management' => '頁面管理',
         'board_management' => '論壇管理',
         'widget_management' => '小工具管理',
+        'shops' => '店鋪管理',
+        'shops_list' => '營業場所列表',
+        'shops_consultations' => '1:1 諮詢',
         'plugins' => '外掛',
             'staff_admins' => '管理員權限',
     ],
@@ -127,4 +130,5 @@ return [
         'update' => '更新',
         'later' => '稍後',
     ],
+    'shops' => ['title' => '店鋪管理', 'description' => '管理和審批已註冊的店鋪。'],
 ];

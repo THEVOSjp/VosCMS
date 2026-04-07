@@ -114,6 +114,8 @@ return [
     ],
 
     // Buttons
+    'days' => ['mon' => 'Пн', 'tue' => 'Вт', 'wed' => 'Ср', 'thu' => 'Чт', 'fri' => 'Пт', 'sat' => 'Сб', 'sun' => 'Вс'],
+    'select' => 'Выбрать',
     'buttons' => [
         'login' => 'Войти',
         'logout' => 'Выйти',

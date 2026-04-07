@@ -227,6 +227,7 @@ return [
         'col_email' => 'Email',
         'col_phone' => 'Телефон',
         'col_grade' => 'Уровень',
+        'col_role' => 'Роль',
         'col_status' => 'Статус',
         'col_joined' => 'Регистрация',
         'col_actions' => 'Действия',

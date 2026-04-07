@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                 $pageSlug,
                 (int)$item['widget_id'],
                 $i,
-                json_encode($item['config'] ?? new \stdClass())
+                json_encode($item['config'] ?? new \stdClass(), JSON_UNESCAPED_UNICODE)
             ]);
         }
         echo json_encode(['success' => true, 'message' => __('site.widget_builder.saved')]);

@@ -44,6 +44,9 @@ return [
         'page_management' => 'Sayfa Yönetimi',
         'board_management' => 'Forum Yönetimi',
         'widget_management' => 'Widget Yönetimi',
+        'shops' => 'Mağaza Yönetimi',
+        'shops_list' => 'İşletme Listesi',
+        'shops_consultations' => '1:1 Danışma',
         'plugins' => 'Eklentiler',
             'staff_admins' => 'Yönetici Yetkileri',
     ],
@@ -124,4 +127,5 @@ return [
         'update' => 'Güncelle',
         'later' => 'Sonra',
     ],
+    'shops' => ['title' => 'Mağaza Yönetimi', 'description' => 'Kayıtlı mağazaları yönetin ve onaylayın.'],
 ];

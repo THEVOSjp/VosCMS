@@ -5,6 +5,8 @@ SET NAMES utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `rzx_point_levels` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `level` INT DEFAULT 0,
+    `point` INT DEFAULT 0,
     `name` VARCHAR(100) NOT NULL,
     `min_points` INT DEFAULT 0,
     `icon` VARCHAR(100) DEFAULT NULL,

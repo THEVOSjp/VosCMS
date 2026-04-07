@@ -44,6 +44,9 @@ return [
         'page_management' => '页面管理',
         'board_management' => '论坛管理',
         'widget_management' => '小部件管理',
+        'shops' => '店铺管理',
+        'shops_list' => '营业场所列表',
+        'shops_consultations' => '1:1 咨询',
         'plugins' => '插件',
             'staff_admins' => '管理员权限',
     ],
@@ -127,4 +130,5 @@ return [
         'update' => '更新',
         'later' => '稍后',
     ],
+    'shops' => ['title' => '店铺管理', 'description' => '管理和审批已注册的店铺。'],
 ];

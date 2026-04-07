@@ -44,6 +44,9 @@ return [
         'page_management' => 'ページ管理',
         'board_management' => '掲示板管理',
         'widget_management' => 'ウィジェット管理',
+        'shops' => '店舗管理',
+        'shops_list' => '事業所一覧',
+        'shops_consultations' => '1:1 相談',
         'plugins' => 'プラグイン',
             'staff_admins' => '管理者権限',
     ],
@@ -127,4 +130,5 @@ return [
         'update' => 'アップデート',
         'later' => '後で',
     ],
+    'shops' => ['title' => '店舗管理', 'description' => '登録された店舗を管理・承認します。'],
 ];

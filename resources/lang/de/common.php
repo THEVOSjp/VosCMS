@@ -114,6 +114,8 @@ return [
     ],
 
     // Buttons
+    'days' => ['mon' => 'Mo', 'tue' => 'Di', 'wed' => 'Mi', 'thu' => 'Do', 'fri' => 'Fr', 'sat' => 'Sa', 'sun' => 'So'],
+    'select' => 'Auswählen',
     'buttons' => [
         'login' => 'Anmelden',
         'logout' => 'Abmelden',

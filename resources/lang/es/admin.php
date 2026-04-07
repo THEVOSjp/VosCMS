@@ -44,6 +44,9 @@ return [
         'page_management' => 'Gestion de paginas',
         'board_management' => 'Gestión de Foros',
         'widget_management' => 'Gestión de widgets',
+        'shops' => 'Gestión de Tiendas',
+        'shops_list' => 'Lista de establecimientos',
+        'shops_consultations' => 'Consulta 1:1',
         'plugins' => 'Plugins',
             'staff_admins' => 'Permisos de admin',
     ],
@@ -127,4 +130,5 @@ return [
         'update' => 'Actualizar',
         'later' => 'Más tarde',
     ],
+    'shops' => ['title' => 'Gestión de Tiendas', 'description' => 'Gestionar y aprobar tiendas registradas.'],
 ];

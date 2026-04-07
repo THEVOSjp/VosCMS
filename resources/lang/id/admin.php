@@ -44,6 +44,9 @@ return [
         'page_management' => 'Manajemen Halaman',
         'board_management' => 'Manajemen Forum',
         'widget_management' => 'Manajemen Widget',
+        'shops' => 'Manajemen Toko',
+        'shops_list' => 'Daftar Tempat Usaha',
+        'shops_consultations' => 'Konsultasi 1:1',
         'plugins' => 'Plugin',
             'staff_admins' => 'Izin Admin',
     ],
@@ -127,4 +130,5 @@ return [
         'update' => 'Perbarui',
         'later' => 'Nanti',
     ],
+    'shops' => ['title' => 'Manajemen Toko', 'description' => 'Kelola dan setujui toko terdaftar.'],
 ];

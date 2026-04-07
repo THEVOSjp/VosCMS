@@ -115,6 +115,8 @@ return [
     ],
 
     // Buttons
+    'days' => ['mon' => 'T2', 'tue' => 'T3', 'wed' => 'T4', 'thu' => 'T5', 'fri' => 'T6', 'sat' => 'T7', 'sun' => 'CN'],
+    'select' => 'Chọn',
     'buttons' => [
         'login' => 'Đăng nhập',
         'logout' => 'Đăng xuất',

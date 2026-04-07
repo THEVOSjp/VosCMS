@@ -57,6 +57,7 @@ $recentReservations = [];
                 </div>
 
                 <!-- 통계 카드 -->
+                <?php if (file_exists(BASE_PATH . '/plugins/vos-salon/plugin.json')): ?>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow p-4">
                         <div class="flex items-center justify-between">
@@ -112,10 +113,13 @@ $recentReservations = [];
                     </div>
                 </div>
 
+                <?php endif; ?>
+
                 <!-- 빠른 메뉴 -->
                 <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6 mb-6">
                     <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4"><?php echo __('auth.mypage.quick_actions'); ?></h2>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <?php if (file_exists(BASE_PATH . '/plugins/vos-salon/plugin.json')): ?>
                         <a href="<?php echo $baseUrl; ?>/booking" class="flex items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition">
                             <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-4">
                                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,6 +142,7 @@ $recentReservations = [];
                                 <p class="text-sm text-gray-500 dark:text-zinc-400"><?php echo __('auth.mypage.view_all'); ?></p>
                             </div>
                         </a>
+                        <?php endif; ?>
                         <a href="<?php echo $baseUrl; ?>/mypage/profile" class="flex items-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl hover:bg-purple-100 dark:hover:bg-purple-900/30 transition">
                             <div class="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mr-4">
                                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,6 +158,7 @@ $recentReservations = [];
                 </div>
 
                 <!-- 최근 예약 -->
+                <?php if (file_exists(BASE_PATH . '/plugins/vos-salon/plugin.json')): ?>
                 <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-lg font-bold text-gray-900 dark:text-white"><?php echo __('auth.mypage.recent_reservations'); ?></h2>
@@ -196,6 +202,7 @@ $recentReservations = [];
                     </div>
                     <?php endif; ?>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>

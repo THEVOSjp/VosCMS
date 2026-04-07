@@ -3,8 +3,8 @@
  * RezlyX Admin - WYSIWYG 위젯 빌더
  * 실시간 미리보기 + 드래그앤드롭 + 설정 편집
  */
-$_wbSlug = $_GET['slug'] ?? 'home';
-$_wbIsHome = ($_wbSlug === 'home' || empty($_wbSlug));
+$_wbSlug = $_GET['slug'] ?? 'index';
+$_wbIsHome = ($_wbSlug === 'index' || empty($_wbSlug));
 $pageTitle = ($_wbIsHome ? __('site.widget_builder.title') : (__('site.widget_builder.page_edit') ?? '페이지 편집')) . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 
 try {
@@ -21,7 +21,7 @@ try {
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 $currentLocale = $config['locale'] ?? 'ko';
-$pageSlug = $_GET['slug'] ?? 'home';
+$pageSlug = $_GET['slug'] ?? 'index';
 
 // ======= AJAX 요청 처리 (별도 파일) =======
 include __DIR__ . '/pages-widget-builder-ajax.php';
@@ -99,8 +99,9 @@ $_isEmbed = !empty($_GET['embed']);
         .category-item:hover, .category-item.active { background: rgb(239 246 255); }
         .dark .category-item:hover, .dark .category-item.active { background: rgb(30 58 138 / 0.2); }
         .category-item.active { border-right: 3px solid rgb(59 130 246); }
-        .widget-flyout { transition: opacity 0.15s, transform 0.15s; }
-        .widget-flyout.hidden { opacity: 0; transform: translateX(-8px); pointer-events: none; }
+        .widget-flyout { transition: opacity 0.2s ease, transform 0.2s ease; opacity: 1; transform: translateX(0); }
+        .widget-flyout.hidden { opacity: 0; transform: translateX(-12px); pointer-events: none; display: flex !important; visibility: hidden; }
+        .widget-flyout:not(.hidden) { visibility: visible; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         #editSidePanel { transition: width 0.2s ease; }
         .note-editor { border-radius: 0.5rem; overflow: hidden; }
@@ -161,14 +162,14 @@ $_isEmbed = !empty($_GET['embed']);
                     </div>
 
                     <!-- 플라이아웃 패널 -->
-                    <div id="widgetFlyout" class="widget-flyout hidden absolute left-full top-0 bottom-0 bg-white dark:bg-zinc-800 border-l border-zinc-200 dark:border-zinc-700 shadow-xl flex flex-col z-40" style="min-height:100%; width: 580px;">
+                    <div id="widgetFlyout" class="widget-flyout hidden absolute left-full top-0 bottom-0 bg-white dark:bg-zinc-800 border-l border-r border-zinc-200 dark:border-zinc-700 shadow-2xl flex flex-col z-40" style="min-height:100%; width: min(580px, calc(100vw - 250px))">
                         <div class="px-4 py-3 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
                             <h3 id="flyoutTitle" class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"></h3>
                             <button id="flyoutClose" class="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-400">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
-                        <div id="flyoutContent" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-3">
+                        <div id="flyoutContent" class="overflow-y-auto p-4 grid grid-cols-2 gap-3 content-start">
                         </div>
                     </div>
                 </aside>
@@ -344,6 +345,12 @@ $_isEmbed = !empty($_GET['embed']);
     var supportedLangs = <?= json_encode(array_values($supportedLangs)) ?>;
     var langNames = <?= json_encode($langNames) ?>;
     var currentLocale = '<?= $currentLocale ?>';
+    // 게시판 목록 (board_select 위젯용)
+    window._boardList = <?php
+        try { $_bl = $pdo->query("SELECT slug, title FROM rzx_widgets")->fetchAll(\PDO::FETCH_ASSOC); } catch(\Throwable $e) { $_bl = []; }
+        try { $_bl = $pdo->query("SELECT slug, title FROM rzx_boards WHERE is_active = 1 ORDER BY id")->fetchAll(\PDO::FETCH_ASSOC); } catch(\Throwable $e) { $_bl = []; }
+        echo json_encode($_bl);
+    ?>;
     var placedWidgetsData = <?= json_encode(array_map(function($pw) use ($fileWidgets) {
         $slug = $pw['widget_slug'];
         // 파일 기반 위젯은 widget.json의 config_schema 우선 사용
@@ -356,7 +363,7 @@ $_isEmbed = !empty($_GET['embed']);
             'slug' => $slug,
             'name' => $pw['widget_name'],
             'icon' => $pw['icon'],
-            'config' => $pw['config'] ?? '{}',
+            'config' => ($pw['config'] && $pw['config'] !== '[]') ? $pw['config'] : '{}',
             'config_schema' => $schema,
         ];
     }, $placedWidgets)) ?>;

@@ -227,6 +227,7 @@ return [
         'col_email' => 'メール',
         'col_phone' => '電話番号',
         'col_grade' => 'グレード',
+        'col_role' => '役割',
         'col_status' => 'ステータス',
         'col_joined' => '登録日',
         'col_actions' => '管理',

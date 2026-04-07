@@ -54,7 +54,7 @@ $isSitePage = strpos($currentPath, '/site/') !== false;
 $isWidgetsPage = strpos($currentPath, '/site/widgets') !== false;
 
 // 회원 관리 서브페이지 여부
-$isMembersPage = strpos($currentPath, '/members') !== false || strpos($currentPath, '/points') !== false;
+$isMembersPage = strpos($currentPath, '/members') !== false || strpos($currentPath, '/points') !== false || strpos($currentPath, '/staff/admins') !== false;
 
 // 설정 서브페이지 여부
 $isSettingsPage = strpos($currentPath, '/settings') !== false;
@@ -277,6 +277,58 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     <?= __('admin.nav.points') ?>
+                </a>
+                <?php if (\RzxLib\Core\Auth\AdminAuth::isMaster()): ?>
+                <a href="<?php echo $adminUrl; ?>/staff/admins" class="flex items-center px-6 py-2.5 pl-14 <?php echo isActiveMenu('/staff/admins', $currentPath) ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'; ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                    <?= __('admin.nav.staff_admins') ?>
+                </a>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+        <!-- 사업장 관리 메뉴 (vos-shop 플러그인) -->
+        <?php
+        $_hasShopPlugin = file_exists(BASE_PATH . '/plugins/vos-shop/plugin.json');
+        $isShopsPage = str_contains($currentPath, '/shops');
+        $pendingShops = 0;
+        $pendingConsultCount = 0;
+        if ($_hasShopPlugin) {
+            try { $pendingShops = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}shops WHERE status = 'pending'")->fetchColumn(); } catch (\Throwable $e) {}
+            try { $pendingConsultCount = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}shop_inquiries WHERE is_public = 0 AND status = 'pending'")->fetchColumn(); } catch (\Throwable $e) {}
+        }
+        $shopBadgeTotal = $pendingShops + $pendingConsultCount;
+        ?>
+        <?php if ($_hasShopPlugin): ?>
+        <div class="has-submenu" data-submenu="shopSubMenu">
+            <button onclick="document.getElementById('shopSubMenu').classList.toggle('hidden');document.getElementById('shopMenuArrow').classList.toggle('rotate-180')" class="flex items-center justify-between w-full px-6 py-3 <?= $isShopsPage ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white' ?>" title="<?= __('admin.nav.shops') ?? '사업장 관리' ?>">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    <span class="sidebar-text"><?= __('admin.nav.shops') ?? '사업장 관리' ?></span>
+                    <?php if ($shopBadgeTotal > 0): ?>
+                    <span class="ml-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full sidebar-text"><?= $shopBadgeTotal ?></span>
+                    <?php endif; ?>
+                </div>
+                <svg id="shopMenuArrow" class="w-4 h-4 transition-transform sidebar-text <?= $isShopsPage ? 'rotate-180' : '' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div id="shopSubMenu" class="<?= $isShopsPage ? '' : 'hidden' ?> bg-zinc-900">
+                <a href="<?= $adminUrl ?>/shops" class="flex items-center px-6 py-2.5 pl-14 <?= isActiveMenu('/shops', $currentPath) && !str_contains($currentPath, '/shops/consultations') ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white' ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    <?= __('admin.nav.shops_list') ?? '사업장 목록' ?>
+                    <?php if ($pendingShops > 0): ?>
+                    <span class="ml-auto bg-amber-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full"><?= $pendingShops ?></span>
+                    <?php endif; ?>
+                </a>
+                <a href="<?= $adminUrl ?>/shops/consultations" class="flex items-center px-6 py-2.5 pl-14 <?= str_contains($currentPath, '/shops/consultations') ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white' ?> text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                    <?= __('admin.nav.shops_consultations') ?? '1:1 상담' ?>
+                    <?php if ($pendingConsultCount > 0): ?>
+                    <span class="ml-auto bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full"><?= $pendingConsultCount ?></span>
+                    <?php endif; ?>
                 </a>
             </div>
         </div>

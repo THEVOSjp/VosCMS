@@ -227,6 +227,7 @@ return [
         'col_email' => 'Email',
         'col_phone' => 'Điện thoại',
         'col_grade' => 'Cấp độ',
+        'col_role' => 'Vai trò',
         'col_status' => 'Trạng thái',
         'col_joined' => 'Ngày đăng ký',
         'col_actions' => 'Thao tác',

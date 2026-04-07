@@ -115,6 +115,8 @@ return [
     ],
 
     // Buttons
+    'days' => ['mon' => 'Pzt', 'tue' => 'Sal', 'wed' => 'Çar', 'thu' => 'Per', 'fri' => 'Cum', 'sat' => 'Cmt', 'sun' => 'Paz'],
+    'select' => 'Seçin',
     'buttons' => [
         'login' => 'Giriş Yap',
         'logout' => 'Çıkış Yap',

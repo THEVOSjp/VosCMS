@@ -13,7 +13,13 @@ CREATE TABLE IF NOT EXISTS `rzx_users` (
     `phone_country` VARCHAR(10) DEFAULT NULL,
     `phone_number` VARCHAR(50) DEFAULT NULL,
     `avatar` VARCHAR(500) DEFAULT NULL,
-    `role` ENUM('user','staff','admin') DEFAULT 'user',
+    `birth_date` DATE DEFAULT NULL,
+    `gender` ENUM('male','female','other') DEFAULT NULL,
+    `company` VARCHAR(200) DEFAULT NULL,
+    `blog` VARCHAR(500) DEFAULT NULL,
+    `profile_image` VARCHAR(500) DEFAULT NULL,
+    `role` VARCHAR(20) DEFAULT 'member',
+    `permissions` JSON DEFAULT NULL,
     `grade_id` INT UNSIGNED DEFAULT NULL,
     `is_active` TINYINT(1) DEFAULT 1,
     `email_verified_at` DATETIME DEFAULT NULL,
@@ -28,12 +34,23 @@ CREATE TABLE IF NOT EXISTS `rzx_users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `rzx_admins` (
-    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    `user_id` CHAR(36) NOT NULL,
+    `id` CHAR(36) NOT NULL,
+    `user_id` CHAR(36) DEFAULT NULL,
+    `staff_id` INT DEFAULT NULL,
+    `email` VARCHAR(255) NOT NULL,
+    `password` VARCHAR(255) NOT NULL,
+    `name` VARCHAR(100) NOT NULL,
+    `role` ENUM('master','manager','staff') DEFAULT 'manager',
+    `permissions` LONGTEXT DEFAULT NULL,
+    `status` ENUM('active','inactive') DEFAULT 'active',
     `is_master` TINYINT(1) DEFAULT 0,
-    `permissions` JSON DEFAULT NULL,
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY `uk_user` (`user_id`)
+    `last_login_at` TIMESTAMP NULL DEFAULT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_email` (`email`),
+    UNIQUE KEY `uk_user` (`user_id`),
+    UNIQUE KEY `uk_staff` (`staff_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `rzx_member_grades` (
@@ -41,11 +58,16 @@ CREATE TABLE IF NOT EXISTS `rzx_member_grades` (
     `name` VARCHAR(100) NOT NULL,
     `slug` VARCHAR(50) NOT NULL,
     `level` INT DEFAULT 0,
+    `min_reservations` INT DEFAULT 0,
+    `min_spent` DECIMAL(10,2) DEFAULT 0,
     `discount_rate` DECIMAL(5,2) DEFAULT 0,
     `point_rate` DECIMAL(5,2) DEFAULT 0,
+    `benefits` TEXT DEFAULT NULL,
     `color` VARCHAR(20) DEFAULT NULL,
+    `sort_order` INT DEFAULT 0,
     `is_default` TINYINT(1) DEFAULT 0,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY `uk_slug` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

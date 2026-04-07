@@ -44,6 +44,9 @@ return [
         'page_management' => 'Gestion des pages',
         'board_management' => 'Gestion des Forums',
         'widget_management' => 'Gestion des widgets',
+        'shops' => 'Gestion Magasins',
+        'shops_list' => 'Liste des établissements',
+        'shops_consultations' => 'Consultation 1:1',
         'plugins' => 'Plugins',
             'staff_admins' => 'Droits admin',
     ],
@@ -127,4 +130,5 @@ return [
         'update' => 'Mettre à jour',
         'later' => 'Plus tard',
     ],
+    'shops' => ['title' => 'Gestion Magasins', 'description' => 'Gérer et approuver les magasins enregistrés.'],
 ];

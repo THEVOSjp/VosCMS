@@ -36,6 +36,7 @@ return [
         'col_email' => 'E-posta',
         'col_phone' => 'Telefon',
         'col_grade' => 'Derece',
+        'col_role' => 'Rol',
         'col_status' => 'Durum',
         'col_joined' => 'Kayıt',
         'col_actions' => 'İşlemler',
