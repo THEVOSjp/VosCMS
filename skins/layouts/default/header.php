@@ -167,7 +167,19 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
                                 <p class="text-xs text-gray-500 dark:text-zinc-400"><?= htmlspecialchars($currentUser['email'] ?? '') ?></p>
                             </div>
                             <a href="<?= $baseUrl ?>/mypage" class="block px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700"><?= __('common.nav.mypage') ?></a>
+                            <?php if (file_exists(BASE_PATH . '/plugins/vos-salon/plugin.json')): ?>
                             <a href="<?= $baseUrl ?>/mypage/reservations" class="block px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700"><?= __('auth.mypage.menu.reservations') ?></a>
+                            <?php endif; ?>
+                            <?php if (file_exists(BASE_PATH . '/plugins/vos-shop/plugin.json')):
+                                $_shopLangHeader = @include(BASE_PATH . '/plugins/vos-shop/lang/' . ($config['locale'] ?? 'ko') . '/shop.php');
+                                if (!is_array($_shopLangHeader)) $_shopLangHeader = @include(BASE_PATH . '/plugins/vos-shop/lang/ko/shop.php');
+                                $_myShopLabel = $_shopLangHeader['nav']['my_shop'] ?? '내 사업장';
+                            ?>
+                            <a href="<?= $baseUrl ?>/shop/my" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                <?= $_myShopLabel ?>
+                            </a>
+                            <?php endif; ?>
                             <?php if (!empty($_SESSION['admin_id'])): ?>
                             <div class="border-t dark:border-zinc-700"></div>
                             <a href="<?= $baseUrl ?>/<?= $config['admin_path'] ?? 'admin' ?>" class="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20">
