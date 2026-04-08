@@ -139,6 +139,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'site_timezone' => $timezone,
                         'default_locale' => $locale,
                         'site_locale' => $locale,
+                        'home_page' => 'home',
+                        'site_layout' => 'modern',
                     ];
                     $settingStmt = $pdo->prepare("INSERT INTO {$pfx}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
                     foreach ($settings as $k => $v) {
@@ -153,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // Main Menu — 홈 + 커뮤니티
                     $menuStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}menu_items (sitemap_id, parent_id, title, url, target, menu_type, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                    $menuStmt->execute([1, null, 'Home', 'index', '_self', 'page', 1, 1]);
+                    $menuStmt->execute([1, null, 'Home', 'home', '_self', 'page', 1, 1]);
                     $menuStmt->execute([1, null, 'Notice', 'notice', '_self', 'board', 2, 1]);
                     $menuStmt->execute([1, null, 'Free Board', 'free', '_self', 'board', 3, 1]);
                     $menuStmt->execute([1, null, 'Q&A', 'qna', '_self', 'board', 4, 1]);
