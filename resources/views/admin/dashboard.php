@@ -20,17 +20,17 @@ try {
     );
     $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
 
-    // Today's reservations
-    $stmt = $pdo->query("SELECT COUNT(*) FROM {$prefix}reservations WHERE reservation_date = CURDATE()");
-    $todayReservations = $stmt->fetchColumn();
+    // Today's reservations (플러그인 없으면 0)
+    $todayReservations = 0;
+    try { $todayReservations = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}reservations WHERE reservation_date = CURDATE()")->fetchColumn(); } catch (\Throwable $e) {}
 
     // Total users
-    $stmt = $pdo->query("SELECT COUNT(*) FROM {$prefix}users");
-    $totalUsers = $stmt->fetchColumn();
+    $totalUsers = 0;
+    try { $totalUsers = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}users")->fetchColumn(); } catch (\Throwable $e) {}
 
-    // Total services
-    $stmt = $pdo->query("SELECT COUNT(*) FROM {$prefix}services");
-    $totalServices = $stmt->fetchColumn();
+    // Total services (플러그인 없으면 0)
+    $totalServices = 0;
+    try { $totalServices = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}services")->fetchColumn(); } catch (\Throwable $e) {}
 
     // Load settings for language selector
     $stmt = $pdo->query("SELECT `key`, `value` FROM {$prefix}settings");
@@ -46,12 +46,18 @@ try {
     $calFirstDay = sprintf('%04d-%02d-01', $calYear, $calMonth);
     $calLastDay = date('Y-m-t', strtotime($calFirstDay));
 
-    // 공통 캘린더 로더 사용
+    // 공통 캘린더 로더 사용 (예약 플러그인 없으면 빈 배열)
+    $calReservations = [];
+    $calByDate = [];
     $_calYear = $calYear;
     $_calMonth = $calMonth;
-    include BASE_PATH . '/resources/views/admin/components/calendar-loader.php';
-    $calReservations = $cal['reservations'];
-    $calByDate = $cal['byDate'];
+    try {
+        if (file_exists(BASE_PATH . '/resources/views/admin/components/calendar-loader.php')) {
+            include BASE_PATH . '/resources/views/admin/components/calendar-loader.php';
+            $calReservations = $cal['reservations'] ?? [];
+            $calByDate = $cal['byDate'] ?? [];
+        }
+    } catch (\Throwable $e) {}
 
     // 통화 설정
     $currencySymbols = [
