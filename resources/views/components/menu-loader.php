@@ -49,7 +49,7 @@ if (!isset($siteMenus)) {
         }
 
         // 사이트맵 목록
-        $__sitemaps = $pdo->query("SELECT id, title, slug FROM rzx_sitemaps ORDER BY sort_order ASC")->fetchAll(PDO::FETCH_ASSOC);
+        $__sitemaps = $pdo->query("SELECT id, title FROM rzx_sitemaps ORDER BY sort_order ASC")->fetchAll(PDO::FETCH_ASSOC);
 
         // 메뉴 항목 전체 로드
         $__menuItems = [];
