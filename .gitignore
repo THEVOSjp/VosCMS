@@ -1,5 +1,4 @@
 .env
-/vendor/
 /node_modules/
 /storage/uploads/*
 /storage/board/*
