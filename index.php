@@ -247,9 +247,13 @@ $__noLayout = false; // API, 로그인 등 자체 레이아웃 페이지
 // Route to appropriate handler
 if (empty($path) || $path === 'index.php') {
     // home_page 설정에 따라 동적 페이지 렌더링
-    $homeSlug = $siteSettings['home_page'] ?? 'index';
-    $pageSlug = $homeSlug;
-    $__pageFile = BASE_PATH . '/resources/views/customer/page.php';
+    $homeSlug = $siteSettings['home_page'] ?? 'home';
+    if ($homeSlug === 'home' && file_exists(BASE_PATH . '/resources/views/customer/home.php')) {
+        $__pageFile = BASE_PATH . '/resources/views/customer/home.php';
+    } else {
+        $pageSlug = $homeSlug;
+        $__pageFile = BASE_PATH . '/resources/views/customer/page.php';
+    }
 } elseif (preg_match('#^staff/([^/]+)$#', $path, $m) && !in_array($m[1], ['settings', 'edit'])) {
     $staffSlug = $m[1];
     $__pageFile = BASE_PATH . '/resources/views/customer/staff-detail.php';
