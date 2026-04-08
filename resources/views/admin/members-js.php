@@ -133,7 +133,8 @@
         setVal('memberCompany', m.company);
         setVal('memberBlog', m.blog);
         setVal('memberGrade', m.grade_id);
-        setVal('memberStatus', m.status || 'active');
+        setVal('memberRole', m.role || 'member');
+        setVal('memberStatus', m.is_active == 1 ? 'active' : 'inactive');
 
         // 전화번호 컴포넌트 값 설정
         if (typeof PhoneInput !== 'undefined') {
@@ -319,5 +320,21 @@
     });
 
     console.log('[Members] Page initialized');
+
+    // 회원 이름 다국어 편집
+    window.openMemberNameMultilang = function() {
+        var memberId = document.getElementById('memberId').value;
+        if (!memberId) {
+            alert('먼저 회원을 저장한 후 다국어를 설정할 수 있습니다.');
+            return;
+        }
+        var langKey = 'user.' + memberId + '.name';
+        var inputId = 'memberName';
+        if (typeof openMultilangModal === 'function') {
+            openMultilangModal(langKey, inputId);
+        } else {
+            alert('다국어 모달을 로드할 수 없습니다.');
+        }
+    };
 })();
 </script>

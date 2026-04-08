@@ -8,12 +8,14 @@ if (!function_exists('__')) {
 }
 
 require_once BASE_PATH . '/rzxlib/Core/Helpers/Encryption.php';
+require_once BASE_PATH . '/rzxlib/Core/Helpers/multilang.php';
 use RzxLib\Core\Helpers\Encryption;
 
 $pageTitle = __('members.list.title') . ' - ' . ($config['app_name'] ?? 'RezlyX') . ' Admin';
 $baseUrl = $config['app_url'] ?? '';
 $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 
+$search = ''; $filterGrade = ''; $filterStatus = '';
 $settings = [];
 try {
     $pdo = new PDO(
@@ -88,6 +90,7 @@ try {
                     $password = trim($_POST['password'] ?? '');
                     $gradeId = trim($_POST['grade_id'] ?? '') ?: null;
                     $status = trim($_POST['status'] ?? 'active');
+                    $role = trim($_POST['role'] ?? 'member');
                     $extra = parseExtraFields($_POST);
 
                     if (empty($name) || empty($email) || empty($password)) {
@@ -103,6 +106,8 @@ try {
                         exit;
                     }
 
+                    if (!in_array($role, ['member', 'staff', 'manager', 'supervisor'])) $role = 'member';
+
                     $id = bin2hex(random_bytes(18));
                     $hashed = password_hash($password, PASSWORD_BCRYPT);
 
@@ -113,13 +118,14 @@ try {
                     // 프로필 이미지 처리
                     $profileImage = handleProfileImage($_FILES, $id);
 
-                    $sql = "INSERT INTO {$prefix}users (id, name, email, password, phone, birth_date, gender, company, blog, grade_id, status, profile_image)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                    $pdo->prepare($sql)->execute([
-                        $id, $encName, $email, $hashed,
-                        $encPhone, $extra['birth_date'], $extra['gender'],
-                        $extra['company'], $extra['blog'], $gradeId, $status, $profileImage,
-                    ]);
+                    $isActive = ($status === 'active') ? 1 : 0;
+
+                    $cols = 'id, name, nick_name, email, password, phone, birth_date, gender, company, blog, grade_id, role, is_active, avatar, profile_image, email_verified_at, created_at, updated_at';
+                    $vals = '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), NOW()';
+                    $params = [$id, $encName, $name, $email, $hashed, $encPhone, $extra['birth_date'], $extra['gender'], $extra['company'], $extra['blog'], $gradeId, $role, $isActive, $profileImage, $profileImage];
+
+                    $sql = "INSERT INTO {$prefix}users ({$cols}) VALUES ({$vals})";
+                    $pdo->prepare($sql)->execute($params);
 
                     echo json_encode(['success' => true, 'message' => __('members.list.success.created')]);
                     exit;
@@ -130,6 +136,7 @@ try {
                     $email = trim($_POST['email'] ?? '');
                     $gradeId = trim($_POST['grade_id'] ?? '') ?: null;
                     $status = trim($_POST['status'] ?? 'active');
+                    $role = trim($_POST['role'] ?? '');
                     $extra = parseExtraFields($_POST);
 
                     if (empty($name) || empty($email)) {
@@ -145,6 +152,12 @@ try {
                         exit;
                     }
 
+                    // 슈퍼바이저 role 변경 보호
+                    if ($role && \RzxLib\Core\Auth\AdminAuth::isSupervisorUser($id) && $role !== 'supervisor') {
+                        echo json_encode(['success' => false, 'message' => '슈퍼바이저의 역할은 변경할 수 없습니다.']);
+                        exit;
+                    }
+
                     // 기존 등급 조회 (StaffSync용)
                     $oldUser = $pdo->prepare("SELECT grade_id FROM {$prefix}users WHERE id = ?");
                     $oldUser->execute([$id]);
@@ -156,12 +169,21 @@ try {
 
                     // 프로필 이미지 처리
                     $profileImage = handleProfileImage($_FILES, $id);
-                    $profileSQL = $profileImage ? ', profile_image=?' : '';
+                    $profileSQL = $profileImage ? ', avatar=?' : '';
 
                     // 비밀번호 변경 (입력된 경우만)
                     $passwordSQL = '';
-                    $params = [$encName, $email, $encPhone, $extra['birth_date'], $extra['gender'], $extra['company'], $extra['blog'], $gradeId, $status];
+                    // role 변경
+                    $roleSQL = '';
+                    $isActive = ($status === 'active') ? 1 : 0;
+                    $params = [$encName, $name, $email, $encPhone, $extra['birth_date'], $extra['gender'], $extra['company'], $extra['blog'], $gradeId, $isActive];
+                    if ($role && in_array($role, ['member', 'staff', 'manager', 'supervisor'])) {
+                        $roleSQL = ', role=?';
+                        $params[] = $role;
+                    }
                     if ($profileImage) {
+                        $profileSQL = ', avatar=?, profile_image=?';
+                        $params[] = $profileImage;
                         $params[] = $profileImage;
                     }
                     $newPassword = trim($_POST['password'] ?? '');
@@ -171,7 +193,7 @@ try {
                     }
                     $params[] = $id;
 
-                    $stmt = $pdo->prepare("UPDATE {$prefix}users SET name=?, email=?, phone=?, birth_date=?, gender=?, company=?, blog=?, grade_id=?, status=? {$profileSQL} {$passwordSQL} WHERE id=?");
+                    $stmt = $pdo->prepare("UPDATE {$prefix}users SET name=?, nick_name=?, email=?, phone=?, birth_date=?, gender=?, company=?, blog=?, grade_id=?, is_active=? {$roleSQL} {$profileSQL} {$passwordSQL} WHERE id=?");
                     $stmt->execute($params);
 
                     // 등급 변경 시 스태프 자동 동기화
@@ -255,8 +277,11 @@ try {
         }
     }
     if ($filterStatus !== '') {
-        $where[] = "u.status = ?";
-        $params[] = $filterStatus;
+        if ($filterStatus === 'active') {
+            $where[] = "u.is_active = 1";
+        } else {
+            $where[] = "u.is_active = 0";
+        }
     }
 
     $whereSQL = $where ? 'WHERE ' . implode(' AND ', $where) : '';
@@ -287,8 +312,8 @@ try {
 
     // 통계
     $totalAll = $pdo->query("SELECT COUNT(*) FROM {$prefix}users")->fetchColumn();
-    $totalActive = $pdo->query("SELECT COUNT(*) FROM {$prefix}users WHERE status = 'active'")->fetchColumn();
-    $totalInactive = $pdo->query("SELECT COUNT(*) FROM {$prefix}users WHERE status != 'active'")->fetchColumn();
+    $totalActive = $pdo->query("SELECT COUNT(*) FROM {$prefix}users WHERE is_active = 1")->fetchColumn();
+    $totalInactive = $pdo->query("SELECT COUNT(*) FROM {$prefix}users WHERE is_active != 1")->fetchColumn();
 
     $dbConnected = true;
 } catch (PDOException $e) {
@@ -381,29 +406,60 @@ try {
                                     <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('members.list.col_email') ?></th>
                                     <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('members.list.col_phone') ?></th>
                                     <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('members.list.col_grade') ?></th>
+                                    <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('members.list.col_role') ?? '역할' ?></th>
                                     <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('members.list.col_status') ?></th>
                                     <th class="text-left px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('members.list.col_joined') ?></th>
                                     <th class="text-center px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300"><?= __('members.list.col_actions') ?></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                                <?php
+                                // 다국어 이름 일괄 로드
+                                $_memberIds = array_column($members, 'id');
+                                $_memberNameTr = [];
+                                if (!empty($_memberIds)) {
+                                    $_currentLocale = $config['locale'] ?? (function_exists('current_locale') ? current_locale() : 'ko');
+                                    $_placeholders = implode(',', array_fill(0, count($_memberIds), '?'));
+                                    $_trParams = [];
+                                    foreach ($_memberIds as $_mid) { $_trParams[] = "user.{$_mid}.name"; }
+                                    try {
+                                        $_trStmt = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations WHERE lang_key IN ({$_placeholders})");
+                                        $_trStmt->execute($_trParams);
+                                        while ($_tr = $_trStmt->fetch(PDO::FETCH_ASSOC)) {
+                                            $_memberNameTr[$_tr['lang_key']][$_tr['locale']] = $_tr['content'];
+                                        }
+                                    } catch (\Throwable $e) {}
+                                }
+                                ?>
                                 <?php foreach ($members as $m):
                                     $grade = $grades[$m['grade_id']] ?? null;
+                                    // 다국어 이름 폴백: 현재 로케일 → en → DB 원본
+                                    $_nameKey = 'user.' . $m['id'] . '.name';
+                                    $_localizedName = $m['name'];
+                                    if (isset($_memberNameTr[$_nameKey])) {
+                                        foreach ([$_currentLocale, 'en'] as $_loc) {
+                                            if (!empty($_memberNameTr[$_nameKey][$_loc])) {
+                                                $_localizedName = $_memberNameTr[$_nameKey][$_loc];
+                                                break;
+                                            }
+                                        }
+                                    }
                                     $statusColors = [
                                         'active' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
                                         'inactive' => 'bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400',
                                         'withdrawn' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
                                     ];
-                                    $statusClass = $statusColors[$m['status']] ?? $statusColors['active'];
-                                    $statusLabel = __('members.list.status_' . $m['status']);
+                                    $_mStatus = ($m['is_active'] ?? 1) ? 'active' : 'inactive';
+                                    $statusClass = $statusColors[$_mStatus] ?? $statusColors['active'];
+                                    $statusLabel = __('members.list.status_' . $_mStatus);
                                 ?>
                                 <tr id="member-<?= htmlspecialchars($m['id']) ?>" class="hover:bg-zinc-50 dark:hover:bg-zinc-700/30 transition-colors">
                                     <td class="px-4 py-3">
                                         <div class="flex items-center gap-3">
                                             <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 font-semibold text-xs">
-                                                <?= mb_substr($m['name'], 0, 1) ?>
+                                                <?= mb_substr($_localizedName, 0, 1) ?>
                                             </div>
-                                            <span class="font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($m['name']) ?></span>
+                                            <span class="font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($_localizedName) ?></span>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400"><?= htmlspecialchars($m['email']) ?></td>
@@ -414,6 +470,27 @@ try {
                                             <span class="w-1.5 h-1.5 rounded-full" style="background-color: <?= htmlspecialchars($grade['color']) ?>"></span>
                                             <?= htmlspecialchars($grade['name']) ?>
                                         </span>
+                                        <?php else: ?>
+                                        <span class="text-xs text-zinc-400">-</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <?php
+                                        $_role = $m['role'] ?? 'member';
+                                        $_roleColors = [
+                                            'supervisor' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+                                            'manager'    => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+                                            'staff'      => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+                                            'admin'      => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+                                            'member'     => 'bg-zinc-100 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400',
+                                            'user'       => 'bg-zinc-100 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400',
+                                        ];
+                                        $_roleLabels = ['supervisor'=>'Supervisor','manager'=>'Manager','staff'=>'Staff','admin'=>'Admin','member'=>'Member','user'=>'Member'];
+                                        $_roleClass = $_roleColors[$_role] ?? $_roleColors['member'];
+                                        $_roleLabel = $_roleLabels[$_role] ?? ucfirst($_role);
+                                        ?>
+                                        <?php if ($_role !== 'member' && $_role !== 'user'): ?>
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium <?= $_roleClass ?>"><?= $_roleLabel ?></span>
                                         <?php else: ?>
                                         <span class="text-xs text-zinc-400">-</span>
                                         <?php endif; ?>
@@ -477,5 +554,6 @@ try {
     </div>
     </main>
 </div>
+<?php include __DIR__ . '/components/multilang-modal.php'; ?>
 </body>
 </html>

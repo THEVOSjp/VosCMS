@@ -52,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $siteName = trim($_POST['site_name'] ?? '');
         $siteTagline = trim($_POST['site_tagline'] ?? '');
         $siteUrl = trim($_POST['site_url'] ?? '');
+        $homePage = trim($_POST['home_page'] ?? 'index');
         $logoType = $_POST['logo_type'] ?? 'text';
 
         // 새로 추가된 설정
@@ -137,6 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute(['site_name', $siteName]);
             $stmt->execute(['site_tagline', $siteTagline]);
             $stmt->execute(['site_url', $siteUrl]);
+            $stmt->execute(['home_page', $homePage]);
             $stmt->execute(['logo_type', $logoType]);
 
             // 새로 추가된 설정 저장
@@ -172,6 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $settings['site_name'] = $siteName;
             $settings['site_tagline'] = $siteTagline;
             $settings['site_url'] = $siteUrl;
+            $settings['home_page'] = $homePage;
             $settings['logo_type'] = $logoType;
             $settings['default_locale'] = $defaultLocale;
             $settings['force_locale'] = $forceLocale;
@@ -273,15 +276,140 @@ ob_start();
             </div>
         </div>
 
-        <!-- Site Tagline -->
-        <div>
-            <label for="site_tagline" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.tagline') ?></label>
-            <div class="flex items-center gap-2">
-                <input type="text" name="site_tagline" id="site_tagline" value="<?= htmlspecialchars($settings['site_tagline'] ?? '') ?>"
-                       class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
-                <?= rzx_multilang_btn("openMultilangModal('site.tagline', 'site_tagline')") ?>
+        <!-- Site Tagline + Home Page (2열 배치) -->
+        <?php
+        $currentHome = $settings['home_page'] ?? 'index';
+        $currentHomeLabel = $currentHome;
+        $__sitemaps = [];
+        $__menusByMap = [];
+        try {
+            $__sitemaps = $pdo->query("SELECT * FROM rzx_sitemaps ORDER BY sort_order ASC")->fetchAll(PDO::FETCH_ASSOC);
+            $__allMenus = $pdo->query("SELECT * FROM rzx_menu_items WHERE is_active = 1 ORDER BY sort_order ASC")->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($__allMenus as $__mi) {
+                $__menusByMap[$__mi['sitemap_id']][] = $__mi;
+            }
+            foreach ($__allMenus as $__mi) {
+                $__slug = $__mi['url'] ?? '';
+                if ($__slug === '/' . $currentHome || $__slug === $currentHome) {
+                    $currentHomeLabel = $__mi['title'] . ' (' . $currentHome . ')';
+                    break;
+                }
+            }
+        } catch (\Throwable $e) {}
+        if (!function_exists('__buildHomeMenuTree')) {
+            function __buildHomeMenuTree($items, $parentId = null) {
+                $tree = [];
+                foreach ($items as $item) {
+                    if ($item['parent_id'] == $parentId) {
+                        $item['children'] = __buildHomeMenuTree($items, $item['id']);
+                        $tree[] = $item;
+                    }
+                }
+                return $tree;
+            }
+        }
+        ?>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="site_tagline" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.tagline') ?></label>
+                <div class="flex items-center gap-2">
+                    <input type="text" name="site_tagline" id="site_tagline" value="<?= htmlspecialchars($settings['site_tagline'] ?? '') ?>"
+                           class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <?= rzx_multilang_btn("openMultilangModal('site.tagline', 'site_tagline')") ?>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.home_page') ?></label>
+                <div class="flex items-center gap-2">
+                    <input type="hidden" name="home_page" id="home_page" value="<?= htmlspecialchars($currentHome) ?>">
+                    <input type="text" id="home_page_display" value="<?= htmlspecialchars($currentHomeLabel) ?>" readonly
+                           class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg cursor-pointer focus:ring-2 focus:ring-blue-500"
+                           onclick="document.getElementById('homePageModal').classList.remove('hidden')">
+                    <button type="button" onclick="document.getElementById('homePageModal').classList.remove('hidden')"
+                            class="px-3 py-2 bg-zinc-100 dark:bg-zinc-600 border border-zinc-300 dark:border-zinc-500 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-500 text-sm">
+                        <?= __('settings.site.home_page_select') ?? '선택' ?>
+                    </button>
+                </div>
             </div>
         </div>
+
+        <!-- 메뉴 선택 모달 -->
+        <div id="homePageModal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/50" onclick="if(event.target===this)this.classList.add('hidden')">
+            <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl w-full max-w-md max-h-[70vh] flex flex-col" onclick="event.stopPropagation()">
+                <!-- 헤더 -->
+                <div class="flex items-center justify-between px-5 py-3 border-b dark:border-zinc-700 bg-zinc-700 dark:bg-zinc-900 rounded-t-xl">
+                    <h3 class="text-base font-semibold text-white"><?= __('settings.site.home_page_modal_title') ?? '대상 메뉴 선택' ?></h3>
+                    <button type="button" onclick="document.getElementById('homePageModal').classList.add('hidden')"
+                            class="text-zinc-300 hover:text-white text-xl leading-none">&times;</button>
+                </div>
+                <!-- 트리 목록 -->
+                <div class="flex-1 overflow-y-auto px-5 py-4">
+                    <?php foreach ($__sitemaps as $__sm): ?>
+                    <div class="mb-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+                            <span class="text-sm font-medium text-zinc-400 dark:text-zinc-500"><?= htmlspecialchars($__sm['title']) ?></span>
+                        </div>
+                        <?php
+                        $__items = $__menusByMap[$__sm['id']] ?? [];
+                        $__tree = __buildHomeMenuTree($__items);
+
+                        // 재귀 렌더링
+                        if (!function_exists('__renderHomeMenuTree')) {
+                            function __renderHomeMenuTree($nodes, $depth, $currentHome) {
+                                foreach ($nodes as $node) {
+                                    $slug = ltrim($node['url'] ?? '', '/');
+                                    if (!$slug) $slug = $node['title'] ?? '';
+                                    $isSelected = ($slug === $currentHome);
+                                    $pad = ($depth + 1) * 16;
+                                    echo '<div class="home-menu-item flex items-center gap-1 py-1.5 px-2 rounded-md cursor-pointer hover:bg-blue-50 dark:hover:bg-zinc-700 transition-colors' . ($isSelected ? ' bg-blue-100 dark:bg-zinc-600 font-semibold' : '') . '"';
+                                    echo ' style="padding-left:' . $pad . 'px"';
+                                    echo ' data-slug="' . htmlspecialchars($slug) . '"';
+                                    echo ' data-label="' . htmlspecialchars($node['title'] . ' (' . $slug . ')') . '"';
+                                    echo ' onclick="selectHomePage(this)">';
+                                    echo '<span class="text-zinc-300 dark:text-zinc-600 text-xs">└</span>';
+                                    echo '<span class="text-sm text-zinc-800 dark:text-zinc-200 hover:text-blue-600 dark:hover:text-blue-400">' . htmlspecialchars($node['title']) . '</span>';
+                                    echo '</div>';
+                                    if (!empty($node['children'])) {
+                                        __renderHomeMenuTree($node['children'], $depth + 1, $currentHome);
+                                    }
+                                }
+                            }
+                        }
+                        __renderHomeMenuTree($__tree, 0, $currentHome);
+                        ?>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <!-- 푸터 -->
+                <div class="flex items-center justify-between px-5 py-3 border-t dark:border-zinc-700">
+                    <button type="button" onclick="document.getElementById('homePageModal').classList.add('hidden')"
+                            class="px-4 py-1.5 text-sm border border-zinc-300 dark:border-zinc-600 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 dark:text-zinc-300"><?= __('common.cancel') ?? '취소' ?></button>
+                    <button type="button" id="homePageConfirmBtn" onclick="confirmHomePage()"
+                            class="px-4 py-1.5 text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium"><?= __('common.confirm') ?? '확인' ?></button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        let _selectedHomeSlug = '<?= htmlspecialchars($currentHome) ?>';
+        let _selectedHomeLabel = '<?= htmlspecialchars($currentHomeLabel) ?>';
+
+        function selectHomePage(el) {
+            document.querySelectorAll('.home-menu-item').forEach(i => {
+                i.classList.remove('bg-blue-100', 'dark:bg-zinc-600', 'font-semibold');
+            });
+            el.classList.add('bg-blue-100', 'dark:bg-zinc-600', 'font-semibold');
+            _selectedHomeSlug = el.dataset.slug;
+            _selectedHomeLabel = el.dataset.label;
+        }
+
+        function confirmHomePage() {
+            document.getElementById('home_page').value = _selectedHomeSlug;
+            document.getElementById('home_page_display').value = _selectedHomeLabel;
+            document.getElementById('homePageModal').classList.add('hidden');
+        }
+        </script>
 
         <!-- Language & Timezone -->
         <div class="border-t dark:border-zinc-700 pt-6">

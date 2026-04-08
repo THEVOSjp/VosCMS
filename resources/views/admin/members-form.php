@@ -44,10 +44,13 @@ $labelClass = 'block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1';
                 </div>
                 <?php endif; ?>
 
-                <!-- 이름 (필수, 항상 표시) -->
+                <!-- 이름 (필수, 항상 표시) + 다국어 -->
                 <div>
                     <label class="<?= $labelClass ?>"><?= __('members.settings.register.fields.name') ?> <span class="text-red-500">*</span></label>
-                    <input type="text" id="memberName" name="name" required class="<?= $inputClass ?>">
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="memberName" name="name" required class="flex-1 <?= $inputClass ?>">
+                        <?= rzx_multilang_btn("openMemberNameMultilang()") ?>
+                    </div>
                 </div>
 
                 <!-- 이메일 (필수, 항상 표시) -->
@@ -125,8 +128,8 @@ $labelClass = 'block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1';
                 </div>
                 <?php endif; ?>
 
-                <!-- 등급 + 상태 (2열) -->
-                <div class="grid grid-cols-2 gap-3">
+                <!-- 등급 + 상태 + 역할 (3열) -->
+                <div class="grid grid-cols-3 gap-3">
                     <div>
                         <label class="<?= $labelClass ?>"><?= __('members.list.col_grade') ?></label>
                         <select id="memberGrade" name="grade_id" class="<?= $inputClass ?>">
@@ -137,11 +140,19 @@ $labelClass = 'block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1';
                         </select>
                     </div>
                     <div>
+                        <label class="<?= $labelClass ?>"><?= __('members.list.col_role') ?></label>
+                        <select id="memberRole" name="role" class="<?= $inputClass ?>">
+                            <option value="member"><?= __('members.list.role_member') ?? '일반' ?></option>
+                            <option value="staff"><?= __('members.list.role_staff') ?? '스태프' ?></option>
+                            <option value="manager"><?= __('members.list.role_manager') ?? '매니저' ?></option>
+                            <option value="supervisor"><?= __('members.list.role_supervisor') ?? '슈퍼바이저' ?></option>
+                        </select>
+                    </div>
+                    <div>
                         <label class="<?= $labelClass ?>"><?= __('members.list.col_status') ?></label>
                         <select id="memberStatus" name="status" class="<?= $inputClass ?>">
                             <option value="active"><?= __('members.list.status_active') ?></option>
                             <option value="inactive"><?= __('members.list.status_inactive') ?></option>
-                            <option value="withdrawn"><?= __('members.list.status_withdrawn') ?></option>
                         </select>
                     </div>
                 </div>

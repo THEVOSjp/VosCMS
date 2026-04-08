@@ -510,10 +510,10 @@ console.log('[Payment Settings] Initialized');
 document.getElementById('payment_gateway').addEventListener('change', function() {
     var gw = this.value;
     var labels = {
-        stripe: ['Publishable Key', 'Secret Key', 'pk_test_...', 'sk_test_...'],
-        toss: ['클라이언트 키', '시크릿 키', 'test_ck_...', 'test_sk_...'],
-        payjp: ['公開鍵', '秘密鍵', 'pk_test_...', 'sk_test_...'],
-        portone: ['가맹점 식별코드', 'API Secret', 'imp_...', 'secret_...']
+        stripe: ['<?= __('settings.payment_config.label_public_key_stripe') ?? 'Publishable Key' ?>', '<?= __('settings.payment_config.label_secret_key_stripe') ?? 'Secret Key' ?>', 'pk_test_...', 'sk_test_...'],
+        toss: ['<?= __('settings.payment_config.label_public_key_toss') ?? 'Client Key' ?>', '<?= __('settings.payment_config.label_secret_key_toss') ?? 'Secret Key' ?>', 'test_ck_...', 'test_sk_...'],
+        payjp: ['<?= __('settings.payment_config.label_public_key_payjp') ?? 'Public Key' ?>', '<?= __('settings.payment_config.label_secret_key_payjp') ?? 'Secret Key' ?>', 'pk_test_...', 'sk_test_...'],
+        portone: ['<?= __('settings.payment_config.label_public_key_portone') ?? 'Merchant ID' ?>', '<?= __('settings.payment_config.label_secret_key_portone') ?? 'API Secret' ?>', 'imp_...', 'secret_...']
     };
     var l = labels[gw] || labels.stripe;
     document.getElementById('pubKeyLabel').textContent = l[0];

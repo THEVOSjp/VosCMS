@@ -20,17 +20,35 @@ try {
     );
     $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
 
-    // Today's reservations (플러그인 없으면 0)
+    // 플러그인 테이블 존재 여부
+    $hasReservations = false;
+    $hasServices = false;
+    try { $pdo->query("SELECT 1 FROM {$prefix}reservations LIMIT 0"); $hasReservations = true; } catch (\PDOException $e) {}
+    try { $pdo->query("SELECT 1 FROM {$prefix}services LIMIT 0"); $hasServices = true; } catch (\PDOException $e) {}
+
+    // Today's reservations
     $todayReservations = 0;
-    try { $todayReservations = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}reservations WHERE reservation_date = CURDATE()")->fetchColumn(); } catch (\Throwable $e) {}
+    if ($hasReservations) { try { $todayReservations = $pdo->query("SELECT COUNT(*) FROM {$prefix}reservations WHERE reservation_date = CURDATE()")->fetchColumn(); } catch (\PDOException $e) {} }
 
     // Total users
     $totalUsers = 0;
-    try { $totalUsers = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}users")->fetchColumn(); } catch (\Throwable $e) {}
+    try { $totalUsers = $pdo->query("SELECT COUNT(*) FROM {$prefix}users")->fetchColumn(); } catch (\PDOException $e) {}
 
-    // Total services (플러그인 없으면 0)
+    // Total services
     $totalServices = 0;
-    try { $totalServices = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}services")->fetchColumn(); } catch (\Throwable $e) {}
+    if ($hasServices) { try { $totalServices = $pdo->query("SELECT COUNT(*) FROM {$prefix}services")->fetchColumn(); } catch (\PDOException $e) {} }
+
+    // Total boards
+    $totalBoards = 0;
+    try { $totalBoards = $pdo->query("SELECT COUNT(*) FROM {$prefix}boards WHERE is_active = 1")->fetchColumn(); } catch (\PDOException $e) {}
+
+    // Total posts
+    $totalPosts = 0;
+    try { $totalPosts = $pdo->query("SELECT COUNT(*) FROM {$prefix}board_posts WHERE status = 'published'")->fetchColumn(); } catch (\PDOException $e) {}
+
+    // Total pages
+    $totalPages = 0;
+    try { $totalPages = $pdo->query("SELECT COUNT(*) FROM {$prefix}page_contents WHERE is_active = 1")->fetchColumn(); } catch (\PDOException $e) {}
 
     // Load settings for language selector
     $stmt = $pdo->query("SELECT `key`, `value` FROM {$prefix}settings");
@@ -46,17 +64,15 @@ try {
     $calFirstDay = sprintf('%04d-%02d-01', $calYear, $calMonth);
     $calLastDay = date('Y-m-t', strtotime($calFirstDay));
 
-    // 공통 캘린더 로더 사용 (예약 플러그인 없으면 빈 배열)
+    // 공통 캘린더 로더 사용 (플러그인 테이블 — 없을 수 있음)
     $calReservations = [];
     $calByDate = [];
-    $_calYear = $calYear;
-    $_calMonth = $calMonth;
     try {
-        if (file_exists(BASE_PATH . '/resources/views/admin/components/calendar-loader.php')) {
-            include BASE_PATH . '/resources/views/admin/components/calendar-loader.php';
-            $calReservations = $cal['reservations'] ?? [];
-            $calByDate = $cal['byDate'] ?? [];
-        }
+        $_calYear = $calYear;
+        $_calMonth = $calMonth;
+        include BASE_PATH . '/resources/views/admin/components/calendar-loader.php';
+        $calReservations = $cal['reservations'] ?? [];
+        $calByDate = $cal['byDate'] ?? [];
     } catch (\Throwable $e) {}
 
     // 통화 설정
@@ -286,8 +302,11 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                 </div>
                 <?php endif; ?>
 
-                <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <!-- Stats + Notices -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- 좌측: 통계 카드 2열 -->
+                <div class="lg:col-span-2 grid grid-cols-2 gap-4">
+                    <?php if ($hasReservations): ?>
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
                         <div class="flex items-center justify-between">
                             <div>
@@ -301,6 +320,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                             </div>
                         </div>
                     </div>
+                    <?php endif; ?>
 
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
                         <div class="flex items-center justify-between">
@@ -316,6 +336,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                         </div>
                     </div>
 
+                    <?php if ($hasServices): ?>
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
                         <div class="flex items-center justify-between">
                             <div>
@@ -329,6 +350,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                             </div>
                         </div>
                     </div>
+                    <?php endif; ?>
 
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
                         <div class="flex items-center justify-between">
@@ -347,24 +369,126 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                             </div>
                         </div>
                     </div>
+
+                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('dashboard.total_boards') ?></p>
+                                <p class="text-3xl font-bold text-zinc-900 dark:text-white mt-1"><?= $totalBoards ?></p>
+                            </div>
+                            <div class="w-12 h-12 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('dashboard.total_posts') ?></p>
+                                <p class="text-3xl font-bold text-zinc-900 dark:text-white mt-1"><?= $totalPosts ?></p>
+                            </div>
+                            <div class="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('dashboard.total_pages') ?></p>
+                                <p class="text-3xl font-bold text-zinc-900 dark:text-white mt-1"><?= $totalPages ?></p>
+                            </div>
+                            <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /좌측 통계 카드 -->
+
+                <!-- 우측: VosCMS 소식 -->
+                <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
+                            <span class="text-blue-600">Vos</span>CMS <?= __('dashboard.notices') ?>
+                        </h2>
+                    </div>
+                    <?php
+                    // VosCMS 원격 공지 (캐시: 1시간)
+                    $vosNotices = [];
+                    $vosCacheFile = BASE_PATH . '/storage/cache/voscms_notices.json';
+                    $vosCacheValid = file_exists($vosCacheFile) && (filemtime($vosCacheFile) > time() - 3600);
+
+                    if ($vosCacheValid) {
+                        $vosNotices = json_decode(file_get_contents($vosCacheFile), true) ?: [];
+                    } else {
+                        try {
+                            $ctx = stream_context_create(['http' => ['timeout' => 3]]);
+                            $remote = @file_get_contents('https://voscms.com/api/notices', false, $ctx);
+                            if ($remote) {
+                                $vosNotices = json_decode($remote, true)['notices'] ?? [];
+                                @file_put_contents($vosCacheFile, json_encode($vosNotices));
+                            }
+                        } catch (\Throwable $e) {}
+                    }
+
+                    // 원격 공지가 없으면 기본 메시지
+                    if (empty($vosNotices)) {
+                        $vosNotices = [
+                            ['title' => 'VosCMS v1.0.0 Released', 'date' => '2026-04-05', 'url' => 'https://voscms.com', 'type' => 'release'],
+                            ['title' => 'Plugin System Available', 'date' => '2026-04-05', 'url' => 'https://voscms.com', 'type' => 'feature'],
+                        ];
+                    }
+                    ?>
+                    <div class="divide-y divide-zinc-100 dark:divide-zinc-700">
+                        <?php foreach ($vosNotices as $vn): ?>
+                        <div class="py-3 flex items-start gap-3">
+                            <?php
+                            $typeIcon = match($vn['type'] ?? 'info') {
+                                'release' => '<span class="mt-0.5 px-1.5 py-0.5 text-[10px] font-bold rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 whitespace-nowrap">UPDATE</span>',
+                                'feature' => '<span class="mt-0.5 px-1.5 py-0.5 text-[10px] font-bold rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 whitespace-nowrap">NEW</span>',
+                                'security' => '<span class="mt-0.5 px-1.5 py-0.5 text-[10px] font-bold rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 whitespace-nowrap">SECURITY</span>',
+                                default => '<span class="mt-0.5 px-1.5 py-0.5 text-[10px] font-bold rounded bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400 whitespace-nowrap">INFO</span>',
+                            };
+                            ?>
+                            <?= $typeIcon ?>
+                            <div class="flex-1 min-w-0">
+                                <a href="<?= htmlspecialchars($vn['url'] ?? '#') ?>" target="_blank" class="text-sm text-zinc-700 dark:text-zinc-300 hover:text-blue-600 block truncate"><?= htmlspecialchars($vn['title']) ?></a>
+                                <span class="text-xs text-zinc-400"><?= htmlspecialchars($vn['date'] ?? '') ?></span>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
+                </div><!-- /Stats + Notices grid -->
 
                 <!-- Quick Actions -->
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-8 transition-colors">
                     <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"><?= __('dashboard.quick_actions') ?></h2>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <?php if ($hasReservations): ?>
                         <a href="<?php echo $adminUrl; ?>/reservations/new" class="flex items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition">
                             <svg class="w-6 h-6 text-blue-600 dark:text-blue-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                             </svg>
                             <span class="font-medium text-zinc-900 dark:text-white"><?= __('dashboard.new_reservation') ?></span>
                         </a>
+                        <?php endif; ?>
+                        <?php if ($hasServices): ?>
                         <a href="<?php echo $adminUrl; ?>/services/new" class="flex items-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition">
                             <svg class="w-6 h-6 text-green-600 dark:text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                             </svg>
                             <span class="font-medium text-zinc-900 dark:text-white"><?= __('dashboard.add_service') ?></span>
                         </a>
+                        <?php endif; ?>
                         <a href="<?php echo $adminUrl; ?>/members" class="flex items-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition">
                             <svg class="w-6 h-6 text-purple-600 dark:text-purple-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -404,8 +528,10 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                     </div>
                 </div>
 
-                <!-- 예약 현황 캘린더 (풀 캘린더) -->
-                <?php if ($dbConnected): ?>
+                <!-- 공지사항: 통계 카드 영역으로 이동됨 -->
+
+                <!-- 예약 현황 캘린더 (플러그인 설치 시에만) -->
+                <?php if ($dbConnected && $hasReservations): ?>
                 <?php include __DIR__ . '/dashboard-calendar.php'; ?>
                 <?php endif; ?>
 

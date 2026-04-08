@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errorMessages = [
                 'invalid_credentials' => '이메일 또는 비밀번호가 올바르지 않습니다.',
                 'account_inactive'    => '비활성화된 계정입니다. 관리자에게 문의하세요.',
+                'not_admin'           => '관리자 권한이 없는 계정입니다.',
                 'user_inactive'       => '연동된 회원 계정이 비활성 상태입니다.',
                 'staff_inactive'      => '연동된 스태프 계정이 비활성 상태입니다.',
             ];

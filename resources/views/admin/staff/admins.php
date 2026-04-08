@@ -50,110 +50,92 @@ try {
             exit;
         }
 
-        // 관리자 추가 (스태프 → 관리자 승격)
+        // v2.1: 관리자 추가 (회원 → 관리자 승격)
         if ($action === 'add_admin') {
-            $staffId = (int)($_POST['staff_id'] ?? 0);
+            $userId = $_POST['staff_id'] ?? $_POST['user_id'] ?? '';
             $role = $_POST['role'] ?? 'staff';
             $perms = $_POST['permissions'] ?? '[]';
 
-            if (!$staffId) {
-                echo json_encode(['error' => '스태프를 선택해주세요.']);
+            if (!$userId) {
+                echo json_encode(['error' => '회원을 선택해주세요.']);
                 exit;
             }
             if (!in_array($role, ['manager', 'staff'])) $role = 'staff';
 
-            // 스태프 정보 조회
-            $stmt = $pdo->prepare("SELECT s.id, s.user_id, s.name, s.email, u.password FROM {$prefix}staff s LEFT JOIN {$prefix}users u ON s.user_id = u.id WHERE s.id = ?");
-            $stmt->execute([$staffId]);
-            $staff = $stmt->fetch(PDO::FETCH_ASSOC);
-            if (!$staff) {
-                echo json_encode(['error' => '스태프를 찾을 수 없습니다.']);
-                exit;
-            }
-            if (!$staff['user_id']) {
-                echo json_encode(['error' => '이 스태프는 회원 연동이 되어있지 않습니다.']);
-                exit;
-            }
-
             // 이미 관리자인지 확인
-            $stmt = $pdo->prepare("SELECT id FROM {$prefix}admins WHERE staff_id = ?");
-            $stmt->execute([$staffId]);
-            if ($stmt->fetch()) {
-                echo json_encode(['error' => '이미 관리자로 등록된 스태프입니다.']);
+            $stmt = $pdo->prepare("SELECT role FROM {$prefix}users WHERE id = ?");
+            $stmt->execute([$userId]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$user) {
+                echo json_encode(['error' => '회원을 찾을 수 없습니다.']);
+                exit;
+            }
+            if (in_array($user['role'], ['supervisor', 'manager', 'staff', 'admin', 'master'])) {
+                echo json_encode(['error' => '이미 관리자로 등록된 회원입니다.']);
                 exit;
             }
 
-            // UUID 생성
-            $data = random_bytes(16);
-            $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
-            $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
-            $adminId = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-
-            $stmt = $pdo->prepare("INSERT INTO {$prefix}admins (id, user_id, staff_id, email, password, name, role, permissions, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')");
-            $stmt->execute([
-                $adminId, $staff['user_id'], $staffId,
-                $staff['email'] ?? '', $staff['password'] ?? '',
-                $staff['name'], $role, $perms
-            ]);
+            $stmt = $pdo->prepare("UPDATE {$prefix}users SET role = ?, permissions = ? WHERE id = ?");
+            $stmt->execute([$role, $perms, $userId]);
 
             echo json_encode(['success' => true, 'message' => '관리자가 추가되었습니다.']);
             exit;
         }
 
-        // 권한 수정
+        // v2.1: 권한 수정
         if ($action === 'update_permissions') {
-            $adminId = $_POST['admin_id'] ?? '';
+            $userId = $_POST['admin_id'] ?? '';
             $role = $_POST['role'] ?? 'staff';
             $perms = $_POST['permissions'] ?? '[]';
 
-            if (!$adminId) {
+            if (!$userId) {
                 echo json_encode(['error' => '관리자 ID가 필요합니다.']);
                 exit;
             }
 
-            // 슈퍼바이저 보호
-            if (\RzxLib\Core\Auth\AdminAuth::isSupervisorAdmin($adminId)) {
+            if (\RzxLib\Core\Auth\AdminAuth::isSupervisorUser($userId)) {
                 echo json_encode(['error' => '슈퍼바이저의 권한은 변경할 수 없습니다.']);
                 exit;
             }
 
             if (!in_array($role, ['manager', 'staff'])) $role = 'staff';
 
-            $stmt = $pdo->prepare("UPDATE {$prefix}admins SET role = ?, permissions = ? WHERE id = ?");
-            $stmt->execute([$role, $perms, $adminId]);
+            $stmt = $pdo->prepare("UPDATE {$prefix}users SET role = ?, permissions = ? WHERE id = ?");
+            $stmt->execute([$role, $perms, $userId]);
 
             echo json_encode(['success' => true, 'message' => '권한이 수정되었습니다.']);
             exit;
         }
 
-        // 관리자 삭제 (권한 해제)
+        // v2.1: 관리자 삭제 (권한 해제 → member로 강등)
         if ($action === 'remove_admin') {
-            $adminId = $_POST['admin_id'] ?? '';
+            $userId = $_POST['admin_id'] ?? '';
 
-            if (\RzxLib\Core\Auth\AdminAuth::isSupervisorAdmin($adminId)) {
+            if (\RzxLib\Core\Auth\AdminAuth::isSupervisorUser($userId)) {
                 echo json_encode(['error' => '슈퍼바이저는 삭제할 수 없습니다.']);
                 exit;
             }
 
-            $stmt = $pdo->prepare("DELETE FROM {$prefix}admins WHERE id = ? AND role != 'master'");
-            $stmt->execute([$adminId]);
+            $stmt = $pdo->prepare("UPDATE {$prefix}users SET role = 'member', permissions = NULL WHERE id = ? AND role NOT IN ('supervisor','master','admin')");
+            $stmt->execute([$userId]);
 
             echo json_encode(['success' => true, 'message' => '관리자 권한이 해제되었습니다.']);
             exit;
         }
 
-        // 관리자 활성/비활성
+        // v2.1: 관리자 활성/비활성
         if ($action === 'toggle_status') {
-            $adminId = $_POST['admin_id'] ?? '';
+            $userId = $_POST['admin_id'] ?? '';
             $status = $_POST['status'] ?? 'inactive';
 
-            if (\RzxLib\Core\Auth\AdminAuth::isSupervisorAdmin($adminId)) {
+            if (\RzxLib\Core\Auth\AdminAuth::isSupervisorUser($userId)) {
                 echo json_encode(['error' => '슈퍼바이저의 상태는 변경할 수 없습니다.']);
                 exit;
             }
 
-            $stmt = $pdo->prepare("UPDATE {$prefix}admins SET status = ? WHERE id = ? AND role != 'master'");
-            $stmt->execute([$status, $adminId]);
+            $isActive = ($status === 'active') ? 1 : 0;
+            $stmt = $pdo->prepare("UPDATE {$prefix}users SET is_active = ? WHERE id = ? AND role NOT IN ('supervisor','master','admin')");
+            $stmt->execute([$isActive, $userId]);
 
             echo json_encode(['success' => true]);
             exit;
@@ -168,26 +150,63 @@ try {
         }
     }
 
-    // 관리자 목록 로드 (스태프 이름/아바타 포함)
+    // v2.1: rzx_users에서 관리자 목록 로드 (role이 member/user가 아닌 사용자)
     $adminList = $pdo->query("
-        SELECT a.*, s.avatar, s.name as staff_name
-        FROM {$prefix}admins a
-        LEFT JOIN {$prefix}staff s ON a.staff_id = s.id
-        ORDER BY FIELD(a.role, 'master', 'manager', 'staff'), a.name
+        SELECT u.id, u.name, u.email, u.avatar, u.role, u.permissions, u.is_active,
+               u.last_login_at, u.created_at
+        FROM {$prefix}users u
+        WHERE u.role IN ('supervisor', 'manager', 'staff', 'admin', 'master')
+        ORDER BY FIELD(u.role, 'supervisor', 'master', 'admin', 'manager', 'staff'), u.name
     ")->fetchAll(PDO::FETCH_ASSOC);
 
-    // 관리자가 아닌 스태프 목록 (추가용)
+    // 관리자가 아닌 회원 목록 (승격용)
     $staffList = $pdo->query("
-        SELECT s.id, s.name, s.email, s.avatar, s.user_id
-        FROM {$prefix}staff s
-        WHERE s.is_active = 1
-          AND s.id NOT IN (SELECT staff_id FROM {$prefix}admins WHERE staff_id IS NOT NULL)
-          AND s.user_id IS NOT NULL
-        ORDER BY s.name
+        SELECT u.id, u.name, u.email, u.avatar, u.id as user_id
+        FROM {$prefix}users u
+        WHERE u.role IN ('member', 'user') AND u.is_active = 1
+        ORDER BY u.name
     ")->fetchAll(PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
     error_log('[Admin] Admin management error: ' . $e->getMessage());
+}
+
+// 이름 복호화 + 다국어 적용
+require_once BASE_PATH . '/rzxlib/Core/Helpers/Encryption.php';
+require_once BASE_PATH . '/rzxlib/Core/Helpers/multilang.php';
+$_currentLocale = $config['locale'] ?? (function_exists('current_locale') ? current_locale() : 'ko');
+$_adminNameTr = [];
+if (!empty($adminList)) {
+    $_trKeys = [];
+    foreach ($adminList as $_a) { $_trKeys[] = 'user.' . $_a['id'] . '.name'; }
+    $_ph = implode(',', array_fill(0, count($_trKeys), '?'));
+    try {
+        $_trStmt = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations WHERE lang_key IN ({$_ph})");
+        $_trStmt->execute($_trKeys);
+        while ($_tr = $_trStmt->fetch(PDO::FETCH_ASSOC)) {
+            $_adminNameTr[$_tr['lang_key']][$_tr['locale']] = $_tr['content'];
+        }
+    } catch (\Throwable $e) {}
+
+    // 복호화 + 다국어 이름 적용
+    foreach ($adminList as &$_adm) {
+        // enc: 접두사 복호화
+        if (!empty($_adm['name']) && str_starts_with($_adm['name'], 'enc:')) {
+            $_adm['name'] = \RzxLib\Core\Helpers\Encryption::decrypt($_adm['name']) ?: $_adm['email'];
+        }
+        // 다국어 폴백
+        $_nKey = 'user.' . $_adm['id'] . '.name';
+        if (isset($_adminNameTr[$_nKey])) {
+            foreach ([$_currentLocale, 'en'] as $_loc) {
+                if (!empty($_adminNameTr[$_nKey][$_loc])) {
+                    $_adm['display_name'] = $_adminNameTr[$_nKey][$_loc];
+                    break;
+                }
+            }
+        }
+        if (!isset($_adm['display_name'])) $_adm['display_name'] = $_adm['name'];
+    }
+    unset($_adm);
 }
 
 // 권한 목록 정의
@@ -222,16 +241,20 @@ $permissionGroups = [
 
 // 역할 라벨
 $roleLabels = [
+    'supervisor' => __('staff.admins.role_supervisor'),
     'master' => __('staff.admins.role_supervisor'),
+    'admin' => __('staff.admins.role_supervisor'),
     'manager' => __('staff.admins.role_manager'),
     'staff' => __('staff.admins.role_staff'),
 ];
 $roleColors = [
+    'supervisor' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
     'master' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    'manager' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-    'staff' => 'bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400',
+    'admin' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    'manager' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+    'staff' => 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
 ];
-$pageHeaderTitle = __('staff.title');
+$pageHeaderTitle = __('staff.admins.page_title') ?? __('staff.admins.title');
 $pageSubTitle = __('staff.admins.title');
 $pageSubDesc = __('staff.admins.description');
 ?>
@@ -263,7 +286,7 @@ $pageSubDesc = __('staff.admins.description');
                     <?php if (empty($adminList)): ?>
                         <tr><td colspan="5" class="px-6 py-12 text-center text-zinc-400"><?= __('staff.admins.empty') ?></td></tr>
                     <?php else: foreach ($adminList as $admin):
-                        $isSupervisor = ($admin['role'] === 'master');
+                        $isSupervisor = in_array($admin['role'], ['supervisor', 'master', 'admin']);
                         $perms = json_decode($admin['permissions'] ?? '[]', true) ?: [];
                         $permCount = $isSupervisor ? __('staff.admins.all_permissions') : count($perms) . __('staff.admins.perm_count_unit');
                     ?>
@@ -274,11 +297,11 @@ $pageSubDesc = __('staff.admins.description');
                                     <img src="<?= htmlspecialchars($basePath . $admin['avatar']) ?>" class="w-10 h-10 rounded-full object-cover mr-3">
                                     <?php else: ?>
                                     <div class="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-600 flex items-center justify-center mr-3">
-                                        <span class="text-sm font-bold text-zinc-500 dark:text-zinc-300"><?= mb_substr($admin['name'], 0, 1) ?></span>
+                                        <span class="text-sm font-bold text-zinc-500 dark:text-zinc-300"><?= mb_substr($admin['display_name'], 0, 1) ?></span>
                                     </div>
                                     <?php endif; ?>
                                     <div>
-                                        <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($admin['name']) ?>
+                                        <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($admin['display_name']) ?>
                                         <?php if ($isSupervisor): ?>
                                             <svg class="inline w-4 h-4 text-red-500 ml-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
                                         <?php endif; ?>
@@ -306,7 +329,7 @@ $pageSubDesc = __('staff.admins.description');
                                 <?php endif; ?>
                             </td>
                             <td class="px-6 py-4">
-                                <?php if ($admin['status'] === 'active'): ?>
+                                <?php if (($admin['is_active'] ?? 1)): ?>
                                 <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium text-green-700 bg-green-100 dark:bg-green-900/30 dark:text-green-400 rounded-full"><?= __('staff.admins.status_active') ?></span>
                                 <?php else: ?>
                                 <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-700 dark:text-zinc-400 rounded-full"><?= __('staff.admins.status_inactive') ?></span>
@@ -319,10 +342,10 @@ $pageSubDesc = __('staff.admins.description');
                                             class="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="권한 편집">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                     </button>
-                                    <button onclick="toggleAdminStatus('<?= $admin['id'] ?>', '<?= $admin['status'] === 'active' ? 'inactive' : 'active' ?>')"
-                                            class="p-1.5 <?= $admin['status'] === 'active' ? 'text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20' : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20' ?> rounded-lg transition"
-                                            title="<?= $admin['status'] === 'active' ? '비활성화' : '활성화' ?>">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $admin['status'] === 'active' ? 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636' : 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' ?>"/></svg>
+                                    <button onclick="toggleAdminStatus('<?= $admin['id'] ?>', '<?= ($admin['is_active'] ?? 1) ? 'inactive' : 'active' ?>')"
+                                            class="p-1.5 <?= ($admin['is_active'] ?? 1) ? 'text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20' : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20' ?> rounded-lg transition"
+                                            title="<?= ($admin['is_active'] ?? 1) ? '비활성화' : '활성화' ?>">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= ($admin['is_active'] ?? 1) ? 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636' : 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' ?>"/></svg>
                                     </button>
                                     <button onclick="removeAdmin('<?= $admin['id'] ?>', '<?= htmlspecialchars($admin['name']) ?>')"
                                             class="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition" title="관리자 해제">
@@ -368,16 +391,16 @@ $pageSubDesc = __('staff.admins.description');
                     <button onclick="closeAddModal()" class="p-1 text-zinc-400 hover:text-zinc-600 rounded">&times;</button>
                 </div>
                 <div class="p-6 space-y-4">
-                    <!-- 스태프 선택 -->
+                    <!-- 회원 선택 -->
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">스태프 선택</label>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('staff.admins.select_member') ?? '회원 선택' ?></label>
                         <?php if (empty($staffList)): ?>
-                        <p class="text-sm text-zinc-400">추가 가능한 스태프가 없습니다. (회원 연동 필요)</p>
+                        <p class="text-sm text-zinc-400"><?= __('staff.admins.no_members') ?? '승격 가능한 일반 회원이 없습니다.' ?></p>
                         <?php else: ?>
                         <select id="addStaffId" class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm">
-                            <option value="">-- 선택 --</option>
+                            <option value="">-- <?= __('common.select') ?? '선택' ?> --</option>
                             <?php foreach ($staffList as $s): ?>
-                            <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['name']) ?> (<?= htmlspecialchars($s['email'] ?? 'N/A') ?>)</option>
+                            <option value="<?= htmlspecialchars($s['id']) ?>"><?= htmlspecialchars($s['name']) ?> (<?= htmlspecialchars($s['email'] ?? 'N/A') ?>)</option>
                             <?php endforeach; ?>
                         </select>
                         <?php endif; ?>
