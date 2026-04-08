@@ -245,7 +245,7 @@ $__pageFile = null;
 $__noLayout = false; // API, 로그인 등 자체 레이아웃 페이지
 
 // Route to appropriate handler
-if (empty($path) || $path === 'index.php') {
+if (empty($path) || $path === 'index.php' || $path === 'home') {
     // home_page 설정에 따라 동적 페이지 렌더링
     $homeSlug = $siteSettings['home_page'] ?? 'home';
     if ($homeSlug === 'home' && file_exists(BASE_PATH . '/resources/views/customer/home.php')) {
