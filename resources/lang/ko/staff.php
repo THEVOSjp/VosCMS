@@ -99,6 +99,8 @@ return [
         'no_overrides' => '등록된 특별 설정이 없습니다.', 'saved' => '스케줄이 저장되었습니다.',
         'override_saved' => '특별 설정이 저장되었습니다.', 'override_deleted' => '특별 설정이 삭제되었습니다.',
         'confirm_delete_override' => '이 특별 설정을 삭제하시겠습니까?',
+        'override_hint' => '휴무, 단축근무, 연장근무 등을 설정합니다. 지난 날짜는 근태 기록과 연관되어 삭제할 수 없습니다.',
+        'override_past_no_delete' => '지난 날짜의 설정은 근태 기록과 연관되어 삭제할 수 없습니다.',
     ],
     'attendance' => [
         'title' => '근태 현황', 'description' => '오늘의 스태프 출퇴근 현황을 관리합니다',

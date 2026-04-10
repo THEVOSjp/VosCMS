@@ -151,6 +151,8 @@ return [
         'override_saved' => 'La configuración especial ha sido guardada.',
         'override_deleted' => 'La configuración especial ha sido eliminada.',
         'confirm_delete_override' => '¿Está seguro de que desea eliminar esta configuración especial?',
+        'override_hint' => 'Configure días libres, horarios reducidos, horas extra, etc. Las fechas pasadas no se pueden eliminar ya que están vinculadas a los registros de asistencia.',
+        'override_past_no_delete' => 'Las configuraciones de fechas pasadas no se pueden eliminar ya que están vinculadas a los registros de asistencia.',
     ],
     'attendance' => [
         'title' => 'Asistencia',

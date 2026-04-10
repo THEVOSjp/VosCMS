@@ -80,12 +80,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $testMode = isset($_POST['payment_test_mode']) ? '1' : '0';
         $enabled = isset($_POST['payment_enabled']) ? '1' : '0';
         try {
+            // 기존 설정 로드 → PG사별 키 보존
+            $existConf = json_decode($settings['payment_config'] ?? '{}', true) ?: [];
+            $gateways = $existConf['gateways'] ?? [];
+            // v1 → v2 마이그레이션 (기존 단일 키 구조 → PG사별 구조)
+            if (!empty($existConf['public_key']) && empty($gateways)) {
+                $oldGw = $existConf['gateway'] ?? 'stripe';
+                $gateways[$oldGw] = [
+                    'public_key' => $existConf['public_key'] ?? '',
+                    'secret_key' => $existConf['secret_key'] ?? '',
+                    'test_mode' => $existConf['test_mode'] ?? '1',
+                ];
+            }
+            // 현재 선택한 PG사의 키 저장
+            if ($pubKey || $secKey) {
+                $gateways[$pgw] = [
+                    'public_key' => $pubKey,
+                    'secret_key' => $secKey,
+                    'test_mode' => $testMode,
+                ];
+            } elseif (isset($gateways[$pgw])) {
+                // 키 입력 안 했으면 test_mode만 업데이트
+                $gateways[$pgw]['test_mode'] = $testMode;
+            }
             $paymentConfig = json_encode([
                 'gateway' => $pgw,
-                'public_key' => $pubKey,
-                'secret_key' => $secKey,
-                'test_mode' => $testMode,
                 'enabled' => $enabled,
+                'gateways' => $gateways,
             ], JSON_UNESCAPED_UNICODE);
             $stmt = $pdo->prepare("INSERT INTO rzx_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
             $stmt->execute(['payment_config', $paymentConfig]);
@@ -352,14 +373,26 @@ ob_start();
 </div>
 
 <?php
-// 결제 설정 로드
+// 결제 설정 로드 (PG사별 키 구조)
 $_payConf = json_decode($settings['payment_config'] ?? '{}', true) ?: [];
 $_payGateway = $_payConf['gateway'] ?? 'stripe';
-$_payPubKey = $_payConf['public_key'] ?? '';
-$_paySecKey = $_payConf['secret_key'] ?? '';
-$_payTestMode = ($_payConf['test_mode'] ?? '1') === '1';
 $_payEnabled = ($_payConf['enabled'] ?? '0') === '1';
+$_payGateways = $_payConf['gateways'] ?? [];
+// v1 호환: 기존 단일 키 구조
+if (empty($_payGateways) && !empty($_payConf['public_key'])) {
+    $_payGateways[$_payGateway] = [
+        'public_key' => $_payConf['public_key'] ?? '',
+        'secret_key' => $_payConf['secret_key'] ?? '',
+        'test_mode' => $_payConf['test_mode'] ?? '1',
+    ];
+}
+$_payCurrentGw = $_payGateways[$_payGateway] ?? [];
+$_payPubKey = $_payCurrentGw['public_key'] ?? '';
+$_paySecKey = $_payCurrentGw['secret_key'] ?? '';
+$_payTestMode = ($_payCurrentGw['test_mode'] ?? '1') === '1';
 $_payMaskedSec = $_paySecKey ? str_repeat('•', 12) . substr($_paySecKey, -8) : '';
+// JS용 PG사별 데이터
+$_payGatewaysJson = json_encode($_payGateways, JSON_UNESCAPED_UNICODE | JSON_HEX_APOS | JSON_HEX_TAG);
 ?>
 
 <!-- 온라인 결제 설정 -->
@@ -414,8 +447,8 @@ $_payMaskedSec = $_paySecKey ? str_repeat('•', 12) . substr($_paySecKey, -8) :
             <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                 <span id="pubKeyLabel">Publishable Key</span>
             </label>
-            <input type="text" name="payment_public_key" value="<?= htmlspecialchars($_payPubKey) ?>"
-                   placeholder="pk_test_..."
+            <input type="text" name="payment_public_key" id="payPubKeyInput" value="<?= htmlspecialchars($_payPubKey) ?>"
+                   placeholder="pk_test_..." autocomplete="off"
                    class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm">
         </div>
         <div>
@@ -423,18 +456,17 @@ $_payMaskedSec = $_paySecKey ? str_repeat('•', 12) . substr($_paySecKey, -8) :
                 <span id="secKeyLabel">Secret Key</span>
             </label>
             <div class="relative">
-                <input type="password" name="payment_secret_key" id="paySecKeyInput"
-                       value="<?= htmlspecialchars($_paySecKey) ?>"
+                <input type="text" name="payment_secret_key" id="paySecKeyInput"
+                       value="<?= htmlspecialchars($_paySecKey) ?>" autocomplete="off"
                        placeholder="sk_test_..."
+                       style="-webkit-text-security: disc; text-security: disc;"
                        class="w-full px-3 py-2 pr-10 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm">
-                <button type="button" onclick="var i=document.getElementById('paySecKeyInput');i.type=i.type==='password'?'text':'password';console.log('[Payment] Toggle key visibility');"
+                <button type="button" onclick="var i=document.getElementById('paySecKeyInput');var s=i.style;if(s.webkitTextSecurity==='disc'||s.textSecurity==='disc'){s.webkitTextSecurity='none';s.textSecurity='none'}else{s.webkitTextSecurity='disc';s.textSecurity='disc'}"
                         class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                 </button>
             </div>
-            <?php if ($_paySecKey): ?>
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?= __('settings.payment_config.key_saved') ?? '키가 저장되어 있습니다.' ?> (<?= $_payMaskedSec ?>)</p>
-            <?php endif; ?>
+            <p id="paySecSavedHint" class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 <?= $_paySecKey ? '' : 'hidden' ?>"><?= $_paySecKey ? (__('settings.payment_config.key_saved') ?? '키가 저장되어 있습니다.') . ' (' . $_payMaskedSec . ')' : '' ?></p>
         </div>
 
         <!-- 상태 표시 -->
@@ -506,22 +538,51 @@ $_payMaskedSec = $_paySecKey ? str_repeat('•', 12) . substr($_paySecKey, -8) :
 </div>
 
 <script>
-console.log('[Payment Settings] Initialized');
-document.getElementById('payment_gateway').addEventListener('change', function() {
-    var gw = this.value;
+(function() {
+    var savedGateways = <?= $_payGatewaysJson ?> || {};
     var labels = {
-        stripe: ['<?= __('settings.payment_config.label_public_key_stripe') ?? 'Publishable Key' ?>', '<?= __('settings.payment_config.label_secret_key_stripe') ?? 'Secret Key' ?>', 'pk_test_...', 'sk_test_...'],
-        toss: ['<?= __('settings.payment_config.label_public_key_toss') ?? 'Client Key' ?>', '<?= __('settings.payment_config.label_secret_key_toss') ?? 'Secret Key' ?>', 'test_ck_...', 'test_sk_...'],
-        payjp: ['<?= __('settings.payment_config.label_public_key_payjp') ?? 'Public Key' ?>', '<?= __('settings.payment_config.label_secret_key_payjp') ?? 'Secret Key' ?>', 'pk_test_...', 'sk_test_...'],
-        portone: ['<?= __('settings.payment_config.label_public_key_portone') ?? 'Merchant ID' ?>', '<?= __('settings.payment_config.label_secret_key_portone') ?? 'API Secret' ?>', 'imp_...', 'secret_...']
+        stripe: ['Publishable Key', 'Secret Key', 'pk_test_...', 'sk_test_...'],
+        toss: ['Client Key', 'Secret Key', 'test_ck_...', 'test_sk_...'],
+        payjp: ['Public Key', 'Secret Key', 'pk_test_...', 'sk_test_...'],
+        portone: ['Merchant ID', 'API Secret', 'imp_...', 'secret_...']
     };
-    var l = labels[gw] || labels.stripe;
-    document.getElementById('pubKeyLabel').textContent = l[0];
-    document.getElementById('secKeyLabel').textContent = l[1];
-    document.querySelector('[name=payment_public_key]').placeholder = l[2];
-    document.getElementById('paySecKeyInput').placeholder = l[3];
-    console.log('[Payment Settings] Gateway changed to:', gw);
-});
+    var pubInput = document.querySelector('[name=payment_public_key]');
+    var secInput = document.getElementById('paySecKeyInput');
+    var testToggle = document.querySelector('[name=payment_test_mode]');
+    var savedHint = document.getElementById('paySecSavedHint');
+
+    function switchGateway(gw) {
+        var l = labels[gw] || labels.stripe;
+        document.getElementById('pubKeyLabel').textContent = l[0];
+        document.getElementById('secKeyLabel').textContent = l[1];
+        pubInput.placeholder = l[2];
+        secInput.placeholder = l[3];
+
+        // 저장된 키값 로드
+        var saved = savedGateways[gw] || {};
+        pubInput.value = saved.public_key || '';
+        secInput.value = saved.secret_key || '';
+        if (testToggle) testToggle.checked = (saved.test_mode || '1') === '1';
+
+        // 마스킹 힌트 업데이트
+        if (savedHint) {
+            if (saved.secret_key) {
+                var masked = '••••••••••••' + saved.secret_key.slice(-8);
+                savedHint.textContent = '<?= __('settings.payment_config.key_saved') ?? '키가 저장되어 있습니다.' ?> (' + masked + ')';
+                savedHint.classList.remove('hidden');
+            } else {
+                savedHint.classList.add('hidden');
+            }
+        }
+    }
+
+    document.getElementById('payment_gateway').addEventListener('change', function() {
+        switchGateway(this.value);
+    });
+
+    // 초기 로드: 현재 선택된 PG사의 키 표시
+    switchGateway(document.getElementById('payment_gateway').value);
+})();
 </script>
 
 <?php

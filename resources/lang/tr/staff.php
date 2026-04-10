@@ -151,6 +151,8 @@ return [
         'override_saved' => 'Özel ayar kaydedildi.',
         'override_deleted' => 'Özel ayar silindi.',
         'confirm_delete_override' => 'Bu özel ayarı silmek istediğinizden emin misiniz?',
+        'override_hint' => 'Tatil, kısa çalışma, fazla mesai vb. ayarlayın. Geçmiş tarihler devam kayıtlarıyla bağlantılı olduğundan silinemez.',
+        'override_past_no_delete' => 'Geçmiş tarih ayarları devam kayıtlarıyla bağlantılı olduğundan silinemez.',
     ],
     'attendance' => [
         'title' => 'Yoklama',

@@ -151,6 +151,8 @@ return [
         'override_saved' => 'Override has been saved.',
         'override_deleted' => 'Override has been deleted.',
         'confirm_delete_override' => 'Are you sure you want to delete this override?',
+        'override_hint' => 'Set holidays, shortened hours, extended hours, etc. Past dates cannot be deleted as they are linked to attendance records.',
+        'override_past_no_delete' => 'Past date settings cannot be deleted as they are linked to attendance records.',
     ],
     'attendance' => [
         'title' => 'Attendance',

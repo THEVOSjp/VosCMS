@@ -48,7 +48,7 @@ define('BASE_PATH', __DIR__);
 | Check Installation
 |--------------------------------------------------------------------------
 */
-if (!file_exists(BASE_PATH . '/install/installed.lock') && !file_exists(BASE_PATH . '/.env')) {
+if (!file_exists(BASE_PATH . '/install/installed.lock') && (!file_exists(BASE_PATH . '/.env') || filesize(BASE_PATH . '/.env') === 0)) {
     $installPath = dirname($_SERVER['SCRIPT_NAME']) . '/install/';
     header('Location: ' . $installPath);
     exit;

@@ -151,6 +151,8 @@ return [
         'override_saved' => 'Pengaturan khusus telah disimpan.',
         'override_deleted' => 'Pengaturan khusus telah dihapus.',
         'confirm_delete_override' => 'Apakah Anda yakin ingin menghapus pengaturan khusus ini?',
+        'override_hint' => 'Atur libur, jam kerja singkat, lembur, dll. Tanggal yang sudah lewat tidak dapat dihapus karena terkait dengan catatan kehadiran.',
+        'override_past_no_delete' => 'Pengaturan tanggal yang sudah lewat tidak dapat dihapus karena terkait dengan catatan kehadiran.',
     ],
     'attendance' => [
         'title' => 'Kehadiran',

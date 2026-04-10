@@ -181,7 +181,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                 </button>
                 <!-- 메뉴 스크롤 영역 -->
-                <nav id="menuNavScroll" class="flex items-center h-11 overflow-x-auto scrollbar-hide" style="scrollbar-width:none;-ms-overflow-style:none">
+                <nav id="menuNavScroll" class="flex items-center justify-center h-11 overflow-x-auto scrollbar-hide" style="scrollbar-width:none;-ms-overflow-style:none">
                     <?php foreach ($mainMenu as $__mi):
                         $__href = rzxMenuUrl($__mi, $baseUrl);
                         $__active = rzxIsActive($__mi, $currentPath, $baseUrl);

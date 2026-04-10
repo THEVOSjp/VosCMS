@@ -293,6 +293,7 @@ $isSettingsPage = strpos($currentPath, '/settings') !== false;
         <?php
         $_hasShopPlugin = file_exists(BASE_PATH . '/plugins/vos-shop/plugin.json');
         $isShopsPage = str_contains($currentPath, '/shops');
+        $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
         $pendingShops = 0;
         $pendingConsultCount = 0;
         if ($_hasShopPlugin) {

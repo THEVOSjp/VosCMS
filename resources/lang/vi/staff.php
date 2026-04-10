@@ -151,6 +151,8 @@ return [
         'override_saved' => 'Cài đặt đặc biệt đã được lưu.',
         'override_deleted' => 'Cài đặt đặc biệt đã được xóa.',
         'confirm_delete_override' => 'Bạn có chắc chắn muốn xóa cài đặt đặc biệt này không?',
+        'override_hint' => 'Đặt ngày nghỉ, giờ làm rút ngắn, tăng ca, v.v. Ngày đã qua không thể xóa vì liên quan đến hồ sơ chấm công.',
+        'override_past_no_delete' => 'Cài đặt ngày đã qua không thể xóa vì liên quan đến hồ sơ chấm công.',
     ],
     'attendance' => [
         'title' => 'Chấm công',

@@ -175,6 +175,24 @@ class PluginManager
         // 마이그레이션 실행
         $this->runMigrations($pluginId, $manifest);
 
+        // 샘플 에셋 복사 (이미지 등)
+        if (!empty($manifest['sample_assets'])) {
+            $pluginDir = $this->pluginsDir . '/' . $pluginId;
+            foreach ($manifest['sample_assets'] as $src => $dest) {
+                $srcPath = $pluginDir . '/' . $src;
+                $destPath = rtrim(BASE_PATH, '/') . '/' . $dest;
+                if (is_dir($srcPath)) {
+                    if (!is_dir($destPath)) @mkdir($destPath, 0775, true);
+                    foreach (scandir($srcPath) as $file) {
+                        if ($file === '.' || $file === '..') continue;
+                        if (!file_exists($destPath . '/' . $file)) {
+                            @copy($srcPath . '/' . $file, $destPath . '/' . $file);
+                        }
+                    }
+                }
+            }
+        }
+
         // 기본 설정 저장
         if (!empty($manifest['settings']['defaults'])) {
             foreach ($manifest['settings']['defaults'] as $key => $value) {

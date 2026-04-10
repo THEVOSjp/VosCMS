@@ -151,6 +151,8 @@ return [
         'override_saved' => 'Sondereinstellung wurde gespeichert.',
         'override_deleted' => 'Sondereinstellung wurde gelöscht.',
         'confirm_delete_override' => 'Möchten Sie diese Sondereinstellung wirklich löschen?',
+        'override_hint' => 'Feiertage, verkürzte Arbeitszeiten, Überstunden usw. festlegen. Vergangene Daten können nicht gelöscht werden, da sie mit Anwesenheitsaufzeichnungen verknüpft sind.',
+        'override_past_no_delete' => 'Vergangene Einstellungen können nicht gelöscht werden, da sie mit Anwesenheitsaufzeichnungen verknüpft sind.',
     ],
     'attendance' => [
         'title' => 'Anwesenheit',

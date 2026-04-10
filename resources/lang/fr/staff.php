@@ -151,6 +151,8 @@ return [
         'override_saved' => 'Le paramètre spécial a été enregistré.',
         'override_deleted' => 'Le paramètre spécial a été supprimé.',
         'confirm_delete_override' => 'Êtes-vous sûr de vouloir supprimer ce paramètre spécial ?',
+        'override_hint' => 'Définir les jours fériés, horaires réduits, heures supplémentaires, etc. Les dates passées ne peuvent pas être supprimées car elles sont liées aux registres de présence.',
+        'override_past_no_delete' => 'Les paramètres des dates passées ne peuvent pas être supprimés car ils sont liés aux registres de présence.',
     ],
     'attendance' => [
         'title' => 'Présence',

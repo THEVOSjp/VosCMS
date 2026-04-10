@@ -151,6 +151,8 @@ return [
         'override_saved' => '特别设置已保存。',
         'override_deleted' => '特别设置已删除。',
         'confirm_delete_override' => '确定要删除此特别设置吗？',
+        'override_hint' => '设置休假、缩短工时、加班等。过去的日期与考勤记录相关联，无法删除。',
+        'override_past_no_delete' => '过去日期的设置与考勤记录相关联，无法删除。',
     ],
     'attendance' => [
         'title' => '考勤状况',

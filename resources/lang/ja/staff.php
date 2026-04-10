@@ -151,6 +151,8 @@ return [
         'override_saved' => '特別設定が保存されました。',
         'override_deleted' => '特別設定が削除されました。',
         'confirm_delete_override' => 'この特別設定を削除しますか？',
+        'override_hint' => '休日、時短勤務、延長勤務などを設定します。過去の日付は勤怠記録と連動しているため削除できません。',
+        'override_past_no_delete' => '過去の日付の設定は勤怠記録と連動しているため削除できません。',
     ],
     'attendance' => [
         'title' => '勤怠状況',

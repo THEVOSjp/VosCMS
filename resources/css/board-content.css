@@ -26,11 +26,17 @@
 .rzx-og-card { transition: box-shadow 0.2s; }
 .rzx-og-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-/* 다크모드 */
-.dark .board-content a { color: #60a5fa; }
-.dark .board-content blockquote { border-color: #52525b; color: #a1a1aa; }
-.dark .board-content pre, .dark .board-content code { background: #27272a; }
-.dark .board-content table td, .dark .board-content table th { border-color: #3f3f46; }
+/* 다크모드 — 전체 텍스트/배경 강제 오버라이드 */
+.dark .board-content { color: #e4e4e7 !important; }
+.dark .board-content * { color: #d4d4d8 !important; background-color: transparent !important; }
+.dark .board-content h1, .dark .board-content h2, .dark .board-content h3, .dark .board-content h4 { color: #f4f4f5 !important; }
+.dark .board-content a { color: #60a5fa !important; }
+.dark .board-content blockquote { border-color: #52525b !important; color: #a1a1aa !important; }
+.dark .board-content pre, .dark .board-content code { background-color: #27272a !important; color: #d4d4d8 !important; }
+.dark .board-content table td, .dark .board-content table th { border-color: #3f3f46 !important; }
+.dark .board-content table th { background-color: #27272a !important; color: #e4e4e7 !important; }
+/* 이미지/비디오는 배경 투명 유지 */
+.dark .board-content img, .dark .board-content video, .dark .board-content iframe { background-color: transparent !important; }
 .dark .rzx-og-card { border-color: #3f3f46 !important; }
 .dark .rzx-og-card div[style*="font-weight:600"] { color: #e4e4e7 !important; }
 .dark .rzx-og-card div[style*="color:#71717a"] { color: #a1a1aa !important; }
