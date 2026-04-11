@@ -1,0 +1,46 @@
+{
+    "slug": "board-contents",
+    "version": "1.0.0",
+    "author": "VosCMS",
+    "category": "content",
+    "icon": "newspaper",
+    "thumbnail": "thumbnail.png",
+    "name": {
+        "ko": "게시판 콘텐츠", "en": "Board Contents", "ja": "掲示板コンテンツ",
+        "zh_CN": "版块内容", "zh_TW": "版塊內容", "de": "Board-Inhalte",
+        "es": "Contenido del Tablero", "fr": "Contenu du Tableau",
+        "id": "Konten Papan", "mn": "Самбарын агуулга", "ru": "Контент доски",
+        "tr": "Pano İçeriği", "vi": "Nội dung Bảng"
+    },
+    "description": {
+        "ko": "게시판 글을 다양한 레이아웃으로 표시합니다",
+        "en": "Display board posts in various layouts",
+        "ja": "掲示板の投稿を様々なレイアウトで表示します"
+    },
+    "config_schema": {
+        "fields": [
+            {"key": "title", "type": "text", "label": "Section Title", "i18n": true},
+            {"key": "board_slug", "type": "board_select", "label": "Board"},
+            {"key": "style", "type": "select", "label": "Layout Style", "options": [
+                {"value": "list", "label": "List (Title Only)"},
+                {"value": "card", "label": "Card Grid (Image + Title)"},
+                {"value": "thumb-list", "label": "Thumbnail List (Image + Title + Desc)"},
+                {"value": "gallery", "label": "Gallery (Image Grid)"},
+                {"value": "banner", "label": "Banner (Full Width Image)"}
+            ], "default": "list"},
+            {"key": "count", "type": "number", "label": "Post Count", "default": 5},
+            {"key": "columns", "type": "select", "label": "Columns (Card/Gallery)", "options": [
+                {"value": "2", "label": "2"},
+                {"value": "3", "label": "3"},
+                {"value": "4", "label": "4"}
+            ], "default": "2"},
+            {"key": "show_image", "type": "toggle", "label": "Show Image", "default": true},
+            {"key": "show_date", "type": "toggle", "label": "Show Date", "default": false},
+            {"key": "show_desc", "type": "toggle", "label": "Show Description", "default": true},
+            {"key": "desc_length", "type": "number", "label": "Description Length", "default": 80},
+            {"key": "show_more_link", "type": "toggle", "label": "Show More Link", "default": true},
+            {"key": "more_text", "type": "text", "label": "More Link Text", "i18n": true},
+            {"key": "bg_color", "type": "color_transparent", "label": "Background Color", "default": "transparent"}
+        ]
+    }
+}

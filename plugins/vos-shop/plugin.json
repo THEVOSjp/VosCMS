@@ -1,0 +1,49 @@
+{
+    "slug": "vos-shop",
+    "name": {
+        "ko": "업소 관리",
+        "en": "Shop Management",
+        "ja": "店舗管理",
+        "de": "Geschäftsverwaltung",
+        "es": "Gestión de Tiendas",
+        "fr": "Gestion de Magasins",
+        "id": "Manajemen Toko",
+        "mn": "Дэлгүүр удирдлага",
+        "ru": "Управление магазинами",
+        "tr": "Mağaza Yönetimi",
+        "vi": "Quản lý Cửa hàng",
+        "zh_CN": "店铺管理",
+        "zh_TW": "店鋪管理"
+    },
+    "description": {
+        "ko": "업소 등록, 검색, 지도, 리뷰, 쿠폰 시스템",
+        "en": "Shop registration, search, map, reviews, and coupons",
+        "ja": "店舗登録、検索、地図、レビュー、クーポンシステム"
+    },
+    "version": "1.0.0",
+    "author": "VosCMS",
+    "depends": [],
+    "icon": "<svg fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'/></svg>",
+    "menus": [
+        {
+            "title": {
+                "ko": "업소 관리",
+                "en": "Shop Management",
+                "ja": "店舗管理"
+            },
+            "icon": "<svg fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'/></svg>",
+            "items": [
+                {"title": {"ko": "업소 목록", "en": "Shop List", "ja": "店舗一覧"}, "path": "shops"},
+                {"title": {"ko": "업소 승인", "en": "Shop Approval", "ja": "店舗承認"}, "path": "shops?filter=pending"}
+            ]
+        }
+    ],
+    "routes": [
+        {"type": "front", "path": "shop/register", "view": "customer/shop/register.php"},
+        {"type": "front", "path": "shops", "view": "customer/shop/list.php"},
+        {"type": "admin", "path": "shops", "view": "admin/shops.php"}
+    ],
+    "migrations": [
+        "database/006_shops.sql"
+    ]
+}

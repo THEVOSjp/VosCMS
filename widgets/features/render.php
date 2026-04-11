@@ -58,7 +58,9 @@ $locOnly = function($val) use ($locale) {
     return '';
 };
 $sTitle = htmlspecialchars($locOnly($config['title'] ?? '') ?: __('home.features.title'));
-$sSub   = htmlspecialchars($locOnly($config['subtitle'] ?? '') ?: __('home.features.subtitle'));
+$_sSubRaw = $locOnly($config['subtitle'] ?? '') ?: __('home.features.subtitle');
+$_sSubRaw = str_replace('\\n', "\n", $_sSubRaw);
+$sSub   = nl2br(htmlspecialchars($_sSubRaw));
 
 // feature_items가 비어있으면 기본 카드 3개 사용
 if (empty($featureItems)) {

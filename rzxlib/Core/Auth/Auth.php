@@ -170,12 +170,13 @@ class Auth
                 $insertStmt->execute([$user['id'], hash('sha256', $token), $expires]);
 
                 // 쿠키 설정
+                $isSecure = !empty($_SERVER['HTTPS']) || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' || str_starts_with($_ENV['APP_URL'] ?? '', 'https');
                 setcookie('remember_token', $token, [
                     'expires' => $expires,
                     'path' => '/',
                     'httponly' => true,
                     'samesite' => 'Lax',
-                    'secure' => isset($_SERVER['HTTPS']),
+                    'secure' => $isSecure,
                 ]);
 
             } catch (PDOException $e) {

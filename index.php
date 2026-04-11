@@ -33,6 +33,16 @@ if (version_compare(PHP_VERSION, '8.0.0', '<')) {
 |--------------------------------------------------------------------------
 */
 if (session_status() === PHP_SESSION_NONE) {
+    // 세션 수명: .env SESSION_LIFETIME (분) 또는 기본 7일
+    $_sessionLifetime = ((int)($_ENV['SESSION_LIFETIME'] ?? 0) ?: 10080) * 60; // 분→초
+    ini_set('session.gc_maxlifetime', (string)$_sessionLifetime);
+    session_set_cookie_params([
+        'lifetime' => $_sessionLifetime,
+        'path'     => '/',
+        'secure'   => !empty($_SERVER['HTTPS']),
+        'httponly'  => true,
+        'samesite'  => 'Lax',
+    ]);
     session_start();
 }
 
@@ -246,14 +256,9 @@ $__noLayout = false; // API, 로그인 등 자체 레이아웃 페이지
 
 // Route to appropriate handler
 if (empty($path) || $path === 'index.php' || $path === 'home') {
-    // home_page 설정에 따라 동적 페이지 렌더링
-    $homeSlug = $siteSettings['home_page'] ?? 'home';
-    if ($homeSlug === 'home' && file_exists(BASE_PATH . '/resources/views/customer/home.php')) {
-        $__pageFile = BASE_PATH . '/resources/views/customer/home.php';
-    } else {
-        $pageSlug = $homeSlug;
-        $__pageFile = BASE_PATH . '/resources/views/customer/page.php';
-    }
+    // home_page 설정에 지정된 위젯 페이지로 연결
+    $pageSlug = $siteSettings['home_page'] ?? 'home';
+    $__pageFile = BASE_PATH . '/resources/views/customer/page.php';
 } elseif (preg_match('#^staff/([^/]+)$#', $path, $m) && !in_array($m[1], ['settings', 'edit'])) {
     $staffSlug = $m[1];
     $__pageFile = BASE_PATH . '/resources/views/customer/staff-detail.php';
@@ -272,6 +277,55 @@ if (empty($path) || $path === 'index.php' || $path === 'home') {
 } elseif ($path === 'payment/webhook' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     include BASE_PATH . '/resources/views/customer/payment/webhook.php';
     exit;
+
+// ─── Developer Pages ───
+} elseif (str_starts_with($path, 'developer')) {
+    $devRoute = trim(substr($path, strlen('developer')), '/') ?: 'dashboard';
+    $devViewFile = BASE_PATH . '/resources/views/developer/' . basename($devRoute) . '.php';
+    if (file_exists($devViewFile)) {
+        include $devViewFile;
+    } else {
+        include BASE_PATH . '/resources/views/developer/dashboard.php';
+    }
+    exit;
+
+// ─── Public Marketplace ───
+} elseif (str_starts_with($path, 'marketplace')) {
+    $mpRoute = trim(substr($path, strlen('marketplace')), '/') ?: 'index';
+    $mpViewFile = BASE_PATH . '/resources/views/marketplace/' . basename($mpRoute) . '.php';
+    if (file_exists($mpViewFile)) {
+        include $mpViewFile;
+    } else {
+        include BASE_PATH . '/resources/views/marketplace/index.php';
+    }
+    exit;
+
+// ─── Developer API ───
+} elseif (str_starts_with($path, 'api/developer/')) {
+    $devEndpoint = substr($path, strlen('api/developer/'));
+    $devApiFile = BASE_PATH . '/api/developer/' . basename($devEndpoint) . '.php';
+    if (file_exists($devApiFile)) {
+        include $devApiFile;
+    } else {
+        header('Content-Type: application/json');
+        http_response_code(404);
+        echo json_encode(['error' => 'endpoint_not_found']);
+    }
+    exit;
+
+// ─── License Server API ───
+} elseif (str_starts_with($path, 'api/license/')) {
+    $licenseEndpoint = substr($path, strlen('api/license/'));
+    $licenseApiFile = BASE_PATH . '/api/license/' . basename($licenseEndpoint) . '.php';
+    if (file_exists($licenseApiFile)) {
+        include $licenseApiFile;
+    } else {
+        header('Content-Type: application/json');
+        http_response_code(404);
+        echo json_encode(['error' => 'endpoint_not_found']);
+    }
+    exit;
+
 } elseif ($path === $config['admin_path'] || str_starts_with($path, $config['admin_path'] . '/')) {
     $adminRoute = substr($path, strlen($config['admin_path']));
     $adminRoute = trim($adminRoute, '/') ?: 'dashboard';
@@ -316,6 +370,18 @@ if (empty($path) || $path === 'index.php' || $path === 'home') {
         http_response_code(403);
         include BASE_PATH . '/resources/views/admin/403.php';
         exit;
+    }
+
+    // ─── 라이선스 체크 ───
+    $licenseInfo = null;
+    try {
+        require_once BASE_PATH . '/rzxlib/Core/License/LicenseClient.php';
+        require_once BASE_PATH . '/rzxlib/Core/License/LicenseStatus.php';
+        $licenseClient = new \RzxLib\Core\License\LicenseClient();
+        $licenseStatus = $licenseClient->check();
+        $licenseInfo = $licenseStatus->toArray();
+    } catch (\Throwable $e) {
+        if ($config['debug']) error_log('License check error: ' . $e->getMessage());
     }
 
     // 업데이트 확인 (캐시 기반, 1시간 TTL)
@@ -484,6 +550,8 @@ if (empty($path) || $path === 'index.php' || $path === 'home') {
         include BASE_PATH . '/resources/views/admin/site/widgets-marketplace.php';
     } elseif ($adminRoute === 'plugins') {
         include BASE_PATH . '/resources/views/admin/plugins.php';
+    } elseif ($adminRoute === 'review-queue') {
+        include BASE_PATH . '/resources/views/admin/review-queue.php';
     } elseif ($adminRoute === 'plugins/api') {
         $__noLayout = true;
         include BASE_PATH . '/resources/views/admin/plugins-api.php';

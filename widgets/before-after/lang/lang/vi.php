@@ -1,0 +1,1 @@
+<?php return ['title'=>'Trước / Sau','before'=>'Trước','after'=>'Sau','view_shop'=>'Xem cửa hàng','book_now'=>'Đặt lịch','empty'=>'Chưa có ảnh so sánh.','prev'=>'Trước','next'=>'Tiếp','compare'=>'So sánh','side_by_side'=>'Song song','create'=>'Đăng','view_more'=>'Xem thêm'];

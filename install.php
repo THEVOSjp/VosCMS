@@ -11,6 +11,32 @@ if (file_exists(__DIR__ . '/.env') && file_exists(__DIR__ . '/storage/.installed
     die('<h1>VosCMS is already installed.</h1><p>Delete <code>storage/.installed</code> to reinstall.</p>');
 }
 
+// localhost / 사설 IP 차단 — 실제 도메인에서만 설치 가능
+$_installHost = strtolower(preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? ''));
+$_blockedHosts = ['localhost', '127.0.0.1', '::1', '0.0.0.0'];
+$_blockedSuffixes = ['.local', '.test', '.example', '.invalid', '.localhost'];
+$_isBlocked = in_array($_installHost, $_blockedHosts);
+foreach ($_blockedSuffixes as $_sfx) {
+    if (str_ends_with($_installHost, $_sfx)) $_isBlocked = true;
+}
+if (!$_isBlocked && filter_var($_installHost, FILTER_VALIDATE_IP) !== false) {
+    // 사설 IP 대역 차단 (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+    if (filter_var($_installHost, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+        $_isBlocked = true;
+    }
+}
+if ($_isBlocked) {
+    die('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>VosCMS</title>
+    <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#f4f4f5}
+    .box{background:#fff;padding:40px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.08);max-width:480px;text-align:center}
+    h1{color:#dc2626;font-size:1.5rem}p{color:#71717a;line-height:1.6}</style></head>
+    <body><div class="box"><h1>Installation Blocked</h1>
+    <p>VosCMS can only be installed on a public domain with SSL.<br>
+    <code>localhost</code>, private IPs, and test domains are not allowed.</p>
+    <p style="margin-top:20px;font-size:.85rem;color:#a1a1aa">Current host: <code>' . htmlspecialchars($_installHost) . '</code></p>
+    </div></body></html>');
+}
+
 define('BASE_PATH', __DIR__);
 $step = $_POST['step'] ?? $_GET['step'] ?? '1';
 $errors = [];
@@ -324,6 +350,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $gradeStmt->execute([3, 'Gold', 'gold', 2, 3, 1, '#ffd500', 2, 0]);
                     $gradeStmt->execute([4, 'VIP', 'vip', 3, 5, 2, '#ff528e', 3, 0]);
 
+                    // ─── 라이선스 키 생성 + 서버 등록 ───
+                    require_once BASE_PATH . '/rzxlib/Core/License/LicenseClient.php';
+                    $licenseKey = \RzxLib\Core\License\LicenseClient::generateKey();
+                    $licenseDomain = \RzxLib\Core\License\LicenseClient::normalizeDomain($siteUrl);
+                    $licenseServer = 'https://vos.21ces.com/api'; // 향후 https://voscms.com/api
+
+                    // 라이선스 서버에 등록 시도
+                    $licenseRegistered = false;
+                    $licenseMessage = '';
+                    try {
+                        $ch = curl_init($licenseServer . '/license/register');
+                        curl_setopt_array($ch, [
+                            CURLOPT_POST => true,
+                            CURLOPT_POSTFIELDS => json_encode([
+                                'key' => $licenseKey,
+                                'domain' => $licenseDomain,
+                                'version' => '2.1.0',
+                                'php_version' => PHP_VERSION,
+                                'server_ip' => $_SERVER['SERVER_ADDR'] ?? '',
+                            ]),
+                            CURLOPT_RETURNTRANSFER => true,
+                            CURLOPT_TIMEOUT => 10,
+                            CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Accept: application/json'],
+                            CURLOPT_SSL_VERIFYPEER => true,
+                        ]);
+                        $licResponse = curl_exec($ch);
+                        $licHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                        curl_close($ch);
+
+                        if ($licHttpCode === 200 && $licResponse) {
+                            $licData = json_decode($licResponse, true);
+                            $licenseRegistered = !empty($licData['success']);
+                            $licenseMessage = $licData['message'] ?? '';
+                        }
+                    } catch (\Throwable $e) {
+                        $licenseMessage = 'License server unreachable';
+                    }
+
                     // .env 파일 생성
                     $appKey = 'base64:' . base64_encode(random_bytes(32));
                     $jwtSecret = bin2hex(random_bytes(32));
@@ -348,7 +412,7 @@ DB_COLLATION=utf8mb4_unicode_ci
 DB_PREFIX={$db['dbPrefix']}
 
 SESSION_DRIVER=file
-SESSION_LIFETIME=120
+SESSION_LIFETIME=10080
 SESSION_SECURE_COOKIE=true
 
 JWT_SECRET={$jwtSecret}
@@ -357,6 +421,11 @@ JWT_REFRESH_TTL=20160
 
 CACHE_DRIVER=file
 CACHE_PREFIX=vos_
+
+LICENSE_KEY={$licenseKey}
+LICENSE_DOMAIN={$licenseDomain}
+LICENSE_REGISTERED_AT=" . date('c') . "
+LICENSE_SERVER={$licenseServer}
 ";
                     file_put_contents(BASE_PATH . '/.env', $envContent);
 
@@ -365,6 +434,8 @@ CACHE_PREFIX=vos_
 
                     $_SESSION['install_complete'] = true;
                     $_SESSION['install_admin_url'] = $siteUrl . '/' . $adminPath;
+                    $_SESSION['install_license_key'] = $licenseKey;
+                    $_SESSION['install_license_registered'] = $licenseRegistered;
                     $step = '5';
                 } catch (PDOException $e) {
                     $errors[] = '설정 저장 실패: ' . $e->getMessage();
@@ -576,7 +647,28 @@ if (!isset($_SESSION)) session_start();
         <h2 class="text-2xl font-bold text-zinc-800">설치 완료!</h2>
         <p class="text-zinc-500 mt-2">VosCMS가 성공적으로 설치되었습니다.</p>
 
-        <div class="mt-6 p-4 bg-zinc-50 rounded-lg text-left text-sm">
+        <!-- 라이선스 정보 -->
+        <div class="mt-6 p-4 bg-blue-50 rounded-lg text-left text-sm border border-blue-200">
+            <p class="text-zinc-700 font-semibold mb-2">라이선스 정보</p>
+            <div class="flex items-center justify-between">
+                <p class="text-zinc-600">라이선스 키:</p>
+                <code class="text-blue-700 font-bold text-base tracking-wider"><?= htmlspecialchars($_SESSION['install_license_key'] ?? '-') ?></code>
+            </div>
+            <?php if (!empty($_SESSION['install_license_registered'])): ?>
+            <p class="text-green-600 text-xs mt-2 flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                라이선스 서버에 등록 완료
+            </p>
+            <?php else: ?>
+            <p class="text-amber-600 text-xs mt-2 flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                라이선스 서버 연결 불가 — 다음 관리자 접속 시 자동 등록됩니다.
+            </p>
+            <?php endif; ?>
+            <p class="text-zinc-400 text-xs mt-2">이 키는 .env 파일에 저장되었습니다. 안전하게 보관하세요.</p>
+        </div>
+
+        <div class="mt-4 p-4 bg-zinc-50 rounded-lg text-left text-sm">
             <p class="text-zinc-600"><strong>관리자 페이지:</strong></p>
             <p class="text-blue-600 font-mono"><?= htmlspecialchars($_SESSION['install_admin_url'] ?? '/admin') ?></p>
         </div>

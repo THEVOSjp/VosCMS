@@ -1,0 +1,1 @@
+<?php return ['title'=>'Öncesi / Sonrası','before'=>'Öncesi','after'=>'Sonrası','view_shop'=>'Salonu Gör','book_now'=>'Rezervasyon Yap','empty'=>'Henüz karşılaştırma fotoğrafı yok.','prev'=>'Önceki','next'=>'Sonraki','compare'=>'Karşılaştır','side_by_side'=>'Yan yana','create'=>'Paylaş','view_more'=>'Daha Fazla'];

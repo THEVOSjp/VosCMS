@@ -1,0 +1,1 @@
+<?php return ['title'=>'前后对比','before'=>'之前','after'=>'之后','view_shop'=>'查看店铺','book_now'=>'立即预约','empty'=>'暂无对比照片。','prev'=>'上一个','next'=>'下一个','compare'=>'对比','side_by_side'=>'并排','create'=>'发布','view_more'=>'查看更多'];

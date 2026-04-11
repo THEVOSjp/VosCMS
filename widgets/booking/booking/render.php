@@ -164,23 +164,49 @@ try {
             $bundlePrice = $bundleId ? (float)($input['bundle_price'] ?? 0) : null;
             if (!$date||!$time||!$name||!$phone) { echo json_encode(['success'=>false,'message'=>__('booking.error.required_fields')]); exit; }
 
-            require_once ($_ENV['BASE_PATH'] ?? dirname(__DIR__, 2)) . '/rzxlib/Core/Helpers/ReservationHelper.php';
-
-            try {
-                $result = \RzxLib\Core\Helpers\ReservationHelper::create($pdo, $prefix, [
-                    'customer_name' => $name, 'customer_phone' => $phone, 'customer_email' => $email,
-                    'reservation_date' => $date, 'start_time' => $time . ':00',
-                    'bundle_id' => $bundleId, 'service_ids' => $serviceIds,
-                    'user_id' => $isLoggedIn ? ($currentUser['id'] ?? null) : null,
-                    'source' => 'online', 'notes' => $notes, 'check_online_payment' => true,
-                ]);
-                $id = $result['id'];
-                $resNum = $result['reservation_number'];
-            } catch (\Throwable $e) {
-                echo json_encode(['success'=>false,'message'=>$e->getMessage()]); exit;
+            // 번들이면 service_bundle_items에서 전체 서비스 조회 (스냅샷)
+            if ($bundleId) {
+                $svcStmt = $pdo->prepare("SELECT s.id, s.name, s.price, s.duration FROM {$prefix}service_bundle_items bi JOIN {$prefix}services s ON bi.service_id = s.id WHERE bi.bundle_id = ? ORDER BY bi.sort_order");
+                $svcStmt->execute([$bundleId]);
+                $selSvcs = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
+            } else {
+                $ph = implode(',', array_fill(0, count($serviceIds), '?'));
+                $svcStmt = $pdo->prepare("SELECT id,name,price,duration FROM {$prefix}services WHERE id IN ({$ph}) AND is_active=1");
+                $svcStmt->execute(array_values($serviceIds));
+                $selSvcs = $svcStmt->fetchAll(PDO::FETCH_ASSOC);
             }
+            if (empty($selSvcs)) { echo json_encode(['success'=>false,'message'=>__('booking.error.invalid_service')]); exit; }
 
-            // 온라인 결제 확인
+            // total_amount = 서비스 원래 가격 합계, final_amount = 번들 가격 또는 원래 합계
+            $totalPrice=$totalDuration=0;
+            foreach ($selSvcs as $s) { $totalPrice+=(float)$s['price']; $totalDuration+=(int)$s['duration']; }
+
+            // 번들이 있으면 DB에서 번들 가격 검증
+            if ($bundleId) {
+                $bdlStmt = $pdo->prepare("SELECT bundle_price FROM {$prefix}service_bundles WHERE id = ? AND is_active = 1");
+                $bdlStmt->execute([$bundleId]);
+                $dbBundlePrice = $bdlStmt->fetchColumn();
+                if ($dbBundlePrice !== false) {
+                    $bundlePrice = (float)$dbBundlePrice;
+                }
+            }
+            $finalAmount = $bundleId && $bundlePrice !== null ? $bundlePrice : $totalPrice;
+
+            $resNum = 'RZX'.date('ymd').strtoupper(bin2hex(random_bytes(3)));
+            $startDt = new DateTime("$date $time");
+            $endDt = clone $startDt; $endDt->modify("+{$totalDuration} minutes");
+            $userId = $isLoggedIn ? ($currentUser['id'] ?? null) : null;
+            $id = bin2hex(random_bytes(4)).'-'.bin2hex(random_bytes(2)).'-'.bin2hex(random_bytes(2)).'-'.bin2hex(random_bytes(2)).'-'.bin2hex(random_bytes(6));
+
+            $sql = "INSERT INTO {$prefix}reservations (id,reservation_number,user_id,staff_id,bundle_id,bundle_price,customer_name,customer_phone,customer_email,reservation_date,start_time,end_time,total_amount,final_amount,designation_fee,status,source,notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending','online',?)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$id,$resNum,$userId,null,$bundleId,$bundlePrice,$name,$phone,$email?:null,$date,$time.':00',$endDt->format('H:i:s'),$totalPrice,$finalAmount,0,$notes?:null]);
+
+            // reservation_services: 서비스 원래 가격 그대로, bundle_id 기록
+            $rsStmt = $pdo->prepare("INSERT INTO {$prefix}reservation_services (reservation_id,service_id,service_name,price,duration,sort_order,bundle_id) VALUES (?,?,?,?,?,?,?)");
+            $si=0; foreach ($selSvcs as $s) { $rsStmt->execute([$id,$s['id'],$s['name'],$s['price'],$s['duration'],$si++,$bundleId]); }
+
+            // 온라인 결제 활성화 여부 확인 (DB에서 직접 조회)
             $_bwPayStmt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'payment_config'");
             $_bwPayStmt->execute();
             $_bwPayConf = json_decode($_bwPayStmt->fetchColumn() ?: '{}', true) ?: [];

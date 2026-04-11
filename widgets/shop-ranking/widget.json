@@ -1,0 +1,30 @@
+{
+  "slug": "shop-ranking",
+  "version": "1.0.0",
+  "author": "VosCMS",
+  "name": {
+    "ko": "인기 사업장 랭킹",
+    "en": "Popular Business Ranking",
+    "ja": "人気事業所ランキング"
+  },
+  "description": {
+    "ko": "인기 사업장 TOP 10 + 사이드바 (쿠폰, 최근 리뷰, 인기 태그)",
+    "en": "Popular business TOP 10 with sidebar (coupons, reviews, tags)",
+    "ja": "人気事業所TOP10 + サイドバー"
+  },
+  "category": "content",
+  "icon": "trophy",
+  "config_schema": {
+    "fields": [
+      {"key": "title", "type": "text", "label": "제목", "i18n": true, "default": "인기 사업장 TOP 10"},
+      {"key": "limit", "type": "select", "label": "표시 개수", "options": [
+        {"value": "5", "label": "5개"},
+        {"value": "10", "label": "10개"},
+        {"value": "15", "label": "15개"}
+      ], "default": "10"},
+      {"key": "show_coupons", "type": "toggle", "label": "오늘의 쿠폰", "default": true},
+      {"key": "show_reviews", "type": "toggle", "label": "최근 리뷰", "default": true},
+      {"key": "show_tags", "type": "toggle", "label": "인기 태그", "default": true}
+    ]
+  }
+}

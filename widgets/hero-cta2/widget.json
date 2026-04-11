@@ -1,0 +1,55 @@
+{
+    "slug": "hero-cta2",
+    "version": "1.0.0",
+    "author": "VosCMS",
+    "category": "layout",
+    "icon": "rocket",
+    "name": {
+        "ko": "히어로 CTA 배너 (타이핑)",
+        "en": "Hero CTA Banner (Typing)",
+        "ja": "ヒーローCTAバナー（タイピング）",
+        "zh_CN": "CTA主横幅",
+        "zh_TW": "CTA主橫幅",
+        "de": "Hero CTA Banner",
+        "es": "Banner CTA Principal",
+        "fr": "Bannière CTA",
+        "id": "Banner CTA Hero",
+        "mn": "CTA Баннер",
+        "ru": "CTA Баннер",
+        "tr": "CTA Hero Banner",
+        "vi": "Banner CTA"
+    },
+    "description": {
+        "ko": "중앙 정렬 타이틀 + 강조 키워드 + 설명 + 다운로드/CTA 버튼",
+        "en": "Centered title with highlight keyword, description, and CTA download buttons",
+        "ja": "中央揃えタイトル + ハイライトキーワード + 説明 + CTAボタン"
+    },
+    "config_schema": {
+        "fields": [
+            {"key": "tagline_top", "type": "text", "label": "Tagline (Top Line)", "i18n": true, "default": "개발자와 사용자가 함께 만들어 가는"},
+            {"key": "highlight_word", "type": "text", "label": "Highlight Keyword (initial)", "i18n": true, "default": "VosCMS"},
+            {"key": "typing_words", "type": "textarea", "label": "Typing Words (one per line)", "i18n": true, "default": "커뮤니티 사이트\n비즈니스 홈페이지\n온라인 쇼핑몰\n포트폴리오\n예약 플랫폼"},
+            {"key": "typing_speed", "type": "select", "label": "Typing Speed", "options": [
+                {"value": "fast", "label": "Fast (100ms)"},
+                {"value": "normal", "label": "Normal (160ms)"},
+                {"value": "slow", "label": "Slow (220ms)"}
+            ], "default": "normal"},
+            {"key": "tagline_bottom", "type": "text", "label": "Tagline (Bottom Line)", "i18n": true, "default": "제작 도구"},
+            {"key": "description", "type": "textarea", "label": "Description", "i18n": true, "default": "VosCMS는 오픈소스 CMS입니다. 누구나 홈페이지를 만들고, 플러그인과 테마를 사용해서 원하는 대로 꾸밀 수 있습니다."},
+            {"key": "primary_btn_text", "type": "text", "label": "Primary Button Text", "default": "Download VosCMS"},
+            {"key": "primary_btn_url", "type": "text", "label": "Primary Button URL", "default": "#"},
+            {"key": "primary_btn_sub", "type": "text", "label": "Primary Button Subtext", "default": "v2.1.0"},
+            {"key": "secondary_btn_text", "type": "text", "label": "Secondary Button Text", "default": "Marketplace"},
+            {"key": "secondary_btn_url", "type": "text", "label": "Secondary Button URL", "default": "/marketplace"},
+            {"key": "secondary_btn_sub", "type": "text", "label": "Secondary Button Subtext", "default": ""},
+            {"key": "requirements", "type": "text", "label": "Requirements Line", "default": "GPLv2 | PHP 8.1+ | MySQL or MariaDB"},
+            {"key": "highlight_color", "type": "color", "label": "Highlight Color", "default": "#e03e48"},
+            {"key": "primary_btn_color", "type": "color", "label": "Primary Button Color", "default": "#e03e48"},
+            {"key": "bg_style", "type": "select", "label": "Background Style", "options": [
+                {"value": "light", "label": "Light"},
+                {"value": "dark", "label": "Dark"},
+                {"value": "gradient", "label": "Gradient"}
+            ], "default": "light"}
+        ]
+    }
+}

@@ -1,0 +1,27 @@
+{
+  "slug": "stylebook",
+  "version": "1.0.0",
+  "author": "VosCMS",
+  "name": {
+    "ko": "스타일북",
+    "en": "Style Book",
+    "ja": "スタイルブック"
+  },
+  "description": {
+    "ko": "헤어/뷰티 스타일 사진 갤러리 — 태그 필터, 좋아요, 매장 연결",
+    "en": "Hair/Beauty style photo gallery with tag filters, likes, and shop linking",
+    "ja": "ヘア・ビューティースタイル写真ギャラリー"
+  },
+  "category": "content",
+  "icon": "camera",
+  "config": {
+    "title": { "ko": "스타일북", "en": "Style Book", "ja": "スタイルブック" },
+    "category_filter": "",
+    "columns": 4,
+    "rows": 2,
+    "show_tags": true,
+    "show_likes": true,
+    "show_more": true,
+    "layout": "grid"
+  }
+}

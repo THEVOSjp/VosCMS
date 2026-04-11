@@ -1,0 +1,1 @@
+<?php return ['title'=>'Sebelum / Sesudah','before'=>'Sebelum','after'=>'Sesudah','view_shop'=>'Lihat Toko','book_now'=>'Pesan Sekarang','empty'=>'Belum ada foto perbandingan.','prev'=>'Sebelumnya','next'=>'Selanjutnya','compare'=>'Bandingkan','side_by_side'=>'Berdampingan','create'=>'Posting','view_more'=>'Lihat Semua'];

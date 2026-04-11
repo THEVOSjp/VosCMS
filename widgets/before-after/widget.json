@@ -1,0 +1,42 @@
+{
+  "slug": "before-after",
+  "version": "1.0.0",
+  "author": "VosCMS",
+  "name": {
+    "ko": "Before / After",
+    "en": "Before / After",
+    "ja": "ビフォー・アフター"
+  },
+  "description": {
+    "ko": "시술 전후 비교 슬라이더 — 스타일북, 클리닉, 인테리어 등 다양한 용도",
+    "en": "Before/After comparison slider — hair, clinic, interior, etc.",
+    "ja": "施術前後の比較スライダー"
+  },
+  "category": "content",
+  "icon": "arrows-expand",
+  "config_schema": {
+    "fields": [
+      {"key": "title", "type": "text", "label": "제목", "i18n": true, "default": "Before / After"},
+      {"key": "source", "type": "select", "label": "데이터 소스", "options": [
+        {"value": "manual", "label": "수동 입력"},
+        {"value": "stylebook", "label": "스타일북 (자동)"}
+      ], "default": "stylebook"},
+      {"key": "items", "type": "repeater", "label": "항목 (수동)", "fields": [
+        {"key": "before_image", "type": "image", "label": "Before 이미지"},
+        {"key": "after_image", "type": "image", "label": "After 이미지"},
+        {"key": "title", "type": "text", "label": "제목", "i18n": true},
+        {"key": "description", "type": "text", "label": "설명", "i18n": true},
+        {"key": "link", "type": "text", "label": "링크 URL"}
+      ]},
+      {"key": "auto_limit", "type": "select", "label": "자동 표시 개수", "options": [
+        {"value": "3", "label": "3개"},
+        {"value": "5", "label": "5개"},
+        {"value": "8", "label": "8개"}
+      ], "default": "5"},
+      {"key": "style", "type": "select", "label": "슬라이더 스타일", "options": [
+        {"value": "slider", "label": "슬라이더 (좌우 스와이프)"},
+        {"value": "grid", "label": "그리드 (2열)"}
+      ], "default": "slider"}
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+<?php
+return [
+    'title' => '인기 사업장 TOP 10',
+    'rank' => '위',
+    'rating' => '평점',
+    'reviews' => '리뷰',
+    'favorites' => '찜',
+    'distance' => 'km',
+    'open' => '영업중',
+    'coupon' => '쿠폰',
+    'no_shops' => '등록된 사업장이 없습니다.',
+    'sidebar_coupons' => '오늘의 쿠폰',
+    'sidebar_reviews' => '최근 리뷰',
+    'sidebar_tags' => '인기 검색 태그',
+    'get_coupon' => '쿠폰 받기',
+    'no_coupons' => '진행 중인 쿠폰이 없습니다.',
+    'no_reviews' => '아직 리뷰가 없습니다.',
+    'view_all' => '전체',
+    'filter_city' => '내 지역',
+];

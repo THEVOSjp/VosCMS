@@ -102,12 +102,15 @@ class WidgetLoader
         // render.php는 return 문으로 HTML을 반환해야 함
         try {
             $siteSettings = $GLOBALS['siteSettings'] ?? [];
+            ob_start();
             $result = (function() use ($renderFile, $config, $widget, $renderer, $pdo, $baseUrl, $locale, $loader, $siteSettings) {
                 return include $renderFile;
             })();
-            // render.php가 return으로 문자열을 반환하거나, ob에 출력한 경우 모두 처리
+            $output = ob_get_clean();
+            // render.php가 return으로 문자열을 반환한 경우
             if (is_string($result) && strlen($result) > 0) return $result;
-            // include가 1을 반환한 경우 (return 없이 ob 출력)
+            // render.php가 echo/<?= 로 직접 출력한 경우
+            if (strlen($output) > 0) return $output;
             return '';
         } catch (\Throwable $e) {
             error_log("WidgetLoader render error [{$slug}]: " . $e->getMessage());

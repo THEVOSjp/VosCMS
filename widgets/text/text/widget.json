@@ -1,0 +1,31 @@
+{
+    "slug": "text",
+    "version": "1.0.0",
+    "author": "RezlyX",
+    "category": "content",
+    "icon": "document-text",
+    "thumbnail": "thumbnail.png",
+    "name": {
+        "ko": "텍스트", "en": "Rich Text", "ja": "テキスト",
+        "zh_CN": "富文本", "zh_TW": "富文本", "de": "Text",
+        "es": "Texto", "fr": "Texte",
+        "id": "Teks", "mn": "Текст", "ru": "Текст",
+        "tr": "Metin", "vi": "Văn bản"
+    },
+    "description": {
+        "ko": "자유 HTML 콘텐츠", "en": "Free HTML content block (Summernote editor)",
+        "ja": "自由HTMLコンテンツブロック",
+        "zh_CN": "自由HTML内容块", "zh_TW": "自由HTML內容區塊",
+        "de": "Freier HTML-Inhaltsblock", "es": "Bloque de contenido HTML libre",
+        "fr": "Bloc de contenu HTML libre", "id": "Blok konten HTML bebas",
+        "mn": "Чөлөөт HTML агуулгын блок", "ru": "Блок HTML-контента",
+        "tr": "Serbest HTML içerik bloğu", "vi": "Khối nội dung HTML tự do"
+    },
+    "config_schema": {
+        "fields": [
+            {"key": "content", "type": "richtext", "label": "Content (HTML)", "i18n": true},
+            {"key": "custom_css", "type": "code", "label": "Custom CSS", "lang": "css"},
+            {"key": "custom_js", "type": "code", "label": "Custom JavaScript", "lang": "javascript"}
+        ]
+    }
+}

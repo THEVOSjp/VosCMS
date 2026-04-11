@@ -1,0 +1,52 @@
+/* VosCMS Marketplace - Custom Styles */
+/* Tailwind으로 대부분 처리, 여기는 보조 스타일만 */
+
+/* 줄 수 제한 */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* 아이템 카드 호버 효과 */
+.mp-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.mp-card:hover {
+    transform: translateY(-2px);
+}
+
+/* 별점 인터랙티브 */
+.rating-input:hover svg,
+.rating-input:hover ~ .rating-input svg {
+    color: #fbbf24;
+}
+
+/* 스크롤바 커스텀 (다크모드) */
+.mp-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.mp-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.mp-scrollbar::-webkit-scrollbar-thumb {
+    background: #a1a1aa;
+    border-radius: 3px;
+}
+.dark .mp-scrollbar::-webkit-scrollbar-thumb {
+    background: #52525b;
+}
+
+/* Alpine.js x-cloak */
+[x-cloak] {
+    display: none !important;
+}

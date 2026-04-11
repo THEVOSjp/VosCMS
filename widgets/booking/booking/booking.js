@@ -320,13 +320,6 @@
         .then(function(data) {
             console.log('[BW] Response:', data);
             if (data.success) {
-                // 결제가 필요한 경우 즉시 결제 페이지로 이동
-                if (data.needs_payment && data.payment_url) {
-                    console.log('[BW] Redirecting to payment:', data.payment_url);
-                    window.location.href = data.payment_url;
-                    return;
-                }
-
                 document.querySelectorAll('.bw-step-panel').forEach(function(el) { el.classList.add('hidden'); });
                 var done = document.getElementById('bwStepDone'); if (done) done.classList.remove('hidden');
 
@@ -418,13 +411,6 @@
                     if (priceDisplay && priceDisplay.textContent) {
                         priceEl.textContent = priceDisplay.textContent;
                     }
-                }
-
-                // 결제 버튼 URL 설정
-                var payBtn = document.getElementById('bwPayNowBtn');
-                if (payBtn && data.reservation_id) {
-                    payBtn.href = window.location.pathname.replace(/\/booking.*$/, '') + '/payment/checkout?reservation_id=' + encodeURIComponent(data.reservation_id);
-                    console.log('[BW] Payment button URL set:', payBtn.href);
                 }
 
                 var pb = document.getElementById('bwProgressBar'); if (pb) pb.style.display = 'none';

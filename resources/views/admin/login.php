@@ -22,7 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         require_once BASE_PATH . '/rzxlib/Core/Auth/AdminAuth.php';
         \RzxLib\Core\Auth\AdminAuth::init($pdo);
 
-        $result = \RzxLib\Core\Auth\AdminAuth::attempt($email, $password);
+        $remember = !empty($_POST['remember']);
+        $result = \RzxLib\Core\Auth\AdminAuth::attempt($email, $password, $remember);
 
         if (is_array($result)) {
             // 로그인 성공 → 대시보드로 리다이렉트
@@ -99,6 +100,12 @@ $siteName = $siteSettings['site_name'] ?? 'RezlyX';
                                class="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-600 rounded-xl bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                                placeholder="••••••••">
                     </div>
+
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="remember" value="1" checked
+                               class="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm text-zinc-600 dark:text-zinc-400">로그인 상태 유지</span>
+                    </label>
 
                     <button type="submit"
                             class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">

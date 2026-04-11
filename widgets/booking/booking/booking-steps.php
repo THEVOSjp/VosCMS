@@ -86,17 +86,8 @@
             <button type="button" class="bw-prev-btn px-6 py-3 border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-zinc-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-700 transition">
                 &larr; <?= __('common.buttons.previous') ?>
             </button>
-            <?php
-            $_cfmPayConf = json_decode($siteSettings['payment_config'] ?? ($GLOBALS['siteSettings']['payment_config'] ?? '{}'), true) ?: [];
-            $_cfmPayOn = ($_cfmPayConf['enabled'] ?? '0') === '1' && !empty($_cfmPayConf['public_key']) && !empty($_cfmPayConf['secret_key']);
-            ?>
-            <button type="button" id="bwSubmitBtn" class="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition shadow-lg shadow-blue-500/30 flex items-center gap-2">
-                <?php if ($_cfmPayOn): ?>
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                <?= __('booking.payment.pay_now') ?? '결제하기' ?>
-                <?php else: ?>
+            <button type="button" id="bwSubmitBtn" class="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition shadow-lg shadow-blue-500/30">
                 <?= __('booking.complete_booking') ?>
-                <?php endif; ?>
             </button>
         </div>
     </div>
@@ -155,18 +146,7 @@
             <?php endif; ?>
         </div>
 
-        <?php
-        // 결제 활성화 여부
-        $_bwPayConf = json_decode($siteSettings['payment_config'] ?? '{}', true) ?: [];
-        $_bwPayEnabled = ($_bwPayConf['enabled'] ?? '0') === '1' && !empty($_bwPayConf['public_key']) && !empty($_bwPayConf['secret_key']);
-        ?>
-        <div class="text-center flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="<?= $baseUrl ?>/" class="inline-block px-6 py-3 text-zinc-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 font-semibold rounded-lg hover:bg-zinc-50 transition"><?= __('common.nav.home') ?></a>
-            <?php if ($_bwPayEnabled): ?>
-            <a href="#" id="bwPayNowBtn" class="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                <?= __('booking.payment.pay_now') ?? '결제하기' ?>
-            </a>
-            <?php endif; ?>
+        <div class="text-center">
+            <a href="<?= $baseUrl ?>/" class="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"><?= __('common.nav.home') ?></a>
         </div>
     </div>

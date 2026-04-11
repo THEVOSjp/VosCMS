@@ -1,0 +1,49 @@
+{
+    "slug": "shop-map",
+    "version": "1.0.0",
+    "author": "VosCMS",
+    "category": "content",
+    "icon": "location-marker",
+    "thumbnail": "thumbnail.png",
+    "name": {
+        "ko": "주변 매장 지도", "en": "Nearby Shops Map", "ja": "周辺店舗マップ",
+        "zh_CN": "附近店铺地图", "zh_TW": "附近店鋪地圖", "de": "Geschäfte in der Nähe",
+        "es": "Tiendas Cercanas", "fr": "Magasins à proximité",
+        "id": "Peta Toko Terdekat", "mn": "Ойролцоох дэлгүүр", "ru": "Магазины рядом",
+        "tr": "Yakın Mağazalar", "vi": "Cửa hàng gần đây"
+    },
+    "description": {
+        "ko": "사용자 위치 기반으로 주변 매장을 지도에 표시합니다",
+        "en": "Show nearby shops on a map based on user location",
+        "ja": "ユーザーの位置情報に基づいて周辺店舗を地図に表示します"
+    },
+    "config_schema": {
+        "fields": [
+            {"key": "title", "type": "text", "label": "Section Title", "i18n": true},
+            {"key": "category", "type": "select", "label": "Category Filter", "options": [
+                {"value": "", "label": "All Categories"},
+                {"value": "hair", "label": "Hair Salon"},
+                {"value": "nail", "label": "Nail & Aesthetic"},
+                {"value": "clinic", "label": "Clinic"},
+                {"value": "fitness", "label": "Fitness"},
+                {"value": "restaurant", "label": "Restaurant"},
+                {"value": "education", "label": "Education"},
+                {"value": "pet", "label": "Pet"},
+                {"value": "photo", "label": "Photo Studio"},
+                {"value": "rental", "label": "Rental"},
+                {"value": "hotel", "label": "Hotel"},
+                {"value": "spa", "label": "Spa"}
+            ], "default": ""},
+            {"key": "count", "type": "number", "label": "Max Shops", "default": 20},
+            {"key": "height", "type": "select", "label": "Map Height", "options": [
+                {"value": "sm", "label": "Small (300px)"},
+                {"value": "md", "label": "Medium (400px)"},
+                {"value": "lg", "label": "Large (500px)"}
+            ], "default": "md"},
+            {"key": "show_list", "type": "toggle", "label": "Show Side List", "default": true},
+            {"key": "default_lat", "type": "text", "label": "Default Latitude", "default": "35.6762"},
+            {"key": "default_lng", "type": "text", "label": "Default Longitude", "default": "139.6503"},
+            {"key": "default_zoom", "type": "number", "label": "Default Zoom", "default": 13}
+        ]
+    }
+}

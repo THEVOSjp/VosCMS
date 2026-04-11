@@ -231,8 +231,7 @@ window.__bwConfig = {
         priceContact: '<?= __('services.settings.general.price_contact') ?>',
         error: '<?= __('common.error') ?>',
         submitting: '<?= __('booking.submitting') ?>',
-        completeBooking: '<?= __('booking.complete_booking') ?>',
-        payNow: '<?= __('booking.payment.pay_now') ?? '결제하기' ?>'
+        completeBooking: '<?= __('booking.complete_booking') ?>'
     }
 };
 </script>

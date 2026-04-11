@@ -131,3 +131,9 @@
     }
 })();
 </script>
+<?php
+// 라이선스 경고 배너
+if (!empty($licenseInfo) && !empty($licenseInfo['warning'])) {
+    include __DIR__ . '/license-banner.php';
+}
+?>

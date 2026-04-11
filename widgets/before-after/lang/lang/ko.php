@@ -1,0 +1,20 @@
+<?php
+return [
+    'title' => 'Before / After',
+    'before' => 'Before',
+    'after' => 'After',
+    'view_shop' => '매장 보기',
+    'book_now' => '예약하기',
+    'empty' => '등록된 비교 사진이 없습니다.',
+    'prev' => '이전',
+    'next' => '다음',
+    'compare' => '비교',
+    'side_by_side' => '나란히',
+    'create' => '등록',
+    'view_more' => '더보기',
+    'page_subtitle' => '시술 전후 비교 사진을 확인하고, 나의 변화도 공유해보세요!',
+    'create_desc' => '시술 전(Before)과 후(After) 사진을 각각 1장씩 올려주세요. 간단하게 2장만 올리면 등록 완료!',
+    'create_warning' => '⚠️ 저작권 등의 문제가 있는 게시물 삭제 시 등록 시 취득한 포인트는 차감됩니다.',
+    'error_need_both' => 'Before 사진과 After 사진을 모두 올려주세요. 각각 1장씩 필요합니다.',
+    'caption_placeholder' => '예) 디지털펌 + 애쉬브라운 컬러링',
+];

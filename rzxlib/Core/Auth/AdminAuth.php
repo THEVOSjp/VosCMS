@@ -30,7 +30,7 @@ class AdminAuth
      * 관리자 로그인 시도 (rzx_users에서 직접 인증)
      * @return array|string 성공 시 user 배열, 실패 시 에러 메시지
      */
-    public static function attempt(string $email, string $password): array|string
+    public static function attempt(string $email, string $password, bool $remember = false): array|string
     {
         $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
 
@@ -60,6 +60,11 @@ class AdminAuth
 
         if (!in_array($role, self::ADMIN_ROLES)) return 'not_admin';
 
+        // 세션 재생성 (세션 고정 공격 방지)
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
+
         // 세션 설정 (admin_id = user id로 통합)
         $_SESSION['admin_id'] = $user['id'];
         $_SESSION['admin_role'] = $role;
@@ -70,6 +75,11 @@ class AdminAuth
 
         // 프론트엔드 세션도 동시 설정 (로그인 통합)
         $_SESSION['user_id'] = $user['id'];
+
+        // Remember Me
+        if ($remember) {
+            self::setRememberToken($user['id']);
+        }
 
         // last_login_at 업데이트
         try {
@@ -85,6 +95,11 @@ class AdminAuth
      */
     public static function logout(): void
     {
+        // Remember Me 토큰 삭제
+        if (isset($_COOKIE['admin_remember']) && self::$pdo) {
+            self::clearRememberToken($_SESSION['admin_id'] ?? null);
+        }
+
         unset(
             $_SESSION['admin_id'],
             $_SESSION['admin_role'],
@@ -101,7 +116,16 @@ class AdminAuth
 
     public static function check(): bool
     {
-        return !empty($_SESSION['admin_id']);
+        if (!empty($_SESSION['admin_id'])) {
+            return true;
+        }
+
+        // Remember Me 토큰으로 자동 로그인 시도
+        if (isset($_COOKIE['admin_remember']) && self::$pdo) {
+            return self::loginWithRememberToken($_COOKIE['admin_remember']);
+        }
+
+        return false;
     }
 
     public static function current(): ?array
@@ -175,6 +199,105 @@ class AdminAuth
     {
         $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
         return (int)self::$pdo->query("SELECT COUNT(*) FROM {$prefix}users WHERE role IN ('supervisor','admin','master')")->fetchColumn();
+    }
+
+    // ===== Remember Me =====
+
+    private static function setRememberToken(string $userId): void
+    {
+        try {
+            $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+            $table = $prefix . 'user_remember_tokens';
+            $token = bin2hex(random_bytes(32));
+            $expires = time() + (86400 * 30); // 30일
+
+            // 테이블 확인/생성
+            self::$pdo->exec("
+                CREATE TABLE IF NOT EXISTS {$table} (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id CHAR(36) NOT NULL,
+                    token VARCHAR(64) NOT NULL,
+                    expires_at TIMESTAMP NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_token (token),
+                    INDEX idx_user (user_id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+            ");
+
+            // 기존 관리자 토큰 삭제 (admin_remember 쿠키용)
+            $hash = hash('sha256', 'admin:' . $userId);
+            self::$pdo->prepare("DELETE FROM {$table} WHERE user_id = ? AND token LIKE 'adm_%'")->execute([$userId]);
+
+            // 새 토큰 저장 (adm_ 접두어로 관리자 토큰 구분)
+            $hashedToken = 'adm_' . hash('sha256', $token);
+            self::$pdo->prepare("INSERT INTO {$table} (user_id, token, expires_at) VALUES (?, ?, FROM_UNIXTIME(?))")
+                ->execute([$userId, $hashedToken, $expires]);
+
+            // 쿠키 설정
+            setcookie('admin_remember', $token, [
+                'expires'  => $expires,
+                'path'     => '/',
+                'httponly'  => true,
+                'samesite'  => 'Lax',
+                'secure'   => !empty($_SERVER['HTTPS']),
+            ]);
+        } catch (\PDOException $e) {
+            error_log('Admin remember token error: ' . $e->getMessage());
+        }
+    }
+
+    private static function loginWithRememberToken(string $token): bool
+    {
+        try {
+            $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+            $table = $prefix . 'user_remember_tokens';
+            $hashedToken = 'adm_' . hash('sha256', $token);
+
+            $stmt = self::$pdo->prepare(
+                "SELECT rt.user_id, u.* FROM {$table} rt
+                 JOIN {$prefix}users u ON u.id = rt.user_id
+                 WHERE rt.token = ? AND rt.expires_at > NOW()"
+            );
+            $stmt->execute([$hashedToken]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$row) {
+                // 무효 토큰 — 쿠키 삭제
+                setcookie('admin_remember', '', ['expires' => 1, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax']);
+                return false;
+            }
+
+            $role = $row['role'] ?? 'member';
+            if ($role === 'admin') $role = 'supervisor';
+            if ($role === 'user') $role = 'member';
+            if (!in_array($role, self::ADMIN_ROLES)) return false;
+
+            // 세션 복원
+            $_SESSION['admin_id'] = $row['id'];
+            $_SESSION['admin_role'] = $role;
+            $_SESSION['admin_name'] = $row['name'] ?? '';
+            $_SESSION['admin_email'] = $row['email'];
+            $_SESSION['admin_permissions'] = $row['permissions'] ?? '[]';
+            $_SESSION['admin_logged_in_at'] = date('c');
+            $_SESSION['user_id'] = $row['id'];
+
+            return true;
+        } catch (\PDOException $e) {
+            return false;
+        }
+    }
+
+    private static function clearRememberToken(?string $userId): void
+    {
+        try {
+            if ($userId) {
+                $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+                $table = $prefix . 'user_remember_tokens';
+                self::$pdo->prepare("DELETE FROM {$table} WHERE user_id = ? AND token LIKE 'adm_%'")->execute([$userId]);
+            }
+        } catch (\PDOException $e) {}
+
+        setcookie('admin_remember', '', ['expires' => 1, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax']);
     }
 
     // ===== 라우트 → 권한 매핑 =====

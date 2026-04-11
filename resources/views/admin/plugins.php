@@ -18,6 +18,21 @@ $available = $pm ? $pm->getAvailable() : [];
 $installedIds = array_column($installed, 'plugin_id');
 $notInstalled = array_filter($available, fn($p) => !in_array($p['id'], $installedIds));
 
+// 업데이트 가능한 플러그인 체크
+$_pluginUpdates = [];
+try {
+    $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+    $_updatePdo = new PDO("mysql:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_DATABASE']};charset=utf8mb4", $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD']);
+    foreach ($installed as $_ip) {
+        $_uStmt = $_updatePdo->prepare("SELECT latest_version FROM {$prefix}mp_items WHERE slug = ? AND status = 'active'");
+        $_uStmt->execute([$_ip['plugin_id']]);
+        $_uRow = $_uStmt->fetch(PDO::FETCH_ASSOC);
+        if ($_uRow && version_compare($_uRow['latest_version'], $_ip['version'], '>')) {
+            $_pluginUpdates[$_ip['plugin_id']] = $_uRow['latest_version'];
+        }
+    }
+} catch (\PDOException $e) {}
+
 $locale = current_locale();
 ?>
 <?php include __DIR__ . '/reservations/_head.php'; ?>
@@ -55,6 +70,11 @@ $locale = current_locale();
                         <p class="text-sm text-zinc-500"><?= htmlspecialchars($p['description'] ?? '') ?></p>
                         <div class="flex items-center gap-3 mt-1 text-xs text-zinc-400">
                             <span>v<?= htmlspecialchars($p['version']) ?></span>
+                            <?php if (!empty($_pluginUpdates[$p['plugin_id']])): ?>
+                            <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded font-medium">
+                                v<?= htmlspecialchars($_pluginUpdates[$p['plugin_id']]) ?> available
+                            </span>
+                            <?php endif; ?>
                             <?php if ($p['author']): ?><span><?= htmlspecialchars($p['author']) ?></span><?php endif; ?>
                             <span><?= $p['installed_at'] ? date('Y-m-d', strtotime($p['installed_at'])) : '' ?></span>
                         </div>
@@ -72,6 +92,12 @@ $locale = current_locale();
                     <button onclick="pluginAction('activate', '<?= $p['plugin_id'] ?>')"
                             class="px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">
                         <?= __('plugins.activate') ?>
+                    </button>
+                    <?php endif; ?>
+                    <?php if (!empty($_pluginUpdates[$p['plugin_id']])): ?>
+                    <button onclick="updatePlugin('<?= $p['plugin_id'] ?>')"
+                            class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                        Update
                     </button>
                     <?php endif; ?>
                     <button onclick="pluginAction('uninstall', '<?= $p['plugin_id'] ?>')"
@@ -114,6 +140,33 @@ $locale = current_locale();
 </div>
 
 <script>
+async function updatePlugin(pluginId) {
+    if (!confirm('Update ' + pluginId + '?')) return;
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'Updating...';
+    try {
+        const res = await fetch('<?= $adminUrl ?>/marketplace/install', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'item_slug=' + pluginId + '&action=update'
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert('Update complete!');
+            location.reload();
+        } else {
+            alert(data.message || 'Update failed');
+            btn.disabled = false;
+            btn.textContent = 'Update';
+        }
+    } catch (err) {
+        alert('Network error');
+        btn.disabled = false;
+        btn.textContent = 'Update';
+    }
+}
+
 async function pluginAction(action, pluginId) {
     if (action === 'uninstall' && !confirm('<?= __('plugins.confirm_uninstall') ?>')) return;
 

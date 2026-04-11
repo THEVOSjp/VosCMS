@@ -50,6 +50,16 @@ try {
     $totalPages = 0;
     try { $totalPages = $pdo->query("SELECT COUNT(*) FROM {$prefix}page_contents WHERE is_active = 1")->fetchColumn(); } catch (\PDOException $e) {}
 
+    // VosCMS 전체 설치 수 (라이선스 서버에서)
+    $totalInstalls = 0;
+    try {
+        $hasLicenseTable = false;
+        try { $pdo->query("SELECT 1 FROM vcs_licenses LIMIT 0"); $hasLicenseTable = true; } catch (\PDOException $e) {}
+        if ($hasLicenseTable) {
+            $totalInstalls = (int) $pdo->query("SELECT COUNT(*) FROM vcs_licenses WHERE status = 'active'")->fetchColumn();
+        }
+    } catch (\PDOException $e) {}
+
     // Load settings for language selector
     $stmt = $pdo->query("SELECT `key`, `value` FROM {$prefix}settings");
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -373,6 +383,20 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
                         <div class="flex items-center justify-between">
                             <div>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Total Installs</p>
+                                <p class="text-3xl font-bold text-zinc-900 dark:text-white mt-1"><?= number_format($totalInstalls) ?></p>
+                            </div>
+                            <div class="w-12 h-12 bg-rose-100 dark:bg-rose-900/30 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
+                        <div class="flex items-center justify-between">
+                            <div>
                                 <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= __('dashboard.total_boards') ?></p>
                                 <p class="text-3xl font-bold text-zinc-900 dark:text-white mt-1"><?= $totalBoards ?></p>
                             </div>
@@ -413,7 +437,77 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                     </div>
                 </div><!-- /좌측 통계 카드 -->
 
-                <!-- 우측: VosCMS 소식 -->
+                <!-- 우측: 라이선스 + VosCMS 소식 -->
+                <div class="space-y-4">
+                <!-- 라이선스 정보 카드 -->
+                <?php
+                $_lk = $_ENV['LICENSE_KEY'] ?? '';
+                $_ld = $_ENV['LICENSE_DOMAIN'] ?? '';
+                $_ls = $_ENV['LICENSE_SERVER'] ?? '';
+                $_lPlan = $licenseInfo['plan'] ?? 'free';
+                $_lState = $licenseInfo['state'] ?? 'unknown';
+                $_lIsOk = $licenseInfo['is_ok'] ?? false;
+                $_lPlugins = $licenseInfo['allowed_plugins'] ?? [];
+                $_lPlanColors = ['free' => 'blue', 'standard' => 'green', 'professional' => 'purple', 'enterprise' => 'amber'];
+                $_lPlanColor = $_lPlanColors[$_lPlan] ?? 'zinc';
+                $_lPlanLabels = ['free' => 'Free', 'standard' => 'Standard', 'professional' => 'Professional', 'enterprise' => 'Enterprise'];
+                ?>
+                <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-5 transition-colors">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">License</h2>
+                        <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-<?= $_lPlanColor ?>-100 text-<?= $_lPlanColor ?>-700 dark:bg-<?= $_lPlanColor ?>-900/30 dark:text-<?= $_lPlanColor ?>-400">
+                            <?= $_lPlanLabels[$_lPlan] ?? ucfirst($_lPlan) ?>
+                        </span>
+                    </div>
+                    <?php if ($_lk): ?>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="text-zinc-400">Key</span>
+                            <code class="text-zinc-700 dark:text-zinc-300 font-mono text-xs"><?= htmlspecialchars($_lk) ?></code>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-zinc-400">Domain</span>
+                            <span class="text-zinc-700 dark:text-zinc-300 text-xs"><?= htmlspecialchars($_ld) ?></span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-zinc-400">Server</span>
+                            <span class="text-zinc-500 text-xs truncate ml-2"><?= htmlspecialchars(preg_replace('#^https?://#', '', $_ls)) ?></span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-zinc-400">Status</span>
+                            <?php if ($_lIsOk): ?>
+                            <span class="flex items-center gap-1 text-green-600 dark:text-green-400 text-xs font-medium">
+                                <span class="w-2 h-2 rounded-full bg-green-500"></span> Active
+                            </span>
+                            <?php else: ?>
+                            <span class="flex items-center gap-1 text-red-600 dark:text-red-400 text-xs font-medium">
+                                <span class="w-2 h-2 rounded-full bg-red-500"></span> <?= htmlspecialchars(ucfirst($_lState)) ?>
+                            </span>
+                            <?php endif; ?>
+                        </div>
+                        <?php if (!empty($_lPlugins)): ?>
+                        <div class="pt-2 border-t border-zinc-100 dark:border-zinc-700">
+                            <span class="text-zinc-400 text-xs">Licensed Plugins</span>
+                            <div class="flex flex-wrap gap-1 mt-1">
+                                <?php foreach ($_lPlugins as $_lp): ?>
+                                <span class="px-1.5 py-0.5 text-[10px] rounded bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"><?= htmlspecialchars($_lp) ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ($licenseInfo['days_left'] !== null): ?>
+                        <div class="pt-2 border-t border-zinc-100 dark:border-zinc-700">
+                            <span class="text-zinc-400 text-xs">Expires in</span>
+                            <span class="text-zinc-700 dark:text-zinc-300 text-sm font-medium ml-2"><?= $licenseInfo['days_left'] ?> days</span>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php else: ?>
+                    <p class="text-sm text-zinc-400">라이선스가 등록되지 않았습니다.</p>
+                    <?php endif; ?>
+                </div>
+
+                <!-- VosCMS 소식 -->
                 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-colors">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
@@ -467,6 +561,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                         <?php endforeach; ?>
                     </div>
                 </div>
+                </div><!-- /space-y-4 우측 -->
                 </div><!-- /Stats + Notices grid -->
 
                 <!-- Quick Actions -->

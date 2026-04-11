@@ -1,0 +1,1 @@
+<?php return ['title'=>'Avant / Après','before'=>'Avant','after'=>'Après','view_shop'=>'Voir le salon','book_now'=>'Réserver','empty'=>'Aucune photo comparative.','prev'=>'Précédent','next'=>'Suivant','compare'=>'Comparer','side_by_side'=>'Côte à côte','create'=>'Publier','view_more'=>'Voir plus'];

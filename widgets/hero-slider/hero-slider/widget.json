@@ -1,0 +1,42 @@
+{
+    "slug": "hero-slider",
+    "version": "1.1.0",
+    "author": "VosCMS",
+    "category": "layout",
+    "icon": "photograph",
+    "thumbnail": "thumbnail.png",
+    "name": {
+        "ko": "히어로 슬라이더", "en": "Hero Slider", "ja": "ヒーロースライダー",
+        "zh_CN": "主横幅轮播", "zh_TW": "主橫幅輪播", "de": "Hero-Slider",
+        "es": "Slider Principal", "fr": "Slider Principal",
+        "id": "Slider Utama", "mn": "Гол слайдер", "ru": "Герой-слайдер",
+        "tr": "Ana Slider", "vi": "Slider Chính"
+    },
+    "description": {
+        "ko": "이미지 슬라이드 + 사이드 네비게이션 히어로 배너",
+        "en": "Image slideshow with side navigation hero banner",
+        "ja": "画像スライド＋サイドナビゲーション付きヒーローバナー"
+    },
+    "config_schema": {
+        "fields": [
+            {"key": "layout", "type": "select", "label": "Layout", "options": [
+                {"value": "slide-nav", "label": "Slide + Side Nav (Default)"},
+                {"value": "slide-only", "label": "Full Width Slide"},
+                {"value": "slide-text", "label": "Slide + Text Overlay"}
+            ], "default": "slide-nav"},
+            {"key": "height", "type": "select", "label": "Height", "options": [
+                {"value": "sm", "label": "Small (300px)"},
+                {"value": "md", "label": "Medium (450px)"},
+                {"value": "lg", "label": "Large (600px)"},
+                {"value": "xl", "label": "Extra Large (700px)"}
+            ], "default": "lg"},
+            {"key": "autoplay", "type": "toggle", "label": "Auto Play", "default": true},
+            {"key": "interval", "type": "number", "label": "Interval (ms)", "default": 5000},
+            {"key": "show_dots", "type": "toggle", "label": "Show Dots", "default": true},
+            {"key": "show_arrows", "type": "toggle", "label": "Show Arrows", "default": true},
+            {"key": "overlay", "type": "range", "label": "Overlay Opacity", "min": 0, "max": 80, "default": 20},
+            {"key": "nav_color", "type": "color", "label": "Side Nav Color", "default": "#ffffff"},
+            {"key": "items", "type": "slider_items", "label": "Slider Items"}
+        ]
+    }
+}

@@ -79,7 +79,7 @@ $_lsCurrentInfo    = $_lsData['currentLangInfo'];
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
         </svg>
     </button>
-    <div id="rzxLangDropdown" class="hidden absolute right-0 mt-2 w-40 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-700 py-1 z-50 max-h-64 overflow-y-auto">
+    <div id="rzxLangDropdown" class="hidden pointer-events-none absolute right-0 mt-2 w-40 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-700 py-1 z-50 max-h-64 overflow-y-auto">
         <?php foreach ($_lsSupportedCodes as $_lsCode): ?>
         <?php if (isset($_lsAllLanguages[$_lsCode])): ?>
         <a href="javascript:void(0)" onclick="rzxChangeLanguage('<?= htmlspecialchars($_lsCode) ?>')"
@@ -100,6 +100,9 @@ $_lsCurrentInfo    = $_lsData['currentLangInfo'];
 
 <script>
 (function() {
+    if (window._rzxLangInit) return;
+    window._rzxLangInit = true;
+
     var btn = document.getElementById('rzxLangBtn');
     var dropdown = document.getElementById('rzxLangDropdown');
     var container = document.getElementById('rzxLangContainer');
@@ -107,19 +110,19 @@ $_lsCurrentInfo    = $_lsData['currentLangInfo'];
     if (btn && dropdown) {
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
-            dropdown.classList.toggle('hidden');
-            console.log('[LangSelector] Dropdown toggled');
+            var isHidden = dropdown.classList.toggle('hidden');
+            dropdown.classList.toggle('pointer-events-none', isHidden);
         });
     }
 
     document.addEventListener('click', function(e) {
         if (container && dropdown && !container.contains(e.target)) {
             dropdown.classList.add('hidden');
+            dropdown.classList.add('pointer-events-none');
         }
     });
 
     window.rzxChangeLanguage = function(lang) {
-        console.log('[LangSelector] Changing language to:', lang);
         document.cookie = 'locale=' + lang + ';path=/;max-age=31536000';
         var url = new URL(window.location.href);
         url.searchParams.set('lang', lang);

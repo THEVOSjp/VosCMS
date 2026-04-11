@@ -1,0 +1,44 @@
+{
+  "slug": "compare-slider",
+  "version": "1.0.0",
+  "author": "VosCMS",
+  "name": {
+    "ko": "비교 슬라이더",
+    "en": "Compare Slider",
+    "ja": "比較スライダー"
+  },
+  "description": {
+    "ko": "두 이미지를 겹쳐 드래그로 비교하는 범용 위젯 — 시술전후, 리모델링, 제품비교 등",
+    "en": "Drag-to-compare two images widget — before/after, remodeling, product comparison",
+    "ja": "2枚の画像をドラッグで比較する汎用ウィジェット"
+  },
+  "category": "content",
+  "icon": "arrows-expand",
+  "config_schema": {
+    "fields": [
+      {"key": "items", "type": "repeater", "label": "비교 항목", "fields": [
+        {"key": "image_a", "type": "image", "label": "이미지 A (왼쪽)"},
+        {"key": "image_b", "type": "image", "label": "이미지 B (오른쪽)"},
+        {"key": "label_a", "type": "text", "label": "라벨 A", "default": "Before"},
+        {"key": "label_b", "type": "text", "label": "라벨 B", "default": "After"},
+        {"key": "caption", "type": "text", "label": "설명", "i18n": true}
+      ]},
+      {"key": "columns", "type": "select", "label": "열 수", "options": [
+        {"value": "1", "label": "1열"},
+        {"value": "2", "label": "2열"},
+        {"value": "3", "label": "3열"}
+      ], "default": "2"},
+      {"key": "ratio", "type": "select", "label": "비율", "options": [
+        {"value": "1/1", "label": "정사각형 (1:1)"},
+        {"value": "4/3", "label": "가로형 (4:3)"},
+        {"value": "16/9", "label": "와이드 (16:9)"},
+        {"value": "3/4", "label": "세로형 (3:4)"}
+      ], "default": "1/1"},
+      {"key": "start_position", "type": "select", "label": "초기 위치", "options": [
+        {"value": "50", "label": "중앙 (50%)"},
+        {"value": "30", "label": "왼쪽 (30%)"},
+        {"value": "70", "label": "오른쪽 (70%)"}
+      ], "default": "50"}
+    ]
+  }
+}
