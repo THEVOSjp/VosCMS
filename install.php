@@ -350,28 +350,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $gradeStmt->execute([3, 'Gold', 'gold', 2, 3, 1, '#ffd500', 2, 0]);
                     $gradeStmt->execute([4, 'VIP', 'vip', 3, 5, 2, '#ff528e', 3, 0]);
 
-                    // ─── 라이선스 키 생성 + 서버 등록 ───
-                    require_once BASE_PATH . '/rzxlib/Core/License/LicenseClient.php';
-                    $licenseKey = \RzxLib\Core\License\LicenseClient::generateKey();
-                    $licenseDomain = \RzxLib\Core\License\LicenseClient::normalizeDomain($siteUrl);
+                    // ─── 라이선스 서버에서 키 발급 ───
+                    $licenseDomain = strtolower(preg_replace('#^https?://#', '', rtrim($siteUrl, '/')));
+                    $licenseDomain = preg_replace('#^www\.#', '', $licenseDomain);
                     $licenseServer = 'https://vos.21ces.com/api'; // 향후 https://voscms.com/api
-
-                    // 라이선스 서버에 등록 시도
+                    $licenseKey = '';
                     $licenseRegistered = false;
-                    $licenseMessage = '';
+
                     try {
                         $ch = curl_init($licenseServer . '/license/register');
                         curl_setopt_array($ch, [
                             CURLOPT_POST => true,
                             CURLOPT_POSTFIELDS => json_encode([
-                                'key' => $licenseKey,
                                 'domain' => $licenseDomain,
                                 'version' => '2.1.0',
                                 'php_version' => PHP_VERSION,
                                 'server_ip' => $_SERVER['SERVER_ADDR'] ?? '',
                             ]),
                             CURLOPT_RETURNTRANSFER => true,
-                            CURLOPT_TIMEOUT => 10,
+                            CURLOPT_TIMEOUT => 15,
                             CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Accept: application/json'],
                             CURLOPT_SSL_VERIFYPEER => true,
                         ]);
@@ -381,11 +378,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         if ($licHttpCode === 200 && $licResponse) {
                             $licData = json_decode($licResponse, true);
-                            $licenseRegistered = !empty($licData['success']);
-                            $licenseMessage = $licData['message'] ?? '';
+                            if (!empty($licData['success']) && !empty($licData['key'])) {
+                                $licenseKey = $licData['key'];
+                                $licenseRegistered = true;
+                            }
                         }
                     } catch (\Throwable $e) {
-                        $licenseMessage = 'License server unreachable';
+                        // 서버 연결 실패 — 키 없이 설치 진행
                     }
 
                     // .env 파일 생성

@@ -221,13 +221,15 @@ VosCMS 코어 (무료)
   → Step 2: DB 설정
   → Step 3: 테이블 생성
   → Step 4: 관리자 계정 + 사이트 설정
-  → Step 5: 라이선스 키 자동 생성 ★ NEW
-      - RZX-XXXX-XXXX-XXXX 형식으로 키 생성
+  → Step 5: 라이선스 등록 ★ NEW
       - 현재 도메인 자동 감지 (https://customer-shop.com)
-      - voscms.com/api/license/register로 전송
-        { key, domain, version, php_version, server_ip }
-      - 서버 응답: { success, plan: "free", registered_at }
-      - 로컬 DB(rzx_settings)에 라이선스 정보 저장
+      - 도메인 정보를 라이선스 서버로 전송
+        POST voscms.com/api/license/register
+        { domain, version, php_version, server_ip }
+      - 서버에서 키 생성 (중복 체크) + DB 저장
+      - 서버 응답: { success, key: "RZX-XXXX-XXXX-XXXX", plan: "free" }
+      - .env에 LICENSE_KEY 저장
+      - 재설치 시: 같은 도메인이면 기존 키 반환 (새 키 발급 안 함)
   → Step 6: 설치 완료
 
 [플러그인 구매 시]
@@ -253,24 +255,37 @@ VosCMS 코어 (무료)
 
 **형식:** `RZX-XXXX-XXXX-XXXX` (16자리 영숫자, 하이픈 구분)
 
-**생성 시점:** install.php Step 5에서 자동 생성 (고객이 입력하는 게 아님)
+**생성 위치:** 라이선스 서버 (`api/license/register.php`)에서 생성 (클라이언트에서 생성하지 않음)
 
-**생성 로직 (ionCube로 암호화됨):**
+**생성 로직 (서버 측):**
 ```php
-function generateLicenseKey(): string {
+function generateUniqueKey(PDO $pdo): string {
     $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 혼동 문자 제외 (0,O,1,I)
-    $segments = [];
-    for ($i = 0; $i < 3; $i++) {
-        $seg = '';
-        for ($j = 0; $j < 4; $j++) {
-            $seg .= $chars[random_int(0, strlen($chars) - 1)];
+    // DB 중복 체크 후 유일한 키 반환
+    for ($attempt = 0; $attempt < 10; $attempt++) {
+        $segments = [];
+        for ($i = 0; $i < 3; $i++) {
+            $seg = '';
+            for ($j = 0; $j < 4; $j++) {
+                $seg .= $chars[random_int(0, strlen($chars) - 1)];
+            }
+            $segments[] = $seg;
         }
-        $segments[] = $seg;
+        $key = 'RZX-' . implode('-', $segments);
+        // DB 중복 체크
+        $chk = $pdo->prepare("SELECT id FROM vcs_licenses WHERE license_key = ?");
+        $chk->execute([$key]);
+        if (!$chk->fetch()) return $key;
     }
-    return 'RZX-' . implode('-', $segments);
 }
 // 결과 예: RZX-K7M2-P9X4-N3H8
 ```
+
+**핵심 변경 (2026-04-11):**
+- ~~install.php에서 키 생성~~ → **서버에서 키 생성** (중복 100% 방지)
+- install.php는 도메인 정보만 전송, 서버가 키를 반환
+- 재설치 시 같은 도메인이면 기존 키 반환 (새 키 발급 안 함)
+- LicenseClient.php에서 `generateKey()` 메서드 제거
 
 ### 3.3 localhost 차단
 
@@ -392,24 +407,33 @@ CREATE TABLE vcs_hardware_orders (
 | GET | `/api/license/check` | 라이선스 상태 조회 | 관리자 설정 페이지 |
 | POST | `/api/license/deactivate` | 라이선스 해제 | 도메인 이전 시 (본사만) |
 
-**등록 API (install.php → voscms.com):**
+**등록 API (install.php → 라이선스 서버):**
 ```json
-// Request
+// Request — 도메인 정보만 전송 (키는 서버에서 생성)
 POST /api/license/register
 {
-    "key": "RZX-K7M2-P9X4-N3H8",
     "domain": "customer-shop.com",
     "version": "2.1.0",
     "php_version": "8.3",
     "server_ip": "123.45.67.89"
 }
 
-// Response (성공)
+// Response (신규 등록)
 {
     "success": true,
+    "key": "RZX-K7M2-P9X4-N3H8",
     "plan": "free",
     "registered_at": "2026-04-10T12:00:00+09:00",
     "message": "License registered successfully"
+}
+
+// Response (같은 도메인 재설치)
+{
+    "success": true,
+    "key": "RZX-K7M2-P9X4-N3H8",
+    "plan": "free",
+    "registered_at": "2026-04-10T12:00:00+09:00",
+    "message": "License restored (same domain reinstall)"
 }
 
 // Response (도메인 중복)

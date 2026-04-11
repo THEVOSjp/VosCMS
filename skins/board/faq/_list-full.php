@@ -89,7 +89,7 @@ $_loc = $currentLocale ?? 'ko';
         </a>
         <?php foreach ($categories as $cat): ?>
         <a href="<?= $boardUrl ?>?category=<?= $cat['id'] ?>" class="px-3 py-1.5 text-sm rounded-lg font-medium <?= $categoryFilter == $cat['id'] ? 'text-white' : 'text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600' ?> transition" <?= $categoryFilter == $cat['id'] ? 'style="background:var(--faq-primary)"' : '' ?>>
-            <?= htmlspecialchars($cat['title']) ?>
+            <?= htmlspecialchars($cat['name']) ?>
         </a>
         <?php endforeach; ?>
     </div>

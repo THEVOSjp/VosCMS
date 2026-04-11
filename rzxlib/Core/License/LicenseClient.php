@@ -110,11 +110,11 @@ class LicenseClient
 
     /**
      * 설치 시 라이선스 등록
+     * 서버에 도메인 정보를 전송하면 서버가 키를 생성하여 반환
      */
-    public function register(string $key, string $domain, string $version = '', string $phpVersion = ''): array
+    public function register(string $domain, string $version = '', string $phpVersion = ''): array
     {
         $response = $this->apiCall('/license/register', [
-            'key' => $key,
             'domain' => self::normalizeDomain($domain),
             'version' => $version ?: ($_ENV['APP_VERSION'] ?? '2.0.0'),
             'php_version' => $phpVersion ?: PHP_VERSION,
@@ -254,23 +254,6 @@ class LicenseClient
         $domain = preg_replace('#^www\.#', '', $domain);
         $domain = preg_replace('#:\d+$#', '', $domain);
         return rtrim($domain, '/');
-    }
-
-    /**
-     * 라이선스 키 생성 (install.php에서 사용)
-     */
-    public static function generateKey(): string
-    {
-        $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        $segments = [];
-        for ($i = 0; $i < 3; $i++) {
-            $seg = '';
-            for ($j = 0; $j < 4; $j++) {
-                $seg .= $chars[random_int(0, strlen($chars) - 1)];
-            }
-            $segments[] = $seg;
-        }
-        return 'RZX-' . implode('-', $segments);
     }
 
     private function getInstalledPlugins(): array
