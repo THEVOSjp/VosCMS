@@ -1,8 +1,8 @@
 <?php
 return [
-    'title' => 'マーケットプレイス',
-    'browse' => '検索',
-    'my_purchases' => '購入履歴',
+    'title' => '自動インストール',
+    'browse' => 'プラグイン検索',
+    'my_purchases' => 'インストール履歴',
     'licenses' => 'ライセンス',
     'settings' => '設定',
 

@@ -1,6 +1,6 @@
 <?php
 return [
-    'title' => 'VosCMS Marketplace',
+    'title' => 'Cài đặt tự động',
     'marketplace' => 'Marketplace',
     'developer_portal' => 'Cổng nhà phát triển',
     'search_placeholder' => 'Tìm plugin, giao diện, widget...',

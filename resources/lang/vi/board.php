@@ -28,4 +28,5 @@ return [
     // Bỏ phiếu
     'dislike' => 'Không thích', 'already_voted' => 'Bạn đã bỏ phiếu rồi.',
     'cannot_vote_own' => 'Bạn không thể bỏ phiếu cho bài viết của mình.',
+    'original_locale_notice' => 'Bản gốc được viết bằng :locale.',
 ];

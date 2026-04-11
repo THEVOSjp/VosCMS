@@ -28,4 +28,5 @@ return [
     // Abstimmung
     'dislike' => 'Nicht empfehlen', 'already_voted' => 'Sie haben bereits abgestimmt.',
     'cannot_vote_own' => 'Sie können nicht für Ihren eigenen Beitrag stimmen.',
+    'original_locale_notice' => 'Original verfasst in :locale.',
 ];

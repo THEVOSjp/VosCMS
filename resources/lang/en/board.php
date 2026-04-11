@@ -46,4 +46,5 @@ return [
     'style_card' => 'Card',
     // Settings
     'board_settings' => 'Board Settings',
+    'original_locale_notice' => 'Original written in :locale.',
 ];

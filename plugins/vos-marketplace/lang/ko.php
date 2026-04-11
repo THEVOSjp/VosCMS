@@ -1,8 +1,8 @@
 <?php
 return [
-    'title' => '마켓플레이스',
-    'browse' => '탐색',
-    'my_purchases' => '구매 내역',
+    'title' => '자동 설치',
+    'browse' => '플러그인/위젯 찾기',
+    'my_purchases' => '설치 내역',
     'licenses' => '라이선스',
     'settings' => '설정',
 

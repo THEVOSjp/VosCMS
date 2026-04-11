@@ -1,6 +1,6 @@
 <?php
 return [
-    'title' => 'VosCMS Marketplace',
+    'title' => 'Instal Otomatis',
     'marketplace' => 'Marketplace',
     'developer_portal' => 'Portal Developer',
     'search_placeholder' => 'Cari plugin, tema, widget...',

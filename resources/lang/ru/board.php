@@ -28,4 +28,5 @@ return [
     // Голосование
     'dislike' => 'Не нравится', 'already_voted' => 'Вы уже проголосовали.',
     'cannot_vote_own' => 'Нельзя голосовать за свою запись.',
+    'original_locale_notice' => 'Оригинал написан на :locale.',
 ];

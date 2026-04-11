@@ -28,4 +28,5 @@ return [
     // Oylama
     'dislike' => 'Beğenme', 'already_voted' => 'Zaten oy verdiniz.',
     'cannot_vote_own' => 'Kendi gönderinize oy veremezsiniz.',
+    'original_locale_notice' => 'Orijinal :locale dilinde yazılmıştır.',
 ];

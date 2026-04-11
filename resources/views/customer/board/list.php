@@ -132,6 +132,15 @@ $startNo = $totalCount - $offset;
     </style>
 
     <div class="board-skin-wrap <?= $_skinContentWidth ?> mx-auto px-4 sm:px-6 py-6">
+        <?php
+        // 전용 스킨: _list-full.php가 있으면 제목/필터/테이블 모두 스킨에 위임
+        $_fullSkinFile = boardSkinFile('_list-full.php');
+        if ($_fullSkinFile) {
+            include $_fullSkinFile;
+            echo '</div>'; // board-skin-wrap 닫기
+            return; // list.php 나머지(기본 테이블 UI) 건너뛰기
+        }
+        ?>
         <!-- 게시판 제목 (배경 이미지/동영상 지원) -->
         <?php require_once BASE_PATH . '/rzxlib/Core/Helpers/admin-icons.php'; ?>
         <?php if ($_hasTitleBg): ?>

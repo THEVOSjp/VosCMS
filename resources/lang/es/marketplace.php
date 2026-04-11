@@ -1,6 +1,6 @@
 <?php
 return [
-    'title' => 'VosCMS Marketplace',
+    'title' => 'Instalación automática',
     'marketplace' => 'Marketplace',
     'developer_portal' => 'Portal de desarrolladores',
     'search_placeholder' => 'Buscar plugins, temas, widgets...',

@@ -28,4 +28,5 @@ return [
     // Voting
     'dislike' => 'Tidak suka', 'already_voted' => 'Anda sudah memberikan suara.',
     'cannot_vote_own' => 'Anda tidak dapat memberikan suara untuk postingan Anda sendiri.',
+    'original_locale_notice' => 'Asli ditulis dalam :locale.',
 ];

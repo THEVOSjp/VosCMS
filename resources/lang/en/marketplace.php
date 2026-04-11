@@ -1,6 +1,6 @@
 <?php
 return [
-    'title' => 'VosCMS Marketplace',
+    'title' => 'Auto Install',
     'marketplace' => 'Marketplace',
     'developer_portal' => 'Developer Portal',
     'search_placeholder' => 'Search plugins, themes, widgets...',

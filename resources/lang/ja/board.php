@@ -46,4 +46,5 @@ return [
     'style_card' => 'カード型',
     // 設定
     'board_settings' => '掲示板設定',
+    'original_locale_notice' => '原文は :locale で作成されました。',
 ];

@@ -248,19 +248,19 @@ $seoContext = [
             }
             ?>
 
-            <!-- 원문 언어 안내 -->
-            <?php if ($postDisplayLocale !== $postOriginalLocale && $currentUser && ($currentUser['id'] == $post['user_id'] || !empty($_SESSION['admin_id']))): ?>
-            <div class="mx-6 mt-4 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-                <?= __('board.source_locale_notice', ['locale' => $postDisplayLocale]) ?>
-            </div>
-            <?php endif; ?>
-
             <!-- 본문 -->
             <link rel="stylesheet" href="<?= $config['app_url'] ?? '' ?>/resources/css/board-content.css">
             <div class="board-content p-6 text-zinc-800 dark:text-zinc-200">
                 <?= $post['content'] ?>
             </div>
+
+            <!-- 원문 언어 안내 (본문 하단, 관리자만) -->
+            <?php if ($currentLocale !== $postOriginalLocale && !empty($_SESSION['admin_id'])): ?>
+            <div class="mx-6 mb-4 px-4 py-2 bg-zinc-50 dark:bg-zinc-700/30 rounded-lg flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+                <?= __('board.original_locale_notice', ['locale' => $postOriginalLocale]) ?>
+            </div>
+            <?php endif; ?>
 
             <!-- 첨부파일 -->
             <?php if (!empty($files)): ?>

@@ -28,4 +28,5 @@ return [
     // 投票
     'dislike' => '踩', 'already_voted' => '您已经投过票了。',
     'cannot_vote_own' => '不能对自己的帖子投票。',
+    'original_locale_notice' => '原文以 :locale 撰写。',
 ];

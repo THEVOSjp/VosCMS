@@ -1,7 +1,7 @@
 <?php
 return [
     // 공통
-    'title' => 'VosCMS 마켓플레이스',
+    'title' => '자동 설치',
     'marketplace' => '마켓플레이스',
     'developer_portal' => '개발자 포털',
     'search_placeholder' => '플러그인, 테마, 위젯 검색...',

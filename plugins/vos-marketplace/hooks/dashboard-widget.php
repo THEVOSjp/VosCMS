@@ -16,9 +16,9 @@ return function () {
     $locale = $_SESSION['locale'] ?? 'ko';
 
     $labels = [
-        'ko' => ['title' => '마켓플레이스', 'browse' => '탐색하기'],
-        'en' => ['title' => 'Marketplace', 'browse' => 'Browse'],
-        'ja' => ['title' => 'マーケットプレイス', 'browse' => '検索する'],
+        'ko' => ['title' => '자동 설치', 'browse' => '플러그인 찾기'],
+        'en' => ['title' => 'Auto Install', 'browse' => 'Find Plugins'],
+        'ja' => ['title' => '自動インストール', 'browse' => 'プラグイン検索'],
     ];
     $l = $labels[$locale] ?? $labels['en'];
     ?>
@@ -27,7 +27,7 @@ return function () {
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
                     <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                     </svg>
                 </div>
                 <div>

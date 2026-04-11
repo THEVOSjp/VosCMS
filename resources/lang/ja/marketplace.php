@@ -1,6 +1,6 @@
 <?php
 return [
-    'title' => 'VosCMS マーケットプレイス',
+    'title' => '自動インストール',
     'marketplace' => 'マーケットプレイス',
     'developer_portal' => '開発者ポータル',
     'search_placeholder' => 'プラグイン、テーマ、ウィジェットを検索...',

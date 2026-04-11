@@ -47,4 +47,5 @@ return [
     'board_settings' => '게시판 설정',
     'dislike' => '비추천', 'already_voted' => '이미 투표하셨습니다.',
     'cannot_vote_own' => '본인의 글에는 투표할 수 없습니다.',
+    'original_locale_notice' => '원문은 :locale 언어로 작성되었습니다.',
 ];

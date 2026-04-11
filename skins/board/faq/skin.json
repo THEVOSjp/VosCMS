@@ -1,0 +1,52 @@
+{
+  "title": { "ko": "FAQ 아코디언 스킨", "en": "FAQ Accordion Skin", "ja": "FAQアコーディオンスキン", "de": "FAQ Akkordeon Skin", "es": "Skin FAQ Acordeón", "fr": "Skin FAQ Accordéon", "id": "Skin FAQ Akordeon", "mn": "FAQ Аккордеон скин", "ru": "FAQ Аккордеон скин", "tr": "FAQ Akordeon Skin", "vi": "Skin FAQ Accordion", "zh_CN": "FAQ手风琴皮肤", "zh_TW": "FAQ手風琴面板" },
+  "description": { "ko": "Q&A 형태의 아코디언 FAQ 스킨. 큼지막한 검색창, 페이지네이션 포함.", "en": "Accordion-style FAQ skin with large search bar and pagination.", "ja": "アコーディオン形式のFAQスキン。大型検索バー、ページネーション付き。" },
+  "version": "1.0.0",
+  "date": "2026-04-11",
+  "author": { "name": "VosCMS", "url": "https://voscms.com" },
+  "vars": [
+    {
+      "section": { "ko": "FAQ 설정", "en": "FAQ Settings", "ja": "FAQ設定" },
+      "name": "primary_color",
+      "type": "color",
+      "title": { "ko": "프라이머리 색상", "en": "Primary Color", "ja": "プライマリカラー" },
+      "default": "#22c55e"
+    },
+    {
+      "name": "posts_per_page",
+      "type": "number",
+      "title": { "ko": "페이지당 표시 수", "en": "Items per page", "ja": "1ページの表示数" },
+      "description": { "ko": "한 페이지에 표시할 FAQ 수 (기본: 10)", "en": "Number of FAQ items per page (default: 10)", "ja": "1ページに表示するFAQ数（デフォルト：10）" },
+      "default": 10,
+      "min": 5,
+      "max": 50
+    },
+    {
+      "name": "show_category_filter",
+      "type": "checkbox",
+      "title": { "ko": "카테고리 필터 표시", "en": "Show category filter", "ja": "カテゴリフィルター表示" },
+      "default": true
+    },
+    {
+      "name": "content_width",
+      "type": "select",
+      "title": { "ko": "게시판 너비", "en": "Content Width", "ja": "コンテンツ幅" },
+      "description": { "ko": "FAQ 영역의 최대 너비를 설정합니다.", "en": "Set the maximum width of the FAQ area.", "ja": "FAQ領域の最大幅を設定します。" },
+      "options": [
+        { "value": "max-w-xl", "label": { "ko": "좁게 (576px)", "en": "Narrow (576px)", "ja": "狭い (576px)" } },
+        { "value": "max-w-2xl", "label": { "ko": "보통 (672px)", "en": "Medium (672px)", "ja": "普通 (672px)" } },
+        { "value": "max-w-3xl", "label": { "ko": "넓게 (768px)", "en": "Wide (768px)", "ja": "広い (768px)" } },
+        { "value": "max-w-4xl", "label": { "ko": "더 넓게 (896px)", "en": "Wider (896px)", "ja": "より広い (896px)" } },
+        { "value": "max-w-5xl", "label": { "ko": "최대 (1024px)", "en": "Max (1024px)", "ja": "最大 (1024px)" } },
+        { "value": "max-w-7xl", "label": { "ko": "전체 (1280px)", "en": "Full (1280px)", "ja": "フル (1280px)" } }
+      ],
+      "default": "max-w-3xl"
+    },
+    {
+      "name": "expand_first",
+      "type": "checkbox",
+      "title": { "ko": "첫 번째 항목 펼치기", "en": "Expand first item", "ja": "最初の項目を展開" },
+      "default": false
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 <?php
 return [
-    'title' => 'VosCMS Marketplace',
+    'title' => 'Автоустановка',
     'marketplace' => 'Marketplace',
     'developer_portal' => 'Портал разработчика',
     'search_placeholder' => 'Поиск плагинов, тем, виджетов...',

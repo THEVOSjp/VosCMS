@@ -1,6 +1,6 @@
 <?php
 return [
-    'title' => 'VosCMS Marketplace',
+    'title' => 'Автомат суулгалт',
     'marketplace' => 'Marketplace',
     'developer_portal' => 'Хөгжүүлэгчийн портал',
     'search_placeholder' => 'Плагин, загвар, виджет хайх...',

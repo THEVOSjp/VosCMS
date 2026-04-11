@@ -9,7 +9,7 @@ $hint = 'text-xs text-zinc-500 dark:text-zinc-400';
 $tgl = 'w-9 h-5 bg-zinc-300 dark:bg-zinc-600 peer-checked:bg-blue-600 rounded-full peer after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full';
 
 // 다른 게시판 목록 (통합 게시판용)
-$otherBoards = $pdo->prepare("SELECT id, slug, title FROM {$prefix}boards WHERE id != ? ORDER BY sort_order");
+$otherBoards = $pdo->prepare("SELECT id, slug, title FROM {$prefix}boards WHERE id != ? ORDER BY id");
 $otherBoards->execute([$boardId]);
 $otherBoardList = $otherBoards->fetchAll(PDO::FETCH_ASSOC);
 $mergeBoards = json_decode($board['merge_boards'] ?? '[]', true) ?: [];

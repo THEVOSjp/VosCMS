@@ -1,6 +1,6 @@
 <?php
 return [
-    'title' => 'VosCMS Marketplace',
+    'title' => 'Otomatik Kurulum',
     'marketplace' => 'Marketplace',
     'developer_portal' => 'Gelistirici Portali',
     'search_placeholder' => 'Eklenti, tema, widget ara...',

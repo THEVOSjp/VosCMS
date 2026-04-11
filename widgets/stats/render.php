@@ -12,7 +12,8 @@ $stats = $config['items'] ?? [
 $items = '';
 foreach ($stats as $s) {
     $num = htmlspecialchars($s['number'] ?? '');
-    $lbl = htmlspecialchars($s['label'] ?? '');
+    $_rawLabel = $s['label'] ?? '';
+    $lbl = is_array($_rawLabel) ? htmlspecialchars($_rawLabel[$locale] ?? $_rawLabel['en'] ?? $_rawLabel['ko'] ?? '') : htmlspecialchars($_rawLabel);
     $items .= '<div><p class="text-3xl font-bold text-blue-600 dark:text-blue-400">' . $num . '</p><p class="text-sm text-gray-600 dark:text-zinc-400 mt-1">' . $lbl . '</p></div>';
 }
 

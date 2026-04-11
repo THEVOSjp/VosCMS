@@ -1,104 +1,224 @@
 {
-  "id": "vos-marketplace",
-  "name": {
-    "ko": "VosCMS 마켓플레이스",
-    "en": "VosCMS Marketplace",
-    "ja": "VosCMS マーケットプレイス",
-    "de": "VosCMS Marktplatz",
-    "es": "VosCMS Marketplace",
-    "fr": "VosCMS Marketplace",
-    "id": "VosCMS Marketplace",
-    "mn": "VosCMS Маркетплейс",
-    "ru": "VosCMS Маркетплейс",
-    "tr": "VosCMS Pazaryeri",
-    "vi": "VosCMS Marketplace",
-    "zh_CN": "VosCMS 市场",
-    "zh_TW": "VosCMS 市場"
-  },
-  "description": {
-    "ko": "플러그인, 테마, 위젯, 스킨을 탐색, 구매, 설치",
-    "en": "Browse, purchase, and install plugins, themes, widgets, and skins",
-    "ja": "プラグイン、テーマ、ウィジェット、スキンの検索・購入・インストール"
-  },
-  "version": "1.0.0",
-  "author": {
-    "name": "VosCMS",
-    "url": "https://voscms.com"
-  },
-  "license": "proprietary",
-  "category": "system",
-  "tags": ["marketplace", "plugins", "themes", "widgets", "skins"],
-
-  "requires": {
-    "php": ">=8.0"
-  },
-
-  "migrations": [
-    "migrations/001_create_marketplace_tables.sql",
-    "migrations/002_create_license_tables.sql",
-    "migrations/003_create_review_tables.sql"
-  ],
-
-  "routes": {
-    "admin": [
-      { "path": "marketplace", "view": "admin/browse.php", "method": "GET" },
-      { "path": "marketplace/item", "view": "admin/item-detail.php", "method": "GET" },
-      { "path": "marketplace/purchases", "view": "admin/purchases.php", "method": "GET" },
-      { "path": "marketplace/licenses", "view": "admin/licenses.php", "method": "GET" },
-      { "path": "marketplace/settings", "view": "admin/settings.php", "method": "GET" },
-      { "path": "marketplace/api", "view": "admin/api.php", "method": "POST" },
-      { "path": "marketplace/install", "view": "admin/install-handler.php", "method": "POST" }
+    "id": "vos-marketplace",
+    "name": {
+        "ko": "VosCMS 마켓플레이스",
+        "en": "VosCMS Marketplace",
+        "ja": "VosCMS マーケットプレイス",
+        "de": "VosCMS Marktplatz",
+        "es": "VosCMS Marketplace",
+        "fr": "VosCMS Marketplace",
+        "id": "VosCMS Marketplace",
+        "mn": "VosCMS Маркетплейс",
+        "ru": "VosCMS Маркетплейс",
+        "tr": "VosCMS Pazaryeri",
+        "vi": "VosCMS Marketplace",
+        "zh_CN": "VosCMS 市场",
+        "zh_TW": "VosCMS 市場"
+    },
+    "description": {
+        "ko": "플러그인, 테마, 위젯, 스킨을 탐색, 구매, 설치",
+        "en": "Browse, purchase, and install plugins, themes, widgets, and skins",
+        "ja": "プラグイン、テーマ、ウィジェット、スキンの検索・購入・インストール"
+    },
+    "version": "1.1.0",
+    "author": {
+        "name": "VosCMS",
+        "url": "https:\/\/voscms.com"
+    },
+    "license": "proprietary",
+    "category": "system",
+    "tags": [
+        "marketplace",
+        "plugins",
+        "themes",
+        "widgets",
+        "skins"
     ],
-    "front": [],
-    "api": [
-      { "path": "api/marketplace/catalog", "view": "api/catalog.php", "method": "GET" },
-      { "path": "api/marketplace/item", "view": "api/item.php", "method": "GET" },
-      { "path": "api/marketplace/purchase", "view": "api/purchase.php", "method": "POST" },
-      { "path": "api/marketplace/license/validate", "view": "api/license-validate.php", "method": "POST" },
-      { "path": "api/marketplace/download", "view": "api/download.php", "method": "GET" },
-      { "path": "api/marketplace/webhook", "view": "api/webhook.php", "method": "POST" }
-    ]
-  },
-
-  "menus": {
-    "admin": [
-      {
-        "title": {
-          "ko": "마켓플레이스",
-          "en": "Marketplace",
-          "ja": "マーケットプレイス",
-          "de": "Marktplatz",
-          "es": "Marketplace",
-          "fr": "Marketplace",
-          "id": "Marketplace",
-          "mn": "Маркетплейс",
-          "ru": "Маркетплейс",
-          "tr": "Pazaryeri",
-          "vi": "Marketplace",
-          "zh_CN": "市场",
-          "zh_TW": "市場"
-        },
-        "icon": "M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z",
-        "items": [
-          { "title": { "ko": "탐색", "en": "Browse", "ja": "検索", "de": "Durchsuchen", "es": "Explorar", "fr": "Parcourir", "id": "Jelajahi", "mn": "Хайх", "ru": "Обзор", "tr": "Gözat", "vi": "Duyệt", "zh_CN": "浏览", "zh_TW": "瀏覽" }, "route": "marketplace" },
-          { "title": { "ko": "구매 내역", "en": "My Purchases", "ja": "購入履歴", "de": "Meine Käufe", "es": "Mis compras", "fr": "Mes achats", "id": "Pembelian Saya", "mn": "Миний худалдан авалт", "ru": "Мои покупки", "tr": "Satın Alımlarım", "vi": "Lịch sử mua", "zh_CN": "购买记录", "zh_TW": "購買記錄" }, "route": "marketplace/purchases" },
-          { "title": { "ko": "라이선스", "en": "Licenses", "ja": "ライセンス", "de": "Lizenzen", "es": "Licencias", "fr": "Licences", "id": "Lisensi", "mn": "Лиценз", "ru": "Лицензии", "tr": "Lisanslar", "vi": "Giấy phép", "zh_CN": "许可证", "zh_TW": "授權" }, "route": "marketplace/licenses" },
-          { "title": { "ko": "설정", "en": "Settings", "ja": "設定", "de": "Einstellungen", "es": "Configuración", "fr": "Paramètres", "id": "Pengaturan", "mn": "Тохиргоо", "ru": "Настройки", "tr": "Ayarlar", "vi": "Cài đặt", "zh_CN": "设置", "zh_TW": "設定" }, "route": "marketplace/settings" }
+    "requires": {
+        "php": ">=8.0"
+    },
+    "migrations": [
+        "migrations\/001_create_marketplace_tables.sql",
+        "migrations\/002_create_license_tables.sql",
+        "migrations\/003_create_review_tables.sql"
+    ],
+    "routes": {
+        "admin": [
+            {
+                "path": "marketplace",
+                "view": "admin\/browse.php",
+                "method": "GET"
+            },
+            {
+                "path": "marketplace\/item",
+                "view": "admin\/item-detail.php",
+                "method": "GET"
+            },
+            {
+                "path": "marketplace\/purchases",
+                "view": "admin\/purchases.php",
+                "method": "GET"
+            },
+            {
+                "path": "marketplace\/licenses",
+                "view": "admin\/licenses.php",
+                "method": "GET"
+            },
+            {
+                "path": "marketplace\/settings",
+                "view": "admin\/settings.php",
+                "method": "GET"
+            },
+            {
+                "path": "marketplace\/api",
+                "view": "admin\/api.php",
+                "method": "POST"
+            },
+            {
+                "path": "marketplace\/install",
+                "view": "admin\/install-handler.php",
+                "method": "POST"
+            }
+        ],
+        "front": [],
+        "api": [
+            {
+                "path": "api\/marketplace\/catalog",
+                "view": "api\/catalog.php",
+                "method": "GET"
+            },
+            {
+                "path": "api\/marketplace\/item",
+                "view": "api\/item.php",
+                "method": "GET"
+            },
+            {
+                "path": "api\/marketplace\/purchase",
+                "view": "api\/purchase.php",
+                "method": "POST"
+            },
+            {
+                "path": "api\/marketplace\/license\/validate",
+                "view": "api\/license-validate.php",
+                "method": "POST"
+            },
+            {
+                "path": "api\/marketplace\/download",
+                "view": "api\/download.php",
+                "method": "GET"
+            },
+            {
+                "path": "api\/marketplace\/webhook",
+                "view": "api\/webhook.php",
+                "method": "POST"
+            }
         ]
-      }
-    ]
-  },
-
-  "hooks": {
-    "admin.dashboard.render": "hooks/dashboard-widget.php",
-    "plugin.update.check": "hooks/update-check.php"
-  },
-
-  "settings": {
-    "defaults": {
-      "marketplace_api_url": "https://marketplace.voscms.com/api",
-      "auto_update_check": "1",
-      "update_check_interval": "86400"
+    },
+    "menus": {
+        "admin": [
+            {
+                "title": {
+                    "ko": "자동 설치",
+                    "en": "Auto Install",
+                    "ja": "自動インストール",
+                    "de": "Auto-Installation",
+                    "es": "Instalación automática",
+                    "fr": "Installation auto",
+                    "id": "Instal Otomatis",
+                    "mn": "Автомат суулгалт",
+                    "ru": "Автоустановка",
+                    "tr": "Otomatik Kurulum",
+                    "vi": "Cài đặt tự động",
+                    "zh_CN": "自动安装",
+                    "zh_TW": "自動安裝"
+                },
+                "icon": "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4",
+                "items": [
+                    {
+                        "title": {
+                            "ko": "플러그인\/위젯 찾기",
+                            "en": "Find Plugins",
+                            "ja": "プラグイン検索",
+                            "de": "Plugins finden",
+                            "es": "Buscar plugins",
+                            "fr": "Trouver des plugins",
+                            "id": "Cari Plugin",
+                            "mn": "Плагин хайх",
+                            "ru": "Найти плагины",
+                            "tr": "Eklenti Bul",
+                            "vi": "Tìm plugin",
+                            "zh_CN": "查找插件",
+                            "zh_TW": "尋找外掛"
+                        },
+                        "route": "marketplace"
+                    },
+                    {
+                        "title": {
+                            "ko": "설치 내역",
+                            "en": "Install History",
+                            "ja": "インストール履歴",
+                            "de": "Installationsverlauf",
+                            "es": "Historial de instalación",
+                            "fr": "Historique d'installation",
+                            "id": "Riwayat Instalasi",
+                            "mn": "Суулгалтын түүх",
+                            "ru": "История установок",
+                            "tr": "Kurulum Geçmişi",
+                            "vi": "Lịch sử cài đặt",
+                            "zh_CN": "安装记录",
+                            "zh_TW": "安裝紀錄"
+                        },
+                        "route": "marketplace\/purchases"
+                    },
+                    {
+                        "title": {
+                            "ko": "라이선스",
+                            "en": "Licenses",
+                            "ja": "ライセンス",
+                            "de": "Lizenzen",
+                            "es": "Licencias",
+                            "fr": "Licences",
+                            "id": "Lisensi",
+                            "mn": "Лиценз",
+                            "ru": "Лицензии",
+                            "tr": "Lisanslar",
+                            "vi": "Giấy phép",
+                            "zh_CN": "许可证",
+                            "zh_TW": "授權"
+                        },
+                        "route": "marketplace\/licenses"
+                    },
+                    {
+                        "title": {
+                            "ko": "설정",
+                            "en": "Settings",
+                            "ja": "設定",
+                            "de": "Einstellungen",
+                            "es": "Configuración",
+                            "fr": "Paramètres",
+                            "id": "Pengaturan",
+                            "mn": "Тохиргоо",
+                            "ru": "Настройки",
+                            "tr": "Ayarlar",
+                            "vi": "Cài đặt",
+                            "zh_CN": "设置",
+                            "zh_TW": "設定"
+                        },
+                        "route": "marketplace\/settings"
+                    }
+                ]
+            }
+        ]
+    },
+    "hooks": {
+        "admin.dashboard.render": "hooks\/dashboard-widget.php",
+        "plugin.update.check": "hooks\/update-check.php"
+    },
+    "settings": {
+        "defaults": {
+            "marketplace_api_url": "https:\/\/marketplace.voscms.com\/api",
+            "auto_update_check": "1",
+            "update_check_interval": "86400"
+        }
     }
-  }
 }

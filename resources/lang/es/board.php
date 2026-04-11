@@ -28,4 +28,5 @@ return [
     // Votación
     'dislike' => 'No me gusta', 'already_voted' => 'Ya has votado.',
     'cannot_vote_own' => 'No puedes votar tu propia publicación.',
+    'original_locale_notice' => 'Original escrito en :locale.',
 ];

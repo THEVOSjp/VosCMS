@@ -28,4 +28,5 @@ return [
     // 投票
     'dislike' => '倒讚', 'already_voted' => '您已經投過票了。',
     'cannot_vote_own' => '不能對自己的文章投票。',
+    'original_locale_notice' => '原文以 :locale 撰寫。',
 ];

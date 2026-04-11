@@ -1,8 +1,8 @@
 <?php
 return [
-    'title' => 'Marketplace',
-    'browse' => 'Browse',
-    'my_purchases' => 'My Purchases',
+    'title' => 'Auto Install',
+    'browse' => 'Find Plugins',
+    'my_purchases' => 'Install History',
     'licenses' => 'Licenses',
     'settings' => 'Settings',
 

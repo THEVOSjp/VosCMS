@@ -67,7 +67,7 @@ try {
     $totalPages = max(1, ceil($totalCount / $perPage));
 
     // 목록 조회
-    $sql = "SELECT * FROM {$prefix}boards {$where} ORDER BY sort_order ASC, id DESC LIMIT {$perPage} OFFSET {$offset}";
+    $sql = "SELECT * FROM {$prefix}boards {$where} ORDER BY id DESC LIMIT {$perPage} OFFSET {$offset}";
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $boards = $stmt->fetchAll(PDO::FETCH_ASSOC);
