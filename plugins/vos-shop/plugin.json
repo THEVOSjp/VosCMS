@@ -48,6 +48,14 @@
                     {"title": {"ko": "1:1 상담", "en": "Consultations", "ja": "相談"}, "route": "shops/consultations"}
                 ]
             }
+        ],
+        "user_dropdown": [
+            {
+                "label": {"ko": "내 사업장", "en": "My Shop", "ja": "マイショップ", "de": "Mein Geschäft", "es": "Mi Tienda", "fr": "Ma Boutique", "id": "Toko Saya", "mn": "Миний дэлгүүр", "ru": "Мой магазин", "tr": "Mağazam", "vi": "Cửa hàng của tôi", "zh_CN": "我的店铺", "zh_TW": "我的店鋪"},
+                "url": "/shop/my",
+                "icon": "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+                "position": 10
+            }
         ]
     },
     "routes": [

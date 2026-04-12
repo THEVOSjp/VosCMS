@@ -22,8 +22,7 @@ if (defined('BASE_PATH') && file_exists(BASE_PATH . '/config/mypage-menu.php')) 
 
 // ── 플러그인 마이페이지 메뉴 병합 (plugin.json menus.mypage) ──
 if (isset($pluginManager)) {
-    foreach ($pluginManager->getPlugins() as $_pm) {
-        $_manifest = $pluginManager->getManifest($_pm['plugin_id'] ?? '');
+    foreach ($pluginManager->getLoaded() as $_pmId => $_manifest) {
         foreach ($_manifest['menus']['mypage'] ?? [] as $_mi) {
             $_mi['position'] = $_mi['position'] ?? 50;
             $_mi['section'] = $_mi['section'] ?? 'main';
