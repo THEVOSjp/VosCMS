@@ -67,6 +67,7 @@ class AdminAuth
 
         // 세션 설정 (admin_id = user id로 통합)
         $_SESSION['admin_id'] = $user['id'];
+        $_SESSION['user_id'] = $user['id']; // 프론트 Auth와 세션 공유
         $_SESSION['admin_role'] = $role;
         $_SESSION['admin_name'] = $user['name'] ?? '';
         $_SESSION['admin_email'] = $user['email'];

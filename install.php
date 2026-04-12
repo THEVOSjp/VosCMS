@@ -49,9 +49,10 @@ $_langData = file_exists(BASE_PATH . '/resources/lang/install.php')
 $_installLangs = $_langData['languages'];
 $_it = $_langData['translations'];
 
-// .env 없이 최초 접속 = 새 설치 → 이전 세션 초기화
+// .env 없이 최초 접속 = 새 설치 → 이전 세션 전체 초기화
 if (!isset($_POST['step']) && !isset($_GET['step']) && !file_exists(BASE_PATH . '/.env')) {
-    unset($_SESSION['install_locale'], $_SESSION['install_db'], $_SESSION['install_tables_done'], $_SESSION['install_tables_count']);
+    session_destroy();
+    session_start();
 }
 
 $installLocale = $_SESSION['install_locale'] ?? null;
@@ -96,8 +97,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
                     $pdo->exec("USE `{$dbName}`");
 
-                    // 세션에 저장
+                    // 세션 + 폼 전달용 저장
                     $_SESSION['install_db'] = compact('dbHost', 'dbPort', 'dbName', 'dbUser', 'dbPass', 'dbPrefix');
+                    session_write_close();
+                    session_start();
                     $step = '3';
                 } catch (PDOException $e) {
                     $errors[] = __t('db_fail') . ': ' . $e->getMessage();
@@ -107,6 +110,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case '3': // 테이블 생성
             $db = $_SESSION['install_db'] ?? null;
+            // 세션 폴백: hidden 필드에서 복원
+            if (!$db && !empty($_POST['_db'])) {
+                $db = json_decode(base64_decode($_POST['_db']), true);
+                if ($db) $_SESSION['install_db'] = $db;
+            }
             if (!$db) { $step = '2'; break; }
 
             try {
@@ -135,6 +143,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $_SESSION['install_tables_done'] = true;
                 $_SESSION['install_tables_count'] = $executed;
+                session_write_close();
+                session_start();
                 $step = '4';
             } catch (PDOException $e) {
                 $errors[] = __t('table_fail') . ': ' . $e->getMessage();
@@ -143,6 +153,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case '4': // 관리자 계정 생성
             $db = $_SESSION['install_db'] ?? null;
+            if (!$db && !empty($_POST['_db'])) {
+                $db = json_decode(base64_decode($_POST['_db']), true);
+                if ($db) $_SESSION['install_db'] = $db;
+            }
             if (!$db) { $step = '2'; break; }
 
             $adminEmail = trim($_POST['admin_email'] ?? '');
@@ -806,6 +820,7 @@ LICENSE_SERVER={$licenseServer}
     </div>
     <form method="POST">
         <input type="hidden" name="step" value="3">
+        <input type="hidden" name="_db" value="<?= base64_encode(json_encode($_SESSION['install_db'] ?? [])) ?>">
         <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition"><?= __t('create_tables') ?> &rarr;</button>
     </form>
 
@@ -813,6 +828,7 @@ LICENSE_SERVER={$licenseServer}
     <h2 class="text-xl font-bold text-zinc-800 mb-6">4. <?= __t('step4') ?></h2>
     <form method="POST">
         <input type="hidden" name="step" value="4">
+        <input type="hidden" name="_db" value="<?= base64_encode(json_encode($_SESSION['install_db'] ?? [])) ?>">
         <div class="space-y-4">
             <div class="pb-4 border-b border-zinc-200">
                 <h3 class="text-sm font-bold text-zinc-600 mb-3"><?= __t('site_info') ?></h3>
