@@ -41,15 +41,17 @@ try {
     $_ptGradeTr = [];
     try {
         $_ptPH = implode(',', array_fill(0, count($_ptChain), '?'));
-        $_ptStmt = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations WHERE locale IN ({$_ptPH}) AND lang_key LIKE 'grade.%.name'");
+        $_ptStmt = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations WHERE locale IN ({$_ptPH}) AND (lang_key LIKE 'member_grade.%.name' OR lang_key LIKE 'grade.%.name')");
         $_ptStmt->execute(array_values($_ptChain));
         while ($_pt = $_ptStmt->fetch(PDO::FETCH_ASSOC)) { $_ptGradeTr[$_pt['lang_key']][$_pt['locale']] = $_pt['content']; }
     } catch (PDOException $e) {}
 
     foreach ($groups as &$_g) {
-        $k = "grade.{$_g['id']}.name";
-        if (isset($_ptGradeTr[$k])) {
-            foreach ($_ptChain as $lc) { if (!empty($_ptGradeTr[$k][$lc])) { $_g['name'] = $_ptGradeTr[$k][$lc]; break; } }
+        $k = "member_grade.{$_g['id']}.name";
+        $k2 = "grade.{$_g['id']}.name"; // 레거시 호환
+        $_foundTr = $_ptGradeTr[$k] ?? $_ptGradeTr[$k2] ?? null;
+        if ($_foundTr) {
+            foreach ($_ptChain as $lc) { if (!empty($_foundTr[$lc])) { $_g['name'] = $_foundTr[$lc]; break; } }
         }
     }
     unset($_g);

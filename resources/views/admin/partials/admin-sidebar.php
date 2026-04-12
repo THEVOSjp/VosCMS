@@ -46,17 +46,22 @@ $_lt = function($val) use ($_locale) {
     return '';
 };
 
-// 메뉴 활성 여부 판별
-$_isActive = function($route) use ($currentPath) {
-    if ($route === '') return false; // 대시보드는 별도 처리
-    return str_contains($currentPath, '/' . $route);
+// 메뉴 활성 여부 판별 (정확한 경로 매칭)
+$_isActive = function($route) use ($currentPath, $adminPath) {
+    if ($route === '') return false;
+    // 관리자 경로 제거 후 비교: /admin/members/groups → /members/groups
+    $_path = preg_replace('#^/' . preg_quote($adminPath, '#') . '#', '', parse_url($currentPath, PHP_URL_PATH) ?? '');
+    $_route = '/' . ltrim($route, '/');
+    // 정확 매칭 또는 하위 경로 매칭 (members → members, members/xxx만 매칭, members와 members/groups 구분)
+    return $_path === $_route || str_starts_with($_path, $_route . '/') || str_starts_with($_path, $_route . '?');
 };
 
 // 부모 메뉴 활성 판별 (route_prefix 지원 — 설정 탭 등 내부 라우트 포함)
-$_isGroupActive = function($menu) use ($currentPath, $_isActive) {
+$_isGroupActive = function($menu) use ($currentPath, $adminPath, $_isActive) {
     // route_prefix가 있으면 해당 prefix 하위 라우트 전체 매칭
     if (!empty($menu['route_prefix'])) {
-        return str_contains($currentPath, '/' . $menu['route_prefix']);
+        $_path = preg_replace('#^/' . preg_quote($adminPath, '#') . '#', '', parse_url($currentPath, PHP_URL_PATH) ?? '');
+        return str_starts_with($_path, '/' . $menu['route_prefix']);
     }
     // 일반: 서브메뉴 항목 중 하나라도 활성이면
     foreach ($menu['items'] ?? [] as $_item) {

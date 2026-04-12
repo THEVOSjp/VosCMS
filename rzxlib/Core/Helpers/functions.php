@@ -545,6 +545,67 @@ if (!function_exists('db_trans')) {
     }
 }
 
+if (!function_exists('db_trans_batch')) {
+    /**
+     * 게시글 배치 다국어 번역 (db_trans와 동일한 폴백 체인)
+     * 위젯 등에서 여러 게시글의 제목/내용을 한 번에 번역
+     *
+     * @param \PDO $pdo DB 연결
+     * @param array $posts 게시글 배열 (id, title, content 포함)
+     * @param string $locale 현재 로케일
+     * @param string $prefix DB 테이블 접두사
+     * @return array 번역이 적용된 게시글 배열
+     */
+    function db_trans_batch(\PDO $pdo, array $posts, string $locale, string $prefix = 'rzx_'): array
+    {
+        if (empty($posts)) return $posts;
+
+        $postIds = array_column($posts, 'id');
+        $titleTr = [];
+        $contentTr = [];
+
+        // 폴백 체인: 현재 로케일 → 영어 → 기본언어
+        $defaultLocale = $_ENV['APP_LOCALE'] ?? $_ENV['DEFAULT_LOCALE'] ?? 'ko';
+        $chain = [$locale];
+        if ($locale !== 'en') $chain[] = 'en';
+        if ($locale !== $defaultLocale && $defaultLocale !== 'en') $chain[] = $defaultLocale;
+
+        // 키 생성
+        $titleKeys = implode(',', array_map(fn($id) => "'" . addslashes("board_post.{$id}.title") . "'", $postIds));
+        $contentKeys = implode(',', array_map(fn($id) => "'" . addslashes("board_post.{$id}.content") . "'", $postIds));
+        $allKeys = $titleKeys . ',' . $contentKeys;
+
+        try {
+            // 폴백 체인 순서대로 조회
+            foreach ($chain as $tryLocale) {
+                $needTitle = array_filter($postIds, fn($id) => !isset($titleTr[(int)$id]));
+                if (empty($needTitle)) break;
+
+                $rows = $pdo->query("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN ({$allKeys}) AND locale = '" . addslashes($tryLocale) . "'")->fetchAll(\PDO::FETCH_ASSOC);
+                foreach ($rows as $tr) {
+                    if (preg_match('/board_post\.(\d+)\.title/', $tr['lang_key'], $m)) {
+                        if (!isset($titleTr[(int)$m[1]])) $titleTr[(int)$m[1]] = $tr['content'];
+                    } elseif (preg_match('/board_post\.(\d+)\.content/', $tr['lang_key'], $m)) {
+                        if (!isset($contentTr[(int)$m[1]])) $contentTr[(int)$m[1]] = $tr['content'];
+                    }
+                }
+            }
+        } catch (\PDOException $e) {
+            error_log("db_trans_batch error: " . $e->getMessage());
+        }
+
+        // 번역 적용
+        foreach ($posts as &$p) {
+            $pid = (int)$p['id'];
+            if (isset($titleTr[$pid])) $p['title'] = $titleTr[$pid];
+            if (isset($contentTr[$pid])) $p['content'] = $contentTr[$pid];
+        }
+        unset($p);
+
+        return $posts;
+    }
+}
+
 if (!function_exists('is_translation_fallback')) {
     /**
      * 해당 번역이 fallback(원본 언어) 사용 중인지 확인
