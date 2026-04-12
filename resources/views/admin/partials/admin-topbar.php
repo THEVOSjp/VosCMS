@@ -78,20 +78,7 @@
                     <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars($_adminEmail) ?></p>
                 </div>
 <?php
-                // config + 플러그인 기반 관리자 드롭다운 메뉴
-                $_adMenus = file_exists(BASE_PATH . '/config/admin-dropdown-menu.php')
-                    ? include(BASE_PATH . '/config/admin-dropdown-menu.php') : [];
-                $_adPluginsDir = BASE_PATH . '/plugins';
-                if (is_dir($_adPluginsDir)) {
-                    foreach (glob($_adPluginsDir . '/*/plugin.json') as $_adPj) {
-                        $_adM = json_decode(file_get_contents($_adPj), true);
-                        foreach ($_adM['menus']['admin_dropdown'] ?? [] as $_adi) {
-                            $_adi['position'] = $_adi['position'] ?? 50;
-                            $_adMenus[] = $_adi;
-                        }
-                    }
-                }
-                usort($_adMenus, fn($a, $b) => ($a['position'] ?? 50) <=> ($b['position'] ?? 50));
+                $_adMenus = function_exists('load_menu') ? load_menu('admin_dropdown') : [];
                 $_adPrevType = '';
                 foreach ($_adMenus as $_adi):
                     $_adLabel = is_string($_adi['label'] ?? '') && str_contains($_adi['label'], '.') ? __($_adi['label']) : ($_adi['label'] ?? '');

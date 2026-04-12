@@ -545,6 +545,93 @@ if (!function_exists('db_trans')) {
     }
 }
 
+if (!function_exists('load_menu')) {
+    /**
+     * 메뉴 로딩 통합 헬퍼
+     *
+     * config 파일 + 플러그인 plugin.json에서 메뉴를 로드하고 병합/정렬하여 반환.
+     * 스킨은 이 함수의 결과만 받아서 렌더링하면 됨.
+     *
+     * @param string $type 메뉴 타입: 'admin', 'admin_dropdown', 'mypage', 'user_dropdown'
+     * @param array $options 추가 옵션 ['admin_path' => 'admin']
+     * @return array 정렬된 메뉴 배열
+     */
+    function load_menu(string $type, array $options = []): array
+    {
+        $basePath = defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 3);
+
+        // config 파일 매핑
+        $configMap = [
+            'admin'          => 'admin-menu.php',
+            'admin_dropdown' => 'admin-dropdown-menu.php',
+            'mypage'         => 'mypage-menu.php',
+            'user_dropdown'  => 'user-dropdown-menu.php',
+        ];
+
+        // 1. config에서 로드
+        $menus = [];
+        $configFile = $basePath . '/config/' . ($configMap[$type] ?? '');
+        if (file_exists($configFile)) {
+            $menus = include $configFile;
+        }
+
+        // 2. 플러그인 메뉴 병합
+        $pluginKey = $type; // plugin.json의 menus.{type}
+        $pluginsDir = $basePath . '/plugins';
+        if (is_dir($pluginsDir)) {
+            foreach (glob($pluginsDir . '/*/plugin.json') as $pjFile) {
+                $pj = @json_decode(file_get_contents($pjFile), true);
+                foreach ($pj['menus'][$pluginKey] ?? [] as $mi) {
+                    $mi['position'] = $mi['position'] ?? 50;
+                    $menus[] = $mi;
+                }
+            }
+        }
+
+        // 3. PluginManager가 있으면 로드된 플러그인에서도 확인
+        if (isset($GLOBALS['pluginManager'])) {
+            foreach ($GLOBALS['pluginManager']->getLoaded() as $pmId => $manifest) {
+                foreach ($manifest['menus'][$pluginKey] ?? [] as $mi) {
+                    // 이미 파일 스캔으로 추가됐을 수 있으므로 중복 방지
+                    $exists = false;
+                    foreach ($menus as $existing) {
+                        if (($existing['key'] ?? '') === ($mi['key'] ?? '') && ($existing['url'] ?? '') === ($mi['url'] ?? '')) {
+                            $exists = true;
+                            break;
+                        }
+                    }
+                    if (!$exists) {
+                        $mi['position'] = $mi['position'] ?? 50;
+                        $menus[] = $mi;
+                    }
+                }
+            }
+        }
+
+        // 4. 정렬
+        usort($menus, fn($a, $b) => ($a['position'] ?? 50) <=> ($b['position'] ?? 50));
+
+        // 5. label 번역 적용 + URL 치환
+        $adminPath = $options['admin_path'] ?? ($GLOBALS['config']['admin_path'] ?? 'admin');
+        foreach ($menus as &$mi) {
+            // label 번역
+            if (is_string($mi['label'] ?? '') && str_contains($mi['label'], '.')) {
+                $mi['label'] = function_exists('__') ? __($mi['label']) : $mi['label'];
+            } elseif (is_array($mi['label'] ?? null)) {
+                $locale = function_exists('current_locale') ? current_locale() : 'ko';
+                $mi['label'] = $mi['label'][$locale] ?? $mi['label']['en'] ?? $mi['label']['ko'] ?? reset($mi['label']);
+            }
+            // URL 치환
+            if (isset($mi['url'])) {
+                $mi['url'] = str_replace('{admin_path}', $adminPath, $mi['url']);
+            }
+        }
+        unset($mi);
+
+        return $menus;
+    }
+}
+
 if (!function_exists('db_trans_batch')) {
     /**
      * 게시글 배치 다국어 번역 (db_trans와 동일한 폴백 체인)

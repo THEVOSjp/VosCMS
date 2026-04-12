@@ -18,27 +18,26 @@ if (!isset($adminUrl)) {
 $currentPath = $_SERVER['REQUEST_URI'] ?? '';
 $_locale = function_exists('current_locale') ? current_locale() : ($config['locale'] ?? 'ko');
 
-// ── 메뉴 로드 ──
-$_coreMenus = [];
-$_configFile = BASE_PATH . '/config/admin-menu.php';
-if (file_exists($_configFile)) {
-    $_coreMenus = include $_configFile;
-}
+// ── 메뉴 로드 (load_menu 공통 헬퍼) ──
+$_allMenus = function_exists('load_menu') ? load_menu('admin') : [];
 
-// 플러그인 메뉴 → 코어 메뉴와 동일한 구조로 변환
-$_pluginMenus = [];
+// 플러그인 동적 메뉴 (PluginManager의 menus.admin — plugin.json 스캔과 별도)
 if (isset($pluginManager)) {
     foreach ($pluginManager->getAdminMenus() as $_pm) {
-        $_pluginMenus[] = array_merge($_pm, ['position' => $_pm['position'] ?? 50]);
+        // load_menu에서 이미 추가된 것과 중복 방지
+        $_exists = false;
+        foreach ($_allMenus as $_existing) {
+            if (($existing['id'] ?? '') === ($_pm['id'] ?? '') || (($_existing['items'][0]['route'] ?? '') && ($_existing['items'][0]['route'] ?? '') === ($_pm['items'][0]['route'] ?? ''))) {
+                $_exists = true; break;
+            }
+        }
+        if (!$_exists) $_allMenus[] = array_merge($_pm, ['position' => $_pm['position'] ?? 50]);
     }
+    usort($_allMenus, fn($a, $b) => ($a['position'] ?? 50) <=> ($b['position'] ?? 50));
 }
 
-// 병합 + position 정렬
-$_allMenus = array_merge($_coreMenus, $_pluginMenus);
-usort($_allMenus, fn($a, $b) => ($a['position'] ?? 50) <=> ($b['position'] ?? 50));
-
 // ── 헬퍼 함수 ──
-// 다국어 텍스트 추출
+// 다국어 텍스트 추출 (load_menu가 label을 번역하지만 title은 배열일 수 있음)
 $_lt = function($val) use ($_locale) {
     if (!$val) return '';
     if (is_string($val)) return $val;

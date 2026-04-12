@@ -14,47 +14,13 @@
 
 $sidebarActive = $sidebarActive ?? 'dashboard';
 
-// ── config에서 메뉴 로드 ──
-$_allMypageMenus = [];
-if (defined('BASE_PATH') && file_exists(BASE_PATH . '/config/mypage-menu.php')) {
-    $_allMypageMenus = include BASE_PATH . '/config/mypage-menu.php';
-}
+// ── 메뉴 로드 (load_menu 공통 헬퍼 사용) ──
+$_allMypageMenus = function_exists('load_menu') ? load_menu('mypage') : [];
 
-// ── 플러그인 마이페이지 메뉴 병합 (plugin.json menus.mypage) ──
-if (isset($pluginManager)) {
-    foreach ($pluginManager->getLoaded() as $_pmId => $_manifest) {
-        foreach ($_manifest['menus']['mypage'] ?? [] as $_mi) {
-            $_mi['position'] = $_mi['position'] ?? 50;
-            $_mi['section'] = $_mi['section'] ?? 'main';
-            $_allMypageMenus[] = $_mi;
-        }
-    }
-} else {
-    // pluginManager 없을 때 — plugin.json 직접 스캔
-    $_pluginsDir = defined('BASE_PATH') ? BASE_PATH . '/plugins' : '';
-    if ($_pluginsDir && is_dir($_pluginsDir)) {
-        foreach (glob($_pluginsDir . '/*/plugin.json') as $_pjFile) {
-            $_pj = json_decode(file_get_contents($_pjFile), true);
-            foreach ($_pj['menus']['mypage'] ?? [] as $_mi) {
-                $_mi['position'] = $_mi['position'] ?? 50;
-                $_mi['section'] = $_mi['section'] ?? 'main';
-                $_allMypageMenus[] = $_mi;
-            }
-        }
-    }
-}
-
-// position으로 정렬
-usort($_allMypageMenus, fn($a, $b) => ($a['position'] ?? 50) <=> ($b['position'] ?? 50));
-
-// main / bottom 분리, label 번역 적용
+// main / bottom 분리
 $menuItems = [];
 $bottomItems = [];
 foreach ($_allMypageMenus as $_mi) {
-    // label이 번역 키면 __()로 변환
-    if (is_string($_mi['label'] ?? '') && str_contains($_mi['label'], '.')) {
-        $_mi['label'] = __($_mi['label']);
-    }
     if (($_mi['section'] ?? 'main') === 'bottom') {
         $bottomItems[] = $_mi;
     } else {

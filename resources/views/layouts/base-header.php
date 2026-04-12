@@ -167,21 +167,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
                                 <p class="text-xs text-gray-500 dark:text-zinc-400"><?= htmlspecialchars($currentUser['email'] ?? '') ?></p>
                             </div>
 <?php
-                            // config + 플러그인 기반 사용자 드롭다운 메뉴
-                            $_udMenus = file_exists(BASE_PATH . '/config/user-dropdown-menu.php')
-                                ? include(BASE_PATH . '/config/user-dropdown-menu.php') : [];
-                            // 플러그인 메뉴 병합 (plugin.json menus.user_dropdown)
-                            $_udPluginsDir = BASE_PATH . '/plugins';
-                            if (is_dir($_udPluginsDir)) {
-                                foreach (glob($_udPluginsDir . '/*/plugin.json') as $_udPj) {
-                                    $_udM = json_decode(file_get_contents($_udPj), true);
-                                    foreach ($_udM['menus']['user_dropdown'] ?? [] as $_udi) {
-                                        $_udi['position'] = $_udi['position'] ?? 50;
-                                        $_udMenus[] = $_udi;
-                                    }
-                                }
-                            }
-                            usort($_udMenus, fn($a, $b) => ($a['position'] ?? 50) <=> ($b['position'] ?? 50));
+                            $_udMenus = function_exists('load_menu') ? load_menu('user_dropdown') : [];
                             $_prevType = '';
                             foreach ($_udMenus as $_udi):
                                 $_udLabel = is_string($_udi['label'] ?? '') && str_contains($_udi['label'], '.') ? __($_udi['label']) : ($_udi['label'] ?? '');
