@@ -159,9 +159,4 @@ CREATE TABLE IF NOT EXISTS `rzx_board_admins` (
     UNIQUE KEY `uk_board_user` (`board_id`, `user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 기본 게시판
-INSERT IGNORE INTO `rzx_boards` (`id`, `slug`, `title`, `category`, `perm_write`, `list_columns`) VALUES
-(1, 'notice', 'Notice', 'notice', 'admin', '["no","title","nick_name","created_at","view_count"]'),
-(2, 'qna', 'Q&A', 'qna', 'member', '["no","title","nick_name","created_at","view_count"]'),
-(3, 'faq', 'FAQ', 'faq', 'admin', '["no","title","nick_name","created_at","view_count"]'),
-(4, 'free', 'Free Board', 'board', 'member', '["no","title","nick_name","created_at","view_count"]');
+-- 기본 게시판은 install.php Step 4에서 skin 포함하여 생성

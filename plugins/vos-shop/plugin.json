@@ -24,20 +24,32 @@
     "author": "VosCMS",
     "depends": [],
     "icon": "<svg fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'/></svg>",
-    "menus": [
-        {
-            "title": {
-                "ko": "업소 관리",
-                "en": "Shop Management",
-                "ja": "店舗管理"
-            },
-            "icon": "<svg fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'/></svg>",
-            "items": [
-                {"title": {"ko": "업소 목록", "en": "Shop List", "ja": "店舗一覧"}, "path": "shops"},
-                {"title": {"ko": "업소 승인", "en": "Shop Approval", "ja": "店舗承認"}, "path": "shops?filter=pending"}
-            ]
-        }
-    ],
+    "menus": {
+        "admin": [
+            {
+                "title": {
+                    "ko": "사업장 관리",
+                    "en": "Shop Management",
+                    "ja": "店舗管理",
+                    "de": "Geschäftsverwaltung",
+                    "es": "Gestión de Tiendas",
+                    "fr": "Gestion de Magasins",
+                    "id": "Manajemen Toko",
+                    "mn": "Дэлгүүр удирдлага",
+                    "ru": "Управление магазинами",
+                    "tr": "Mağaza Yönetimi",
+                    "vi": "Quản lý Cửa hàng",
+                    "zh_CN": "店铺管理",
+                    "zh_TW": "店鋪管理"
+                },
+                "icon": "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+                "items": [
+                    {"title": {"ko": "사업장 목록", "en": "Shop List", "ja": "店舗一覧"}, "route": "shops"},
+                    {"title": {"ko": "1:1 상담", "en": "Consultations", "ja": "相談"}, "route": "shops/consultations"}
+                ]
+            }
+        ]
+    },
     "routes": [
         {"type": "front", "path": "shop/register", "view": "customer/shop/register.php"},
         {"type": "front", "path": "shops", "view": "customer/shop/list.php"},

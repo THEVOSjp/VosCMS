@@ -46,11 +46,50 @@ if ($boardSlug) {
                 while ($f = $fStmt->fetch(\PDO::FETCH_ASSOC)) {
                     if (!isset($fileMap[$f['post_id']])) $fileMap[$f['post_id']] = $f['file_path'];
                 }
-                // content에서 첫 번째 img src 추출
+                // 다국어 번역 조회 (현재 로케일 → 영어 → 원본 폴백)
+                $_titleTr = [];
+                $_contentTr = [];
+                $postIds = array_column($posts, 'id');
+                if (!empty($postIds)) {
+                    $_titleKeys = implode(',', array_map(fn($id) => "'" . addslashes("board_post.{$id}.title") . "'", $postIds));
+                    $_contentKeys = implode(',', array_map(fn($id) => "'" . addslashes("board_post.{$id}.content") . "'", $postIds));
+                    $_allKeys = $_titleKeys . ',' . $_contentKeys;
+                    $_cl = $locale ?? (function_exists('current_locale') ? current_locale() : 'ko');
+
+                    $_trRows = $pdo->query("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN ({$_allKeys}) AND locale = '" . addslashes($_cl) . "'")->fetchAll(\PDO::FETCH_ASSOC);
+                    foreach ($_trRows as $_tr) {
+                        if (preg_match('/board_post\.(\d+)\.title/', $_tr['lang_key'], $_m)) {
+                            $_titleTr[(int)$_m[1]] = $_tr['content'];
+                        } elseif (preg_match('/board_post\.(\d+)\.content/', $_tr['lang_key'], $_m)) {
+                            $_contentTr[(int)$_m[1]] = $_tr['content'];
+                        }
+                    }
+
+                    if ($_cl !== 'en') {
+                        $_missingIds = array_filter($postIds, fn($id) => !isset($_titleTr[(int)$id]));
+                        if (!empty($_missingIds)) {
+                            $_fbKeys = implode(',', array_map(fn($id) => "'" . addslashes("board_post.{$id}.title") . "'", $_missingIds));
+                            $_fbCKeys = implode(',', array_map(fn($id) => "'" . addslashes("board_post.{$id}.content") . "'", $_missingIds));
+                            $_enRows = $pdo->query("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN ({$_fbKeys},{$_fbCKeys}) AND locale = 'en'")->fetchAll(\PDO::FETCH_ASSOC);
+                            foreach ($_enRows as $_tr) {
+                                if (preg_match('/board_post\.(\d+)\.title/', $_tr['lang_key'], $_m)) {
+                                    if (!isset($_titleTr[(int)$_m[1]])) $_titleTr[(int)$_m[1]] = $_tr['content'];
+                                } elseif (preg_match('/board_post\.(\d+)\.content/', $_tr['lang_key'], $_m)) {
+                                    if (!isset($_contentTr[(int)$_m[1]])) $_contentTr[(int)$_m[1]] = $_tr['content'];
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 번역 적용 + 이미지 추출
                 foreach ($posts as &$p) {
+                    $_pid = (int)$p['id'];
+                    if (isset($_titleTr[$_pid])) $p['title'] = $_titleTr[$_pid];
+                    $content = $_contentTr[$_pid] ?? $p['content'];
                     $p['_image'] = $fileMap[$p['id']] ?? '';
                     if (!$p['_image'] && $showImage) {
-                        if (preg_match('/<img[^>]+src=["\']([^"\']+)/i', $p['content'] ?? '', $m)) {
+                        if (preg_match('/<img[^>]+src=["\']([^"\']+)/i', $content ?? '', $m)) {
                             $p['_image'] = $m[1];
                         }
                     }
@@ -59,8 +98,7 @@ if ($boardSlug) {
                     } elseif ($p['_image'] && str_starts_with($p['_image'], '/')) {
                         $p['_image'] = $baseUrl . $p['_image'];
                     }
-                    // 설명 텍스트 (HTML 태그 제거)
-                    $p['_desc'] = mb_strimwidth(strip_tags($p['content'] ?? ''), 0, $descLen, '...');
+                    $p['_desc'] = mb_strimwidth(strip_tags($content ?? ''), 0, $descLen, '...');
                 }
                 unset($p);
             }

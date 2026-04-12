@@ -38,13 +38,43 @@ if ($_isBlocked) {
 }
 
 define('BASE_PATH', __DIR__);
-$step = $_POST['step'] ?? $_GET['step'] ?? '1';
+
+// 세션 시작 (언어 선택 저장용)
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+// 번역 시스템 로드
+$_langData = file_exists(BASE_PATH . '/resources/lang/install.php')
+    ? include(BASE_PATH . '/resources/lang/install.php')
+    : ['languages' => ['en' => 'English'], 'translations' => ['en' => []]];
+$_installLangs = $_langData['languages'];
+$_it = $_langData['translations'];
+
+// .env 없이 최초 접속 = 새 설치 → 이전 세션 초기화
+if (!isset($_POST['step']) && !isset($_GET['step']) && !file_exists(BASE_PATH . '/.env')) {
+    unset($_SESSION['install_locale'], $_SESSION['install_db'], $_SESSION['install_tables_done'], $_SESSION['install_tables_count']);
+}
+
+$installLocale = $_SESSION['install_locale'] ?? null;
+$step = $_POST['step'] ?? $_GET['step'] ?? ($installLocale ? '1' : '0');
 $errors = [];
 $success = '';
+
+// 번역 헬퍼
+function __t(string $key): string {
+    global $_it, $installLocale;
+    return $_it[$installLocale][$key] ?? $_it['en'][$key] ?? $key;
+}
 
 // Step 처리
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     switch ($step) {
+        case '0': // 언어 선택
+            $installLocale = $_POST['install_locale'] ?? 'en';
+            if (!isset($_installLangs[$installLocale])) $installLocale = 'en';
+            $_SESSION['install_locale'] = $installLocale;
+            $step = '1';
+            break;
+
         case '2': // DB 연결 테스트
             $dbHost = trim($_POST['db_host'] ?? '127.0.0.1');
             $dbPort = trim($_POST['db_port'] ?? '3306');
@@ -54,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $dbPrefix = trim($_POST['db_prefix'] ?? 'rzx_');
 
             if (!$dbName || !$dbUser) {
-                $errors[] = 'DB 이름과 사용자명은 필수입니다.';
+                $errors[] = __t('db_required');
             } else {
                 try {
                     $pdo = new PDO(
@@ -67,17 +97,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $pdo->exec("USE `{$dbName}`");
 
                     // 세션에 저장
-                    session_start();
                     $_SESSION['install_db'] = compact('dbHost', 'dbPort', 'dbName', 'dbUser', 'dbPass', 'dbPrefix');
                     $step = '3';
                 } catch (PDOException $e) {
-                    $errors[] = 'DB 연결 실패: ' . $e->getMessage();
+                    $errors[] = __t('db_fail') . ': ' . $e->getMessage();
                 }
             }
             break;
 
         case '3': // 테이블 생성
-            session_start();
             $db = $_SESSION['install_db'] ?? null;
             if (!$db) { $step = '2'; break; }
 
@@ -109,12 +137,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['install_tables_count'] = $executed;
                 $step = '4';
             } catch (PDOException $e) {
-                $errors[] = '테이블 생성 실패: ' . $e->getMessage();
+                $errors[] = __t('table_fail') . ': ' . $e->getMessage();
             }
             break;
 
         case '4': // 관리자 계정 생성
-            session_start();
             $db = $_SESSION['install_db'] ?? null;
             if (!$db) { $step = '2'; break; }
 
@@ -128,9 +155,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $timezone = $_POST['timezone'] ?? 'Asia/Seoul';
 
             if (!$adminEmail || !$adminPass) {
-                $errors[] = '관리자 이메일과 비밀번호는 필수입니다.';
+                $errors[] = __t('admin_required');
             } elseif (strlen($adminPass) < 8) {
-                $errors[] = '비밀번호는 8자 이상이어야 합니다.';
+                $errors[] = __t('pw_length');
             } else {
                 try {
                     $pdo = new PDO(
@@ -165,9 +192,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'site_timezone' => $timezone,
                         'default_locale' => $locale,
                         'site_locale' => $locale,
+                        'default_language' => $locale,
+                        'force_locale' => '1',
+                        'language_auto_detect' => '0',
                         'home_page' => 'home',
                         'site_layout' => 'modern',
                     ];
+
+                    // 설치한 언어로 세션/쿠키 즉시 설정
+                    $_SESSION['locale'] = $locale;
+                    if (!headers_sent()) {
+                        setcookie('locale', $locale, ['expires' => time() + 86400 * 365, 'path' => '/', 'httponly' => false, 'samesite' => 'Lax']);
+                    }
                     $settingStmt = $pdo->prepare("INSERT INTO {$pfx}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
                     foreach ($settings as $k => $v) {
                         $settingStmt->execute([$k, $v]);
@@ -179,13 +215,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $pdo->exec("INSERT IGNORE INTO {$pfx}sitemaps (id, title, sort_order) VALUES (3, 'Footer Menu', 2)");
                     $pdo->exec("INSERT IGNORE INTO {$pfx}sitemaps (id, title, sort_order) VALUES (4, 'Unlinked', 99)");
 
-                    // Main Menu — 홈 + 커뮤니티
+                    // Main Menu
                     $menuStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}menu_items (sitemap_id, parent_id, title, url, target, menu_type, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                     $menuStmt->execute([1, null, 'Home', 'home', '_self', 'page', 1, 1]);
                     $menuStmt->execute([1, null, 'Notice', 'notice', '_self', 'board', 2, 1]);
                     $menuStmt->execute([1, null, 'Free Board', 'free', '_self', 'board', 3, 1]);
                     $menuStmt->execute([1, null, 'Q&A', 'qna', '_self', 'board', 4, 1]);
                     $menuStmt->execute([1, null, 'FAQ', 'faq', '_self', 'board', 5, 1]);
+
+                    // 메뉴 다국어 번역
+                    $_menuTrStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}translations (lang_key, locale, content) VALUES (?, ?, ?)");
+                    $_menuTranslations = [
+                        1 => ['ko'=>'홈','en'=>'Home','ja'=>'ホーム','de'=>'Startseite','es'=>'Inicio','fr'=>'Accueil','id'=>'Beranda','mn'=>'Нүүр','ru'=>'Главная','tr'=>'Ana Sayfa','vi'=>'Trang chủ','zh_CN'=>'首页','zh_TW'=>'首頁'],
+                        2 => ['ko'=>'공지사항','en'=>'Notice','ja'=>'お知らせ','de'=>'Ankündigungen','es'=>'Avisos','fr'=>'Annonces','id'=>'Pengumuman','mn'=>'Мэдэгдэл','ru'=>'Объявления','tr'=>'Duyurular','vi'=>'Thông báo','zh_CN'=>'公告','zh_TW'=>'公告'],
+                        3 => ['ko'=>'자유게시판','en'=>'Free Board','ja'=>'自由掲示板','de'=>'Freies Forum','es'=>'Foro Libre','fr'=>'Forum Libre','id'=>'Forum Bebas','mn'=>'Чөлөөт самбар','ru'=>'Свободный форум','tr'=>'Serbest Forum','vi'=>'Diễn đàn tự do','zh_CN'=>'自由论坛','zh_TW'=>'自由論壇'],
+                        4 => ['ko'=>'질문과 답변','en'=>'Q&A','ja'=>'Q&A','de'=>'F&A','es'=>'Preguntas','fr'=>'Questions','id'=>'Tanya Jawab','mn'=>'Асуулт хариулт','ru'=>'Вопросы','tr'=>'Sorular','vi'=>'Hỏi đáp','zh_CN'=>'问答','zh_TW'=>'問答'],
+                        5 => ['ko'=>'자주 묻는 질문','en'=>'FAQ','ja'=>'よくある質問','de'=>'FAQ','es'=>'FAQ','fr'=>'FAQ','id'=>'FAQ','mn'=>'Түгээмэл асуулт','ru'=>'FAQ','tr'=>'SSS','vi'=>'FAQ','zh_CN'=>'常见问题','zh_TW'=>'常見問題'],
+                    ];
+                    foreach ($_menuTranslations as $_menuId => $_trs) {
+                        foreach ($_trs as $_tLocale => $_tContent) {
+                            $_menuTrStmt->execute(["menu_item.{$_menuId}.title", $_tLocale, $_tContent]);
+                        }
+                    }
 
                     // Footer Menu — 법적 페이지
                     $menuStmt->execute([3, null, 'Terms of Service', 'terms', '_self', 'page', 1, 1]);
@@ -198,8 +249,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Unlinked — 메뉴 미연결 페이지 관리용
                     $menuStmt->execute([4, null, $siteName, 'index', '_self', 'page', 1, 1]);
 
-                    // 기본 페이지 (홈)
-                    $pdo->prepare("INSERT IGNORE INTO {$pfx}page_contents (page_slug, page_type, locale, title, content, is_system, is_active) VALUES ('index', 'widget', ?, ?, '', 1, 1)")
+                    // 기본 페이지 — 홈 (시스템, 삭제 불가)
+                    $_homeTitle = ['ko'=>'홈','en'=>'Home','ja'=>'ホーム','de'=>'Startseite','es'=>'Inicio','fr'=>'Accueil'][$locale] ?? 'Home';
+                    $pdo->prepare("INSERT IGNORE INTO {$pfx}page_contents (page_slug, page_type, locale, title, content, is_system, is_active) VALUES ('home', 'widget', ?, ?, '', 1, 1)")
+                        ->execute([$locale, $_homeTitle]);
+
+                    // 기본 페이지 — index (사용자, 리뉴얼용)
+                    $pdo->prepare("INSERT IGNORE INTO {$pfx}page_contents (page_slug, page_type, locale, title, content, is_system, is_active) VALUES ('index', 'widget', ?, ?, '', 0, 1)")
                         ->execute([$locale, $siteName]);
 
                     // 법적 페이지 13개국어 (시드 파일에서 로드)
@@ -329,19 +385,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     // 기본 게시판 4개 (공지, Q&A, FAQ, 자유게시판)
-                    $boardStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}boards (id, slug, title, category, perm_write, perm_read, list_columns, is_active) VALUES (?, ?, ?, ?, ?, 'all', ?, 1)");
+                    $boardStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}boards (id, slug, title, category, perm_write, perm_read, list_columns, skin, per_page, is_active) VALUES (?, ?, ?, ?, ?, 'all', ?, ?, ?, 1)");
                     $listCols = json_encode(['no', 'title', 'nick_name', 'created_at', 'view_count']);
-                    $boardStmt->execute([1, 'notice', 'Notice', 'notice', 'admin', $listCols]);
-                    $boardStmt->execute([2, 'qna', 'Q&A', 'qna', 'member', $listCols]);
-                    $boardStmt->execute([3, 'faq', 'FAQ', 'faq', 'admin', $listCols]);
-                    $boardStmt->execute([4, 'free', 'Free Board', 'board', 'member', $listCols]);
+                    $boardStmt->execute([1, 'notice', 'Notice', 'notice', 'admin', $listCols, 'default', 20]);
+                    $boardStmt->execute([2, 'qna', 'Q&A', 'qna', 'member', $listCols, 'default', 20]);
+                    $boardStmt->execute([3, 'faq', 'FAQ', 'faq', 'admin', $listCols, 'faq', 10]);
+                    $boardStmt->execute([4, 'free', 'Free Board', 'board', 'member', $listCols, 'default', 20]);
 
-                    // 샘플 게시글
-                    $postStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}board_posts (board_id, title, content, nick_name, view_count, is_notice, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
-                    $postStmt->execute([1, 'Welcome to VosCMS!', '<p>Thank you for installing VosCMS. This is your first notice. You can edit or delete this post from the admin panel.</p><p>VosCMS is a powerful, plugin-based CMS that supports 13 languages and provides a flexible layout system.</p>', 'Admin', 10, 1]);
-                    $postStmt->execute([4, 'Hello! This is a sample post.', '<p>This is a sample post on the Free Board. Feel free to write anything here.</p><p>You can customize board settings, skins, and permissions from the admin panel.</p>', 'VosCMS', 5, 0]);
-                    $postStmt->execute([2, 'How do I change my password?', '<p>I forgot my password. How can I reset it?</p>', 'User', 8, 0]);
-                    $postStmt->execute([3, 'What is VosCMS?', '<p><strong>Q:</strong> What is VosCMS?</p><p><strong>A:</strong> VosCMS (Value Of Style CMS) is a modular content management system with plugin architecture, supporting 13 languages, multiple layout skins, and extensible features through a marketplace.</p>', 'Admin', 15, 0]);
+                    // 게시판 시드 데이터 (카테고리 + 게시글 + 다국어 번역)
+                    $_boardSeedFile = BASE_PATH . '/database/seeds/board_data.php';
+                    if (file_exists($_boardSeedFile)) {
+                        $_boardSeed = include $_boardSeedFile;
+
+                        // 게시판 slug → id 매핑
+                        $_boardMap = ['notice'=>1, 'qna'=>2, 'faq'=>3, 'free'=>4];
+
+                        // 카테고리 생성
+                        $_catMap = []; // slug → id
+                        if (!empty($_boardSeed['categories'])) {
+                            $_catStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}board_categories (board_id, name, slug, sort_order, is_active) VALUES (?, ?, ?, ?, 1)");
+                            $_catTrStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}translations (lang_key, locale, content) VALUES (?, ?, ?)");
+                            foreach ($_boardSeed['categories'] as $_cat) {
+                                $_boardId = $_boardMap[$_cat['board_slug']] ?? null;
+                                if (!$_boardId) continue;
+                                $_catStmt->execute([$_boardId, $_cat['name'], $_cat['slug'], $_cat['sort']]);
+                                $_catId = (int)$pdo->lastInsertId();
+                                if ($_catId > 0) {
+                                    $_catMap[$_cat['slug']] = $_catId;
+                                    foreach ($_cat['translations'] ?? [] as $_tLocale => $_tContent) {
+                                        $_catTrStmt->execute(["board_category.{$_catId}.name", $_tLocale, $_tContent]);
+                                    }
+                                }
+                            }
+                        }
+
+                        // 게시글 생성
+                        if (!empty($_boardSeed['posts'])) {
+                            $_postStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}board_posts (board_id, title, content, nick_name, view_count, is_notice, category_id, original_locale, source_locale, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                            $_postTrStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}translations (lang_key, locale, content) VALUES (?, ?, ?)");
+                            foreach ($_boardSeed['posts'] as $_post) {
+                                $_boardId = $_boardMap[$_post['board_slug']] ?? null;
+                                if (!$_boardId) continue;
+                                $_catId = isset($_post['cat_slug']) ? ($_catMap[$_post['cat_slug']] ?? null) : null;
+                                $_postStmt->execute([$_boardId, $_post['title'], $_post['content'], $_post['nick_name'], rand(5,30), $_post['is_notice'], $_catId, $_post['original_locale'], $_post['original_locale']]);
+                                $_postId = (int)$pdo->lastInsertId();
+                                if ($_postId > 0) {
+                                    foreach ($_post['title_translations'] ?? [] as $_tLocale => $_tContent) {
+                                        $_postTrStmt->execute(["board_post.{$_postId}.title", $_tLocale, $_tContent]);
+                                    }
+                                    foreach ($_post['content_translations'] ?? [] as $_tLocale => $_tContent) {
+                                        $_postTrStmt->execute(["board_post.{$_postId}.content", $_tLocale, $_tContent]);
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     // 기본 회원 등급
                     $gradeStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}member_grades (id, name, slug, level, discount_rate, point_rate, color, sort_order, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -349,6 +447,123 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $gradeStmt->execute([2, 'Silver', 'silver', 1, 2, 0.5, '#bdbdbd', 1, 0]);
                     $gradeStmt->execute([3, 'Gold', 'gold', 2, 3, 1, '#ffd500', 2, 0]);
                     $gradeStmt->execute([4, 'VIP', 'vip', 3, 5, 2, '#ff528e', 3, 0]);
+
+                    // 회원 등급 다국어 번역 (13개국어)
+                    $_gradeTranslations = [
+                        1 => ['ko'=>'일반','en'=>'Normal','ja'=>'一般','de'=>'Standard','es'=>'Normal','fr'=>'Normal','id'=>'Normal','mn'=>'Энгийн','ru'=>'Обычный','tr'=>'Normal','vi'=>'Thường','zh_CN'=>'普通','zh_TW'=>'普通'],
+                        2 => ['ko'=>'실버','en'=>'Silver','ja'=>'シルバー','de'=>'Silber','es'=>'Plata','fr'=>'Argent','id'=>'Silver','mn'=>'Мөнгө','ru'=>'Серебро','tr'=>'Gümüş','vi'=>'Bạc','zh_CN'=>'白银','zh_TW'=>'白銀'],
+                        3 => ['ko'=>'골드','en'=>'Gold','ja'=>'ゴールド','de'=>'Gold','es'=>'Oro','fr'=>'Or','id'=>'Emas','mn'=>'Алт','ru'=>'Золото','tr'=>'Altın','vi'=>'Vàng','zh_CN'=>'黄金','zh_TW'=>'黃金'],
+                        4 => ['ko'=>'VIP','en'=>'VIP','ja'=>'VIP','de'=>'VIP','es'=>'VIP','fr'=>'VIP','id'=>'VIP','mn'=>'VIP','ru'=>'VIP','tr'=>'VIP','vi'=>'VIP','zh_CN'=>'VIP','zh_TW'=>'VIP'],
+                    ];
+                    $_gradeTrStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}translations (lang_key, locale, content) VALUES (?, ?, ?)");
+                    foreach ($_gradeTranslations as $_gid => $_gtr) {
+                        foreach ($_gtr as $_gloc => $_gname) {
+                            $_gradeTrStmt->execute(["member_grade.{$_gid}.name", $_gloc, $_gname]);
+                        }
+                    }
+
+                    // ─── 홈 페이지 기본 위젯 배치 ───
+                    // 위젯 ID 조회 (WidgetLoader가 자동 등록했을 수 있으므로)
+                    $_widgetIds = [];
+                    $_wStmt = $pdo->query("SELECT id, slug FROM {$pfx}widgets WHERE slug IN ('hero-cta2','stats','features')");
+                    while ($_w = $_wStmt->fetch(PDO::FETCH_ASSOC)) $_widgetIds[$_w['slug']] = (int)$_w['id'];
+
+                    // 위젯이 DB에 없으면 수동 등록
+                    if (empty($_widgetIds['hero-cta2'])) {
+                        $pdo->exec("INSERT IGNORE INTO {$pfx}widgets (slug, type, is_active) VALUES ('hero-cta2','hero-cta2',1)");
+                        $_widgetIds['hero-cta2'] = (int)$pdo->lastInsertId();
+                    }
+                    if (empty($_widgetIds['stats'])) {
+                        $pdo->exec("INSERT IGNORE INTO {$pfx}widgets (slug, type, is_active) VALUES ('stats','stats',1)");
+                        $_widgetIds['stats'] = (int)$pdo->lastInsertId();
+                    }
+                    if (empty($_widgetIds['features'])) {
+                        $pdo->exec("INSERT IGNORE INTO {$pfx}widgets (slug, type, is_active) VALUES ('features','features',1)");
+                        $_widgetIds['features'] = (int)$pdo->lastInsertId();
+                    }
+
+                    if (!empty($_widgetIds['hero-cta2'])) {
+                        $heroConfig = json_encode([
+                            'tagline_top' => ['ko'=>'플러그인과 위젯, 스킨, 테마로 자유롭게 확장하는','en'=>'Freely extensible with plugins and themes','ja'=>'プラグインとテーマで自由に拡張できる'],
+                            'highlight_word' => ['ko'=>'VosCMS','en'=>'VosCMS','ja'=>'VosCMS'],
+                            'tagline_bottom' => ['ko'=>'오픈소스 CMS','en'=>'Open Source CMS','ja'=>'オープンソースCMS'],
+                            'description' => ['ko'=>"VosCMS는 누구나 홈페이지를 만들고,\n플러그인과 위젯, 스킨, 테마를 사용해서\n원하는 대로 꾸밀 수 있는 오픈소스 CMS입니다.",'en'=>'VosCMS is an open-source CMS that lets anyone build a website and customize it with plugins and themes.','ja'=>'VosCMSは誰でもホームページを作成し、プラグインとテーマで自由にカスタマイズできるオープンソースCMSです。'],
+                            'typing_words' => ['ko'=>"커뮤니티 사이트\n비즈니스 홈페이지\n온라인 쇼핑몰\n포트폴리오 사이트\n예약 플랫폼",'en'=>"Community Site\nBusiness Website\nOnline Store\nPortfolio\nBooking Platform",'ja'=>"コミュニティサイト\nビジネスサイト\nオンラインストア\nポートフォリオ\n予約プラットフォーム"],
+                            'typing_speed' => 'normal',
+                            'primary_btn_text' => ['ko'=>'관리자 화면','en'=>'Admin Panel','ja'=>'管理画面'],
+                            'primary_btn_url' => '/' . $adminPath,
+                            'primary_btn_sub' => '',
+                            'secondary_btn_text' => '','secondary_btn_url' => '','secondary_btn_sub' => '',
+                            'requirements' => 'GPLv2 | PHP 8.1+ | MySQL or MariaDB',
+                            'highlight_color' => '#4f46e5','primary_btn_color' => '#4f46e5','bg_style' => 'light',
+                        ], JSON_UNESCAPED_UNICODE);
+
+                        $statsConfig = json_encode([
+                            'items' => [
+                                ['number'=>'22','label'=>['ko'=>'위젯','en'=>'Widgets','ja'=>'ウィジェット']],
+                                ['number'=>'13','label'=>['ko'=>'지원 언어','en'=>'Languages','ja'=>'対応言語']],
+                                ['number'=>'100%','label'=>['ko'=>'오픈소스','en'=>'Open Source','ja'=>'オープンソース']],
+                                ['number'=>'24/7','label'=>['ko'=>'커뮤니티 지원','en'=>'Community Support','ja'=>'コミュニティサポート']],
+                            ]
+                        ], JSON_UNESCAPED_UNICODE);
+
+                        $featuresConfig = json_encode([
+                            'title' => ['ko'=>'왜 VosCMS 인가요?','en'=>'Why VosCMS?','ja'=>'なぜVosCMS？','de'=>'Warum VosCMS?','es'=>'¿Por qué VosCMS?','fr'=>'Pourquoi VosCMS ?','id'=>'Mengapa VosCMS?','mn'=>'Яагаад VosCMS?','ru'=>'Почему VosCMS?','tr'=>'Neden VosCMS?','vi'=>'Tại sao chọn VosCMS?','zh_CN'=>'为什么选择 VosCMS？','zh_TW'=>'為什麼選擇 VosCMS？'],
+                            'subtitle' => ['ko'=>"VosCMS는 오픈소스 CMS 및 프레임워크입니다.\n누구나 홈페이지를 시작할 수 있는 안정적인 기초가 되어 주고,\n플러그인과 위젯, 스킨, 테마를 사용해서 원하는 대로 꾸밀 수 있습니다.",'en'=>"VosCMS is an open-source CMS and framework.\nIt provides a stable foundation for anyone to start a website,\nand lets you customize it with plugins, widgets, skins, and themes.",'ja'=>"VosCMSはオープンソースのCMS及びフレームワークです。\n誰でもホームページを始められる安定した基盤を提供し、\nプラグインやウィジェット、スキン、テーマで自由にカスタマイズできます。"],
+                            'columns' => '3',
+                            'feature_items' => [
+                                ['icon'=>'mobile','color'=>'blue','title'=>['ko'=>'모바일 최적화','en'=>'Mobile Optimized','ja'=>'モバイル最適化','de'=>'Mobil optimiert','es'=>'Optimización móvil','fr'=>'Optimisé mobile','id'=>'Optimasi Mobile','mn'=>'Мобайл оновчлол','ru'=>'Мобильная оптимизация','tr'=>'Mobil Optimizasyon','vi'=>'Tối ưu di động','zh_CN'=>'移动端优化','zh_TW'=>'行動裝置優化'],'description'=>['ko'=>'언제 어디서나 편리하게 사용 할 수 있게 PWA 지원으로 안드로이드, 애플 모두 사용 가능한 앱이 제공 됩니다.','en'=>'PWA support enables app-like experience on both Android and iOS, accessible anytime, anywhere.','ja'=>'PWA対応でAndroid・iOS両方で使えるアプリが提供されます。いつでもどこでも便利に利用可能。']],
+                                ['icon'=>'cube','color'=>'green','title'=>['ko'=>'일정한 성능','en'=>'Consistent Performance','ja'=>'一定のパフォーマンス','de'=>'Konstante Leistung','es'=>'Rendimiento constante','fr'=>'Performance constante','id'=>'Performa Konsisten','mn'=>'Тогтвортой гүйцэтгэл','ru'=>'Стабильная производительность','tr'=>'Tutarlı Performans','vi'=>'Hiệu suất ổn định','zh_CN'=>'稳定性能','zh_TW'=>'穩定效能'],'description'=>['ko'=>'홈페이지가 성장해도 걱정 없어요! 동시접속자 1만 명이 넘는 대형 커뮤니티들도 VOS CMS를 적극 도입하고 있어요.','en'=>'No worries as your site grows! Large communities with 10,000+ concurrent users actively use VosCMS.','ja'=>'サイトが成長しても心配なし！同時接続1万人超の大型コミュニティもVosCMSを採用。']],
+                                ['icon'=>'shield','color'=>'purple','title'=>['ko'=>'완벽한 보안 솔루션','en'=>'Complete Security','ja'=>'完全なセキュリティ','de'=>'Vollständige Sicherheit','es'=>'Seguridad completa','fr'=>'Sécurité complète','id'=>'Keamanan Lengkap','mn'=>'Бүрэн аюулгүй байдал','ru'=>'Полная безопасность','tr'=>'Tam Güvenlik','vi'=>'Bảo mật toàn diện','zh_CN'=>'完善的安全方案','zh_TW'=>'完善的安全方案'],'description'=>['ko'=>'회원의 중요 정보는 모두 암호화하여 저장 됩니다. 사이트 해킹을 당해도 회원 정보는 안전하게 보호 됩니다.','en'=>'All sensitive member data is encrypted. Even if the site is hacked, member information stays protected.','ja'=>'会員の重要情報はすべて暗号化して保存。サイトがハッキングされても会員情報は安全に保護されます。']],
+                                ['icon'=>'heart','color'=>'red','title'=>['ko'=>'다양한 기능과 디자인','en'=>'Rich Features & Design','ja'=>'豊富な機能とデザイン','de'=>'Vielfältige Funktionen','es'=>'Funciones variadas','fr'=>'Fonctionnalités riches','id'=>'Fitur Beragam','mn'=>'Олон функц, дизайн','ru'=>'Богатый функционал','tr'=>'Zengin Özellikler','vi'=>'Tính năng phong phú','zh_CN'=>'丰富的功能和设计','zh_TW'=>'豐富的功能和設計'],'description'=>['ko'=>'계속 개발되어 공급되는 다양한 기능과 자유로운 디자인이 가능하게 많은 위젯과 스킨이 풍부하게 제공 됩니다.','en'=>'A wide variety of widgets and skins are provided for diverse functionality and free design customization.','ja'=>'多様な機能と自由なデザインを可能にする豊富なウィジェットとスキンが提供されます。']],
+                                ['icon'=>'check-circle','color'=>'orange','title'=>['ko'=>'꾸준한 업데이트','en'=>'Steady Updates','ja'=>'着実なアップデート','de'=>'Regelmäßige Updates','es'=>'Actualizaciones constantes','fr'=>'Mises à jour régulières','id'=>'Pembaruan Rutin','mn'=>'Тогтмол шинэчлэлт','ru'=>'Регулярные обновления','tr'=>'Düzenli Güncellemeler','vi'=>'Cập nhật đều đặn','zh_CN'=>'持续更新','zh_TW'=>'持續更新'],'description'=>['ko'=>'개발 후 지금까지 꾸준한 업데이트와 보안패치를 만들어 왔어요. 오래 운영할 홈페이지를 위한 최적의 선택!','en'=>'Consistent updates and security patches since launch. The best choice for long-running websites!','ja'=>'開発以来、着実なアップデートとセキュリティパッチを提供。長期運営サイトに最適！']],
+                                ['icon'=>'chat','color'=>'indigo','title'=>['ko'=>'같이 배우는 커뮤니티','en'=>'Learning Community','ja'=>'共に学ぶコミュニティ','de'=>'Lernende Gemeinschaft','es'=>'Comunidad de aprendizaje','fr'=>"Communauté d'apprentissage",'id'=>'Komunitas Belajar','mn'=>'Хамтдаа суралцах','ru'=>'Обучающее сообщество','tr'=>'Öğrenen Topluluk','vi'=>'Cộng đồng học hỏi','zh_CN'=>'共同学习的社区','zh_TW'=>'共同學習的社群'],'description'=>['ko'=>'질문으로 문제를 해결하는 과정을 통해, 개발자도 사용자도 한 걸음씩 성장합니다.','en'=>'Through the process of solving problems with questions, both developers and users grow step by step.','ja'=>'質問で問題を解決する過程を通じて、開発者もユーザーも一歩ずつ成長します。']],
+                            ],
+                        ], JSON_UNESCAPED_UNICODE);
+
+                        // grid-section 위젯으로 3단 레이아웃 (Notice, Q&A, FAQ)
+                        if (empty($_widgetIds['grid-section'])) {
+                            $pdo->exec("INSERT IGNORE INTO {$pfx}widgets (slug, type, is_active) VALUES ('grid-section','grid-section',1)");
+                            $_widgetIds['grid-section'] = (int)$pdo->lastInsertId();
+                        }
+
+                        $gridConfig = json_encode([
+                            'layout' => '3-equal',
+                            'gap' => '6',
+                            'bg_color' => 'transparent',
+                            'cells' => [
+                                [
+                                    'type' => 'board-list',
+                                    'board_slug' => 'notice',
+                                    'title' => ['ko'=>'공지사항','en'=>'Notice','ja'=>'お知らせ','de'=>'Ankündigungen','es'=>'Avisos','fr'=>'Annonces','id'=>'Pengumuman','mn'=>'Мэдэгдэл','ru'=>'Объявления','tr'=>'Duyurular','vi'=>'Thông báo','zh_CN'=>'公告','zh_TW'=>'公告'],
+                                    'count' => 5,
+                                    'show_more' => 1,
+                                ],
+                                [
+                                    'type' => 'board-list',
+                                    'board_slug' => 'qna',
+                                    'title' => ['ko'=>'Q&A','en'=>'Q&A','ja'=>'Q&A','de'=>'Q&A','es'=>'Q&A','fr'=>'Q&A','id'=>'Q&A','mn'=>'Асуулт хариулт','ru'=>'Вопросы','tr'=>'Soru Cevap','vi'=>'Hỏi đáp','zh_CN'=>'问答','zh_TW'=>'問答'],
+                                    'count' => 5,
+                                    'show_more' => 1,
+                                ],
+                                [
+                                    'type' => 'board-list',
+                                    'board_slug' => 'faq',
+                                    'title' => ['ko'=>'FAQ','en'=>'FAQ','ja'=>'FAQ','de'=>'FAQ','es'=>'FAQ','fr'=>'FAQ','id'=>'FAQ','mn'=>'Түгээмэл асуулт','ru'=>'FAQ','tr'=>'SSS','vi'=>'FAQ','zh_CN'=>'常见问题','zh_TW'=>'常見問題'],
+                                    'count' => 5,
+                                    'show_more' => 1,
+                                ],
+                            ],
+                        ], JSON_UNESCAPED_UNICODE);
+
+                        $pwStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}page_widgets (page_slug, widget_id, sort_order, config) VALUES ('home', ?, ?, ?)");
+                        $pwStmt->execute([$_widgetIds['hero-cta2'], 0, $heroConfig]);
+                        $pwStmt->execute([$_widgetIds['stats'], 1, $statsConfig]);
+                        $pwStmt->execute([$_widgetIds['features'], 2, $featuresConfig]);
+                        if (!empty($_widgetIds['grid-section'])) {
+                            $pwStmt->execute([$_widgetIds['grid-section'], 3, $gridConfig]);
+                        }
+                    }
 
                     // ─── 라이선스 서버에서 키 발급 ───
                     $licenseDomain = strtolower(preg_replace('#^https?://#', '', rtrim($siteUrl, '/')));
@@ -437,16 +652,15 @@ LICENSE_SERVER={$licenseServer}
                     $_SESSION['install_license_registered'] = $licenseRegistered;
                     $step = '5';
                 } catch (PDOException $e) {
-                    $errors[] = '설정 저장 실패: ' . $e->getMessage();
+                    $errors[] = __t('save_fail') . ': ' . $e->getMessage();
                 }
             }
             break;
     }
 }
-if (!isset($_SESSION)) session_start();
 ?>
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="<?= htmlspecialchars($installLocale ?? 'en') ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -463,18 +677,20 @@ if (!isset($_SESSION)) session_start();
         <p class="text-zinc-500 mt-1">Value Of Style CMS</p>
     </div>
 
+    <?php if ($step !== '0'): // Step 0에서는 프로그레스 바 숨김 ?>
     <!-- 프로그레스 -->
     <div class="flex items-center justify-center gap-2 mb-8">
         <?php for ($i = 1; $i <= 5; $i++): ?>
         <div class="flex items-center">
             <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
                 <?= $i < $step ? 'bg-blue-600 text-white' : ($i == $step ? 'bg-blue-600 text-white ring-4 ring-blue-200' : 'bg-zinc-300 text-zinc-500') ?>">
-                <?= $i < $step ? '✓' : $i ?>
+                <?= $i < $step ? '&#10003;' : $i ?>
             </div>
             <?php if ($i < 5): ?><div class="w-8 h-0.5 <?= $i < $step ? 'bg-blue-600' : 'bg-zinc-300' ?>"></div><?php endif; ?>
         </div>
         <?php endfor; ?>
     </div>
+    <?php endif; ?>
 
     <div class="bg-white rounded-2xl shadow-lg p-8">
 
@@ -484,8 +700,26 @@ if (!isset($_SESSION)) session_start();
     </div>
     <?php endif; ?>
 
-    <?php if ($step === '1' || $step === 1): // 환경 체크 ?>
-    <h2 class="text-xl font-bold text-zinc-800 mb-6">1. 환경 체크</h2>
+    <?php if ($step === '0'): // 언어 선택 ?>
+    <h2 class="text-xl font-bold text-zinc-800 mb-2 text-center">Select Language</h2>
+    <p class="text-sm text-zinc-500 mb-6 text-center">Choose your installation language</p>
+    <form method="POST">
+        <input type="hidden" name="step" value="0">
+        <div class="grid grid-cols-2 gap-3">
+            <?php foreach ($_installLangs as $_lCode => $_lName): ?>
+            <label class="flex items-center gap-3 p-3 border border-zinc-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                <input type="radio" name="install_locale" value="<?= $_lCode ?>" <?= $_lCode === 'ko' ? 'checked' : '' ?> class="text-blue-600 focus:ring-blue-500">
+                <span class="text-sm font-medium text-zinc-700"><?= $_lName ?></span>
+            </label>
+            <?php endforeach; ?>
+        </div>
+        <button type="submit" class="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">
+            Start Installation &rarr;
+        </button>
+    </form>
+
+    <?php elseif ($step === '1' || $step === 1): // 환경 체크 ?>
+    <h2 class="text-xl font-bold text-zinc-800 mb-6">1. <?= __t('step1') ?></h2>
     <?php
     $checks = [
         ['PHP Version >= 8.1', version_compare(PHP_VERSION, '8.1.0', '>=')],
@@ -494,8 +728,9 @@ if (!isset($_SESSION)) session_start();
         ['json', extension_loaded('json')],
         ['fileinfo', extension_loaded('fileinfo')],
         ['openssl', extension_loaded('openssl')],
-        ['storage/ 쓰기 권한', is_writable(BASE_PATH . '/storage')],
-        ['.env 쓰기 권한', is_writable(BASE_PATH) || (file_exists(BASE_PATH . '/.env') && is_writable(BASE_PATH . '/.env'))],
+        ['curl', extension_loaded('curl')],
+        [__t('storage_perm'), is_writable(BASE_PATH . '/storage')],
+        [__t('env_perm'), is_writable(BASE_PATH)],
     ];
     $allPassed = true;
     foreach ($checks as [$label, $ok]):
@@ -504,9 +739,9 @@ if (!isset($_SESSION)) session_start();
     <div class="flex items-center justify-between py-2 border-b border-zinc-100">
         <span class="text-sm text-zinc-700"><?= $label ?></span>
         <?php if ($ok): ?>
-        <span class="text-green-600 text-sm font-bold">✓ OK</span>
+        <span class="text-green-600 text-sm font-bold">&#10003; OK</span>
         <?php else: ?>
-        <span class="text-red-600 text-sm font-bold">✗ FAIL</span>
+        <span class="text-red-600 text-sm font-bold">&#10007; FAIL</span>
         <?php endif; ?>
     </div>
     <?php endforeach; ?>
@@ -516,124 +751,128 @@ if (!isset($_SESSION)) session_start();
     <?php if ($allPassed): ?>
     <form method="GET" class="mt-6">
         <input type="hidden" name="step" value="2">
-        <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">다음 →</button>
+        <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition"><?= __t('next') ?> &rarr;</button>
     </form>
     <?php else: ?>
-    <p class="mt-6 text-red-600 text-sm font-bold">환경 요구사항을 충족하지 않습니다. 서버 설정을 확인하세요.</p>
+    <p class="mt-6 text-red-600 text-sm font-bold"><?= __t('env_fail') ?></p>
     <?php endif; ?>
 
     <?php elseif ($step === '2'): // DB 설정 ?>
-    <h2 class="text-xl font-bold text-zinc-800 mb-6">2. 데이터베이스 설정</h2>
+    <h2 class="text-xl font-bold text-zinc-800 mb-6">2. <?= __t('step2') ?></h2>
     <form method="POST">
         <input type="hidden" name="step" value="2">
         <div class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 mb-1">호스트</label>
+                    <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('host') ?></label>
                     <input type="text" name="db_host" value="127.0.0.1" required class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 mb-1">포트</label>
+                    <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('port') ?></label>
                     <input type="text" name="db_port" value="3306" required class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
             </div>
             <div>
-                <label class="block text-sm font-medium text-zinc-700 mb-1">데이터베이스 이름</label>
+                <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('db_name') ?></label>
                 <input type="text" name="db_name" placeholder="voscms" required class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <p class="text-xs text-zinc-400 mt-1">존재하지 않으면 자동 생성됩니다.</p>
+                <p class="text-xs text-zinc-400 mt-1"><?= __t('db_name_hint') ?></p>
             </div>
             <div>
-                <label class="block text-sm font-medium text-zinc-700 mb-1">사용자명</label>
+                <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('db_user') ?></label>
                 <input type="text" name="db_user" placeholder="root" required class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
             <div>
-                <label class="block text-sm font-medium text-zinc-700 mb-1">비밀번호</label>
+                <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('db_pass') ?></label>
                 <input type="password" name="db_pass" class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
             <div>
-                <label class="block text-sm font-medium text-zinc-700 mb-1">테이블 접두사</label>
+                <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('db_prefix') ?></label>
                 <input type="text" name="db_prefix" value="rzx_" class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
         </div>
-        <button type="submit" class="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">연결 테스트 + 다음 →</button>
+        <button type="submit" class="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition"><?= __t('connect_next') ?> &rarr;</button>
     </form>
 
     <?php elseif ($step === '3'): // 테이블 생성 ?>
-    <h2 class="text-xl font-bold text-zinc-800 mb-6">3. 데이터베이스 설정</h2>
+    <h2 class="text-xl font-bold text-zinc-800 mb-6">3. <?= __t('step3') ?></h2>
     <div class="text-center py-6">
         <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
         </div>
-        <p class="text-lg font-bold text-zinc-800">DB 연결 성공!</p>
-        <p class="text-sm text-zinc-500 mt-2">마이그레이션 파일 <?= count(glob(BASE_PATH . '/database/migrations/*.sql')) ?>개를 실행합니다.</p>
+        <p class="text-lg font-bold text-zinc-800"><?= __t('db_success') ?></p>
+        <p class="text-sm text-zinc-500 mt-2"><?= sprintf(__t('migration_info'), count(glob(BASE_PATH . '/database/migrations/core/*.sql'))) ?></p>
     </div>
     <form method="POST">
         <input type="hidden" name="step" value="3">
-        <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">테이블 생성 →</button>
+        <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition"><?= __t('create_tables') ?> &rarr;</button>
     </form>
 
     <?php elseif ($step === '4'): // 관리자 + 사이트 설정 ?>
-    <h2 class="text-xl font-bold text-zinc-800 mb-6">4. 사이트 설정</h2>
+    <h2 class="text-xl font-bold text-zinc-800 mb-6">4. <?= __t('step4') ?></h2>
     <form method="POST">
         <input type="hidden" name="step" value="4">
         <div class="space-y-4">
             <div class="pb-4 border-b border-zinc-200">
-                <h3 class="text-sm font-bold text-zinc-600 mb-3">사이트 정보</h3>
+                <h3 class="text-sm font-bold text-zinc-600 mb-3"><?= __t('site_info') ?></h3>
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 mb-1">사이트 이름</label>
+                    <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('site_name') ?></label>
                     <input type="text" name="site_name" value="VosCMS" required class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div class="mt-3">
-                    <label class="block text-sm font-medium text-zinc-700 mb-1">사이트 URL</label>
+                    <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('site_url') ?></label>
                     <input type="url" name="site_url" placeholder="https://example.com" required class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div class="grid grid-cols-3 gap-3 mt-3">
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 mb-1">관리자 경로</label>
+                        <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('admin_path') ?></label>
                         <input type="text" name="admin_path" value="admin" class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 mb-1">언어</label>
+                        <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('language') ?></label>
                         <select name="locale" class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="ko">한국어</option>
-                            <option value="ja">日本語</option>
-                            <option value="en">English</option>
-                            <option value="zh_CN">中文(简体)</option>
-                            <option value="zh_TW">中文(繁體)</option>
+                            <?php foreach ($_installLangs as $_lCode => $_lName): ?>
+                            <option value="<?= $_lCode ?>" <?= $_lCode === $installLocale ? 'selected' : '' ?>><?= $_lName ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-zinc-700 mb-1">시간대</label>
+                        <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('timezone_label') ?></label>
                         <select name="timezone" class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="Asia/Seoul">서울 (KST)</option>
-                            <option value="Asia/Tokyo">도쿄 (JST)</option>
-                            <option value="Asia/Shanghai">상하이 (CST)</option>
+                            <option value="Asia/Seoul">Seoul (KST)</option>
+                            <option value="Asia/Tokyo">Tokyo (JST)</option>
+                            <option value="Asia/Shanghai">Shanghai (CST)</option>
                             <option value="UTC">UTC</option>
-                            <option value="America/New_York">뉴욕 (EST)</option>
-                            <option value="Europe/London">런던 (GMT)</option>
+                            <option value="America/New_York">New York (EST)</option>
+                            <option value="Europe/London">London (GMT)</option>
+                            <option value="Europe/Berlin">Berlin (CET)</option>
+                            <option value="Europe/Moscow">Moscow (MSK)</option>
+                            <option value="Europe/Istanbul">Istanbul (TRT)</option>
+                            <option value="Asia/Jakarta">Jakarta (WIB)</option>
+                            <option value="Asia/Ulaanbaatar">Ulaanbaatar (ULAT)</option>
+                            <option value="Asia/Ho_Chi_Minh">Ho Chi Minh (ICT)</option>
                         </select>
                     </div>
                 </div>
             </div>
             <div>
-                <h3 class="text-sm font-bold text-zinc-600 mb-3">관리자 계정</h3>
+                <h3 class="text-sm font-bold text-zinc-600 mb-3"><?= __t('admin_account') ?></h3>
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 mb-1">이름</label>
+                    <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('admin_name') ?></label>
                     <input type="text" name="admin_name" value="Administrator" required class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div class="mt-3">
-                    <label class="block text-sm font-medium text-zinc-700 mb-1">이메일</label>
+                    <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('email') ?></label>
                     <input type="email" name="admin_email" placeholder="admin@example.com" required class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div class="mt-3">
-                    <label class="block text-sm font-medium text-zinc-700 mb-1">비밀번호</label>
-                    <input type="password" name="admin_pass" placeholder="8자 이상" required minlength="8" class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('password') ?></label>
+                    <input type="password" name="admin_pass" placeholder="<?= __t('pw_hint') ?>" required minlength="8" class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
             </div>
         </div>
-        <button type="submit" class="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">설치 완료 →</button>
+        <button type="submit" class="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition"><?= __t('finish_install') ?> &rarr;</button>
     </form>
 
     <?php elseif ($step === '5'): // 완료 ?>
@@ -643,45 +882,46 @@ if (!isset($_SESSION)) session_start();
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
         </div>
-        <h2 class="text-2xl font-bold text-zinc-800">설치 완료!</h2>
-        <p class="text-zinc-500 mt-2">VosCMS가 성공적으로 설치되었습니다.</p>
+        <h2 class="text-2xl font-bold text-zinc-800"><?= __t('complete_title') ?></h2>
+        <p class="text-zinc-500 mt-2"><?= __t('complete_desc') ?></p>
 
         <!-- 라이선스 정보 -->
         <div class="mt-6 p-4 bg-blue-50 rounded-lg text-left text-sm border border-blue-200">
-            <p class="text-zinc-700 font-semibold mb-2">라이선스 정보</p>
+            <p class="text-zinc-700 font-semibold mb-2"><?= __t('license_info') ?></p>
             <div class="flex items-center justify-between">
-                <p class="text-zinc-600">라이선스 키:</p>
+                <p class="text-zinc-600"><?= __t('license_key') ?>:</p>
                 <code class="text-blue-700 font-bold text-base tracking-wider"><?= htmlspecialchars($_SESSION['install_license_key'] ?? '-') ?></code>
             </div>
             <?php if (!empty($_SESSION['install_license_registered'])): ?>
             <p class="text-green-600 text-xs mt-2 flex items-center gap-1">
                 <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                라이선스 서버에 등록 완료
+                <?= __t('license_ok') ?>
             </p>
             <?php else: ?>
             <p class="text-amber-600 text-xs mt-2 flex items-center gap-1">
                 <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                라이선스 서버 연결 불가 — 다음 관리자 접속 시 자동 등록됩니다.
+                <?= __t('license_fail_msg') ?>
             </p>
             <?php endif; ?>
-            <p class="text-zinc-400 text-xs mt-2">이 키는 .env 파일에 저장되었습니다. 안전하게 보관하세요.</p>
+            <p class="text-zinc-400 text-xs mt-2"><?= __t('license_env') ?></p>
         </div>
 
         <div class="mt-4 p-4 bg-zinc-50 rounded-lg text-left text-sm">
-            <p class="text-zinc-600"><strong>관리자 페이지:</strong></p>
+            <p class="text-zinc-600"><strong><?= __t('admin_page') ?>:</strong></p>
             <p class="text-blue-600 font-mono"><?= htmlspecialchars($_SESSION['install_admin_url'] ?? '/admin') ?></p>
         </div>
 
         <a href="<?= htmlspecialchars($_SESSION['install_admin_url'] ?? '/admin') ?>"
            class="inline-block mt-6 px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">
-            관리자로 이동 →
+            <?= __t('go_admin') ?> &rarr;
         </a>
     </div>
     <?php endif; ?>
 
     </div>
 
-    <p class="text-center text-xs text-zinc-400 mt-6">VosCMS — Value Of Style CMS</p>
+    <p class="text-center text-xs text-zinc-400 mt-6">VosCMS &mdash; Value Of Style CMS</p>
+    <p class="text-center text-xs text-zinc-300 mt-1">Powered by <a href="https://thevos.com" target="_blank" class="hover:text-zinc-500 transition">THEVOS</a></p>
 </div>
 </body>
 </html>

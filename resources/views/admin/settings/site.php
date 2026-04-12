@@ -245,7 +245,7 @@ ob_start();
             <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.site.category_description') ?></p>
             <?php
             $currentCategory = $settings['site_category'] ?? '';
-            $categoryKeys = ['beauty_salon', 'nail_salon', 'skincare', 'massage', 'hospital', 'dental', 'studio', 'restaurant', 'accommodation', 'sports', 'education', 'consulting', 'pet', 'car', 'other'];
+            $categoryKeys = ['beauty_salon', 'nail_salon', 'skincare', 'massage', 'hospital', 'dental', 'studio', 'restaurant', 'accommodation', 'sports', 'education', 'consulting', 'pet', 'car', 'corporate', 'shopping', 'law_firm', 'accounting', 'real_estate', 'it_tech', 'media', 'nonprofit', 'government', 'community', 'portfolio', 'other'];
             $categories = ['' => __('settings.site.category_placeholder')];
             foreach ($categoryKeys as $key) {
                 $categories[$key] = __('settings.site.categories.' . $key);

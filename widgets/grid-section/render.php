@@ -85,16 +85,56 @@ function renderGridCell($cell, $pdo, $prefix, $baseUrl, $locale, $loc) {
                 $pStmt = $pdo->prepare("SELECT id, title, content, nick_name, created_at, is_notice FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' ORDER BY is_notice DESC, created_at DESC LIMIT " . (int)$count);
                 $pStmt->execute([$boardId]);
                 $posts = $pStmt->fetchAll(\PDO::FETCH_ASSOC);
-                // 이미지 추출
+                // 다국어 번역 조회 (현재 로케일 → 영어 → 원본 폴백)
+                $postIds = array_column($posts, 'id');
+                $_titleTr = [];
+                $_contentTr = [];
+                if (!empty($postIds)) {
+                    $_titleKeys = implode(',', array_map(fn($id) => "'" . addslashes("board_post.{$id}.title") . "'", $postIds));
+                    $_contentKeys = implode(',', array_map(fn($id) => "'" . addslashes("board_post.{$id}.content") . "'", $postIds));
+                    $_allKeys = $_titleKeys . ',' . $_contentKeys;
+
+                    // 현재 로케일 번역
+                    $_trRows = $pdo->query("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN ({$_allKeys}) AND locale = '" . addslashes($locale) . "'")->fetchAll(\PDO::FETCH_ASSOC);
+                    foreach ($_trRows as $_tr) {
+                        if (preg_match('/board_post\.(\d+)\.title/', $_tr['lang_key'], $_m)) {
+                            $_titleTr[(int)$_m[1]] = $_tr['content'];
+                        } elseif (preg_match('/board_post\.(\d+)\.content/', $_tr['lang_key'], $_m)) {
+                            $_contentTr[(int)$_m[1]] = $_tr['content'];
+                        }
+                    }
+
+                    // 영어 폴백 (현재 로케일이 영어가 아닌 경우)
+                    if ($locale !== 'en') {
+                        $_missingIds = array_filter($postIds, fn($id) => !isset($_titleTr[(int)$id]));
+                        if (!empty($_missingIds)) {
+                            $_fbKeys = implode(',', array_map(fn($id) => "'" . addslashes("board_post.{$id}.title") . "'", $_missingIds));
+                            $_fbCKeys = implode(',', array_map(fn($id) => "'" . addslashes("board_post.{$id}.content") . "'", $_missingIds));
+                            $_enRows = $pdo->query("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN ({$_fbKeys},{$_fbCKeys}) AND locale = 'en'")->fetchAll(\PDO::FETCH_ASSOC);
+                            foreach ($_enRows as $_tr) {
+                                if (preg_match('/board_post\.(\d+)\.title/', $_tr['lang_key'], $_m)) {
+                                    if (!isset($_titleTr[(int)$_m[1]])) $_titleTr[(int)$_m[1]] = $_tr['content'];
+                                } elseif (preg_match('/board_post\.(\d+)\.content/', $_tr['lang_key'], $_m)) {
+                                    if (!isset($_contentTr[(int)$_m[1]])) $_contentTr[(int)$_m[1]] = $_tr['content'];
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 번역 적용 + 이미지 추출
                 foreach ($posts as &$p) {
+                    $_pid = (int)$p['id'];
+                    if (isset($_titleTr[$_pid])) $p['title'] = $_titleTr[$_pid];
+                    $content = $_contentTr[$_pid] ?? $p['content'];
                     $p['_image'] = '';
-                    if ($showImage && preg_match('/<img[^>]+src=["\']([^"\']+)/i', $p['content'] ?? '', $m)) {
+                    if ($showImage && preg_match('/<img[^>]+src=["\']([^"\']+)/i', $content ?? '', $m)) {
                         $img = $m[1];
                         if (!str_starts_with($img, 'http') && !str_starts_with($img, '/')) $img = $baseUrl . '/storage/' . $img;
                         elseif (str_starts_with($img, '/')) $img = $baseUrl . $img;
                         $p['_image'] = $img;
                     }
-                    $p['_desc'] = mb_strimwidth(strip_tags($p['content'] ?? ''), 0, $descLen, '...');
+                    $p['_desc'] = mb_strimwidth(strip_tags($content ?? ''), 0, $descLen, '...');
                 }
                 unset($p);
             }

@@ -52,6 +52,13 @@ class Translator
     protected static bool $autoDetect = true;
 
     /**
+     * 기본 언어 강제 적용 여부
+     * true이면 세션/쿠키/브라우저 무시하고 기본 언어 사용
+     * 사용자가 언어 스위처로 명시적으로 변경한 경우는 예외 (?lang= 파라미터)
+     */
+    protected static bool $forceLocale = false;
+
+    /**
      * 초기화
      */
     public static function init(string $langPath, ?string $locale = null): void
@@ -106,8 +113,8 @@ class Translator
             );
 
             // 설정 조회
-            $stmt = $pdo->prepare("SELECT `key`, `value` FROM rzx_settings WHERE `key` IN (?, ?, ?, ?)");
-            $stmt->execute(['supported_languages', 'custom_languages', 'default_language', 'language_auto_detect']);
+            $stmt = $pdo->prepare("SELECT `key`, `value` FROM rzx_settings WHERE `key` IN (?, ?, ?, ?, ?)");
+            $stmt->execute(['supported_languages', 'custom_languages', 'default_language', 'language_auto_detect', 'force_locale']);
             $settings = [];
             while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
                 $settings[$row['key']] = $row['value'];
@@ -128,6 +135,9 @@ class Translator
 
             // 자동 감지 설정
             self::$autoDetect = ($settings['language_auto_detect'] ?? '1') === '1';
+
+            // 강제 적용 설정
+            self::$forceLocale = ($settings['force_locale'] ?? '0') === '1';
 
             // 기본 제공 언어
             $defaultLanguages = [
@@ -196,17 +206,28 @@ class Translator
      */
     protected static function detectLocale(): string
     {
-        // 1. 세션에서 확인 (가장 우선)
+        // 0. URL 파라미터로 명시적 언어 변경 (?lang=xx) — 항상 우선
+        if (isset($_GET['lang']) && in_array($_GET['lang'], self::$supportedLocales)) {
+            self::saveLocale($_GET['lang']);
+            return $_GET['lang'];
+        }
+
+        // 1. 강제 적용 모드: 기본 언어를 사용 (세션/쿠키/브라우저 무시)
+        if (self::$forceLocale) {
+            return self::$fallbackLocale;
+        }
+
+        // 2. 세션에서 확인 (사용자가 이전에 선택한 언어)
         if (isset($_SESSION['locale']) && in_array($_SESSION['locale'], self::$supportedLocales)) {
             return $_SESSION['locale'];
         }
 
-        // 2. 쿠키에서 확인 (두 번째 우선)
+        // 3. 쿠키에서 확인
         if (isset($_COOKIE['locale']) && in_array($_COOKIE['locale'], self::$supportedLocales)) {
             return $_COOKIE['locale'];
         }
 
-        // 3. 자동 감지가 활성화된 경우에만 브라우저 언어 감지
+        // 4. 자동 감지가 활성화된 경우에만 브라우저 언어 감지
         if (self::$autoDetect && isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
             // Accept-Language 파싱 (예: "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6")
             $acceptLangs = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);

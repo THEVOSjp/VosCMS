@@ -4,6 +4,31 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.1.1] - 2026-04-12
+
+### Added — 설치 마법사 다국어
+- **Step 0 언어선택 화면 추가** — 설치 시작 전 13개 언어 중 선택, 이후 전체 UI가 해당 언어로 표시
+- **설치 번역 파일 분리** — `resources/lang/install.php` (13개 언어 × 45개 문자열)
+- **회원 등급 다국어** — Normal/Silver/Gold/VIP 13개국어 번역 자동 생성
+
+### Added — 관리자 메뉴 시스템 분리
+- **config/admin-menu.php** — 코어 관리자 메뉴를 설정 파일로 분리 (Core 업데이트 시 보존)
+- **admin-sidebar.php 리팩토링** — 731줄 하드코딩 → ~200줄 동적 렌더러 (config + plugin.json 기반)
+- **vos-shop plugin.json** — 하드코딩 메뉴를 `menus.admin` 형식으로 이전
+
+### Fixed
+- **FAQ 스킨 미적용** — 마이그레이션 SQL의 기본 게시판 INSERT가 skin 없이 먼저 실행되어 install.php의 `INSERT IGNORE`가 무시되는 문제 수정
+- **설정 탭 사이드바 활성 표시** — `route_prefix` 속성 추가로 settings 하위 모든 라우트에서 설정 메뉴 활성 유지
+- **설치 세션 잔류 버그** — .env 없는 새 설치 시 이전 PHP 세션이 남아 Step 0을 건너뛰는 문제 수정
+- **nginx 403** — admin/ 물리 디렉토리와 라우트 충돌 수정 (`try_files $uri/` 제거)
+
+### Changed
+- **그리드 위젯 설정** — grid-section render.php의 네이티브 셀 타입(`board-list`)으로 변경, 13개국어 제목
+- **Step 4 언어 선택** — 5개 → 13개 언어 확대, 설치 언어로 pre-fill
+- **timezone 선택** — 13개국어 사용자 대응 시간대 12개로 확대
+
+---
+
 ## [1.26.0] - 2026-04-01
 
 ### Added — 키오스크 번들 서비스
