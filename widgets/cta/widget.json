@@ -1,7 +1,7 @@
 {
     "slug": "cta",
-    "version": "1.0.0",
-    "author": "RezlyX",
+    "version": "1.1.0",
+    "author": "VosCMS",
     "category": "marketing",
     "icon": "megaphone",
     "thumbnail": "thumbnail.png",
@@ -13,20 +13,45 @@
         "tr": "Harekete Geçirici", "vi": "Kêu gọi Hành động"
     },
     "description": {
-        "ko": "CTA 배너 (버튼 포함)", "en": "CTA banner with button",
-        "ja": "CTAバナー（ボタン付き）",
-        "zh_CN": "CTA横幅（含按钮）", "zh_TW": "CTA橫幅（含按鈕）",
-        "de": "CTA-Banner mit Button", "es": "Banner CTA con botón",
-        "fr": "Bannière CTA avec bouton", "id": "Banner CTA dengan tombol",
-        "mn": "CTA баннер (товчтой)", "ru": "CTA-баннер с кнопкой",
-        "tr": "CTA banner (butonlu)", "vi": "Banner CTA với nút bấm"
+        "ko": "CTA 배너 (버튼 최대 3개)", "en": "CTA banner with up to 3 buttons",
+        "ja": "CTAバナー（ボタン最大3個）",
+        "zh_CN": "CTA横幅（最多3个按钮）", "zh_TW": "CTA橫幅（最多3個按鈕）",
+        "de": "CTA-Banner mit bis zu 3 Buttons", "es": "Banner CTA con hasta 3 botones",
+        "fr": "Bannière CTA avec jusqu'à 3 boutons", "id": "Banner CTA dengan hingga 3 tombol",
+        "mn": "CTA баннер (3 хүртэл товч)", "ru": "CTA-баннер до 3 кнопок",
+        "tr": "CTA banner (3 butona kadar)", "vi": "Banner CTA với tối đa 3 nút"
     },
     "config_schema": {
         "fields": [
             {"key": "title", "type": "text", "label": "Title", "i18n": true},
             {"key": "subtitle", "type": "textarea", "label": "Subtitle", "i18n": true},
-            {"key": "btn_text", "type": "text", "label": "Button Text", "i18n": true},
-            {"key": "btn_url", "type": "text", "label": "Button URL", "default": "/booking"}
+            {"key": "bg_style", "type": "select", "label": "Background", "options": [
+                {"value": "blue", "label": "Blue Gradient"},
+                {"value": "dark", "label": "Dark"},
+                {"value": "custom", "label": "Custom Color"}
+            ], "default": "blue"},
+            {"key": "bg_color", "type": "color", "label": "Custom BG Color", "condition": "bg_style=custom"},
+            {"key": "btn_text", "type": "text", "label": "Button 1 Text", "i18n": true},
+            {"key": "btn_url", "type": "text", "label": "Button 1 URL", "default": "/register"},
+            {"key": "btn_style", "type": "select", "label": "Button 1 Style", "options": [
+                {"value": "primary", "label": "Primary (White)"},
+                {"value": "outline", "label": "Outline"},
+                {"value": "ghost", "label": "Ghost (Text)"}
+            ], "default": "primary"},
+            {"key": "btn_text_2", "type": "text", "label": "Button 2 Text", "i18n": true},
+            {"key": "btn_url_2", "type": "text", "label": "Button 2 URL"},
+            {"key": "btn_style_2", "type": "select", "label": "Button 2 Style", "options": [
+                {"value": "primary", "label": "Primary (White)"},
+                {"value": "outline", "label": "Outline"},
+                {"value": "ghost", "label": "Ghost (Text)"}
+            ], "default": "outline"},
+            {"key": "btn_text_3", "type": "text", "label": "Button 3 Text", "i18n": true},
+            {"key": "btn_url_3", "type": "text", "label": "Button 3 URL"},
+            {"key": "btn_style_3", "type": "select", "label": "Button 3 Style", "options": [
+                {"value": "primary", "label": "Primary (White)"},
+                {"value": "outline", "label": "Outline"},
+                {"value": "ghost", "label": "Ghost (Text)"}
+            ], "default": "ghost"}
         ]
     }
 }
