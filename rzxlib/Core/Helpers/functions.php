@@ -579,8 +579,9 @@ if (!function_exists('load_menu')) {
         $pluginKey = $type;
 
         // PluginManager가 있으면 로드된(활성) 플러그인에서만 메뉴 로드
-        if (isset($GLOBALS['pluginManager'])) {
-            foreach ($GLOBALS['pluginManager']->getLoaded() as $pmId => $manifest) {
+        $_pm = $GLOBALS['pluginManager'] ?? \RzxLib\Core\Plugin\PluginManager::getInstance() ?? null;
+        if ($_pm && !empty($_pm->getLoaded())) {
+            foreach ($_pm->getLoaded() as $pmId => $manifest) {
                 foreach ($manifest['menus'][$pluginKey] ?? [] as $mi) {
                     $mi['position'] = $mi['position'] ?? 50;
                     $menus[] = $mi;
