@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VosCMS 서비스 신청</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        .plan-card { transition: all 0.2s; }
+        .plan-card.selected { ring: 2px; }
+        .hosting-option.selected { background-color: #eff6ff; border-color: #3b82f6; }
+        .dark .hosting-option.selected { background-color: #1e3a5f; border-color: #60a5fa; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- 헤더 -->
+<div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12">
+    <div class="max-w-4xl mx-auto px-4 text-center relative">
+        <h1 class="text-3xl font-bold mb-2">VosCMS 서비스 신청</h1>
+        <p class="text-blue-100">원스톱 서비스로 홈페이지를 시작하세요.</p>
+        <!-- 관리자 설정 버튼 -->
+        <button onclick="document.getElementById('adminSettingsModal').classList.remove('hidden')" class="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition" title="환경 설정">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </button>
+    </div>
+</div>
+
+<!-- 관리자 환경 설정 모달 -->
+<div id="adminSettingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50" onclick="document.getElementById('adminSettingsModal').classList.add('hidden')"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <h2 class="text-lg font-bold text-gray-900">서비스 환경 설정</h2>
+            </div>
+            <button onclick="document.getElementById('adminSettingsModal').classList.add('hidden')" class="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="p-6 space-y-6">
+
+            <!-- 환율 설정 -->
+            <div>
+                <h3 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    환율 설정
+                </h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">USD → KRW 환율</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" value="1380" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            <span class="text-xs text-gray-400 whitespace-nowrap">원/$</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">환율 자동 업데이트</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+                            <option>수동 설정</option>
+                            <option>매일 자동 (한국은행)</option>
+                            <option>매주 자동</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 도메인 마진 설정 -->
+            <div>
+                <h3 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+                    도메인 마진 설정
+                </h3>
+                <div class="grid grid-cols-2 gap-4 mb-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">기본 마진율</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" value="30" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            <span class="text-xs text-gray-400">%</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">가격 반올림 단위</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+                            <option>100원</option>
+                            <option>500원</option>
+                            <option selected>1,000원</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-3">
+                    <p class="text-xs font-medium text-gray-500 mb-2">TLD별 개별 가격 (빈칸: 마진율 자동 적용)</p>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="flex items-center gap-1">
+                            <span class="text-xs text-gray-500 w-12">.com</span>
+                            <input type="number" placeholder="20000" class="w-full px-2 py-1.5 border border-gray-200 rounded text-xs">
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-xs text-gray-500 w-12">.net</span>
+                            <input type="number" placeholder="자동" class="w-full px-2 py-1.5 border border-gray-200 rounded text-xs">
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-xs text-gray-500 w-12">.org</span>
+                            <input type="number" placeholder="자동" class="w-full px-2 py-1.5 border border-gray-200 rounded text-xs">
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-xs text-gray-500 w-12">.io</span>
+                            <input type="number" placeholder="55000" class="w-full px-2 py-1.5 border border-gray-200 rounded text-xs">
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-xs text-gray-500 w-12">.dev</span>
+                            <input type="number" placeholder="자동" class="w-full px-2 py-1.5 border border-gray-200 rounded text-xs">
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-xs text-gray-500 w-12">.shop</span>
+                            <input type="number" placeholder="자동" class="w-full px-2 py-1.5 border border-gray-200 rounded text-xs">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 호스팅 가격 설정 -->
+            <div>
+                <h3 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/></svg>
+                    호스팅 가격 설정
+                </h3>
+                <div class="bg-gray-50 rounded-xl p-3">
+                    <div class="grid grid-cols-4 gap-2 text-xs">
+                        <div class="font-medium text-gray-500">플랜</div>
+                        <div class="font-medium text-gray-500">월 가격</div>
+                        <div class="font-medium text-gray-500">플랜</div>
+                        <div class="font-medium text-gray-500">월 가격</div>
+                        <div class="text-gray-600">무료 50MB</div>
+                        <input type="number" value="0" class="px-2 py-1 border border-gray-200 rounded text-xs" disabled>
+                        <div class="text-gray-600">500MB</div>
+                        <input type="number" value="3000" class="px-2 py-1 border border-gray-200 rounded text-xs">
+                        <div class="text-gray-600">1GB</div>
+                        <input type="number" value="5000" class="px-2 py-1 border border-gray-200 rounded text-xs">
+                        <div class="text-gray-600">3GB</div>
+                        <input type="number" value="10000" class="px-2 py-1 border border-gray-200 rounded text-xs">
+                        <div class="text-gray-600">5GB</div>
+                        <input type="number" value="18000" class="px-2 py-1 border border-gray-200 rounded text-xs">
+                        <div class="text-gray-600">10GB</div>
+                        <input type="number" value="30000" class="px-2 py-1 border border-gray-200 rounded text-xs">
+                        <div class="text-gray-600">15GB</div>
+                        <input type="number" value="45000" class="px-2 py-1 border border-gray-200 rounded text-xs">
+                        <div class="text-gray-600">20GB</div>
+                        <input type="number" value="55000" class="px-2 py-1 border border-gray-200 rounded text-xs">
+                        <div class="text-gray-600">30GB</div>
+                        <input type="number" value="80000" class="px-2 py-1 border border-gray-200 rounded text-xs">
+                        <div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 장기 할인율 -->
+            <div>
+                <h3 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                    장기 계약 할인율
+                </h3>
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-500 w-10">6개월</span>
+                        <input type="number" value="5" class="w-full px-2 py-1.5 border border-gray-200 rounded text-xs">
+                        <span class="text-xs text-gray-400">%</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-500 w-10">1년</span>
+                        <input type="number" value="10" class="w-full px-2 py-1.5 border border-gray-200 rounded text-xs">
+                        <span class="text-xs text-gray-400">%</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-500 w-10">2년</span>
+                        <input type="number" value="15" class="w-full px-2 py-1.5 border border-gray-200 rounded text-xs">
+                        <span class="text-xs text-gray-400">%</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-500 w-10">3년</span>
+                        <input type="number" value="20" class="w-full px-2 py-1.5 border border-gray-200 rounded text-xs">
+                        <span class="text-xs text-gray-400">%</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-500 w-10">5년</span>
+                        <input type="number" value="30" class="w-full px-2 py-1.5 border border-gray-200 rounded text-xs">
+                        <span class="text-xs text-gray-400">%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NameSilo API -->
+            <div>
+                <h3 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                    NameSilo API
+                </h3>
+                <div class="grid grid-cols-1 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">API Key</label>
+                        <input type="password" value="d5a36430d51cbec11f3ad" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" class="text-blue-600 rounded">
+                            <span class="text-xs text-gray-600">샌드박스 모드 (테스트)</span>
+                        </label>
+                        <button class="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs rounded-lg hover:bg-gray-200 transition">연결 테스트</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
+            <button onclick="document.getElementById('adminSettingsModal').classList.add('hidden')" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">취소</button>
+            <button onclick="document.getElementById('adminSettingsModal').classList.add('hidden')" class="px-6 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition">저장</button>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-4xl mx-auto px-4 py-8 space-y-8">
+
+    <!-- ① 도메인 -->
+    <section class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <div class="flex items-center gap-2">
+                <span class="w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                <h2 class="text-lg font-bold text-gray-900">도메인</h2>
+                <span class="text-xs text-gray-400 ml-1">선택사항</span>
+            </div>
+        </div>
+        <div class="p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="domain_option" value="new" class="text-blue-600" checked>
+                    <span class="text-sm font-medium text-gray-700">신규 도메인 등록</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="domain_option" value="existing" class="text-blue-600">
+                    <span class="text-sm font-medium text-gray-700">기존 도메인 사용</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="domain_option" value="none" class="text-blue-600">
+                    <span class="text-sm font-medium text-gray-700">나중에</span>
+                </label>
+            </div>
+            <!-- 신규 도메인 검색 -->
+            <div id="domainSearch">
+                <div class="flex gap-2">
+                    <input type="text" id="domainInput" placeholder="원하는 도메인명을 입력하세요 (예: mycompany)" class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" onkeydown="if(event.key==='Enter')searchDomain()">
+                    <button onclick="searchDomain()" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition text-sm whitespace-nowrap">검색</button>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">* .com, .net, .org 등 확장자 없이 도메인명만 입력하세요.</p>
+
+                <!-- 검색 결과 -->
+                <div id="domainResults" class="hidden mt-4">
+                    <!-- 로딩 -->
+                    <div id="domainLoading" class="hidden text-center py-6">
+                        <div class="inline-flex items-center gap-2 text-sm text-gray-500">
+                            <svg class="w-5 h-5 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
+                            도메인을 검색 중입니다...
+                        </div>
+                    </div>
+                    <!-- 결과 리스트 -->
+                    <div id="domainList" class="space-y-2"></div>
+                    <!-- 선택 확인 버튼 -->
+                    <div id="domainConfirmWrap" class="hidden mt-4 flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <p class="text-sm text-blue-800"><span id="domainSelectedCount" class="font-bold">0</span>개 도메인 선택됨 · 합계 <span id="domainSelectedTotal" class="font-bold">0원</span></p>
+                        <button onclick="confirmDomains()" class="px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition text-sm">확인</button>
+                    </div>
+                    <!-- 확정된 도메인 -->
+                    <div id="domainConfirmed" class="hidden mt-4 space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ② 웹 호스팅 -->
+    <section class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <div class="flex items-center gap-2">
+                <span class="w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">2</span>
+                <h2 class="text-lg font-bold text-gray-900">웹 호스팅</h2>
+                <span class="text-xs text-blue-600 font-medium ml-1">필수</span>
+            </div>
+        </div>
+        <div class="p-6">
+            <!-- 호스팅 플랜 -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <label class="hosting-option cursor-pointer border-2 border-gray-200 rounded-xl p-4 text-center hover:border-green-400 transition">
+                    <input type="radio" name="hosting_plan" value="free" class="hidden">
+                    <p class="text-xs text-green-600 font-semibold mb-1">무료</p>
+                    <p class="text-lg font-bold text-gray-900">50MB</p>
+                    <p class="text-green-600 font-bold mt-1">0원</p>
+                    <p class="text-[10px] text-gray-400 mt-0.5">광고 포함</p>
+                </label>
+                <label class="hosting-option cursor-pointer border-2 border-gray-200 rounded-xl p-4 text-center hover:border-blue-400 transition">
+                    <input type="radio" name="hosting_plan" value="500mb" class="hidden">
+                    <p class="text-xs text-gray-400 mb-1">입문</p>
+                    <p class="text-lg font-bold text-gray-900">500MB</p>
+                    <p class="text-blue-600 font-bold mt-1">3,000<span class="text-xs font-normal text-gray-400">/월</span></p>
+                </label>
+                <label class="hosting-option selected cursor-pointer border-2 border-blue-500 rounded-xl p-4 text-center bg-blue-50">
+                    <input type="radio" name="hosting_plan" value="1g" class="hidden" checked>
+                    <p class="text-xs text-blue-600 font-semibold mb-1">추천</p>
+                    <p class="text-lg font-bold text-gray-900">1GB</p>
+                    <p class="text-blue-600 font-bold mt-1">5,000<span class="text-xs font-normal text-gray-400">/월</span></p>
+                </label>
+                <label class="hosting-option cursor-pointer border-2 border-gray-200 rounded-xl p-4 text-center hover:border-blue-400 transition">
+                    <input type="radio" name="hosting_plan" value="3g" class="hidden">
+                    <p class="text-xs text-gray-400 mb-1">비즈니스</p>
+                    <p class="text-lg font-bold text-gray-900">3GB</p>
+                    <p class="text-blue-600 font-bold mt-1">10,000<span class="text-xs font-normal text-gray-400">/월</span></p>
+                </label>
+                <label class="hosting-option cursor-pointer border-2 border-gray-200 rounded-xl p-4 text-center hover:border-blue-400 transition">
+                    <input type="radio" name="hosting_plan" value="5g" class="hidden">
+                    <p class="text-xs text-gray-400 mb-1">프로</p>
+                    <p class="text-lg font-bold text-gray-900">5GB</p>
+                    <p class="text-blue-600 font-bold mt-1">18,000<span class="text-xs font-normal text-gray-400">/월</span></p>
+                </label>
+                <label class="hosting-option cursor-pointer border-2 border-gray-200 rounded-xl p-4 text-center hover:border-blue-400 transition">
+                    <input type="radio" name="hosting_plan" value="10g" class="hidden">
+                    <p class="text-xs text-gray-400 mb-1">엔터프라이즈</p>
+                    <p class="text-lg font-bold text-gray-900">10GB</p>
+                    <p class="text-blue-600 font-bold mt-1">30,000<span class="text-xs font-normal text-gray-400">/월</span></p>
+                </label>
+                <label class="hosting-option cursor-pointer border-2 border-gray-200 rounded-xl p-4 text-center hover:border-blue-400 transition">
+                    <input type="radio" name="hosting_plan" value="15g" class="hidden">
+                    <p class="text-xs text-gray-400 mb-1">대용량</p>
+                    <p class="text-lg font-bold text-gray-900">15GB</p>
+                    <p class="text-blue-600 font-bold mt-1">45,000<span class="text-xs font-normal text-gray-400">/월</span></p>
+                </label>
+                <label class="hosting-option cursor-pointer border-2 border-gray-200 rounded-xl p-4 text-center hover:border-blue-400 transition">
+                    <input type="radio" name="hosting_plan" value="20g" class="hidden">
+                    <p class="text-xs text-gray-400 mb-1">프리미엄</p>
+                    <p class="text-lg font-bold text-gray-900">20GB</p>
+                    <p class="text-blue-600 font-bold mt-1">55,000<span class="text-xs font-normal text-gray-400">/월</span></p>
+                </label>
+                <label class="hosting-option cursor-pointer border-2 border-gray-200 rounded-xl p-4 text-center hover:border-blue-400 transition">
+                    <input type="radio" name="hosting_plan" value="30g" class="hidden">
+                    <p class="text-xs text-gray-400 mb-1">맥스</p>
+                    <p class="text-lg font-bold text-gray-900">30GB</p>
+                    <p class="text-blue-600 font-bold mt-1">80,000<span class="text-xs font-normal text-gray-400">/월</span></p>
+                </label>
+            </div>
+
+            <!-- 호스팅 기간 -->
+            <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+                <span class="text-sm font-medium text-gray-600">계약 기간:</span>
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="radio" name="hosting_period" value="1" class="text-blue-600">
+                    <span class="text-sm text-gray-700">1개월</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="radio" name="hosting_period" value="6" class="text-blue-600">
+                    <span class="text-sm text-gray-700">6개월 <span class="text-blue-600 text-xs">-5%</span></span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="radio" name="hosting_period" value="12" class="text-blue-600" checked>
+                    <span class="text-sm text-gray-700">1년 <span class="text-blue-600 text-xs font-semibold">-10%</span></span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="radio" name="hosting_period" value="24" class="text-blue-600">
+                    <span class="text-sm text-gray-700">2년 <span class="text-blue-600 text-xs font-semibold">-15%</span></span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="radio" name="hosting_period" value="36" class="text-blue-600">
+                    <span class="text-sm text-gray-700">3년 <span class="text-blue-600 text-xs font-semibold">-20%</span></span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="radio" name="hosting_period" value="60" class="text-blue-600">
+                    <span class="text-sm text-gray-700">5년 <span class="text-red-500 text-xs font-semibold">-30%</span></span>
+                </label>
+            </div>
+
+            <!-- 추가 용량 -->
+            <div class="mt-4 flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+                <span class="text-sm font-medium text-gray-600">추가 용량:</span>
+                <select class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+                    <option value="0">추가 없음</option>
+                    <option value="1">+1GB (2,000원/월)</option>
+                    <option value="3">+3GB (5,000원/월)</option>
+                    <option value="5">+5GB (8,000원/월)</option>
+                    <option value="10">+10GB (14,000원/월)</option>
+                    <option value="20">+20GB (25,000원/월)</option>
+                    <option value="50">+50GB (50,000원/월)</option>
+                </select>
+                <span class="text-xs text-gray-400">현재 플랜에 용량을 추가합니다.</span>
+            </div>
+
+            <!-- 포함 사항 -->
+            <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-gray-500">
+                <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>SSL 인증서 무료</span>
+                <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>일일 백업</span>
+                <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>PHP 8.3</span>
+                <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>MySQL / MariaDB</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ③ 부가 서비스 -->
+    <section class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <div class="flex items-center gap-2">
+                <span class="w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                <h2 class="text-lg font-bold text-gray-900">부가 서비스</h2>
+                <span class="text-xs text-gray-400 ml-1">선택사항</span>
+            </div>
+        </div>
+        <div class="p-6 space-y-3">
+            <!-- 설치 지원 -->
+            <label class="flex items-start gap-4 p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50/50 transition">
+                <input type="checkbox" class="mt-1 text-blue-600 rounded" checked>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <p class="font-semibold text-gray-900">설치 지원</p>
+                        <p class="text-blue-600 font-bold">무료</p>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">VosCMS 설치 및 초기 설정을 대행합니다. 도메인 연결, SSL 설정, 기본 환경 구성 포함.</p>
+                </div>
+            </label>
+
+            <!-- 1년 기술 지원 -->
+            <label class="flex items-start gap-4 p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50/50 transition">
+                <input type="checkbox" class="mt-1 text-blue-600 rounded">
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <p class="font-semibold text-gray-900">기술 지원 (1년)</p>
+                        <p class="text-blue-600 font-bold">120,000원<span class="text-xs font-normal text-gray-400">/년</span></p>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">이메일/채팅 기술 지원, 버그 수정, 보안 업데이트 적용, 장애 대응 (영업일 기준 24시간 이내 응답).</p>
+                </div>
+            </label>
+
+            <!-- 정기 유지보수 -->
+            <div class="p-4 border border-gray-200 rounded-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="font-semibold text-gray-900">정기 유지보수</p>
+                    <span class="text-xs text-gray-400">택 1</span>
+                </div>
+                <div class="space-y-2">
+                    <label class="flex items-start gap-3 p-3 border border-gray-100 rounded-lg cursor-pointer hover:border-blue-300 hover:bg-blue-50/50 transition">
+                        <input type="radio" name="maintenance" value="10000" class="mt-0.5 text-blue-600">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-medium text-gray-900">Basic</p>
+                                <p class="text-sm font-bold text-blue-600">10,000원<span class="text-xs font-normal text-gray-400">/월</span></p>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-0.5">보안 업데이트 적용, 월 1회 백업 확인</p>
+                        </div>
+                    </label>
+                    <label class="flex items-start gap-3 p-3 border border-gray-100 rounded-lg cursor-pointer hover:border-blue-300 hover:bg-blue-50/50 transition">
+                        <input type="radio" name="maintenance" value="20000" class="mt-0.5 text-blue-600">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-medium text-gray-900">Standard</p>
+                                <p class="text-sm font-bold text-blue-600">20,000원<span class="text-xs font-normal text-gray-400">/월</span></p>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-0.5">보안 업데이트, 플러그인/코어 업데이트, 주 1회 백업, 이메일 기술지원</p>
+                        </div>
+                    </label>
+                    <label class="flex items-start gap-3 p-3 border border-gray-100 rounded-lg cursor-pointer hover:border-blue-300 hover:bg-blue-50/50 transition">
+                        <input type="radio" name="maintenance" value="30000" class="mt-0.5 text-blue-600">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-medium text-gray-900">Pro</p>
+                                <p class="text-sm font-bold text-blue-600">30,000원<span class="text-xs font-normal text-gray-400">/월</span></p>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-0.5">Standard + 성능 모니터링, 장애 대응 (24h 이내), 일일 백업, 월 1회 리포트</p>
+                        </div>
+                    </label>
+                    <label class="flex items-start gap-3 p-3 border border-blue-100 bg-blue-50/30 rounded-lg cursor-pointer hover:border-blue-300 transition">
+                        <input type="radio" name="maintenance" value="50000" class="mt-0.5 text-blue-600">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <p class="text-sm font-medium text-gray-900">Enterprise</p>
+                                    <span class="text-[10px] px-1.5 py-0.5 bg-blue-600 text-white rounded-full font-semibold">포털 · 쇼핑몰</span>
+                                </div>
+                                <p class="text-sm font-bold text-blue-600">50,000원<span class="text-xs font-normal text-gray-400">/월</span></p>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-0.5">Pro + 전담 매니저, 긴급 장애 대응 (4h 이내), 커스텀 기능 월 2건, 트래픽 분석</p>
+                        </div>
+                    </label>
+                    <label class="flex items-start gap-3 p-3 border border-gray-100 rounded-lg cursor-pointer hover:border-gray-300 transition">
+                        <input type="radio" name="maintenance" value="0" class="mt-0.5 text-gray-400" checked>
+                        <p class="text-sm text-gray-400">유지보수 신청 안 함</p>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 커스터마이징 -->
+            <label class="flex items-start gap-4 p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50/50 transition">
+                <input type="checkbox" class="mt-1 text-blue-600 rounded">
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <p class="font-semibold text-gray-900">커스터마이징 개발</p>
+                        <p class="text-blue-600 font-bold">별도 견적</p>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">맞춤 디자인, 전용 플러그인 개발, 외부 시스템 연동, 데이터 마이그레이션 등.</p>
+                </div>
+            </label>
+
+            <!-- 기본 메일 안내 -->
+            <div class="p-4 border border-green-200 bg-green-50/50 rounded-xl">
+                <div class="flex items-center gap-2 mb-1">
+                    <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                    <p class="font-semibold text-gray-900">기본 메일 5개 포함</p>
+                    <span class="text-xs text-green-600 font-medium">호스팅 기본 제공</span>
+                </div>
+                <p class="text-xs text-gray-500 ml-6">도메인 기반 이메일 5개 (예: info@yourdomain.com). 웹메일, IMAP/POP3 지원. 계정당 1GB.</p>
+            </div>
+
+            <!-- 비즈니스 메일 (대용량) -->
+            <label class="flex items-start gap-4 p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50/50 transition">
+                <input type="checkbox" class="mt-1 text-blue-600 rounded">
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <p class="font-semibold text-gray-900">비즈니스 메일</p>
+                            <span class="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full font-semibold">대용량</span>
+                        </div>
+                        <p class="text-blue-600 font-bold">5,000원<span class="text-xs font-normal text-gray-400">/계정/월</span></p>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">대용량 첨부파일 전송 (최대 10GB), 계정당 10GB 저장공간, 광고 없는 웹메일, 스팸 필터, 바이러스 검사.</p>
+                    <div class="mt-2 flex items-center gap-2">
+                        <span class="text-xs text-gray-500">추가 계정 수:</span>
+                        <select class="px-2 py-1 border border-gray-300 rounded text-xs bg-white">
+                            <option value="0">추가 없음</option>
+                            <option>1</option><option>3</option><option>5</option><option>10</option><option>20</option><option>50</option>
+                        </select>
+                    </div>
+                </div>
+            </label>
+        </div>
+    </section>
+
+    <!-- ④ 신청자 정보 -->
+    <section class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <div class="flex items-center gap-2">
+                <span class="w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">4</span>
+                <h2 class="text-lg font-bold text-gray-900">신청자 정보</h2>
+            </div>
+        </div>
+        <div class="p-6 space-y-4">
+
+            <!-- 비회원: 로그인/회원가입 안내 -->
+            <div id="guestForm">
+                <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl mb-4">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/></svg>
+                        <div>
+                            <p class="text-sm font-semibold text-amber-800">회원이신가요?</p>
+                            <p class="text-xs text-amber-700 mt-1">이미 회원이시면 로그인하세요. 정보가 자동으로 입력됩니다.</p>
+                            <button onclick="toggleLogin()" class="mt-2 px-4 py-2 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition">로그인</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 로그인 폼 (토글) -->
+                <div id="loginForm" class="hidden mb-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                    <p class="text-sm font-semibold text-gray-900 mb-3">로그인</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input type="email" placeholder="이메일" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                        <div class="flex gap-2">
+                            <input type="password" placeholder="비밀번호" class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                            <button onclick="demoLogin()" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition text-sm whitespace-nowrap">로그인</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 비회원 정보 입력 (자동 회원가입) -->
+                <div id="guestFields">
+                    <p class="text-xs text-gray-400 mb-3">* 비회원은 입력된 정보로 자동 회원가입됩니다.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">이름 / 회사명 <span class="text-red-500">*</span></label>
+                            <input type="text" id="f_name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" placeholder="홍길동 / 주식회사 OOO">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">이메일 <span class="text-red-500">*</span></label>
+                            <input type="email" id="f_email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" placeholder="email@example.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">비밀번호 <span class="text-red-500">*</span></label>
+                            <input type="password" id="f_password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" placeholder="8자 이상">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">연락처 <span class="text-red-500">*</span></label>
+                            <input type="tel" id="f_phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" placeholder="010-0000-0000">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 회원: 자동 입력 (로그인 후 표시) -->
+            <div id="memberForm" class="hidden">
+                <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl mb-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">V</div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900" id="m_name">VosCMS</p>
+                                <p class="text-xs text-gray-500" id="m_email">webmaster@thevos.jp</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-green-600 font-medium flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                                로그인됨
+                            </span>
+                            <button onclick="demoLogout()" class="text-xs text-gray-400 hover:text-red-500 transition">로그아웃</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">연락처</label>
+                        <input type="tel" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" value="010-1234-5678">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">사이트 용도</label>
+                        <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm bg-white">
+                            <option value="">선택하세요</option>
+                            <option>기업 홈페이지</option>
+                            <option>쇼핑몰</option>
+                            <option>커뮤니티</option>
+                            <option>포트폴리오</option>
+                            <option>블로그 / 미디어</option>
+                            <option>예약 플랫폼</option>
+                            <option>기타</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 공통: 사이트 용도 + 요청사항 -->
+            <div id="guestExtra">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">사이트 용도</label>
+                    <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm bg-white">
+                        <option value="">선택하세요</option>
+                        <option>기업 홈페이지</option>
+                        <option>쇼핑몰</option>
+                        <option>커뮤니티</option>
+                        <option>포트폴리오</option>
+                        <option>블로그 / 미디어</option>
+                        <option>예약 플랫폼</option>
+                        <option>기타</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">요청 사항</label>
+                <textarea class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm resize-y" rows="3" placeholder="추가 요청 사항이 있으면 입력하세요."></textarea>
+            </div>
+        </div>
+    </section>
+
+    <!-- ⑤ 결제 방법 -->
+    <section class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <div class="flex items-center gap-2">
+                <span class="w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">5</span>
+                <h2 class="text-lg font-bold text-gray-900">결제 방법</h2>
+            </div>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-2 gap-3">
+                <label class="hosting-option selected cursor-pointer border-2 border-blue-500 rounded-xl p-4 text-center bg-blue-50">
+                    <input type="radio" name="payment" value="card" class="hidden" checked>
+                    <svg class="w-6 h-6 mx-auto mb-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    <p class="text-sm font-semibold text-gray-900">카드 결제</p>
+                </label>
+                <label class="hosting-option cursor-pointer border-2 border-gray-200 rounded-xl p-4 text-center hover:border-blue-400 transition">
+                    <input type="radio" name="payment" value="bank" class="hidden">
+                    <svg class="w-6 h-6 mx-auto mb-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    <p class="text-sm font-semibold text-gray-900">계좌이체</p>
+                </label>
+            </div>
+            <div class="mt-4 flex items-start gap-2">
+                <input type="checkbox" class="mt-1 text-blue-600 rounded">
+                <p class="text-xs text-gray-500"><span class="text-blue-600 underline cursor-pointer">이용약관</span> 및 <span class="text-blue-600 underline cursor-pointer">개인정보처리방침</span>에 동의합니다.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ⑥ 주문 요약 (Sticky) -->
+    <section class="bg-gradient-to-b from-zinc-800 to-zinc-900 rounded-2xl shadow-xl overflow-hidden text-white">
+        <div class="px-6 py-4 border-b border-zinc-700 flex items-center justify-between">
+            <h2 class="text-lg font-bold">주문 요약</h2>
+            <div class="flex items-center gap-1">
+                <button onclick="setCurrency('KRW')" id="cur_KRW" class="cur-btn px-2 py-1 rounded text-xs font-medium bg-white/20 text-white transition hover:bg-white/30">🇰🇷 KRW</button>
+                <button onclick="setCurrency('USD')" id="cur_USD" class="cur-btn px-2 py-1 rounded text-xs font-medium text-zinc-400 transition hover:bg-white/10">🇺🇸 USD</button>
+                <button onclick="setCurrency('JPY')" id="cur_JPY" class="cur-btn px-2 py-1 rounded text-xs font-medium text-zinc-400 transition hover:bg-white/10">🇯🇵 JPY</button>
+                <button onclick="setCurrency('CNY')" id="cur_CNY" class="cur-btn px-2 py-1 rounded text-xs font-medium text-zinc-400 transition hover:bg-white/10">🇨🇳 CNY</button>
+                <button onclick="setCurrency('EUR')" id="cur_EUR" class="cur-btn px-2 py-1 rounded text-xs font-medium text-zinc-400 transition hover:bg-white/10">🇪🇺 EUR</button>
+            </div>
+        </div>
+        <div class="p-6 space-y-3 text-sm">
+            <div class="flex justify-between">
+                <span class="text-zinc-400">도메인</span>
+                <span>example.com <span class="text-zinc-500">(<span class="cur-price" data-krw="15000"></span>/년)</span></span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-zinc-400">웹 호스팅</span>
+                <span>1GB × 12개월 <span class="text-zinc-500">(<span class="cur-price" data-krw="54000"></span>)</span></span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-zinc-400">설치 지원</span>
+                <span class="text-green-400">무료</span>
+            </div>
+            <div class="border-t border-zinc-700 pt-3 flex justify-between">
+                <span class="text-zinc-400">소계</span>
+                <span class="cur-price" data-krw="69000"></span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-zinc-400">장기 할인 (10%)</span>
+                <span class="text-green-400">-<span class="cur-price" data-krw="5400"></span></span>
+            </div>
+            <div class="border-t border-zinc-700 pt-3 flex justify-between items-center">
+                <span class="text-lg font-bold">결제 금액</span>
+                <span class="text-2xl font-bold text-blue-400"><span class="cur-price" data-krw="63600"></span></span>
+            </div>
+            <button class="w-full mt-4 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition text-lg shadow-lg">
+                결제하기
+            </button>
+            <p class="text-center text-xs text-zinc-500 mt-2">부가세(VAT) 포함 금액입니다.</p>
+        </div>
+    </section>
+
+</div>
+
+<!-- 인터랙션 JS -->
+<script>
+// 통화 전환
+var currentCurrency = 'KRW';
+var exchangeRates = { KRW: 1, USD: 1/1380, JPY: 1/9.2, CNY: 1/190, EUR: 1/1500 };
+var currencySymbols = { KRW: '원', USD: '$', JPY: '¥', CNY: '¥', EUR: '€' };
+var currencyDecimals = { KRW: 0, USD: 2, JPY: 0, CNY: 2, EUR: 2 };
+var currencyPrefix = { KRW: false, USD: true, JPY: true, CNY: true, EUR: true };
+
+function setCurrency(code) {
+    currentCurrency = code;
+    document.querySelectorAll('.cur-btn').forEach(function(btn) {
+        btn.classList.remove('bg-white/20', 'text-white');
+        btn.classList.add('text-zinc-400');
+    });
+    var active = document.getElementById('cur_' + code);
+    if (active) { active.classList.add('bg-white/20', 'text-white'); active.classList.remove('text-zinc-400'); }
+    updateCurrencyDisplay();
+}
+
+function updateCurrencyDisplay() {
+    var rate = exchangeRates[currentCurrency] || 1;
+    var sym = currencySymbols[currentCurrency] || '';
+    var dec = currencyDecimals[currentCurrency] ?? 0;
+    var pre = currencyPrefix[currentCurrency] ?? false;
+
+    document.querySelectorAll('.cur-price').forEach(function(el) {
+        var krw = parseFloat(el.dataset.krw) || 0;
+        var converted = krw * rate;
+        var formatted = dec > 0 ? converted.toFixed(dec) : Math.round(converted).toLocaleString();
+        el.textContent = pre ? (sym + formatted) : (formatted + sym);
+    });
+}
+
+// 초기 표시
+document.addEventListener('DOMContentLoaded', function() { updateCurrencyDisplay(); });
+
+// 호스팅/결제 선택 UI
+document.querySelectorAll('.hosting-option').forEach(function(el) {
+    el.addEventListener('click', function() {
+        el.closest('.grid').querySelectorAll('.hosting-option').forEach(function(s) {
+            s.classList.remove('selected', 'border-blue-500', 'bg-blue-50');
+            s.classList.add('border-gray-200');
+        });
+        el.classList.add('selected', 'border-blue-500', 'bg-blue-50');
+        el.classList.remove('border-gray-200');
+    });
+});
+
+// 도메인 검색 (다중 선택)
+var selectedDomains = {}; // { 'example.com': 20000, ... }
+
+var domainPricing = {
+    '.com': 20000, '.net': 22000, '.org': 18000, '.io': 55000,
+    '.co': 20000, '.dev': 22000, '.shop': 10000, '.store': 12000,
+    '.site': 10000, '.online': 10000, '.biz': 15000, '.info': 15000,
+    '.xyz': 8000, '.app': 25000
+};
+
+var searchTLDs = ['.com','.net','.org','.io','.co','.dev','.shop','.store','.site','.online','.biz','.info','.xyz','.app'];
+
+function searchDomain() {
+    var input = document.getElementById('domainInput').value.trim().toLowerCase();
+    if (!input) return;
+    input = input.replace(/\.[a-z.]+$/i, '');
+    if (!input || input.length < 2) { alert('2자 이상 입력하세요.'); return; }
+
+    var results = document.getElementById('domainResults');
+    var loading = document.getElementById('domainLoading');
+    var list = document.getElementById('domainList');
+    var confirmWrap = document.getElementById('domainConfirmWrap');
+    var confirmed = document.getElementById('domainConfirmed');
+
+    results.classList.remove('hidden');
+    loading.classList.remove('hidden');
+    list.innerHTML = '';
+    confirmWrap.classList.add('hidden');
+    confirmed.classList.add('hidden');
+    selectedDomains = {};
+
+    setTimeout(function() {
+        loading.classList.add('hidden');
+        var domains = searchTLDs.map(function(tld) {
+            return { name: input + tld, tld: tld, available: Math.random() > 0.3 };
+        });
+        domains.sort(function(a, b) { return a.available === b.available ? 0 : a.available ? -1 : 1; });
+
+        domains.forEach(function(d) {
+            var price = domainPricing[d.tld] || 15000;
+            if (d.available) {
+                list.innerHTML += '<label class="domain-result flex items-center justify-between p-3 border border-gray-200 rounded-xl cursor-pointer transition hover:border-blue-400 hover:bg-blue-50/50" data-domain="' + d.name + '" data-price="' + price + '">'
+                    + '<div class="flex items-center gap-3">'
+                    + '<input type="checkbox" class="domain-check w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" onchange="toggleDomain(\'' + d.name + '\',' + price + ',this)">'
+                    + '<div><p class="text-sm font-semibold text-gray-900">' + d.name + '</p>'
+                    + '<p class="text-xs text-green-600">등록 가능</p></div></div>'
+                    + '<p class="text-sm font-bold text-blue-600">' + price.toLocaleString() + '원<span class="text-xs font-normal text-gray-400">/년</span></p></label>';
+            } else {
+                list.innerHTML += '<div class="flex items-center justify-between p-3 border border-gray-100 rounded-xl opacity-40">'
+                    + '<div class="flex items-center gap-3">'
+                    + '<span class="w-4 h-4 flex items-center justify-center"><svg class="w-3.5 h-3.5 text-red-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg></span>'
+                    + '<div><p class="text-sm text-gray-400 line-through">' + d.name + '</p>'
+                    + '<p class="text-xs text-red-400">이미 등록됨</p></div></div>'
+                    + '<p class="text-xs text-gray-300">등록 불가</p></div>';
+            }
+        });
+    }, 800);
+}
+
+function toggleDomain(name, price, checkbox) {
+    var label = checkbox.closest('.domain-result');
+    if (checkbox.checked) {
+        selectedDomains[name] = price;
+        label.classList.add('border-blue-500', 'bg-blue-50');
+        label.classList.remove('border-gray-200');
+    } else {
+        delete selectedDomains[name];
+        label.classList.remove('border-blue-500', 'bg-blue-50');
+        label.classList.add('border-gray-200');
+    }
+    updateDomainSummary();
+}
+
+function updateDomainSummary() {
+    var count = Object.keys(selectedDomains).length;
+    var total = Object.values(selectedDomains).reduce(function(s, p) { return s + p; }, 0);
+    var wrap = document.getElementById('domainConfirmWrap');
+    document.getElementById('domainSelectedCount').textContent = count;
+    document.getElementById('domainSelectedTotal').textContent = total.toLocaleString() + '원';
+    if (count > 0) { wrap.classList.remove('hidden'); } else { wrap.classList.add('hidden'); }
+}
+
+function confirmDomains() {
+    var list = document.getElementById('domainList');
+    var confirmWrap = document.getElementById('domainConfirmWrap');
+    var confirmed = document.getElementById('domainConfirmed');
+
+    list.classList.add('hidden');
+    confirmWrap.classList.add('hidden');
+    confirmed.classList.remove('hidden');
+
+    var h = '<div class="flex items-center justify-between mb-2"><p class="text-xs font-medium text-green-700 uppercase tracking-wider">선택된 도메인</p>'
+        + '<button onclick="resetDomainSearch()" class="text-xs text-blue-600 hover:underline">다시 검색</button></div>';
+    Object.keys(selectedDomains).forEach(function(name) {
+        var price = selectedDomains[name];
+        h += '<div class="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-xl">'
+            + '<div class="flex items-center gap-2">'
+            + '<svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>'
+            + '<p class="text-sm font-semibold text-gray-900">' + name + '</p></div>'
+            + '<p class="text-sm font-bold text-green-700">' + price.toLocaleString() + '원/년</p></div>';
+    });
+    confirmed.innerHTML = h;
+}
+
+// 로그인/비회원 전환
+function toggleLogin() {
+    document.getElementById('loginForm').classList.toggle('hidden');
+}
+
+function demoLogin() {
+    // 실제: AJAX 로그인 → 세션 → 사용자 정보 반환
+    document.getElementById('guestForm').classList.add('hidden');
+    document.getElementById('guestExtra').classList.add('hidden');
+    document.getElementById('memberForm').classList.remove('hidden');
+}
+
+function demoLogout() {
+    document.getElementById('guestForm').classList.remove('hidden');
+    document.getElementById('guestExtra').classList.remove('hidden');
+    document.getElementById('memberForm').classList.add('hidden');
+    document.getElementById('loginForm').classList.add('hidden');
+}
+
+function resetDomainSearch() {
+    var list = document.getElementById('domainList');
+    var confirmed = document.getElementById('domainConfirmed');
+    list.classList.remove('hidden');
+    confirmed.classList.add('hidden');
+    selectedDomains = {};
+    document.querySelectorAll('.domain-check').forEach(function(cb) { cb.checked = false; });
+    document.querySelectorAll('.domain-result').forEach(function(el) {
+        el.classList.remove('border-blue-500', 'bg-blue-50');
+        el.classList.add('border-gray-200');
+    });
+    updateDomainSummary();
+}
+</script>
+
+</body>
+</html>
