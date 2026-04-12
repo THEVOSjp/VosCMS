@@ -1,7 +1,7 @@
 {
     "slug": "cta001",
-    "version": "1.0.0",
-    "author": "RezlyX",
+    "version": "1.1.0",
+    "author": "VosCMS",
     "category": "marketing",
     "icon": "sparkles",
     "thumbnail": "thumbnail.png",
@@ -13,29 +13,38 @@
         "tr": "Rezervasyon CTA Bannerı", "vi": "Banner CTA đặt lịch"
     },
     "description": {
-        "ko": "그라데이션 배경의 예약 유도 배너. 제목, 설명, 예약 버튼을 포함합니다.",
-        "en": "Gradient booking CTA banner with title, description, and booking button.",
-        "ja": "グラデーション背景の予約誘導バナー。タイトル、説明、予約ボタン付き。",
-        "zh_CN": "渐变背景预约引导横幅，包含标题、描述和预约按钮。",
-        "zh_TW": "漸變背景預約引導橫幅，包含標題、描述和預約按鈕。",
-        "de": "Buchungs-CTA-Banner mit Farbverlauf, Titel, Beschreibung und Buchungsbutton.",
-        "es": "Banner CTA de reserva con degradado, título, descripción y botón de reserva.",
-        "fr": "Bannière CTA de réservation avec dégradé, titre, description et bouton.",
-        "id": "Banner CTA pemesanan gradien dengan judul, deskripsi, dan tombol pemesanan.",
-        "mn": "Градиент дэвсгэртэй захиалга CTA баннер. Гарчиг, тайлбар, захиалгын товч.",
-        "ru": "Градиентный баннер бронирования с заголовком, описанием и кнопкой.",
-        "tr": "Gradyan arka planlı rezervasyon CTA banner. Başlık, açıklama ve rezervasyon düğmesi.",
-        "vi": "Banner CTA đặt lịch nền gradient với tiêu đề, mô tả và nút đặt lịch."
+        "ko": "그라데이션 배경의 유도 배너. 버튼 최대 3개, 다국어 지원.",
+        "en": "Gradient CTA banner with up to 3 buttons, multilingual support.",
+        "ja": "グラデーション背景の誘導バナー。ボタン最大3個、多言語対応。"
     },
     "config_schema": {
         "fields": [
-            {"key": "title", "type": "text", "label": "Title", "i18n": true, "default": "지금 바로 예약하세요"},
-            {"key": "subtitle", "type": "textarea", "label": "Subtitle", "i18n": true, "default": "전문 스태프와 함께하는 최고의 서비스를 경험해보세요."},
-            {"key": "btn_text", "type": "text", "label": "Button Text", "i18n": true, "default": "예약하기"},
-            {"key": "btn_url", "type": "text", "label": "Button URL", "default": "/booking"},
+            {"key": "title", "type": "text", "label": "Title", "i18n": true},
+            {"key": "subtitle", "type": "textarea", "label": "Subtitle", "i18n": true},
             {"key": "gradient_from", "type": "color", "label": "Gradient Start", "default": "#2563EB"},
             {"key": "gradient_to", "type": "color", "label": "Gradient End", "default": "#9333EA"},
-            {"key": "rounded", "type": "toggle", "label": "Rounded Corners", "default": true}
+            {"key": "rounded", "type": "toggle", "label": "Rounded Corners", "default": true},
+            {"key": "btn_text", "type": "text", "label": "Button 1 Text", "i18n": true, "default": "예약하기"},
+            {"key": "btn_url", "type": "text", "label": "Button 1 URL", "default": "/booking"},
+            {"key": "btn_style", "type": "select", "label": "Button 1 Style", "options": [
+                {"value": "primary", "label": "Primary (White)"},
+                {"value": "outline", "label": "Outline"},
+                {"value": "ghost", "label": "Ghost (Text)"}
+            ], "default": "primary"},
+            {"key": "btn_text_2", "type": "text", "label": "Button 2 Text", "i18n": true},
+            {"key": "btn_url_2", "type": "text", "label": "Button 2 URL"},
+            {"key": "btn_style_2", "type": "select", "label": "Button 2 Style", "options": [
+                {"value": "primary", "label": "Primary (White)"},
+                {"value": "outline", "label": "Outline"},
+                {"value": "ghost", "label": "Ghost (Text)"}
+            ], "default": "outline"},
+            {"key": "btn_text_3", "type": "text", "label": "Button 3 Text", "i18n": true},
+            {"key": "btn_url_3", "type": "text", "label": "Button 3 URL"},
+            {"key": "btn_style_3", "type": "select", "label": "Button 3 Style", "options": [
+                {"value": "primary", "label": "Primary (White)"},
+                {"value": "outline", "label": "Outline"},
+                {"value": "ghost", "label": "Ghost (Text)"}
+            ], "default": "ghost"}
         ]
     }
 }
