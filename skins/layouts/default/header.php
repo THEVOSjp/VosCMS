@@ -166,29 +166,33 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
                                 <p class="text-sm font-medium text-gray-900 dark:text-white"><?= htmlspecialchars($currentUser['name'] ?? '') ?></p>
                                 <p class="text-xs text-gray-500 dark:text-zinc-400"><?= htmlspecialchars($currentUser['email'] ?? '') ?></p>
                             </div>
-                            <a href="<?= $baseUrl ?>/mypage" class="block px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700"><?= __('common.nav.mypage') ?></a>
-                            <?php if (file_exists(BASE_PATH . '/plugins/vos-salon/plugin.json')): ?>
-                            <a href="<?= $baseUrl ?>/mypage/reservations" class="block px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700"><?= __('auth.mypage.menu.reservations') ?></a>
-                            <?php endif; ?>
-                            <?php if (file_exists(BASE_PATH . '/plugins/vos-shop/plugin.json')):
-                                $_shopLangHeader = @include(BASE_PATH . '/plugins/vos-shop/lang/' . ($config['locale'] ?? 'ko') . '/shop.php');
-                                if (!is_array($_shopLangHeader)) $_shopLangHeader = @include(BASE_PATH . '/plugins/vos-shop/lang/ko/shop.php');
-                                $_myShopLabel = $_shopLangHeader['nav']['my_shop'] ?? '내 사업장';
-                            ?>
-                            <a href="<?= $baseUrl ?>/shop/my" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                                <?= $_myShopLabel ?>
-                            </a>
-                            <?php endif; ?>
-                            <?php if (!empty($_SESSION['admin_id'])): ?>
+<?php
+                            $_udMenus = function_exists('load_menu') ? load_menu('user_dropdown') : [];
+                            $_prevType = '';
+                            foreach ($_udMenus as $_udi):
+                                $_udLabel = is_string($_udi['label'] ?? '') ? $_udi['label'] : '';
+                                $_udUrl = $_udi['url'] ?? '';
+                                $_udType = $_udi['type'] ?? 'link';
+                                $_udIcon = $_udi['icon'] ?? '';
+                                if ($_udType === 'admin' && empty($_SESSION['admin_id'])) continue;
+                                if ($_prevType && $_prevType !== $_udType): ?>
                             <div class="border-t dark:border-zinc-700"></div>
-                            <a href="<?= $baseUrl ?>/<?= $config['admin_path'] ?? 'admin' ?>" class="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                <?= __('common.nav.admin') ?? '관리자' ?>
-                            </a>
-                            <?php endif; ?>
+                            <?php endif; $_prevType = $_udType;
+                                if ($_udType === 'danger'): ?>
                             <div class="border-t dark:border-zinc-700"></div>
-                            <a href="<?= $baseUrl ?>/logout" class="block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700"><?= __('common.buttons.logout') ?></a>
+                            <a href="<?= $baseUrl ?><?= $_udUrl ?>" class="block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700"><?= htmlspecialchars($_udLabel) ?></a>
+                            <?php elseif ($_udType === 'admin'): ?>
+                            <a href="<?= $baseUrl ?><?= $_udUrl ?>" class="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                                <?php if ($_udIcon): ?><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $_udIcon ?>"/></svg><?php endif; ?>
+                                <?= htmlspecialchars($_udLabel) ?>
+                            </a>
+                            <?php else: ?>
+                            <a href="<?= $baseUrl ?><?= $_udUrl ?>" class="<?= $_udIcon ? 'flex items-center gap-2' : 'block' ?> px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700">
+                                <?php if ($_udIcon): ?><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $_udIcon ?>"/></svg><?php endif; ?>
+                                <?= htmlspecialchars($_udLabel) ?>
+                            </a>
+                            <?php endif;
+                            endforeach; ?>
                         </div>
                     </div>
                     <?php else: ?>
