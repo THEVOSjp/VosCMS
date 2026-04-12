@@ -651,22 +651,31 @@ if (!function_exists('db_trans_batch')) {
         $titleTr = [];
         $contentTr = [];
 
+        // 게시글별 original_locale 매핑
+        $origLocaleMap = [];
+        foreach ($posts as $p) {
+            $origLocaleMap[(int)$p['id']] = $p['original_locale'] ?? '';
+        }
+
+        // 현재 로케일이 원본 언어인 게시글은 번역 불필요 (원본 title 유지)
+        $needTranslation = array_filter($postIds, fn($id) => ($origLocaleMap[(int)$id] ?? '') !== $locale);
+        if (empty($needTranslation)) return $posts; // 전부 원본 언어
+
         // 폴백 체인: 현재 로케일 → 영어 → 기본언어
         $defaultLocale = $_ENV['APP_LOCALE'] ?? $_ENV['DEFAULT_LOCALE'] ?? 'ko';
         $chain = [$locale];
         if ($locale !== 'en') $chain[] = 'en';
         if ($locale !== $defaultLocale && $defaultLocale !== 'en') $chain[] = $defaultLocale;
 
-        // 키 생성
-        $titleKeys = implode(',', array_map(fn($id) => "'" . addslashes("board_post.{$id}.title") . "'", $postIds));
-        $contentKeys = implode(',', array_map(fn($id) => "'" . addslashes("board_post.{$id}.content") . "'", $postIds));
+        // 번역 필요한 게시글만 키 생성
+        $titleKeys = implode(',', array_map(fn($id) => "'" . addslashes("board_post.{$id}.title") . "'", $needTranslation));
+        $contentKeys = implode(',', array_map(fn($id) => "'" . addslashes("board_post.{$id}.content") . "'", $needTranslation));
         $allKeys = $titleKeys . ',' . $contentKeys;
 
         try {
-            // 폴백 체인 순서대로 조회
             foreach ($chain as $tryLocale) {
-                $needTitle = array_filter($postIds, fn($id) => !isset($titleTr[(int)$id]));
-                if (empty($needTitle)) break;
+                $still = array_filter($needTranslation, fn($id) => !isset($titleTr[(int)$id]));
+                if (empty($still)) break;
 
                 $rows = $pdo->query("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN ({$allKeys}) AND locale = '" . addslashes($tryLocale) . "'")->fetchAll(\PDO::FETCH_ASSOC);
                 foreach ($rows as $tr) {
@@ -681,7 +690,7 @@ if (!function_exists('db_trans_batch')) {
             error_log("db_trans_batch error: " . $e->getMessage());
         }
 
-        // 번역 적용
+        // 번역 적용 (원본 언어 게시글은 건드리지 않음)
         foreach ($posts as &$p) {
             $pid = (int)$p['id'];
             if (isset($titleTr[$pid])) $p['title'] = $titleTr[$pid];

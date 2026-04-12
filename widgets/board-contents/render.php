@@ -32,7 +32,7 @@ if ($boardSlug) {
         $boardInfo = $bStmt->fetch(\PDO::FETCH_ASSOC);
 
         if ($boardInfo) {
-            $pStmt = $pdo->prepare("SELECT id, title, content, nick_name, created_at, view_count, is_notice FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' ORDER BY is_notice DESC, created_at DESC LIMIT " . (int)$count);
+            $pStmt = $pdo->prepare("SELECT id, title, content, nick_name, created_at, view_count, is_notice, original_locale FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' ORDER BY is_notice DESC, created_at DESC LIMIT " . (int)$count);
             $pStmt->execute([$boardInfo['id']]);
             $posts = $pStmt->fetchAll(\PDO::FETCH_ASSOC);
 

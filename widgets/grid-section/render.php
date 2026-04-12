@@ -82,7 +82,7 @@ function renderGridCell($cell, $pdo, $prefix, $baseUrl, $locale, $loc) {
             $bStmt->execute([$boardSlug]);
             $boardId = $bStmt->fetchColumn();
             if ($boardId) {
-                $pStmt = $pdo->prepare("SELECT id, title, content, nick_name, created_at, is_notice FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' ORDER BY is_notice DESC, created_at DESC LIMIT " . (int)$count);
+                $pStmt = $pdo->prepare("SELECT id, title, content, nick_name, created_at, is_notice, original_locale FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' ORDER BY is_notice DESC, created_at DESC LIMIT " . (int)$count);
                 $pStmt->execute([$boardId]);
                 $posts = $pStmt->fetchAll(\PDO::FETCH_ASSOC);
                 // 다국어 번역 (공통컴포넌트 db_trans_batch)
