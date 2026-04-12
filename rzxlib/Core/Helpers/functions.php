@@ -575,32 +575,39 @@ if (!function_exists('load_menu')) {
             $menus = include $configFile;
         }
 
-        // 2. 플러그인 메뉴 병합
-        $pluginKey = $type; // plugin.json의 menus.{type}
-        $pluginsDir = $basePath . '/plugins';
-        if (is_dir($pluginsDir)) {
-            foreach (glob($pluginsDir . '/*/plugin.json') as $pjFile) {
-                $pj = @json_decode(file_get_contents($pjFile), true);
-                foreach ($pj['menus'][$pluginKey] ?? [] as $mi) {
+        // 2. 활성 플러그인 메뉴만 병합
+        $pluginKey = $type;
+
+        // PluginManager가 있으면 로드된(활성) 플러그인에서만 메뉴 로드
+        if (isset($GLOBALS['pluginManager'])) {
+            foreach ($GLOBALS['pluginManager']->getLoaded() as $pmId => $manifest) {
+                foreach ($manifest['menus'][$pluginKey] ?? [] as $mi) {
                     $mi['position'] = $mi['position'] ?? 50;
                     $menus[] = $mi;
                 }
             }
-        }
+        } else {
+            // PluginManager 없을 때 — DB에서 활성 플러그인 목록 조회 후 해당 plugin.json만 로드
+            $activePlugins = [];
+            try {
+                $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
+                $dbname = $_ENV['DB_DATABASE'] ?? '';
+                $username = $_ENV['DB_USERNAME'] ?? 'root';
+                $password = $_ENV['DB_PASSWORD'] ?? '';
+                $pfx = $_ENV['DB_PREFIX'] ?? 'rzx_';
+                if ($dbname) {
+                    $_pdo = new \PDO("mysql:host={$host};dbname={$dbname};charset=utf8mb4", $username, $password);
+                    $activePlugins = $_pdo->query("SELECT plugin_id FROM {$pfx}plugins WHERE is_active = 1")->fetchAll(\PDO::FETCH_COLUMN);
+                }
+            } catch (\Throwable $e) {}
 
-        // 3. PluginManager가 있으면 로드된 플러그인에서도 확인
-        if (isset($GLOBALS['pluginManager'])) {
-            foreach ($GLOBALS['pluginManager']->getLoaded() as $pmId => $manifest) {
-                foreach ($manifest['menus'][$pluginKey] ?? [] as $mi) {
-                    // 이미 파일 스캔으로 추가됐을 수 있으므로 중복 방지
-                    $exists = false;
-                    foreach ($menus as $existing) {
-                        if (($existing['key'] ?? '') === ($mi['key'] ?? '') && ($existing['url'] ?? '') === ($mi['url'] ?? '')) {
-                            $exists = true;
-                            break;
-                        }
-                    }
-                    if (!$exists) {
+            $pluginsDir = $basePath . '/plugins';
+            if (is_dir($pluginsDir)) {
+                foreach (glob($pluginsDir . '/*/plugin.json') as $pjFile) {
+                    $pluginSlug = basename(dirname($pjFile));
+                    if (!empty($activePlugins) && !in_array($pluginSlug, $activePlugins)) continue;
+                    $pj = @json_decode(file_get_contents($pjFile), true);
+                    foreach ($pj['menus'][$pluginKey] ?? [] as $mi) {
                         $mi['position'] = $mi['position'] ?? 50;
                         $menus[] = $mi;
                     }
@@ -608,7 +615,7 @@ if (!function_exists('load_menu')) {
             }
         }
 
-        // 4. 정렬
+        // 3. 정렬
         usort($menus, fn($a, $b) => ($a['position'] ?? 50) <=> ($b['position'] ?? 50));
 
         // 5. label 번역 적용 + URL 치환
