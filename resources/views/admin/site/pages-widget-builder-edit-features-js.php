@@ -51,6 +51,7 @@
         if (item.title) titleVal = typeof item.title === 'object' ? (item.title[currentLocale] || item.title['ko'] || item.title['en'] || '') : item.title;
         var descVal = '';
         if (item.description) descVal = typeof item.description === 'object' ? (item.description[currentLocale] || item.description['ko'] || item.description['en'] || '') : item.description;
+        var linkVal = item.link || '';
 
         var h = '<div class="fi-item p-2.5 bg-zinc-50 dark:bg-zinc-700/50 rounded-lg border border-zinc-200 dark:border-zinc-600" data-fi-idx="' + idx + '">';
 
@@ -88,6 +89,10 @@
         h += '<div class="mb-1"><label class="text-[10px] text-zinc-400 mb-0.5 block">Description (' + (langNames[currentLocale] || currentLocale) + ')</label>';
         h += '<textarea class="fi-desc w-full px-2 py-1.5 border border-zinc-200 dark:border-zinc-600 rounded text-[11px] bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white resize-y" data-lang="' + currentLocale + '" rows="2" placeholder="Description">' + esc(descVal) + '</textarea></div>';
 
+        // 링크
+        h += '<div class="mb-1"><label class="text-[10px] text-zinc-400 mb-0.5 block">Link</label>';
+        h += '<input type="text" class="fi-link w-full px-2 py-1.5 border border-zinc-200 dark:border-zinc-600 rounded text-[11px] bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white" value="' + esc(linkVal) + '" placeholder="https:// or /path"></div>';
+
         // i18n 확장 (숨김 상태)
         h += '<div class="fi-i18n-expanded hidden space-y-1.5 pl-2 border-l-2 border-blue-200 dark:border-blue-800">';
         supportedLangs.forEach(function(lang) {
@@ -110,7 +115,7 @@
         var addBtn = document.getElementById('btnAddFeatureItem');
         if (addBtn) addBtn.addEventListener('click', function() {
             if (!E.editTempConfig.feature_items) E.editTempConfig.feature_items = [];
-            E.editTempConfig.feature_items.push({ icon: 'cube', color: 'blue', title: {}, description: {} });
+            E.editTempConfig.feature_items.push({ icon: 'cube', color: 'blue', title: {}, description: {}, link: '' });
             refreshFi();
             console.log('[WYSIWYG] Feature item added, total:', E.editTempConfig.feature_items.length);
         });
@@ -179,6 +184,8 @@
             var fi = E.editTempConfig.feature_items[idx];
             fi.icon = item.querySelector('.fi-icon').value;
             fi.color = item.querySelector('.fi-color').value;
+            var linkInp = item.querySelector('.fi-link');
+            fi.link = linkInp ? linkInp.value.trim() : '';
 
             // title i18n
             if (typeof fi.title !== 'object' || fi.title === null) fi.title = {};

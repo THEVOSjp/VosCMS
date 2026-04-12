@@ -4,6 +4,18 @@
  * config 기반 동적 렌더링 (feature_items 배열)
  */
 
+// Tailwind CDN safelist — 동적 색상 클래스를 JIT가 인식하도록
+// bg-blue-100 bg-blue-600 text-blue-600 bg-blue-900/50 dark:bg-blue-900/50 dark:text-blue-400
+// bg-green-100 bg-green-600 text-green-600 bg-green-900/50 dark:bg-green-900/50 dark:text-green-400
+// bg-purple-100 bg-purple-600 text-purple-600 bg-purple-900/50 dark:bg-purple-900/50 dark:text-purple-400
+// bg-red-100 bg-red-600 text-red-600 bg-red-900/50 dark:bg-red-900/50 dark:text-red-400
+// bg-orange-100 bg-orange-600 text-orange-600 bg-orange-900/50 dark:bg-orange-900/50 dark:text-orange-400
+// bg-indigo-100 bg-indigo-600 text-indigo-600 bg-indigo-900/50 dark:bg-indigo-900/50 dark:text-indigo-400
+// bg-teal-100 bg-teal-600 text-teal-600 bg-teal-900/50 dark:bg-teal-900/50 dark:text-teal-400
+// bg-cyan-100 bg-cyan-600 text-cyan-600 bg-cyan-900/50 dark:bg-cyan-900/50 dark:text-cyan-400
+// bg-amber-100 bg-amber-600 text-amber-600 bg-amber-900/50 dark:bg-amber-900/50 dark:text-amber-400
+// bg-yellow-100 bg-yellow-600 text-yellow-600 bg-yellow-900/50 dark:bg-yellow-900/50 dark:text-yellow-400
+
 // 아이콘 매핑 (key → SVG path)
 $iconMap = [
     'mobile'       => 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z',
@@ -98,15 +110,22 @@ foreach ($featureItems as $item) {
     $fc = $item['color'] ?? 'blue';
     $iTitle = htmlspecialchars($loc($item['title'] ?? ''));
     $iDesc  = htmlspecialchars($loc($item['description'] ?? ''));
+    $iLink  = trim($loc($item['link'] ?? ''));
     $svgPath = $iconMap[$ic] ?? $iconMap['cube'];
 
-    $cards .= '<div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-8 text-center hover:shadow-lg transition">'
-        . '<div class="w-16 h-16 bg-' . $fc . '-100 dark:bg-' . $fc . '-900/50 rounded-xl flex items-center justify-center mx-auto mb-6">'
+    $cardInner = '<div class="w-16 h-16 bg-' . $fc . '-100 dark:bg-' . $fc . '-900/50 rounded-xl flex items-center justify-center mx-auto mb-6">'
         . '<svg class="w-8 h-8 text-' . $fc . '-600 dark:text-' . $fc . '-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="' . $svgPath . '"/></svg>'
         . '</div>'
         . '<h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">' . $iTitle . '</h3>'
-        . '<p class="text-gray-600 dark:text-zinc-400">' . $iDesc . '</p>'
-        . '</div>';
+        . '<p class="text-gray-600 dark:text-zinc-400">' . $iDesc . '</p>';
+
+    if ($iLink) {
+        $cards .= '<a href="' . htmlspecialchars($iLink) . '" class="block bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-8 text-center hover:shadow-lg transition cursor-pointer">'
+            . $cardInner . '</a>';
+    } else {
+        $cards .= '<div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-8 text-center hover:shadow-lg transition">'
+            . $cardInner . '</div>';
+    }
 }
 
 return '<section class="py-20"' . $bgStyle . '>'
