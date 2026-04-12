@@ -75,7 +75,7 @@ if ($_sidebarSkinOverride): ?>
 <?php else: ?>
 
 <!-- 모바일: 아바타 토글 버튼 (lg 이상에서 숨김) -->
-<button id="mypageSidebarToggle" onclick="document.getElementById('mypageSidebarOverlay').classList.remove('hidden');document.getElementById('mypageSidebarPanel').classList.replace('-translate-x-full','translate-x-0')" class="lg:hidden flex items-center gap-3 mb-4 p-3 bg-white dark:bg-zinc-800 rounded-xl shadow-md w-full">
+<button id="mypageSidebarToggle" onclick="mypageSidebar.open()" class="lg:hidden flex items-center gap-3 mb-4 p-3 bg-white dark:bg-zinc-800 rounded-xl shadow-md w-full">
     <div class="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 <?= $_avatarBg ?>">
         <?= $_avatarHtml ?>
     </div>
@@ -87,18 +87,44 @@ if ($_sidebarSkinOverride): ?>
 </button>
 
 <!-- 모바일: 슬라이드인 오버레이 -->
-<div id="mypageSidebarOverlay" class="hidden fixed inset-0 z-50 lg:hidden">
-    <!-- 배경 딤 -->
-    <div onclick="document.getElementById('mypageSidebarOverlay').classList.add('hidden');document.getElementById('mypageSidebarPanel').classList.replace('translate-x-0','-translate-x-full')" class="absolute inset-0 bg-black/50"></div>
+<div id="mypageSidebarOverlay" class="fixed inset-0 z-50 lg:hidden pointer-events-none">
+    <!-- 배경 딤 (페이드 인/아웃) -->
+    <div id="mypageSidebarDim" onclick="mypageSidebar.close()" class="absolute inset-0 bg-black/0 transition-colors duration-300"></div>
     <!-- 슬라이드 패널 -->
-    <div id="mypageSidebarPanel" class="absolute left-0 top-0 h-full w-72 bg-white dark:bg-zinc-800 shadow-2xl transform -translate-x-full transition-transform duration-300 overflow-y-auto">
+    <div id="mypageSidebarPanel" class="absolute left-0 top-0 h-full w-72 bg-white dark:bg-zinc-800 shadow-2xl transform -translate-x-full transition-transform duration-300 ease-out overflow-y-auto pointer-events-auto">
         <!-- 닫기 버튼 -->
         <div class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-700">
             <span class="text-sm font-bold text-gray-900 dark:text-white"><?= __('auth.mypage.menu.profile') ?></span>
-            <button onclick="document.getElementById('mypageSidebarOverlay').classList.add('hidden');document.getElementById('mypageSidebarPanel').classList.replace('translate-x-0','-translate-x-full')" class="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-white rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700">
+            <button onclick="mypageSidebar.close()" class="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-white rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
+<script>
+var mypageSidebar = {
+    open: function() {
+        var overlay = document.getElementById('mypageSidebarOverlay');
+        var dim = document.getElementById('mypageSidebarDim');
+        var panel = document.getElementById('mypageSidebarPanel');
+        overlay.classList.remove('pointer-events-none');
+        document.body.style.overflow = 'hidden';
+        requestAnimationFrame(function() {
+            dim.classList.replace('bg-black/0', 'bg-black/50');
+            panel.classList.replace('-translate-x-full', 'translate-x-0');
+        });
+    },
+    close: function() {
+        var overlay = document.getElementById('mypageSidebarOverlay');
+        var dim = document.getElementById('mypageSidebarDim');
+        var panel = document.getElementById('mypageSidebarPanel');
+        dim.classList.replace('bg-black/50', 'bg-black/0');
+        panel.classList.replace('translate-x-0', '-translate-x-full');
+        setTimeout(function() {
+            overlay.classList.add('pointer-events-none');
+            document.body.style.overflow = '';
+        }, 300);
+    }
+};
+</script>
         <!-- 프로필 -->
         <div class="text-center p-6 pb-4">
             <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 overflow-hidden <?= $_avatarBg ?>">

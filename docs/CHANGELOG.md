@@ -16,13 +16,26 @@ RezlyX 프로젝트 변경 이력입니다.
 - **admin-sidebar.php 리팩토링** — 731줄 하드코딩 → ~200줄 동적 렌더러 (config + plugin.json 기반)
 - **vos-shop plugin.json** — 하드코딩 메뉴를 `menus.admin` 형식으로 이전
 
+### Added — 마이페이지 모바일 대응
+- **슬라이드인 메뉴** — 모바일에서 아바타+이름 토글 바 → 좌측 슬라이드인 오버레이 (300ms ease-out)
+- **페이드 딤 배경** — 배경 클릭 또는 X 버튼으로 닫기, body 스크롤 잠금
+
+### Added — Translator 언어 감지 개선
+- **force_locale** — 기본 언어 강제 적용 (`?lang=xx` 파라미터로 사용자 변경 가능)
+- **default_language** — install.php ↔ Translator 설정 키 통일
+- **URL 파라미터** — `?lang=xx` 최우선 감지, 세션/쿠키에 저장
+
 ### Fixed
 - **FAQ 스킨 미적용** — 마이그레이션 SQL의 기본 게시판 INSERT가 skin 없이 먼저 실행되어 install.php의 `INSERT IGNORE`가 무시되는 문제 수정
+- **translations 테이블 source_locale 누락** — 코어 마이그레이션에 컬럼 누락 → db_trans() 전체 실패 → 사용자 정보/메뉴/다국어 표시 안 됨
 - **설정 탭 사이드바 활성 표시** — `route_prefix` 속성 추가로 settings 하위 모든 라우트에서 설정 메뉴 활성 유지
 - **설치 세션 잔류 버그** — .env 없는 새 설치 시 이전 PHP 세션이 남아 Step 0을 건너뛰는 문제 수정
 - **nginx 403** — admin/ 물리 디렉토리와 라우트 충돌 수정 (`try_files $uri/` 제거)
+- **난독화 스크립트 버전 하드코딩** — obfuscate.php가 version.json에서 동적으로 버전을 읽도록 수정
 
 ### Changed
+- **그리드/board-contents 위젯 다국어뷰** — rzx_translations 번역 조회 추가 (현재 로케일 → 영어 폴백)
+- **사이트 업종 카테고리** — 15개 → 26개 확대 (기업, 쇼핑몰, 법률, 회계, IT, 미디어 등 13개국어)
 - **그리드 위젯 설정** — grid-section render.php의 네이티브 셀 타입(`board-list`)으로 변경, 13개국어 제목
 - **Step 4 언어 선택** — 5개 → 13개 언어 확대, 설치 언어로 pre-fill
 - **timezone 선택** — 13개국어 사용자 대응 시간대 12개로 확대
