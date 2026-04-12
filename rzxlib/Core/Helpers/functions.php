@@ -578,9 +578,17 @@ if (!function_exists('load_menu')) {
         // 2. 활성 플러그인 메뉴만 병합
         $pluginKey = $type;
 
-        // PluginManager가 있으면 로드된(활성) 플러그인에서만 메뉴 로드
-        $_pm = $GLOBALS['pluginManager'] ?? \RzxLib\Core\Plugin\PluginManager::getInstance() ?? null;
-        if ($_pm && !empty($_pm->getLoaded())) {
+        // 활성 플러그인 메뉴만 병합
+        $pluginKey = $type;
+        $_pm = null;
+
+        // PluginManager 싱글턴 확인
+        if (class_exists('\RzxLib\Core\Plugin\PluginManager', false)) {
+            $_pm = \RzxLib\Core\Plugin\PluginManager::getInstance();
+        }
+
+        if ($_pm) {
+            // PluginManager에서 로드된(활성) 플러그인만
             foreach ($_pm->getLoaded() as $pmId => $manifest) {
                 foreach ($manifest['menus'][$pluginKey] ?? [] as $mi) {
                     $mi['position'] = $mi['position'] ?? 50;
@@ -588,8 +596,8 @@ if (!function_exists('load_menu')) {
                 }
             }
         } else {
-            // PluginManager 없을 때 — DB에서 활성 플러그인 목록 조회 후 해당 plugin.json만 로드
-            $activePlugins = [];
+            // PluginManager 없을 때 — DB에서 활성 목록 조회
+            $activePlugins = null; // null = 조회 안 됨, [] = 활성 플러그인 없음
             try {
                 $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
                 $dbname = $_ENV['DB_DATABASE'] ?? '';
@@ -602,15 +610,18 @@ if (!function_exists('load_menu')) {
                 }
             } catch (\Throwable $e) {}
 
-            $pluginsDir = $basePath . '/plugins';
-            if (is_dir($pluginsDir)) {
-                foreach (glob($pluginsDir . '/*/plugin.json') as $pjFile) {
-                    $pluginSlug = basename(dirname($pjFile));
-                    if (!empty($activePlugins) && !in_array($pluginSlug, $activePlugins)) continue;
-                    $pj = @json_decode(file_get_contents($pjFile), true);
-                    foreach ($pj['menus'][$pluginKey] ?? [] as $mi) {
-                        $mi['position'] = $mi['position'] ?? 50;
-                        $menus[] = $mi;
+            // 활성 플러그인의 plugin.json만 로드 (DB 조회 실패 시 플러그인 메뉴 없음)
+            if (is_array($activePlugins) && !empty($activePlugins)) {
+                $pluginsDir = $basePath . '/plugins';
+                if (is_dir($pluginsDir)) {
+                    foreach ($activePlugins as $pluginSlug) {
+                        $pjFile = $pluginsDir . '/' . $pluginSlug . '/plugin.json';
+                        if (!file_exists($pjFile)) continue;
+                        $pj = @json_decode(file_get_contents($pjFile), true);
+                        foreach ($pj['menus'][$pluginKey] ?? [] as $mi) {
+                            $mi['position'] = $mi['position'] ?? 50;
+                            $menus[] = $mi;
+                        }
                     }
                 }
             }
