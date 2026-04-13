@@ -16,7 +16,7 @@ $_baseUrl = $config['app_url'] ?? ($baseUrl ?? '');
      data-error="<?= htmlspecialchars(__('common.msg.error') ?? 'An error occurred.') ?>"
      data-saved="<?= htmlspecialchars(__('common.msg.saved') ?? 'Saved.') ?>"
      data-confirm="<?= htmlspecialchars(__('common.buttons.confirm') ?? 'OK') ?>"></div>
-<script src="<?= $_baseUrl ?>/assets/js/result-modal.js"></script>
+<script src="<?= $_baseUrl ?>/assets/js/result-modal.js?v=<?= filemtime(BASE_PATH . '/assets/js/result-modal.js') ?>"></script>
 <?php if (!empty($message) && !empty($messageType)): ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
