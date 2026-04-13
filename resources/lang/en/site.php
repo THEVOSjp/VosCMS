@@ -106,6 +106,8 @@ return [
         'install_other' => 'Install Other Skin',
         'detail_settings' => 'Detail Settings',
         'rename' => 'Rename', 'cfg_title' => 'Layout Name',
+        'cfg_path' => 'Path', 'cfg_desc' => 'Description', 'cfg_author' => 'Author', 'cfg_version' => 'Version',
+        'cfg_menus' => 'Menus', 'select_menu' => '-- Select Menu --', 'cfg_vars' => 'Extended Variables',
         'duplicate' => 'Duplicate',
         'delete' => 'Delete',
         'save_layout' => 'Save Layout',

@@ -106,6 +106,8 @@ return [
         'install_other' => '安裝其他皮膚',
         'detail_settings' => '詳細設定',
         'rename' => '重新命名', 'cfg_title' => '佈局名稱',
+        'cfg_path' => '路徑', 'cfg_desc' => '描述', 'cfg_author' => '作者', 'cfg_version' => '版本',
+        'cfg_menus' => '選單', 'select_menu' => '-- 選擇選單 --', 'cfg_vars' => '擴充變數',
         'duplicate' => '建立副本',
         'delete' => '刪除',
         'save_layout' => '儲存版面',

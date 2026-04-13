@@ -106,6 +106,8 @@ return [
         'install_other' => 'Anderes Skin installieren',
         'detail_settings' => 'Detaileinstellungen',
         'rename' => 'Umbenennen', 'cfg_title' => 'Layout-Name',
+        'cfg_path' => 'Pfad', 'cfg_desc' => 'Beschreibung', 'cfg_author' => 'Autor', 'cfg_version' => 'Version',
+        'cfg_menus' => 'Menüs', 'select_menu' => '-- Menü auswählen --', 'cfg_vars' => 'Erweiterte Variablen',
         'duplicate' => 'Kopie erstellen',
         'delete' => 'Loeschen',
         'save_layout' => 'Layout speichern',

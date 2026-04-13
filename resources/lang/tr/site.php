@@ -103,6 +103,8 @@ return [
         'install_other' => 'Başka Skin Kur',
         'detail_settings' => 'Detaylı Ayarlar',
         'rename' => 'Yeniden Adlandır', 'cfg_title' => 'Düzen Adı',
+        'cfg_path' => 'Yol', 'cfg_desc' => 'Açıklama', 'cfg_author' => 'Yazar', 'cfg_version' => 'Sürüm',
+        'cfg_menus' => 'Menüler', 'select_menu' => '-- Menü Seçin --', 'cfg_vars' => 'Genişletilmiş Değişkenler',
         'duplicate' => 'Kopya Oluştur',
         'delete' => 'Sil',
         'save_layout' => 'Düzeni Kaydet',

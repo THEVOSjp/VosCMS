@@ -106,6 +106,8 @@ return [
         'install_other' => 'Cài đặt skin khác',
         'detail_settings' => 'Cài đặt chi tiết',
         'rename' => 'Đổi tên', 'cfg_title' => 'Tên bố cục',
+        'cfg_path' => 'Đường dẫn', 'cfg_desc' => 'Mô tả', 'cfg_author' => 'Tác giả', 'cfg_version' => 'Phiên bản',
+        'cfg_menus' => 'Menu', 'select_menu' => '-- Chọn menu --', 'cfg_vars' => 'Biến mở rộng',
         'duplicate' => 'Tạo bản sao',
         'delete' => 'Xóa',
         'save_layout' => 'Lưu bố cục',

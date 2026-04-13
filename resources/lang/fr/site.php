@@ -106,6 +106,8 @@ return [
         'install_other' => 'Installer un autre skin',
         'detail_settings' => 'Parametres detailles',
         'rename' => 'Renommer', 'cfg_title' => 'Nom du layout',
+        'cfg_path' => 'Chemin', 'cfg_desc' => 'Description', 'cfg_author' => 'Auteur', 'cfg_version' => 'Version',
+        'cfg_menus' => 'Menus', 'select_menu' => '-- Sélectionner un menu --', 'cfg_vars' => 'Variables étendues',
         'duplicate' => 'Creer une copie',
         'delete' => 'Supprimer',
         'save_layout' => 'Enregistrer la mise en page',

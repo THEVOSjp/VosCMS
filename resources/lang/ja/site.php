@@ -106,6 +106,8 @@ return [
         'install_other' => '他のスキンをインストール',
         'detail_settings' => '詳細設定',
         'rename' => '名前変更', 'cfg_title' => 'レイアウト名',
+        'cfg_path' => 'パス', 'cfg_desc' => '説明', 'cfg_author' => '作成者', 'cfg_version' => 'バージョン',
+        'cfg_menus' => 'メニュー', 'select_menu' => '-- メニュー選択 --', 'cfg_vars' => '拡張変数',
         'duplicate' => '複製を作成',
         'delete' => '削除',
         'save_layout' => 'レイアウト保存',

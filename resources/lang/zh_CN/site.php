@@ -106,6 +106,8 @@ return [
         'install_other' => '安装其他皮肤',
         'detail_settings' => '详细设置',
         'rename' => '重命名', 'cfg_title' => '布局名称',
+        'cfg_path' => '路径', 'cfg_desc' => '描述', 'cfg_author' => '作者', 'cfg_version' => '版本',
+        'cfg_menus' => '菜单', 'select_menu' => '-- 选择菜单 --', 'cfg_vars' => '扩展变量',
         'duplicate' => '创建副本',
         'delete' => '删除',
         'save_layout' => '保存布局',

@@ -106,6 +106,8 @@ return [
         'install_other' => 'Установить другой скин',
         'detail_settings' => 'Детальные настройки',
         'rename' => 'Переименовать', 'cfg_title' => 'Название макета',
+        'cfg_path' => 'Путь', 'cfg_desc' => 'Описание', 'cfg_author' => 'Автор', 'cfg_version' => 'Версия',
+        'cfg_menus' => 'Меню', 'select_menu' => '-- Выбрать меню --', 'cfg_vars' => 'Расширенные переменные',
         'duplicate' => 'Создать копию',
         'delete' => 'Удалить',
         'save_layout' => 'Сохранить макет',

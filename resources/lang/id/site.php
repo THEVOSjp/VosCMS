@@ -42,6 +42,8 @@ return [
         'install_other' => 'Instal Skin Lain',
         'detail_settings' => 'Pengaturan Detail',
         'rename' => 'Ubah Nama', 'cfg_title' => 'Nama Layout',
+        'cfg_path' => 'Path', 'cfg_desc' => 'Deskripsi', 'cfg_author' => 'Penulis', 'cfg_version' => 'Versi',
+        'cfg_menus' => 'Menu', 'select_menu' => '-- Pilih Menu --', 'cfg_vars' => 'Variabel Tambahan',
         'duplicate' => 'Buat Salinan',
         'delete' => 'Hapus',
         'save_layout' => 'Simpan Tata Letak',

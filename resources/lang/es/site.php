@@ -106,6 +106,8 @@ return [
         'install_other' => 'Instalar otro skin',
         'detail_settings' => 'Configuracion detallada',
         'rename' => 'Renombrar', 'cfg_title' => 'Nombre del diseño',
+        'cfg_path' => 'Ruta', 'cfg_desc' => 'Descripción', 'cfg_author' => 'Autor', 'cfg_version' => 'Versión',
+        'cfg_menus' => 'Menús', 'select_menu' => '-- Seleccionar menú --', 'cfg_vars' => 'Variables extendidas',
         'duplicate' => 'Crear copia',
         'delete' => 'Eliminar',
         'save_layout' => 'Guardar diseno',

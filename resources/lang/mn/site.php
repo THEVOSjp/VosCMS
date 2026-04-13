@@ -103,6 +103,8 @@ return [
         'install_other' => 'Өөр скин суулгах',
         'detail_settings' => 'Дэлгэрэнгүй тохиргоо',
         'rename' => 'Нэр солих', 'cfg_title' => 'Загварын нэр',
+        'cfg_path' => 'Зам', 'cfg_desc' => 'Тайлбар', 'cfg_author' => 'Зохиогч', 'cfg_version' => 'Хувилбар',
+        'cfg_menus' => 'Цэс', 'select_menu' => '-- Цэс сонгох --', 'cfg_vars' => 'Өргөтгөсөн хувьсагч',
         'duplicate' => 'Хуулбар үүсгэх',
         'delete' => 'Устгах',
         'save_layout' => 'Загвар хадгалах',
