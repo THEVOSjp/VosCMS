@@ -209,24 +209,33 @@ foreach ($_sysPages as $_sp):
             </div>
         </main>
     </div>
+<?php include __DIR__ . '/../partials/result-modal.php'; ?>
 <script>
 function deleteUserPage(slug, title) {
-    if (!confirm('「' + title + '」 페이지를 삭제하시겠습니까?\n\n연결된 콘텐츠와 위젯도 함께 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.')) return;
-
-    fetch(window.location.href, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-        body: JSON.stringify({ action: 'delete_page', slug: slug })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert(data.error || '삭제에 실패했습니다.');
+    showConfirmModal({
+        title: '「' + title + '」 페이지를 삭제하시겠습니까?',
+        message: '이 작업은 되돌릴 수 없습니다.',
+        checkLabel: '연결된 콘텐츠와 위젯도 함께 삭제된다는 것을 알고 있습니다.',
+        confirmText: '삭제',
+        danger: true,
+        onConfirm: function() {
+            fetch(window.location.href, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ action: 'delete_page', slug: slug })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    showResultModal(true, '페이지가 삭제되었습니다.');
+                    setTimeout(function() { location.reload(); }, 1000);
+                } else {
+                    showResultModal(false, data.error || '삭제에 실패했습니다.');
+                }
+            })
+            .catch(function(err) { showResultModal(false, err.message); });
         }
-    })
-    .catch(function(err) { alert('오류가 발생했습니다: ' + err.message); });
+    });
 }
 </script>
 </body>
