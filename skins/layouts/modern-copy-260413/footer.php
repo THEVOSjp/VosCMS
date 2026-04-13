@@ -35,6 +35,22 @@
     }
     document.addEventListener('click', () => { if (userMenuDropdown) userMenuDropdown.classList.add('hidden'); });
 
+    // 투명 헤더 스크롤 시 배경 전환
+    (function() {
+        var header = document.querySelector('header.header-transparent');
+        if (!header) return;
+        var threshold = 80;
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > threshold) {
+                header.classList.add('bg-white', 'dark:bg-zinc-800', 'shadow-sm', 'dark:shadow-zinc-900/50');
+                header.classList.remove('bg-transparent');
+            } else {
+                header.classList.remove('bg-white', 'dark:bg-zinc-800', 'shadow-sm', 'dark:shadow-zinc-900/50');
+                header.classList.add('bg-transparent');
+            }
+        });
+    })();
+
     // 메뉴 드롭다운 (fixed 위치 계산)
     document.querySelectorAll('.menu-has-dropdown').forEach(function(el) {
         var ddId = el.dataset.dropdown;

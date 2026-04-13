@@ -159,7 +159,7 @@ elseif ($_darkMode === 'light') $_htmlDarkClass = '';
 </head>
 <body class="bg-gray-50 dark:bg-zinc-900 min-h-screen flex flex-col transition-colors duration-200">
     <!-- Header (Modern: 2단 구조) -->
-    <header class="<?= $_headerStyle === 'transparent' ? 'absolute w-full bg-transparent' : 'bg-white dark:bg-zinc-800 shadow-sm dark:shadow-zinc-900/50' ?> <?= $_menuFixed || $_headerStyle === 'sticky' ? 'sticky top-0' : '' ?> z-50 transition-colors duration-200">
+    <header class="<?= $_headerStyle === 'transparent' ? 'fixed w-full bg-transparent header-transparent' : 'bg-white dark:bg-zinc-800 shadow-sm dark:shadow-zinc-900/50' ?> <?= $_menuFixed || $_headerStyle === 'sticky' || $_headerStyle === 'transparent' ? 'sticky top-0' : '' ?> z-50 transition-all duration-300">
         <!-- 상단: 로고 + 유틸리티 -->
         <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-14">
