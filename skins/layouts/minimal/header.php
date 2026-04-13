@@ -30,7 +30,19 @@ $baseUrl = rtrim($config['app_url'] ?? '', '/');
 if (!isset($siteSettings)) $siteSettings = [];
 
 $logoType = $siteSettings['logo_type'] ?? 'text';
-$logoImage = $siteSettings['logo_image'] ?? '';
+
+// 레이아웃 설정 ($__layoutConfig: index.php에서 로드)
+$_lc = $__layoutConfig ?? [];
+$_headerStyle = $_lc['header_style'] ?? 'fixed';
+$_contentWidth = $_lc['content_width'] ?? 'max-w-7xl';
+$_primaryColor = $_lc['primary_color'] ?? '#3B82F6';
+$_darkMode = $_lc['dark_mode'] ?? 'auto';
+$_menuFixed = ($_lc['menu_fixed'] ?? '1') === '1';
+$_showSearch = ($_lc['show_search'] ?? '1') === '1';
+$_lcLogoImage = $_lc['logo_image'] ?? '';
+$_headerScript = $_lc['header_script'] ?? '';
+$_customCss = $_lc['custom_css'] ?? '';
+$logoImage = $_lcLogoImage ?: ($siteSettings['logo_image'] ?? '');
 $pageTitle = $pageTitle ?? $siteName;
 
 // SEO 헬퍼 로드

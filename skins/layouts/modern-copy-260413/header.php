@@ -29,22 +29,8 @@ $siteName = function_exists('get_site_name') ? get_site_name() : ($config['app_n
 $baseUrl = rtrim($config['app_url'] ?? '', '/');
 if (!isset($siteSettings)) $siteSettings = [];
 
-// 레이아웃 설정 ($__layoutConfig: index.php에서 skin_detail_layout_{slug} 로드)
-$_lc = $__layoutConfig ?? [];
-$_headerStyle = $_lc['header_style'] ?? 'fixed';
-$_contentWidth = $_lc['content_width'] ?? 'max-w-7xl';
-$_primaryColor = $_lc['primary_color'] ?? '#3B82F6';
-$_darkMode = $_lc['dark_mode'] ?? 'auto';
-$_menuFixed = ($_lc['menu_fixed'] ?? '1') === '1';
-$_showSearch = ($_lc['show_search'] ?? '1') === '1';
-$_lcLogoImage = $_lc['logo_image'] ?? '';
-$_lcLogoText = $_lc['logo_text'] ?? '';
-$_lcLogoUrl = $_lc['logo_url'] ?? '';
-$_headerScript = $_lc['header_script'] ?? '';
-$_customCss = $_lc['custom_css'] ?? '';
-
 $logoType = $siteSettings['logo_type'] ?? 'text';
-$logoImage = $_lcLogoImage ?: ($siteSettings['logo_image'] ?? '');
+$logoImage = $siteSettings['logo_image'] ?? '';
 $pageTitle = $pageTitle ?? $siteName;
 
 // SEO 헬퍼 로드
@@ -88,19 +74,11 @@ if (!isset($siteMenus) || empty($siteMenus)) {
 $mainMenu = $siteMenus['Main Menu'] ?? [];
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 ?>
-<?php
-// 다크모드 클래스
-$_htmlDarkClass = '';
-if ($_darkMode === 'dark') $_htmlDarkClass = ' class="dark"';
-elseif ($_darkMode === 'light') $_htmlDarkClass = '';
-// auto, toggle은 JS로 처리
-?>
 <!DOCTYPE html>
-<html lang="<?= htmlspecialchars($currentLocale) ?>"<?= $_htmlDarkClass ?>>
+<html lang="<?= htmlspecialchars($currentLocale) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="<?= htmlspecialchars($_primaryColor) ?>">
     <title><?= htmlspecialchars($pageTitle) ?></title>
     <?php if (!empty($metaKeywords)): ?><meta name="keywords" content="<?= htmlspecialchars($metaKeywords) ?>"><?php endif; ?>
     <?php if (!empty($metaDescription)): ?><meta name="description" content="<?= htmlspecialchars($metaDescription) ?>"><?php endif; ?>
@@ -126,21 +104,12 @@ elseif ($_darkMode === 'light') $_htmlDarkClass = '';
     <link rel="stylesheet" href="<?= $baseUrl ?>/resources/css/board-content.css">
     <script src="<?= $baseUrl ?>/resources/js/board-autolink.js" defer></script>
 <?= $_seo['meta_tags'] ?>    <?php if (isset($headExtra)) echo $headExtra; ?>
-    <?php if ($_headerScript): echo $_headerScript; endif; ?>
-    <?php if ($_customCss || $_primaryColor !== '#3B82F6'): ?>
-    <style>
-        <?php if ($_primaryColor !== '#3B82F6'): ?>
-        :root { --primary: <?= htmlspecialchars($_primaryColor) ?>; }
-        <?php endif; ?>
-        <?= $_customCss ?>
-    </style>
-    <?php endif; ?>
 </head>
 <body class="bg-gray-50 dark:bg-zinc-900 min-h-screen flex flex-col transition-colors duration-200">
     <!-- Header (Modern: 2단 구조) -->
-    <header class="<?= $_headerStyle === 'transparent' ? 'absolute w-full bg-transparent' : 'bg-white dark:bg-zinc-800 shadow-sm dark:shadow-zinc-900/50' ?> <?= $_menuFixed || $_headerStyle === 'sticky' ? 'sticky top-0' : '' ?> z-50 transition-colors duration-200">
+    <header class="bg-white dark:bg-zinc-800 shadow-sm dark:shadow-zinc-900/50 sticky top-0 z-50 transition-colors duration-200">
         <!-- 상단: 로고 + 유틸리티 -->
-        <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-14">
                 <a href="<?= $baseUrl ?>/" class="flex items-center text-xl font-bold text-blue-600 dark:text-blue-400">
                     <?php if ($logoType === 'image' && $logoImage): ?>
@@ -210,7 +179,7 @@ elseif ($_darkMode === 'light') $_htmlDarkClass = '';
         </div>
         <!-- 하단: 메뉴 내비게이션 (좌우 스크롤) -->
         <div class="hidden lg:block border-t border-zinc-100 dark:border-zinc-700/50 bg-zinc-50/50 dark:bg-zinc-800/80">
-            <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 lg:px-8 relative" id="menuNavWrap">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative" id="menuNavWrap">
                 <!-- 좌측 화살표 -->
                 <button id="menuNavLeft" class="hidden absolute left-0 top-0 bottom-0 z-10 w-8 bg-gradient-to-r from-zinc-50 dark:from-zinc-800 to-transparent flex items-center justify-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition" onclick="scrollMenuNav(-200)">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>

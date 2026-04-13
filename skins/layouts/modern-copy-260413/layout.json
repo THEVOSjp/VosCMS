@@ -1,0 +1,370 @@
+{
+    "title": {
+        "ko": "VosCMS 메인 레이아웃",
+        "en": "Modern Layout (Copy)",
+        "ja": "モダンレイアウト (Copy)",
+        "zh_CN": "现代布局 (Copy)",
+        "zh_TW": "現代版面 (Copy)",
+        "de": "Modernes Layout (Copy)",
+        "es": "Diseño moderno (Copy)",
+        "fr": "Mise en page moderne (Copy)",
+        "id": "Tata letak modern (Copy)",
+        "mn": "Орчин үеийн загвар (Copy)",
+        "ru": "Современный макет (Copy)",
+        "tr": "Modern düzen (Copy)",
+        "vi": "Bố cục hiện đại (Copy)"
+    },
+    "description": {
+        "ko": "사이드바 내비게이션과 깔끔한 디자인의 모던 레이아웃입니다.",
+        "en": "Modern layout with sidebar navigation and clean design.",
+        "ja": "サイドバーナビゲーションとクリーンデザインのモダンレイアウトです。"
+    },
+    "version": "1.0.0",
+    "date": "2026-03-23",
+    "thumbnail": "thumbnail.png",
+    "author": {
+        "name": "RezlyX",
+        "url": "https:\/\/rezlyx.com",
+        "email": "info@rezlyx.com"
+    },
+    "menus": {
+        "GNB": {
+            "title": {
+                "ko": "메인 메뉴",
+                "en": "Main Menu",
+                "ja": "メインメニュー"
+            },
+            "maxdepth": 3,
+            "default": true
+        },
+        "FNB": {
+            "title": {
+                "ko": "푸터 메뉴",
+                "en": "Footer Menu",
+                "ja": "フッターメニュー"
+            },
+            "maxdepth": 2
+        }
+    },
+    "vars": [
+        {
+            "section": {
+                "ko": "기본 설정",
+                "en": "Basic Settings",
+                "ja": "基本設定"
+            },
+            "name": "header_style",
+            "type": "select",
+            "title": {
+                "ko": "헤더 스타일",
+                "en": "Header style",
+                "ja": "ヘッダースタイル"
+            },
+            "description": {
+                "ko": "사이트 상단 헤더의 표시 방식을 설정합니다.",
+                "en": "Set the display style for the site header.",
+                "ja": "サイトヘッダーの表示方式を設定します。"
+            },
+            "options": [
+                {
+                    "value": "fixed",
+                    "label": {
+                        "ko": "고정형 (기본)",
+                        "en": "Fixed (default)",
+                        "ja": "固定型（デフォルト）"
+                    }
+                },
+                {
+                    "value": "transparent",
+                    "label": {
+                        "ko": "투명형",
+                        "en": "Transparent",
+                        "ja": "透明型"
+                    }
+                },
+                {
+                    "value": "sticky",
+                    "label": {
+                        "ko": "스크롤 고정",
+                        "en": "Sticky on scroll",
+                        "ja": "スクロール固定"
+                    }
+                }
+            ],
+            "default": "fixed"
+        },
+        {
+            "name": "content_width",
+            "type": "select",
+            "title": {
+                "ko": "콘텐츠 너비",
+                "en": "Content width",
+                "ja": "コンテンツ幅"
+            },
+            "description": {
+                "ko": "페이지 본문 영역의 최대 너비를 설정합니다.",
+                "en": "Set the maximum width of the content area.",
+                "ja": "コンテンツ領域の最大幅を設定します。"
+            },
+            "options": [
+                {
+                    "value": "max-w-5xl",
+                    "label": {
+                        "ko": "기본 (1024px)",
+                        "en": "Default (1024px)",
+                        "ja": "標準 (1024px)"
+                    }
+                },
+                {
+                    "value": "max-w-6xl",
+                    "label": {
+                        "ko": "넓게 (1152px)",
+                        "en": "Wide (1152px)",
+                        "ja": "広い (1152px)"
+                    }
+                },
+                {
+                    "value": "max-w-7xl",
+                    "label": {
+                        "ko": "최대 (1280px)",
+                        "en": "Maximum (1280px)",
+                        "ja": "最大 (1280px)"
+                    }
+                },
+                {
+                    "value": "max-w-full",
+                    "label": {
+                        "ko": "전체 너비",
+                        "en": "Full width",
+                        "ja": "全幅"
+                    }
+                }
+            ],
+            "default": "max-w-7xl"
+        },
+        {
+            "name": "menu_fixed",
+            "type": "checkbox",
+            "title": {
+                "ko": "메뉴 상단 고정",
+                "en": "Fix menu at top",
+                "ja": "メニュー上部固定"
+            },
+            "description": {
+                "ko": "스크롤 시 메뉴가 화면 상단에 고정됩니다.",
+                "en": "Menu stays fixed at the top when scrolling.",
+                "ja": "スクロール時にメニューが画面上部に固定されます。"
+            },
+            "default": true
+        },
+        {
+            "name": "show_search",
+            "type": "checkbox",
+            "title": {
+                "ko": "검색창 표시",
+                "en": "Show search",
+                "ja": "検索表示"
+            },
+            "description": {
+                "ko": "헤더에 통합 검색창을 표시합니다.",
+                "en": "Show integrated search in the header.",
+                "ja": "ヘッダーに統合検索を表示します。"
+            },
+            "default": true
+        },
+        {
+            "section": {
+                "ko": "로고",
+                "en": "Logo",
+                "ja": "ロゴ"
+            },
+            "name": "logo_image",
+            "type": "image",
+            "title": {
+                "ko": "로고 이미지",
+                "en": "Logo image",
+                "ja": "ロゴ画像"
+            },
+            "description": {
+                "ko": "헤더에 표시될 로고 이미지를 업로드하세요. (권장 높이: 40~50px)",
+                "en": "Upload a logo image for the header. (Recommended height: 40-50px)",
+                "ja": "ヘッダーに表示するロゴ画像をアップロードしてください。（推奨高さ: 40-50px）"
+            }
+        },
+        {
+            "name": "logo_text",
+            "type": "text",
+            "title": {
+                "ko": "로고 텍스트",
+                "en": "Logo text",
+                "ja": "ロゴテキスト"
+            },
+            "description": {
+                "ko": "로고 이미지가 없을 때 표시되는 사이트 이름입니다.",
+                "en": "Site name displayed when no logo image is set.",
+                "ja": "ロゴ画像がない場合に表示されるサイト名です。"
+            },
+            "multilang": true
+        },
+        {
+            "name": "logo_url",
+            "type": "text",
+            "title": {
+                "ko": "로고 링크 주소",
+                "en": "Logo link URL",
+                "ja": "ロゴリンクURL"
+            },
+            "description": {
+                "ko": "로고 클릭 시 이동할 URL (비워두면 홈)",
+                "en": "URL to navigate when logo is clicked (empty = home)",
+                "ja": "ロゴクリック時の遷移先URL（空=ホーム）"
+            }
+        },
+        {
+            "section": {
+                "ko": "색상",
+                "en": "Colors",
+                "ja": "カラー"
+            },
+            "name": "primary_color",
+            "type": "color",
+            "title": {
+                "ko": "포인트 컬러",
+                "en": "Primary color",
+                "ja": "ポイントカラー"
+            },
+            "description": {
+                "ko": "사이트의 주요 강조 색상을 선택하세요.",
+                "en": "Select the main accent color for the site.",
+                "ja": "サイトの主要なアクセントカラーを選択してください。"
+            },
+            "default": "#3B82F6"
+        },
+        {
+            "name": "dark_mode",
+            "type": "select",
+            "title": {
+                "ko": "다크 모드",
+                "en": "Dark mode",
+                "ja": "ダークモード"
+            },
+            "options": [
+                {
+                    "value": "auto",
+                    "label": {
+                        "ko": "시스템 설정 따름 (기본)",
+                        "en": "Follow system (default)",
+                        "ja": "システム設定に従う（デフォルト）"
+                    }
+                },
+                {
+                    "value": "light",
+                    "label": {
+                        "ko": "라이트 모드 고정",
+                        "en": "Light mode only",
+                        "ja": "ライトモード固定"
+                    }
+                },
+                {
+                    "value": "dark",
+                    "label": {
+                        "ko": "다크 모드 고정",
+                        "en": "Dark mode only",
+                        "ja": "ダークモード固定"
+                    }
+                },
+                {
+                    "value": "toggle",
+                    "label": {
+                        "ko": "전환 버튼 표시",
+                        "en": "Show toggle button",
+                        "ja": "切替ボタン表示"
+                    }
+                }
+            ],
+            "default": "auto"
+        },
+        {
+            "section": {
+                "ko": "푸터",
+                "en": "Footer",
+                "ja": "フッター"
+            },
+            "name": "footer_logo_image",
+            "type": "image",
+            "title": {
+                "ko": "푸터 로고 이미지",
+                "en": "Footer logo image",
+                "ja": "フッターロゴ画像"
+            }
+        },
+        {
+            "name": "footer_text",
+            "type": "textarea",
+            "title": {
+                "ko": "푸터 내용",
+                "en": "Footer content",
+                "ja": "フッター内容"
+            },
+            "description": {
+                "ko": "푸터에 표시할 HTML 콘텐츠를 입력합니다.",
+                "en": "Enter HTML content to display in the footer.",
+                "ja": "フッターに表示するHTMLコンテンツを入力します。"
+            },
+            "multilang": true
+        },
+        {
+            "name": "copyright",
+            "type": "textarea",
+            "title": {
+                "ko": "카피라이트",
+                "en": "Copyright",
+                "ja": "コピーライト"
+            },
+            "description": {
+                "ko": "푸터 하단에 표시되는 저작권 문구입니다.",
+                "en": "Copyright text displayed at the bottom of the footer.",
+                "ja": "フッター下部に表示される著作権表記です。"
+            },
+            "multilang": true
+        },
+        {
+            "section": {
+                "ko": "사용자 정의",
+                "en": "Custom",
+                "ja": "カスタム"
+            },
+            "name": "header_script",
+            "type": "textarea",
+            "title": {
+                "ko": "헤더 스크립트",
+                "en": "Header script",
+                "ja": "ヘッダースクリプト"
+            },
+            "description": {
+                "ko": "HTML <head>...<\/head> 사이에 들어가는 코드를 직접 입력할 수 있습니다. 예) <script>, <style>, <meta>",
+                "en": "Enter code to be placed between <head>...<\/head>. e.g. <script>, <style>, <meta>",
+                "ja": "HTML <head>...<\/head> の間に入るコードを入力できます。例）<script>, <style>, <meta>"
+            }
+        },
+        {
+            "name": "custom_css",
+            "type": "textarea",
+            "title": {
+                "ko": "커스텀 CSS",
+                "en": "Custom CSS",
+                "ja": "カスタムCSS"
+            }
+        },
+        {
+            "name": "custom_footer_html",
+            "type": "textarea",
+            "title": {
+                "ko": "푸터 하단 HTML",
+                "en": "Footer bottom HTML",
+                "ja": "フッター下部HTML"
+            },
+            "multilang": true
+        }
+    ]
+}
