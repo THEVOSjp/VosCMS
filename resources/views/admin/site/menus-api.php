@@ -318,18 +318,46 @@ function deleteMenuItemRecursive(PDO $pdo, int $id): void {
     foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $childId) {
         deleteMenuItemRecursive($pdo, (int)$childId);
     }
-    // 연결된 페이지 삭제
+    // 연결된 콘텐츠 삭제
     $item = $pdo->prepare("SELECT url, menu_type FROM rzx_menu_items WHERE id=?");
     $item->execute([$id]);
     $menuItem = $item->fetch(PDO::FETCH_ASSOC);
     if ($menuItem) {
         $slug = $menuItem['url'] ?? '';
         $type = $menuItem['menu_type'] ?? '';
-        if ($slug && $type === 'page') {
-            $pdo->prepare("DELETE FROM rzx_page_contents WHERE page_slug = ?")->execute([$slug]);
-        } elseif ($slug && $type === 'widget') {
-            $pdo->prepare("DELETE FROM rzx_page_widgets WHERE page_slug = ?")->execute([$slug]);
+
+        // 시스템 페이지 보호 (삭제 안 함)
+        $isSystem = false;
+        if ($slug) {
+            $sysCheck = $pdo->prepare("SELECT is_system FROM rzx_page_contents WHERE page_slug = ? AND is_system = 1 LIMIT 1");
+            $sysCheck->execute([$slug]);
+            $isSystem = (bool)$sysCheck->fetchColumn();
         }
+
+        if ($slug && !$isSystem) {
+            if ($type === 'page' || $type === 'widget') {
+                // 페이지 콘텐츠 + 위젯 모두 삭제
+                $pdo->prepare("DELETE FROM rzx_page_contents WHERE page_slug = ?")->execute([$slug]);
+                $pdo->prepare("DELETE FROM rzx_page_widgets WHERE page_slug = ?")->execute([$slug]);
+            } elseif ($type === 'board') {
+                // 게시판 삭제 (게시글, 댓글, 파일, 카테고리, 투표, 번역 포함)
+                $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+                $boardStmt = $pdo->prepare("SELECT id FROM {$prefix}boards WHERE slug = ?");
+                $boardStmt->execute([$slug]);
+                $boardId = $boardStmt->fetchColumn();
+                if ($boardId) {
+                    $pdo->prepare("DELETE FROM {$prefix}board_votes WHERE target_type = 'post' AND target_id IN (SELECT id FROM {$prefix}board_posts WHERE board_id = ?)")->execute([$boardId]);
+                    $pdo->prepare("DELETE FROM {$prefix}board_files WHERE board_id = ?")->execute([$boardId]);
+                    $pdo->prepare("DELETE FROM {$prefix}board_comments WHERE board_id = ?")->execute([$boardId]);
+                    $pdo->prepare("DELETE FROM {$prefix}board_posts WHERE board_id = ?")->execute([$boardId]);
+                    $pdo->prepare("DELETE FROM {$prefix}board_categories WHERE board_id = ?")->execute([$boardId]);
+                    $pdo->prepare("DELETE FROM {$prefix}board_extra_vars WHERE board_id = ?")->execute([$boardId]);
+                    $pdo->prepare("DELETE FROM {$prefix}board_admins WHERE board_id = ?")->execute([$boardId]);
+                    $pdo->prepare("DELETE FROM {$prefix}boards WHERE id = ?")->execute([$boardId]);
+                }
+            }
+        }
+
         // 번역 데이터 삭제
         $pdo->prepare("DELETE FROM rzx_translations WHERE lang_key LIKE ?")->execute(["menu_item.{$id}.%"]);
     }
