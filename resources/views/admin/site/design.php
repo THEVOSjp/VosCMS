@@ -83,6 +83,28 @@ try {
             exit;
         }
 
+        // 레이아웃/스킨 이름 변경
+        if (($input['action'] ?? '') === 'rename_skin') {
+            $group = $input['group'] ?? '';
+            $slug = preg_replace('/[^a-zA-Z0-9_-]/', '', $input['slug'] ?? '');
+            $newTitle = trim($input['title'] ?? '');
+            if (!$slug || !$newTitle) { echo json_encode(['success' => false, 'error' => 'Invalid params']); exit; }
+            $jsonMap = ['layout' => 'layout.json', 'page' => 'skin.json', 'board' => 'skin.json', 'member' => 'skin.json'];
+            $dirMap = ['layout' => 'layouts', 'page' => 'page', 'board' => 'board', 'member' => 'member'];
+            $jsonFile = BASE_PATH . '/skins/' . ($dirMap[$group] ?? $group) . '/' . $slug . '/' . ($jsonMap[$group] ?? 'skin.json');
+            if (!file_exists($jsonFile)) { echo json_encode(['success' => false, 'error' => 'File not found']); exit; }
+            $data = json_decode(file_get_contents($jsonFile), true);
+            $locale = $config['locale'] ?? 'ko';
+            if (is_array($data['title'] ?? null)) {
+                $data['title'][$locale] = $newTitle;
+            } else {
+                $data['title'] = [$locale => $newTitle];
+            }
+            file_put_contents($jsonFile, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+            echo json_encode(['success' => true]);
+            exit;
+        }
+
         // 스킨 상세 설정 폼 로드
         if (($input['action'] ?? '') === 'load_skin_settings') {
             $group = $input['group'] ?? '';
@@ -118,6 +140,12 @@ try {
             };
 
             ob_start();
+            // 제목 (편집 가능)
+            $_skinTitle = $t($skinData['title'] ?? $slug);
+            echo '<div class="flex items-center gap-2 mb-4">';
+            echo '<input type="text" id="skinTitleInput" value="' . htmlspecialchars($_skinTitle) . '" class="flex-1 px-3 py-2 border border-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500" placeholder="' . (__('site.design.cfg_title') ?? '레이아웃 이름') . '">';
+            echo '<button onclick="renameSkin(\'' . $group . '\',\'' . $slug . '\')" class="px-4 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition whitespace-nowrap">' . (__('site.design.rename') ?? '이름 변경') . '</button>';
+            echo '</div>';
             // 경로
             echo '<div class="divide-y divide-zinc-100 dark:divide-zinc-700 mb-6">';
             echo '<div class="flex py-3"><span class="w-20 text-sm text-zinc-500 shrink-0">' . (__('site.design.cfg_path') ?? '경로') . '</span><span class="text-sm text-zinc-800 dark:text-zinc-200">/skins/' . htmlspecialchars($group === 'layout' ? 'layouts' : $group) . '/' . htmlspecialchars($slug) . '/</span></div>';
@@ -408,6 +436,18 @@ function closePanel() {
 
 var currentSettingsGroup = '';
 var currentSettingsSlug = '';
+
+function renameSkin(group, slug) {
+    var input = document.getElementById('skinTitleInput');
+    if (!input || !input.value.trim()) return;
+    fetch(window.location.href, {
+        method: 'POST', headers: {'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
+        body: JSON.stringify({action:'rename_skin', group:group, slug:slug, title:input.value.trim()})
+    }).then(r=>r.json()).then(data=>{
+        if (data.success) { showResultModal(true, '이름이 변경되었습니다.'); setTimeout(()=>location.reload(), 1000); }
+        else { showResultModal(false, data.error || '변경에 실패했습니다.'); }
+    });
+}
 
 function copyLayout(slug) {
     fetch(window.location.href, {
