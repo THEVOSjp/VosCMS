@@ -1,327 +1,271 @@
-# 페이지 시스템 (Page System)
+# VosCMS 페이지 시스템
 
-RezlyX의 범용 페이지 관리 시스템. 문서/위젯/외부 3가지 타입을 지원하며, 스킨 기반 렌더링과 다국어 콘텐츠를 제공한다.
+## 개요
 
-## 페이지 타입
+VosCMS의 페이지 시스템은 3가지 유형의 페이지를 지원합니다.
+각 유형은 목적과 사용 방식이 다르며, 관리자가 쉽게 관리할 수 있도록 통합된 인터페이스를 제공합니다.
 
-| 타입 | 설명 | 렌더링 |
-|------|------|--------|
-| `document` | HTML 콘텐츠 문서 | 스킨 설정 적용, `board-content` CSS 클래스 |
-| `widget` | 위젯 빌더 페이지 | `WidgetRenderer` + `rzx_page_widgets` 테이블 |
-| `external` | 외부 페이지 | URL→iframe, PHP/HTML→include |
+---
 
-## 파일 구조
+## 페이지 유형
 
-### 프론트 (고객 뷰)
+### 비유로 이해하기
 
-| 파일 | 역할 |
-|------|------|
-| `customer/page.php` | 페이지 렌더러 (스킨 설정 적용) |
-| `customer/_page-title-bg.php` | 제목 배경 공통 partial (이미지/동영상/오버레이) |
-| `customer/page-settings.php` | 프론트 레이아웃 내 설정 래퍼 (embed 모드) |
-| `customer/page-edit.php` | 프론트 레이아웃 내 편집 래퍼 (embed 모드) |
-
-### 관리자 뷰
-
-| 파일 | 역할 |
-|------|------|
-| `admin/site/pages-settings.php` | 페이지 환경 설정 (4개 탭) |
-| `admin/site/pages-edit-content.php` | 콘텐츠 편집 (로케일별) |
-| `admin/site/pages-document.php` | 범용 문서 에디터 |
-| `admin/site/pages.php` | 페이지 목록 |
-
-### 스킨
-
-| 파일 | 역할 |
-|------|------|
-| `skins/page/{skin}/skin.json` | 스킨 정의 (메타 + 확장 변수) |
-| `rzxlib/Core/Skin/SkinConfigRenderer.php` | skin.json → 설정 폼 자동 생성 |
-
-## 라우팅
-
-```
-관리자:
-  /admin/site/pages                → 페이지 목록
-  /admin/site/pages/settings       → 환경 설정
-  /admin/site/pages/edit-content   → 콘텐츠 편집
-
-프론트 (embed 모드):
-  /{slug}/settings                 → 프론트 레이아웃 내 설정
-  /{slug}/edit                     → 프론트 레이아웃 내 편집
-  /{slug}                          → 페이지 렌더링 (최종 fallback)
-```
-
-동적 페이지 라우팅은 게시판 slug 체크 이후의 최종 fallback으로 동작한다.
-
-## DB 구조
-
-### `rzx_page_contents`
-
-| 컬럼 | 설명 |
-|------|------|
-| `page_slug` | 페이지 식별자 (URL slug) |
-| `page_type` | document / widget / external |
-| `locale` | 언어 코드 (ko, en, ja 등) |
-| `title` | 페이지 제목 |
-| `content` | HTML 콘텐츠 또는 URL |
-| `is_active` | 활성 상태 |
-| `is_system` | 시스템 페이지 여부 (terms, privacy 등) |
-
-**로케일 체인**: `[$currentLocale, 'en', 'ko']` → 일치하는 첫 번째 로케일 사용, 없으면 아무 로케일.
-
-### `rzx_settings` (페이지 설정)
-
-키: `page_config_{slug}`, 값: JSON
-
-```json
-{
-  "slug": "about",
-  "browser_title": "회사 소개",
-  "layout": "default",
-  "skin": "default",
-  "full_width": false,
-  "search_index": "yes",
-  "meta_title": "",
-  "meta_description": "",
-  "meta_keywords": "",
-  "robots": "index,follow",
-  "og_image": "/storage/pages/og_about_1774061295.jpg",
-  "perm_access": "all",
-  "perm_edit": "admin",
-  "perm_manage": "admin",
-  "module_admins": [],
-  "skin_config": {
-    "show_title": "1",
-    "content_width": "max-w-5xl",
-    "title_bg_type": "image",
-    "title_bg_image": "/storage/skins/bg.jpg",
-    "title_bg_height": "300",
-    "title_bg_overlay": "40",
-    "title_text_color": "white",
-    "primary_color": "#3B82F6",
-    "content_bg": "transparent"
-  }
-}
-```
-
-## 설정 탭 구조
-
-### 1. 모듈 정보 (basic)
-
-- 페이지 타입 (읽기 전용)
-- URL / slug
-- 브라우저 제목 (다국어 입력)
-- 검색엔진 색인 (yes/no)
-- SEO: 키워드(다국어), 설명(다국어), Meta Title, OG Image(업로드+URL), Robots
-- **레이아웃 선택** — 카드형 그리드 UI, `skins/layouts/*/layout.json` 스캔
-- **스킨 선택** — 카드형 그리드 UI, `skins/page/*/skin.json` 스캔
-- 전체 너비 토글
-
-레이아웃/스킨 선택은 썸네일 + 이름 + 버전을 카드로 표시하며, 클릭 시 파란 테두리로 선택 상태를 나타낸다.
-
-### 2. 추가 설정 (addition)
-
-- WYSIWYG 에디터 권한 컴포넌트 (`editor-permissions.php` 공용)
-- 문서/댓글 분리, HTML 편집/파일 첨부/기본 컴포넌트/확장 컴포넌트 권한
-
-### 3. 권한 관리 (permissions)
-
-- 모듈 관리자 (이메일 추가/삭제)
-- 접근 권한 / 페이지 수정 / 관리 권한 — 드롭다운 (모든 방문자/로그인 회원/관리자/등급별)
-
-### 4. 스킨 (skin)
-
-- **스킨 기본정보**: 이름, 제작자(URL+이메일), 날짜, 버전, 설명, 썸네일
-- **확장 변수**: `SkinConfigRenderer`가 `skin.json`의 `vars`를 읽어 폼 자동 생성
-- 저장 시 `page_config_{slug}.skin_config`에 머지 저장
-
-## 스킨 시스템
-
-### skin.json 구조
-
-```json
-{
-  "title": { "ko": "기본 페이지 스킨", "en": "Default Page Skin", ... },
-  "description": { ... },
-  "version": "1.0.0",
-  "date": "2026-03-21",
-  "thumbnail": "thumbnail.png",
-  "author": { "name": "RezlyX", "url": "https://rezlyx.com", "email": "info@rezlyx.com" },
-  "vars": [ ... ]
-}
-```
-
-### 지원 타입
-
-| 타입 | HTML 요소 | 용도 |
-|------|----------|------|
-| `text` | `<input type="text">` | 짧은 문자열 |
-| `textarea` | `<textarea>` | 긴 텍스트, CSS, HTML |
-| `checkbox` | 토글 스위치 | on/off 설정 |
-| `select` | `<select>` | 드롭다운 선택 |
-| `radio` | `<input type="radio">` | 라디오 버튼 선택 |
-| `color` | `<input type="color">` | 색상 선택기 |
-| `number` | `<input type="number">` | 숫자 입력 (min/max) |
-| `image` | 파일 업로드 + 미리보기 | 이미지 업로드 |
-| `video` | 파일 업로드 + URL 입력 | 동영상 업로드 |
-
-### 특수 속성
-
-| 속성 | 설명 |
-|------|------|
-| `section` | 섹션 그룹핑 (다국어 지원) |
-| `multilang` | `true`이면 다국어 입력 버튼 표시 |
-| `depends_on` | 부모 필드명. 부모 비활성 시 자식 필드 자동 비활성 |
-| `default` | 기본값 |
-| `min` / `max` | number 타입의 범위 제한 |
-| `options` | select/radio 타입의 선택지 배열 |
-
-### depends_on 시스템
-
-`skin.json`에서 필드 간 의존 관계를 선언적으로 정의:
-
-```json
-{
-  "name": "title_bg_type",
-  "depends_on": "show_title",
-  "type": "radio",
-  ...
-}
-```
-
-**동작 방식:**
-
-1. `SkinConfigRenderer`가 `depends_on` 속성 감지
-2. 해당 `<div>`에 `data-depends-on="show_title"` HTML 속성 추가
-3. `renderForm()` 끝에 자동 JS 코드 삽입:
-   - 페이지 로드 시 부모 필드 상태에 따라 자식 필드 opacity/pointerEvents 설정
-   - 부모 필드 change 이벤트에 리스너 등록
-
-**부모 타입별 활성 조건:**
-
-| 부모 타입 | 활성 | 비활성 |
-|----------|------|--------|
-| checkbox | checked | unchecked |
-| radio | `none`, `0`, `disabled` 이외 값 | `none`, `0`, `disabled` |
-
-게시판/페이지 어디서든 `skin.json`에 `"depends_on"` 한 줄만 추가하면 자동 동작한다.
-
-## 제목 배경 시스템
-
-스킨 설정의 제목 배경 관련 vars:
-
-| 필드 | 타입 | 설명 |
+| 유형 | 비유 | 설명 |
 |------|------|------|
-| `title_bg_type` | radio | none / image / video |
-| `title_bg_image` | image | 배경 이미지 업로드 |
-| `title_bg_video` | video | MP4/WebM 업로드 또는 URL |
-| `title_bg_height` | number | 배경 높이 (100~600px, 기본 200) |
-| `title_bg_overlay` | number | 오버레이 투명도 (0~100%, 기본 40) |
-| `title_text_color` | radio | auto / white / dark |
+| **사용자 페이지** | 자유롭게 꾸미는 방 | 관리자가 직접 만들고 편집하는 페이지 |
+| **시스템 페이지** | 건물 안의 특수 목적 방 | 특정 사이트에만 존재하는 고유 페이지 |
+| **플러그인** | 어디든 설치 가능한 가구 | 범용 기능으로 누구나 설치/제거 가능 |
 
-**렌더링 (`page.php`):**
+---
+
+### 1. 사용자 페이지
+
+관리자가 **사이트 관리 > 페이지 관리**에서 직접 생성하는 페이지.
+
+| 항목 | 내용 |
+|------|------|
+| 생성 방법 | 관리자 페이지에서 "페이지 추가" |
+| 편집 방식 | 위젯 빌더 (드래그 앤 드롭) 또는 문서 편집기 |
+| 저장 위치 | DB (`rzx_page_contents` 테이블) |
+| URL | `/{page_slug}` (예: `/about`, `/company`) |
+| 메뉴 연결 | 메뉴 관리에서 연결 |
+| 누가 만드나 | 사이트 관리자 (코딩 불필요) |
+
+**예시**: 회사 소개, 서비스 안내, 이벤트 페이지 등
+
+---
+
+### 2. 시스템 페이지
+
+특정 사이트에만 존재하는 **고유 기능 페이지**. 코드로 구현되며, 사이트별로 다를 수 있음.
+
+| 항목 | 내용 |
+|------|------|
+| 정의 위치 | `config/system-pages.php` |
+| 뷰 파일 | `resources/views/system/{slug}/` |
+| DB 등록 | `rzx_page_contents` (`is_system = 1`) |
+| URL | `/{slug}` (예: `/service/order`, `/terms`) |
+| 관리자 표시 | 페이지 관리 상단 (시스템 페이지 섹션) |
+| 메뉴 연결 | 메뉴 관리 > 시스템 페이지 선택 |
+| 누가 만드나 | 개발자 |
+| 배포 포함 여부 | 선택적 (본사 전용 페이지는 배포 제외) |
+
+**코어 시스템 페이지 (기본 제공)**:
+- `home` — 홈페이지 (위젯 빌더)
+- `terms` — 이용약관
+- `privacy` — 개인정보처리방침
+- `data-policy` — 데이터 관리 정책
+- `refund-policy` — 취소 환불 규정
+- `tokushoho` — 특정상거래법 표기 (일본)
+- `funds-settlement` — 자금결제법 표시 (일본)
+
+**본사 전용 시스템 페이지 (배포 미포함)**:
+- `service/order` — 서비스 신청 페이지
+
+**고객 맞춤 시스템 페이지 (납품)**:
+- 고객 요청에 따라 제작 → 해당 사이트에만 설치
+- 고객은 메뉴 관리에서 URL만 연결하면 사용 가능
+- 커스터마이징 서비스 수익 모델의 핵심
+
+---
+
+### 3. 플러그인
+
+범용 기능 모듈. 마켓플레이스에서 누구나 설치/제거 가능.
+
+| 항목 | 내용 |
+|------|------|
+| 정의 위치 | `plugins/{slug}/plugin.json` |
+| 구조 | plugin.json + 라우트 + 마이그레이션 + 뷰 + 언어 |
+| 관리자 표시 | 플러그인 관리 |
+| 설치/삭제 | 마켓플레이스 또는 수동 업로드 |
+| 메뉴 자동 등록 | plugin.json의 `menus` 섹션 |
+| 시스템 페이지 추가 | plugin.json의 `system_pages` 섹션 |
+| 누가 만드나 | 개발자 |
+| 배포 | 마켓플레이스에서 범용 배포 |
+
+**플러그인 vs 시스템 페이지 판단 기준**:
+- 여러 사이트에서 동일하게 쓸 수 있으면 → **플러그인**
+- 특정 사이트 전용이면 → **시스템 페이지**
+
+---
+
+## 시스템 페이지 vs 플러그인 상세 비교
+
+| 구분 | 시스템 페이지 | 플러그인 |
+|------|------------|---------|
+| **목적** | 특정 사이트 전용 페이지 | 범용 기능 모듈 |
+| **설치** | config에 정의 | 마켓플레이스에서 설치 |
+| **관리** | 페이지 관리에 표시 | 플러그인 관리에 표시 |
+| **배포** | 사이트별 개별 | 누구나 설치 가능 |
+| **구조** | 뷰 파일 + config 한 줄 | plugin.json + 라우트 + DB + 뷰 |
+| **DB 마이그레이션** | 필요 시 수동 | plugin.json에 정의 → 자동 |
+| **메뉴 등록** | config/system-pages.php | plugin.json menus |
+| **의존성** | VosCMS 코어 | 코어 + 다른 플러그인 가능 |
+| **업데이트** | 수동 | 마켓플레이스 자동 |
+| **수익 모델** | 커스터마이징 납품 | 마켓플레이스 판매 |
+
+---
+
+## config/system-pages.php 구조
+
+```php
+return [
+    [
+        'slug'  => 'service/order',           // URL 경로
+        'title' => 'site.pages.service_order', // 번역 키 또는 문자열
+        'icon'  => 'M16 11V7a4...',           // SVG path (페이지 관리용)
+        'emoji' => '🛒',                       // 이모지 (메뉴 관리용)
+        'color' => 'indigo',                   // 아이콘 색상
+        'type'  => 'system',                   // widget | document | system
+        'view'  => 'system/service/order.php', // 뷰 파일 경로
+        'edit'  => '/service/order',           // 편집 URL
+    ],
+];
+```
+
+### 필드 설명
+
+| 필드 | 필수 | 설명 |
+|------|------|------|
+| `slug` | O | URL 경로. `/`로 접속 시 이 slug로 매칭 |
+| `title` | O | 페이지 제목. 번역 키(`site.pages.xxx`) 또는 직접 문자열 |
+| `icon` | - | SVG path d 속성. 페이지 관리 목록에 표시 |
+| `emoji` | - | 이모지. 메뉴 관리 선택 드롭다운에 표시 |
+| `color` | - | 아이콘 배경 색상 (blue, green, purple, amber, red, orange, teal, indigo) |
+| `type` | O | 페이지 타입. `widget`(위젯빌더), `document`(문서), `system`(코드) |
+| `view` | - | type=system일 때 뷰 파일 경로 (`resources/views/` 기준) |
+| `edit` | - | 편집 버튼 클릭 시 이동할 URL. `{admin}`은 관리자 경로로 치환 |
+
+---
+
+## 시스템 페이지 자동 연동
+
+`config/system-pages.php`에 페이지를 정의하면 3곳에 **자동으로 반영**됩니다:
 
 ```
-제목 표시 OFF → 제목/배경 모두 숨김
-제목 표시 ON + 배경 none → 일반 텍스트 제목 (<h1>)
-제목 표시 ON + 이미지 → CSS background-image + 오버레이 + 중앙 정렬 제목
-제목 표시 ON + 동영상 → <video> autoplay muted loop + 오버레이 + 중앙 정렬 제목
+config/system-pages.php (정의)
+        ↓
+  load_system_pages() 헬퍼 함수
+        ↓
+  ┌─ 1. 페이지 관리 — 시스템 페이지 섹션에 자동 표시
+  ├─ 2. 메뉴 관리 — 시스템 페이지 선택 드롭다운에 자동 표시
+  └─ 3. 프론트 라우팅 — URL 접속 시 자동 뷰 파일 로드
 ```
 
-배경이 있을 때 브레드크럼은 배경 안에 표시되고, 배경이 없을 때는 콘텐츠 영역 상단에 표시된다.
+**코드 수정 없이 config 한 줄로 시스템 페이지 추가 가능.**
 
-## 스킨 설정 적용 범위
+---
 
-모든 스킨 설정은 3가지 페이지 타입 모두에 적용된다.
+## 플러그인에서 시스템 페이지 추가
 
-| 스킨 설정 | external | widget | document | 비고 |
-|----------|:--------:|:------:|:--------:|------|
-| `content_width` | ✅ | ✅ | ✅ | 콘텐츠 영역 최대 너비 |
-| `show_title` + 배경 | ✅ | ✅ | ✅ | `_page-title-bg.php` partial 공용 |
-| `show_breadcrumb` | ✅ | ✅ | ✅ | 배경 있으면 배경 안, 없으면 상단 |
-| `primary_color` | ✅ | ✅ | ✅ | CSS 변수 `--page-primary` |
-| `custom_css` | ✅ | ✅ | ✅ | `<style>` 태그로 출력 |
-| `custom_header_html` | ✅ | ✅ | ✅ | 제목 위에 표시 |
-| `custom_footer_html` | ✅ | ✅ | ✅ | 콘텐츠 아래에 표시 |
-| `content_bg` | — | — | ✅ | 문서 타입 전용 (투명/흰색 카드) |
-| `title_text_color` | ✅ | ✅ | ✅ | auto/white/dark |
+플러그인도 `plugin.json`의 `system_pages` 섹션으로 시스템 페이지를 등록할 수 있습니다.
 
-### 렌더링 구조 (`page.php`)
-
-```
-┌─ 공통 (모든 타입) ─────────────────────────┐
-│  custom_css 출력                           │
-│  primary_color CSS 변수 출력               │
-├─────────────────────────────────────────────┤
-│  <div class="{content_width}">             │
-│    breadcrumb (배경 없을 때)                │
-│    custom_header_html                      │
-│    ┌─ 제목 영역 ──────────────────────┐    │
-│    │  배경 있음 → _page-title-bg.php  │    │
-│    │  배경 없음 → 일반 <h1> 제목      │    │
-│    └──────────────────────────────────┘    │
-│    ┌─ 콘텐츠 영역 ────────────────────┐    │
-│    │  external → iframe / include     │    │
-│    │  widget  → WidgetRenderer        │    │
-│    │  document → HTML + content_bg    │    │
-│    └──────────────────────────────────┘    │
-│    custom_footer_html                      │
-│  </div>                                    │
-└─────────────────────────────────────────────┘
+```json
+{
+    "slug": "vos-salon",
+    "system_pages": [
+        {
+            "slug": "staff",
+            "title": {"ko": "스태프 소개", "en": "Staff"},
+            "emoji": "👥",
+            "type": "system",
+            "view": "plugins/vos-salon/views/staff.php"
+        }
+    ]
+}
 ```
 
-### 파일 업로드 경로
+플러그인 설치 시 자동으로 페이지 관리 + 메뉴 관리에 등록되고,
+플러그인 삭제 시 자동으로 제거됩니다.
 
-| 대상 | 저장 경로 |
-|------|----------|
-| 스킨 배경 이미지/동영상 | `storage/skins/page/{skin}/{varName}_{timestamp}.{ext}` |
-| OG Image | `storage/pages/og_{slug}_{timestamp}.{ext}` |
+---
 
-## API 엔드포인트
-
-### pages-settings.php
-
-| 메서드 | 액션 | 설명 |
-|--------|------|------|
-| POST (multipart) | `save_skin_config_multipart` | 스킨 설정 저장 (파일 업로드 포함) → `storage/skins/page/` |
-| POST (multipart) | — | OG 이미지 파일 업로드 → `storage/pages/` |
-| POST (JSON) | `save_settings` | 전체 설정 저장 → `page_config_{slug}` |
-| POST (JSON) | `save_skin_config` | 기존 config의 `skin_config`만 머지 저장 (파일 없음) |
-| POST (JSON) | `delete_og_image` | OG 이미지 파일 삭제 |
-
-### pages-edit-content.php
-
-| 메서드 | 액션 | 설명 |
-|--------|------|------|
-| POST (JSON) | `save` | 제목/타입/콘텐츠 저장 (slug 변경 시 관련 테이블 일괄 업데이트) |
-| POST (JSON) | `delete` | 페이지 완전 삭제 (page_contents + page_widgets + menu_items) |
-| POST (JSON) | `load_locale` | 특정 로케일의 제목/콘텐츠 로드 |
-
-## Embed 모드
-
-관리자가 프론트 페이지에서 설정/편집할 수 있도록 embed 모드를 지원한다.
+## 디렉토리 구조
 
 ```
-/{slug}/settings → page-settings.php
-  └── $_GET['embed'] = '1' 설정
-  └── pages-settings.php include (admin sidebar/topbar 생략)
-  └── 프론트 레이아웃 내에 렌더링
+VosCMS/
+├── config/
+│   └── system-pages.php          ← 시스템 페이지 정의
+│
+├── resources/views/
+│   ├── system/                   ← 시스템 페이지 뷰 파일
+│   │   └── service/
+│   │       ├── order.php
+│   │       ├── _addons.php
+│   │       └── ...
+│   │
+│   ├── customer/                 ← 사용자 페이지 뷰
+│   └── admin/site/
+│       ├── pages.php             ← 페이지 관리 (load_system_pages() 사용)
+│       └── menus.php             ← 메뉴 관리 (load_system_pages() 사용)
+│
+└── plugins/                      ← 플러그인 (system_pages로 페이지 추가 가능)
 ```
 
-- embed 모드: admin UI가 프론트 레이아웃 안에 표시
-- 비 embed 모드: 일반 관리자 페이지로 표시
-- API URL은 항상 admin 경로 (`$adminUrl/site/pages/settings`)로 POST (프론트 URL로 POST하면 HTML 반환 문제)
+---
 
-## 저장 모달
+## 라우팅 우선순위
 
-저장 결과는 `result-modal.php` + `result-modal.js` 공통 모달로 표시:
+```
+1. 고정 라우트 (login, register, mypage, admin 등)
+2. 게시판 라우트 (/{board_slug})
+3. 시스템 페이지 (config/system-pages.php → view 파일)
+4. 동적 페이지 (rzx_page_contents 테이블)
+5. 플러그인 프론트 라우트 (plugin.json routes)
+6. 404 Not Found
+```
 
-- 성공 시: 현재 로케일의 `common.msg.saved` 메시지 표시 (data-saved 속성에서 읽음)
-- 실패 시: API 에러 메시지 표시
-- 13개 언어 지원
+---
 
-## 메뉴 시스템 연동
+## 새 시스템 페이지 추가 방법
 
-- 메뉴 아이템 생성 시 페이지 자동 생성 (`menus-api.php`)
-- 메뉴 삭제 시 페이지 + 번역 정리
-- slug 변경 시 menu_items URL 자동 업데이트
+### 1단계: 뷰 파일 생성
+
+```
+resources/views/system/{slug}/
+├── index.php       ← 메인 페이지
+└── _part.php       ← 파트별 분리 (선택)
+```
+
+### 2단계: config에 등록
+
+`config/system-pages.php`에 한 줄 추가.
+
+### 3단계: 완료
+
+- 페이지 관리에 자동 표시
+- 메뉴 관리에서 선택 가능
+- `/{slug}`로 접속 가능
+
+**코드 수정 불필요.**
+
+---
+
+## 고객 맞춤 시스템 페이지 납품
+
+```
+1. 고객 요구사항 접수
+2. 시스템 페이지 개발 (뷰 파일 생성)
+3. 고객 서버에 뷰 파일 업로드
+4. config/system-pages.php에 등록
+5. 고객이 메뉴 관리에서 연결
+6. 완료
+```
+
+고객은 코드를 전혀 모르더라도 **메뉴 관리에서 클릭 한 번**으로 사용 가능합니다.
+
+---
+
+## VosCMS config 분리 체계 (전체)
+
+| config 파일 | 용도 | 헬퍼 함수 |
+|------------|------|----------|
+| `admin-menu.php` | 관리자 사이드바 메뉴 | `load_menu('admin')` |
+| `admin-dropdown-menu.php` | 관리자 드롭다운 메뉴 | `load_menu('admin_dropdown')` |
+| `mypage-menu.php` | 마이페이지 사이드바 메뉴 | `load_menu('mypage')` |
+| `user-dropdown-menu.php` | 프론트 사용자 드롭다운 | `load_menu('user_dropdown')` |
+| `system-pages.php` | 시스템 페이지 + 라우팅 | `load_system_pages()` |
+
+모든 config는 **플러그인 확장 가능**, **Core 업데이트 시 보존**.
