@@ -441,24 +441,14 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                     </div>
 
                     <!-- 레이아웃 선택 (카드형) -->
-                    <input type="hidden" id="cfgLayout" value="<?= htmlspecialchars($pageConfig['layout'] ?? 'inherit') ?>">
+                    <?php $_currentLayout = $pageConfig['layout'] ?? ($siteSettings['site_layout'] ?? 'modern'); if ($_currentLayout === 'inherit') $_currentLayout = $siteSettings['site_layout'] ?? 'modern'; ?>
+                    <input type="hidden" id="cfgLayout" value="<?= htmlspecialchars($_currentLayout) ?>">
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
                         <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-1"><?= __('site.pages.cfg.layout_select') ?? '레이아웃 선택' ?></h3>
                         <p class="text-xs text-zinc-400 mb-4"><?= __('site.pages.cfg.layout_inherit_desc') ?? '전체 설정 따름을 선택하면 레이아웃 관리에서 설정한 레이아웃이 적용됩니다.' ?></p>
                         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
-                            <?php $__inheritSelected = ($pageConfig['layout'] ?? 'inherit') === 'inherit'; ?>
-                            <div onclick="selectLayout('inherit')" id="layout-card-inherit"
-                                 class="cursor-pointer rounded-xl border-2 p-1 transition-all <?= $__inheritSelected ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400' ?>">
-                                <div class="h-24 bg-zinc-100 dark:bg-zinc-700 rounded-lg flex items-center justify-center">
-                                    <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                                </div>
-                                <div class="px-2 py-2">
-                                    <p class="text-sm font-medium text-blue-600 dark:text-blue-400"><?= __('site.pages.cfg.layout_inherit') ?? '전체 설정 따름' ?></p>
-                                    <p class="text-xs text-zinc-400"><?= htmlspecialchars($siteSettings['site_layout'] ?? 'default') ?></p>
-                                </div>
-                            </div>
                             <?php foreach ($layouts as $lk => $lInfo):
-                                $isSelected = ($pageConfig['layout'] ?? 'inherit') === $lk;
+                                $isSelected = $_currentLayout === $lk;
                             ?>
                             <div onclick="selectLayout('<?= $lk ?>')" id="layout-card-<?= $lk ?>"
                                  class="cursor-pointer rounded-xl border-2 p-1 transition-all <?= $isSelected ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400' ?>">
