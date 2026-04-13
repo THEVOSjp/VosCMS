@@ -440,8 +440,7 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                         </div>
                     </div>
 
-                    <!-- 레이아웃 선택 (카드형) — 시스템 페이지는 자체 뷰 사용하므로 숨김 -->
-                    <?php if (($pageData['page_type'] ?? '') !== 'system'): ?>
+                    <!-- 레이아웃 선택 (카드형) -->
                     <input type="hidden" id="cfgLayout" value="<?= htmlspecialchars($pageConfig['layout'] ?? 'inherit') ?>">
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
                         <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-1"><?= __('site.pages.cfg.layout_select') ?? '레이아웃 선택' ?></h3>
@@ -481,10 +480,7 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                         </div>
                         <p class="text-xs text-zinc-400 mt-3"><?= __('site.pages.cfg.layout_desc') ?? '게시판에 적용할 레이아웃을 선택합니다. 레이아웃을 변경하면 페이지가 새로고침됩니다.' ?></p>
                     </div>
-                    <?php endif; // system 페이지 레이아웃 숨김 끝 ?>
-
-                    <!-- 스킨 선택 (카드형) — 시스템 페이지는 숨김 -->
-                    <?php if (($pageData['page_type'] ?? '') !== 'system'): ?>
+                    <!-- 스킨 선택 (카드형) -->
                     <input type="hidden" id="cfgSkin" value="<?= htmlspecialchars($pageConfig['skin'] ?? '') ?>">
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
                         <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-1"><?= __('site.pages.cfg.skin_select') ?? '스킨 선택' ?></h3>
@@ -512,8 +508,6 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                         </div>
                         <p class="text-xs text-zinc-400 mt-3"><?= __('site.pages.cfg.skin_card_desc') ?? '스킨을 변경하면 페이지가 새로고침됩니다. 스킨별 세부 설정은 스킨 탭에서 할 수 있습니다.' ?></p>
                     </div>
-                    <?php endif; // system 페이지 스킨 숨김 끝 ?>
-
                     <!-- 추가 설정 카드 -->
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700">
                         <div class="divide-y divide-zinc-100 dark:divide-zinc-700">
