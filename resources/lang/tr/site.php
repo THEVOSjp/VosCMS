@@ -102,6 +102,7 @@ return [
         'not_use' => 'Kullanılmıyor',
         'install_other' => 'Başka Skin Kur',
         'detail_settings' => 'Detaylı Ayarlar',
+        'rename' => 'Yeniden Adlandır', 'cfg_title' => 'Düzen Adı',
         'duplicate' => 'Kopya Oluştur',
         'delete' => 'Sil',
         'save_layout' => 'Düzeni Kaydet',

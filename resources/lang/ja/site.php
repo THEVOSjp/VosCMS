@@ -105,6 +105,7 @@ return [
         'not_use' => '使用しない',
         'install_other' => '他のスキンをインストール',
         'detail_settings' => '詳細設定',
+        'rename' => '名前変更', 'cfg_title' => 'レイアウト名',
         'duplicate' => '複製を作成',
         'delete' => '削除',
         'save_layout' => 'レイアウト保存',

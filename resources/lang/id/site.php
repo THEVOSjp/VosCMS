@@ -41,6 +41,7 @@ return [
         'not_use' => 'Tidak Digunakan',
         'install_other' => 'Instal Skin Lain',
         'detail_settings' => 'Pengaturan Detail',
+        'rename' => 'Ubah Nama', 'cfg_title' => 'Nama Layout',
         'duplicate' => 'Buat Salinan',
         'delete' => 'Hapus',
         'save_layout' => 'Simpan Tata Letak',

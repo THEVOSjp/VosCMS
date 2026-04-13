@@ -105,6 +105,7 @@ return [
         'not_use' => '不使用',
         'install_other' => '安装其他皮肤',
         'detail_settings' => '详细设置',
+        'rename' => '重命名', 'cfg_title' => '布局名称',
         'duplicate' => '创建副本',
         'delete' => '删除',
         'save_layout' => '保存布局',

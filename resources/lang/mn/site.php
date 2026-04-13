@@ -102,6 +102,7 @@ return [
         'not_use' => 'Ашиглахгүй',
         'install_other' => 'Өөр скин суулгах',
         'detail_settings' => 'Дэлгэрэнгүй тохиргоо',
+        'rename' => 'Нэр солих', 'cfg_title' => 'Загварын нэр',
         'duplicate' => 'Хуулбар үүсгэх',
         'delete' => 'Устгах',
         'save_layout' => 'Загвар хадгалах',

@@ -105,6 +105,7 @@ return [
         'not_use' => '不使用',
         'install_other' => '安裝其他皮膚',
         'detail_settings' => '詳細設定',
+        'rename' => '重新命名', 'cfg_title' => '佈局名稱',
         'duplicate' => '建立副本',
         'delete' => '刪除',
         'save_layout' => '儲存版面',

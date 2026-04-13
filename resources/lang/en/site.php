@@ -105,6 +105,7 @@ return [
         'not_use' => 'Not Used',
         'install_other' => 'Install Other Skin',
         'detail_settings' => 'Detail Settings',
+        'rename' => 'Rename', 'cfg_title' => 'Layout Name',
         'duplicate' => 'Duplicate',
         'delete' => 'Delete',
         'save_layout' => 'Save Layout',

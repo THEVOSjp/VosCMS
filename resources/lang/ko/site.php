@@ -66,6 +66,7 @@ return [
         'detail_settings' => '상세 설정', 'no_skins' => '사용 가능한 스킨이 없습니다.',
         'not_use' => '사용 안 함', 'install_other' => '다른 스킨 설치', 'coming_soon' => '준비 중',
         'duplicate' => '복사본 생성', 'delete' => '삭제',
+        'rename' => '이름 변경', 'cfg_title' => '레이아웃 이름',
         'cfg_path' => '경로', 'cfg_desc' => '설명', 'cfg_author' => '작성자', 'cfg_version' => '버전',
         'cfg_menus' => '메뉴', 'select_menu' => '메뉴 선택', 'cfg_vars' => '확장 변수',
         'preview' => '미리보기',

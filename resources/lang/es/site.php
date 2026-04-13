@@ -105,6 +105,7 @@ return [
         'not_use' => 'No usar',
         'install_other' => 'Instalar otro skin',
         'detail_settings' => 'Configuracion detallada',
+        'rename' => 'Renombrar', 'cfg_title' => 'Nombre del diseño',
         'duplicate' => 'Crear copia',
         'delete' => 'Eliminar',
         'save_layout' => 'Guardar diseno',

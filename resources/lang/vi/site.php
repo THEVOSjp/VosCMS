@@ -105,6 +105,7 @@ return [
         'not_use' => 'Không sử dụng',
         'install_other' => 'Cài đặt skin khác',
         'detail_settings' => 'Cài đặt chi tiết',
+        'rename' => 'Đổi tên', 'cfg_title' => 'Tên bố cục',
         'duplicate' => 'Tạo bản sao',
         'delete' => 'Xóa',
         'save_layout' => 'Lưu bố cục',
