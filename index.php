@@ -313,6 +313,11 @@ if (empty($path) || $path === 'index.php' || $path === 'home') {
     }
     exit;
 
+// ─── Public API (공지사항 등) ───
+} elseif ($path === 'api/notices' || $path === 'api/notices/') {
+    include BASE_PATH . '/api/notices.php';
+    exit;
+
 // ─── License Server API ───
 } elseif (str_starts_with($path, 'api/license/')) {
     $licenseEndpoint = substr($path, strlen('api/license/'));
@@ -378,6 +383,33 @@ if (empty($path) || $path === 'index.php' || $path === 'home') {
         require_once BASE_PATH . '/rzxlib/Core/License/LicenseClient.php';
         require_once BASE_PATH . '/rzxlib/Core/License/LicenseStatus.php';
         $licenseClient = new \RzxLib\Core\License\LicenseClient();
+
+        // 라이선스 키 미등록 사이트 → 자동 Free 라이선스 등록
+        if (empty($_ENV['LICENSE_KEY'])) {
+            try {
+                $result = $licenseClient->register(
+                    $_ENV['APP_URL'] ?? $_SERVER['HTTP_HOST'] ?? 'unknown',
+                    $_ENV['APP_VERSION'] ?? '2.1.0',
+                    PHP_VERSION
+                );
+                if (!empty($result['success']) && !empty($result['key'])) {
+                    // .env에 라이선스 정보 추가
+                    $envFile = BASE_PATH . '/.env';
+                    if (file_exists($envFile) && is_writable($envFile)) {
+                        $envContent = file_get_contents($envFile);
+                        if (!str_contains($envContent, 'LICENSE_KEY=')) {
+                            $domain = $licenseClient::normalizeDomain($_ENV['APP_URL'] ?? $_SERVER['HTTP_HOST'] ?? '');
+                            $envContent .= "\n\nLICENSE_KEY={$result['key']}\nLICENSE_DOMAIN={$domain}\nLICENSE_REGISTERED_AT=" . date('c') . "\nLICENSE_SERVER=" . ($_ENV['LICENSE_SERVER'] ?? 'https://vos.21ces.com/api') . "\n";
+                            file_put_contents($envFile, $envContent);
+                            $_ENV['LICENSE_KEY'] = $result['key'];
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                if ($config['debug']) error_log('Auto license register error: ' . $e->getMessage());
+            }
+        }
+
         $licenseStatus = $licenseClient->check();
         $licenseInfo = $licenseStatus->toArray();
     } catch (\Throwable $e) {
@@ -735,6 +767,14 @@ if (empty($path) || $path === 'index.php' || $path === 'home') {
                 }
 
                 if (!$_pageRouteMatch) {
+                    // 시스템 페이지 확인 (resources/views/system/)
+                    $_systemPages = ['service/order' => 'system/service/order.php'];
+                    if (isset($_systemPages[$path])) {
+                        $__noLayout = true;
+                        include BASE_PATH . '/resources/views/' . $_systemPages[$path];
+                        exit;
+                    }
+
                     // 동적 페이지 확인 (rzx_page_contents)
                     $_pageCheck = $pdo->prepare("SELECT page_slug FROM {$_pfx}page_contents WHERE page_slug = ? LIMIT 1");
                     $_pageCheck->execute([$path]);
