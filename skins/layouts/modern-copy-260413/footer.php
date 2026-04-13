@@ -34,6 +34,28 @@
         userMenuBtn.addEventListener('click', (e) => { e.stopPropagation(); userMenuDropdown.classList.toggle('hidden'); });
     }
     document.addEventListener('click', () => { if (userMenuDropdown) userMenuDropdown.classList.add('hidden'); });
+
+    // 메뉴 드롭다운 (fixed 위치 계산)
+    document.querySelectorAll('.menu-has-dropdown').forEach(function(el) {
+        var ddId = el.dataset.dropdown;
+        var dd = document.getElementById(ddId);
+        if (!dd) return;
+        var hideTimer = null;
+        function show() {
+            clearTimeout(hideTimer);
+            document.querySelectorAll('.menu-dropdown').forEach(function(d) { d.classList.add('hidden'); });
+            var rect = el.getBoundingClientRect();
+            dd.style.left = rect.left + 'px';
+            dd.style.top = rect.bottom + 'px';
+            dd.classList.remove('hidden');
+        }
+        function scheduleHide() { hideTimer = setTimeout(function() { dd.classList.add('hidden'); }, 150); }
+        function cancelHide() { clearTimeout(hideTimer); }
+        el.addEventListener('mouseenter', show);
+        el.addEventListener('mouseleave', scheduleHide);
+        dd.addEventListener('mouseenter', cancelHide);
+        dd.addEventListener('mouseleave', function() { dd.classList.add('hidden'); });
+    });
     // 다크 모드 토글
     document.getElementById('darkModeBtn')?.addEventListener('click', () => {
         const isDark = document.documentElement.classList.toggle('dark');

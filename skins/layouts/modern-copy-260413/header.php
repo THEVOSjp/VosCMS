@@ -247,24 +247,25 @@ elseif ($_darkMode === 'light') $_htmlDarkClass = '';
                             : 'text-gray-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 border-b-2 border-transparent hover:border-zinc-300 dark:hover:border-zinc-500';
                     ?>
                     <?php if ($__hasKids): ?>
-                    <div class="relative group h-full flex items-center flex-shrink-0">
+                    <div class="menu-has-dropdown h-full flex items-center flex-shrink-0" data-dropdown="dropdown-<?= $__mi['id'] ?>">
                         <a href="<?= htmlspecialchars($__href) ?>" class="px-4 h-full flex items-center text-sm font-medium gap-1 transition whitespace-nowrap <?= $__cls ?>">
                             <?= htmlspecialchars($__mi['title']) ?>
                             <svg class="w-3 h-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </a>
-                        <div class="absolute left-0 top-full hidden group-hover:block z-50">
-                            <div class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg py-1 min-w-[180px] mt-0">
-                                <?php foreach ($__mi['children'] as $__ch): ?>
-                                <a href="<?= htmlspecialchars(rzxMenuUrl($__ch, $baseUrl)) ?>" class="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 whitespace-nowrap"><?= htmlspecialchars($__ch['title']) ?></a>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
                     </div>
                     <?php else: ?>
                     <a href="<?= htmlspecialchars($__href) ?>" class="px-4 h-full flex items-center text-sm font-medium transition whitespace-nowrap flex-shrink-0 <?= $__cls ?>"><?= htmlspecialchars($__mi['title']) ?></a>
                     <?php endif; ?>
                     <?php endforeach; ?>
                 </nav>
+                <!-- 드롭다운 메뉴 (nav 밖, fixed 위치) -->
+                <?php foreach ($mainMenu as $__mi): if (!empty($__mi['children'])): ?>
+                <div id="dropdown-<?= $__mi['id'] ?>" class="menu-dropdown hidden fixed z-[60] bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg py-1 min-w-[180px]">
+                    <?php foreach ($__mi['children'] as $__ch): ?>
+                    <a href="<?= htmlspecialchars(rzxMenuUrl($__ch, $baseUrl)) ?>" class="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 whitespace-nowrap"><?= htmlspecialchars($__ch['title']) ?></a>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; endforeach; ?>
                 <!-- 우측 화살표 -->
                 <button id="menuNavRight" class="hidden absolute right-0 top-0 bottom-0 z-10 w-8 bg-gradient-to-l from-zinc-50 dark:from-zinc-800 to-transparent flex items-center justify-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition" onclick="scrollMenuNav(200)">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
