@@ -545,6 +545,43 @@ if (!function_exists('db_trans')) {
     }
 }
 
+if (!function_exists('load_system_pages')) {
+    /**
+     * 시스템 페이지 목록 로드
+     * config/system-pages.php + 플러그인 system_pages 병합
+     */
+    function load_system_pages(): array
+    {
+        $basePath = defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 3);
+        $pages = [];
+        $configFile = $basePath . '/config/system-pages.php';
+        if (file_exists($configFile)) {
+            $pages = include $configFile;
+        }
+        // 플러그인 시스템 페이지 병합
+        $_pm = null;
+        if (class_exists('\RzxLib\Core\Plugin\PluginManager', false)) {
+            $_pm = \RzxLib\Core\Plugin\PluginManager::getInstance();
+        }
+        if ($_pm) {
+            foreach ($_pm->getLoaded() as $pmId => $manifest) {
+                foreach ($manifest['system_pages'] ?? [] as $sp) {
+                    $pages[] = $sp;
+                }
+            }
+        }
+        // title 번역 적용
+        foreach ($pages as &$p) {
+            if (is_string($p['title'] ?? '') && str_contains($p['title'], '.')) {
+                $translated = function_exists('__') ? __($p['title']) : $p['title'];
+                if ($translated !== $p['title']) $p['title'] = $translated;
+            }
+        }
+        unset($p);
+        return $pages;
+    }
+}
+
 if (!function_exists('load_menu')) {
     /**
      * 메뉴 로딩 통합 헬퍼

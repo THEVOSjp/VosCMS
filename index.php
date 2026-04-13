@@ -767,12 +767,14 @@ if (empty($path) || $path === 'index.php' || $path === 'home') {
                 }
 
                 if (!$_pageRouteMatch) {
-                    // 시스템 페이지 확인 (resources/views/system/)
-                    $_systemPages = ['service/order' => 'system/service/order.php'];
-                    if (isset($_systemPages[$path])) {
-                        $__noLayout = true;
-                        include BASE_PATH . '/resources/views/' . $_systemPages[$path];
-                        exit;
+                    // 시스템 페이지 확인 (config/system-pages.php)
+                    $_spConfig = file_exists(BASE_PATH . '/config/system-pages.php') ? include(BASE_PATH . '/config/system-pages.php') : [];
+                    foreach ($_spConfig as $_sp) {
+                        if (($_sp['slug'] ?? '') === $path && !empty($_sp['view'])) {
+                            $__noLayout = true;
+                            include BASE_PATH . '/resources/views/' . $_sp['view'];
+                            exit;
+                        }
                     }
 
                     // 동적 페이지 확인 (rzx_page_contents)

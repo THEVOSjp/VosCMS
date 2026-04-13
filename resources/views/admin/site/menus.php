@@ -407,17 +407,12 @@ $pageSubDesc = __('site.menus.description');
                             <p class="text-xs text-blue-600 dark:text-blue-400 mb-3"><?= __('site.menus.desc_system') ?? '시스템에서 제공하는 기본 페이지를 메뉴에 추가합니다.' ?></p>
                             <div class="space-y-1">
                                 <?php
-                                $__sysItems = [
-                                    ['slug' => 'staff', 'title' => __('site.pages.staff_intro') ?? '스태프 소개', 'icon' => '👥'],
-                                    ['slug' => 'booking', 'title' => __('site.pages.booking') ?? '예약하기', 'icon' => '📅'],
-                                    ['slug' => 'lookup', 'title' => __('site.pages.lookup') ?? '예약 조회', 'icon' => '🔍'],
-                                    ['slug' => 'terms', 'title' => __('site.pages.terms') ?? '이용약관', 'icon' => '📄'],
-                                    ['slug' => 'privacy', 'title' => __('site.pages.privacy') ?? '개인정보처리방침', 'icon' => '🔒'],
-                                    ['slug' => 'data-policy', 'title' => __('site.pages.data_policy') ?? '데이터 관리 정책', 'icon' => '🛡️'],
-                                    ['slug' => 'refund-policy', 'title' => __('site.pages.refund_policy') ?? '취소 환불 규정', 'icon' => '💳'],
-                                    ['slug' => 'tokushoho', 'title' => __('site.pages.tokushoho') ?? '특정상거래법 표기', 'icon' => '📋'],
-                                    ['slug' => 'funds-settlement', 'title' => __('site.pages.funds_settlement') ?? '자금결제법 표시', 'icon' => '💰'],
-                                ];
+                                // config/system-pages.php에서 동적 로드
+                                $__sysItems = [];
+                                $_spDefs = function_exists('load_system_pages') ? load_system_pages() : [];
+                                foreach ($_spDefs as $_spd) {
+                                    $__sysItems[] = ['slug' => $_spd['slug'], 'title' => $_spd['title'], 'icon' => $_spd['emoji'] ?? '📄'];
+                                }
                                 foreach ($__sysItems as $__si): ?>
                                 <button type="button" onclick="addSystemPage('<?= $__si['slug'] ?>', '<?= htmlspecialchars($__si['title'], ENT_QUOTES) ?>')"
                                         class="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition text-left">

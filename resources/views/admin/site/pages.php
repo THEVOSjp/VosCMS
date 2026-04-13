@@ -55,19 +55,21 @@ $pageHeaderTitle = __('site.pages.title');
                     <div class="divide-y divide-zinc-200 dark:divide-zinc-700">
 <?php
 // 시스템 페이지 데이터 (아이콘, 색상, 타입배지, slug, 제목, 설정URL, 수정URL, 미리보기URL)
-$_sysPages = [
-    ['icon' => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', 'color' => 'blue', 'badge' => 'widget', 'slug' => '', 'title' => __('site.pages.home'), 'edit' => $adminUrl . '/site/pages/widget-builder?slug=index', 'preview' => '/'],
-    ['icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'color' => 'green', 'badge' => 'document', 'slug' => 'terms', 'title' => __('site.pages.terms'), 'edit' => $adminUrl . '/site/pages/edit?slug=terms', 'preview' => '/terms'],
-    ['icon' => 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', 'color' => 'purple', 'badge' => 'document', 'slug' => 'privacy', 'title' => __('site.pages.privacy'), 'edit' => $adminUrl . '/site/pages/edit?slug=privacy', 'preview' => '/privacy'],
-    ['icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', 'color' => 'amber', 'badge' => 'document', 'slug' => 'data-policy', 'title' => __('site.pages.data_policy'), 'edit' => $adminUrl . '/site/pages/compliance', 'preview' => '/data-policy'],
-    ['icon' => 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', 'color' => 'red', 'badge' => 'document', 'slug' => 'refund-policy', 'title' => __('site.pages.refund_policy'), 'edit' => $adminUrl . '/site/pages/edit?slug=refund-policy', 'preview' => '/refund-policy'],
-    ['icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01', 'color' => 'orange', 'badge' => 'document', 'slug' => 'tokushoho', 'title' => __('site.pages.tokushoho') ?? '特定商取引法に基づく表記', 'edit' => $adminUrl . '/site/pages/edit?slug=tokushoho', 'preview' => '/tokushoho'],
-    ['icon' => 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z', 'color' => 'teal', 'badge' => 'document', 'slug' => 'funds-settlement', 'title' => __('site.pages.funds_settlement') ?? '資金決済法に基づく表示', 'edit' => $adminUrl . '/site/pages/edit?slug=funds-settlement', 'preview' => '/funds-settlement'],
-    // staff, booking, lookup → vos-salon 플러그인으로 이전
-];
+// config/system-pages.php에서 로드
+$_sysPagesDef = function_exists('load_system_pages') ? load_system_pages() : [];
+$_sysPages = [];
+foreach ($_sysPagesDef as $_spd) {
+    $_editUrl = str_replace('{admin}', $adminUrl, $_spd['edit'] ?? '');
+    $_sysPages[] = [
+        'icon' => $_spd['icon'] ?? '', 'color' => $_spd['color'] ?? 'blue',
+        'badge' => $_spd['type'] ?? 'document', 'slug' => $_spd['slug'] ?? '',
+        'title' => $_spd['title'] ?? '', 'edit' => $_editUrl, 'preview' => '/' . ($_spd['slug'] ?? ''),
+    ];
+}
 $_badgeMap = [
     'widget' => ['bg' => 'purple', 'label' => __('site.pages.type_widget')],
     'document' => ['bg' => 'blue', 'label' => __('site.pages.type_document')],
+    'system' => ['bg' => 'indigo', 'label' => __('site.pages.type_system') ?? '시스템'],
 ];
 foreach ($_sysPages as $_sp):
     $_b = $_badgeMap[$_sp['badge']] ?? $_badgeMap['document'];
@@ -98,7 +100,7 @@ foreach ($_sysPages as $_sp):
 
                     <!-- 사용자 생성 페이지 (DB에서 동적 로드) -->
                     <?php
-                    $systemSlugs = ['terms', 'privacy', 'data-policy', 'refund-policy', 'tokushoho', 'funds-settlement', 'home'];
+                    $systemSlugs = array_column($_sysPagesDef, 'slug');
                     $placeholders = implode(',', array_fill(0, count($systemSlugs), '?'));
                     $defaultLocale = $config['locale'] ?? 'ko';
                     $customPages = $pdo->prepare("
