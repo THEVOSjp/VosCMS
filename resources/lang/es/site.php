@@ -163,6 +163,7 @@ return [
             'full_width' => 'Ancho completo',
             'full_width_desc' => 'Mostrar contenido a ancho completo. (Predeterminado: max-w-5xl)',
             'layout_default' => 'Diseno predeterminado',
+            'layout_inherit' => 'Heredar diseño del sitio', 'layout_inherit_desc' => 'Utiliza el diseño configurado en la configuración del sitio.',
         ],
         'tab_permissions' => 'Permisos',
         'perm' => [

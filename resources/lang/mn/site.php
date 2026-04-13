@@ -160,6 +160,7 @@ return [
             'full_width' => 'Бүтэн өргөн',
             'full_width_desc' => 'Агуулгыг бүтэн өргөнөөр харуулна. (Анхдагч: max-w-5xl)',
             'layout_default' => 'Анхдагч байршил',
+            'layout_inherit' => 'Сайтын тохиргоог дагах', 'layout_inherit_desc' => 'Сайтын тохиргоонд заасан загварыг ашиглана.',
         ],
         'tab_permissions' => 'Эрхийн удирдлага',
         'perm' => [

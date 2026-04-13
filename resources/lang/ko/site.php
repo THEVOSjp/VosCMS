@@ -117,6 +117,8 @@ return [
             'full_width' => '전체 너비',
             'full_width_desc' => '콘텐츠를 전체 너비로 표시합니다. (기본: max-w-5xl)',
             'layout_default' => '기본 레이아웃',
+            'layout_inherit' => '전체 설정 따름',
+            'layout_inherit_desc' => '전체 설정 따름을 선택하면 사이트 설정에서 지정한 레이아웃이 적용됩니다.',
             'layout_select' => '레이아웃 선택',
             'skin_select' => '스킨 선택',
             'skin_card_desc' => '스킨을 변경하면 페이지가 새로고침됩니다. 스킨별 세부 설정은 스킨 탭에서 할 수 있습니다.',

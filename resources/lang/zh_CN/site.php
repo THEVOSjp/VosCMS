@@ -163,6 +163,7 @@ return [
             'full_width' => '全宽',
             'full_width_desc' => '以全宽显示内容。（默认：max-w-5xl）',
             'layout_default' => '默认布局',
+            'layout_inherit' => '继承站点布局', 'layout_inherit_desc' => '使用站点设置中配置的布局。',
         ],
         'tab_permissions' => '权限管理',
         'perm' => [

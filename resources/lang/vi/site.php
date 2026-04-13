@@ -163,6 +163,7 @@ return [
             'full_width' => 'Do rong toan phan',
             'full_width_desc' => 'Hien thi noi dung voi do rong toan phan. (Mac dinh: max-w-5xl)',
             'layout_default' => 'Bo cuc mac dinh',
+            'layout_inherit' => 'Kế thừa bố cục trang web', 'layout_inherit_desc' => 'Sử dụng bố cục được cấu hình trong cài đặt trang web.',
         ],
         'tab_permissions' => 'Quyen han',
         'perm' => [

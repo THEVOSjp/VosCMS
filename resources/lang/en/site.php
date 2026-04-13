@@ -157,6 +157,7 @@ return [
             'mobile_view_desc' => 'Use different layouts and skins for PC and mobile. Select "No" if using a responsive theme.',
             'layout' => 'Layout', 'layout_desc' => 'Helps you easily create site layouts.',
             'layout_default' => 'Default Layout',
+            'layout_inherit' => 'Inherit Site Layout', 'layout_inherit_desc' => 'Uses the layout configured in site settings.',
             'skin' => 'Skin', 'skin_default' => 'Use site default skin', 'skin_desc' => 'Select a content skin.',
             'show_title' => 'Show Page Title', 'show_title_desc' => 'Display the title at the top of the page.',
             'full_width' => 'Full Width', 'full_width_desc' => 'Display content at full width. (Default: max-w-5xl)',

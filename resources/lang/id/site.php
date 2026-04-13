@@ -99,6 +99,7 @@ return [
             'full_width' => 'Lebar Penuh',
             'full_width_desc' => 'Tampilkan konten dengan lebar penuh. (Default: max-w-5xl)',
             'layout_default' => 'Tata Letak Default',
+            'layout_inherit' => 'Ikuti Pengaturan Situs', 'layout_inherit_desc' => 'Menggunakan layout yang dikonfigurasi di pengaturan situs.',
         ],
         'tab_permissions' => 'Izin',
         'perm' => [

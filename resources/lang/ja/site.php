@@ -156,6 +156,7 @@ return [
             'og_image_upload' => '画像アップロード',
             'mobile_view' => 'モバイルビュー', 'mobile_view_desc' => 'PCとモバイルで異なるレイアウトとスキンを使用します。レスポンシブテーマを使用する場合は「いいえ」を選択してください。',
             'layout' => 'レイアウト', 'layout_desc' => 'サイトのレイアウトを簡単に作成できます。', 'layout_default' => 'デフォルトレイアウト',
+            'layout_inherit' => 'サイト設定に従う', 'layout_inherit_desc' => 'サイト設定で指定されたレイアウトが適用されます。',
             'skin' => 'スキン', 'skin_default' => 'サイトデフォルトスキン使用', 'skin_desc' => 'コンテンツスキンを選択できます。',
             'show_title' => 'ページタイトル表示', 'show_title_desc' => 'ページ上部にタイトルを表示します。',
             'full_width' => '全幅', 'full_width_desc' => 'コンテンツを全幅で表示します。（デフォルト: max-w-5xl）',

@@ -163,6 +163,7 @@ return [
             'full_width' => 'Volle Breite',
             'full_width_desc' => 'Inhalt in voller Breite anzeigen. (Standard: max-w-5xl)',
             'layout_default' => 'Standard-Layout',
+            'layout_inherit' => 'Website-Layout übernehmen', 'layout_inherit_desc' => 'Verwendet das in den Website-Einstellungen konfigurierte Layout.',
         ],
         'tab_permissions' => 'Berechtigungen',
         'perm' => [

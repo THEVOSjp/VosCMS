@@ -160,6 +160,7 @@ return [
             'full_width' => 'Tam Genislik',
             'full_width_desc' => 'Icerigi tam genislikte goster. (Varsayilan: max-w-5xl)',
             'layout_default' => 'Varsayilan Yerlesim',
+            'layout_inherit' => 'Site Düzenini Devral', 'layout_inherit_desc' => 'Site ayarlarında yapılandırılan düzeni kullanır.',
         ],
         'tab_permissions' => 'Izinler',
         'perm' => [

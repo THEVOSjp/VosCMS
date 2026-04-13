@@ -163,6 +163,7 @@ return [
             'full_width' => 'Pleine largeur',
             'full_width_desc' => 'Afficher le contenu en pleine largeur. (Par defaut: max-w-5xl)',
             'layout_default' => 'Mise en page par defaut',
+            'layout_inherit' => 'Hériter du layout du site', 'layout_inherit_desc' => 'Utilise le layout configuré dans les paramètres du site.',
         ],
         'tab_permissions' => 'Permissions',
         'perm' => [

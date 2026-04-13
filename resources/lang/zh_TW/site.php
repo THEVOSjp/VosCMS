@@ -163,6 +163,7 @@ return [
             'full_width' => '全寬',
             'full_width_desc' => '以全寬顯示內容。（預設：max-w-5xl）',
             'layout_default' => '預設版面配置',
+            'layout_inherit' => '繼承站台佈局', 'layout_inherit_desc' => '使用站台設定中配置的佈局。',
         ],
         'tab_permissions' => '權限管理',
         'perm' => [
