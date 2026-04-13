@@ -1,7 +1,15 @@
     </main>
 
     <!-- Footer -->
-    <?php $footerMenu = $siteMenus['Footer Menu'] ?? []; ?>
+    <?php
+    // FNB 메뉴 매핑 — 레이아웃 설정의 FNB 사이트맵 사용
+    $_fnbId = ($_lc['_menus']['FNB'] ?? '');
+    if ($_fnbId && isset($_sitemapNames[$_fnbId])) {
+        $footerMenu = $siteMenus[$_sitemapNames[$_fnbId]] ?? [];
+    } else {
+        $footerMenu = $siteMenus['Footer Menu'] ?? [];
+    }
+    ?>
     <?php $_lc = $__layoutConfig ?? []; $_contentWidth = $_lc['content_width'] ?? 'max-w-7xl'; ?>
     <footer class="bg-white dark:bg-zinc-800 border-t dark:border-zinc-700 transition-colors duration-200">
         <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 lg:px-8 py-8">

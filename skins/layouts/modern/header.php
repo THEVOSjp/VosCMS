@@ -81,11 +81,32 @@ $pwaFrontEnabled = ($_pwaS['pwa_front_enabled'] ?? '1') === '1';
 $pwaFrontIcon = $_pwaS['pwa_front_icon'] ?? '';
 $pwaFrontTheme = $_pwaS['pwa_front_theme_color'] ?? '#3b82f6';
 
-// DB 메뉴 로드 (include_once가 아닌 include — 스킨 클로저에서 먼저 로드되었을 수 있음)
+// DB 메뉴 로드
 if (!isset($siteMenus) || empty($siteMenus)) {
     include BASE_PATH . '/resources/views/components/menu-loader.php';
 }
-$mainMenu = $siteMenus['Main Menu'] ?? [];
+
+// 레이아웃 메뉴 매핑 — GNB/FNB에 지정된 사이트맵 사용
+$_menuMapping = $_lc['_menus'] ?? [];
+$_gnbSitemapId = $_menuMapping['GNB'] ?? '';
+$_fnbSitemapId = $_menuMapping['FNB'] ?? '';
+
+// 사이트맵 ID → 제목 매핑
+$_sitemapNames = [];
+if (isset($pdo)) {
+    try {
+        $_pfx = $_ENV['DB_PREFIX'] ?? 'rzx_';
+        $_smStmt = $pdo->query("SELECT id, title FROM {$_pfx}sitemaps ORDER BY sort_order");
+        while ($_sm = $_smStmt->fetch(PDO::FETCH_ASSOC)) $_sitemapNames[$_sm['id']] = $_sm['title'];
+    } catch (\Throwable $e) {}
+}
+
+// GNB 메뉴 결정: 레이아웃 설정에 지정된 사이트맵 → 없으면 Main Menu
+if ($_gnbSitemapId && isset($_sitemapNames[$_gnbSitemapId])) {
+    $mainMenu = $siteMenus[$_sitemapNames[$_gnbSitemapId]] ?? [];
+} else {
+    $mainMenu = $siteMenus['Main Menu'] ?? [];
+}
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 ?>
 <?php
