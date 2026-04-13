@@ -831,7 +831,7 @@ if ($__pageFile && !$__noLayout) {
             $__boardConfig = json_decode($__bcStmt->fetchColumn() ?: '{}', true) ?: [];
         }
         $__boardLayout = $__boardConfig['layout'] ?? '';
-        if ($__boardLayout !== '' && $__boardLayout !== 'inherit') {
+        if ($__boardLayout && $__boardLayout !== 'inherit') {
             $__layout = $__boardLayout;
         }
     }
@@ -848,7 +848,7 @@ if ($__pageFile && !$__noLayout) {
             $__pageConfig = json_decode($__pcStmt->fetchColumn() ?: '{}', true) ?: [];
         }
         $__pageLayout = $__pageConfig['layout'] ?? '';
-        if ($__pageLayout !== '' && $__pageLayout !== 'inherit') {
+        if ($__pageLayout && $__pageLayout !== 'inherit') {
             $__layout = $__pageLayout;
         }
     }
@@ -881,10 +881,12 @@ if ($__pageFile && !$__noLayout) {
         echo $__content;
         echo '</body></html>';
     } else {
-        // 항상 사이트 레이아웃 적용 (페이지별 "사용 안함"이어도 사이트 레이아웃 사용)
+        // 레이아웃 결정: 개별 설정 → 사이트 기본값 (none이면 콘텐츠만 출력)
         $__siteLayout = $siteSettings['site_layout'] ?? 'default';
-        if ($__layout === false || $__layout === 'none') {
-            $__layout = $__siteLayout;
+        if ($__layout === false) {
+            // none이 명시적으로 설정된 경우 → 레이아웃 없이 콘텐츠만 출력
+            echo $__content;
+            exit;
         }
 
         // 스킨 레이아웃 설정값 로드
