@@ -578,6 +578,7 @@ $pageSubDesc = __('site.menus.description');
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
 
 <?php include __DIR__ . '/../components/multilang-modal.php'; ?>
+<?php include __DIR__ . '/../partials/result-modal.php'; ?>
 <?php include __DIR__ . '/menus-js.php'; ?>
 </body>
 </html>

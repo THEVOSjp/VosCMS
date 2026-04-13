@@ -5,6 +5,7 @@ var selectedId = null;
 var selectedSitemapId = null;
 var selectedIsHome = false;
 var selectedMenuType = null;
+var selectedTitle = '';
 var addMode = null; // 'menu' | 'sub'
 var csrfToken = '<?= $_SESSION['csrf_token'] ?? '' ?>';
 var apiUrl = '<?= $adminUrl ?>/site/menus-api';
@@ -67,6 +68,7 @@ function selectMenuItem(id, title, sitemapId, isHome) {
     closePanel(3);
     selectedType = 'menuItem';
     selectedId = id;
+    selectedTitle = title;
     selectedSitemapId = sitemapId;
     selectedIsHome = !!isHome;
 
@@ -422,10 +424,9 @@ function deleteMenuItem() {
         showResultModal(false, '<?= __('site.menus.cannot_delete_home') ?>');
         return;
     }
-    var menuTitle = selectedEl ? (selectedEl.querySelector('.menu-item-title')?.textContent || '') : '';
     showConfirmModal({
         title: '이 메뉴 항목을 삭제하시겠습니까?',
-        message: menuTitle ? '「' + menuTitle.trim() + '」' : '',
+        message: selectedTitle ? '「' + selectedTitle + '」' : '',
         checkLabel: '연결된 페이지(게시판)도 함께 삭제된다는 것을 알고 있습니다.',
         confirmText: '삭제',
         danger: true,
