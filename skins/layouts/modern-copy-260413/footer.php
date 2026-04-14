@@ -20,9 +20,12 @@
     ?>
     <footer class="bg-white dark:bg-zinc-800 border-t dark:border-zinc-700 transition-colors duration-200">
         <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <?php if ($_footerLogoImg): ?>
+            <?php
+            $_footerLogoDark = $_lc['footer_logo_image_dark'] ?? '';
+            if ($_footerLogoImg): ?>
             <div class="mb-4 flex justify-center md:justify-start">
-                <img src="<?= $baseUrl . htmlspecialchars($_footerLogoImg) ?>" alt="" class="h-8 object-contain">
+                <img src="<?= $baseUrl . htmlspecialchars($_footerLogoImg) ?>" alt="" class="h-8 object-contain <?= $_footerLogoDark ? 'dark:hidden' : '' ?>">
+                <?php if ($_footerLogoDark): ?><img src="<?= $baseUrl . htmlspecialchars($_footerLogoDark) ?>" alt="" class="h-8 object-contain hidden dark:block"><?php endif; ?>
             </div>
             <?php endif; ?>
             <?php if ($_footerText): ?>
