@@ -253,7 +253,7 @@ function addMailAccount() {
     row.className = 'mail-account-row flex items-center gap-2';
     row.innerHTML = '<div class="flex-1 flex items-center border border-gray-300 dark:border-zinc-600 rounded-lg overflow-hidden">'
         + '<input type="text" name="mail_id[]" placeholder="user' + mailAccountCount + '" class="flex-1 px-3 py-2 text-sm bg-white dark:bg-zinc-700 dark:text-white border-0 focus:ring-0 min-w-0">'
-        + '<span class="px-2 text-sm text-gray-400 dark:text-zinc-500 bg-gray-50 dark:bg-zinc-600 border-l border-gray-300 dark:border-zinc-600 whitespace-nowrap mail-domain-suffix">' + suffix + '</span>'
+        + '<span class="px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-gray-100 dark:bg-zinc-600 border-l border-gray-300 dark:border-zinc-500 whitespace-nowrap mail-domain-suffix">' + suffix + '</span>'
         + '</div>'
         + '<input type="password" name="mail_pw[]" placeholder="비밀번호" class="w-36 px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">'
         + '<button type="button" onclick="this.parentElement.remove();mailAccountCount--" class="p-1 text-red-400 hover:text-red-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>';
