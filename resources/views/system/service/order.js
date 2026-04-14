@@ -185,6 +185,10 @@ function confirmDomains() {
             + '<p class="text-sm font-bold text-green-700 dark:text-green-400">' + selectedDomains[name].toLocaleString() + '원/년</p></div>';
     });
     confirmed.innerHTML = h;
+
+    // 첫 번째 도메인으로 메일 도메인 업데이트
+    var firstDomain = Object.keys(selectedDomains)[0];
+    if (firstDomain) updateMailDomain(firstDomain);
 }
 
 function resetDomainSearch() {
@@ -227,10 +231,13 @@ function checkSubdomain() {
 
 // 메일 도메인 접미사 업데이트
 function updateMailDomain(domain) {
-    document.querySelectorAll('#mailAccountsWrap [id="mailDomainSuffix"], #mailAccountsWrap .mail-domain-suffix').forEach(function(el) {
+    document.querySelectorAll('.mail-domain-suffix').forEach(function(el) {
         el.textContent = '@' + domain;
     });
 }
+
+// 도메인 확정 시 메일 도메인도 업데이트
+var _origConfirmDomains = typeof confirmDomains === 'function' ? confirmDomains : null;
 
 // ===== 메일 계정 추가 =====
 var mailAccountCount = 1;
