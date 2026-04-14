@@ -100,7 +100,7 @@ include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern
 
             <!-- 기존 도메인 입력 -->
             <div id="domainExisting" class="hidden">
-                <input type="text" name="existing_domain" placeholder="보유한 도메인을 입력하세요 (예: mydomain.com)" class="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                <input type="text" name="existing_domain" placeholder="보유한 도메인을 입력하세요 (예: mydomain.com)" class="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" onchange="if(this.value.trim()) updateMailDomain(this.value.trim())">
                 <p class="text-xs text-gray-400 dark:text-zinc-500 mt-2">* 도메인의 네임서버를 저희 서버로 변경해야 합니다. 설정 안내는 가입 후 이메일로 발송됩니다.</p>
             </div>
 

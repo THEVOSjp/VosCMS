@@ -212,6 +212,9 @@ function toggleDomainOption(type) {
     var map = { free: 'domainFree', 'new': 'domainSearch', existing: 'domainExisting', none: 'domainNone' };
     var target = document.getElementById(map[type]);
     if (target) target.classList.remove('hidden');
+
+    // 도메인 전환 시 메일 도메인 리셋
+    updateMailDomain('도메인을 선택하세요');
 }
 
 // 서브도메인 사용 가능 확인
