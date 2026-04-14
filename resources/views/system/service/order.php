@@ -100,7 +100,7 @@ include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern
                     <p class="text-xs text-green-600 font-semibold mb-1">무료</p>
                     <p class="text-lg font-bold text-gray-900 dark:text-white">50MB</p>
                     <p class="text-green-600 font-bold mt-1">0원</p>
-                    <p class="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5">광고 포함</p>
+                    <p class="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5">광고 포함 · 1개월</p>
                 </label>
                 <label class="hosting-option cursor-pointer border-2 border-gray-200 dark:border-zinc-600 rounded-xl p-4 text-center hover:border-blue-400 transition">
                     <input type="radio" name="hosting_plan" value="500mb" class="hidden">
@@ -141,8 +141,14 @@ include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern
                 </div>
             </details>
 
-            <!-- 계약 기간 -->
-            <div class="flex flex-wrap items-center gap-3 p-4 bg-gray-50 dark:bg-zinc-700/50 rounded-xl mb-4">
+            <!-- 무료 플랜 안내 (무료 선택 시만 표시) -->
+            <div id="freePlanNotice" class="hidden p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl mb-4">
+                <p class="text-sm text-green-800 dark:text-green-200 font-medium">무료 플랜은 <strong>1개월 단위</strong>로 연장 가능합니다.</p>
+                <p class="text-xs text-green-600 dark:text-green-400 mt-1">서브도메인 제공 · 광고 포함 · 메일 미제공 · 마이페이지에서 연장 · 언제든 유료 전환 가능</p>
+            </div>
+
+            <!-- 계약 기간 (무료 선택 시 숨김) -->
+            <div id="hostingPeriodWrap" class="flex flex-wrap items-center gap-3 p-4 bg-gray-50 dark:bg-zinc-700/50 rounded-xl mb-4">
                 <span class="text-sm font-medium text-gray-600 dark:text-zinc-300">계약 기간:</span>
                 <label class="flex items-center gap-1.5 cursor-pointer"><input type="radio" name="hosting_period" value="1" class="text-blue-600"><span class="text-sm text-gray-700 dark:text-zinc-300">1개월</span></label>
                 <label class="flex items-center gap-1.5 cursor-pointer"><input type="radio" name="hosting_period" value="6" class="text-blue-600"><span class="text-sm text-gray-700 dark:text-zinc-300">6개월 <span class="text-blue-600 text-xs">-5%</span></span></label>
@@ -152,8 +158,8 @@ include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern
                 <label class="flex items-center gap-1.5 cursor-pointer"><input type="radio" name="hosting_period" value="60" class="text-blue-600"><span class="text-sm text-gray-700 dark:text-zinc-300">5년 <span class="text-red-500 text-xs font-semibold">-30%</span></span></label>
             </div>
 
-            <!-- 추가 용량 -->
-            <div class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-zinc-700/50 rounded-xl mb-4">
+            <!-- 추가 용량 (무료 선택 시 숨김) -->
+            <div id="hostingStorageWrap" class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-zinc-700/50 rounded-xl mb-4">
                 <span class="text-sm font-medium text-gray-600 dark:text-zinc-300">추가 용량:</span>
                 <select class="px-3 py-2 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg text-sm">
                     <option value="0">추가 없음</option>

@@ -47,6 +47,16 @@ document.querySelectorAll('.hosting-option').forEach(function(el) {
         });
         el.classList.add('selected', 'border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/30');
         el.classList.remove('border-gray-200', 'dark:border-zinc-600');
+
+        // 무료 플랜 선택 시 기간/용량 숨기고 안내 표시
+        var radio = el.querySelector('input[name="hosting_plan"]');
+        var isFree = radio && radio.value === 'free';
+        var notice = document.getElementById('freePlanNotice');
+        var period = document.getElementById('hostingPeriodWrap');
+        var storage = document.getElementById('hostingStorageWrap');
+        if (notice) notice.classList.toggle('hidden', !isFree);
+        if (period) period.classList.toggle('hidden', isFree);
+        if (storage) storage.classList.toggle('hidden', isFree);
     });
 });
 
