@@ -81,6 +81,15 @@ document.querySelectorAll('.hosting-option').forEach(function(el) {
             }
             storageWrap.classList.toggle('opacity-40', isFree);
         }
+
+        // 메일 입력 비활성
+        var mailWrap = document.getElementById('mailAccountsWrap');
+        var mailAddBtn = mailWrap?.parentElement?.querySelector('button[onclick*="addMailAccount"]');
+        if (mailWrap) {
+            mailWrap.querySelectorAll('input').forEach(function(inp) { inp.disabled = isFree; });
+            mailWrap.classList.toggle('opacity-40', isFree);
+        }
+        if (mailAddBtn) { mailAddBtn.disabled = isFree; mailAddBtn.classList.toggle('opacity-40', isFree); }
     });
 });
 
