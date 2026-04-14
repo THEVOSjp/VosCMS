@@ -393,12 +393,12 @@ $menuItems = [
                         <?php foreach ($item['skins'] as $slug => $skin):
                             $isSelected = $slug === $item['current'];
                         ?>
-                        <div onclick="selectSkin('<?= $key ?>', '<?= $slug ?>', '<?= htmlspecialchars($skin['title'], ENT_QUOTES) ?>')" id="skin-<?= $key ?>-<?= $slug ?>"
+                        <div onclick="selectSkin('<?= $key ?>', '<?= $slug ?>', '<?= htmlspecialchars($skin['title'], ENT_QUOTES) ?>')" id="skin-<?= $key ?>-<?= $slug ?>" data-skin-slug="<?= $slug ?>"
                              class="px-6 py-4 cursor-pointer transition <?= $isSelected ? 'bg-yellow-50 dark:bg-yellow-900/10' : 'hover:bg-zinc-50 dark:hover:bg-zinc-700/30' ?>">
                             <!-- 라디오 + 타이틀 -->
                             <div class="flex items-center gap-2 mb-3">
                                 <input type="radio" name="skin_<?= $key ?>" value="<?= $slug ?>" <?= $isSelected ? 'checked' : '' ?> class="text-blue-600" readonly>
-                                <span class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($skin['title']) ?></span>
+                                <span class="text-sm font-medium text-zinc-900 dark:text-white skin-title"><?= htmlspecialchars($skin['title']) ?></span>
                             </div>
                             <!-- 썸네일 + 액션 링크 -->
                             <div class="flex gap-3 ml-5">
@@ -496,12 +496,22 @@ var currentSettingsSlug = '';
 function renameSkin(group, slug) {
     var input = document.getElementById('skinTitleInput');
     if (!input || !input.value.trim()) return;
+    var newTitle = input.value.trim();
     fetch(window.location.href, {
         method: 'POST', headers: {'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
-        body: JSON.stringify({action:'rename_skin', group:group, slug:slug, title:input.value.trim()})
+        body: JSON.stringify({action:'rename_skin', group:group, slug:slug, title:newTitle})
     }).then(r=>r.json()).then(data=>{
-        if (data.success) { showResultModal(true, '이름이 변경되었습니다.'); setTimeout(()=>location.reload(), 1000); }
-        else { showResultModal(false, data.error || '변경에 실패했습니다.'); }
+        if (data.success) {
+            // 좌측 목록의 제목도 업데이트
+            var card = document.querySelector('[data-skin-slug="' + slug + '"] .skin-title');
+            if (card) card.textContent = newTitle;
+            // 설정 패널 제목 업데이트
+            var panelTitle = document.getElementById('settingsPanelTitle');
+            if (panelTitle) panelTitle.textContent = newTitle + ' 상세 설정';
+            showResultModal(true, '이름이 변경되었습니다.');
+        } else {
+            showResultModal(false, data.error || '변경에 실패했습니다.');
+        }
     });
 }
 
