@@ -38,6 +38,7 @@ $_darkMode = $_lc['dark_mode'] ?? 'auto';
 $_menuFixed = ($_lc['menu_fixed'] ?? '1') === '1';
 $_showSearch = ($_lc['show_search'] ?? '1') === '1';
 $_lcLogoImage = $_lc['logo_image'] ?? '';
+$_lcLogoImageDark = $_lc['logo_image_dark'] ?? '';
 $_lcLogoText = $_lc['logo_text'] ?? '';
 $_lcLogoUrl = $_lc['logo_url'] ?? '';
 $_headerScript = $_lc['header_script'] ?? '';
@@ -45,6 +46,7 @@ $_customCss = $_lc['custom_css'] ?? '';
 
 $logoType = $siteSettings['logo_type'] ?? 'text';
 $logoImage = $_lcLogoImage ?: ($siteSettings['logo_image'] ?? '');
+$logoImageDark = $_lcLogoImageDark ?: ($siteSettings['logo_image_dark'] ?? '');
 $pageTitle = $pageTitle ?? $siteName;
 
 // SEO 헬퍼 로드
@@ -165,9 +167,11 @@ elseif ($_darkMode === 'light') $_htmlDarkClass = '';
             <div class="flex items-center justify-between h-14">
                 <a href="<?= $baseUrl ?>/" class="flex items-center text-xl font-bold text-blue-600 dark:text-blue-400">
                     <?php if ($logoType === 'image' && $logoImage): ?>
-                        <img src="<?= $baseUrl . htmlspecialchars($logoImage) ?>" alt="<?= htmlspecialchars($siteName) ?>" class="h-10 object-contain">
+                        <img src="<?= $baseUrl . htmlspecialchars($logoImage) ?>" alt="<?= htmlspecialchars($siteName) ?>" class="h-10 object-contain <?= $logoImageDark ? 'dark:hidden' : '' ?>">
+                        <?php if ($logoImageDark): ?><img src="<?= $baseUrl . htmlspecialchars($logoImageDark) ?>" alt="<?= htmlspecialchars($siteName) ?>" class="h-10 object-contain hidden dark:block"><?php endif; ?>
                     <?php elseif ($logoType === 'image_text' && $logoImage): ?>
-                        <img src="<?= $baseUrl . htmlspecialchars($logoImage) ?>" alt="" class="h-10 object-contain mr-2">
+                        <img src="<?= $baseUrl . htmlspecialchars($logoImage) ?>" alt="" class="h-10 object-contain mr-2 <?= $logoImageDark ? 'dark:hidden' : '' ?>">
+                        <?php if ($logoImageDark): ?><img src="<?= $baseUrl . htmlspecialchars($logoImageDark) ?>" alt="" class="h-10 object-contain mr-2 hidden dark:block"><?php endif; ?>
                         <span><?= htmlspecialchars($siteName) ?></span>
                     <?php else: ?>
                         <span><?= htmlspecialchars($siteName) ?></span>

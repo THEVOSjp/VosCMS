@@ -260,16 +260,27 @@ class SkinConfigRenderer
                 break;
             case 'image':
                 echo '<label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">' . htmlspecialchars($title) . '</label>';
-                if ($value) {
-                    $imgSrc = (str_starts_with($value, 'http') ? $value : $this->baseUrl . $value);
-                    echo '<div class="mb-2 flex items-start gap-3">';
-                    echo '<img src="' . htmlspecialchars($imgSrc) . '" class="max-h-20 rounded border border-zinc-300 dark:border-zinc-600">';
-                    echo '<button type="button" onclick="this.closest(\'.mb-2\').remove();document.querySelector(\'[name=\\\'skin_config[' . $name . ']\\\']]\').value=\'\';document.querySelector(\'[name=\\\'skin_delete[' . $name . ']\\\']]\').value=\'1\'" class="text-xs text-red-500 hover:text-red-700 shrink-0 mt-1">삭제</button>';
-                    echo '</div>';
+                $imgId = 'img_preview_' . $name;
+                $imgSrc = $value ? (str_starts_with($value, 'http') ? $value : $this->baseUrl . $value) : '';
+                echo '<div class="flex items-start gap-3 mb-2" id="' . $imgId . '_wrap">';
+                echo '<div class="w-32 h-20 rounded border border-zinc-300 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center overflow-hidden">';
+                if ($imgSrc) {
+                    echo '<img id="' . $imgId . '" src="' . htmlspecialchars($imgSrc) . '" class="max-h-full max-w-full object-contain">';
+                } else {
+                    echo '<img id="' . $imgId . '" src="" class="max-h-full max-w-full object-contain hidden">';
+                    echo '<svg id="' . $imgId . '_placeholder" class="w-8 h-8 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>';
                 }
-                echo '<input type="file" name="skin_file_' . $name . '" accept="image/*" class="text-sm text-zinc-600 dark:text-zinc-400">';
-                echo '<input type="hidden" name="skin_config[' . $name . ']" value="' . htmlspecialchars($value) . '">';
-                echo '<input type="hidden" name="skin_delete[' . $name . ']" value="0">';
+                echo '</div>';
+                echo '<div class="flex flex-col gap-1">';
+                echo '<label class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition cursor-pointer inline-block">';
+                echo '<input type="file" accept="image/*" class="hidden" onchange="uploadSkinImage(this,\'' . $name . '\')">';
+                echo (__('common.buttons.upload') ?? '업로드') . '</label>';
+                if ($value) {
+                    echo '<button type="button" onclick="removeSkinImage(\'' . $name . '\')" class="text-xs text-red-500 hover:text-red-700">' . (__('common.delete') ?? '삭제') . '</button>';
+                }
+                echo '</div></div>';
+                echo '<input type="hidden" name="skin_config[' . $name . ']" id="skin_val_' . $name . '" value="' . htmlspecialchars($value) . '">';
+                if ($desc) echo '<p class="text-xs text-zinc-400 mt-1">' . htmlspecialchars($desc) . '</p>';
                 break;
             case 'video':
                 echo '<label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">' . htmlspecialchars($title) . '</label>';

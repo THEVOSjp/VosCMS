@@ -220,6 +220,62 @@ try {
         }
     }
 
+    // 파일 업로드 (multipart/form-data) — 로고, 푸터 로고 등 이미지
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action']) && $_POST['action'] === 'upload_skin_image') {
+        header('Content-Type: application/json; charset=utf-8');
+        $group = preg_replace('/[^a-zA-Z0-9_-]/', '', $_POST['group'] ?? '');
+        $slug = preg_replace('/[^a-zA-Z0-9_-]/', '', $_POST['slug'] ?? '');
+        $fieldName = preg_replace('/[^a-zA-Z0-9_-]/', '', $_POST['field'] ?? '');
+
+        if (!$group || !$slug || !$fieldName || empty($_FILES['file'])) {
+            echo json_encode(['success' => false, 'error' => 'Invalid params']);
+            exit;
+        }
+
+        $file = $_FILES['file'];
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            echo json_encode(['success' => false, 'error' => 'Upload failed: ' . $file['error']]);
+            exit;
+        }
+
+        // 이미지 유효성 검사
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+        if (!in_array($mimeType, $allowedTypes)) {
+            echo json_encode(['success' => false, 'error' => 'Invalid image type']);
+            exit;
+        }
+
+        // 저장 경로
+        $dirMap = ['layout' => 'layouts', 'page' => 'page', 'board' => 'board', 'member' => 'member'];
+        $uploadDir = BASE_PATH . '/storage/skins/' . ($dirMap[$group] ?? $group) . '/' . $slug . '/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0775, true);
+
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION) ?: 'png';
+        $fileName = $fieldName . '_' . time() . '.' . $ext;
+        $filePath = $uploadDir . $fileName;
+
+        if (move_uploaded_file($file['tmp_name'], $filePath)) {
+            $webPath = '/storage/skins/' . ($dirMap[$group] ?? $group) . '/' . $slug . '/' . $fileName;
+
+            // DB 설정에도 반영
+            $cfgKey = 'skin_detail_' . $group . '_' . $slug;
+            $cfgStmt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = ?");
+            $cfgStmt->execute([$cfgKey]);
+            $existingConfig = json_decode($cfgStmt->fetchColumn() ?: '{}', true) ?: [];
+            $existingConfig[$fieldName] = $webPath;
+            $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)")
+                ->execute([$cfgKey, json_encode($existingConfig, JSON_UNESCAPED_UNICODE)]);
+
+            echo json_encode(['success' => true, 'path' => $webPath, 'url' => ($config['app_url'] ?? '') . $webPath]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'File move failed']);
+        }
+        exit;
+    }
+
     // 현재 설정 로드
     $settings = [];
     $rows = $pdo->query("SELECT `key`, `value` FROM {$prefix}settings WHERE `key` IN ('site_layout','site_page_skin','site_board_skin','site_member_skin')")->fetchAll(PDO::FETCH_ASSOC);
@@ -512,6 +568,46 @@ async function openSkinSettings(group, slug) {
     } catch (e) {
         content.innerHTML = '<p class="text-sm text-red-500 text-center py-8">' + e.message + '</p>';
     }
+}
+
+// 이미지 즉시 업로드 + 프리뷰
+async function uploadSkinImage(fileInput, fieldName) {
+    var file = fileInput.files[0];
+    if (!file) return;
+
+    var fd = new FormData();
+    fd.append('action', 'upload_skin_image');
+    fd.append('group', currentSettingsGroup);
+    fd.append('slug', currentSettingsSlug);
+    fd.append('field', fieldName);
+    fd.append('file', file);
+
+    try {
+        var resp = await fetch(window.location.href, { method: 'POST', body: fd });
+        var data = await resp.json();
+        if (data.success) {
+            // 프리뷰 업데이트
+            var img = document.getElementById('img_preview_' + fieldName);
+            var ph = document.getElementById('img_preview_' + fieldName + '_placeholder');
+            if (img) { img.src = data.url; img.classList.remove('hidden'); }
+            if (ph) ph.classList.add('hidden');
+            // hidden input 업데이트
+            var val = document.getElementById('skin_val_' + fieldName);
+            if (val) val.value = data.path;
+            showResultModal(true, '이미지가 업로드되었습니다.');
+        } else {
+            showResultModal(false, data.error || '업로드 실패');
+        }
+    } catch (e) { showResultModal(false, e.message); }
+}
+
+function removeSkinImage(fieldName) {
+    var img = document.getElementById('img_preview_' + fieldName);
+    var ph = document.getElementById('img_preview_' + fieldName + '_placeholder');
+    if (img) { img.src = ''; img.classList.add('hidden'); }
+    if (ph) ph.classList.remove('hidden');
+    var val = document.getElementById('skin_val_' + fieldName);
+    if (val) val.value = '';
 }
 
 async function saveSkinDetail() {
