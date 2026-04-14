@@ -37,48 +37,56 @@ try {
         }
 
         // 레이아웃 복사
-        if (($input['action'] ?? '') === 'copy_layout') {
+        // 스킨 복사 (레이아웃/페이지/게시판/회원 공통)
+        if (($input['action'] ?? '') === 'copy_skin') {
+            $group = $input['group'] ?? 'layout';
             $src = preg_replace('/[^a-zA-Z0-9_-]/', '', $input['slug'] ?? '');
-            $srcDir = BASE_PATH . '/skins/layouts/' . $src;
-            if (!$src || !is_dir($srcDir)) { echo json_encode(['success' => false, 'error' => 'Layout not found']); exit; }
+            $dirMap = ['layout' => 'layouts', 'page' => 'page', 'board' => 'board', 'member' => 'member'];
+            $srcDir = BASE_PATH . '/skins/' . ($dirMap[$group] ?? $group) . '/' . $src;
+            if (!$src || !is_dir($srcDir)) { echo json_encode(['success' => false, 'error' => 'Skin not found']); exit; }
             $newSlug = $src . '-copy-' . date('ymd');
             $i = 1;
-            while (is_dir(BASE_PATH . '/skins/layouts/' . $newSlug)) { $newSlug = $src . '-copy-' . date('ymd') . '-' . $i++; }
-            $newDir = BASE_PATH . '/skins/layouts/' . $newSlug;
-            // 디렉토리 복사
+            $baseDir = dirname($srcDir);
+            while (is_dir($baseDir . '/' . $newSlug)) { $newSlug = $src . '-copy-' . date('ymd') . '-' . $i++; }
+            $newDir = $baseDir . '/' . $newSlug;
             mkdir($newDir, 0775, true);
             foreach (scandir($srcDir) as $f) {
                 if ($f === '.' || $f === '..') continue;
                 copy($srcDir . '/' . $f, $newDir . '/' . $f);
             }
-            // layout.json 제목 수정
-            $ljPath = $newDir . '/layout.json';
-            if (file_exists($ljPath)) {
-                $lj = json_decode(file_get_contents($ljPath), true);
-                if (isset($lj['title']) && is_array($lj['title'])) {
-                    foreach ($lj['title'] as $lang => &$t) { $t .= ' (Copy)'; }
+            // JSON 제목 수정
+            $jsonFile = $group === 'layout' ? 'layout.json' : 'skin.json';
+            $jPath = $newDir . '/' . $jsonFile;
+            if (file_exists($jPath)) {
+                $j = json_decode(file_get_contents($jPath), true);
+                if (isset($j['title']) && is_array($j['title'])) {
+                    foreach ($j['title'] as $lang => &$t) { $t .= ' (Copy)'; }
                     unset($t);
                 }
-                file_put_contents($ljPath, json_encode($lj, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+                file_put_contents($jPath, json_encode($j, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
             }
             echo json_encode(['success' => true, 'slug' => $newSlug]);
             exit;
         }
 
-        // 레이아웃 삭제
-        if (($input['action'] ?? '') === 'delete_layout') {
+        // 스킨 삭제 (공통)
+        if (($input['action'] ?? '') === 'delete_skin') {
+            $group = $input['group'] ?? 'layout';
             $slug = preg_replace('/[^a-zA-Z0-9_-]/', '', $input['slug'] ?? '');
-            if (!$slug || $slug === 'default') { echo json_encode(['success' => false, 'error' => 'Cannot delete default layout']); exit; }
-            $dir = BASE_PATH . '/skins/layouts/' . $slug;
-            if (!is_dir($dir)) { echo json_encode(['success' => false, 'error' => 'Layout not found']); exit; }
-            // 현재 사이트 레이아웃이면 삭제 불가
-            $currentLayout = $siteSettings['site_layout'] ?? 'default';
-            if ($currentLayout === $slug) { echo json_encode(['success' => false, 'error' => 'Cannot delete active layout']); exit; }
-            // 디렉토리 삭제
+            if (!$slug || $slug === 'default') { echo json_encode(['success' => false, 'error' => 'Cannot delete default']); exit; }
+            $dirMap = ['layout' => 'layouts', 'page' => 'page', 'board' => 'board', 'member' => 'member'];
+            $dir = BASE_PATH . '/skins/' . ($dirMap[$group] ?? $group) . '/' . $slug;
+            if (!is_dir($dir)) { echo json_encode(['success' => false, 'error' => 'Skin not found']); exit; }
+            // 현재 활성 스킨이면 삭제 불가
+            $activeKeys = ['layout' => 'site_layout', 'page' => 'site_page_skin', 'board' => 'site_board_skin', 'member' => 'site_member_skin'];
+            $activeKey = $activeKeys[$group] ?? '';
+            if ($activeKey && ($siteSettings[$activeKey] ?? 'default') === $slug) {
+                echo json_encode(['success' => false, 'error' => 'Cannot delete active skin']);
+                exit;
+            }
             foreach (scandir($dir) as $f) { if ($f !== '.' && $f !== '..') unlink($dir . '/' . $f); }
             rmdir($dir);
-            // DB 설정 삭제
-            $pdo->prepare("DELETE FROM {$prefix}settings WHERE `key` = ?")->execute(['skin_detail_layout_' . $slug]);
+            $pdo->prepare("DELETE FROM {$prefix}settings WHERE `key` = ?")->execute(['skin_detail_' . $group . '_' . $slug]);
             echo json_encode(['success' => true]);
             exit;
         }
@@ -414,11 +422,11 @@ $menuItems = [
                                         <?= __('site.design.detail_settings') ?? '상세 설정' ?>
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a10 10 0 11-20 0 10 10 0 0120 0z"/></svg>
                                     </a>
-                                    <a href="#" onclick="event.stopPropagation();copyLayout('<?= $slug ?>')" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline">
+                                    <a href="#" onclick="event.stopPropagation();copySkin('<?= $key ?>','<?= $slug ?>')" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline">
                                         <?= __('site.design.duplicate') ?? '복사본 생성' ?>
                                     </a>
                                     <?php if ($slug !== 'default'): ?>
-                                    <a href="#" onclick="event.stopPropagation();deleteLayout('<?= $slug ?>')" class="text-red-500 hover:text-red-600 dark:text-red-400 hover:underline">
+                                    <a href="#" onclick="event.stopPropagation();deleteSkin('<?= $key ?>','<?= $slug ?>')" class="text-red-500 hover:text-red-600 dark:text-red-400 hover:underline">
                                         <?= __('site.design.delete') ?? '삭제' ?>
                                     </a>
                                     <?php endif; ?>
@@ -515,29 +523,33 @@ function renameSkin(group, slug) {
     });
 }
 
-function copyLayout(slug) {
+function copySkin(group, slug) {
     fetch(window.location.href, {
         method: 'POST', headers: {'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
-        body: JSON.stringify({action:'copy_layout', slug:slug})
+        body: JSON.stringify({action:'copy_skin', group:group, slug:slug})
     }).then(r=>r.json()).then(data=>{
-        if (data.success) { location.reload(); }
-        else { alert(data.error || 'Failed'); }
+        if (data.success) {
+            showResultModal(true, '복사본이 생성되었습니다.');
+            setTimeout(()=>location.reload(), 1000);
+        } else {
+            showResultModal(false, data.error || '복사에 실패했습니다.');
+        }
     });
 }
 
-function deleteLayout(slug) {
+function deleteSkin(group, slug) {
     showConfirmModal({
-        title: '이 레이아웃을 삭제하시겠습니까?',
-        message: '「' + slug + '」 레이아웃이 삭제됩니다.',
-        checkLabel: '레이아웃 파일과 설정이 영구 삭제된다는 것을 알고 있습니다.',
+        title: '이 스킨을 삭제하시겠습니까?',
+        message: '「' + slug + '」이(가) 삭제됩니다.',
+        checkLabel: '스킨 파일과 설정이 영구 삭제된다는 것을 알고 있습니다.',
         confirmText: '삭제',
         danger: true,
         onConfirm: function() {
             fetch(window.location.href, {
                 method: 'POST', headers: {'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
-                body: JSON.stringify({action:'delete_layout', slug:slug})
+                body: JSON.stringify({action:'delete_skin', group:group, slug:slug})
             }).then(r=>r.json()).then(data=>{
-                if (data.success) { showResultModal(true, '레이아웃이 삭제되었습니다.'); setTimeout(()=>location.reload(), 1000); }
+                if (data.success) { showResultModal(true, '삭제되었습니다.'); setTimeout(()=>location.reload(), 1000); }
                 else { showResultModal(false, data.error || '삭제에 실패했습니다.'); }
             });
         }
