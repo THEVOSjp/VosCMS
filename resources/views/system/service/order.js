@@ -189,6 +189,7 @@ function confirmDomains() {
     // 첫 번째 도메인으로 메일 도메인 업데이트
     var firstDomain = Object.keys(selectedDomains)[0];
     if (firstDomain) updateMailDomain(firstDomain);
+    updateOrderSummary();
 }
 
 function resetDomainSearch() {
@@ -230,6 +231,7 @@ function checkSubdomain() {
 
     // 메일 도메인 업데이트
     updateMailDomain(val + '.21ces.net');
+    updateOrderSummary();
 }
 
 // 메일 도메인 접미사 업데이트
@@ -291,7 +293,126 @@ function addBizMailAccount() {
     wrap.insertBefore(row, wrap.querySelector('button'));
 }
 
+// ===== 주문 요약 실시간 업데이트 =====
+var hostingPrices = { free: 0, '500mb': 3000, '1g': 5000, '3g': 10000, '5g': 18000, '10g': 30000, '15g': 45000, '20g': 55000, '30g': 80000 };
+var hostingLabels = { free: '무료 50MB', '500mb': '500MB', '1g': '1GB', '3g': '3GB', '5g': '5GB', '10g': '10GB', '15g': '15GB', '20g': '20GB', '30g': '30GB' };
+var periodDiscounts = { '1': 0, '6': 5, '12': 10, '24': 15, '36': 20, '60': 30 };
+var periodLabels = { '1': '1개월', '6': '6개월', '12': '1년', '24': '2년', '36': '3년', '60': '5년' };
+var maintenancePrices = { '10000': { label: 'Basic', price: 10000 }, '20000': { label: 'Standard', price: 20000 }, '30000': { label: 'Pro', price: 30000 }, '50000': { label: 'Enterprise', price: 50000 } };
+
+function updateOrderSummary() {
+    var items = [];
+    var total = 0;
+
+    // 도메인
+    var domainTotal = Object.values(selectedDomains).reduce(function(s, p) { return s + p; }, 0);
+    if (domainTotal > 0) {
+        items.push({ label: '도메인 (' + Object.keys(selectedDomains).length + '개)', amount: domainTotal, note: '/년' });
+        total += domainTotal;
+    }
+    // 무료 서브도메인
+    var freeSubVal = document.getElementById('freeSubdomain')?.value;
+    var domainOpt = document.querySelector('input[name="domain_option"]:checked')?.value;
+    if (domainOpt === 'free' && freeSubVal) {
+        items.push({ label: freeSubVal + '.21ces.net', amount: 0, note: '무료' });
+    }
+
+    // 호스팅
+    var plan = document.querySelector('input[name="hosting_plan"]:checked')?.value || '';
+    var period = document.querySelector('input[name="hosting_period"]:checked')?.value || '12';
+    if (plan) {
+        var monthlyPrice = hostingPrices[plan] || 0;
+        var months = parseInt(period) || 1;
+        var discount = periodDiscounts[period] || 0;
+        var hostingTotal = monthlyPrice * months;
+        var discountAmount = Math.floor(hostingTotal * discount / 100);
+        var hostingFinal = hostingTotal - discountAmount;
+
+        if (plan === 'free') {
+            items.push({ label: '웹 호스팅 (무료 50MB)', amount: 0, note: '1개월' });
+        } else {
+            items.push({ label: '웹 호스팅 ' + (hostingLabels[plan] || plan) + ' × ' + (periodLabels[period] || period), amount: hostingFinal });
+            if (discountAmount > 0) {
+                items.push({ label: '장기 할인 (' + discount + '%)', amount: -discountAmount, cls: 'text-green-400' });
+            }
+        }
+        total += hostingFinal;
+    }
+
+    // 설치 지원 (무료)
+    if (document.querySelector('input[name="addon_install"]:checked')) {
+        items.push({ label: '설치 지원', amount: 0, note: '무료' });
+    }
+
+    // 기술 지원
+    if (document.querySelector('input[name="addon_support"]:checked')) {
+        items.push({ label: '기술 지원 (1년)', amount: 120000 });
+        total += 120000;
+    }
+
+    // 유지보수
+    var maint = document.querySelector('input[name="maintenance"]:checked')?.value;
+    if (maint && maint !== '0' && maintenancePrices[maint]) {
+        var mp = maintenancePrices[maint];
+        items.push({ label: '유지보수 ' + mp.label, amount: mp.price, note: '/월' });
+        total += mp.price;
+    }
+
+    // 비즈니스 메일
+    if (document.querySelector('input[name="addon_bizmail"]:checked')) {
+        var bizCount = document.querySelectorAll('.bizmail-account-row').length || 1;
+        items.push({ label: '비즈니스 메일 × ' + bizCount, amount: 5000 * bizCount, note: '/월' });
+        total += 5000 * bizCount;
+    }
+
+    // 렌더링
+    var summaryItems = document.getElementById('summaryItems');
+    var summaryEmpty = document.getElementById('summaryEmpty');
+    var summaryTotal = document.getElementById('summaryTotal');
+    var summaryTotalAmount = document.getElementById('summaryTotalAmount');
+    var submitBtn = document.getElementById('btnSubmitOrder');
+
+    if (items.length === 0) {
+        summaryEmpty.classList.remove('hidden');
+        summaryItems.classList.add('hidden');
+        summaryTotal.classList.add('hidden');
+        if (submitBtn) submitBtn.disabled = true;
+        return;
+    }
+
+    summaryEmpty.classList.add('hidden');
+    summaryItems.classList.remove('hidden');
+    summaryTotal.classList.remove('hidden');
+
+    var h = '';
+    items.forEach(function(item) {
+        h += '<div class="flex justify-between">';
+        h += '<span class="text-zinc-400">' + item.label + '</span>';
+        if (item.amount === 0) {
+            h += '<span class="text-green-400">' + (item.note || '무료') + '</span>';
+        } else if (item.amount < 0) {
+            h += '<span class="' + (item.cls || 'text-green-400') + '">' + formatCurrency(item.amount) + '</span>';
+        } else {
+            h += '<span>' + formatCurrency(item.amount) + (item.note ? '<span class="text-zinc-500 text-xs">' + item.note + '</span>' : '') + '</span>';
+        }
+        h += '</div>';
+    });
+    summaryItems.innerHTML = h;
+    summaryTotalAmount.textContent = formatCurrency(total);
+    if (submitBtn) submitBtn.disabled = false;
+}
+
+// 모든 입력 변경 시 주문 요약 업데이트
+document.addEventListener('change', function(e) {
+    var t = e.target;
+    if (t.name === 'hosting_plan' || t.name === 'hosting_period' || t.name === 'maintenance' ||
+        t.name === 'addon_install' || t.name === 'addon_support' || t.name === 'addon_bizmail' || t.name === 'addon_custom') {
+        updateOrderSummary();
+    }
+});
+
 // 초기 표시
 document.addEventListener('DOMContentLoaded', function() {
     setCurrency(currentCurrency);
+    updateOrderSummary();
 });

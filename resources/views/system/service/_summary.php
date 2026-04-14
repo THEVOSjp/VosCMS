@@ -10,7 +10,12 @@
         </div>
     </div>
     <div class="p-6 space-y-3 text-sm" id="orderSummaryBody">
-        <div class="flex justify-between"><span class="text-zinc-400">선택된 항목이 없습니다.</span></div>
+        <div id="summaryEmpty" class="flex justify-between"><span class="text-zinc-400">호스팅 플랜을 선택하세요.</span></div>
+        <div id="summaryItems" class="hidden space-y-2"></div>
+        <div id="summaryTotal" class="hidden border-t border-zinc-700 pt-3 mt-3 flex justify-between items-center">
+            <span class="text-lg font-bold">결제 금액</span>
+            <span class="text-2xl font-bold text-blue-400" id="summaryTotalAmount">0원</span>
+        </div>
     </div>
     <div class="px-6 pb-6">
         <button id="btnSubmitOrder" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>결제하기</button>
