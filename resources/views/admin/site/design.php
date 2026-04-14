@@ -725,6 +725,7 @@ async function saveLayout() {
     }
 }
 </script>
+<?php include BASE_PATH . '/resources/views/admin/components/multilang-modal.php'; ?>
 <?php include BASE_PATH . '/resources/views/admin/partials/result-modal.php'; ?>
     </div>
     </main>
