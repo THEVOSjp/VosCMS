@@ -88,21 +88,29 @@
             <button type="button" onclick="addMailAccount()" class="ml-6 mt-2 text-xs text-blue-600 hover:underline">+ 메일 계정 추가</button>
         </div>
         <!-- 비즈니스 메일 -->
-        <label class="flex items-start gap-4 p-4 border border-gray-200 dark:border-zinc-600 rounded-xl cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 transition">
-            <input type="checkbox" name="addon_bizmail" class="mt-1 text-blue-600 rounded">
-            <div class="flex-1">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2"><p class="font-semibold text-gray-900 dark:text-white">비즈니스 메일</p><span class="text-[10px] px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 rounded-full font-semibold">대용량</span></div>
-                    <p class="text-blue-600 font-bold">5,000원<span class="text-xs font-normal text-gray-400">/계정/월</span></p>
+        <div class="p-4 border border-gray-200 dark:border-zinc-600 rounded-xl">
+            <label class="flex items-start gap-4 cursor-pointer">
+                <input type="checkbox" name="addon_bizmail" class="mt-1 text-blue-600 rounded" onchange="toggleBizMail(this.checked)">
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2"><p class="font-semibold text-gray-900 dark:text-white">비즈니스 메일</p><span class="text-[10px] px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 rounded-full font-semibold">대용량</span></div>
+                        <p class="text-blue-600 font-bold">5,000원<span class="text-xs font-normal text-gray-400">/계정/월</span></p>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1">대용량 첨부파일 전송 (최대 10GB), 계정당 10GB 저장공간, 광고 없는 웹메일, 스팸 필터.</p>
                 </div>
-                <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1">대용량 첨부파일 전송 (최대 10GB), 계정당 10GB 저장공간, 광고 없는 웹메일, 스팸 필터.</p>
-                <div class="mt-2 flex items-center gap-2">
-                    <span class="text-xs text-gray-500 dark:text-zinc-400">추가 계정 수:</span>
-                    <select name="bizmail_count" class="px-2 py-1 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded text-xs">
-                        <option value="0">추가 없음</option><option>1</option><option>3</option><option>5</option><option>10</option><option>20</option>
-                    </select>
+            </label>
+            <!-- 비즈니스 메일 계정 입력 (체크 시 표시) -->
+            <div id="bizMailAccountsWrap" class="hidden mt-3 ml-8 space-y-2">
+                <p class="text-xs font-medium text-amber-700 dark:text-amber-300 mb-1">비즈니스 메일 계정 설정</p>
+                <div class="bizmail-account-row flex items-center gap-2">
+                    <div class="flex-1 flex items-center border border-gray-300 dark:border-zinc-600 rounded-lg overflow-hidden">
+                        <input type="text" name="bizmail_id[]" placeholder="ceo" class="flex-1 px-3 py-2 text-sm bg-white dark:bg-zinc-700 dark:text-white border-0 focus:ring-0 min-w-0">
+                        <span class="px-3 py-2 text-sm font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 border-l border-gray-300 dark:border-zinc-500 whitespace-nowrap bizmail-domain-suffix">@도메인을 선택하세요</span>
+                    </div>
+                    <input type="password" name="bizmail_pw[]" placeholder="비밀번호" class="w-36 px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-amber-500">
                 </div>
+                <button type="button" onclick="addBizMailAccount()" class="text-xs text-amber-600 hover:underline">+ 비즈니스 메일 계정 추가</button>
             </div>
-        </label>
+        </div>
     </div>
 </section>

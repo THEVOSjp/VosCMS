@@ -237,6 +237,9 @@ function updateMailDomain(domain) {
     document.querySelectorAll('.mail-domain-suffix').forEach(function(el) {
         el.textContent = '@' + domain;
     });
+    document.querySelectorAll('.bizmail-domain-suffix').forEach(function(el) {
+        el.textContent = '@' + domain;
+    });
 }
 
 // 도메인 확정 시 메일 도메인도 업데이트
@@ -258,6 +261,34 @@ function addMailAccount() {
         + '<input type="password" name="mail_pw[]" placeholder="비밀번호" class="w-36 px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">'
         + '<button type="button" onclick="this.parentElement.remove();mailAccountCount--" class="p-1 text-red-400 hover:text-red-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>';
     wrap.appendChild(row);
+}
+
+// ===== 비즈니스 메일 =====
+function toggleBizMail(checked) {
+    var wrap = document.getElementById('bizMailAccountsWrap');
+    if (wrap) wrap.classList.toggle('hidden', !checked);
+    // 도메인 동기화
+    if (checked) {
+        var suffix = document.getElementById('mailDomainSuffix')?.textContent || '@도메인을 선택하세요';
+        document.querySelectorAll('.bizmail-domain-suffix').forEach(function(el) { el.textContent = suffix; });
+    }
+}
+
+var bizMailAccountCount = 1;
+function addBizMailAccount() {
+    if (bizMailAccountCount >= 20) { alert('최대 20개까지 추가할 수 있습니다.'); return; }
+    bizMailAccountCount++;
+    var wrap = document.getElementById('bizMailAccountsWrap');
+    var suffix = document.querySelector('.bizmail-domain-suffix')?.textContent || '@도메인을 선택하세요';
+    var row = document.createElement('div');
+    row.className = 'bizmail-account-row flex items-center gap-2';
+    row.innerHTML = '<div class="flex-1 flex items-center border border-gray-300 dark:border-zinc-600 rounded-lg overflow-hidden">'
+        + '<input type="text" name="bizmail_id[]" placeholder="user' + bizMailAccountCount + '" class="flex-1 px-3 py-2 text-sm bg-white dark:bg-zinc-700 dark:text-white border-0 focus:ring-0 min-w-0">'
+        + '<span class="px-3 py-2 text-sm font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 border-l border-gray-300 dark:border-zinc-500 whitespace-nowrap bizmail-domain-suffix">' + suffix + '</span>'
+        + '</div>'
+        + '<input type="password" name="bizmail_pw[]" placeholder="비밀번호" class="w-36 px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-amber-500">'
+        + '<button type="button" onclick="this.parentElement.remove();bizMailAccountCount--" class="p-1 text-red-400 hover:text-red-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>';
+    wrap.insertBefore(row, wrap.querySelector('button'));
 }
 
 // 초기 표시
