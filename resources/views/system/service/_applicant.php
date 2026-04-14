@@ -51,15 +51,7 @@
             <div><label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">연락처</label><input type="tel" name="phone" class="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" value="<?= htmlspecialchars($currentUser['phone'] ?? '') ?>"></div>
             <?php endif; ?>
             <div><label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1"><?= __('settings.site.category_label') ?? '사이트 분류 (업종)' ?></label>
-                <?php
-                $categoryKeys = ['beauty_salon', 'nail_salon', 'skincare', 'massage', 'hospital', 'dental', 'studio', 'restaurant', 'accommodation', 'sports', 'education', 'consulting', 'pet', 'car', 'corporate', 'shopping', 'law_firm', 'accounting', 'real_estate', 'it_tech', 'media', 'nonprofit', 'government', 'community', 'portfolio', 'other'];
-                ?>
-                <select name="site_category" class="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
-                    <option value=""><?= __('settings.site.category_placeholder') ?? '-- 업종을 선택하세요 --' ?></option>
-                    <?php foreach ($categoryKeys as $ck): ?>
-                    <option value="<?= $ck ?>"><?= __('settings.site.categories.' . $ck) ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <?php include BASE_PATH . '/resources/views/components/site-category-select.php'; ?>
             </div>
         </div>
         <div><label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">요청 사항</label><textarea name="notes" class="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm resize-y" rows="3" placeholder="추가 요청 사항이 있으면 입력하세요."></textarea></div>

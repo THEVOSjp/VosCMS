@@ -244,19 +244,10 @@ ob_start();
             <label for="site_category" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.site.category_label') ?></label>
             <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= __('settings.site.category_description') ?></p>
             <?php
-            $currentCategory = $settings['site_category'] ?? '';
-            $categoryKeys = ['beauty_salon', 'nail_salon', 'skincare', 'massage', 'hospital', 'dental', 'studio', 'restaurant', 'accommodation', 'sports', 'education', 'consulting', 'pet', 'car', 'corporate', 'shopping', 'law_firm', 'accounting', 'real_estate', 'it_tech', 'media', 'nonprofit', 'government', 'community', 'portfolio', 'other'];
-            $categories = ['' => __('settings.site.category_placeholder')];
-            foreach ($categoryKeys as $key) {
-                $categories[$key] = __('settings.site.categories.' . $key);
-            }
+            $categorySelected = $settings['site_category'] ?? '';
+            $categoryInputClass = 'md:w-1/2';
+            include BASE_PATH . '/resources/views/components/site-category-select.php';
             ?>
-            <select name="site_category" id="site_category"
-                    class="w-full md:w-1/2 px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
-                <?php foreach ($categories as $value => $label): ?>
-                <option value="<?= $value ?>" <?= $currentCategory === $value ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
-                <?php endforeach; ?>
-            </select>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
