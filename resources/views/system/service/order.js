@@ -3,7 +3,7 @@
  */
 
 // ===== 통화 전환 =====
-var currentCurrency = 'KRW';
+var currentCurrency = (typeof siteCurrency !== 'undefined') ? siteCurrency : 'KRW';
 var exchangeRates = { KRW: 1, USD: 1/1380, JPY: 1/9.2, CNY: 1/190, EUR: 1/1500 };
 var currencySymbols = { KRW: '원', USD: '$', JPY: '¥', CNY: '¥', EUR: '€' };
 var currencyDecimals = { KRW: 0, USD: 2, JPY: 0, CNY: 2, EUR: 2 };
@@ -48,15 +48,39 @@ document.querySelectorAll('.hosting-option').forEach(function(el) {
         el.classList.add('selected', 'border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/30');
         el.classList.remove('border-gray-200', 'dark:border-zinc-600');
 
-        // 무료 플랜 선택 시 기간/용량 숨기고 안내 표시
+        // 무료 플랜 선택 시 기간 1개월 강제 + 추가용량 비활성
         var radio = el.querySelector('input[name="hosting_plan"]');
         var isFree = radio && radio.value === 'free';
         var notice = document.getElementById('freePlanNotice');
-        var period = document.getElementById('hostingPeriodWrap');
-        var storage = document.getElementById('hostingStorageWrap');
+        var periodWrap = document.getElementById('hostingPeriodWrap');
+        var storageWrap = document.getElementById('hostingStorageWrap');
+
         if (notice) notice.classList.toggle('hidden', !isFree);
-        if (period) period.classList.toggle('hidden', isFree);
-        if (storage) storage.classList.toggle('hidden', isFree);
+
+        if (periodWrap) {
+            periodWrap.querySelectorAll('input[name="hosting_period"]').forEach(function(r) {
+                if (isFree) {
+                    r.disabled = (r.value !== '1');
+                    if (r.value === '1') r.checked = true;
+                    r.closest('label').classList.toggle('opacity-40', r.value !== '1');
+                    r.closest('label').classList.toggle('cursor-not-allowed', r.value !== '1');
+                    r.closest('label').classList.toggle('cursor-pointer', r.value === '1');
+                } else {
+                    r.disabled = false;
+                    r.closest('label').classList.remove('opacity-40', 'cursor-not-allowed');
+                    r.closest('label').classList.add('cursor-pointer');
+                }
+            });
+        }
+
+        if (storageWrap) {
+            var storageSelect = storageWrap.querySelector('select');
+            if (storageSelect) {
+                storageSelect.disabled = isFree;
+                if (isFree) storageSelect.value = '0';
+            }
+            storageWrap.classList.toggle('opacity-40', isFree);
+        }
     });
 });
 
@@ -218,4 +242,6 @@ function addMailAccount() {
 }
 
 // 초기 표시
-document.addEventListener('DOMContentLoaded', function() { updateCurrencyDisplay(); });
+document.addEventListener('DOMContentLoaded', function() {
+    setCurrency(currentCurrency);
+});

@@ -222,6 +222,7 @@ include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern
 <?php if ($isAdmin) include __DIR__ . '/_admin_settings.php'; ?>
 
 <!-- JS -->
+<script>var siteCurrency = '<?= $serviceSettings['service_currency'] ?? $siteSettings['default_currency'] ?? 'KRW' ?>';</script>
 <script src="<?= $baseUrl ?>/resources/views/system/service/order.js"></script>
 
 <?php
