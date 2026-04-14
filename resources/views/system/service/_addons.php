@@ -66,14 +66,26 @@
                 <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1">맞춤 디자인, 전용 플러그인 개발, 외부 시스템 연동, 데이터 마이그레이션 등.</p>
             </div>
         </label>
-        <!-- 기본 메일 안내 -->
+        <!-- 기본 메일 안내 + 메일 계정 입력 -->
         <div class="p-4 border border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/20 rounded-xl">
             <div class="flex items-center gap-2 mb-1">
                 <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
                 <p class="font-semibold text-gray-900 dark:text-white">기본 메일 5개 포함</p>
                 <span class="text-xs text-green-600 font-medium">호스팅 기본 제공</span>
             </div>
-            <p class="text-xs text-gray-500 dark:text-zinc-400 ml-6">도메인 기반 이메일 5개 (예: info@yourdomain.com). 웹메일, IMAP/POP3 지원. 계정당 1GB.</p>
+            <p class="text-xs text-gray-500 dark:text-zinc-400 ml-6 mb-3">도메인 기반 이메일 5개 (예: info@yourdomain.com). 웹메일, IMAP/POP3 지원. 계정당 1GB.</p>
+            <!-- 메일 계정 입력 -->
+            <div class="ml-6 space-y-2" id="mailAccountsWrap">
+                <p class="text-xs font-medium text-gray-600 dark:text-zinc-300 mb-1">메일 계정 설정 (최대 5개)</p>
+                <div class="mail-account-row flex items-center gap-2">
+                    <div class="flex-1 flex items-center border border-gray-300 dark:border-zinc-600 rounded-lg overflow-hidden">
+                        <input type="text" name="mail_id[]" placeholder="info" class="flex-1 px-3 py-2 text-sm bg-white dark:bg-zinc-700 dark:text-white border-0 focus:ring-0 min-w-0">
+                        <span class="px-2 text-sm text-gray-400 dark:text-zinc-500 bg-gray-50 dark:bg-zinc-600 border-l border-gray-300 dark:border-zinc-600 whitespace-nowrap" id="mailDomainSuffix">@yourdomain.com</span>
+                    </div>
+                    <input type="password" name="mail_pw[]" placeholder="비밀번호" class="w-36 px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <button type="button" onclick="addMailAccount()" class="ml-6 mt-2 text-xs text-blue-600 hover:underline">+ 메일 계정 추가</button>
         </div>
         <!-- 비즈니스 메일 -->
         <label class="flex items-start gap-4 p-4 border border-gray-200 dark:border-zinc-600 rounded-xl cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 transition">

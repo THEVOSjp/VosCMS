@@ -166,5 +166,56 @@ function resetDomainSearch() {
     updateDomainSummary();
 }
 
+// ===== 도메인 옵션 토글 =====
+function toggleDomainOption(type) {
+    ['domainFree', 'domainSearch', 'domainExisting', 'domainNone'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    });
+    var map = { free: 'domainFree', 'new': 'domainSearch', existing: 'domainExisting', none: 'domainNone' };
+    var target = document.getElementById(map[type]);
+    if (target) target.classList.remove('hidden');
+}
+
+// 서브도메인 사용 가능 확인
+function checkSubdomain() {
+    var input = document.getElementById('freeSubdomain');
+    var result = document.getElementById('subdomainResult');
+    var val = (input?.value || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+    if (!val || val.length < 2) { result.innerHTML = '<p class="text-xs text-red-500">2자 이상 영문 소문자/숫자로 입력하세요.</p>'; result.classList.remove('hidden'); return; }
+    input.value = val;
+    // TODO: 실제 구현 시 서버 API로 중복 확인
+    result.innerHTML = '<p class="text-xs text-green-600 flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><strong>' + val + '.21ces.net</strong> 사용 가능합니다.</p>';
+    result.classList.remove('hidden');
+
+    // 메일 도메인 업데이트
+    updateMailDomain(val + '.21ces.net');
+}
+
+// 메일 도메인 접미사 업데이트
+function updateMailDomain(domain) {
+    document.querySelectorAll('#mailAccountsWrap [id="mailDomainSuffix"], #mailAccountsWrap .mail-domain-suffix').forEach(function(el) {
+        el.textContent = '@' + domain;
+    });
+}
+
+// ===== 메일 계정 추가 =====
+var mailAccountCount = 1;
+function addMailAccount() {
+    if (mailAccountCount >= 5) { alert('최대 5개까지 추가할 수 있습니다.'); return; }
+    mailAccountCount++;
+    var wrap = document.getElementById('mailAccountsWrap');
+    var suffix = document.getElementById('mailDomainSuffix')?.textContent || '@yourdomain.com';
+    var row = document.createElement('div');
+    row.className = 'mail-account-row flex items-center gap-2';
+    row.innerHTML = '<div class="flex-1 flex items-center border border-gray-300 dark:border-zinc-600 rounded-lg overflow-hidden">'
+        + '<input type="text" name="mail_id[]" placeholder="user' + mailAccountCount + '" class="flex-1 px-3 py-2 text-sm bg-white dark:bg-zinc-700 dark:text-white border-0 focus:ring-0 min-w-0">'
+        + '<span class="px-2 text-sm text-gray-400 dark:text-zinc-500 bg-gray-50 dark:bg-zinc-600 border-l border-gray-300 dark:border-zinc-600 whitespace-nowrap mail-domain-suffix">' + suffix + '</span>'
+        + '</div>'
+        + '<input type="password" name="mail_pw[]" placeholder="비밀번호" class="w-36 px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">'
+        + '<button type="button" onclick="this.parentElement.remove();mailAccountCount--" class="p-1 text-red-400 hover:text-red-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>';
+    wrap.appendChild(row);
+}
+
 // 초기 표시
 document.addEventListener('DOMContentLoaded', function() { updateCurrencyDisplay(); });

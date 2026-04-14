@@ -55,12 +55,28 @@ include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern
             </div>
         </div>
         <div class="p-6">
-            <div class="flex items-center gap-3 mb-4">
-                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="domain_option" value="new" class="text-blue-600" checked><span class="text-sm font-medium text-gray-700 dark:text-zinc-300">신규 도메인 등록</span></label>
-                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="domain_option" value="existing" class="text-blue-600"><span class="text-sm font-medium text-gray-700 dark:text-zinc-300">기존 도메인 사용</span></label>
-                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="domain_option" value="none" class="text-blue-600"><span class="text-sm font-medium text-gray-700 dark:text-zinc-300">나중에</span></label>
+            <div class="flex flex-wrap items-center gap-3 mb-4">
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="domain_option" value="free" class="text-blue-600" checked onchange="toggleDomainOption('free')"><span class="text-sm font-medium text-green-600">무료 서브도메인</span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="domain_option" value="new" class="text-blue-600" onchange="toggleDomainOption('new')"><span class="text-sm font-medium text-gray-700 dark:text-zinc-300">신규 도메인 등록</span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="domain_option" value="existing" class="text-blue-600" onchange="toggleDomainOption('existing')"><span class="text-sm font-medium text-gray-700 dark:text-zinc-300">기존 도메인 사용</span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="domain_option" value="none" class="text-blue-600" onchange="toggleDomainOption('none')"><span class="text-sm font-medium text-gray-700 dark:text-zinc-300">나중에</span></label>
             </div>
-            <div id="domainSearch">
+
+            <!-- 무료 서브도메인 입력 -->
+            <div id="domainFree">
+                <div class="flex items-center gap-2">
+                    <div class="flex-1 flex items-center border border-gray-300 dark:border-zinc-600 rounded-lg overflow-hidden">
+                        <input type="text" id="freeSubdomain" placeholder="mysite" class="flex-1 px-4 py-3 text-sm bg-white dark:bg-zinc-700 dark:text-white border-0 focus:ring-0" pattern="[a-z0-9-]+" title="영문 소문자, 숫자, 하이픈만 사용 가능">
+                        <span class="px-3 py-3 text-sm text-gray-500 dark:text-zinc-400 bg-gray-50 dark:bg-zinc-600 border-l border-gray-300 dark:border-zinc-600 whitespace-nowrap font-medium">.21ces.net</span>
+                    </div>
+                    <button type="button" onclick="checkSubdomain()" class="px-4 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition text-sm whitespace-nowrap">확인</button>
+                </div>
+                <p class="text-xs text-gray-400 dark:text-zinc-500 mt-2">* 영문 소문자, 숫자, 하이픈(-) 사용 가능. 설정에서 다른 도메인으로 변경할 수 있습니다.</p>
+                <div id="subdomainResult" class="hidden mt-2"></div>
+            </div>
+
+            <!-- 신규 도메인 검색 -->
+            <div id="domainSearch" class="hidden">
                 <div class="flex gap-2">
                     <input type="text" id="domainInput" placeholder="원하는 도메인명을 입력하세요 (예: mycompany)" class="flex-1 px-4 py-3 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" onkeydown="if(event.key==='Enter')searchDomain()">
                     <button onclick="searchDomain()" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition text-sm whitespace-nowrap">검색</button>
@@ -80,6 +96,17 @@ include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern
                     </div>
                     <div id="domainConfirmed" class="hidden mt-4 space-y-2"></div>
                 </div>
+            </div>
+
+            <!-- 기존 도메인 입력 -->
+            <div id="domainExisting" class="hidden">
+                <input type="text" name="existing_domain" placeholder="보유한 도메인을 입력하세요 (예: mydomain.com)" class="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                <p class="text-xs text-gray-400 dark:text-zinc-500 mt-2">* 도메인의 네임서버를 저희 서버로 변경해야 합니다. 설정 안내는 가입 후 이메일로 발송됩니다.</p>
+            </div>
+
+            <!-- 나중에 -->
+            <div id="domainNone" class="hidden">
+                <p class="text-sm text-gray-500 dark:text-zinc-400 p-4 bg-gray-50 dark:bg-zinc-700/50 rounded-xl">도메인 없이 시작합니다. 마이페이지에서 언제든 도메인을 추가할 수 있습니다.</p>
             </div>
         </div>
     </section>
