@@ -26,7 +26,7 @@ $widthClass = match($pageWidth) {
     default => 'max-w-4xl',
 };
 
-$pageTitle = __('service.order.title') ?? 'VosCMS 서비스 신청';
+$pageTitle = __('site.pages.service_order') ?? 'VosCMS 서비스 신청';
 include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern') . '/header.php';
 ?>
 
@@ -56,9 +56,9 @@ include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern
         </div>
         <div class="p-6">
             <div class="flex flex-wrap items-center gap-3 mb-4">
-                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="domain_option" value="free" class="text-blue-600" checked onchange="toggleDomainOption('free')"><span class="text-sm font-medium text-green-600">무료 서브도메인</span></label>
-                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="domain_option" value="new" class="text-blue-600" onchange="toggleDomainOption('new')"><span class="text-sm font-medium text-gray-700 dark:text-zinc-300">신규 도메인 등록</span></label>
-                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="domain_option" value="existing" class="text-blue-600" onchange="toggleDomainOption('existing')"><span class="text-sm font-medium text-gray-700 dark:text-zinc-300">기존 도메인 사용</span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="domain_option" value="free" class="text-blue-600" checked onchange="toggleDomainOption('free')"><span class="text-sm font-medium text-green-600">무료 도메인</span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="domain_option" value="new" class="text-blue-600" onchange="toggleDomainOption('new')"><span class="text-sm font-medium text-gray-700 dark:text-zinc-300">신규 도메인</span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="domain_option" value="existing" class="text-blue-600" onchange="toggleDomainOption('existing')"><span class="text-sm font-medium text-gray-700 dark:text-zinc-300">보유 도메인</span></label>
                 <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="domain_option" value="none" class="text-blue-600" onchange="toggleDomainOption('none')"><span class="text-sm font-medium text-gray-700 dark:text-zinc-300">나중에</span></label>
             </div>
 
@@ -66,7 +66,7 @@ include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern
             <div id="domainFree">
                 <div class="flex items-center gap-2">
                     <div class="flex-1 flex items-center border border-gray-300 dark:border-zinc-600 rounded-lg overflow-hidden">
-                        <input type="text" id="freeSubdomain" placeholder="mysite" class="flex-1 px-4 py-3 text-sm bg-white dark:bg-zinc-700 dark:text-white border-0 focus:ring-0" pattern="[a-z0-9-]+" title="영문 소문자, 숫자, 하이픈만 사용 가능">
+                        <input type="text" id="freeSubdomain" placeholder="mysite" class="flex-1 px-4 py-3 text-sm bg-white dark:bg-zinc-700 dark:text-white border-0 focus:ring-0" title="영문 소문자, 숫자, 하이픈만 사용 가능">
                         <span class="px-3 py-3 text-sm text-gray-500 dark:text-zinc-400 bg-gray-50 dark:bg-zinc-600 border-l border-gray-300 dark:border-zinc-600 whitespace-nowrap font-medium">.21ces.net</span>
                     </div>
                     <button type="button" onclick="checkSubdomain()" class="px-4 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition text-sm whitespace-nowrap">확인</button>
@@ -223,7 +223,7 @@ include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern
 
 <!-- JS -->
 <script>var siteCurrency = '<?= $serviceSettings['service_currency'] ?? $siteSettings['default_currency'] ?? 'KRW' ?>';</script>
-<script src="<?= $baseUrl ?>/resources/views/system/service/order.js"></script>
+<script src="<?= $baseUrl ?>/resources/views/system/service/order.js?v=<?= filemtime(BASE_PATH . '/resources/views/system/service/order.js') ?>"></script>
 
 <?php
 include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern') . '/footer.php';
