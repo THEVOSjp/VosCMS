@@ -50,9 +50,15 @@
             <?php if ($isLoggedIn): ?>
             <div><label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">연락처</label><input type="tel" name="phone" class="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" value="<?= htmlspecialchars($currentUser['phone'] ?? '') ?>"></div>
             <?php endif; ?>
-            <div><label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">사이트 용도</label>
-                <select name="site_purpose" class="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
-                    <option value="">선택하세요</option><option>기업 홈페이지</option><option>쇼핑몰</option><option>커뮤니티</option><option>포트폴리오</option><option>블로그 / 미디어</option><option>예약 플랫폼</option><option>기타</option>
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1"><?= __('settings.site.category_label') ?? '사이트 분류 (업종)' ?></label>
+                <?php
+                $categoryKeys = ['beauty_salon', 'nail_salon', 'skincare', 'massage', 'hospital', 'dental', 'studio', 'restaurant', 'accommodation', 'sports', 'education', 'consulting', 'pet', 'car', 'corporate', 'shopping', 'law_firm', 'accounting', 'real_estate', 'it_tech', 'media', 'nonprofit', 'government', 'community', 'portfolio', 'other'];
+                ?>
+                <select name="site_category" class="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                    <option value=""><?= __('settings.site.category_placeholder') ?? '-- 업종을 선택하세요 --' ?></option>
+                    <?php foreach ($categoryKeys as $ck): ?>
+                    <option value="<?= $ck ?>"><?= __('settings.site.categories.' . $ck) ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
         </div>
