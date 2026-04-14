@@ -272,15 +272,18 @@ class SkinConfigRenderer
                 }
                 echo '</div>';
                 echo '<div class="flex flex-col gap-1">';
+                $_uploadLabel = function_exists('__') ? __('common.buttons.upload') : 'Upload';
+                $_deleteLabel = function_exists('__') ? __('common.buttons.delete') : 'Delete';
+                if (str_contains($_uploadLabel, '.')) $_uploadLabel = 'Upload';
+                if (str_contains($_deleteLabel, '.')) $_deleteLabel = 'Delete';
                 echo '<label class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition cursor-pointer inline-block">';
                 echo '<input type="file" accept="image/*" class="hidden" onchange="uploadSkinImage(this,\'' . $name . '\')">';
-                echo (__('common.buttons.upload') ?? '업로드') . '</label>';
+                echo $_uploadLabel . '</label>';
                 if ($value) {
-                    echo '<button type="button" onclick="removeSkinImage(\'' . $name . '\')" class="text-xs text-red-500 hover:text-red-700">' . (__('common.delete') ?? '삭제') . '</button>';
+                    echo '<button type="button" onclick="removeSkinImage(\'' . $name . '\')" class="text-xs text-red-500 hover:text-red-700">' . $_deleteLabel . '</button>';
                 }
                 echo '</div></div>';
                 echo '<input type="hidden" name="skin_config[' . $name . ']" id="skin_val_' . $name . '" value="' . htmlspecialchars($value) . '">';
-                if ($desc) echo '<p class="text-xs text-zinc-400 mt-1">' . htmlspecialchars($desc) . '</p>';
                 break;
             case 'video':
                 echo '<label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">' . htmlspecialchars($title) . '</label>';

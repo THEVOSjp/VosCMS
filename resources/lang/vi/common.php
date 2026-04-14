@@ -125,6 +125,7 @@ return [
         'save' => 'Lưu',
         'cancel' => 'Hủy',
         'delete' => 'Xóa',
+        'upload' => 'Tải lên',
         'edit' => 'Chỉnh sửa',
         'create' => 'Tạo mới',
         'back' => 'Quay lại',

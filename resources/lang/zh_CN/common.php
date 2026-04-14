@@ -76,6 +76,7 @@ return [
         'save' => '保存',
         'cancel' => '取消',
         'delete' => '删除',
+        'upload' => '上传',
         'edit' => '编辑',
         'create' => '创建',
         'back' => '返回',

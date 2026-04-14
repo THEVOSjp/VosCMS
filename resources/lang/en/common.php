@@ -124,6 +124,7 @@ return [
         'save' => 'Save',
         'cancel' => 'Cancel',
         'delete' => 'Delete',
+        'upload' => 'Upload',
         'edit' => 'Edit',
         'create' => 'Create',
         'add' => 'Add',

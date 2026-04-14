@@ -125,6 +125,7 @@ return [
         'save' => 'Enregistrer',
         'cancel' => 'Annuler',
         'delete' => 'Supprimer',
+        'upload' => 'Télécharger',
         'edit' => 'Modifier',
         'create' => 'Creer',
         'back' => 'Retour',

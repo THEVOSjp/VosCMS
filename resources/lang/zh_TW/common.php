@@ -76,6 +76,7 @@ return [
         'save' => '儲存',
         'cancel' => '取消',
         'delete' => '刪除',
+        'upload' => '上傳',
         'edit' => '編輯',
         'create' => '建立',
         'back' => '返回',

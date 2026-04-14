@@ -125,6 +125,7 @@ return [
         'save' => 'Kaydet',
         'cancel' => 'İptal',
         'delete' => 'Sil',
+        'upload' => 'Yükle',
         'edit' => 'Düzenle',
         'create' => 'Oluştur',
         'back' => 'Geri',

@@ -125,6 +125,7 @@ return [
         'save' => 'Simpan',
         'cancel' => 'Batal',
         'delete' => 'Hapus',
+        'upload' => 'Unggah',
         'edit' => 'Edit',
         'create' => 'Buat',
         'back' => 'Kembali',

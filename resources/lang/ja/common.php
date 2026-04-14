@@ -99,6 +99,7 @@ return [
         'save' => '保存',
         'cancel' => 'キャンセル',
         'delete' => '削除',
+        'upload' => 'アップロード',
         'edit' => '編集',
         'create' => '作成',
         'back' => '戻る',
