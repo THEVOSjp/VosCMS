@@ -10,12 +10,27 @@
         $footerMenu = $siteMenus['Footer Menu'] ?? [];
     }
     ?>
-    <?php $_lc = $__layoutConfig ?? []; $_contentWidth = $_lc['content_width'] ?? 'max-w-7xl'; ?>
+    <?php
+    $_lc = $__layoutConfig ?? [];
+    $_contentWidth = $_lc['content_width'] ?? 'max-w-7xl';
+    $_copyright = $_lc['copyright'] ?? '';
+    $_footerText = $_lc['footer_text'] ?? '';
+    $_footerHtml = $_lc['custom_footer_html'] ?? '';
+    $_footerLogoImg = $_lc['footer_logo_image'] ?? '';
+    ?>
     <footer class="bg-white dark:bg-zinc-800 border-t dark:border-zinc-700 transition-colors duration-200">
         <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <?php if ($_footerLogoImg): ?>
+            <div class="mb-4 flex justify-center md:justify-start">
+                <img src="<?= $baseUrl . htmlspecialchars($_footerLogoImg) ?>" alt="" class="h-8 object-contain">
+            </div>
+            <?php endif; ?>
+            <?php if ($_footerText): ?>
+            <div class="text-sm text-gray-500 dark:text-zinc-400 mb-4"><?= $_footerText ?></div>
+            <?php endif; ?>
             <div class="flex flex-col md:flex-row items-center justify-between">
                 <p class="text-gray-500 dark:text-zinc-400 text-sm">
-                    <?= __('common.footer.copyright', ['year' => date('Y')]) ?>
+                    <?= $_copyright ?: __('common.footer.copyright', ['year' => date('Y')]) ?>
                 </p>
                 <div class="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4 md:mt-0">
                     <?php foreach ($footerMenu as $__fi): ?>
@@ -218,5 +233,6 @@
     #mobileMenuPanel.open { transform: translateX(0); }
     </style>
     <?php if (isset($footerExtra)) echo $footerExtra; ?>
+    <?php if ($_footerHtml): echo $_footerHtml; endif; ?>
 </body>
 </html>
