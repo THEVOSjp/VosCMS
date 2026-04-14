@@ -32,9 +32,9 @@
             <div class="text-sm text-gray-500 dark:text-zinc-400 mb-4"><?= $_footerText ?></div>
             <?php endif; ?>
             <div class="flex flex-col md:flex-row items-center justify-between">
-                <p class="text-gray-500 dark:text-zinc-400 text-sm">
+                <div class="text-gray-500 dark:text-zinc-400 text-sm">
                     <?= $_copyright ?: __('common.footer.copyright', ['year' => date('Y')]) ?>
-                </p>
+                </div>
                 <div class="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4 md:mt-0">
                     <?php foreach ($footerMenu as $__fi): ?>
                     <a href="<?= htmlspecialchars(rzxMenuUrl($__fi, $baseUrl)) ?>" class="text-sm text-gray-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400"><?= htmlspecialchars($__fi['title']) ?></a>
