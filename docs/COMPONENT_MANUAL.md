@@ -269,6 +269,196 @@ include BASE_PATH . '/skins/default/components/register_fields.php';
 
 ---
 
+### 1.6 사이트 분류 (업종) 선택 컴포넌트
+
+| 항목 | 내용 |
+|------|------|
+| **컴포넌트명** | `site-category-select` |
+| **파일** | `resources/views/components/site-category-select.php` |
+| **용도** | 사이트 업종 선택 드롭다운 (26개 카테고리, 13개국어) |
+
+**사용법:**
+```php
+<?php include BASE_PATH . '/resources/views/components/site-category-select.php'; ?>
+```
+
+**변수:**
+| 변수 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| `$categoryFieldName` | string | `'site_category'` | input name 속성 |
+| `$categorySelected` | string | `''` | 현재 선택된 값 |
+| `$categoryInputClass` | string | `''` | 추가 CSS 클래스 |
+
+**사용 예시:**
+```php
+<?php
+$categorySelected = $settings['site_category'] ?? '';
+$categoryInputClass = 'md:w-1/2';
+include BASE_PATH . '/resources/views/components/site-category-select.php';
+?>
+```
+
+**사용처:** 관리자 사이트 설정, 서비스 신청 페이지
+
+---
+
+### 1.7 마이페이지 사이드바 컴포넌트
+
+| 항목 | 내용 |
+|------|------|
+| **컴포넌트명** | `mypage-sidebar` |
+| **파일** | `resources/views/components/mypage-sidebar.php` |
+| **용도** | 마이페이지 좌측 메뉴 (데스크톱: 고정, 모바일: 슬라이드인) |
+
+**사용법:**
+```php
+<?php
+$sidebarActive = 'profile';
+include BASE_PATH . '/resources/views/components/mypage-sidebar.php';
+?>
+```
+
+**변수:**
+| 변수 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| `$baseUrl` | string | 필수 | 사이트 기본 URL |
+| `$user` | array | 필수 | 사용자 정보 (name, email, created_at) |
+| `$profileImgUrl` | string | `''` | 프로필 이미지 URL |
+| `$sidebarActive` | string | `'dashboard'` | 현재 활성 메뉴 키 |
+
+**메뉴 로딩:** `load_menu('mypage')` — config/mypage-menu.php + 플러그인 menus.mypage
+**스킨 오버라이드:** `skins/member/{스킨}/components/mypage-sidebar.php`
+
+---
+
+### 1.8 메뉴 로더 컴포넌트
+
+| 항목 | 내용 |
+|------|------|
+| **컴포넌트명** | `menu-loader` |
+| **파일** | `resources/views/components/menu-loader.php` |
+| **용도** | DB에서 사이트맵별 메뉴 로드 + 다국어 번역 적용 |
+
+**사용법:**
+```php
+<?php include BASE_PATH . '/resources/views/components/menu-loader.php'; ?>
+```
+
+**제공 변수:**
+| 변수 | 설명 |
+|------|------|
+| `$siteMenus['Main Menu']` | 메인 메뉴 트리 |
+| `$siteMenus['Footer Menu']` | 푸터 메뉴 |
+| `$siteMenus['Utility Menu']` | 유틸리티 메뉴 |
+
+**헬퍼 함수:**
+- `rzxMenuUrl($item, $baseUrl)` — 메뉴 URL 생성
+- `rzxIsActive($item, $currentPath, $baseUrl)` — 현재 페이지 매칭
+
+---
+
+### 1.9 언어 선택 컴포넌트
+
+| 항목 | 내용 |
+|------|------|
+| **컴포넌트명** | `language-selector` |
+| **파일** | `resources/views/components/language-selector.php` |
+| **용도** | 프론트엔드 언어 전환 드롭다운 |
+
+---
+
+### 1.10 공통 결과 모달
+
+| 항목 | 내용 |
+|------|------|
+| **컴포넌트명** | `result-modal` |
+| **파일** | `resources/views/admin/partials/result-modal.php` + `assets/js/result-modal.js` |
+| **용도** | 성공/실패 알림 + 확인 모달 (체크박스 동의) |
+
+**사용법:**
+```php
+<?php include BASE_PATH . '/resources/views/admin/partials/result-modal.php'; ?>
+```
+
+**JS API:**
+| 함수 | 설명 |
+|------|------|
+| `showResultModal(success, message)` | 성공/실패 알림 모달 |
+| `showConfirmModal(opts)` | 확인 모달 (체크박스 + 확인/취소) |
+| `closeResultModal()` | 알림 모달 닫기 |
+| `closeConfirmModal()` | 확인 모달 닫기 |
+
+**showConfirmModal 옵션:**
+```javascript
+showConfirmModal({
+    title: '삭제하시겠습니까?',
+    message: '추가 설명',
+    checkLabel: '동의합니다.',  // 체크박스 라벨 (있으면 체크 필수)
+    confirmText: '삭제',
+    danger: true,              // 빨간 버튼
+    onConfirm: function() { /* 확인 시 실행 */ }
+});
+```
+
+---
+
+### 1.11 다국어 입력 모달
+
+| 항목 | 내용 |
+|------|------|
+| **컴포넌트명** | `multilang-modal` |
+| **파일** | `resources/views/admin/components/multilang-modal.php` |
+| **용도** | 다국어 텍스트 입력 모달 (13개 언어) |
+
+**사용법:**
+```php
+<?php include BASE_PATH . '/resources/views/admin/components/multilang-modal.php'; ?>
+```
+
+---
+
+### 1.12 관리자 사이드바
+
+| 항목 | 내용 |
+|------|------|
+| **컴포넌트명** | `admin-sidebar` |
+| **파일** | `resources/views/admin/partials/admin-sidebar.php` |
+| **용도** | 관리자 좌측 메뉴 (config + 플러그인 동적 렌더러) |
+| **메뉴 로딩** | `load_menu('admin')` — config/admin-menu.php + plugin.json menus.admin |
+
+---
+
+### 1.13 관리자 상단바
+
+| 항목 | 내용 |
+|------|------|
+| **컴포넌트명** | `admin-topbar` |
+| **파일** | `resources/views/admin/partials/admin-topbar.php` |
+| **용도** | 관리자 상단 헤더 (시계, 다크모드, 프로필 드롭다운) |
+| **드롭다운 로딩** | `load_menu('admin_dropdown')` |
+
+---
+
+## 공통 헬퍼 함수
+
+### `load_menu(type)`
+메뉴 로딩 통합 헬퍼. config + 플러그인 메뉴 병합/정렬/번역.
+
+| type | config 파일 | plugin.json 키 |
+|------|------------|---------------|
+| `'admin'` | `config/admin-menu.php` | `menus.admin` |
+| `'admin_dropdown'` | `config/admin-dropdown-menu.php` | `menus.admin_dropdown` |
+| `'mypage'` | `config/mypage-menu.php` | `menus.mypage` |
+| `'user_dropdown'` | `config/user-dropdown-menu.php` | `menus.user_dropdown` |
+
+### `load_system_pages()`
+시스템 페이지 목록 로드. config/system-pages.php + 플러그인 system_pages 병합.
+
+### `db_trans_batch(PDO, posts, locale, prefix)`
+게시글 배치 다국어 번역. db_trans와 동일한 3단계 폴백 체인.
+
+---
+
 ## 2. 번역 함수
 
 ### 2.1 `__()`
