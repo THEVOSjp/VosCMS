@@ -1,0 +1,497 @@
+<?php
+/**
+ * 서비스 주문 API
+ *
+ * POST /api/service-order.php
+ * Body (JSON): {
+ *   payment_method: "card" | "bank",
+ *   payment_token: "tok_xxx" (카드 결제 시),
+ *   domain_option: "free" | "new" | "existing",
+ *   domain: "example.com",
+ *   hosting_plan: "1GB",
+ *   contract_months: 12,
+ *   items: [...],  // 프론트에서 계산한 항목 (서버에서 재계산)
+ *   applicant: { name, email, phone, company, category },
+ *   domains: { "example.com": 2850 },  // 선택된 도메인
+ *   addons: ["설치 지원", ...],
+ *   maintenance: "Basic",
+ *   bizmail_count: 0,
+ * }
+ */
+if (!headers_sent()) header('Content-Type: application/json; charset=utf-8');
+
+if (!defined('BASE_PATH')) define('BASE_PATH', dirname(__DIR__));
+
+// .env 로드
+$envFile = BASE_PATH . '/.env';
+if (file_exists($envFile)) {
+    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#') continue;
+        if (strpos($line, '=') !== false) {
+            [$k, $v] = explode('=', $line, 2);
+            $_ENV[trim($k)] = trim($v, " \t\n\r\0\x0B\"'");
+        }
+    }
+}
+
+require_once BASE_PATH . '/vendor/autoload.php';
+
+// POST만 허용
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(['success' => false, 'message' => 'POST only']);
+    exit;
+}
+
+// 세션
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+// 입력 파싱
+$input = json_decode(file_get_contents('php://input'), true);
+if (!$input) {
+    echo json_encode(['success' => false, 'message' => '요청 데이터가 없습니다.']);
+    exit;
+}
+
+// DB 연결
+$prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+try {
+    $pdo = new PDO(
+        "mysql:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_DATABASE']};charset=utf8mb4",
+        $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'],
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+    );
+} catch (PDOException $e) {
+    echo json_encode(['success' => false, 'message' => 'DB 연결 실패']);
+    exit;
+}
+
+// 사용자 확인
+$userId = $_SESSION['user_id'] ?? null;
+if (!$userId) {
+    echo json_encode(['success' => false, 'message' => '로그인이 필요합니다.']);
+    exit;
+}
+
+// 사용자 정보 DB에서 로드
+$userStmt = $pdo->prepare("SELECT name, email, phone FROM {$prefix}users WHERE id = ?");
+$userStmt->execute([$userId]);
+$userData = $userStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+// ===== 서비스 설정 로드 =====
+$svcSettings = [];
+$sStmt = $pdo->prepare("SELECT `key`, `value` FROM {$prefix}settings WHERE `key` LIKE 'service_%'");
+$sStmt->execute();
+while ($r = $sStmt->fetch(PDO::FETCH_ASSOC)) $svcSettings[$r['key']] = $r['value'];
+
+$hostingPlans = json_decode($svcSettings['service_hosting_plans'] ?? '[]', true) ?: [];
+$hostingPeriods = json_decode($svcSettings['service_hosting_periods'] ?? '[]', true) ?: [];
+$domainPricing = json_decode($svcSettings['service_domain_pricing'] ?? '[]', true) ?: [];
+$addons = json_decode($svcSettings['service_addons'] ?? '[]', true) ?: [];
+$maintenance = json_decode($svcSettings['service_maintenance'] ?? '[]', true) ?: [];
+$currency = $svcSettings['service_currency'] ?? 'JPY';
+
+// ===== 서버에서 금액 재계산 =====
+$items = [];
+$subtotal = 0;
+
+$paymentMethod = $input['payment_method'] ?? 'card';
+$paymentToken = $input['payment_token'] ?? '';
+$contractMonths = (int)($input['contract_months'] ?? 12);
+$domainOption = $input['domain_option'] ?? 'free';
+$domainName = $input['domain'] ?? '';
+$selectedDomains = $input['domains'] ?? [];
+$selectedAddons = $input['addons'] ?? [];
+$selectedMaint = $input['maintenance'] ?? '';
+$bizmailCount = (int)($input['bizmail_count'] ?? 0);
+$bizmailAccounts = $input['bizmail_accounts'] ?? [];
+$mailAccounts = $input['mail_accounts'] ?? [];
+$applicant = $input['applicant'] ?? [];
+// 프론트에서 안 보낸 필드는 DB 사용자 정보로 폴백
+if (empty($applicant['email'])) $applicant['email'] = $userData['email'] ?? '';
+if (empty($applicant['name'])) $applicant['name'] = $userData['name'] ?? '';
+if (empty($applicant['phone'])) $applicant['phone'] = $userData['phone'] ?? '';
+
+// 할인율 찾기
+$discount = 0;
+foreach ($hostingPeriods as $pd) {
+    if ((int)$pd['months'] === $contractMonths) {
+        $discount = (int)($pd['discount'] ?? 0);
+        break;
+    }
+}
+
+// 1. 도메인
+$domainYears = max(1, ceil($contractMonths / 12));
+if (!empty($selectedDomains)) {
+    $domainTotal = 0;
+    $domainPriceMap = [];
+    foreach ($domainPricing as $dp) {
+        $domainPriceMap[$dp['tld']] = $dp;
+    }
+    foreach ($selectedDomains as $fqdn => $frontPrice) {
+        // TLD 추출하여 서버 가격으로 재계산
+        $tld = '.' . implode('.', array_slice(explode('.', $fqdn), 1));
+        $dp = $domainPriceMap[$tld] ?? null;
+        $isLoggedIn = !empty($userId);
+        $price = $dp ? (int)($isLoggedIn && !empty($dp['vip_price']) ? $dp['vip_price'] : ($dp['price'] ?? 0)) : 0;
+        $domainTotal += $price;
+    }
+    $domainAmount = $domainTotal * $domainYears;
+    $items[] = [
+        'type' => 'domain',
+        'label' => '도메인',
+        'qty' => count($selectedDomains) . '개 × ' . $domainYears . '년',
+        'unit_price' => $domainTotal,
+        'amount' => $domainAmount,
+        'detail' => array_keys($selectedDomains),
+        'tax_excluded' => true,
+    ];
+    $subtotal += $domainAmount;
+}
+
+// 2. 호스팅
+$hostingPlanName = $input['hosting_plan'] ?? '';
+$hostingInfo = null;
+foreach ($hostingPlans as $p) {
+    $val = strtolower(str_replace(' ', '', $p['capacity'] ?? ''));
+    if ($val === $hostingPlanName || $p['label'] === $hostingPlanName) {
+        $hostingInfo = $p;
+        break;
+    }
+}
+
+if ($hostingInfo && (int)$hostingInfo['price'] > 0) {
+    $monthlyPrice = (int)$hostingInfo['price'];
+    $hostingTotal = $monthlyPrice * $contractMonths;
+    $hostingDiscount = (int)floor($hostingTotal * $discount / 100);
+    $hostingFinal = $hostingTotal - $hostingDiscount;
+
+    $items[] = [
+        'type' => 'hosting',
+        'label' => '웹 호스팅 ' . ($hostingInfo['capacity'] ?? ''),
+        'qty' => $contractMonths . '개월',
+        'unit_price' => $monthlyPrice,
+        'amount' => $hostingTotal,
+    ];
+    if ($hostingDiscount > 0) {
+        $items[] = [
+            'type' => 'hosting_discount',
+            'label' => '장기 할인 (' . $discount . '%)',
+            'amount' => -$hostingDiscount,
+        ];
+    }
+    $subtotal += $hostingFinal;
+} elseif ($hostingInfo) {
+    $items[] = [
+        'type' => 'hosting',
+        'label' => '웹 호스팅 (무료 ' . ($hostingInfo['capacity'] ?? '') . ')',
+        'qty' => '1개월',
+        'unit_price' => 0,
+        'amount' => 0,
+    ];
+}
+
+// 3. 부가 서비스
+foreach ($addons as $addon) {
+    $addonLabel = $addon['label'] ?? '';
+    if (!in_array($addonLabel, $selectedAddons)) continue;
+
+    $price = (int)($addon['price'] ?? 0);
+    $unit = $addon['unit'] ?? '';
+    $isBizmail = stripos($addonLabel, '비즈니스 메일') !== false || stripos($addonLabel, 'ビジネスメール') !== false;
+    $isMonthly = strpos($unit, '/월') !== false || strpos($unit, '/계정/월') !== false;
+    $isYearly = strpos($unit, '/년') !== false;
+
+    if ($isBizmail && $bizmailCount > 0) {
+        $mailTotal = $price * $bizmailCount * $contractMonths;
+        $mailDiscount = $discount > 0 ? (int)floor($mailTotal * $discount / 100) : 0;
+        $items[] = ['type' => 'addon', 'label' => $addonLabel, 'qty' => $bizmailCount . '계정 × ' . $contractMonths . '개월', 'unit_price' => $price, 'amount' => $mailTotal];
+        if ($mailDiscount > 0) {
+            $items[] = ['type' => 'addon_discount', 'label' => '할인 (' . $discount . '%)', 'amount' => -$mailDiscount];
+        }
+        $subtotal += $mailTotal - $mailDiscount;
+    } elseif ($price > 0 && $isMonthly) {
+        $monthTotal = $price * $contractMonths;
+        $monthDiscount = $discount > 0 ? (int)floor($monthTotal * $discount / 100) : 0;
+        $items[] = ['type' => 'addon', 'label' => $addonLabel, 'qty' => $contractMonths . '개월', 'unit_price' => $price, 'amount' => $monthTotal];
+        if ($monthDiscount > 0) {
+            $items[] = ['type' => 'addon_discount', 'label' => '할인 (' . $discount . '%)', 'amount' => -$monthDiscount];
+        }
+        $subtotal += $monthTotal - $monthDiscount;
+    } elseif ($price > 0 && $isYearly) {
+        $years = max(1, ceil($contractMonths / 12));
+        $yearTotal = $price * $years;
+        $items[] = ['type' => 'addon', 'label' => $addonLabel, 'qty' => $years . '년', 'unit_price' => $price, 'amount' => $yearTotal];
+        $subtotal += $yearTotal;
+    } elseif ($price > 0) {
+        $items[] = ['type' => 'addon', 'label' => $addonLabel, 'qty' => 1, 'unit_price' => $price, 'amount' => $price];
+        $subtotal += $price;
+    } else {
+        $items[] = ['type' => 'addon', 'label' => $addonLabel, 'qty' => '', 'unit_price' => 0, 'amount' => 0];
+    }
+}
+
+// 4. 유지보수
+if ($selectedMaint) {
+    foreach ($maintenance as $mt) {
+        if ($mt['label'] === $selectedMaint && (int)$mt['price'] > 0) {
+            $mp = (int)$mt['price'];
+            $maintTotal = $mp * $contractMonths;
+            $maintDiscount = $discount > 0 ? (int)floor($maintTotal * $discount / 100) : 0;
+            $items[] = ['type' => 'maintenance', 'label' => '유지보수 ' . $mt['label'], 'qty' => $contractMonths . '개월', 'unit_price' => $mp, 'amount' => $maintTotal];
+            if ($maintDiscount > 0) {
+                $items[] = ['type' => 'maintenance_discount', 'label' => '할인 (' . $discount . '%)', 'amount' => -$maintDiscount];
+            }
+            $subtotal += $maintTotal - $maintDiscount;
+            break;
+        }
+    }
+}
+
+// 5. 메일 계정 정보 (금액 없음, 설치 작업용 데이터)
+require_once BASE_PATH . '/rzxlib/Core/Helpers/Encryption.php';
+require_once BASE_PATH . '/rzxlib/Core/Helpers/functions.php';
+
+if (!empty($mailAccounts)) {
+    $encMailAccounts = array_map(function($m) {
+        return ['address' => $m['address'] ?? '', 'password' => encrypt($m['password'] ?? '')];
+    }, $mailAccounts);
+    $items[] = ['type' => 'mail_basic', 'label' => '기본 메일', 'qty' => count($mailAccounts), 'accounts' => $encMailAccounts];
+}
+
+if (!empty($bizmailAccounts)) {
+    $encBizmailAccounts = array_map(function($m) {
+        return ['address' => $m['address'] ?? '', 'password' => encrypt($m['password'] ?? '')];
+    }, $bizmailAccounts);
+    $items[] = ['type' => 'mail_business', 'label' => '비즈니스 메일', 'qty' => count($bizmailAccounts), 'accounts' => $encBizmailAccounts];
+}
+
+// 부가세
+$taxRate = 10;
+$tax = (int)round($subtotal * $taxRate / 100);
+$total = $subtotal + $tax;
+
+// ===== 주문 생성 =====
+$uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+    mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000,
+    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+);
+$orderNumber = 'SVC' . date('ymd') . strtoupper(substr(md5(uniqid()), 0, 6));
+
+$pdo->beginTransaction();
+
+try {
+    // rzx_orders INSERT
+    $stmt = $pdo->prepare("INSERT INTO {$prefix}orders
+        (uuid, order_number, user_id, status, items, subtotal, tax_rate, tax, total, currency,
+         contract_months, payment_method, domain, domain_option, hosting_plan, hosting_capacity,
+         applicant_name, applicant_email, applicant_phone, applicant_company, applicant_category)
+        VALUES (?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?)");
+    $stmt->execute([
+        $uuid, $orderNumber, $userId,
+        json_encode($items, JSON_UNESCAPED_UNICODE),
+        $subtotal, $taxRate, $tax, $total, $currency,
+        $contractMonths, $paymentMethod,
+        $domainName, $domainOption,
+        $hostingInfo['label'] ?? '', $hostingInfo['capacity'] ?? '',
+        $applicant['name'] ?? '', $applicant['email'] ?? '',
+        $applicant['phone'] ?? '', $applicant['company'] ?? '',
+        $applicant['category'] ?? '',
+    ]);
+    $orderId = $pdo->lastInsertId();
+
+    // 주문 로그
+    $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'created', ?, 'user', ?)")
+        ->execute([$orderId, json_encode(['total' => $total, 'currency' => $currency]), $userId]);
+
+    // ===== 결제 처리 =====
+    if ($paymentMethod === 'card' && $paymentToken && strlen($paymentToken) > 10 && strpos($paymentToken, 'tok_') === 0) {
+        // PaymentManager로 PG사 결제
+        $payMgr = new \RzxLib\Modules\Payment\PaymentManager($pdo, $prefix);
+        $gateway = $payMgr->gateway();
+        $gwName = $payMgr->getGatewayName();
+
+        // 1) Customer 생성 (카드 저장 — 구독 갱신용)
+        $customerId = null;
+        if ($gwName === 'payjp' && method_exists($gateway, 'createCustomer')) {
+            $custResult = $gateway->createCustomer($paymentToken, $applicant['email'] ?? '', ['order_id' => $orderNumber]);
+            if ($custResult['success'] ?? false) {
+                $customerId = $custResult['customer_id'];
+            } else {
+                $pdo->prepare("UPDATE {$prefix}orders SET status='failed' WHERE id=?")->execute([$orderId]);
+                $pdo->commit();
+                echo json_encode(['success' => false, 'message' => '카드 등록에 실패했습니다: ' . ($custResult['message'] ?? '')]);
+                exit;
+            }
+        }
+
+        // 2) Customer의 카드로 첫 결제 (Charge)
+        $result = $gateway->chargeCustomer($customerId, $total, strtolower($currency), 'VosCMS Service Order: ' . $orderNumber);
+
+        if ($result->isSuccessful()) {
+            // 결제 성공
+            $paymentStmt = $pdo->prepare("INSERT INTO {$prefix}payments
+                (uuid, user_id, order_id, payment_key, gateway, method, method_detail, amount, status, paid_at, raw_response)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'paid', NOW(), ?)");
+            $payUuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+                mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000,
+                mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff));
+            $paymentStmt->execute([
+                $payUuid, $userId, $orderNumber,
+                $result->paymentKey, $gwName, $result->method,
+                json_encode($result->methodDetail ?? []),
+                $total, json_encode($result->raw ?? []),
+            ]);
+            $paymentId = $pdo->lastInsertId();
+
+            // 주문 상태 업데이트
+            $now = date('Y-m-d H:i:s');
+            $expiresAt = date('Y-m-d H:i:s', strtotime("+{$contractMonths} months"));
+            $pdo->prepare("UPDATE {$prefix}orders SET status='paid', payment_id=?, payment_gateway=?, started_at=?, expires_at=? WHERE id=?")
+                ->execute([$paymentId, $gwName, $now, $expiresAt, $orderId]);
+
+            // ===== 구독 생성 =====
+            $subStmt = $pdo->prepare("INSERT INTO {$prefix}subscriptions
+                (order_id, user_id, type, label, unit_price, quantity, billing_amount, billing_cycle, billing_months,
+                 currency, started_at, expires_at, next_billing_at, auto_renew, payment_customer_id, payment_gateway, status, metadata)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 'active', ?)");
+
+            $startedAt = $now;
+            $expiresAtDT = $expiresAt;
+            $nextBilling = $expiresAt;
+
+            // 호스팅 구독
+            if ($hostingInfo && (int)$hostingInfo['price'] > 0) {
+                $subStmt->execute([
+                    $orderId, $userId, 'hosting', '웹 호스팅 ' . ($hostingInfo['capacity'] ?? ''),
+                    (int)$hostingInfo['price'], 1, (int)$hostingInfo['price'] * $contractMonths,
+                    'custom', $contractMonths, $currency,
+                    $startedAt, $expiresAtDT, $nextBilling,
+                    $customerId, $gwName, json_encode([
+                        'capacity' => $hostingInfo['capacity'],
+                        'mail_accounts' => array_map(function($m) {
+                            return ['address' => $m['address'] ?? '', 'password' => encrypt($m['password'] ?? '')];
+                        }, $mailAccounts)
+                    ])
+                ]);
+            }
+
+            // 도메인 구독
+            if (!empty($selectedDomains)) {
+                $domExpires = date('Y-m-d H:i:s', strtotime("+{$domainYears} years"));
+                $subStmt->execute([
+                    $orderId, $userId, 'domain', '도메인',
+                    $domainTotal, count($selectedDomains), $domainAmount,
+                    'yearly', 12, $currency,
+                    $startedAt, $domExpires, $domExpires,
+                    $customerId, $gwName, json_encode(['domains' => array_keys($selectedDomains)])
+                ]);
+            }
+
+            // 유지보수 구독
+            if ($selectedMaint) {
+                foreach ($maintenance as $mt) {
+                    if ($mt['label'] === $selectedMaint && (int)$mt['price'] > 0) {
+                        $subStmt->execute([
+                            $orderId, $userId, 'maintenance', '유지보수 ' . $mt['label'],
+                            (int)$mt['price'], 1, (int)$mt['price'] * $contractMonths,
+                            'custom', $contractMonths, $currency,
+                            $startedAt, $expiresAtDT, $nextBilling,
+                            $customerId, $gwName, null
+                        ]);
+                        break;
+                    }
+                }
+            }
+
+            // 비즈니스 메일 구독
+            if ($bizmailCount > 0) {
+                foreach ($addons as $addon) {
+                    if (stripos($addon['label'], '비즈니스 메일') !== false || stripos($addon['label'], 'ビジネスメール') !== false) {
+                        $subStmt->execute([
+                            $orderId, $userId, 'mail', $addon['label'],
+                            (int)$addon['price'], $bizmailCount, (int)$addon['price'] * $bizmailCount * $contractMonths,
+                            'custom', $contractMonths, $currency,
+                            $startedAt, $expiresAtDT, $nextBilling,
+                            $customerId, $gwName, json_encode([
+                                'accounts' => $bizmailCount,
+                                'mail_accounts' => array_map(function($m) {
+                                    return ['address' => $m['address'] ?? '', 'password' => encrypt($m['password'] ?? '')];
+                                }, $bizmailAccounts)
+                            ])
+                        ]);
+                        break;
+                    }
+                }
+            }
+
+            // 주문 로그
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type) VALUES (?, 'paid', ?, 'system')")
+                ->execute([$orderId, json_encode(['payment_id' => $paymentId, 'payment_key' => $result->paymentKey])]);
+
+            $pdo->commit();
+
+            echo json_encode([
+                'success' => true,
+                'order_number' => $orderNumber,
+                'total' => $total,
+                'currency' => $currency,
+                'message' => '결제가 완료되었습니다.',
+            ]);
+            exit;
+
+        } else {
+            // 결제 실패
+            $pdo->prepare("UPDATE {$prefix}orders SET status='failed' WHERE id=?")->execute([$orderId]);
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type) VALUES (?, 'failed', ?, 'system')")
+                ->execute([$orderId, json_encode(['code' => $result->failureCode, 'message' => $result->failureMessage])]);
+
+            $pdo->commit();
+
+            echo json_encode([
+                'success' => false,
+                'message' => '결제에 실패했습니다: ' . ($result->failureMessage ?? '카드 정보를 확인해주세요.'),
+            ]);
+            exit;
+        }
+
+    } elseif ($paymentMethod === 'card') {
+        // 카드 결제인데 토큰이 없거나 유효하지 않음
+        $pdo->prepare("UPDATE {$prefix}orders SET status='failed' WHERE id=?")->execute([$orderId]);
+        $pdo->commit();
+        echo json_encode(['success' => false, 'message' => '카드 정보가 유효하지 않습니다. 카드 번호, 유효기간, CVC를 확인해주세요.']);
+        exit;
+
+    } elseif ($paymentMethod === 'bank') {
+        // 계좌이체: pending 상태 유지
+        $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type) VALUES (?, 'bank_pending', '계좌이체 대기', 'system')")
+            ->execute([$orderId]);
+
+        $pdo->commit();
+
+        // TODO: 입금 안내 메일 발송
+
+        echo json_encode([
+            'success' => true,
+            'order_number' => $orderNumber,
+            'total' => $total,
+            'currency' => $currency,
+            'payment_method' => 'bank',
+            'message' => '주문이 접수되었습니다. 입금 안내가 이메일로 발송됩니다.',
+        ]);
+        exit;
+    }
+
+    $pdo->commit();
+    echo json_encode(['success' => false, 'message' => '결제 방법이 선택되지 않았습니다.']);
+
+} catch (\Throwable $e) {
+    $pdo->rollBack();
+    error_log("[ServiceOrder] Error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+    echo json_encode(['success' => false, 'message' => '주문 처리 중 오류가 발생했습니다.']);
+}

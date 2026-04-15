@@ -90,12 +90,30 @@ $pageHeaderTitle = __('site.pages.title');
 // config/system-pages.php에서 로드
 $_sysPagesDef = function_exists('load_system_pages') ? load_system_pages() : [];
 $_sysPages = [];
+$_sysSlugs = [];
 foreach ($_sysPagesDef as $_spd) {
+    if (!empty($_spd['hidden'])) continue;
     $_editUrl = str_replace('{admin}', $adminUrl, $_spd['edit'] ?? '');
     $_sysPages[] = [
         'icon' => $_spd['icon'] ?? '', 'color' => $_spd['color'] ?? 'blue',
         'badge' => $_spd['type'] ?? 'document', 'slug' => $_spd['slug'] ?? '',
         'title' => $_spd['title'] ?? '', 'edit' => $_editUrl, 'preview' => '/' . ($_spd['slug'] ?? ''),
+    ];
+    $_sysSlugs[] = $_spd['slug'] ?? '';
+}
+// DB에서 is_system=1인 문서 페이지도 자동 추가 (config에 없는 것만)
+$_defaultLocale = $config['locale'] ?? 'ko';
+$_dbSysStmt = $pdo->prepare("SELECT page_slug, page_type, title FROM {$prefix}page_contents WHERE is_system = 1 AND is_active = 1 ORDER BY page_slug");
+$_dbSysStmt->execute();
+$_docIcon = 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z';
+while ($_dbSys = $_dbSysStmt->fetch(PDO::FETCH_ASSOC)) {
+    if (in_array($_dbSys['page_slug'], $_sysSlugs)) continue;
+    $_dbSysTitle = function_exists('db_trans') ? db_trans('page.' . $_dbSys['page_slug'] . '.title', null, $_dbSys['title']) : $_dbSys['title'];
+    $_sysPages[] = [
+        'icon' => $_docIcon, 'color' => 'blue',
+        'badge' => $_dbSys['page_type'] ?? 'document', 'slug' => $_dbSys['page_slug'],
+        'title' => $_dbSysTitle, 'edit' => $adminUrl . '/site/pages/edit?slug=' . urlencode($_dbSys['page_slug']),
+        'preview' => '/' . $_dbSys['page_slug'],
     ];
 }
 $_badgeMap = [
@@ -137,11 +155,11 @@ foreach ($_sysPages as $_sp):
                     $defaultLocale = $config['locale'] ?? 'ko';
                     $customPages = $pdo->prepare("
                         SELECT page_slug, page_type, title, is_active, created_at
-                        FROM rzx_page_contents
-                        WHERE page_slug NOT IN ({$placeholders}) AND locale = ?
+                        FROM {$prefix}page_contents
+                        WHERE page_slug NOT IN ({$placeholders}) AND is_system = 0
                         ORDER BY created_at DESC
                     ");
-                    $customPages->execute(array_merge($systemSlugs, [$defaultLocale]));
+                    $customPages->execute($systemSlugs);
                     $userPages = $customPages->fetchAll(PDO::FETCH_ASSOC);
                     ?>
 

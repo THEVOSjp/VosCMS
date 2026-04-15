@@ -133,6 +133,7 @@ return [
             'dashboard' => 'Dashboard',
             'reservations' => 'Reservations',
             'profile' => 'Profile',
+            'services' => 'Service Management',
             'settings' => 'Settings',
             'password' => 'Change Password',
             'withdraw' => 'Delete Account',
@@ -153,6 +154,7 @@ return [
 
     // Profile
     'profile' => [
+            'services' => 'Service Management',
         'title' => 'Profile',
         'description' => 'My profile information.',
         'edit_title' => 'Edit Profile',

@@ -92,7 +92,7 @@ return [
         'external_url' => '외부 URL / 파일 경로',
         'external_url_desc' => '외부 URL(https://...)은 iframe으로, 내부 파일(.php/.html)은 include로 렌더링됩니다.',
         'quick_edit' => '빠른 편집', 'open_widget_builder' => '위젯 빌더 열기', 'open_document_editor' => '문서 에디터 열기',
-        'edit_content' => '콘텐츠 편집', 'tab_basic' => '모듈 정보', 'tab_skin' => '스킨', 'tab_layout' => '레이아웃',
+        'edit_content' => '콘텐츠 편집', 'tab_basic' => '모듈 정보', 'tab_skin' => '스킨', 'tab_layout' => '레이아웃', 'tab_service' => '서비스 설정',
         'skin_info' => '스킨 기본정보',
         'cfg' => [
             'page_type' => '페이지 타입',
@@ -144,6 +144,8 @@ return [
         'tokushoho' => '특정상거래법 표기', 'funds_settlement' => '자금결제법 표시',
         'staff_intro' => '스태프 소개', 'booking' => '예약하기', 'lookup' => '예약 조회',
         'service_order' => '서비스 신청',
+        'withholding_tax' => '원천징수세 안내',
+        'service_complete' => '주문 완료',
         'refund' => ['editor_title' => '취소 환불 규정 편집', 'editor_desc' => '취소 및 환불 관련 규정을 작성하고 관리합니다.'],
         'terms_edit' => ['editor_title' => '이용약관 편집', 'editor_desc' => '서비스 이용약관을 작성하고 관리합니다.'],
         'privacy_edit' => ['editor_title' => '개인정보처리방침 편집', 'editor_desc' => '개인정보처리방침을 작성하고 관리합니다.'],

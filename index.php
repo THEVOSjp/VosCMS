@@ -653,6 +653,8 @@ if (empty($path) || $path === 'index.php' || $path === 'home') {
     } elseif (preg_match('#^mypage/reservations/([a-zA-Z0-9_-]+)$#', $path, $m)) {
         $reservationId = $m[1];
         $__pageFile = BASE_PATH . '/resources/views/customer/mypage/reservation-detail.php';
+    } elseif ($path === 'mypage/services') {
+        $__pageFile = BASE_PATH . '/resources/views/customer/mypage/services.php';
     } elseif ($path === 'mypage/password') {
         $__pageFile = BASE_PATH . '/resources/views/customer/mypage/password.php';
     } elseif ($path === 'mypage/settings') {
@@ -742,7 +744,7 @@ if (empty($path) || $path === 'index.php' || $path === 'home') {
 
                 // 페이지 설정/편집 프론트 라우트: {slug}/settings, {slug}/edit
                 $_pageRouteMatch = false;
-                if (preg_match('#^([a-zA-Z0-9_-]+)/(settings|edit)$#', $path, $_prm)) {
+                if (preg_match('#^(.+?)/(settings|edit)$#', $path, $_prm)) {
                     $_prSlug = $_prm[1];
                     $_prAction = $_prm[2];
                     $_prCheck = $pdo->prepare("SELECT page_slug FROM {$_pfx}page_contents WHERE page_slug = ? LIMIT 1");
@@ -776,6 +778,7 @@ if (empty($path) || $path === 'index.php' || $path === 'home') {
                             exit;
                         }
                     }
+
 
                     // 동적 페이지 확인 (rzx_page_contents)
                     $_pageCheck = $pdo->prepare("SELECT page_slug FROM {$_pfx}page_contents WHERE page_slug = ? LIMIT 1");

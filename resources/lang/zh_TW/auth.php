@@ -133,6 +133,7 @@ return [
             'dashboard' => '儀表板',
             'reservations' => '預約',
             'profile' => '個人資料',
+            'services' => '服務管理',
             'settings' => '設定',
             'password' => '變更密碼',
             'withdraw' => '刪除帳戶',
@@ -153,6 +154,7 @@ return [
 
     // Profile
     'profile' => [
+            'services' => '服務管理',
         'title' => '個人資料',
         'description' => '我的個人資料資訊。',
         'edit_title' => '編輯個人資料',

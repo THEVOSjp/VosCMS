@@ -183,6 +183,7 @@ return [
         'refund_policy' => 'Politique d\'annulation et de remboursement',
         'tokushoho' => 'Loi commerciale', 'funds_settlement' => 'Loi sur les paiements',
         'staff_intro' => 'Équipe', 'booking' => 'Réserver', 'lookup' => 'Rechercher',
+        'service_order' => 'Demande de Service',
         'refund' => ['editor_title' => 'Éditeur de politique d\'annulation et de remboursement', 'editor_desc' => 'Créez et gérez les politiques d\'annulation et de remboursement.'],
         'terms_edit' => ['editor_title' => 'Modifier les Conditions d\'Utilisation', 'editor_desc' => 'Créer et gérer les conditions d\'utilisation.'],
         'privacy_edit' => ['editor_title' => 'Modifier la Politique de Confidentialité', 'editor_desc' => 'Créer et gérer la politique de confidentialité.'],

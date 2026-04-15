@@ -180,6 +180,7 @@ return [
         'refund_policy' => 'İptal ve İade Politikası',
         'tokushoho' => 'Ticaret Kanunu', 'funds_settlement' => 'Ödeme Kanunu',
         'staff_intro' => 'Ekibimiz', 'booking' => 'Rezervasyon', 'lookup' => 'Rezervasyon Ara',
+        'service_order' => 'Hizmet Başvurusu',
         'refund' => ['editor_title' => 'İptal ve İade Politikası Düzenleyici', 'editor_desc' => 'İptal ve iade politikalarını oluşturun ve yönetin.'],
         'terms_edit' => ['editor_title' => 'Kullanım Koşullarını Düzenle', 'editor_desc' => 'Kullanım koşullarını oluşturun ve yönetin.'],
         'privacy_edit' => ['editor_title' => 'Gizlilik Politikasını Düzenle', 'editor_desc' => 'Gizlilik politikasını oluşturun ve yönetin.'],

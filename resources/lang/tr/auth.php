@@ -133,6 +133,7 @@ return [
             'dashboard' => 'Kontrol Paneli',
             'reservations' => 'Rezervasyonlar',
             'profile' => 'Profil',
+            'services' => 'Hizmet Yönetimi',
             'settings' => 'Ayarlar',
             'password' => 'Şifre Değiştir',
             'withdraw' => 'Hesabı Sil',
@@ -153,6 +154,7 @@ return [
 
     // Profile
     'profile' => [
+            'services' => 'Hizmet Yönetimi',
         'title' => 'Profil',
         'description' => 'Profil bilgilerim.',
         'edit_title' => 'Profili Düzenle',

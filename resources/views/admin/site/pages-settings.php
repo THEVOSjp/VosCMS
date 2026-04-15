@@ -22,6 +22,82 @@ try {
     $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
     $defaultLocale = $config['locale'] ?? 'ko';
 
+    // AJAX 처리 - 서비스(시스템 페이지) 설정 저장
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_service_settings') {
+        header('Content-Type: application/json; charset=utf-8');
+        $fields = [
+            'service_currency', 'service_exchange_rate', 'service_rate_jpy',
+            'service_rate_cny', 'service_rate_eur', 'service_exchange_auto',
+            'service_addons', 'service_maintenance',
+            'service_rounding', 'service_search_tlds', 'service_domain_pricing',
+            'service_namesilo_key', 'service_namesilo_sandbox',
+            'service_hosting_plans', 'service_hosting_periods',
+            'service_hosting_storage', 'service_hosting_features',
+        ];
+        foreach ($fields as $f) {
+            $val = $_POST[$f] ?? '';
+            if ($f === 'service_namesilo_sandbox') {
+                $val = isset($_POST[$f]) ? '1' : '0';
+            }
+            $stmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+            $stmt->execute([$f, $val]);
+        }
+        echo json_encode(['success' => true, 'message' => __('common.msg.saved') ?? '저장되었습니다.']);
+        exit;
+    }
+
+    // AJAX 처리 - 스킨 이미지 개별 업로드
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'upload_skin_image') {
+        header('Content-Type: application/json; charset=utf-8');
+        $slug = $_POST['slug'] ?? '';
+        $skinName = $_POST['skin'] ?? 'default';
+        $fieldName = $_POST['field'] ?? '';
+        $file = $_FILES['file'] ?? null;
+
+        if (!$file || $file['error'] !== UPLOAD_ERR_OK || !$fieldName) {
+            echo json_encode(['success' => false, 'error' => '파일 업로드 실패']);
+            exit;
+        }
+
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+        if (!in_array($file['type'], $allowedTypes)) {
+            echo json_encode(['success' => false, 'error' => '허용되지 않는 파일 형식입니다.']);
+            exit;
+        }
+
+        $uploadDir = BASE_PATH . '/storage/skins/page/' . $skinName . '/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $fileName = $fieldName . '_' . time() . '.' . $ext;
+
+        if (move_uploaded_file($file['tmp_name'], $uploadDir . $fileName)) {
+            $path = '/storage/skins/page/' . $skinName . '/' . $fileName;
+            $url = ($config['app_url'] ?? '') . $path;
+
+            // page_config에 저장
+            $configKey = 'page_config_' . $slug;
+            $cfgStmt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = ?");
+            $cfgStmt->execute([$configKey]);
+            $existing = json_decode($cfgStmt->fetchColumn() ?: '{}', true) ?: [];
+            if (!isset($existing['skin_config'])) $existing['skin_config'] = [];
+
+            // 이전 파일 삭제
+            $oldVal = $existing['skin_config'][$fieldName] ?? '';
+            if ($oldVal && file_exists(BASE_PATH . $oldVal)) @unlink(BASE_PATH . $oldVal);
+
+            $existing['skin_config'][$fieldName] = $path;
+            $configJson = json_encode($existing, JSON_UNESCAPED_UNICODE);
+            $stmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+            $stmt->execute([$configKey, $configJson]);
+
+            echo json_encode(['success' => true, 'url' => $url, 'path' => $path]);
+        } else {
+            echo json_encode(['success' => false, 'error' => '파일 저장 실패']);
+        }
+        exit;
+    }
+
     // AJAX 처리 - 스킨 설정 저장 (multipart/form-data, 파일 업로드 포함)
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_skin_config_multipart') {
         header('Content-Type: application/json; charset=utf-8');
@@ -248,6 +324,28 @@ try {
 
     $currentTab = $_GET['tab'] ?? 'basic';
 
+    // 시스템 페이지 settings_view 확인
+    $_systemSettingsView = null;
+    $_systemSettingsTab = null;
+    $systemPages = include BASE_PATH . '/config/system-pages.php';
+    foreach ($systemPages as $sp) {
+        if (($sp['slug'] ?? '') === $pageSlug && !empty($sp['settings_view'])) {
+            $_systemSettingsView = $sp['settings_view'];
+            $_systemSettingsTab = $sp['settings_tab'] ?? 'site.pages.tab_system_settings';
+            break;
+        }
+    }
+
+    // 시스템 페이지 전용 설정 로드
+    $serviceSettings = [];
+    if ($_systemSettingsView) {
+        $ssStmt = $pdo->prepare("SELECT `key`, `value` FROM {$prefix}settings WHERE `key` LIKE 'service_%'");
+        $ssStmt->execute();
+        while ($row = $ssStmt->fetch(PDO::FETCH_ASSOC)) {
+            $serviceSettings[$row['key']] = $row['value'];
+        }
+    }
+
 } catch (PDOException $e) {
     die('DB Error: ' . $e->getMessage());
 }
@@ -307,7 +405,7 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                             foreach ($tabs as $key => $tab):
                                 $isActive = $currentTab === $key;
                                 $url = $embedMode
-                                    ? $baseUrl . '/' . urlencode($pageSlug) . '/settings?tab=' . $key
+                                    ? $baseUrl . '/' . htmlspecialchars($pageSlug) . '/settings?tab=' . $key
                                     : $adminUrl . '/site/pages/settings?slug=' . urlencode($pageSlug) . '&tab=' . $key;
                             ?>
                             <a href="<?= $url ?>" class="flex items-center px-4 py-4 text-sm font-medium border-b-2 whitespace-nowrap <?= $isActive ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400' ?>">
@@ -501,15 +599,16 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                     <!-- 추가 설정 카드 -->
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700">
                         <div class="divide-y divide-zinc-100 dark:divide-zinc-700">
-                        <!-- 전체 너비 -->
+                        <!-- 페이지 너비 -->
                         <div class="flex items-start px-6 py-4">
-                            <label class="w-40 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300 pt-2"><?= __('site.pages.cfg.full_width') ?? '전체 너비' ?></label>
+                            <label class="w-40 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300 pt-2"><?= __('site.pages.cfg.page_width') ?? '페이지 너비' ?></label>
                             <div class="flex-1">
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="cfgFullWidth" class="sr-only peer" <?= ($pageConfig['full_width'] ?? false) ? 'checked' : '' ?>>
-                                    <div class="w-11 h-6 bg-zinc-200 rounded-full peer dark:bg-zinc-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                </label>
-                                <p class="text-xs text-zinc-400 mt-1"><?= __('site.pages.cfg.full_width_desc') ?? '콘텐츠를 전체 너비로 표시합니다. (기본: max-w-5xl)' ?></p>
+                                <?php
+                                // full_width (레거시) → page_width 변환
+                                $_curPageWidth = $pageConfig['page_width'] ?? ((!empty($pageConfig['full_width'])) ? 'full' : '5xl');
+                                $__pageWidth = ['id' => 'cfgPageWidth', 'value' => $_curPageWidth];
+                                include BASE_PATH . '/resources/views/components/page-width-select.php';
+                                ?>
                             </div>
                         </div>
                         </div>
@@ -617,6 +716,42 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
 
                 <script>
                 console.log('[PageSkin] 스킨 탭 로드됨, skin:', '<?= $currentPageSkin ?>');
+                // 스킨 이미지 업로드/삭제
+                async function uploadSkinImage(fileInput, fieldName) {
+                    var file = fileInput.files[0];
+                    if (!file) return;
+                    var fd = new FormData();
+                    fd.append('action', 'upload_skin_image');
+                    fd.append('slug', '<?= $pageSlug ?>');
+                    fd.append('skin', '<?= $currentPageSkin ?>');
+                    fd.append('group', 'page');
+                    fd.append('field', fieldName);
+                    fd.append('file', file);
+                    try {
+                        var resp = await fetch(PAGE_URL + '<?= $embedMode ? '' : '?slug=' . urlencode($pageSlug) ?>', { method: 'POST', body: fd });
+                        var data = await resp.json();
+                        if (data.success) {
+                            var img = document.getElementById('img_preview_' + fieldName);
+                            var ph = document.getElementById('img_preview_' + fieldName + '_placeholder');
+                            if (img) { img.src = data.url; img.classList.remove('hidden'); }
+                            if (ph) ph.classList.add('hidden');
+                            var val = document.getElementById('skin_val_' + fieldName);
+                            if (val) val.value = data.path;
+                            if (typeof showResultModal === 'function') showResultModal(true, '이미지가 업로드되었습니다.');
+                        } else {
+                            if (typeof showResultModal === 'function') showResultModal(false, data.error || '업로드 실패');
+                        }
+                    } catch (e) { if (typeof showResultModal === 'function') showResultModal(false, e.message); }
+                }
+                function removeSkinImage(fieldName) {
+                    var img = document.getElementById('img_preview_' + fieldName);
+                    var ph = document.getElementById('img_preview_' + fieldName + '_placeholder');
+                    if (img) { img.src = ''; img.classList.add('hidden'); }
+                    if (ph) ph.classList.remove('hidden');
+                    var val = document.getElementById('skin_val_' + fieldName);
+                    if (val) val.value = '';
+                }
+
                 document.getElementById('pageSkinForm')?.addEventListener('submit', async function(e) {
                     e.preventDefault();
                     const fd = new FormData(this);
@@ -629,7 +764,7 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                     fd.append('skin', '<?= $currentPageSkin ?>');
 
                     try {
-                        const apiUrl = '<?= $adminUrl ?>/site/pages/settings?slug=<?= urlencode($pageSlug) ?>&tab=skin';
+                        const apiUrl = PAGE_URL + '<?= $embedMode ? '' : '?slug=' . urlencode($pageSlug) ?>' + '<?= $embedMode ? '?tab=skin' : '&tab=skin' ?>';
                         const resp = await fetch(apiUrl, {
                             method: 'POST',
                             headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -644,6 +779,29 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                     }
                 });
                 </script>
+
+                <?php
+                // 시스템 페이지 전용 설정 — 스킨 탭 하단에 표시
+                if ($_systemSettingsView):
+                    $settingsViewPath = BASE_PATH . '/resources/views/' . $_systemSettingsView;
+                    if (file_exists($settingsViewPath)):
+                ?>
+                <div class="mt-10 bg-gradient-to-b from-blue-50 to-transparent dark:from-blue-950/30 dark:to-transparent rounded-2xl p-6 -mx-2">
+                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-blue-200 dark:border-blue-800/50">
+                        <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-zinc-900 dark:text-white"><?= __($_systemSettingsTab) ?? '서비스 설정' ?></h3>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">이 페이지 전용 서비스 설정입니다. 위 스킨 설정과 별도로 저장됩니다.</p>
+                        </div>
+                    </div>
+                    <?php include $settingsViewPath; ?>
+                </div>
+                <?php
+                    endif;
+                endif;
+                ?>
 
                 <?php elseif ($currentTab === 'addition'): ?>
                 <?php
@@ -751,7 +909,7 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
 
                 <!-- 하단 바로가기 -->
                 <div class="mt-6 flex items-center gap-3">
-                    <a id="linkEditContent" href="<?= $embedMode ? $baseUrl . '/' . urlencode($pageSlug) . '/edit' : $adminUrl . '/site/pages/edit-content?slug=' . urlencode($pageSlug) ?>" class="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <a id="linkEditContent" href="<?= $embedMode ? $baseUrl . '/' . htmlspecialchars($pageSlug) . '/edit' : $adminUrl . '/site/pages/edit-content?slug=' . urlencode($pageSlug) ?>" class="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                         <?= __('site.pages.edit_content') ?? '콘텐츠 편집' ?> →
                     </a>
                     <a id="linkPreview" href="<?= $baseUrl ?>/<?= htmlspecialchars($pageSlug) ?>" target="_blank" class="px-4 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg border border-zinc-200 dark:border-zinc-700">
@@ -763,7 +921,7 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
     </div>
 
 <script>
-var PAGE_URL = '<?= $adminUrl ?>/site/pages/settings';
+var PAGE_URL = '<?= $embedMode ? $baseUrl . '/' . htmlspecialchars($pageSlug) . '/settings' : $adminUrl . '/site/pages/settings' ?>';
 var SLUG = '<?= htmlspecialchars($pageSlug) ?>';
 var BASE_URL = '<?= $baseUrl ?>';
 var ADMIN_URL = '<?= $adminUrl ?>';
@@ -886,7 +1044,7 @@ async function saveSettings() {
     var settings = {
         slug: document.getElementById('cfgSlug')?.value || SLUG,
         browser_title: document.getElementById('cfgBrowserTitle')?.value || '',
-        full_width: document.getElementById('cfgFullWidth')?.checked ? true : false,
+        page_width: document.getElementById('cfgPageWidth')?.value || '5xl',
         search_index: document.getElementById('cfgSearchIndex')?.checked ? 'yes' : 'no',
         layout: document.getElementById('cfgLayout')?.value || 'inherit',
         skin: document.getElementById('cfgSkin')?.value || '',

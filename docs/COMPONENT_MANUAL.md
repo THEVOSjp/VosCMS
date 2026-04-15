@@ -437,6 +437,33 @@ showConfirmModal({
 | **용도** | 관리자 상단 헤더 (시계, 다크모드, 프로필 드롭다운) |
 | **드롭다운 로딩** | `load_menu('admin_dropdown')` |
 
+### 1.14 페이지 너비 선택 컴포넌트
+
+| 항목 | 내용 |
+|------|------|
+| **컴포넌트명** | `page-width-select` |
+| **파일** | `resources/views/components/page-width-select.php` |
+| **용도** | 페이지 콘텐츠 영역의 최대 너비를 비주얼 카드로 선택 |
+| **선택지** | 2xl(672px), 3xl(768px), 4xl(896px), 5xl(1024px), 6xl(1152px), 7xl(1280px), Full(100%) |
+
+**사용법:**
+```php
+$__pageWidth = ['id' => 'cfgPageWidth', 'value' => '5xl'];
+include BASE_PATH . '/resources/views/components/page-width-select.php';
+```
+
+| 파라미터 | 설명 | 기본값 |
+|----------|------|--------|
+| `id` | hidden input의 ID | `'cfgPageWidth'` |
+| `value` | 현재 선택 값 | `'5xl'` |
+| `name` | form name 속성 (선택) | `''` |
+
+**적용 위치:**
+- 관리자 > 페이지 설정 > 추가 설정 탭 (`pages-settings.php`)
+- 관리자 > 서비스 설정 탭 (`_settings.php`)
+
+**JS로 값 읽기:** `document.getElementById('cfgPageWidth').value`
+
 ---
 
 ## 공통 헬퍼 함수

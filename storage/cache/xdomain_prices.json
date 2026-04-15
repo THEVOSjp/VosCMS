@@ -1,0 +1,1823 @@
+{
+    "success": true,
+    "source_url": "https:\/\/www.xdomain.ne.jp\/domain\/price.php",
+    "count": 259,
+    "currency": "JPY",
+    "prices": [
+        {
+            "tld": ".com",
+            "registration": 1,
+            "renewal": 1721,
+            "transfer": 1721,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".net",
+            "registration": 1,
+            "renewal": 1992,
+            "transfer": 1992,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".blog",
+            "registration": 1,
+            "renewal": 3820,
+            "transfer": 3820,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".store",
+            "registration": 328,
+            "renewal": 7381,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".xyz",
+            "registration": 1,
+            "renewal": 2333,
+            "transfer": 2333,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".co.jp",
+            "registration": 990,
+            "renewal": 4136,
+            "transfer": 4136,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".info",
+            "registration": 308,
+            "renewal": 2434,
+            "transfer": 2434,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".site",
+            "registration": 99,
+            "renewal": 5239,
+            "transfer": 5239,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".org",
+            "registration": 946,
+            "renewal": 1992,
+            "transfer": 1992,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".online",
+            "registration": 108,
+            "renewal": 6189,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".biz",
+            "registration": 1628,
+            "renewal": 2127,
+            "transfer": 2127,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".fun",
+            "registration": 108,
+            "renewal": 3958,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".monster",
+            "registration": 190,
+            "renewal": 2847,
+            "transfer": 2847,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".space",
+            "registration": 108,
+            "renewal": 3958,
+            "transfer": 3958,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".website",
+            "registration": 108,
+            "renewal": 4096,
+            "transfer": 4096,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".life",
+            "registration": 218,
+            "renewal": 5432,
+            "transfer": 5432,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".tech",
+            "registration": 460,
+            "renewal": 6293,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".live",
+            "registration": 273,
+            "renewal": 3503,
+            "transfer": 3503,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".email",
+            "registration": 275,
+            "renewal": 4054,
+            "transfer": 4054,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".world",
+            "registration": 328,
+            "renewal": 5432,
+            "transfer": 5432,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".works",
+            "registration": 396,
+            "renewal": 5432,
+            "transfer": 5432,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".news",
+            "registration": 418,
+            "renewal": 4054,
+            "transfer": 4054,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".blue",
+            "registration": 528,
+            "renewal": 2029,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".pink",
+            "registration": 528,
+            "renewal": 2029,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".red",
+            "registration": 528,
+            "renewal": 2029,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".mobi",
+            "registration": 528,
+            "renewal": 2718,
+            "transfer": 2718,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".ink",
+            "registration": 528,
+            "renewal": 4096,
+            "transfer": 4096,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".wiki",
+            "registration": 528,
+            "renewal": 4096,
+            "transfer": 4096,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".design",
+            "registration": 6468,
+            "renewal": 7913,
+            "transfer": 7913,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".press",
+            "registration": 548,
+            "renewal": 9433,
+            "transfer": 9433,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".host",
+            "registration": 548,
+            "renewal": 12401,
+            "transfer": 12401,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".group",
+            "registration": 594,
+            "renewal": 2539,
+            "transfer": 2539,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".earth",
+            "registration": 2288,
+            "renewal": 2880,
+            "transfer": 2880,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".me",
+            "registration": 768,
+            "renewal": 3407,
+            "transfer": 3407,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".style",
+            "registration": 935,
+            "renewal": 5432,
+            "transfer": 5432,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".company",
+            "registration": 968,
+            "renewal": 2539,
+            "transfer": 2539,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".click",
+            "registration": 1628,
+            "renewal": 2333,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".link",
+            "registration": 1628,
+            "renewal": 2029,
+            "transfer": 2029,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".moe",
+            "registration": 1848,
+            "renewal": 2350,
+            "transfer": 2350,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".asia",
+            "registration": 2178,
+            "renewal": 2718,
+            "transfer": 2718,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".rent",
+            "registration": 2198,
+            "renewal": 9298,
+            "transfer": 9298,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".college",
+            "registration": 2198,
+            "renewal": 9433,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".baby",
+            "registration": 2198,
+            "renewal": 12224,
+            "transfer": 12224,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".in",
+            "registration": 2838,
+            "renewal": 2838,
+            "transfer": 2838,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".gift",
+            "registration": 3278,
+            "renewal": 4710,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".help",
+            "registration": 3278,
+            "renewal": 4678,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".lol",
+            "registration": 170,
+            "renewal": 4678,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".photo",
+            "registration": 3278,
+            "renewal": 4068,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".pics",
+            "registration": 170,
+            "renewal": 4313,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".osaka",
+            "registration": 3718,
+            "renewal": 4580,
+            "transfer": 4580,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".bz",
+            "registration": 3828,
+            "renewal": 4096,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".ac.jp",
+            "registration": 4136,
+            "renewal": 4136,
+            "transfer": 4136,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".ed.jp",
+            "registration": 4136,
+            "renewal": 4136,
+            "transfer": 4136,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".or.jp",
+            "registration": 4136,
+            "renewal": 4136,
+            "transfer": 4136,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".cc",
+            "registration": 4158,
+            "renewal": 4158,
+            "transfer": 4158,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".ws",
+            "registration": 4158,
+            "renewal": 4780,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".mom",
+            "registration": 170,
+            "renewal": 5473,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".rest",
+            "registration": 4378,
+            "renewal": 5473,
+            "transfer": 5473,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".tv",
+            "registration": 5258,
+            "renewal": 6000,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".black",
+            "registration": 5478,
+            "renewal": 6851,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".clinic",
+            "registration": 6578,
+            "renewal": 8188,
+            "transfer": 8188,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".salon",
+            "registration": 6578,
+            "renewal": 8188,
+            "transfer": 8188,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".bar",
+            "registration": 7678,
+            "renewal": 9607,
+            "transfer": 9607,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".gr.jp",
+            "registration": 7678,
+            "renewal": 7678,
+            "transfer": 7678,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".ne.jp",
+            "registration": 7678,
+            "renewal": 7678,
+            "transfer": 7678,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".sexy",
+            "registration": -1,
+            "renewal": 5478,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".pro",
+            "registration": 3745,
+            "renewal": 4306,
+            "transfer": 4306,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".ltd",
+            "registration": 4139,
+            "renewal": 4759,
+            "transfer": 4759,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".art",
+            "registration": 3943,
+            "renewal": 4534,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".icu",
+            "registration": 1910,
+            "renewal": 1910,
+            "transfer": 1910,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".cafe",
+            "registration": 6309,
+            "renewal": 7255,
+            "transfer": 7255,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".studio",
+            "registration": 6111,
+            "renewal": 6755,
+            "transfer": 6755,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".media",
+            "registration": 6309,
+            "renewal": 6309,
+            "transfer": 6309,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".llc",
+            "registration": 5717,
+            "renewal": 6574,
+            "transfer": 6574,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".support",
+            "registration": 3745,
+            "renewal": 4306,
+            "transfer": 4306,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".games",
+            "registration": 3663,
+            "renewal": 3663,
+            "transfer": 3663,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".pet",
+            "registration": 3450,
+            "renewal": 3450,
+            "transfer": 3450,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".today",
+            "registration": 3943,
+            "renewal": 3943,
+            "transfer": 3943,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".school",
+            "registration": 4928,
+            "renewal": 5667,
+            "transfer": 5667,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".city",
+            "registration": 3548,
+            "renewal": 3548,
+            "transfer": 3548,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".coffee",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".ooo",
+            "registration": 3940,
+            "renewal": 4530,
+            "transfer": 4530,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".town",
+            "registration": 5126,
+            "renewal": 5126,
+            "transfer": 5126,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".team",
+            "registration": 5126,
+            "renewal": 5126,
+            "transfer": 5126,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".farm",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".fan",
+            "registration": 7492,
+            "renewal": 7492,
+            "transfer": 7492,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".dental",
+            "registration": 9858,
+            "renewal": 9858,
+            "transfer": 9858,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".gallery",
+            "registration": 3745,
+            "renewal": 3745,
+            "transfer": 3745,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".dog",
+            "registration": 8675,
+            "renewal": 8675,
+            "transfer": 8675,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".golf",
+            "registration": 8871,
+            "renewal": 8871,
+            "transfer": 8871,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".global",
+            "registration": 12618,
+            "renewal": 12618,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".care",
+            "registration": 5914,
+            "renewal": 5914,
+            "transfer": 5914,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".wine",
+            "registration": 8083,
+            "renewal": 8083,
+            "transfer": 8083,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".center",
+            "registration": 4337,
+            "renewal": 4337,
+            "transfer": 4337,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".run",
+            "registration": 3548,
+            "renewal": 3548,
+            "transfer": 3548,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".systems",
+            "registration": 4346,
+            "renewal": 4997,
+            "transfer": 4997,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".network",
+            "registration": 4346,
+            "renewal": 4346,
+            "transfer": 4346,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".holdings",
+            "registration": 8871,
+            "renewal": 8871,
+            "transfer": 8871,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".green",
+            "registration": 11237,
+            "renewal": 11237,
+            "transfer": 11237,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".plus",
+            "registration": 5715,
+            "renewal": 5715,
+            "transfer": 5715,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".digital",
+            "registration": 5717,
+            "renewal": 5717,
+            "transfer": 5717,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".promo",
+            "registration": 2707,
+            "renewal": 2707,
+            "transfer": 2707,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".bio",
+            "registration": 10351,
+            "renewal": 10351,
+            "transfer": 10351,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".organic",
+            "registration": 11631,
+            "renewal": 11631,
+            "transfer": 11631,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".academy",
+            "registration": 5715,
+            "renewal": 6572,
+            "transfer": 6572,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".social",
+            "registration": 5030,
+            "renewal": 5030,
+            "transfer": 5030,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".rocks",
+            "registration": 2956,
+            "renewal": 2956,
+            "transfer": 2956,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".estate",
+            "registration": 5322,
+            "renewal": 6120,
+            "transfer": 6120,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".family",
+            "registration": 4299,
+            "renewal": 4299,
+            "transfer": 4299,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".house",
+            "registration": 5715,
+            "renewal": 5715,
+            "transfer": 5715,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".camp",
+            "registration": 8083,
+            "renewal": 8083,
+            "transfer": 8083,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".education",
+            "registration": 4346,
+            "renewal": 4346,
+            "transfer": 4346,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".kitchen",
+            "registration": 7166,
+            "renewal": 7166,
+            "transfer": 7166,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".guide",
+            "registration": 5717,
+            "renewal": 5717,
+            "transfer": 5717,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".tours",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".tax",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".marketing",
+            "registration": 5520,
+            "renewal": 5520,
+            "transfer": 5520,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".agency",
+            "registration": 4139,
+            "renewal": 4139,
+            "transfer": 4139,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".international",
+            "registration": 4337,
+            "renewal": 4337,
+            "transfer": 4337,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".travel",
+            "registration": 19716,
+            "renewal": 19716,
+            "transfer": 19716,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".fitness",
+            "registration": 5520,
+            "renewal": 5520,
+            "transfer": 5520,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".market",
+            "registration": 5096,
+            "renewal": 5096,
+            "transfer": 5096,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".bike",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".land",
+            "registration": 5520,
+            "renewal": 5520,
+            "transfer": 5520,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".community",
+            "registration": 5520,
+            "renewal": 5520,
+            "transfer": 5520,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".business",
+            "registration": 2464,
+            "renewal": 2464,
+            "transfer": 2464,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".services",
+            "registration": 5520,
+            "renewal": 5520,
+            "transfer": 5520,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".sale",
+            "registration": 5030,
+            "renewal": 5030,
+            "transfer": 5030,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".photos",
+            "registration": 3745,
+            "renewal": 3745,
+            "transfer": 3745,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".tools",
+            "registration": 4928,
+            "renewal": 4928,
+            "transfer": 4928,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".vision",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".money",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".consulting",
+            "registration": 5732,
+            "renewal": 5732,
+            "transfer": 5732,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".graphics",
+            "registration": 3548,
+            "renewal": 3548,
+            "transfer": 3548,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".camera",
+            "registration": 6370,
+            "renewal": 6370,
+            "transfer": 6370,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".dance",
+            "registration": 3661,
+            "renewal": 3661,
+            "transfer": 3661,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".audio",
+            "registration": 19716,
+            "renewal": 19716,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".tips",
+            "registration": 4139,
+            "renewal": 4139,
+            "transfer": 4139,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".solutions",
+            "registration": 4337,
+            "renewal": 4337,
+            "transfer": 4337,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".kim",
+            "registration": 2388,
+            "renewal": 2388,
+            "transfer": 2388,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".ski",
+            "registration": 7324,
+            "renewal": 7324,
+            "transfer": 7324,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".diet",
+            "registration": 19716,
+            "renewal": 19716,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".partners",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".chat",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".technology",
+            "registration": 3943,
+            "renewal": 3943,
+            "transfer": 3943,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".fund",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".report",
+            "registration": 3351,
+            "renewal": 3351,
+            "transfer": 3351,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".video",
+            "registration": 4346,
+            "renewal": 4346,
+            "transfer": 4346,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".ventures",
+            "registration": 8083,
+            "renewal": 8083,
+            "transfer": 8083,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".cool",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".ninja",
+            "registration": 3661,
+            "renewal": 3661,
+            "transfer": 3661,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".photography",
+            "registration": 4346,
+            "renewal": 4346,
+            "transfer": 4346,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".events",
+            "registration": 5715,
+            "renewal": 5715,
+            "transfer": 5715,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".engineer",
+            "registration": 5030,
+            "renewal": 5030,
+            "transfer": 5030,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".delivery",
+            "registration": 8083,
+            "renewal": 8083,
+            "transfer": 8083,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".flowers",
+            "registration": 19716,
+            "renewal": 19716,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".cards",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".finance",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".zone",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".lawyer",
+            "registration": 6848,
+            "renewal": 6848,
+            "transfer": 6848,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".church",
+            "registration": 5715,
+            "renewal": 5715,
+            "transfer": 5715,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".pictures",
+            "registration": 1971,
+            "renewal": 1971,
+            "transfer": 1971,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".capital",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".cash",
+            "registration": 4928,
+            "renewal": 4928,
+            "transfer": 4928,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".university",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".legal",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".direct",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".institute",
+            "registration": 3745,
+            "renewal": 3745,
+            "transfer": 3745,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".gifts",
+            "registration": 4928,
+            "renewal": 4928,
+            "transfer": 4928,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".limited",
+            "registration": 4928,
+            "renewal": 4928,
+            "transfer": 4928,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".movie",
+            "registration": 45345,
+            "renewal": 45345,
+            "transfer": 45345,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".careers",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".jewelry",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".exchange",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".shoes",
+            "registration": 7007,
+            "renewal": 7007,
+            "transfer": 7007,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".fish",
+            "registration": 5715,
+            "renewal": 5715,
+            "transfer": 5715,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".training",
+            "registration": 5520,
+            "renewal": 5520,
+            "transfer": 5520,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".band",
+            "registration": 4337,
+            "renewal": 4337,
+            "transfer": 4337,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".management",
+            "registration": 3548,
+            "renewal": 3548,
+            "transfer": 3548,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".game",
+            "registration": 59147,
+            "renewal": 59147,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".expert",
+            "registration": 8280,
+            "renewal": 8280,
+            "transfer": 8280,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".watch",
+            "registration": 5715,
+            "renewal": 5715,
+            "transfer": 5715,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".football",
+            "registration": 3548,
+            "renewal": 3548,
+            "transfer": 3548,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".software",
+            "registration": 5030,
+            "renewal": 5030,
+            "transfer": 5030,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".financial",
+            "registration": 7885,
+            "renewal": 7885,
+            "transfer": 7885,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".toys",
+            "registration": 7166,
+            "renewal": 7166,
+            "transfer": 7166,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".restaurant",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".healthcare",
+            "registration": 9554,
+            "renewal": 9554,
+            "transfer": 9554,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".recipes",
+            "registration": 8759,
+            "renewal": 8759,
+            "transfer": 8759,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".pub",
+            "registration": 5030,
+            "renewal": 5030,
+            "transfer": 5030,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".coach",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".express",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".codes",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".show",
+            "registration": 5715,
+            "renewal": 5715,
+            "transfer": 5715,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".investments",
+            "registration": 17520,
+            "renewal": 17520,
+            "transfer": 17520,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".builders",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".vet",
+            "registration": 5030,
+            "renewal": 5030,
+            "transfer": 5030,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".taxi",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".guitars",
+            "registration": 19716,
+            "renewal": 19716,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".credit",
+            "registration": 14786,
+            "renewal": 14786,
+            "transfer": 14786,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".ceo",
+            "registration": 13412,
+            "renewal": 13412,
+            "transfer": 13412,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".voyage",
+            "registration": 8083,
+            "renewal": 8083,
+            "transfer": 8083,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".creditcard",
+            "registration": 20259,
+            "renewal": 20259,
+            "transfer": 20259,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".cleaning",
+            "registration": 8361,
+            "renewal": 8361,
+            "transfer": 8361,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".construction",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".productions",
+            "registration": 5520,
+            "renewal": 5520,
+            "transfer": 5520,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".energy",
+            "registration": 13412,
+            "renewal": 13412,
+            "transfer": 13412,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".auction",
+            "registration": 4928,
+            "renewal": 4928,
+            "transfer": 4928,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".engineering",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".solar",
+            "registration": 7007,
+            "renewal": 7007,
+            "transfer": 7007,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".forsale",
+            "registration": 4928,
+            "renewal": 4928,
+            "transfer": 4928,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".soccer",
+            "registration": 3351,
+            "renewal": 3351,
+            "transfer": 3351,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".domains",
+            "registration": 5715,
+            "renewal": 5715,
+            "transfer": 5715,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".glass",
+            "registration": 7007,
+            "renewal": 7007,
+            "transfer": 7007,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".wtf",
+            "registration": 4928,
+            "renewal": 4928,
+            "transfer": 4928,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".maison",
+            "registration": 8083,
+            "renewal": 8083,
+            "transfer": 8083,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".associates",
+            "registration": 5520,
+            "renewal": 5520,
+            "transfer": 5520,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".reviews",
+            "registration": 6848,
+            "renewal": 6848,
+            "transfer": 6848,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".tennis",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".florist",
+            "registration": 4928,
+            "renewal": 4928,
+            "transfer": 4928,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".repair",
+            "registration": 4928,
+            "renewal": 4928,
+            "transfer": 4928,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".industries",
+            "registration": 5715,
+            "renewal": 5715,
+            "transfer": 5715,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".clothing",
+            "registration": 4928,
+            "renewal": 4928,
+            "transfer": 4928,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".holiday",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".lighting",
+            "registration": 3548,
+            "renewal": 3548,
+            "transfer": 3548,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".parts",
+            "registration": 5520,
+            "renewal": 5520,
+            "transfer": 5520,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".enterprises",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".haus",
+            "registration": 4534,
+            "renewal": 4534,
+            "transfer": 4534,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".rentals",
+            "registration": 5715,
+            "renewal": 5715,
+            "transfer": 5715,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".guru",
+            "registration": 5717,
+            "renewal": 5717,
+            "transfer": 5717,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".computer",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".villas",
+            "registration": 8379,
+            "renewal": 8379,
+            "transfer": 8379,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".dentist",
+            "registration": 7962,
+            "renewal": 7962,
+            "transfer": 7962,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".pizza",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".rip",
+            "registration": 3154,
+            "renewal": 3154,
+            "transfer": 3154,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".hosting",
+            "registration": 59147,
+            "renewal": 59147,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".supply",
+            "registration": 3548,
+            "renewal": 3548,
+            "transfer": 3548,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".mba",
+            "registration": 5322,
+            "renewal": 5322,
+            "transfer": 5322,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".directory",
+            "registration": 3548,
+            "renewal": 3548,
+            "transfer": 3548,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".diamonds",
+            "registration": 7492,
+            "renewal": 7492,
+            "transfer": 7492,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".insure",
+            "registration": 8454,
+            "renewal": 8454,
+            "transfer": 8454,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".cab",
+            "registration": 4534,
+            "renewal": 4534,
+            "transfer": 4534,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".gold",
+            "registration": 14786,
+            "renewal": 14786,
+            "transfer": 14786,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".christmas",
+            "registration": 5914,
+            "renewal": 5914,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".flights",
+            "registration": 7885,
+            "renewal": 7885,
+            "transfer": 7885,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".auto",
+            "registration": 394315,
+            "renewal": 394315,
+            "transfer": 394315,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".car",
+            "registration": 394315,
+            "renewal": 394315,
+            "transfer": 394315,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".cars",
+            "registration": 394315,
+            "renewal": 394315,
+            "transfer": 394315,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".pw",
+            "registration": 2956,
+            "renewal": 2956,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".love",
+            "registration": 3985,
+            "renewal": 5408,
+            "transfer": 5408,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".sbs",
+            "registration": 103,
+            "renewal": 2737,
+            "transfer": 2737,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".cyou",
+            "registration": 150,
+            "renewal": 2737,
+            "transfer": 2737,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".cloud",
+            "registration": 260,
+            "renewal": 4921,
+            "transfer": 4921,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".ai",
+            "registration": 32787,
+            "renewal": 32836,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".io",
+            "registration": 5100,
+            "renewal": 8936,
+            "transfer": 8936,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".top",
+            "registration": 228,
+            "renewal": 2700,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".country",
+            "registration": 487192,
+            "renewal": 487192,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".property",
+            "registration": 17811,
+            "renewal": 24406,
+            "transfer": null,
+            "currency": "JPY"
+        },
+        {
+            "tld": ".ac",
+            "registration": 6138,
+            "renewal": 11011,
+            "transfer": null,
+            "currency": "JPY"
+        }
+    ],
+    "fetched_at": 1776183493,
+    "source": "crawl"
+}

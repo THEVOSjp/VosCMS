@@ -17,6 +17,111 @@
 .board-content h2 { font-size: 1.25rem; }
 .board-content h3 { font-size: 1.125rem; }
 
+/* 문서 페이지 카드형 레이아웃 */
+.board-content h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 2rem 0 0;
+    padding: 1.25rem 1.5rem 0.75rem;
+    background: #fff;
+    border: 1px solid #e4e4e7;
+    border-bottom: none;
+    border-radius: 0.75rem 0.75rem 0 0;
+}
+.board-content h2 + p,
+.board-content h2 + table,
+.board-content h2 + h3 {
+    background: #fff;
+    border: 1px solid #e4e4e7;
+    border-top: none;
+    padding: 0 1.5rem;
+    margin-top: 0;
+}
+.board-content h2 ~ p:last-of-type,
+.board-content h2 ~ table:last-of-type {
+    border-radius: 0 0 0.75rem 0.75rem;
+    padding-bottom: 1.25rem;
+}
+.board-content h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #374151;
+    padding: 0.75rem 1.5rem 0.25rem;
+    background: #f9fafb;
+    border-left: 1px solid #e4e4e7;
+    border-right: 1px solid #e4e4e7;
+    margin: 0;
+}
+.board-content table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0;
+    background: #fff;
+    border-left: 1px solid #e4e4e7;
+    border-right: 1px solid #e4e4e7;
+}
+.board-content table th {
+    background: #f3f4f6;
+    font-weight: 600;
+    text-align: left;
+}
+.board-content table td, .board-content table th {
+    padding: 0.6rem 1rem;
+    border: 1px solid #e5e7eb;
+}
+.board-content table td strong {
+    color: #2563eb;
+}
+.board-content p {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    background: #fff;
+    border-left: 1px solid #e4e4e7;
+    border-right: 1px solid #e4e4e7;
+    margin: 0;
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+}
+/* 첫 번째 p (h2 없는 경우) */
+.board-content > p:first-child {
+    border: none;
+    background: transparent;
+    padding-left: 0;
+    padding-right: 0;
+}
+/* small 참고 링크 */
+.board-content small, .board-content p small {
+    color: #9ca3af;
+}
+.board-content small a {
+    color: #3b82f6;
+}
+/* 마지막 요소 하단 둥글게 */
+.board-content > *:last-child {
+    border-radius: 0 0 0.75rem 0.75rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid #e4e4e7;
+}
+/* 참고 링크 p는 카드 밖 */
+.board-content > p:has(small) {
+    background: transparent;
+    border: none;
+    padding: 0.5rem 0;
+    margin-top: 1rem;
+}
+
+/* 다크모드 카드형 */
+.dark .board-content h2 { background: #27272a !important; border-color: #3f3f46 !important; }
+.dark .board-content h3 { background: #1f1f23 !important; border-color: #3f3f46 !important; color: #d4d4d8 !important; }
+.dark .board-content p { background: #27272a !important; border-color: #3f3f46 !important; }
+.dark .board-content table { background: #27272a !important; border-color: #3f3f46 !important; }
+.dark .board-content table th { background: #1f1f23 !important; }
+.dark .board-content table td, .dark .board-content table th { border-color: #3f3f46 !important; }
+.dark .board-content table td strong { color: #60a5fa !important; }
+.dark .board-content > *:last-child { border-color: #3f3f46 !important; }
+.dark .board-content > p:has(small) { background: transparent !important; border: none !important; }
+.dark .board-content > p:first-child { background: transparent !important; border: none !important; }
+
 /* Summernote 에디터 내부 — Tailwind preflight 덮어쓰기 */
 .note-editor .note-editable img, .note-editor .note-editable video, .note-editor .note-editable iframe {
     display: inline; vertical-align: middle; max-width: 100%; height: auto;

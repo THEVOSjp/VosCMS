@@ -1,0 +1,69 @@
+{
+  "id": "vos-license-manager",
+  "name": {
+    "ko": "라이선스 관리",
+    "en": "License Manager",
+    "ja": "ライセンス管理",
+    "de": "Lizenzverwaltung",
+    "es": "Gestión de licencias",
+    "fr": "Gestion des licences",
+    "id": "Manajemen Lisensi",
+    "mn": "Лицензийн удирдлага",
+    "ru": "Управление лицензиями",
+    "tr": "Lisans Yönetimi",
+    "vi": "Quản lý giấy phép",
+    "zh_CN": "许可证管理",
+    "zh_TW": "授權管理"
+  },
+  "description": {
+    "ko": "VosCMS 라이선스, 개발자, 정산을 관리하는 본사 관리 플러그인",
+    "en": "Manage VosCMS licenses, developers and payouts",
+    "ja": "VosCMSライセンス、開発者、精算を管理する本社管理プラグイン"
+  },
+  "version": "1.0.0",
+  "author": { "name": "VosCMS", "url": "https://voscms.com" },
+  "license": "proprietary",
+  "category": "system",
+  "requires": { "php": ">=8.0" },
+  "routes": {
+    "admin": [
+      { "path": "license-manager", "view": "admin/dashboard.php", "method": "GET" },
+      { "path": "license-manager/licenses", "view": "admin/licenses.php", "method": "GET" },
+      { "path": "license-manager/license", "view": "admin/license-detail.php", "method": "GET" },
+      { "path": "license-manager/developers", "view": "admin/developers.php", "method": "GET" },
+      { "path": "license-manager/payouts", "view": "admin/payouts.php", "method": "GET" },
+      { "path": "license-manager/api", "view": "admin/api.php", "method": "POST" }
+    ]
+  },
+  "menus": {
+    "admin": [
+      {
+        "title": {
+          "ko": "라이선스 관리",
+          "en": "License Manager",
+          "ja": "ライセンス管理",
+          "de": "Lizenzverwaltung",
+          "es": "Gestión de licencias",
+          "fr": "Gestion des licences",
+          "id": "Manajemen Lisensi",
+          "mn": "Лицензийн удирдлага",
+          "ru": "Управление лицензиями",
+          "tr": "Lisans Yönetimi",
+          "vi": "Quản lý giấy phép",
+          "zh_CN": "许可证管理",
+          "zh_TW": "授權管理"
+        },
+        "icon": "M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z",
+        "items": [
+          { "title": { "ko": "대시보드", "en": "Dashboard", "ja": "ダッシュボード", "de": "Dashboard", "es": "Panel", "fr": "Tableau de bord", "id": "Dasbor", "mn": "Хяналтын самбар", "ru": "Панель", "tr": "Gösterge Paneli", "vi": "Bảng điều khiển", "zh_CN": "仪表盘", "zh_TW": "儀表板" }, "route": "license-manager" },
+          { "title": { "ko": "라이선스 목록", "en": "Licenses", "ja": "ライセンス一覧", "de": "Lizenzen", "es": "Licencias", "fr": "Licences", "id": "Lisensi", "mn": "Лиценз", "ru": "Лицензии", "tr": "Lisanslar", "vi": "Giấy phép", "zh_CN": "许可证列表", "zh_TW": "授權列表" }, "route": "license-manager/licenses" },
+          { "title": { "ko": "개발자 관리", "en": "Developers", "ja": "開発者管理", "de": "Entwickler", "es": "Desarrolladores", "fr": "Développeurs", "id": "Pengembang", "mn": "Хөгжүүлэгчид", "ru": "Разработчики", "tr": "Geliştiriciler", "vi": "Nhà phát triển", "zh_CN": "开发者", "zh_TW": "開發者" }, "route": "license-manager/developers" },
+          { "title": { "ko": "정산 관리", "en": "Payouts", "ja": "精算管理", "de": "Auszahlungen", "es": "Pagos", "fr": "Paiements", "id": "Pembayaran", "mn": "Төлбөр", "ru": "Выплаты", "tr": "Ödemeler", "vi": "Thanh toán", "zh_CN": "结算", "zh_TW": "結算" }, "route": "license-manager/payouts" }
+        ]
+      }
+    ]
+  },
+  "settings": {
+    "defaults": {}
+  }
+}

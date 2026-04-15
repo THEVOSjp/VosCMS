@@ -510,6 +510,29 @@ return [
     'pwa_status_completed' => 'Completed',
     'pwa_status_failed' => 'Failed',
 
+    // Tax Settings
+    'tax' => [
+        'title' => 'Tax Settings',
+        'desc' => 'Manage consumption tax and withholding tax settings.',
+        'display_title' => 'Consumption Tax Display',
+        'exclusive' => 'Tax excluded (show separately)',
+        'exclusive_invoice' => 'Tax excluded (calculate only on invoice)',
+        'inclusive' => 'Tax included',
+        'exempt' => 'Tax included (tax-exempt)',
+        'rate_title' => 'Tax Rate',
+        'rate_reduced' => 'Reduced 8%',
+        'rounding_title' => 'Tax Rounding',
+        'rounding_desc' => 'Select how to handle decimal places in tax calculation.',
+        'floor' => 'Truncate (round down)',
+        'round' => 'Round (half up)',
+        'ceil' => 'Round up',
+        'withholding_title' => 'Withholding Tax',
+        'withholding_link' => 'About withholding tax calculation',
+        'withholding_none' => 'None',
+        'withholding_with' => 'Enabled (with reconstruction tax)',
+        'withholding_without' => 'Enabled (without reconstruction tax)',
+    ],
+
     // Online Payment Settings
     'payment_config' => [
         'title' => 'Online Payment Settings',
@@ -521,6 +544,9 @@ return [
         'test_mode_hint' => 'No real charges are made in test mode.',
         'live_mode' => 'Live Mode',
         'key_saved' => 'Key is saved.',
+        'webhook_token' => 'Webhook Token',
+        'webhook_token_placeholder' => 'Copy webhook token from PG dashboard',
+        'webhook_token_hint' => 'Token to verify the authenticity of webhook requests. Available in your PG dashboard.',
         'status_ready' => 'Payment system is ready.',
         'status_incomplete' => 'Please enter API keys.',
         'region_global' => 'Global',

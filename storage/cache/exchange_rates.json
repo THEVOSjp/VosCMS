@@ -1,0 +1,13 @@
+{
+    "success": true,
+    "date": "2026-04-14",
+    "base": "USD",
+    "rates": {
+        "CNY": 6.8256,
+        "EUR": 0.8525,
+        "JPY": 159.54,
+        "KRW": 1480.53
+    },
+    "fetched_at": 1776183493,
+    "source": "api"
+}

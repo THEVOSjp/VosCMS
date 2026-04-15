@@ -73,6 +73,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if ($action === 'update_tax') {
+        try {
+            $taxConfig = json_encode([
+                'tax_display' => $_POST['tax_display'] ?? 'exclusive',
+                'tax_rate' => $_POST['tax_rate'] ?? '10',
+                'tax_rounding' => $_POST['tax_rounding'] ?? 'round',
+                'withholding' => $_POST['withholding'] ?? 'none',
+            ], JSON_UNESCAPED_UNICODE);
+            $stmt = $pdo->prepare("INSERT INTO rzx_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+            $stmt->execute(['tax_config', $taxConfig]);
+            $settings['tax_config'] = $taxConfig;
+            $message = __('settings.success') ?? '저장되었습니다.';
+            $messageType = 'success';
+        } catch (PDOException $e) {
+            $message = __('settings.error_save') . ': ' . $e->getMessage();
+            $messageType = 'error';
+        }
+    }
+
     if ($action === 'update_payment') {
         $pgw = trim($_POST['payment_gateway'] ?? 'stripe');
         $pubKey = trim($_POST['payment_public_key'] ?? '');
@@ -92,16 +111,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'test_mode' => $existConf['test_mode'] ?? '1',
                 ];
             }
+            $webhookToken = trim($_POST['payment_webhook_token'] ?? '');
             // 현재 선택한 PG사의 키 저장
+            $existingWebhook = $gateways[$pgw]['webhook_token'] ?? '';
             if ($pubKey || $secKey) {
                 $gateways[$pgw] = [
                     'public_key' => $pubKey,
                     'secret_key' => $secKey,
                     'test_mode' => $testMode,
+                    'webhook_token' => $webhookToken ?: $existingWebhook,
                 ];
             } elseif (isset($gateways[$pgw])) {
-                // 키 입력 안 했으면 test_mode만 업데이트
+                // 키 입력 안 했으면 test_mode, webhook_token만 업데이트
                 $gateways[$pgw]['test_mode'] = $testMode;
+                if ($webhookToken) $gateways[$pgw]['webhook_token'] = $webhookToken;
             }
             $paymentConfig = json_encode([
                 'gateway' => $pgw,
@@ -372,6 +395,79 @@ ob_start();
     </form>
 </div>
 
+<!-- 과세 설정 -->
+<?php
+$_taxConf = json_decode($settings['tax_config'] ?? '{}', true) ?: [];
+$_taxDisplay = $_taxConf['tax_display'] ?? 'exclusive';
+$_taxRate = $_taxConf['tax_rate'] ?? '10';
+$_taxRounding = $_taxConf['tax_rounding'] ?? 'round';
+$_withholding = $_taxConf['withholding'] ?? 'none';
+?>
+<div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
+    <?php
+    $headerIcon = 'M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z';
+    $headerTitle = __('settings.tax.title') ?? '과세 설정';
+    $headerDescription = __('settings.tax.desc') ?? '소비세 및 원천징수세 설정을 관리합니다.';
+    $headerIconColor = ''; $headerActions = '';
+    include __DIR__ . '/../components/settings-header.php';
+    ?>
+
+    <form method="POST" class="space-y-6">
+        <input type="hidden" name="action" value="update_tax">
+
+        <!-- 소비세 설정 -->
+        <div>
+            <h4 class="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-3"><?= __('settings.tax.display_title') ?? '소비세 설정' ?></h4>
+            <div class="space-y-2">
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tax_display" value="exclusive" class="text-blue-600" <?= $_taxDisplay === 'exclusive' ? 'checked' : '' ?>><span class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.tax.exclusive') ?? '세금 별도 표시' ?></span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tax_display" value="exclusive_invoice" class="text-blue-600" <?= $_taxDisplay === 'exclusive_invoice' ? 'checked' : '' ?>><span class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.tax.exclusive_invoice') ?? '세금 별도 표시 (납품서만 청구시에 계산)' ?></span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tax_display" value="inclusive" class="text-blue-600" <?= $_taxDisplay === 'inclusive' ? 'checked' : '' ?>><span class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.tax.inclusive') ?? '부가세 포함 표시' ?></span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tax_display" value="exempt" class="text-blue-600" <?= $_taxDisplay === 'exempt' ? 'checked' : '' ?>><span class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.tax.exempt') ?? '부가세 포함 표시 (면세)' ?></span></label>
+            </div>
+        </div>
+
+        <!-- 소비세율 설정 -->
+        <div>
+            <h4 class="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-3"><?= __('settings.tax.rate_title') ?? '소비세율 설정' ?></h4>
+            <div class="space-y-2">
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tax_rate" value="10" class="text-blue-600" <?= $_taxRate === '10' ? 'checked' : '' ?>><span class="text-sm text-zinc-700 dark:text-zinc-300">10%</span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tax_rate" value="8r" class="text-blue-600" <?= $_taxRate === '8r' ? 'checked' : '' ?>><span class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.tax.rate_reduced') ?? '경감 8%' ?></span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tax_rate" value="8" class="text-blue-600" <?= $_taxRate === '8' ? 'checked' : '' ?>><span class="text-sm text-zinc-700 dark:text-zinc-300">8%</span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tax_rate" value="5" class="text-blue-600" <?= $_taxRate === '5' ? 'checked' : '' ?>><span class="text-sm text-zinc-700 dark:text-zinc-300">5%</span></label>
+            </div>
+        </div>
+
+        <!-- 소비세 단수 처리 -->
+        <div>
+            <h4 class="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-2"><?= __('settings.tax.rounding_title') ?? '소비세 단수 처리' ?></h4>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-3"><?= __('settings.tax.rounding_desc') ?? '소계에 걸리는 소비세의 소수점 이하의 처리 방법을 선택할 수 있습니다.' ?></p>
+            <div class="space-y-2">
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tax_rounding" value="floor" class="text-blue-600" <?= $_taxRounding === 'floor' ? 'checked' : '' ?>><span class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.tax.floor') ?? '잘라내다 (切り捨て)' ?></span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tax_rounding" value="round" class="text-blue-600" <?= $_taxRounding === 'round' ? 'checked' : '' ?>><span class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.tax.round') ?? '반올림 (四捨五入)' ?></span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tax_rounding" value="ceil" class="text-blue-600" <?= $_taxRounding === 'ceil' ? 'checked' : '' ?>><span class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.tax.ceil') ?? '올림 (切り上げ)' ?></span></label>
+            </div>
+        </div>
+
+        <!-- 원천징수세 설정 -->
+        <div>
+            <h4 class="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-2"><?= __('settings.tax.withholding_title') ?? '원천징수세 설정' ?></h4>
+            <?php $_whCountry = strtolower($settings['site_country'] ?? 'jp'); ?>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-3"><a href="<?= rtrim($config['app_url'] ?? '', '/') ?>/withholding-tax-<?= $_whCountry ?>" target="_blank" class="text-blue-500 hover:underline"><?= __('settings.tax.withholding_link') ?? '원천징수세의 계산방법에 대해서' ?> ↗</a></p>
+            <div class="space-y-2">
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="withholding" value="none" class="text-blue-600" <?= $_withholding === 'none' ? 'checked' : '' ?>><span class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.tax.withholding_none') ?? '없음' ?></span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="withholding" value="with_reconstruction" class="text-blue-600" <?= $_withholding === 'with_reconstruction' ? 'checked' : '' ?>><span class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.tax.withholding_with') ?? '있음 (부흥세 있음)' ?></span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="withholding" value="without_reconstruction" class="text-blue-600" <?= $_withholding === 'without_reconstruction' ? 'checked' : '' ?>><span class="text-sm text-zinc-700 dark:text-zinc-300"><?= __('settings.tax.withholding_without') ?? '있음 (부흥세 없음)' ?></span></label>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-end pt-4 border-t dark:border-zinc-700">
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                <?= __('common.buttons.save') ?? '저장' ?>
+            </button>
+        </div>
+    </form>
+</div>
+
 <?php
 // 결제 설정 로드 (PG사별 키 구조)
 $_payConf = json_decode($settings['payment_config'] ?? '{}', true) ?: [];
@@ -467,6 +563,30 @@ $_payGatewaysJson = json_encode($_payGateways, JSON_UNESCAPED_UNICODE | JSON_HEX
                 </button>
             </div>
             <p id="paySecSavedHint" class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 <?= $_paySecKey ? '' : 'hidden' ?>"><?= $_paySecKey ? (__('settings.payment_config.key_saved') ?? '키가 저장되어 있습니다.') . ' (' . $_payMaskedSec . ')' : '' ?></p>
+        </div>
+
+        <!-- Webhook Token -->
+        <?php
+        $_payWebhookToken = $_payCurrentGw['webhook_token'] ?? '';
+        $_payMaskedWebhook = $_payWebhookToken ? str_repeat('·', 12) . substr($_payWebhookToken, -6) : '';
+        ?>
+        <div>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Webhook Token</label>
+            <div class="relative">
+                <input type="text" name="payment_webhook_token" id="payWebhookInput"
+                       value="<?= htmlspecialchars($_payWebhookToken) ?>" autocomplete="off"
+                       placeholder="PG사 대시보드에서 Webhook 토큰을 복사하세요"
+                       style="-webkit-text-security: disc; text-security: disc;"
+                       class="w-full px-3 py-2 pr-10 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm">
+                <button type="button" onclick="var i=document.getElementById('payWebhookInput');var s=i.style;if(s.webkitTextSecurity==='disc'||s.textSecurity==='disc'){s.webkitTextSecurity='none';s.textSecurity='none'}else{s.webkitTextSecurity='disc';s.textSecurity='disc'}"
+                        class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                </button>
+            </div>
+            <?php if ($_payWebhookToken): ?>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1"><?php $_ks = __('settings.payment_config.key_saved'); echo $_ks === 'settings.payment_config.key_saved' ? '키가 저장되어 있습니다.' : $_ks; ?> (<?= $_payMaskedWebhook ?>)</p>
+            <?php endif; ?>
+            <p class="text-xs text-zinc-400 mt-1">Webhook 요청의 진위를 검증하는 토큰입니다. PG사 대시보드에서 확인할 수 있습니다.</p>
         </div>
 
         <!-- 상태 표시 -->

@@ -1,0 +1,31 @@
+{
+  "slug": "feature-tour",
+  "version": "1.0.0",
+  "author": "VosCMS",
+  "category": "marketing",
+  "icon": "presentation-chart-bar",
+  "name": {
+    "ko": "기능 소개 투어",
+    "en": "Feature Tour",
+    "ja": "機能紹介ツアー",
+    "zh_CN": "功能介绍", "zh_TW": "功能介紹",
+    "de": "Funktionsübersicht", "es": "Tour de funciones", "fr": "Tour des fonctionnalités",
+    "id": "Tur Fitur", "mn": "Онцлог танилцуулга", "ru": "Обзор функций",
+    "tr": "Özellik Turu", "vi": "Giới thiệu tính năng"
+  },
+  "description": {
+    "ko": "스크린샷 슬라이드 + 다크 패널 기능 소개 (Product Tour)",
+    "en": "Screenshot slideshow with dark info panel for product features",
+    "ja": "スクリーンショットスライド＋ダークパネルの機能紹介"
+  },
+  "config_schema": {
+    "fields": [
+      {"key": "title", "type": "text", "label": "Section Title", "i18n": true},
+      {"key": "panel_subtitle", "type": "text", "label": "Panel Subtitle", "i18n": true, "default": "SMART EXPERIENCE"},
+      {"key": "panel_title", "type": "textarea", "label": "Panel Main Copy", "i18n": true},
+      {"key": "panel_desc", "type": "textarea", "label": "Panel Description", "i18n": true},
+      {"key": "panel_bullets", "type": "textarea", "label": "Bullet Points (one per line)", "i18n": true},
+      {"key": "items", "type": "slider_items", "label": "Feature Slides"}
+    ]
+  }
+}

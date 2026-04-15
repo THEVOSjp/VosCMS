@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.\\(php|js\\)$\")",
+      "Bash(cat /var/www/salon/plugins/vos-pos/hooks/*.php)",
+      "Bash(grep -E \"\\\\.\\(php|sql|json\\)$\")",
+      "Bash(find /var/www/voscms/database/migrations -name \"*.sql\" -exec grep -l \"order\\\\|product\\\\|cart\\\\|vendor\" {} \\\\;)",
+      "Bash(grep \"rzx_\" /var/www/voscms/database/migrations/core/*.sql)",
+      "Bash(tail -30 /var/log/php*/error.log)",
+      "Bash(tail -30 /var/www/voscms/storage/logs/*.log)",
+      "Bash(php -r \"ini_get\\('error_log'\\);\")",
+      "Bash(sudo journalctl:*)",
+      "Bash(mysql -urezlyx -p'rezlyx2026!' voscms_dev -e \"SELECT plugin_id, title, is_active FROM rzx_plugins;\")",
+      "Bash(php -r ':*)",
+      "Bash(php -d display_errors=1 -r ':*)",
+      "Bash(php -d display_errors=1 -d error_reporting=E_ALL -r ':*)",
+      "Bash(sudo grep:*)"
+    ]
+  }
+}

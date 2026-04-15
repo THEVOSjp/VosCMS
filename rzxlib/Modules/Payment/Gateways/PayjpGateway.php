@@ -273,6 +273,163 @@ class PayjpGateway implements PaymentGatewayInterface
         ]);
     }
 
+    // ===== Customer (구독 결제용) =====
+
+    /**
+     * Customer 생성 — 카드 토큰을 고객에 연결하여 재결제 가능
+     */
+    public function createCustomer(string $cardToken, string $email, array $metadata = []): array
+    {
+        $params = [
+            'card' => $cardToken,
+            'email' => $email,
+        ];
+        foreach ($metadata as $k => $v) {
+            $params["metadata[{$k}]"] = $v;
+        }
+
+        $response = $this->apiCall('POST', '/customers', $params);
+
+        if (!empty($response['error'])) {
+            return ['success' => false, 'message' => $response['error']['message'] ?? 'Customer creation failed'];
+        }
+
+        return [
+            'success' => true,
+            'customer_id' => $response['id'] ?? null,
+            'card' => [
+                'brand' => $response['cards']['data'][0]['brand'] ?? null,
+                'last4' => $response['cards']['data'][0]['last4'] ?? null,
+            ],
+        ];
+    }
+
+    /**
+     * Customer의 저장된 카드로 결제
+     */
+    public function chargeCustomer(string $customerId, int $amount, string $currency = 'jpy', string $description = ''): PaymentResult
+    {
+        $params = [
+            'amount' => $amount,
+            'currency' => strtolower($currency),
+            'customer' => $customerId,
+            'capture' => 'true',
+        ];
+        if ($description) $params['description'] = $description;
+
+        $response = $this->apiCall('POST', '/charges', $params);
+
+        if (!empty($response['error'])) {
+            return new PaymentResult([
+                'success' => false,
+                'status' => 'failed',
+                'failure_code' => $response['error']['code'] ?? 'unknown',
+                'failure_message' => $response['error']['message'] ?? 'Charge failed',
+                'raw' => $response,
+            ]);
+        }
+
+        $paid = ($response['paid'] ?? false) && ($response['captured'] ?? false);
+
+        return new PaymentResult([
+            'success' => $paid,
+            'status' => $paid ? 'paid' : 'failed',
+            'payment_key' => $response['id'] ?? null,
+            'transaction_id' => $response['id'] ?? null,
+            'amount' => (int)($response['amount'] ?? 0),
+            'method' => 'card',
+            'method_detail' => [
+                'card_brand' => $response['card']['brand'] ?? null,
+                'card_last4' => $response['card']['last4'] ?? null,
+            ],
+            'raw' => $response,
+        ]);
+    }
+
+    /**
+     * Customer 삭제
+     */
+    public function deleteCustomer(string $customerId): bool
+    {
+        $response = $this->apiCall('DELETE', "/customers/{$customerId}");
+        return !empty($response['deleted']);
+    }
+
+    // ===== Plan & Subscription (定期課金) =====
+
+    /**
+     * Plan 생成 — 定期課金プラン
+     */
+    public function createPlan(string $id, int $amount, string $interval = 'month', string $name = '', string $currency = 'jpy'): array
+    {
+        $params = [
+            'id' => $id,
+            'amount' => $amount,
+            'currency' => strtolower($currency),
+            'interval' => $interval, // 'month' or 'year'
+        ];
+        if ($name) $params['name'] = $name;
+        $response = $this->apiCall('POST', '/plans', $params);
+        if (!empty($response['error'])) {
+            // プラン既存の場合はOK
+            if (($response['error']['code'] ?? '') === 'already_exists') {
+                return ['success' => true, 'plan_id' => $id, 'exists' => true];
+            }
+            return ['success' => false, 'message' => $response['error']['message'] ?? 'Plan creation failed'];
+        }
+        return ['success' => true, 'plan_id' => $response['id'] ?? $id];
+    }
+
+    /**
+     * Subscription 生成 — 定期課金開始
+     */
+    public function createSubscription(string $customerId, string $planId, ?int $trialEnd = null): array
+    {
+        $params = [
+            'customer' => $customerId,
+            'plan' => $planId,
+        ];
+        if ($trialEnd) $params['trial_end'] = $trialEnd;
+
+        $response = $this->apiCall('POST', '/subscriptions', $params);
+        if (!empty($response['error'])) {
+            return ['success' => false, 'message' => $response['error']['message'] ?? 'Subscription creation failed'];
+        }
+        return [
+            'success' => true,
+            'subscription_id' => $response['id'] ?? null,
+            'status' => $response['status'] ?? 'active',
+            'current_period_end' => $response['current_period_end'] ?? null,
+        ];
+    }
+
+    /**
+     * Subscription 解約
+     */
+    public function cancelSubscription(string $subscriptionId): bool
+    {
+        $response = $this->apiCall('POST', "/subscriptions/{$subscriptionId}/cancel");
+        return ($response['status'] ?? '') === 'canceled';
+    }
+
+    /**
+     * Subscription 一時停止
+     */
+    public function pauseSubscription(string $subscriptionId): bool
+    {
+        $response = $this->apiCall('POST', "/subscriptions/{$subscriptionId}/pause");
+        return ($response['status'] ?? '') === 'paused';
+    }
+
+    /**
+     * Subscription 再開
+     */
+    public function resumeSubscription(string $subscriptionId): bool
+    {
+        $response = $this->apiCall('POST', "/subscriptions/{$subscriptionId}/resume");
+        return ($response['status'] ?? '') === 'active';
+    }
+
     /**
      * PAY.JP REST API 호출
      */

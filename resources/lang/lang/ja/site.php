@@ -171,6 +171,7 @@ return [
         'refund_policy' => 'キャンセル・返金規定',
         'tokushoho' => '特定商取引法に基づく表記', 'funds_settlement' => '資金決済法に基づく表示',
         'staff_intro' => 'スタッフ紹介', 'booking' => '予約する', 'lookup' => '予約照会',
+        'service_order' => 'サービス申請',
         'refund' => ['editor_title' => 'キャンセル・返金規定の編集', 'editor_desc' => 'キャンセルおよび返金に関する規定を作成・管理します。'],
         'terms_edit' => ['editor_title' => '利用規約の編集', 'editor_desc' => '利用規約を作成・管理します。'],
         'privacy_edit' => ['editor_title' => 'プライバシーポリシーの編集', 'editor_desc' => 'プライバシーポリシーを作成・管理します。'],

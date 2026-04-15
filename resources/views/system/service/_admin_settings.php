@@ -1,3 +1,12 @@
+<?php
+/**
+ * @deprecated 이 파일은 더 이상 사용되지 않습니다.
+ * 서비스 설정은 관리자 > 페이지 설정 > 서비스 설정 탭으로 이동했습니다.
+ * @see resources/views/system/service/_settings.php
+ * @see config/system-pages.php (settings_view)
+ */
+return; // 실행 방지
+?>
 <div id="adminSettingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-black/50" onclick="document.getElementById('adminSettingsModal').classList.add('hidden')"></div>
     <div class="relative bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">

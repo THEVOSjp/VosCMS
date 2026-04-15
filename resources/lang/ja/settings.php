@@ -510,6 +510,29 @@ return [
     'pwa_status_completed' => '完了',
     'pwa_status_failed' => '失敗',
 
+    // 課税設定
+    'tax' => [
+        'title' => '課税設定',
+        'desc' => '消費税および源泉徴収税の設定を管理します。',
+        'display_title' => '消費税設定',
+        'exclusive' => '税金別途表示',
+        'exclusive_invoice' => '税金別途表示（納品書のみ請求時に計算）',
+        'inclusive' => '税込表示',
+        'exempt' => '税込表示（免税）',
+        'rate_title' => '消費税率設定',
+        'rate_reduced' => '軽減 8%',
+        'rounding_title' => '消費税端数処理',
+        'rounding_desc' => '小計にかかる消費税の小数点以下の処理方法を選択できます。',
+        'floor' => '切り捨て',
+        'round' => '四捨五入',
+        'ceil' => '切り上げ',
+        'withholding_title' => '源泉徴収税設定',
+        'withholding_link' => '源泉徴収税の計算方法について',
+        'withholding_none' => 'なし',
+        'withholding_with' => 'あり（復興税あり）',
+        'withholding_without' => 'あり（復興税なし）',
+    ],
+
     // オンライン決済設定
     'payment_config' => [
         'title' => 'オンライン決済設定',
@@ -521,6 +544,9 @@ return [
         'test_mode_hint' => 'テストモードでは実際の課金は発生しません。',
         'live_mode' => '本番モード',
         'key_saved' => 'キーが保存されています。',
+        'webhook_token' => 'Webhookトークン',
+        'webhook_token_placeholder' => 'PGダッシュボードからWebhookトークンをコピーしてください',
+        'webhook_token_hint' => 'Webhookリクエストの真正性を検証するトークンです。PGダッシュボードで確認できます。',
         'status_ready' => '決済システムの準備が完了しました。',
         'status_incomplete' => 'APIキーを入力してください。',
         'region_global' => 'グローバル',

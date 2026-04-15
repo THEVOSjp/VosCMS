@@ -133,6 +133,7 @@ return [
             'dashboard' => 'Dasbor',
             'reservations' => 'Reservasi',
             'profile' => 'Profil',
+            'services' => 'Manajemen Layanan',
             'settings' => 'Pengaturan',
             'password' => 'Ubah Kata Sandi',
             'withdraw' => 'Hapus Akun',
@@ -153,6 +154,7 @@ return [
 
     // Profile
     'profile' => [
+            'services' => 'Manajemen Layanan',
         'title' => 'Profil',
         'description' => 'Informasi profil saya.',
         'edit_title' => 'Edit Profil',

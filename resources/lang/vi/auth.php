@@ -133,6 +133,7 @@ return [
             'dashboard' => 'Bảng điều khiển',
             'reservations' => 'Đặt chỗ',
             'profile' => 'Hồ sơ',
+            'services' => 'Quản lý dịch vụ',
             'settings' => 'Cài đặt',
             'password' => 'Đổi mật khẩu',
             'withdraw' => 'Xóa tài khoản',
@@ -153,6 +154,7 @@ return [
 
     // Profile
     'profile' => [
+            'services' => 'Quản lý dịch vụ',
         'title' => 'Hồ sơ',
         'description' => 'Thông tin hồ sơ của tôi.',
         'edit_title' => 'Chỉnh sửa hồ sơ',

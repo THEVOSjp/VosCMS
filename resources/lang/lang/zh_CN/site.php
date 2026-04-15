@@ -183,6 +183,7 @@ return [
         'refund_policy' => '取消退款政策',
         'tokushoho' => '特定商业交易法标示', 'funds_settlement' => '资金结算法标示',
         'staff_intro' => '员工介绍', 'booking' => '预约', 'lookup' => '预约查询',
+        'service_order' => '服务申请',
         'refund' => ['editor_title' => '取消退款政策编辑', 'editor_desc' => '创建和管理取消及退款相关政策。'],
         'terms_edit' => ['editor_title' => '编辑服务条款', 'editor_desc' => '创建和管理服务条款。'],
         'privacy_edit' => ['editor_title' => '编辑隐私政策', 'editor_desc' => '创建和管理隐私政策。'],

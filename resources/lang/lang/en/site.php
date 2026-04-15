@@ -173,6 +173,7 @@ return [
         'refund_policy' => 'Cancellation & Refund Policy',
         'tokushoho' => 'Commercial Transactions Act', 'funds_settlement' => 'Funds Settlement Act',
         'staff_intro' => 'Staff', 'booking' => 'Book Now', 'lookup' => 'Reservation Lookup',
+        'service_order' => 'Service Order',
         'refund' => ['editor_title' => 'Cancellation & Refund Policy Editor', 'editor_desc' => 'Create and manage your cancellation and refund policies.'],
         'terms_edit' => ['editor_title' => 'Edit Terms of Service', 'editor_desc' => 'Create and manage your terms of service.'],
         'privacy_edit' => ['editor_title' => 'Edit Privacy Policy', 'editor_desc' => 'Create and manage your privacy policy.'],

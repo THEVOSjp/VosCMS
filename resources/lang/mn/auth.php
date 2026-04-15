@@ -133,6 +133,7 @@ return [
             'dashboard' => 'Хянах самбар',
             'reservations' => 'Захиалгууд',
             'profile' => 'Профайл',
+            'services' => 'Үйлчилгээний удирдлага',
             'settings' => 'Тохиргоо',
             'password' => 'Нууц үг солих',
             'withdraw' => 'Бүртгэл устгах',
@@ -153,6 +154,7 @@ return [
 
     // Profile
     'profile' => [
+            'services' => 'Үйлчилгээний удирдлага',
         'title' => 'Профайл',
         'description' => 'Миний профайл мэдээлэл.',
         'edit_title' => 'Профайл засах',

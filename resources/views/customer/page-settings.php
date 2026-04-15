@@ -11,6 +11,12 @@ if (empty($_SESSION['admin_id'])) {
 
 $_GET['slug'] = $pageSlug;
 $_GET['embed'] = '1';
+
+// POST 요청 시 HTML 래퍼 없이 바로 처리 (JSON 응답)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    include BASE_PATH . '/resources/views/admin/site/pages-settings.php';
+    return;
+}
 ?>
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
     <div class="mb-4">

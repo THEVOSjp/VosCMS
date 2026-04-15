@@ -135,6 +135,7 @@ return [
             'dashboard' => 'ダッシュボード',
             'reservations' => '予約履歴',
             'profile' => 'プロフィール',
+            'services' => 'サービス管理',
             'settings' => '設定',
             'password' => 'パスワード変更',
             'withdraw' => '退会',
@@ -155,6 +156,7 @@ return [
 
     // プロフィール
     'profile' => [
+            'services' => 'サービス管理',
         'title' => 'プロフィール',
         'description' => 'プロフィール情報です。',
         'edit_title' => 'プロフィール編集',

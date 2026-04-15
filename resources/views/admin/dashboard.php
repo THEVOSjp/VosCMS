@@ -16,7 +16,8 @@ try {
     $pdo = new PDO(
         "mysql:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_DATABASE']};charset=utf8mb4",
         $_ENV['DB_USERNAME'],
-        $_ENV['DB_PASSWORD']
+        $_ENV['DB_PASSWORD'],
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
     $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
 
@@ -50,15 +51,27 @@ try {
     $totalPages = 0;
     try { $totalPages = $pdo->query("SELECT COUNT(*) FROM {$prefix}page_contents WHERE is_active = 1")->fetchColumn(); } catch (\PDOException $e) {}
 
-    // VosCMS 전체 설치 수 (라이선스 서버에서)
+    // VosCMS 전체 설치 수 (라이선스 서버 API에서 가져오기, 1시간 캐시)
     $totalInstalls = 0;
-    try {
-        $hasLicenseTable = false;
-        try { $pdo->query("SELECT 1 FROM vcs_licenses LIMIT 0"); $hasLicenseTable = true; } catch (\PDOException $e) {}
-        if ($hasLicenseTable) {
-            $totalInstalls = (int) $pdo->query("SELECT COUNT(*) FROM vcs_licenses WHERE status = 'active'")->fetchColumn();
-        }
-    } catch (\PDOException $e) {}
+    $_statsCacheFile = BASE_PATH . '/storage/cache/voscms_stats.json';
+    $_statsCacheValid = file_exists($_statsCacheFile) && (filemtime($_statsCacheFile) > time() - 3600);
+    if ($_statsCacheValid) {
+        $_statsData = json_decode(file_get_contents($_statsCacheFile), true) ?: [];
+        $totalInstalls = (int)($_statsData['active_installs'] ?? 0);
+    } else {
+        try {
+            $_statsServer = $_ENV['LICENSE_SERVER'] ?? 'https://vos.21ces.com/api';
+            $_statsServer = preg_replace('#/api$#', '', $_statsServer);
+            $_statsCtx = stream_context_create(['http' => ['timeout' => 5, 'follow_location' => 1, 'max_redirects' => 3]]);
+            $_statsRaw = @file_get_contents($_statsServer . '/api/license/stats', false, $_statsCtx);
+            if ($_statsRaw) {
+                $_statsData = json_decode($_statsRaw, true) ?: [];
+                $totalInstalls = (int)($_statsData['active_installs'] ?? 0);
+                @mkdir(BASE_PATH . '/storage/cache', 0775, true);
+                @file_put_contents($_statsCacheFile, json_encode($_statsData));
+            }
+        } catch (\Throwable $e) {}
+    }
 
     // Load settings for language selector
     $stmt = $pdo->query("SELECT `key`, `value` FROM {$prefix}settings");
@@ -515,19 +528,24 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                         </h2>
                     </div>
                     <?php
-                    // VosCMS 원격 공지 (캐시: 1시간)
+                    // VosCMS 원격 공지 (캐시: 1시간, 로케일별)
+                    $_noticeLocale = $config['locale'] ?? 'ko';
                     $vosNotices = [];
-                    $vosCacheFile = BASE_PATH . '/storage/cache/voscms_notices.json';
+                    $vosCacheFile = BASE_PATH . '/storage/cache/voscms_notices_' . $_noticeLocale . '.json';
                     $vosCacheValid = file_exists($vosCacheFile) && (filemtime($vosCacheFile) > time() - 3600);
 
                     if ($vosCacheValid) {
                         $vosNotices = json_decode(file_get_contents($vosCacheFile), true) ?: [];
                     } else {
                         try {
-                            $ctx = stream_context_create(['http' => ['timeout' => 3]]);
-                            $remote = @file_get_contents('https://voscms.com/api/notices', false, $ctx);
+                            $_noticeServer = $_ENV['LICENSE_SERVER'] ?? 'https://vos.21ces.com/api';
+                            $_noticeServer = preg_replace('#/api$#', '', $_noticeServer);
+                            $_noticeUrl = $_noticeServer . '/api/notices?locale=' . urlencode($_noticeLocale) . '&limit=5';
+                            $ctx = stream_context_create(['http' => ['timeout' => 5, 'follow_location' => 1, 'max_redirects' => 3]]);
+                            $remote = @file_get_contents($_noticeUrl, false, $ctx);
                             if ($remote) {
                                 $vosNotices = json_decode($remote, true)['notices'] ?? [];
+                                @mkdir(BASE_PATH . '/storage/cache', 0775, true);
                                 @file_put_contents($vosCacheFile, json_encode($vosNotices));
                             }
                         } catch (\Throwable $e) {}
@@ -536,8 +554,7 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
                     // 원격 공지가 없으면 기본 메시지
                     if (empty($vosNotices)) {
                         $vosNotices = [
-                            ['title' => 'VosCMS v1.0.0 Released', 'date' => '2026-04-05', 'url' => 'https://voscms.com', 'type' => 'release'],
-                            ['title' => 'Plugin System Available', 'date' => '2026-04-05', 'url' => 'https://voscms.com', 'type' => 'feature'],
+                            ['title' => 'Welcome to VosCMS!', 'date' => date('Y-m-d'), 'url' => 'https://voscms.com', 'type' => 'release'],
                         ];
                     }
                     ?>

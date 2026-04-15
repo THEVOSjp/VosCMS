@@ -133,6 +133,7 @@ return [
             'dashboard' => '대시보드',
             'reservations' => '예약 내역',
             'profile' => '프로필',
+            'services' => '서비스 관리',
             'settings' => '설정',
             'password' => '비밀번호 변경',
             'messages' => '메시지',

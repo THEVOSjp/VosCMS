@@ -15,6 +15,8 @@
  *   type     - 'widget' | 'document' | 'system'
  *   edit     - 편집 URL ({admin} = 관리자 경로 치환)
  *   view     - 시스템 페이지 뷰 파일 (type=system일 때)
+ *   settings_view - 관리자 페이지 설정에 추가 탭으로 표시할 뷰 파일 (선택)
+ *   settings_tab  - 추가 탭 라벨 번역 키 (선택, 없으면 '서비스 설정')
  */
 return [
     // ── 코어 페이지 ──
@@ -92,5 +94,18 @@ return [
         'type' => 'system',
         'view' => 'system/service/order.php',
         'edit' => '/service/order',
+        'settings_view' => 'system/service/_settings.php',
+        'settings_tab' => 'site.pages.tab_service',
+    ],
+    // 결제 완료 페이지 (페이지 관리 목록에 숨김, 라우팅용)
+    [
+        'slug' => 'service/order/complete',
+        'title' => 'site.pages.service_complete',
+        'icon' => 'M5 13l4 4L19 7',
+        'emoji' => '✅',
+        'color' => 'green',
+        'type' => 'system',
+        'view' => 'system/service/complete.php',
+        'hidden' => true,
     ],
 ];

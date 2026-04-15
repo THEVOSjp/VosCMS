@@ -133,6 +133,7 @@ return [
             'dashboard' => 'Панель управления',
             'reservations' => 'Бронирования',
             'profile' => 'Профиль',
+            'services' => 'Управление услугами',
             'settings' => 'Настройки',
             'password' => 'Изменить пароль',
             'withdraw' => 'Удалить аккаунт',
@@ -153,6 +154,7 @@ return [
 
     // Profile
     'profile' => [
+            'services' => 'Управление услугами',
         'title' => 'Профиль',
         'description' => 'Мои данные профиля.',
         'edit_title' => 'Редактирование профиля',

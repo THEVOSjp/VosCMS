@@ -133,6 +133,7 @@ return [
             'dashboard' => '仪表板',
             'reservations' => '预约',
             'profile' => '个人资料',
+            'services' => '服务管理',
             'settings' => '设置',
             'password' => '修改密码',
             'withdraw' => '注销账户',
@@ -153,6 +154,7 @@ return [
 
     // Profile
     'profile' => [
+            'services' => '服务管理',
         'title' => '个人资料',
         'description' => '我的个人资料信息。',
         'edit_title' => '编辑个人资料',
