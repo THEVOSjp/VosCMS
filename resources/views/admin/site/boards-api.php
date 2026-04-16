@@ -424,18 +424,25 @@ if ($action === 'extra_var_add') {
         echo json_encode(['success' => false, 'message' => '필수 항목을 입력해주세요.']);
         exit;
     }
-    $maxSort = $pdo->prepare("SELECT MAX(sort_order) FROM {$prefix}board_extra_vars WHERE board_id = ?");
-    $maxSort->execute([$boardId]);
-    $nextSort = ((int)$maxSort->fetchColumn()) + 1;
+    try {
+        $maxSort = $pdo->prepare("SELECT MAX(sort_order) FROM {$prefix}board_extra_vars WHERE board_id = ?");
+        $maxSort->execute([$boardId]);
+        $nextSort = ((int)$maxSort->fetchColumn()) + 1;
 
-    $stmt = $pdo->prepare("INSERT INTO {$prefix}board_extra_vars (board_id, var_name, var_type, title, description, options, default_value, is_required, is_searchable, is_shown_in_list, sort_order) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
-    $stmt->execute([
-        $boardId, $varName, $_POST['var_type'] ?? 'text', $title,
-        $_POST['description'] ?? '', $_POST['options'] ?? '', $_POST['default_value'] ?? '',
-        (int)($_POST['is_required'] ?? 0), (int)($_POST['is_searchable'] ?? 0), (int)($_POST['is_shown_in_list'] ?? 0),
-        $nextSort
-    ]);
-    echo json_encode(['success' => true, 'message' => '확장 변수가 추가되었습니다.', 'ev_id' => $pdo->lastInsertId()]);
+        $optionsRaw = trim($_POST['options'] ?? '');
+        $optionsJson = ($optionsRaw !== '' && json_decode($optionsRaw) !== null) ? $optionsRaw : null;
+
+        $stmt = $pdo->prepare("INSERT INTO {$prefix}board_extra_vars (board_id, var_name, var_type, title, description, options, default_value, is_required, is_searchable, is_shown_in_list, sort_order) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+        $stmt->execute([
+            $boardId, $varName, $_POST['var_type'] ?? 'text', $title,
+            $_POST['description'] ?? '', $optionsJson, $_POST['default_value'] ?? '',
+            (int)($_POST['is_required'] ?? 0), (int)($_POST['is_searchable'] ?? 0), (int)($_POST['is_shown_in_list'] ?? 0),
+            $nextSort
+        ]);
+        echo json_encode(['success' => true, 'message' => '확장 변수가 추가되었습니다.', 'ev_id' => $pdo->lastInsertId()]);
+    } catch (\PDOException $e) {
+        echo json_encode(['success' => false, 'message' => 'DB Error: ' . $e->getMessage()]);
+    }
     exit;
 }
 
@@ -447,14 +454,21 @@ if ($action === 'extra_var_update') {
         echo json_encode(['success' => false, 'message' => '필수 항목을 입력해주세요.']);
         exit;
     }
-    $stmt = $pdo->prepare("UPDATE {$prefix}board_extra_vars SET var_type=?, title=?, description=?, options=?, default_value=?, is_required=?, is_searchable=?, is_shown_in_list=? WHERE id=?");
-    $stmt->execute([
-        $_POST['var_type'] ?? 'text', $title,
-        $_POST['description'] ?? '', $_POST['options'] ?? '', $_POST['default_value'] ?? '',
-        (int)($_POST['is_required'] ?? 0), (int)($_POST['is_searchable'] ?? 0), (int)($_POST['is_shown_in_list'] ?? 0),
-        $evId
-    ]);
-    echo json_encode(['success' => true, 'message' => '확장 변수가 수정되었습니다.']);
+    try {
+        $optionsRaw = trim($_POST['options'] ?? '');
+        $optionsJson = ($optionsRaw !== '' && json_decode($optionsRaw) !== null) ? $optionsRaw : null;
+
+        $stmt = $pdo->prepare("UPDATE {$prefix}board_extra_vars SET var_type=?, title=?, description=?, options=?, default_value=?, is_required=?, is_searchable=?, is_shown_in_list=? WHERE id=?");
+        $stmt->execute([
+            $_POST['var_type'] ?? 'text', $title,
+            $_POST['description'] ?? '', $optionsJson, $_POST['default_value'] ?? '',
+            (int)($_POST['is_required'] ?? 0), (int)($_POST['is_searchable'] ?? 0), (int)($_POST['is_shown_in_list'] ?? 0),
+            $evId
+        ]);
+        echo json_encode(['success' => true, 'message' => '확장 변수가 수정되었습니다.']);
+    } catch (\PDOException $e) {
+        echo json_encode(['success' => false, 'message' => 'DB Error: ' . $e->getMessage()]);
+    }
     exit;
 }
 

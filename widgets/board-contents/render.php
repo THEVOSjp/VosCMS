@@ -40,7 +40,7 @@ if ($boardSlug) {
             if ($showImage && !empty($posts)) {
                 $postIds = array_column($posts, 'id');
                 $ph = implode(',', array_fill(0, count($postIds), '?'));
-                $fStmt = $pdo->prepare("SELECT post_id, file_path FROM {$prefix}board_files WHERE post_id IN ({$ph}) AND file_type LIKE 'image/%' ORDER BY id ASC");
+                $fStmt = $pdo->prepare("SELECT post_id, file_path FROM {$prefix}board_files WHERE post_id IN ({$ph}) AND mime_type LIKE 'image/%' ORDER BY id ASC");
                 $fStmt->execute($postIds);
                 $fileMap = [];
                 while ($f = $fStmt->fetch(\PDO::FETCH_ASSOC)) {

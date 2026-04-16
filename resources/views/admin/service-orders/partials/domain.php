@@ -25,12 +25,7 @@ $fst = $statusLabels[$firstSub['status']] ?? ['알 수 없음', 'bg-gray-100 tex
 
 // 네임서버 정보 (주문 metadata 또는 시스템 설정)
 $orderMeta = json_decode($firstSub['metadata'] ?? '{}', true) ?: [];
-$nameservers = $orderMeta['nameservers'] ?? [
-    ['host' => 'ns.21ces.kr', 'ip' => ''],
-    ['host' => 'ns1.21ces.kr', 'ip' => ''],
-    ['host' => 'ns2.21ces.kr', 'ip' => ''],
-    ['host' => 'ns3.21ces.kr', 'ip' => ''],
-];
+$nameservers = $orderMeta['nameservers'] ?? [];
 ?>
 
 <!-- 도메인 연결 정보 -->

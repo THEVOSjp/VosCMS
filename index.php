@@ -36,6 +36,15 @@ if (session_status() === PHP_SESSION_NONE) {
     // 세션 수명: .env SESSION_LIFETIME (분) 또는 기본 7일
     $_sessionLifetime = ((int)($_ENV['SESSION_LIFETIME'] ?? 0) ?: 10080) * 60; // 분→초
     ini_set('session.gc_maxlifetime', (string)$_sessionLifetime);
+
+    // 전용 세션 디렉토리 (OS phpsessionclean cron의 24분 GC 회피)
+    $_sessionDir = __DIR__ . '/storage/sessions';
+    if (!is_dir($_sessionDir)) { @mkdir($_sessionDir, 0770, true); }
+    ini_set('session.save_path', $_sessionDir);
+    // VosCMS 자체 GC: 1/100 확률로 만료 세션 정리
+    ini_set('session.gc_probability', '1');
+    ini_set('session.gc_divisor', '100');
+
     session_set_cookie_params([
         'lifetime' => $_sessionLifetime,
         'path'     => '/',

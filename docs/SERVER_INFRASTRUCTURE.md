@@ -245,25 +245,88 @@ POST https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records
 
 ## 7. 자동 프로비저닝 워크플로우
 
-### 고객 주문 → 서비스 활성화 (자동)
+### 원칙
+- **서브도메인 우선**: 결제 즉시 무료 서브도메인으로 서비스 시작
+- **구입 도메인은 후속 작업**: DNS 전파(24~48시간)를 기다리지 않음
+- **고객 대기 시간 0**: 결제 완료 → 즉시 사이트 접속 가능
+
+### 프로비저닝 ID 규칙
+```
+무료 도메인 신청 시: 고객이 입력한 서브도메인명
+  예) myshop.21ces.net → ID: myshop
+
+도메인 구입 신청 시: 구입 도메인의 SLD (Second Level Domain)
+  예) myshop.com → ID: myshop
+  예) neitpat.co.kr → ID: neitpat
+
+프로비저닝 기준:
+  - Nginx vhost 이름
+  - PHP-FPM pool 이름
+  - MySQL DB명 / 유저명
+  - Linux 유저명
+  - FTP 아이디
+  모두 이 ID를 기준으로 생성
+```
+
+### Step 1: 즉시 프로비저닝 (결제 완료 직후)
 ```
 1. 고객: 서비스 신청 + 결제 완료
    └→ rzx_orders.status = 'paid'
+   └→ 프로비저닝 ID 결정: 신청 서브도메인명 또는 구입 도메인 SLD
 
-2. VosCMS (서버 1):
-   ├→ Cloudflare API: DNS 레코드 생성 (A, MX, CNAME, SPF, DKIM)
-   ├→ 서버 2 제어 API:
-   │   ├→ 호스팅 계정 생성 (Linux 유저, nginx vhost, PHP-FPM pool)
-   │   ├→ DB 생성 (MySQL DB + 유저)
-   │   ├→ 메일 계정 생성 (Mailcow API × 계정 수)
-   │   └→ VosCMS 자동 설치 (파일 복사 + DB 초기화 + 설정)
+2. 무료 서브도메인 기반 자동 설정 (즉시):
+   ├→ Cloudflare: 설정 불필요 (*.21ces.net 와일드카드 터널 등록 완료)
+   ├→ Nginx: vhost 생성 (server_name {subdomain}.21ces.net)
+   ├→ PHP-FPM: 고객 전용 pool 생성 ({id})
+   ├→ MySQL: DB + 유저 자동 생성 ({id})
+   ├→ VosCMS: 파일 복사 + DB 초기화 + .env 설정
+   ├→ Mailcow API: 메일 도메인 + 계정 생성
+   ├→ SSL: Cloudflare Universal SSL (서브도메인 즉시 적용)
    └→ rzx_orders.status = 'active'
 
-3. 고객에게 알림 메일 발송:
-   ├→ 사이트 URL, 관리자 로그인 정보
+3. 서버 접속정보 자동 저장:
+   ├→ subscription.metadata.server.ftp = { host, ip, user, port }
+   ├→ subscription.metadata.server.db = { host, name, user }
+   ├→ subscription.metadata.server.env = { php, mysql }
+   └→ 마이페이지에 즉시 반영
+
+4. 고객에게 알림 메일 발송:
+   ├→ https://{subdomain}.21ces.net 접속 가능
+   ├→ 관리자 로그인 정보
+   ├→ FTP/DB 접속정보
    ├→ 메일 계정 정보 (웹메일 URL)
    └→ 기본 사용 가이드
 ```
+
+### Step 2: 구입 도메인 연결 (비동기, 후속 작업)
+```
+※ 도메인 구입 신청이 포함된 경우에만 실행
+
+1. Cloudflare API: 새 Zone 추가 (customer.com)
+   └→ 응답에서 NS 자동 수신 (예: brett.ns.cloudflare.com, kara.ns.cloudflare.com)
+
+2. NS 정보를 metadata에 자동 저장
+   └→ 마이페이지 도메인 탭에 즉시 표시
+
+3. 고객에게 NS 변경 안내 메일 발송
+   └→ "도메인 등록처에서 네임서버를 변경해주세요"
+
+4. DNS 전파 대기 (24~48시간)
+   └→ Cloudflare Zone 상태 모니터링 (status: pending → active)
+
+5. 전파 완료 후:
+   ├→ Cloudflare: A, MX, CNAME, SPF, DKIM, DMARC 레코드 설정
+   ├→ Nginx: vhost에 server_name 추가 (기존 서브도메인 + 구입 도메인)
+   ├→ Mailcow: 구입 도메인 메일 도메인 추가
+   └→ 주문의 메인 도메인 업데이트 (서브도메인 → 구입 도메인)
+```
+
+### 도메인 우선순위
+```
+결제 직후:  {subdomain}.21ces.net (메인) ← 즉시 접속 가능
+DNS 전파 후: customer.com (메인) + {subdomain}.21ces.net (보조)
+```
+서브도메인은 삭제하지 않고 보조 도메인으로 유지 → 구입 도메인 만료 시에도 접속 가능.
 
 ### 마이페이지 서비스 변경 (자동)
 ```
@@ -278,13 +341,17 @@ POST https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records
 
 호스팅 용량 추가:
   → PAY.JP 추가 결제 (차액)
-  → 서버 2 API (quota 변경)
+  → 서버 quota 변경
   → DB 구독 금액 업데이트
 
 호스팅 플랜 변경:
   → PAY.JP 차액 계산 + 결제/환불
-  → 서버 2 API (vhost + quota + PHP 설정 변경)
+  → vhost + quota + PHP 설정 변경
   → DB 구독 전체 업데이트
+
+도메인 추가 연결:
+  → Cloudflare Zone 추가 + NS 안내
+  → DNS 전파 후 vhost 업데이트
 
 도메인 연장:
   → PAY.JP 결제
