@@ -200,7 +200,7 @@ var WBEdit = (function() {
                 boardList.forEach(function(b) { h += '<option value="' + esc(b.slug) + '"' + (b.slug === String(val) ? ' selected' : '') + '>' + esc(b.title) + ' (' + esc(b.slug) + ')</option>'; });
                 h += '</select>';
                 break;
-            case 'image': var imgUrl = String(val || ''); h += '<div class="image-upload-wrap" data-key="' + f.key + '">'; if (imgUrl) h += '<div class="relative mb-2 inline-block"><img src="' + esc(imgUrl) + '" class="h-20 rounded-lg object-cover border border-zinc-200 dark:border-zinc-600"><button type="button" class="img-remove absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600">&times;</button></div>'; h += '<div class="flex gap-2"><label class="px-2.5 py-1.5 bg-blue-600 text-white text-[11px] rounded-lg cursor-pointer hover:bg-blue-700 transition inline-flex items-center"><svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Upload<input type="file" class="img-file-input hidden" accept="image/*"></label><input type="text" class="edit-field flex-1 px-2 py-1.5 border border-zinc-200 dark:border-zinc-600 rounded-lg text-[11px] bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white" data-key="' + f.key + '" value="' + esc(imgUrl) + '" placeholder="or paste URL"></div></div>'; break;
+            case 'image': var imgUrl = String(val || ''); h += '<div class="image-upload-wrap" data-key="' + f.key + '">'; if (imgUrl) h += '<div class="img-preview-wrap relative mb-2 inline-block"><img src="' + esc(imgUrl) + '" class="h-20 rounded-lg object-cover border border-zinc-200 dark:border-zinc-600"><button type="button" class="img-remove absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600">&times;</button></div>'; h += '<div class="flex gap-2"><label class="px-2.5 py-1.5 bg-blue-600 text-white text-[11px] rounded-lg cursor-pointer hover:bg-blue-700 transition inline-flex items-center"><svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Upload<input type="file" class="img-file-input hidden" accept="image/*"></label><input type="text" class="edit-field flex-1 px-2 py-1.5 border border-zinc-200 dark:border-zinc-600 rounded-lg text-[11px] bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white" data-key="' + f.key + '" value="' + esc(imgUrl) + '" placeholder="or paste URL"></div></div>'; break;
             case 'video':
                 var vidUrl = String(val || '');
                 var isUrl = vidUrl && (vidUrl.startsWith('http') || vidUrl.startsWith('//'));
@@ -247,29 +247,58 @@ var WBEdit = (function() {
         return h + '</div>';
     }
 
+    // ===== 업로드 상태 표시 헬퍼 =====
+    function showUploadStatus(wrap, type, message) {
+        var existing = wrap.querySelector('.upload-status');
+        if (existing) existing.remove();
+        var el = document.createElement('div');
+        el.className = 'upload-status flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium mt-2 ' +
+            (type === 'loading' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' :
+             type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' :
+             'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400');
+        if (type === 'loading') {
+            el.innerHTML = '<svg class="animate-spin w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>' + esc(message);
+        } else if (type === 'success') {
+            el.innerHTML = '<svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>' + esc(message);
+            setTimeout(function() { if (el.parentNode) el.remove(); }, 3000);
+        } else {
+            el.innerHTML = '<svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' + esc(message);
+            setTimeout(function() { if (el.parentNode) el.remove(); }, 5000);
+        }
+        wrap.appendChild(el);
+    }
+
     // ===== 이미지 업로드 / 범위 =====
     function bindImageUploads() {
         editPanel.querySelectorAll('.image-upload-wrap').forEach(function(wrap) {
             var key = wrap.dataset.key, fileInput = wrap.querySelector('.img-file-input'), removeBtn = wrap.querySelector('.img-remove');
             if (fileInput) fileInput.addEventListener('change', function() {
                 if (!this.files[0]) return;
-                var fd = new FormData(); fd.append('action', 'upload_widget_image'); fd.append('image', this.files[0]);
+                var file = this.files[0];
+                showUploadStatus(wrap, 'loading', 'Uploading ' + file.name + '...');
+                var fd = new FormData(); fd.append('action', 'upload_widget_image'); fd.append('image', file);
                 fetch(window.location.href, { method: 'POST', body: fd }).then(function(r) { return r.json(); }).then(function(data) {
                     if (data.success && data.url) {
                         editTempConfig[key] = data.url;
                         var urlInput = wrap.querySelector('.edit-field[data-key="' + key + '"]'); if (urlInput) urlInput.value = data.url;
-                        var existing = wrap.querySelector('img');
-                        if (existing) { existing.src = data.url; } else {
-                            var p = document.createElement('div'); p.className = 'relative mb-2 inline-block';
+                        var existing = wrap.querySelector('.img-preview-wrap');
+                        if (existing) { existing.querySelector('img').src = data.url; } else {
+                            var p = document.createElement('div'); p.className = 'img-preview-wrap relative mb-2 inline-block';
                             p.innerHTML = '<img src="' + esc(data.url) + '" class="h-20 rounded-lg object-cover border border-zinc-200 dark:border-zinc-600"><button type="button" class="img-remove absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600">&times;</button>';
                             wrap.insertBefore(p, wrap.firstChild); bindImageUploads();
                         }
+                        showUploadStatus(wrap, 'success', 'Upload complete');
+                    } else {
+                        showUploadStatus(wrap, 'error', 'Upload failed: ' + (data.message || 'Unknown error'));
                     }
-                }).catch(function(err) { console.error('[WYSIWYG] Upload error:', err); });
+                }).catch(function(err) {
+                    console.error('[WYSIWYG] Upload error:', err);
+                    showUploadStatus(wrap, 'error', 'Upload error: ' + err.message);
+                });
             });
             if (removeBtn) removeBtn.addEventListener('click', function() {
                 editTempConfig[key] = ''; var urlInput = wrap.querySelector('.edit-field[data-key="' + key + '"]'); if (urlInput) urlInput.value = '';
-                var imgWrap = removeBtn.closest('.relative'); if (imgWrap) imgWrap.remove();
+                var imgWrap = removeBtn.closest('.img-preview-wrap') || removeBtn.closest('.relative'); if (imgWrap) imgWrap.remove();
             });
         });
     }
@@ -538,6 +567,7 @@ var WBEdit = (function() {
         get editTempConfig() { return editTempConfig; },
         set editTempConfig(v) { editTempConfig = v; },
         esc: esc,
+        showUploadStatus: showUploadStatus,
         // items-js에서 설정하는 함수 슬롯
         renderHeroImagesSection: null,
         bindHeroImagesEvents: null,

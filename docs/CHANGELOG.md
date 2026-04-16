@@ -4,6 +4,20 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.1.1-hotfix] - 2026-04-16
+
+### Fixed
+- **푸터 메뉴 404 오류** — `rzx_page_contents` 테이블에 법적 문서 페이지(terms, privacy, refund-policy, data-policy, tokushoho, funds-settlement) 데이터 누락 → test DB에서 원본 복구
+- **위젯 빌더 이미지/동영상 업로드 실패** — 프론트 래퍼(`page-widget-builder.php`)에서 `FormData` POST가 AJAX 핸들러로 전달되지 않는 문제 수정 (파일 업로드 조건 추가 + `ob_end_clean`/`exit` 처리)
+- **업로드 디렉토리 권한** — `storage/uploads/widgets/` 소유자를 `www-data`로 변경하여 PHP-FPM 쓰기 권한 확보
+
+### Added
+- **서비스 신청 메뉴 다국어** — `rzx_translations` 테이블에 `menu_item.19.title` 13개 언어 번역 추가
+- **히어로 CTA 위젯 다국어** — Dev 페이지 히어로 배너의 title, subtitle, button text에 13개 언어 번역 적용
+- **업로드 상태 프리뷰** — 이미지/동영상 업로드 시 진행 상태(스피너), 성공(체크), 실패(에러 메시지) 시각적 피드백 추가
+
+---
+
 ## [VosCMS 2.1.1] - 2026-04-12
 
 ### Added — 설치 마법사 다국어

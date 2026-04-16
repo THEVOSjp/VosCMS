@@ -14,11 +14,16 @@ $_GET['embed'] = '1';
 ?>
 <?php
 // AJAX 요청은 직접 처리 (래퍼 HTML 출력 없이)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+// X-Requested-With (JSON AJAX) 또는 multipart/form-data (파일 업로드) 모두 처리
+$_isAjaxPost = !empty($_SERVER['HTTP_X_REQUESTED_WITH']);
+$_isFileUpload = !empty($_POST['action']) && str_starts_with($_POST['action'], 'upload_widget_');
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_isAjaxPost || $_isFileUpload)) {
+    // ob_start() 내부에서 실행되므로 버퍼를 비우고 exit해야 JSON만 반환됨
+    if (ob_get_level()) ob_end_clean();
     $_GET['slug'] = $pageSlug;
     $_GET['embed'] = '1';
     include BASE_PATH . '/resources/views/admin/site/pages-widget-builder.php';
-    return;
+    exit;
 }
 
 // 페이지 제목 가져오기

@@ -197,38 +197,38 @@
             // 파일 업로드
             if (fileInput) fileInput.addEventListener('change', function() {
                 if (!this.files[0]) return;
+                var file = this.files[0];
                 var fd = new FormData();
                 fd.append('action', 'upload_widget_video');
-                fd.append('video', this.files[0]);
+                fd.append('video', file);
                 console.log('[WYSIWYG] Uploading video for:', key);
 
                 // 업로드 중 표시
                 var uploadSection = wrap.querySelector('.vid-upload-section');
                 var origLabel = uploadSection ? uploadSection.querySelector('label') : null;
                 if (origLabel) origLabel.innerHTML = '<svg class="animate-spin w-4 h-4 text-purple-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="text-[11px] text-zinc-600 dark:text-zinc-400">Uploading...</span>';
+                E.showUploadStatus(wrap, 'loading', 'Uploading ' + file.name + '...');
 
                 fetch(window.location.href, { method: 'POST', body: fd })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (data.success && data.url) {
                         E.editTempConfig[key] = data.url;
-                        // 업로드 URL 우선 적용 마킹
                         wrap.dataset.uploadedUrl = data.url;
-                        // URL 입력란 업데이트
                         var urlInput = wrap.querySelector('.edit-field[data-key="' + key + '"]');
                         if (urlInput) urlInput.value = data.url;
-                        // 프리뷰 갱신
                         updateVideoPreview(wrap, data.url);
+                        E.showUploadStatus(wrap, 'success', 'Upload complete');
                         console.log('[WYSIWYG] Video uploaded (priority over URL):', data.url);
                     } else {
                         console.error('[WYSIWYG] Video upload failed:', data.message);
-                        alert('Upload failed: ' + (data.message || 'Unknown error'));
+                        E.showUploadStatus(wrap, 'error', 'Upload failed: ' + (data.message || 'Unknown error'));
                     }
-                    // 업로드 버튼 복원
                     restoreUploadLabel(origLabel);
                 })
                 .catch(function(err) {
                     console.error('[WYSIWYG] Video upload error:', err);
+                    E.showUploadStatus(wrap, 'error', 'Upload error: ' + err.message);
                     restoreUploadLabel(origLabel);
                 });
             });
