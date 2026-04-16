@@ -1,7 +1,8 @@
 # VosCMS 서버 인프라 구축 계획서
 
 **작성일**: 2026-04-15
-**버전**: 1.0
+**최종 수정**: 2026-04-16
+**버전**: 1.1
 
 ---
 
@@ -97,15 +98,17 @@ VosCMS 서비스 신청 시스템의 자동 프로비저닝을 위한 서버 인
 |------|------|
 | CPU | Intel Xeon E5-2630 v4 (10코어 / 20쓰레드 @ 2.20GHz) |
 | RAM | 16GB DDR4 ECC |
-| OS 디스크 | NVMe 128GB |
-| 데이터 디스크 | HDD 4TB (메일 저장 + 백업) |
+| OS 디스크 | NVMe 256GB |
+| 메일 디스크 | SSD 2TB |
+| 백업 디스크 | HDD 8TB |
 | 네트워크 | 1Gbps |
 
 ### 디스크 구성
 | 디스크 | 마운트 | 용도 | 용량 |
 |--------|--------|------|------|
-| NVMe 128GB | `/` | OS + Docker + Mailcow 엔진 | 128GB |
-| HDD 4TB | `/data` | 메일 데이터 + 서버 1 백업 | 4TB |
+| NVMe 256GB | `/` | OS + Docker + Mailcow 엔진 + MariaDB + Redis | 256GB |
+| SSD 2TB | `/data/mail` | 메일 본문/첨부/maildir (빠른 I/O) | 2TB |
+| HDD 8TB | `/backup` | 메인서버 백업 + 메일 백업 + 아카이브 | 8TB |
 
 ### RAM 사용 예측 (16GB)
 | 구성 요소 | 사용량 |
@@ -325,7 +328,16 @@ scripts/
 
 ## 10. 구축 순서
 
-### Phase 1: 서버 2 기본 구축
+### Phase 0: 현재 서버 1대 올인원 (즉시 실행)
+1. SSD 2TB + HDD 8TB 장착
+2. 파티션 + 마운트 (/data, /backup) — UUID 기반
+3. MySQL datadir 이전 → /data/mysql
+4. Docker + Mailcow 설치 → /data/mail
+5. voscms.com DNS + SSL 설정
+6. 백업 크론 설정 → /backup
+7. 서비스 운영 시작
+
+### Phase 1: 서버 2 분리 (고객 50+ 이후)
 1. OS 설치 (Ubuntu 24.04 LTS)
 2. nginx + PHP-FPM + MySQL 설치
 3. Docker + Docker Compose 설치
@@ -413,7 +425,107 @@ scripts/
 | 네트워크 | 대역폭 포화 | Cloudflare CDN 활용 |
 | 메일 큐 | 발송 지연 | Rspamd 튜닝, 큐 모니터링 |
 
-## 12. 보안 고려사항
+## 12. 단계별 구축 실행 계획 (2026-04-16 확정)
+
+### Phase 0: 현재 서버 1대 운영 (즉시)
+
+SSD 2TB + HDD 8TB를 현재 서버에 장착하여 올인원 운영 시작.
+서버 2(메일/백업 전용)는 추후 분리.
+
+#### 디스크 구성
+
+```
+/dev/nvme0n1 (116GB)  — OS + 시스템
+/dev/sda (2TB SSD)    — 실시간 데이터 (빠른 I/O)
+  ├── /data/www/          ← 고객 웹사이트
+  ├── /data/mysql/        ← MySQL datadir 이전
+  └── /data/mail/         ← Mailcow Docker 데이터
+
+/dev/sdb (8TB HDD)    — 백업 + 아카이브
+  ├── /backup/daily/      ← 일일 백업 (최근 7일)
+  ├── /backup/weekly/     ← 주간 백업 (최근 4주)
+  ├── /backup/monthly/    ← 월간 백업 (최근 12개월)
+  └── /backup/archive/    ← 해지 고객 데이터 보관
+```
+
+#### 마운트 설정 (UUID 기반 — 디스크 이동 대비)
+
+```bash
+# UUID 확인
+blkid /dev/sda1
+blkid /dev/sdb1
+
+# /etc/fstab (장치명이 아닌 UUID 사용)
+UUID=xxxx-xxxx  /data    ext4  defaults,noatime  0  2
+UUID=yyyy-yyyy  /backup  ext4  defaults,noatime  0  2
+```
+
+> **중요**: UUID 기반 마운트이므로 HDD를 물리적으로 다른 서버에 장착해도
+> 포맷 없이 마운트만 하면 데이터 그대로 사용 가능.
+
+#### 현재 서버 리소스 현황
+
+| 항목 | 사양 | 사용량 |
+|---|---|---|
+| CPU | Xeon E5-2683 v4 (32쓰레드) | 여유 |
+| RAM | 64GB | 7GB 사용 / 55GB 여유 |
+| OS 디스크 | NVMe 116GB | 80GB 사용 / 31GB 잔여 |
+| 사이트 | 10개 | ~2.4GB |
+| MySQL | - | 185MB |
+
+#### 용량 예측 (SSD 2TB)
+
+| 용도 | 예상 용량 |
+|---|---|
+| 고객 사이트 100개 × 1GB | ~100GB |
+| Mailcow + 메일 계정 50개 × 10GB | ~500GB |
+| MySQL DB 전체 | ~50GB |
+| 여유 | ~1.3TB |
+
+#### 용량 예측 (HDD 8TB)
+
+| 용도 | 예상 용량 |
+|---|---|
+| 일일 백업 7일 × 200GB | ~1.4TB |
+| 주간 백업 4주 × 200GB | ~800GB |
+| 월간 백업 12개월 × 200GB | ~2.4TB |
+| 해지 고객 아카이브 | ~1TB |
+| 여유 | ~2.4TB |
+
+### 실행 순서
+
+```
+Step 1. SSD 2TB + HDD 8TB 장착
+Step 2. 파티션 생성 + ext4 포맷 + UUID 마운트
+Step 3. MySQL datadir → /data/mysql 이전
+Step 4. 고객 www → /data/www 심볼릭 링크 또는 이전
+Step 5. Docker 설치 + Mailcow → /data/mail
+Step 6. voscms.com DNS → 현재 서버 IP
+Step 7. Nginx vhost + Let's Encrypt SSL
+Step 8. 메일 DNS 설정 (MX, SPF, DKIM, DMARC)
+Step 9. 백업 크론 설정 (→ /backup)
+```
+
+### 디스크 분리 이동 계획 (추후 서버 2 투입 시)
+
+```
+현재 서버 (1대 운영)              →  서버 2 투입 후
+┌──────────────────────┐         ┌──────────────┐  ┌──────────────────┐
+│ NVMe 116GB (OS)      │         │ 서버 1       │  │ 서버 2           │
+│ SSD 2TB (/data)      │   →     │ NVMe (OS)    │  │ NVMe 256GB (OS)  │
+│ HDD 8TB (/backup)    │         │ SSD 2TB      │  │ SSD 2TB (신규)   │ ← 메일 데이터
+└──────────────────────┘         │ (웹/DB)      │  │ HDD 8TB          │ ← 물리 이동
+                                 └──────────────┘  │ (백업)           │
+                                                    └──────────────────┘
+```
+
+- HDD 8TB → 서버 2에 물리 이동 → UUID로 마운트 (포맷 불필요)
+- Mailcow Docker 데이터 → 서버 2 SSD로 마이그레이션
+- 서버 1은 SSD 2TB (웹/DB 전용)으로 경량화
+
+---
+
+## 13. 보안 고려사항
 
 - 서버 간 통신: API 토큰 + IP 화이트리스트
 - 고객 데이터: 암호화 저장 (AES-256, 기존 encrypt/decrypt 활용)

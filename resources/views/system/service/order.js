@@ -264,6 +264,23 @@ function checkSubdomain() {
     var val = (input?.value || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
     if (!val || val.length < 2) { result.innerHTML = '<p class="text-xs text-red-500">2자 이상 영문 소문자/숫자로 입력하세요.</p>'; result.classList.remove('hidden'); return; }
     input.value = val;
+    // 등록 불가 서브도메인 검증
+    // 패턴: test* (접두사), *admin (접미사), ns[n] (문자+숫자)
+    var blocked = (typeof svcBlockedSubs !== 'undefined') ? svcBlockedSubs : [];
+    var isBlocked = blocked.some(function(pattern) {
+        if (pattern.includes('[n]')) {
+            var prefix = pattern.replace('[n]', '');
+            return new RegExp('^' + prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\d+$').test(val);
+        }
+        if (pattern.endsWith('*')) return val.startsWith(pattern.slice(0, -1));
+        if (pattern.startsWith('*')) return val.endsWith(pattern.slice(1));
+        return val === pattern;
+    });
+    if (isBlocked) {
+        result.innerHTML = '<p class="text-xs text-red-500"><strong>' + val + '</strong>은(는) 사용할 수 없는 서브도메인입니다.</p>';
+        result.classList.remove('hidden');
+        return;
+    }
     // TODO: 실제 구현 시 서버 API로 중복 확인
     var freeSuffix = getFreeDomainSuffix();
     result.innerHTML = '<p class="text-xs text-green-600 flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><strong>' + val + '.' + freeSuffix + '</strong> 사용 가능합니다.</p>';
