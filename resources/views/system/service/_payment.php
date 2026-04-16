@@ -68,8 +68,13 @@
                 var btn = document.getElementById('btnSubmitOrder');
                 var agree = document.getElementById('agreeTerms');
                 var payment = document.querySelector('input[name="payment"]:checked')?.value;
+                var paymentSection = document.querySelector('input[name="payment"]')?.closest('section');
+                var isFree = paymentSection && paymentSection.classList.contains('hidden');
                 if (!btn) return;
-                if (payment === 'bank') {
+                if (isFree) {
+                    // 무료: 약관 동의만
+                    btn.disabled = !(agree && agree.checked);
+                } else if (payment === 'bank') {
                     btn.disabled = !(agree && agree.checked);
                 } else {
                     btn.disabled = !(_cardReady.number && _cardReady.expiry && _cardReady.cvc && agree && agree.checked);
@@ -139,12 +144,6 @@
             </div>
         </div>
 
-        <!-- 약관 동의 -->
-        <div class="mt-4 flex items-start gap-2">
-            <input type="checkbox" id="agreeTerms" name="agree_terms" class="mt-1 text-blue-600 rounded" onchange="if(typeof updateSubmitButton==='function')updateSubmitButton()">
-            <p class="text-xs text-gray-500 dark:text-zinc-400"><a href="<?= $baseUrl ?>/terms" class="text-blue-600 hover:underline">이용약관</a> 및 <a href="<?= $baseUrl ?>/privacy" class="text-blue-600 hover:underline">개인정보처리방침</a>에 동의합니다.</p>
-        </div>
-
         <?php if ($_payTestMode): ?>
         <div class="mt-3 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
             <p class="text-[10px] text-amber-700 dark:text-amber-300 text-center">⚠ 테스트 모드 — 실제 결제가 이루어지지 않습니다</p>
@@ -154,6 +153,12 @@
         <?php endif; ?>
     </div>
 </section>
+
+<!-- 약관 동의 (결제 섹션과 독립 — 무료 주문에서도 표시) -->
+<div class="mt-4 flex items-start gap-2 px-6">
+    <input type="checkbox" id="agreeTerms" name="agree_terms" class="mt-1 text-blue-600 rounded" onchange="if(typeof updateSubmitButton==='function')updateSubmitButton()">
+    <p class="text-xs text-gray-500 dark:text-zinc-400"><a href="<?= $baseUrl ?>/terms" class="text-blue-600 hover:underline">이용약관</a> 및 <a href="<?= $baseUrl ?>/privacy" class="text-blue-600 hover:underline">개인정보처리방침</a>에 동의합니다.</p>
+</div>
 
 <script>
 function selectPayment(type) {

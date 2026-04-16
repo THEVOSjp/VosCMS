@@ -463,7 +463,7 @@ try {
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400"><?= htmlspecialchars($m['email']) ?></td>
-                                    <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400"><?= htmlspecialchars($m['phone'] ?? '-') ?></td>
+                                    <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400"><?= htmlspecialchars(!empty($m['phone']) ? format_phone($m['phone']) : '-') ?></td>
                                     <td class="px-4 py-3">
                                         <?php if ($grade): ?>
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium" style="background-color: <?= htmlspecialchars($grade['color']) ?>20; color: <?= htmlspecialchars($grade['color']) ?>">

@@ -253,6 +253,9 @@ if ($selectedMaint) {
 require_once BASE_PATH . '/rzxlib/Core/Helpers/Encryption.php';
 require_once BASE_PATH . '/rzxlib/Core/Helpers/functions.php';
 
+$encMailAccounts = [];
+$encBizmailAccounts = [];
+
 if (!empty($mailAccounts)) {
     $encMailAccounts = array_map(function($m) {
         return ['address' => $m['address'] ?? '', 'password' => encrypt($m['password'] ?? '')];
@@ -265,6 +268,206 @@ if (!empty($bizmailAccounts)) {
         return ['address' => $m['address'] ?? '', 'password' => encrypt($m['password'] ?? '')];
     }, $bizmailAccounts);
     $items[] = ['type' => 'mail_business', 'label' => '비즈니스 메일', 'qty' => count($bizmailAccounts), 'accounts' => $encBizmailAccounts];
+}
+
+// ===== 구독 데이터 사전 계산 (모든 서비스 — 유무료 무관) =====
+$subscriptionData = [];
+
+// (1) 호스팅
+if ($hostingInfo) {
+    $hPrice = (int)($hostingInfo['price'] ?? 0);
+    $subscriptionData[] = [
+        'type' => 'hosting',
+        'service_class' => $hPrice > 0 ? 'recurring' : 'free',
+        'label' => $hPrice > 0
+            ? '웹 호스팅 ' . ($hostingInfo['capacity'] ?? '')
+            : '웹 호스팅 (무료 ' . ($hostingInfo['capacity'] ?? '') . ')',
+        'unit_price' => $hPrice,
+        'quantity' => 1,
+        'billing_amount' => $hPrice > 0 ? $hPrice * $contractMonths : 0,
+        'billing_cycle' => $hPrice > 0 ? 'custom' : 'monthly',
+        'billing_months' => $hPrice > 0 ? $contractMonths : 1,
+        'expires_offset' => $hPrice > 0 ? "+{$contractMonths} months" : '+1 month',
+        'metadata' => ['capacity' => $hostingInfo['capacity'] ?? '', 'mail_accounts' => $encMailAccounts],
+    ];
+}
+
+// (2) 도메인
+if (!empty($selectedDomains)) {
+    $subscriptionData[] = [
+        'type' => 'domain',
+        'service_class' => 'recurring',
+        'label' => '도메인',
+        'unit_price' => $domainTotal ?? 0,
+        'quantity' => count($selectedDomains),
+        'billing_amount' => $domainAmount ?? 0,
+        'billing_cycle' => 'yearly',
+        'billing_months' => 12,
+        'expires_offset' => "+{$domainYears} years",
+        'metadata' => ['domains' => array_keys($selectedDomains)],
+    ];
+} elseif ($domainOption === 'free' && !empty($domainName)) {
+    $subscriptionData[] = [
+        'type' => 'domain',
+        'service_class' => 'free',
+        'label' => '도메인 (무료)',
+        'unit_price' => 0,
+        'quantity' => 1,
+        'billing_amount' => 0,
+        'billing_cycle' => 'monthly',
+        'billing_months' => 1,
+        'expires_offset' => '+1 month',
+        'metadata' => ['domains' => [$domainName], 'free_subdomain' => true],
+    ];
+} elseif ($domainOption === 'existing' && !empty($domainName)) {
+    $subscriptionData[] = [
+        'type' => 'domain',
+        'service_class' => 'free',
+        'label' => '도메인 (보유)',
+        'unit_price' => 0,
+        'quantity' => 1,
+        'billing_amount' => 0,
+        'billing_cycle' => 'custom',
+        'billing_months' => $contractMonths,
+        'expires_offset' => "+{$contractMonths} months",
+        'metadata' => ['domains' => [$domainName], 'existing' => true],
+    ];
+}
+
+// (3) 부가서비스 (비즈메일 제외)
+foreach ($addons as $addon) {
+    $addonLabel = $addon['label'] ?? '';
+    if (!in_array($addonLabel, $selectedAddons)) continue;
+    $isBizmail = stripos($addonLabel, '비즈니스 메일') !== false || stripos($addonLabel, 'ビジネスメール') !== false;
+    if ($isBizmail) continue;
+
+    $aPrice = (int)($addon['price'] ?? 0);
+    $aUnit = $addon['unit'] ?? '';
+    $aIsOneTime = !empty($addon['one_time']);
+    $aIsMonthly = strpos($aUnit, '/월') !== false;
+    $aIsYearly = strpos($aUnit, '/년') !== false;
+    $aServiceClass = $aIsOneTime ? 'one_time' : ($aPrice > 0 ? 'recurring' : 'free');
+
+    if ($aIsOneTime) {
+        $subscriptionData[] = [
+            'type' => 'addon', 'service_class' => 'one_time', 'label' => $addonLabel,
+            'unit_price' => $aPrice, 'quantity' => 1,
+            'billing_amount' => $aPrice,
+            'billing_cycle' => 'once', 'billing_months' => 0,
+            'expires_offset' => "+{$contractMonths} months",
+            'metadata' => null,
+        ];
+    } elseif ($aIsMonthly) {
+        $subscriptionData[] = [
+            'type' => 'addon', 'service_class' => $aServiceClass, 'label' => $addonLabel,
+            'unit_price' => $aPrice, 'quantity' => 1,
+            'billing_amount' => $aPrice * $contractMonths,
+            'billing_cycle' => 'custom', 'billing_months' => $contractMonths,
+            'expires_offset' => "+{$contractMonths} months",
+            'metadata' => null,
+        ];
+    } elseif ($aIsYearly) {
+        $aYears = max(1, ceil($contractMonths / 12));
+        $subscriptionData[] = [
+            'type' => 'addon', 'service_class' => $aServiceClass, 'label' => $addonLabel,
+            'unit_price' => $aPrice, 'quantity' => 1,
+            'billing_amount' => $aPrice * $aYears,
+            'billing_cycle' => 'yearly', 'billing_months' => 12,
+            'expires_offset' => "+{$aYears} years",
+            'metadata' => null,
+        ];
+    } else {
+        $subscriptionData[] = [
+            'type' => 'addon', 'service_class' => $aServiceClass, 'label' => $addonLabel,
+            'unit_price' => $aPrice, 'quantity' => 1,
+            'billing_amount' => $aPrice,
+            'billing_cycle' => 'custom', 'billing_months' => $contractMonths,
+            'expires_offset' => "+{$contractMonths} months",
+            'metadata' => ($aUnit === '별도 견적') ? ['quote_required' => true] : null,
+        ];
+    }
+}
+
+// (4) 유지보수
+if ($selectedMaint) {
+    foreach ($maintenance as $mt) {
+        if ($mt['label'] === $selectedMaint) {
+            $mp = (int)($mt['price'] ?? 0);
+            $subscriptionData[] = [
+                'type' => 'maintenance',
+                'service_class' => $mp > 0 ? 'recurring' : 'free',
+                'label' => '유지보수 ' . $mt['label'],
+                'unit_price' => $mp, 'quantity' => 1,
+                'billing_amount' => $mp * $contractMonths,
+                'billing_cycle' => 'custom', 'billing_months' => $contractMonths,
+                'expires_offset' => "+{$contractMonths} months",
+                'metadata' => null,
+            ];
+            break;
+        }
+    }
+}
+
+// (5) 기본 메일 (호스팅 포함 무료 메일 계정)
+if (!empty($encMailAccounts)) {
+    $subscriptionData[] = [
+        'type' => 'mail',
+        'service_class' => 'free',
+        'label' => '기본 메일',
+        'unit_price' => 0, 'quantity' => count($encMailAccounts),
+        'billing_amount' => 0,
+        'billing_cycle' => 'custom', 'billing_months' => $contractMonths,
+        'expires_offset' => $hostingInfo && (int)($hostingInfo['price'] ?? 0) > 0
+            ? "+{$contractMonths} months" : '+1 month',
+        'metadata' => ['accounts' => count($encMailAccounts), 'mail_accounts' => $encMailAccounts],
+    ];
+}
+
+// (6) 비즈니스 메일
+if ($bizmailCount > 0) {
+    foreach ($addons as $addon) {
+        if (stripos($addon['label'], '비즈니스 메일') !== false || stripos($addon['label'], 'ビジネスメール') !== false) {
+            $bPrice = (int)($addon['price'] ?? 0);
+            $subscriptionData[] = [
+                'type' => 'mail',
+                'service_class' => $bPrice > 0 ? 'recurring' : 'free',
+                'label' => $addon['label'],
+                'unit_price' => $bPrice, 'quantity' => $bizmailCount,
+                'billing_amount' => $bPrice * $bizmailCount * $contractMonths,
+                'billing_cycle' => 'custom', 'billing_months' => $contractMonths,
+                'expires_offset' => "+{$contractMonths} months",
+                'metadata' => ['accounts' => $bizmailCount, 'mail_accounts' => $encBizmailAccounts],
+            ];
+            break;
+        }
+    }
+}
+
+/**
+ * 구독 레코드 일괄 INSERT (모든 결제 경로에서 공통 사용)
+ */
+function _insertSubscriptions($pdo, $prefix, $orderId, $userId, $currency, $subscriptionData, $status, $now, $customerId = null, $gwName = null) {
+    $stmt = $pdo->prepare("INSERT INTO {$prefix}subscriptions
+        (order_id, user_id, type, service_class, label, unit_price, quantity, billing_amount, billing_cycle, billing_months,
+         currency, started_at, expires_at, next_billing_at, auto_renew, payment_customer_id, payment_gateway, status, metadata)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    foreach ($subscriptionData as $sub) {
+        $serviceClass = $sub['service_class'] ?? 'recurring';
+        // recurring(유료)만 자동연장, free/one_time은 수동
+        $autoRenew = ($serviceClass === 'recurring') ? 1 : 0;
+        $exp = date('Y-m-d H:i:s', strtotime($sub['expires_offset'], strtotime($now)));
+        $nextBilling = ($serviceClass === 'one_time') ? null : $exp;
+        // 1회성은 항상 '접수(pending)'로 시작
+        $subStatus = ($serviceClass === 'one_time') ? 'pending' : $status;
+        $stmt->execute([
+            $orderId, $userId, $sub['type'], $serviceClass, $sub['label'],
+            $sub['unit_price'], $sub['quantity'], $sub['billing_amount'],
+            $sub['billing_cycle'], $sub['billing_months'], $currency,
+            $now, $exp, $nextBilling, $autoRenew,
+            $customerId, $gwName, $subStatus,
+            $sub['metadata'] ? json_encode($sub['metadata'], JSON_UNESCAPED_UNICODE) : null,
+        ]);
+    }
 }
 
 // 부가세
@@ -309,6 +512,31 @@ try {
         ->execute([$orderId, json_encode(['total' => $total, 'currency' => $currency]), $userId]);
 
     // ===== 결제 처리 =====
+    // ===== 무료 주문 (총액 0원) — 결제 없이 바로 활성화 =====
+    if ($total <= 0) {
+        $now = date('Y-m-d H:i:s');
+        $expiresAt = date('Y-m-d H:i:s', strtotime("+{$contractMonths} months"));
+        $pdo->prepare("UPDATE {$prefix}orders SET status='paid', payment_method='free', started_at=?, expires_at=? WHERE id=?")
+            ->execute([$now, $expiresAt, $orderId]);
+
+        // 모든 구독 레코드 생성
+        _insertSubscriptions($pdo, $prefix, $orderId, $userId, $currency, $subscriptionData, 'active', $now);
+
+        $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type) VALUES (?, 'paid', '무료 주문', 'system')")
+            ->execute([$orderId]);
+
+        $pdo->commit();
+
+        echo json_encode([
+            'success' => true,
+            'order_number' => $orderNumber,
+            'total' => 0,
+            'currency' => $currency,
+            'message' => '서비스가 활성화되었습니다.',
+        ]);
+        exit;
+    }
+
     if ($paymentMethod === 'card' && $paymentToken && strlen($paymentToken) > 10 && strpos($paymentToken, 'tok_') === 0) {
         // PaymentManager로 PG사 결제
         $payMgr = new \RzxLib\Modules\Payment\PaymentManager($pdo, $prefix);
@@ -355,80 +583,8 @@ try {
             $pdo->prepare("UPDATE {$prefix}orders SET status='paid', payment_id=?, payment_gateway=?, started_at=?, expires_at=? WHERE id=?")
                 ->execute([$paymentId, $gwName, $now, $expiresAt, $orderId]);
 
-            // ===== 구독 생성 =====
-            $subStmt = $pdo->prepare("INSERT INTO {$prefix}subscriptions
-                (order_id, user_id, type, label, unit_price, quantity, billing_amount, billing_cycle, billing_months,
-                 currency, started_at, expires_at, next_billing_at, auto_renew, payment_customer_id, payment_gateway, status, metadata)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 'active', ?)");
-
-            $startedAt = $now;
-            $expiresAtDT = $expiresAt;
-            $nextBilling = $expiresAt;
-
-            // 호스팅 구독
-            if ($hostingInfo && (int)$hostingInfo['price'] > 0) {
-                $subStmt->execute([
-                    $orderId, $userId, 'hosting', '웹 호스팅 ' . ($hostingInfo['capacity'] ?? ''),
-                    (int)$hostingInfo['price'], 1, (int)$hostingInfo['price'] * $contractMonths,
-                    'custom', $contractMonths, $currency,
-                    $startedAt, $expiresAtDT, $nextBilling,
-                    $customerId, $gwName, json_encode([
-                        'capacity' => $hostingInfo['capacity'],
-                        'mail_accounts' => array_map(function($m) {
-                            return ['address' => $m['address'] ?? '', 'password' => encrypt($m['password'] ?? '')];
-                        }, $mailAccounts)
-                    ])
-                ]);
-            }
-
-            // 도메인 구독
-            if (!empty($selectedDomains)) {
-                $domExpires = date('Y-m-d H:i:s', strtotime("+{$domainYears} years"));
-                $subStmt->execute([
-                    $orderId, $userId, 'domain', '도메인',
-                    $domainTotal, count($selectedDomains), $domainAmount,
-                    'yearly', 12, $currency,
-                    $startedAt, $domExpires, $domExpires,
-                    $customerId, $gwName, json_encode(['domains' => array_keys($selectedDomains)])
-                ]);
-            }
-
-            // 유지보수 구독
-            if ($selectedMaint) {
-                foreach ($maintenance as $mt) {
-                    if ($mt['label'] === $selectedMaint && (int)$mt['price'] > 0) {
-                        $subStmt->execute([
-                            $orderId, $userId, 'maintenance', '유지보수 ' . $mt['label'],
-                            (int)$mt['price'], 1, (int)$mt['price'] * $contractMonths,
-                            'custom', $contractMonths, $currency,
-                            $startedAt, $expiresAtDT, $nextBilling,
-                            $customerId, $gwName, null
-                        ]);
-                        break;
-                    }
-                }
-            }
-
-            // 비즈니스 메일 구독
-            if ($bizmailCount > 0) {
-                foreach ($addons as $addon) {
-                    if (stripos($addon['label'], '비즈니스 메일') !== false || stripos($addon['label'], 'ビジネスメール') !== false) {
-                        $subStmt->execute([
-                            $orderId, $userId, 'mail', $addon['label'],
-                            (int)$addon['price'], $bizmailCount, (int)$addon['price'] * $bizmailCount * $contractMonths,
-                            'custom', $contractMonths, $currency,
-                            $startedAt, $expiresAtDT, $nextBilling,
-                            $customerId, $gwName, json_encode([
-                                'accounts' => $bizmailCount,
-                                'mail_accounts' => array_map(function($m) {
-                                    return ['address' => $m['address'] ?? '', 'password' => encrypt($m['password'] ?? '')];
-                                }, $bizmailAccounts)
-                            ])
-                        ]);
-                        break;
-                    }
-                }
-            }
+            // 모든 구독 레코드 생성
+            _insertSubscriptions($pdo, $prefix, $orderId, $userId, $currency, $subscriptionData, 'active', $now, $customerId, $gwName);
 
             // 주문 로그
             $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type) VALUES (?, 'paid', ?, 'system')")
@@ -468,13 +624,17 @@ try {
         exit;
 
     } elseif ($paymentMethod === 'bank') {
-        // 계좌이체: pending 상태 유지
+        // 계좌이체: pending 상태로 구독 생성
+        $now = date('Y-m-d H:i:s');
+        $expiresAt = date('Y-m-d H:i:s', strtotime("+{$contractMonths} months"));
+
+        // 모든 구독 레코드 생성
+        _insertSubscriptions($pdo, $prefix, $orderId, $userId, $currency, $subscriptionData, 'pending', $now);
+
         $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type) VALUES (?, 'bank_pending', '계좌이체 대기', 'system')")
             ->execute([$orderId]);
 
         $pdo->commit();
-
-        // TODO: 입금 안내 메일 발송
 
         echo json_encode([
             'success' => true,

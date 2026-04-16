@@ -437,8 +437,14 @@ if (empty($path) || $path === 'index.php' || $path === 'home') {
         }
     }
 
+    // 서비스 주문 관리 (코어)
+    if ($adminRoute === 'service-orders') {
+        include BASE_PATH . '/resources/views/admin/service-orders/index.php';
+    } elseif (preg_match('#^service-orders/([a-zA-Z0-9_-]+)$#', $adminRoute, $m)) {
+        $adminOrderNumber = $m[1];
+        include BASE_PATH . '/resources/views/admin/service-orders/detail.php';
     // 서비스 설정 (정규식 라우트 — 플러그인에서 직접 처리)
-    if (preg_match('#^services/settings(?:/(\w+))?$#', $adminRoute, $m)) {
+    } elseif (preg_match('#^services/settings(?:/(\w+))?$#', $adminRoute, $m)) {
         $settingsTab = $m[1] ?? 'general';
         if (!in_array($settingsTab, ['general', 'categories', 'holidays'])) $settingsTab = 'general';
         $_sf = BASE_PATH . '/plugins/vos-salon/views/services/settings.php';
@@ -655,6 +661,9 @@ if (empty($path) || $path === 'index.php' || $path === 'home') {
         $__pageFile = BASE_PATH . '/resources/views/customer/mypage/reservation-detail.php';
     } elseif ($path === 'mypage/services') {
         $__pageFile = BASE_PATH . '/resources/views/customer/mypage/services.php';
+    } elseif (preg_match('#^mypage/services/([a-zA-Z0-9_-]+)$#', $path, $m)) {
+        $serviceOrderNumber = $m[1];
+        $__pageFile = BASE_PATH . '/resources/views/customer/mypage/service-detail.php';
     } elseif ($path === 'mypage/password') {
         $__pageFile = BASE_PATH . '/resources/views/customer/mypage/password.php';
     } elseif ($path === 'mypage/settings') {

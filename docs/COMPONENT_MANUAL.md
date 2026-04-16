@@ -85,6 +85,53 @@ const formatted = PhoneInput.formatPhoneNumber('01012345678', '+82');
 
 ---
 
+### 1.1.1 전화번호 표시 컴포넌트 (읽기 전용)
+
+| 항목 | 내용 |
+|------|------|
+| **컴포넌트명** | `phone-display` |
+| **파일** | `resources/views/components/phone-display.php` |
+| **의존** | `assets/js/phone-input.js` |
+
+#### 기능
+- 국제 전화번호를 국가별 포맷으로 읽기 전용 표시
+- `PhoneInput.formatPhoneNumber()` 재사용
+- phone-input.js 로드 순서 무관 (자동 대기)
+- 페이지 내 여러 개 사용 가능 (초기화 스크립트 1회만 출력)
+
+#### 사용법
+
+```php
+<?php
+$phoneDisplayConfig = [
+    'value' => '+821012345678',   // 전체 전화번호 (필수)
+    'class' => '',                // 추가 CSS 클래스 (선택)
+    'fallback' => '-',            // 값 없을 때 표시 (선택)
+];
+include BASE_PATH . '/resources/views/components/phone-display.php';
+?>
+```
+
+JavaScript 의존 없음. PHP `format_phone()` 헬퍼 사용.
+
+#### PHP 헬퍼 직접 사용
+
+```php
+echo format_phone('+821012345678'); // +82 010-1234-5678
+echo format_phone('+819012345678'); // +81 090-1234-5678
+echo format_phone('+11234567890');  // +1 123-456-7890
+```
+
+#### 표시 결과
+
+| 입력 | 표시 |
+|------|------|
+| `+821012345678` | `+82 010-1234-5678` |
+| `+819012345678` | `+81 090-1234-5678` |
+| `+11234567890` | `+1 123-456-7890` |
+
+---
+
 ### 1.2 약관 동의 컴포넌트
 
 | 항목 | 내용 |
@@ -483,6 +530,38 @@ include BASE_PATH . '/resources/views/components/page-width-select.php';
 
 ### `db_trans_batch(PDO, posts, locale, prefix)`
 게시글 배치 다국어 번역. db_trans와 동일한 3단계 폴백 체인.
+
+---
+
+### 1.x format_phone() 헬퍼
+
+| 항목 | 내용 |
+|------|------|
+| **함수명** | `format_phone(?string $raw): string` |
+| **파일** | `rzxlib/Core/Helpers/functions.php` |
+| **설명** | 국제 전화번호를 국가별 포맷으로 변환 |
+
+#### 지원 국가
+
+| 국가코드 | 포맷 예시 |
+|---|---|
+| `+82` (한국) | `+82 010-1234-5678` |
+| `+81` (일본) | `+81 090-1234-5678` |
+| `+1` (미국) | `+1 123-456-7890` |
+| `+86` (중국) | `+86 138-1234-5678` |
+| `+44` (영국) | `+44 7XXX-XXX-XXX` |
+| `+33` (프랑스) | `+33 6-12-34-56-78` |
+| `+49` (독일) | `+49 151-1234-5678` |
+| `+61` (호주) | `+61 0412-345-678` |
+| 기타 | 4자리씩 하이픈 구분 |
+
+#### 사용 예
+
+```php
+echo format_phone('+8201055220019');  // +82 010-5522-0019
+echo format_phone('+819012345678');   // +81 9012-34-5678
+echo format_phone(null);              // '' (빈 문자열)
+```
 
 ---
 

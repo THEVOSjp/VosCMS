@@ -16,6 +16,7 @@ if (!isset($adminUrl)) {
 }
 
 $currentPath = $_SERVER['REQUEST_URI'] ?? '';
+$adminPath = $config['admin_path'] ?? 'admin';
 $_locale = function_exists('current_locale') ? current_locale() : ($config['locale'] ?? 'ko');
 
 // ── 메뉴 로드 (load_menu 공통 헬퍼) ──

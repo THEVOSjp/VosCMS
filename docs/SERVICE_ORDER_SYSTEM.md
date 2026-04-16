@@ -300,12 +300,88 @@ rzx_service_pricing (
 
 ---
 
+## 서비스 분류 체계 (2026-04-16)
+
+### service_class
+
+| 값 | 설명 | 자동연장 | 예시 |
+|---|---|---|---|
+| `recurring` | 유료 반복 | O (토글) | 웹 호스팅, 기술 지원, 비즈니스 메일 |
+| `free` | 무료 | X (연장 신청) | 무료 호스팅, 무료 서브도메인 |
+| `one_time` | 1회성 | X | 설치 지원, 커스터마이징 개발 |
+
+### 1회성 서비스 상태
+
+| status | completed_at | 표시 |
+|---|---|---|
+| pending | - | 접수 (파랑) |
+| active | NULL | 진행 (주황) |
+| suspended | - | 보류 (회색) |
+| cancelled | - | 취소 (빨강) |
+| any | 값 있음 | 완료 (녹색) |
+
+### DB 컬럼 (031 마이그레이션)
+
+```sql
+ALTER TABLE rzx_subscriptions
+  ADD COLUMN service_class VARCHAR(15) DEFAULT 'recurring' AFTER type,
+  ADD COLUMN completed_at DATETIME NULL AFTER next_billing_at;
+```
+
+---
+
+## 마이페이지 서비스 관리
+
+### 서비스 목록 (`/mypage/services`)
+- 주문번호별 요약 카드 (도메인, 서비스 태그, 기간, 금액)
+- 카드 클릭 → 상세 페이지 이동
+
+### 서비스 상세 (`/mypage/services/{order_number}`)
+- 주문 정보 섹션 (자동연장 토글/연장 신청 포함)
+- 서비스 타입별 탭: 웹 호스팅, 도메인, 메일, 유지보수, 부가서비스
+- 파셜 뷰: `resources/views/customer/mypage/service-partials/{type}.php`
+
+### 서비스 관리 API (`/api/service-manage.php`)
+| action | 설명 |
+|---|---|
+| `toggle_auto_renew` | 자동연장 토글 (recurring만) |
+| `request_renewal` | 무료 서비스 연장 신청 |
+| `set_primary_domain` | 메인 도메인 설정 |
+| `change_mail_password` | 메일 비밀번호 변경 |
+| `mark_complete` | 1회성 서비스 완료 (관리자) |
+
+---
+
+## 관리자 서비스 주문 관리
+
+### 주문 목록 (`/admin/service-orders`)
+- 통계 카드: 전체/결제완료/대기/실패/취소 + 1회성 접수 대기
+- 검색: 주문번호, 도메인, 이름, 이메일
+- 상태 필터링, 페이지네이션
+
+### 주문 상세 (`/admin/service-orders/{order_number}`)
+- 주문 상태 변경 (셀렉트)
+- 서비스 타입별 탭 (마이페이지와 동일 구조)
+- 1회성 서비스: 상태 배지 클릭 → 모달에서 접수/진행/보류/취소/완료 선택
+- 활동 로그 사이드바
+
+---
+
+## 무료 도메인 설정
+
+관리자 설정 (`service_free_domains`)에서 무료 서브도메인 목록 관리.
+- 복수 도메인 등록 가능 (예: `21ces.net`, `voscms.com`)
+- 1개면 고정 표시, 2개 이상이면 셀렉트 드롭다운
+- 설정 키: `service_free_domains` (JSON 배열)
+
+---
+
 ## 개발 우선순위
 
-1. **시스템 페이지 기본 구현** — 서비스 신청 폼 (디자인 샘플 기반)
-2. **NameSilo API 연동** — 도메인 검색/등록
-3. **결제 연동** — 카드 결제 (PG사), 계좌이체
+1. ~~**시스템 페이지 기본 구현**~~ ✅ 서비스 신청 폼
+2. ~~**NameSilo API 연동**~~ ✅ 도메인 검색 (WHOIS)
+3. ~~**결제 연동**~~ ✅ PAY.JP 카드 결제 + 계좌이체 + 무료
 4. **자동 프로비저닝** — nginx vhost + DB + VosCMS 자동 설치
-5. **마이페이지 서비스 관리** — 내 서비스, 결제 내역, 도메인 관리
-6. **무료 플랜** — 서브도메인 자동 생성 + 즉시 프로비저닝
-7. **관리자 대시보드** — 주문 관리, 매출 통계, 서버 현황
+5. ~~**마이페이지 서비스 관리**~~ ✅ 서비스 목록/상세/탭/API
+6. ~~**무료 플랜**~~ ✅ 서브도메인 + 즉시 활성화
+7. ~~**관리자 대시보드**~~ ✅ 주문 목록/상세/1회성 상태 관리

@@ -37,6 +37,10 @@ $_hostingPeriods = json_decode($serviceSettings['service_hosting_periods'] ?? ''
 $_hostingStorage = json_decode($serviceSettings['service_hosting_storage'] ?? '', true) ?: [];
 $_hostingFeatures = json_decode($serviceSettings['service_hosting_features'] ?? '', true) ?: [];
 
+// 무료 도메인
+$_freeDomains = json_decode($serviceSettings['service_free_domains'] ?? '', true) ?: ['21ces.net'];
+$_defaultFreeDomain = $_freeDomains[0] ?? '21ces.net';
+
 // 부가 서비스 데이터
 $_addons = json_decode($serviceSettings['service_addons'] ?? '', true) ?: [
     ['label'=>'설치 지원','desc'=>'VosCMS 설치 및 초기 설정을 대행합니다.','price'=>0,'unit'=>'','checked'=>true],
@@ -111,7 +115,15 @@ include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern
                 <div class="flex items-center gap-2">
                     <div class="flex-1 flex items-center border border-gray-300 dark:border-zinc-600 rounded-lg overflow-hidden">
                         <input type="text" id="freeSubdomain" placeholder="mysite" class="flex-1 px-4 py-3 text-sm bg-white dark:bg-zinc-700 dark:text-white border-0 focus:ring-0" title="영문 소문자, 숫자, 하이픈만 사용 가능">
-                        <span class="px-3 py-3 text-sm text-gray-500 dark:text-zinc-400 bg-gray-50 dark:bg-zinc-600 border-l border-gray-300 dark:border-zinc-600 whitespace-nowrap font-medium">.21ces.net</span>
+                        <?php if (count($_freeDomains) > 1): ?>
+                        <select id="freeDomainSelect" class="px-3 py-3 text-sm text-gray-500 dark:text-zinc-400 bg-gray-50 dark:bg-zinc-600 border-l border-gray-300 dark:border-zinc-600 focus:ring-0 border-0 font-medium">
+                            <?php foreach ($_freeDomains as $fd): ?>
+                            <option value="<?= htmlspecialchars($fd) ?>">.<?= htmlspecialchars($fd) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <?php else: ?>
+                        <span class="px-3 py-3 text-sm text-gray-500 dark:text-zinc-400 bg-gray-50 dark:bg-zinc-600 border-l border-gray-300 dark:border-zinc-600 whitespace-nowrap font-medium" id="freeDomainSuffix">.<?= htmlspecialchars($_defaultFreeDomain) ?></span>
+                        <?php endif; ?>
                     </div>
                     <button type="button" onclick="checkSubdomain()" class="px-4 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition text-sm whitespace-nowrap">확인</button>
                 </div>
@@ -275,6 +287,8 @@ var svcHostingPlans = <?= json_encode($_hostingPlans, JSON_UNESCAPED_UNICODE) ?>
 var svcHostingPeriods = <?= json_encode($_hostingPeriods, JSON_UNESCAPED_UNICODE) ?>;
 var svcAddons = <?= json_encode($_addons, JSON_UNESCAPED_UNICODE) ?>;
 var svcMaintenance = <?= json_encode($_maintenance, JSON_UNESCAPED_UNICODE) ?>;
+var svcFreeDomains = <?= json_encode($_freeDomains, JSON_UNESCAPED_UNICODE) ?>;
+var svcDefaultFreeDomain = '<?= addslashes($_defaultFreeDomain) ?>';
 var svcRounding = <?= json_encode(json_decode($serviceSettings['service_rounding'] ?? '{}', true) ?: ['KRW'=>'1000','USD'=>'1','JPY'=>'100','CNY'=>'10','EUR'=>'1']) ?>;
 </script>
 <script src="<?= $baseUrl ?>/resources/views/system/service/order.js?v=<?= filemtime(BASE_PATH . '/resources/views/system/service/order.js') ?>"></script>

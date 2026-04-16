@@ -433,7 +433,7 @@ $pageSubDesc = __('staff.description');
                                     <p class="text-xs text-blue-600 dark:text-blue-400 mt-0.5"><?= htmlspecialchars($_posDisp) ?></p>
                                     <?php endif; ?>
                                     <?php if ($s['email'] || $s['phone']): ?>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 truncate"><?= htmlspecialchars($s['email'] ?? '') ?><?= $s['email'] && $s['phone'] ? ' · ' : '' ?><?= htmlspecialchars($s['phone'] ?? '') ?></p>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 truncate"><?= htmlspecialchars($s['email'] ?? '') ?><?= $s['email'] && $s['phone'] ? ' · ' : '' ?><?= htmlspecialchars(!empty($s['phone']) ? format_phone($s['phone']) : '') ?></p>
                                     <?php endif; ?>
                                     <?php if ($s['bio']): ?>
                                     <p class="text-xs text-zinc-400 mt-1 line-clamp-2"><?= htmlspecialchars(mb_substr($s['bio'], 0, 60)) ?><?= mb_strlen($s['bio']) > 60 ? '...' : '' ?></p>

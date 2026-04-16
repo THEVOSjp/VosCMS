@@ -147,6 +147,35 @@ $_roundCurrencies = [
     </div>
 </div>
 
+<!-- ③-2 무료 도메인 설정 -->
+<?php
+$_defFreeDomains = ['21ces.net'];
+$_freeDomains = json_decode($serviceSettings['service_free_domains'] ?? '', true) ?: $_defFreeDomains;
+?>
+<div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border dark:border-zinc-700 overflow-hidden mb-6">
+    <div class="px-6 py-4 border-b border-zinc-100 dark:border-zinc-700">
+        <h3 class="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+            무료 도메인
+        </h3>
+    </div>
+    <div class="px-6 py-4">
+        <p class="text-xs text-zinc-400 mb-3">서비스 신청 시 무료로 제공할 서브도메인 목록입니다. 첫 번째 도메인이 기본 선택됩니다.</p>
+        <div class="flex flex-wrap gap-2" id="freeDomainList">
+            <?php foreach ($_freeDomains as $fd): ?>
+            <span class="free-domain-tag inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-mono font-medium rounded-lg">
+                .<?= htmlspecialchars($fd) ?>
+                <button type="button" onclick="this.closest('.free-domain-tag').remove()" class="text-green-400 hover:text-red-500 ml-0.5">&times;</button>
+            </span>
+            <?php endforeach; ?>
+        </div>
+        <div class="flex items-center gap-2 mt-3">
+            <input type="text" id="newFreeDomain" placeholder="example.net" class="<?= $_inp ?> text-xs max-w-[180px] font-mono" onkeydown="if(event.key==='Enter'){event.preventDefault();addFreeDomain();}">
+            <button type="button" onclick="addFreeDomain()" class="text-xs text-green-600 dark:text-green-400 hover:underline">+ 추가</button>
+        </div>
+    </div>
+</div>
+
 <!-- ④ 도메인 검색 TLD -->
 <?php
 $_defSearchTLDs = ['.com','.net','.org','.jp','.co.jp','.kr','.co.kr'];
@@ -458,7 +487,7 @@ $_features = json_decode($serviceSettings['service_hosting_features'] ?? '', tru
 <!-- ⑥ 부가 서비스 -->
 <?php
 $_defAddons = [
-    ['key'=>'install','label'=>'설치 지원','desc'=>'VosCMS 설치 및 초기 설정을 대행합니다. 도메인 연결, SSL 설정, 기본 환경 구성 포함.','price'=>0,'unit'=>'','checked'=>true,'type'=>'checkbox'],
+    ['key'=>'install','label'=>'설치 지원','desc'=>'VosCMS 설치 및 초기 설정을 대행합니다. 도메인 연결, SSL 설정, 기본 환경 구성 포함.','price'=>0,'unit'=>'','checked'=>true,'one_time'=>true,'type'=>'checkbox'],
     ['key'=>'support','label'=>'기술 지원 (1년)','desc'=>'이메일/채팅 기술 지원, 버그 수정, 보안 업데이트 적용, 장애 대응 (영업일 기준 24시간 이내 응답).','price'=>120000,'unit'=>'/년','type'=>'checkbox'],
     ['key'=>'custom','label'=>'커스터마이징 개발','desc'=>'맞춤 디자인, 전용 플러그인 개발, 외부 시스템 연동, 데이터 마이그레이션 등.','price'=>0,'unit'=>'별도 견적','type'=>'checkbox'],
     ['key'=>'bizmail','label'=>'비즈니스 메일','desc'=>'대용량 첨부파일 전송 (최대 10GB), 계정당 10GB 저장공간, 광고 없는 웹메일, 스팸 필터.','price'=>5000,'unit'=>'/계정/월','type'=>'checkbox'],
@@ -492,6 +521,7 @@ $_maintenance = json_decode($serviceSettings['service_maintenance'] ?? '', true)
                             <th class="pb-2 px-2 text-center w-28">가격 (<?= $_dispCur ?>)</th>
                             <th class="pb-2 px-2 text-center w-24">단위</th>
                             <th class="pb-2 px-2 text-center w-14">기본체크</th>
+                            <th class="pb-2 px-2 text-center w-14">1회성</th>
                             <th class="pb-2 w-8"></th>
                         </tr>
                     </thead>
@@ -503,6 +533,7 @@ $_maintenance = json_decode($serviceSettings['service_maintenance'] ?? '', true)
                             <td class="py-1.5 px-2"><input type="number" value="<?= (int)($addon['price'] ?? 0) ?>" class="addon-price <?= $_inp ?> text-xs text-center" min="0"></td>
                             <td class="py-1.5 px-2"><input type="text" value="<?= htmlspecialchars($addon['unit'] ?? '') ?>" class="addon-unit <?= $_inp ?> text-xs text-center" placeholder="/년, /월, 별도 견적"></td>
                             <td class="py-1.5 px-2 text-center"><input type="checkbox" class="addon-checked rounded text-blue-600" <?= !empty($addon['checked']) ? 'checked' : '' ?>></td>
+                            <td class="py-1.5 px-2 text-center"><input type="checkbox" class="addon-onetime rounded text-amber-600" <?= !empty($addon['one_time']) ? 'checked' : '' ?>></td>
                             <td class="py-1.5 text-center"><button type="button" onclick="this.closest('tr').remove()" class="text-red-400 hover:text-red-600 p-0.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></td>
                         </tr>
                         <?php endforeach; ?>
@@ -784,6 +815,7 @@ function addAddonRow() {
         + '<td class="py-1.5 px-2"><input type="number" class="addon-price ' + _inp + ' text-xs text-center" min="0" value="0"></td>'
         + '<td class="py-1.5 px-2"><input type="text" class="addon-unit ' + _inp + ' text-xs text-center" placeholder="/년, /월"></td>'
         + '<td class="py-1.5 px-2 text-center"><input type="checkbox" class="addon-checked rounded text-blue-600"></td>'
+        + '<td class="py-1.5 px-2 text-center"><input type="checkbox" class="addon-onetime rounded text-amber-600"></td>'
         + '<td class="py-1.5 text-center"><button type="button" onclick="this.closest(\'tr\').remove()" class="text-red-400 hover:text-red-600 p-0.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></td>';
     document.getElementById('addonRows').appendChild(tr);
 }
@@ -810,6 +842,7 @@ function collectAddonsData() {
             price: parseInt(tr.querySelector('.addon-price').value) || 0,
             unit: tr.querySelector('.addon-unit').value,
             checked: tr.querySelector('.addon-checked').checked,
+            one_time: tr.querySelector('.addon-onetime').checked,
             type: 'checkbox'
         });
     });
@@ -824,6 +857,31 @@ function collectAddonsData() {
         });
     });
     return { addons: addons, maintenance: maintenance };
+}
+
+function addFreeDomain() {
+    var input = document.getElementById('newFreeDomain');
+    var domain = input.value.trim().toLowerCase().replace(/^\./, '');
+    if (!domain) return;
+    var exists = false;
+    document.querySelectorAll('.free-domain-tag').forEach(function(el) {
+        if (el.textContent.trim().replace('×','').trim().replace(/^\./, '') === domain) exists = true;
+    });
+    if (exists) { input.value = ''; return; }
+    var span = document.createElement('span');
+    span.className = 'free-domain-tag inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-mono font-medium rounded-lg';
+    span.innerHTML = '.' + domain + ' <button type="button" onclick="this.closest(\'.free-domain-tag\').remove()" class="text-green-400 hover:text-red-500 ml-0.5">&times;</button>';
+    document.getElementById('freeDomainList').appendChild(span);
+    input.value = '';
+}
+
+function collectFreeDomains() {
+    var domains = [];
+    document.querySelectorAll('.free-domain-tag').forEach(function(el) {
+        var d = el.textContent.trim().replace('×','').trim().replace(/^\./, '');
+        if (d) domains.push(d);
+    });
+    return domains;
 }
 
 function addSearchTLD() {
@@ -924,6 +982,7 @@ function saveServiceSettings(successMsg) {
     var addonsData = collectAddonsData();
     formData.append('service_addons', JSON.stringify(addonsData.addons));
     formData.append('service_maintenance', JSON.stringify(addonsData.maintenance));
+    formData.append('service_free_domains', JSON.stringify(collectFreeDomains()));
     formData.append('service_search_tlds', JSON.stringify(collectSearchTLDs()));
     formData.append('service_domain_pricing', JSON.stringify(collectDomainData()));
     formData.append('service_namesilo_key', document.getElementById('svcNamesiloKey').value);

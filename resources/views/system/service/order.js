@@ -2,6 +2,13 @@
  * VosCMS 서비스 신청 페이지 JS
  */
 
+// ===== 무료 도메인 헬퍼 =====
+function getFreeDomainSuffix() {
+    var sel = document.getElementById('freeDomainSelect');
+    if (sel) return sel.value;
+    return (typeof svcDefaultFreeDomain !== 'undefined') ? svcDefaultFreeDomain : '21ces.net';
+}
+
 // ===== 통화 전환 =====
 var currentCurrency = (typeof siteCurrency !== 'undefined') ? siteCurrency : 'KRW';
 var exchangeRates = { KRW: 1, USD: 1/1380, JPY: 1/9.2, CNY: 1/190, EUR: 1/1500 };
@@ -68,7 +75,7 @@ document.querySelectorAll('.hosting-option').forEach(function(el) {
 
         // 무료 플랜 선택 시 기간 1개월 강제 + 추가용량 비활성
         var radio = el.querySelector('input[name="hosting_plan"]');
-        var isFree = radio && radio.value === 'free';
+        var isFree = radio && (parseInt(radio.dataset.price) === 0);
         var notice = document.getElementById('freePlanNotice');
         var periodWrap = document.getElementById('hostingPeriodWrap');
         var storageWrap = document.getElementById('hostingStorageWrap');
@@ -258,11 +265,12 @@ function checkSubdomain() {
     if (!val || val.length < 2) { result.innerHTML = '<p class="text-xs text-red-500">2자 이상 영문 소문자/숫자로 입력하세요.</p>'; result.classList.remove('hidden'); return; }
     input.value = val;
     // TODO: 실제 구현 시 서버 API로 중복 확인
-    result.innerHTML = '<p class="text-xs text-green-600 flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><strong>' + val + '.21ces.net</strong> 사용 가능합니다.</p>';
+    var freeSuffix = getFreeDomainSuffix();
+    result.innerHTML = '<p class="text-xs text-green-600 flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><strong>' + val + '.' + freeSuffix + '</strong> 사용 가능합니다.</p>';
     result.classList.remove('hidden');
 
     // 메일 도메인 업데이트
-    updateMailDomain(val + '.21ces.net');
+    updateMailDomain(val + '.' + freeSuffix);
     updateOrderSummary();
 }
 
@@ -372,7 +380,7 @@ function updateOrderSummary() {
     var freeSubVal = document.getElementById('freeSubdomain')?.value;
     var domainOpt = document.querySelector('input[name="domain_option"]:checked')?.value;
     if (domainOpt === 'free' && freeSubVal) {
-        rows.push({ label: freeSubVal + '.21ces.net', qty: '', unit: '', amount: 0, free: true, group: 'domain' });
+        rows.push({ label: freeSubVal + '.' + getFreeDomainSuffix(), qty: '', unit: '', amount: 0, free: true, group: 'domain' });
     }
 
     // 호스팅
@@ -549,6 +557,18 @@ function updateOrderSummary() {
 
     summaryItems.innerHTML = h;
     summaryTotal.classList.add('hidden');
+
+    // 0원이면 버튼 텍스트 + 결제 섹션 변경
+    var submitBtn = document.getElementById('btnSubmitOrder');
+    var paymentSection = document.querySelector('input[name="payment"]')?.closest('section');
+    if (grandTotal <= 0) {
+        if (submitBtn) submitBtn.textContent = '신청서 제출';
+        if (paymentSection) paymentSection.classList.add('hidden');
+    } else {
+        if (submitBtn && submitBtn.textContent === '신청서 제출') submitBtn.textContent = '결제하기';
+        if (paymentSection) paymentSection.classList.remove('hidden');
+    }
+
     if (typeof updateSubmitButton === 'function') updateSubmitButton();
 }
 
@@ -597,7 +617,7 @@ function submitOrder() {
 
     // 도메인
     if (orderData.domain_option === 'free') {
-        orderData.domain = (document.getElementById('freeSubdomain')?.value || '') + '.21ces.net';
+        orderData.domain = (document.getElementById('freeSubdomain')?.value || '') + '.' + getFreeDomainSuffix();
     } else if (orderData.domain_option === 'existing') {
         orderData.domain = document.querySelector('[name="existing_domain"]')?.value || '';
     } else if (orderData.domain_option === 'new' && Object.keys(selectedDomains).length > 0) {
@@ -642,6 +662,15 @@ function submitOrder() {
 
     submitBtn.disabled = true;
     submitBtn.textContent = '처리 중...';
+
+    // 무료 주문: 결제 없이 바로 제출
+    var paymentSection = document.querySelector('input[name="payment"]')?.closest('section');
+    var isFree = paymentSection && paymentSection.classList.contains('hidden');
+    if (isFree) {
+        orderData.payment_method = 'free';
+        sendOrder(orderData);
+        return;
+    }
 
     // 카드 결제: 토큰 생성 후 API 호출
     if (paymentMethod === 'card') {

@@ -4,6 +4,37 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.1.2] - 2026-04-16
+
+### Added — 서비스 관리 시스템
+- **서비스 분류 체계** — `service_class` 컬럼 추가 (recurring/one_time/free), `completed_at` 1회성 완료일
+- **마이페이지 서비스 상세** — `/mypage/services/{order}` 타입별 탭 관리 (호스팅/도메인/메일/유지보수/부가서비스)
+- **서비스 관리 API** — `api/service-manage.php` (자동연장 토글, 연장 신청, 메인 도메인 설정, 메일 비밀번호 변경)
+- **관리자 주문 관리** — `/admin/service-orders` 주문 목록 + 상세 페이지, 1회성 상태 모달 (접수/진행/보류/취소/완료)
+- **관리자 메뉴** — 사이드바에 "서비스 주문" 메뉴 추가 (position: 65)
+
+### Added — 컴포넌트
+- **phone-display** — 전화번호 표시 컴포넌트 (서버사이드 `format_phone()` 헬퍼), JS 의존 없음
+- **format_phone()** — PHP 국제 전화번호 포맷 함수 (한국/일본/미국/중국/영국/프랑스/독일/호주 등)
+- **무료 도메인 설정** — 관리자 설정에서 무료 서브도메인 목록 관리 (`service_free_domains`), 복수 도메인 셀렉트 지원
+
+### Fixed
+- **무료 서비스 구독 누락** — 무료 주문 시 도메인/부가서비스/유지보수 등 구독 레코드 미생성 → 전체 서비스 일괄 생성으로 리팩토링
+- **결제 섹션 약관 동의** — 무료 주문 시 약관 체크박스가 결제 섹션과 함께 숨겨지는 문제 → 섹션 밖으로 분리
+- **updateSubmitButton isFree 판별** — `btn.closest('form')` NULL → `document.querySelector`로 수정
+- **관리자 사이드바 활성 표시** — `$adminPath` 미정의로 모든 메뉴 비활성 → 변수 선언 추가
+- **마이페이지 아바타** — services.php/service-detail.php에 `use Auth` + `$user = Auth::user()` 누락
+- **부가서비스 1회성 체크** — 관리자 설정의 `one_time` 플래그가 주문 시 `service_class`에 반영되도록 수정
+- **1회성 서비스 초기 상태** — `active` → `pending`(접수)으로 생성되도록 수정
+
+### Changed
+- **주문 API 리팩토링** — 3개 결제 경로(무료/카드/계좌이체)의 구독 생성 코드를 `$subscriptionData` + `_insertSubscriptions()` 공통 함수로 통합
+- **서비스 목록 UI** — 인라인 펼침 → 카드 링크 + 상세 페이지 분리
+- **전화번호 표시** — 프로필/회원목록/스태프목록에 `format_phone()` 적용
+- **무료 도메인 동적화** — `.21ces.net` 하드코딩 → 관리자 설정값 참조
+
+---
+
 ## [VosCMS 2.1.1-hotfix] - 2026-04-16
 
 ### Fixed

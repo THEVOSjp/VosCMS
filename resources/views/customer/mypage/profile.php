@@ -206,7 +206,7 @@ if ($editMode && in_array('profile_photo', $registerFields)) {
                         <?php if (in_array('phone', $registerFields)): ?>
                         <div class="py-4 flex items-center">
                             <span class="w-32 text-sm font-medium text-gray-500 dark:text-zinc-400 flex-shrink-0"><?= __('auth.profile.phone') ?></span>
-                            <span class="text-sm text-gray-900 dark:text-white" id="viewPhoneDisplay"><?= $phoneRaw ? htmlspecialchars($phoneRaw) : $notSet ?></span>
+                            <span class="text-sm text-gray-900 dark:text-white" id="viewPhoneDisplay"><?= $phoneRaw ? htmlspecialchars(format_phone($phoneRaw)) : $notSet ?></span>
                         </div>
                         <?php endif; ?>
 
