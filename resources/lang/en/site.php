@@ -178,6 +178,7 @@ return [
         'tokushoho' => 'Commercial Transactions Act', 'funds_settlement' => 'Funds Settlement Act',
         'staff_intro' => 'Staff', 'booking' => 'Book Now', 'lookup' => 'Reservation Lookup',
         'service_order' => 'Service Order',
+        'downloads' => 'Downloads',
         'withholding_tax' => 'Withholding Tax Guide',
         'service_complete' => 'Order Complete',
         'refund' => ['editor_title' => 'Cancellation & Refund Policy Editor', 'editor_desc' => 'Create and manage your cancellation and refund policies.'],

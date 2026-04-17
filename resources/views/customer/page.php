@@ -87,7 +87,7 @@ $_primaryColor = $_skinCfg['primary_color'] ?? '';
 $_customCss = $_skinCfg['custom_css'] ?? '';
 $_customHeader = $_skinCfg['custom_header_html'] ?? '';
 $_customFooter = $_skinCfg['custom_footer_html'] ?? '';
-$_bgClass = $_contentBg === 'white' ? 'bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6' : '';
+$_bgClass = $_contentBg === 'white' ? 'bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6' : ($_contentBg === 'none' ? 'bg-transparent' : '');
 // 제목 배경 설정
 $_titleBgType = $_skinCfg['title_bg_type'] ?? 'none';
 $_titleBgImage = $_skinCfg['title_bg_image'] ?? '';

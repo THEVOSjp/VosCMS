@@ -84,6 +84,17 @@ return [
         'edit' => '{admin}/site/pages/edit?slug=funds-settlement',
     ],
 
+    // ── 다운로드 ──
+    [
+        'slug' => 'downloads',
+        'title' => 'site.pages.downloads',
+        'icon' => 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4',
+        'emoji' => '📥',
+        'color' => 'blue',
+        'type' => 'widget',
+        'edit' => '{admin}/site/pages/widget-builder?slug=downloads',
+    ],
+
     // ── 시스템 페이지 (본사 전용, 배포 제외 가능) ──
     [
         'slug' => 'service/order',

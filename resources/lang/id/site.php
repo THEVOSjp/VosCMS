@@ -124,6 +124,7 @@ return [
         'tokushoho' => 'UU Perdagangan', 'funds_settlement' => 'UU Pembayaran',
         'staff_intro' => 'Staf Kami', 'booking' => 'Pesan', 'lookup' => 'Cari Reservasi',
         'service_order' => 'Permintaan Layanan',
+        'downloads' => 'Unduhan',
         'refund' => ['editor_title' => 'Editor Kebijakan Pembatalan & Pengembalian Dana', 'editor_desc' => 'Buat dan kelola kebijakan pembatalan dan pengembalian dana.'],
         'terms_edit' => ['editor_title' => 'Edit Syarat dan Ketentuan', 'editor_desc' => 'Buat dan kelola syarat dan ketentuan.'],
         'privacy_edit' => ['editor_title' => 'Edit Kebijakan Privasi', 'editor_desc' => 'Buat dan kelola kebijakan privasi.'],

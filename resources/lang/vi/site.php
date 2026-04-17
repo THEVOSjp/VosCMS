@@ -188,6 +188,7 @@ return [
         'tokushoho' => 'Luật Thương mại', 'funds_settlement' => 'Luật Thanh toán',
         'staff_intro' => 'Nhân viên', 'booking' => 'Đặt lịch', 'lookup' => 'Tra cứu',
         'service_order' => 'Đăng ký Dịch vụ',
+        'downloads' => 'Tải xuống',
         'refund' => ['editor_title' => 'Chỉnh sửa chính sách hủy và hoàn tiền', 'editor_desc' => 'Tạo và quản lý chính sách hủy và hoàn tiền.'],
         'terms_edit' => ['editor_title' => 'Chỉnh sửa Điều khoản Dịch vụ', 'editor_desc' => 'Tạo và quản lý điều khoản dịch vụ.'],
         'privacy_edit' => ['editor_title' => 'Chỉnh sửa Chính sách Bảo mật', 'editor_desc' => 'Tạo và quản lý chính sách bảo mật.'],

@@ -144,6 +144,7 @@ return [
         'tokushoho' => '특정상거래법 표기', 'funds_settlement' => '자금결제법 표시',
         'staff_intro' => '스태프 소개', 'booking' => '예약하기', 'lookup' => '예약 조회',
         'service_order' => '서비스 신청',
+        'downloads' => '다운로드',
         'withholding_tax' => '원천징수세 안내',
         'service_complete' => '주문 완료',
         'refund' => ['editor_title' => '취소 환불 규정 편집', 'editor_desc' => '취소 및 환불 관련 규정을 작성하고 관리합니다.'],

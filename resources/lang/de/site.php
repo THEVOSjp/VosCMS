@@ -188,6 +188,7 @@ return [
         'tokushoho' => 'Handelsgesetz', 'funds_settlement' => 'Zahlungsgesetz',
         'staff_intro' => 'Unser Team', 'booking' => 'Buchen', 'lookup' => 'Buchung suchen',
         'service_order' => 'Serviceanfrage',
+        'downloads' => 'Downloads',
         'refund' => ['editor_title' => 'Stornierungs- und Rückerstattungsrichtlinie bearbeiten', 'editor_desc' => 'Erstellen und verwalten Sie Stornierungs- und Rückerstattungsrichtlinien.'],
         'terms_edit' => ['editor_title' => 'AGB bearbeiten', 'editor_desc' => 'Allgemeine Geschäftsbedingungen erstellen und verwalten.'],
         'privacy_edit' => ['editor_title' => 'Datenschutzrichtlinie bearbeiten', 'editor_desc' => 'Datenschutzrichtlinie erstellen und verwalten.'],

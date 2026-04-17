@@ -1,0 +1,175 @@
+{
+    "slug": "marketplace-showcase",
+    "version": "0.1.0",
+    "author": "VosCMS",
+    "category": "content",
+    "icon": "cube",
+    "thumbnail": "thumbnail.png",
+    "name": {
+        "ko": "자료실",
+        "en": "Marketplace Showcase",
+        "ja": "マーケットプレイス",
+        "zh_CN": "资料室",
+        "zh_TW": "資料室",
+        "de": "Marktplatz-Vitrine",
+        "es": "Vitrina del Marketplace",
+        "fr": "Vitrine du Marketplace",
+        "id": "Etalase Marketplace",
+        "mn": "Маркетплейс витрин",
+        "ru": "Витрина маркетплейса",
+        "tr": "Mağaza Vitrini",
+        "vi": "Gian hàng Marketplace"
+    },
+    "description": {
+        "ko": "마켓플레이스 최신 아이템을 가로 슬라이드로 표시합니다",
+        "en": "Display latest marketplace items in a horizontal scroll",
+        "ja": "マーケットプレイスの最新アイテムを横スクロールで表示します",
+        "zh_CN": "以水平滚动方式展示市场最新项目",
+        "zh_TW": "以水平滾動方式展示市場最新項目",
+        "de": "Zeigt die neuesten Marktplatz-Artikel in einem horizontalen Scroll an",
+        "es": "Muestra los artículos más recientes del marketplace en un carrusel horizontal",
+        "fr": "Affiche les derniers articles du marketplace en défilement horizontal",
+        "id": "Menampilkan item marketplace terbaru dalam gulir horizontal",
+        "mn": "Маркетплейсийн хамгийн сүүлийн бүтээгдэхүүнийг хэвтээ гүйлгэлтээр харуулна",
+        "ru": "Отображает последние товары маркетплейса в горизонтальной прокрутке",
+        "tr": "En son mağaza ürünlerini yatay kaydırma ile gösterir",
+        "vi": "Hiển thị các sản phẩm mới nhất trên marketplace dạng cuộn ngang"
+    },
+    "config_schema": {
+        "fields": [
+            {
+                "key": "title",
+                "type": "text",
+                "label": {
+                    "ko": "섹션 제목", "en": "Section Title", "ja": "セクションタイトル",
+                    "zh_CN": "栏目标题", "zh_TW": "欄目標題", "de": "Abschnittstitel",
+                    "es": "Título de sección", "fr": "Titre de section",
+                    "id": "Judul Bagian", "mn": "Хэсгийн гарчиг", "ru": "Заголовок раздела",
+                    "tr": "Bölüm Başlığı", "vi": "Tiêu đề mục"
+                },
+                "i18n": true,
+                "default": "자료실"
+            },
+            {
+                "key": "count",
+                "type": "number",
+                "label": {
+                    "ko": "표시 개수", "en": "Item Count", "ja": "表示件数",
+                    "zh_CN": "显示数量", "zh_TW": "顯示數量", "de": "Anzahl",
+                    "es": "Cantidad", "fr": "Nombre d'éléments",
+                    "id": "Jumlah Item", "mn": "Тоо хэмжээ", "ru": "Количество",
+                    "tr": "Öğe Sayısı", "vi": "Số lượng"
+                },
+                "default": 10
+            },
+            {
+                "key": "type_filter",
+                "type": "select",
+                "label": {
+                    "ko": "유형 필터", "en": "Type Filter", "ja": "タイプフィルター",
+                    "zh_CN": "类型筛选", "zh_TW": "類型篩選", "de": "Typfilter",
+                    "es": "Filtro de tipo", "fr": "Filtre par type",
+                    "id": "Filter Jenis", "mn": "Төрлийн шүүлтүүр", "ru": "Фильтр по типу",
+                    "tr": "Tür Filtresi", "vi": "Lọc theo loại"
+                },
+                "options": [
+                    {"value": "all", "label": {
+                        "ko": "전체", "en": "All", "ja": "すべて",
+                        "zh_CN": "全部", "zh_TW": "全部", "de": "Alle",
+                        "es": "Todos", "fr": "Tous",
+                        "id": "Semua", "mn": "Бүгд", "ru": "Все",
+                        "tr": "Tümü", "vi": "Tất cả"
+                    }},
+                    {"value": "plugin", "label": {
+                        "ko": "모듈", "en": "Plugin", "ja": "モジュール",
+                        "zh_CN": "插件", "zh_TW": "外掛", "de": "Plugin",
+                        "es": "Plugin", "fr": "Plugin",
+                        "id": "Plugin", "mn": "Плагин", "ru": "Плагин",
+                        "tr": "Eklenti", "vi": "Plugin"
+                    }},
+                    {"value": "theme", "label": {
+                        "ko": "테마", "en": "Theme", "ja": "テーマ",
+                        "zh_CN": "主题", "zh_TW": "佈景", "de": "Theme",
+                        "es": "Tema", "fr": "Thème",
+                        "id": "Tema", "mn": "Загвар", "ru": "Тема",
+                        "tr": "Tema", "vi": "Giao diện"
+                    }},
+                    {"value": "widget", "label": {
+                        "ko": "위젯", "en": "Widget", "ja": "ウィジェット",
+                        "zh_CN": "小部件", "zh_TW": "小工具", "de": "Widget",
+                        "es": "Widget", "fr": "Widget",
+                        "id": "Widget", "mn": "Виджет", "ru": "Виджет",
+                        "tr": "Widget", "vi": "Widget"
+                    }},
+                    {"value": "skin", "label": {
+                        "ko": "스킨", "en": "Skin", "ja": "スキン",
+                        "zh_CN": "皮肤", "zh_TW": "面板", "de": "Skin",
+                        "es": "Skin", "fr": "Skin",
+                        "id": "Skin", "mn": "Скин", "ru": "Скин",
+                        "tr": "Skin", "vi": "Giao diện"
+                    }}
+                ],
+                "default": "all"
+            },
+            {
+                "key": "sort",
+                "type": "select",
+                "label": {
+                    "ko": "정렬", "en": "Sort", "ja": "並び替え",
+                    "zh_CN": "排序", "zh_TW": "排序", "de": "Sortierung",
+                    "es": "Ordenar", "fr": "Tri",
+                    "id": "Urutkan", "mn": "Эрэмбэлэх", "ru": "Сортировка",
+                    "tr": "Sıralama", "vi": "Sắp xếp"
+                },
+                "options": [
+                    {"value": "newest", "label": {
+                        "ko": "최신순", "en": "Newest", "ja": "新着順",
+                        "zh_CN": "最新", "zh_TW": "最新", "de": "Neueste",
+                        "es": "Más reciente", "fr": "Plus récent",
+                        "id": "Terbaru", "mn": "Шинэ", "ru": "Новые",
+                        "tr": "En yeni", "vi": "Mới nhất"
+                    }},
+                    {"value": "popular", "label": {
+                        "ko": "인기순", "en": "Popular", "ja": "人気順",
+                        "zh_CN": "热门", "zh_TW": "熱門", "de": "Beliebt",
+                        "es": "Popular", "fr": "Populaire",
+                        "id": "Populer", "mn": "Түгээмэл", "ru": "Популярные",
+                        "tr": "Popüler", "vi": "Phổ biến"
+                    }},
+                    {"value": "rating", "label": {
+                        "ko": "평점순", "en": "Rating", "ja": "評価順",
+                        "zh_CN": "评分", "zh_TW": "評分", "de": "Bewertung",
+                        "es": "Valoración", "fr": "Évaluation",
+                        "id": "Peringkat", "mn": "Үнэлгээ", "ru": "Рейтинг",
+                        "tr": "Puan", "vi": "Đánh giá"
+                    }}
+                ],
+                "default": "newest"
+            },
+            {
+                "key": "show_more_link",
+                "type": "toggle",
+                "label": {
+                    "ko": "더보기 링크 표시", "en": "Show More Link", "ja": "もっと見るリンク",
+                    "zh_CN": "显示更多链接", "zh_TW": "顯示更多連結", "de": "Mehr anzeigen Link",
+                    "es": "Mostrar enlace Ver más", "fr": "Afficher le lien Voir plus",
+                    "id": "Tampilkan Tautan Lainnya", "mn": "Дэлгэрэнгүй холбоос", "ru": "Ссылка «Ещё»",
+                    "tr": "Daha Fazla Bağlantısı", "vi": "Hiển thị liên kết Xem thêm"
+                },
+                "default": true
+            },
+            {
+                "key": "bg_color",
+                "type": "color_transparent",
+                "label": {
+                    "ko": "배경색", "en": "Background Color", "ja": "背景色",
+                    "zh_CN": "背景色", "zh_TW": "背景色", "de": "Hintergrundfarbe",
+                    "es": "Color de fondo", "fr": "Couleur de fond",
+                    "id": "Warna Latar", "mn": "Дэвсгэр өнгө", "ru": "Цвет фона",
+                    "tr": "Arka Plan Rengi", "vi": "Màu nền"
+                },
+                "default": "transparent"
+            }
+        ]
+    }
+}

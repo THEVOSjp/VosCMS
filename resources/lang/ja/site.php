@@ -176,6 +176,7 @@ return [
         'tokushoho' => '特定商取引法に基づく表記', 'funds_settlement' => '資金決済法に基づく表示',
         'staff_intro' => 'スタッフ紹介', 'booking' => '予約する', 'lookup' => '予約照会',
         'service_order' => 'サービス申請',
+        'downloads' => 'ダウンロード',
         'withholding_tax' => '源泉徴収税について',
         'service_complete' => '注文完了',
         'refund' => ['editor_title' => 'キャンセル・返金規定の編集', 'editor_desc' => 'キャンセルおよび返金に関する規定を作成・管理します。'],
