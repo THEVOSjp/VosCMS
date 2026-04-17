@@ -76,10 +76,10 @@
 
 ## 5. 관리자 패널
 
-### 반복 에러 (이전 로그 기반)
-- [ ] `Undefined array key "label"` — admin-sidebar.php, functions.php:674
-- [ ] `Undefined variable $adminPath` — admin-sidebar.php:49,59
-- [ ] `Undefined variable $pageTitle` — reservations/_head.php:6
+### ~~반복 에러~~ ✅ 수정 완료 (2026-04-18)
+- [x] `Undefined array key "label"` — load_menu()에서 label/title 둘 다 지원 + items 하위 메뉴도 처리
+- [x] `Undefined variable $adminPath` — $_ENV['ADMIN_PATH'] 폴백 추가
+- [x] `Undefined variable $pageTitle` — null 합병 연산자로 폴백
 
 ### 마켓플레이스 관리
 - [ ] 아이템 심사/승인 워크플로우

@@ -667,15 +667,32 @@ if (!function_exists('load_menu')) {
         // 3. 정렬
         usort($menus, fn($a, $b) => ($a['position'] ?? 50) <=> ($b['position'] ?? 50));
 
-        // 5. label 번역 적용 + URL 치환
+        // 5. label/title 번역 적용 + URL 치환
         $adminPath = $options['admin_path'] ?? ($GLOBALS['config']['admin_path'] ?? 'admin');
+        $locale = function_exists('current_locale') ? current_locale() : 'ko';
         foreach ($menus as &$mi) {
-            // label 번역
-            if (is_string($mi['label'] ?? '') && str_contains($mi['label'], '.')) {
-                $mi['label'] = function_exists('__') ? __($mi['label']) : $mi['label'];
-            } elseif (is_array($mi['label'] ?? null)) {
-                $locale = function_exists('current_locale') ? current_locale() : 'ko';
-                $mi['label'] = $mi['label'][$locale] ?? $mi['label']['en'] ?? $mi['label']['ko'] ?? reset($mi['label']);
+            // label 또는 title 키 처리 (둘 다 지원)
+            foreach (['label', 'title'] as $_lkey) {
+                if (!isset($mi[$_lkey])) continue;
+                if (is_string($mi[$_lkey]) && str_contains($mi[$_lkey], '.')) {
+                    $mi[$_lkey] = function_exists('__') ? __($mi[$_lkey]) : $mi[$_lkey];
+                } elseif (is_array($mi[$_lkey])) {
+                    $mi[$_lkey] = $mi[$_lkey][$locale] ?? $mi[$_lkey]['en'] ?? $mi[$_lkey]['ko'] ?? reset($mi[$_lkey]);
+                }
+            }
+            // items 하위 메뉴도 동일 처리
+            if (!empty($mi['items']) && is_array($mi['items'])) {
+                foreach ($mi['items'] as &$_sub) {
+                    foreach (['label', 'title'] as $_lkey) {
+                        if (!isset($_sub[$_lkey])) continue;
+                        if (is_string($_sub[$_lkey]) && str_contains($_sub[$_lkey], '.')) {
+                            $_sub[$_lkey] = function_exists('__') ? __($_sub[$_lkey]) : $_sub[$_lkey];
+                        } elseif (is_array($_sub[$_lkey])) {
+                            $_sub[$_lkey] = $_sub[$_lkey][$locale] ?? $_sub[$_lkey]['en'] ?? $_sub[$_lkey]['ko'] ?? reset($_sub[$_lkey]);
+                        }
+                    }
+                }
+                unset($_sub);
             }
             // URL 치환
             if (isset($mi['url'])) {
