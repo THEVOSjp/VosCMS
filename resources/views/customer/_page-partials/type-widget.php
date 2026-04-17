@@ -24,6 +24,7 @@
     <?php
     require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetLoader.php';
     require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetRenderer.php';
+    require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetHelpers.php';
     $renderer = new \RzxLib\Core\Modules\WidgetRenderer($pdo, $pageSlug, $currentLocale ?? 'ko', $baseUrl ?? '');
     $widgets = $pdo->prepare("SELECT pw.*, w.slug as widget_type, w.name as widget_name FROM {$prefix}page_widgets pw LEFT JOIN {$prefix}widgets w ON pw.widget_id = w.id WHERE pw.page_slug = ? AND pw.is_active = 1 ORDER BY pw.sort_order");
     $widgets->execute([$pageSlug]);

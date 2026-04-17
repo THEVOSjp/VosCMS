@@ -93,6 +93,9 @@ class WidgetLoader
 
         $renderFile = $widgetDef['_dir'] . '/render.php';
 
+        // 위젯 공통 헬퍼 로드
+        require_once __DIR__ . '/WidgetHelpers.php';
+
         // render.php에 전달할 변수들
         $pdo     = $this->pdo;
         $baseUrl = $renderer->getBaseUrl();

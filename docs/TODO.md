@@ -110,7 +110,11 @@
 ### 리팩토링 대상
 - [x] `index.php` — 953줄 → 669줄 ✅ 관리자 라우트 `AdminRouter.php`(295줄)로 분리
 - [x] `page.php` — 303줄 → 165줄 ✅ 타입별 파셜 분리 (external/widget/document)
-- [ ] 위젯 render.php — 공통 패턴 추출 (CSS/JS 스코핑, 다국어 로드)
+- [x] 위젯 render.php — 공통 패턴 추출 ✅ `WidgetHelpers.php` 신설
+  - `rzx_widget_init()` — 로케일, uid, 배경색, 섹션 HTML 공통 초기화
+  - `rzx_widget_header()` — 제목 + 더보기 링크 공통 헤더
+  - `rzx_widget_scroll_slide()` — 가로 슬라이드 CSS/JS/네비게이션 공통 생성
+  - `rzx_widget_empty()` — 빈 상태 메시지 13개 언어 내장
 
 ### 테스트
 - [ ] 유닛 테스트 프레임워크 도입
