@@ -83,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute(['seo_extract_hashtag', $seoExtractHashtag]);
                 $stmt->execute(['seo_show_author', $seoShowAuthor]);
                 $stmt->execute(['seo_show_datetime', $seoShowDatetime]);
+                $stmt->execute(['robots_txt', trim($_POST['robots_txt'] ?? '')]);
 
                 if ($ogImage) {
                     $stmt->execute(['og_image', $ogImage]);
@@ -409,6 +410,13 @@ ob_start();
                            placeholder="<?= __('settings.seo.webmaster.naver_placeholder') ?>">
                 </div>
             </div>
+        </div>
+
+        <!-- robots.txt -->
+        <div class="border-b dark:border-zinc-700 pb-6">
+            <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-2">robots.txt</h3>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-3">검색 엔진 크롤러의 접근을 제어합니다. 비워두면 기본값(전체 허용 + Sitemap)이 적용됩니다.</p>
+            <textarea name="robots_txt" rows="6" class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg text-xs font-mono" placeholder="User-agent: *&#10;Allow: /&#10;&#10;Sitemap: https://voscms.com/sitemap.xml"><?= htmlspecialchars($settings['robots_txt'] ?? '') ?></textarea>
         </div>
 
         <!-- Analytics Section -->

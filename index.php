@@ -270,6 +270,15 @@ $__noLayout = false; // API, 로그인 등 자체 레이아웃 페이지
 if ($path === 'sitemap.xml') {
     include BASE_PATH . '/sitemap.php';
     exit;
+} elseif ($path === 'robots.txt') {
+    header('Content-Type: text/plain');
+    $robotsCustom = $siteSettings['robots_txt'] ?? '';
+    if ($robotsCustom) { echo $robotsCustom; }
+    else {
+        $appUrl = rtrim($config['app_url'] ?? '', '/');
+        echo "User-agent: *\nAllow: /\n\nSitemap: {$appUrl}/sitemap.xml\n";
+    }
+    exit;
 } elseif ($path === 'changelog') {
     $__pageFile = BASE_PATH . '/resources/views/customer/changelog.php';
 } elseif (empty($path) || $path === 'index.php' || $path === 'home') {

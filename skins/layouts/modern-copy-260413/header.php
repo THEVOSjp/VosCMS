@@ -129,6 +129,26 @@ elseif ($_darkMode === 'light') $_htmlDarkClass = '';
     <?php if (!empty($metaDescription)): ?><meta name="description" content="<?= htmlspecialchars($metaDescription) ?>"><?php endif; ?>
     <?php if (!empty($metaRobots)): ?><meta name="robots" content="<?= $metaRobots ?>"><?php endif; ?>
     <meta name="base-url" content="<?= $baseUrl ?>">
+    <script type="application/ld+json"><?php
+    echo json_encode([
+        '@context' => 'https://schema.org',
+        '@graph' => [
+            [
+                '@type' => 'Organization',
+                'name' => $siteName,
+                'url' => $baseUrl,
+                'logo' => !empty($siteSettings['site_logo_image']) ? $baseUrl . $siteSettings['site_logo_image'] : '',
+            ],
+            [
+                '@type' => 'WebSite',
+                'name' => $siteName,
+                'url' => $baseUrl,
+                'description' => $metaDescription ?? '',
+                'inLanguage' => $config['locale'] ?? 'ko',
+            ],
+        ],
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    ?></script>
     <link rel="icon" href="<?= !empty($siteSettings['favicon']) ? $baseUrl . htmlspecialchars($siteSettings['favicon']) : $baseUrl . '/assets/images/favicon.ico' ?>">
     <?php if ($pwaFrontEnabled): ?>
     <link rel="manifest" href="<?= $baseUrl ?>/manifest.json">

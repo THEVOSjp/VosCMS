@@ -90,8 +90,8 @@
 
 ## 6. 프론트엔드
 
-### 페이지
-- [ ] 가격 정책 (Pricing) 페이지 — 플랜별 비교표
+### ~~페이지~~ ✅ 완료
+- [x] 가격 정책 (Pricing) 페이지 ✅ (`/pricing` — DB 호스팅 플랜 자동 렌더링)
 - [x] 업데이트 로그 (Changelog) 공개 페이지 ✅ (`/changelog` — docs/CHANGELOG.md 자동 렌더링)
 
 ### 게시판
@@ -100,8 +100,8 @@
 
 ### SEO
 - [x] sitemap.xml 자동 생성 ✅ (`/sitemap.xml` — 48개 URL, 1시간 캐시)
-- [ ] robots.txt 관리자 편집
-- [ ] 구조화 데이터 (Schema.org)
+- [x] robots.txt 관리자 편집 ✅ (SEO 설정에서 편집, 동적 생성)
+- [x] 구조화 데이터 (Schema.org) ✅ (Organization + WebSite JSON-LD)
 
 ---
 
