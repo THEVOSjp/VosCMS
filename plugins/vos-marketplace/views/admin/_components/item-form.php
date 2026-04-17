@@ -194,7 +194,7 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
     <div class="<?= $_card ?>">
         <h2 class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-4"><?= __mp('sf_release') ?></h2>
         <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-4 text-xs text-amber-700 dark:text-amber-300">
-            <span class="font-semibold"><?= __mp('sf_release_notice') ?></span> <?= __mp('sf_release_notice') ?>
+            <span class="font-semibold"><?= __mp('sf_release') ?>:</span> <?= __mp('sf_release_notice') ?>
         </div>
 
         <?php if ($isEdit && !empty($editVersions)): ?>
@@ -243,7 +243,7 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
                 <p class="<?= $_hint ?>"><?= __mp('sf_package_hint') ?></p>
             </div>
             <div><label class="<?= $_lbl ?>"><?= __mp('sf_changelog') ?></label>
-                <textarea name="changelog" rows="3" class="<?= $_inp ?>" placeholder="- 새 기능 추가&#10;- 버그 수정"><?= htmlspecialchars($editVersions[0]['changelog'] ?? '') ?></textarea></div>
+                <textarea name="changelog" rows="3" class="<?= $_inp ?>" placeholder="<?= __mp('sf_changelog_hint') ?>"><?= htmlspecialchars($editVersions[0]['changelog'] ?? '') ?></textarea></div>
         </div>
     </div>
 </div>
@@ -293,7 +293,7 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
 <div class="flex items-center justify-between mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-700">
     <div>
         <button type="button" id="prevTabBtn" class="hidden px-4 py-2.5 border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 text-sm font-medium rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition inline-flex items-center gap-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> 이전
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> <?= __mp('sf_prev') ?>
         </button>
     </div>
     <div class="flex items-center gap-3">
@@ -303,7 +303,7 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
         <?php if ($context === 'developer' && !$isEdit): ?>
         <button type="button" id="draftBtn" class="px-5 py-2.5 border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 text-sm font-medium rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition inline-flex items-center gap-1.5">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-            임시 저장
+            <?= __mp('sf_draft') ?>
         </button>
         <?php endif; ?>
         <button type="submit" id="submitBtn" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition inline-flex items-center gap-1.5 shadow-lg shadow-indigo-600/25">
