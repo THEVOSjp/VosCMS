@@ -94,9 +94,9 @@
 - [x] 가격 정책 (Pricing) 페이지 ✅ (`/pricing` — DB 호스팅 플랜 자동 렌더링)
 - [x] 업데이트 로그 (Changelog) 공개 페이지 ✅ (`/changelog` — docs/CHANGELOG.md 자동 렌더링)
 
-### 게시판
-- [ ] 게시판 확장 변수 — 프론트 렌더링 (글쓰기/읽기에 표시)
-- [ ] 게시판 스킨 다양화
+### ~~게시판~~ ✅ 이미 구현됨
+- [x] 게시판 확장 변수 — 글쓰기(write.php) + 글읽기(read.php) + ExtraVarRenderer 클래스
+- [x] 게시판 스킨 — 5가지 목록 스타일(row/card/gallery/webzine/notices) + 스킨 디렉토리 구조 + FAQ 전용 스킨
 
 ### SEO
 - [x] sitemap.xml 자동 생성 ✅ (`/sitemap.xml` — 48개 URL, 1시간 캐시)
