@@ -46,14 +46,26 @@ $_lt = function($val) use ($_locale) {
     return '';
 };
 
-// 메뉴 활성 여부 판별 (정확 매칭 전용)
-$_isActive = function($route) use ($currentPath, $adminPath) {
+// 현재 경로 (캐시)
+$_adminCleanPath = rtrim(preg_replace('#^/' . preg_quote($adminPath, '#') . '#', '', parse_url($currentPath, PHP_URL_PATH) ?? ''), '/');
+
+// 메뉴 활성 판별 — 하위 메뉴용 (접두사 매칭, 형제 중 가장 구체적인 것만 활성)
+$_isActive = function($route, array $siblings = []) use ($_adminCleanPath) {
     if ($route === '') return false;
-    $_path = preg_replace('#^/' . preg_quote($adminPath, '#') . '#', '', parse_url($currentPath, PHP_URL_PATH) ?? '');
-    $_path = rtrim($_path, '/');
     $_route = '/' . ltrim($route, '/');
-    // 정확 매칭만 (하위 경로 매칭 제거 — 하위 메뉴 중복 활성 방지)
-    return $_path === $_route;
+    // 정확 매칭
+    if ($_adminCleanPath === $_route) return true;
+    // 접두사 매칭 (하위 경로 허용)
+    if (!str_starts_with($_adminCleanPath, $_route . '/')) return false;
+    // 형제 라우트 중 더 구체적인 매칭이 있으면 현재 라우트는 비활성
+    foreach ($siblings as $s) {
+        $sr = '/' . ltrim($s, '/');
+        if ($sr === $_route) continue;
+        if (strlen($sr) > strlen($_route) && str_starts_with($_adminCleanPath, $sr . '/') || $_adminCleanPath === $sr) {
+            return false; // 더 구체적인 형제가 매칭됨
+        }
+    }
+    return true;
 };
 
 // 경로 하위 매칭 (부모 그룹 판별용)
@@ -179,11 +191,12 @@ $_canShow = function($menu) {
                 </svg>
             </button>
             <div id="<?= $_submenuId ?>" class="<?= $_isMenuActive ? '' : 'hidden' ?> bg-zinc-900">
-<?php       foreach ($_visibleItems as $_item):
+<?php       $_siblingRoutes = array_map(fn($i) => $i['route'] ?? '', $_visibleItems);
+            foreach ($_visibleItems as $_item):
                 $_itemTitle = $_lt($_item['title'] ?? '');
                 $_itemRoute = $_item['route'] ?? '';
                 $_itemIcon = $_item['icon'] ?? '';
-                $_itemActive = $_isActive($_itemRoute);
+                $_itemActive = $_isActive($_itemRoute, $_siblingRoutes);
 ?>
                 <a href="<?= $adminUrl ?>/<?= $_itemRoute ?>" class="flex items-center px-6 py-2.5 pl-14 <?= $_itemActive ? 'text-white bg-blue-600/80' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white' ?> text-sm">
                     <?php if ($_itemIcon): ?><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $_itemIcon ?>"/></svg><?php endif; ?>
