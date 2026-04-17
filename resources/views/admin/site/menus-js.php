@@ -6,7 +6,14 @@ var selectedSitemapId = null;
 var selectedIsHome = false;
 var selectedMenuType = null;
 var selectedTitle = '';
+var selectedUrl = '';
 var addMode = null; // 'menu' | 'sub'
+
+// 시스템 페이지 slug 목록 (삭제 보호)
+var systemPageSlugs = <?= json_encode(array_column(
+    file_exists(BASE_PATH . '/config/system-pages.php') ? include BASE_PATH . '/config/system-pages.php' : [],
+    'slug'
+)) ?>;
 var csrfToken = '<?= $_SESSION['csrf_token'] ?? '' ?>';
 var apiUrl = '<?= $adminUrl ?>/site/menus-api';
 
@@ -73,7 +80,10 @@ function selectMenuItem(id, title, sitemapId, isHome) {
     selectedIsHome = !!isHome;
 
     var el = document.querySelector('[data-type="menuItem"][data-id="' + id + '"]');
-    if (el) el.classList.add('selected');
+    if (el) {
+        el.classList.add('selected');
+        selectedUrl = el.dataset.url || '';
+    }
 
     document.getElementById('panel2Title').textContent = title;
     document.getElementById('sitemapCtx').classList.add('hidden');
@@ -424,16 +434,29 @@ function deleteMenuItem() {
         showResultModal(false, '<?= __('site.menus.cannot_delete_home') ?>');
         return;
     }
-    showConfirmModal({
-        title: '이 메뉴 항목을 삭제하시겠습니까?',
-        message: selectedTitle ? '「' + selectedTitle + '」' : '',
-        checkLabel: '연결된 페이지(게시판)도 함께 삭제된다는 것을 알고 있습니다.',
-        confirmText: '삭제',
-        danger: true,
-        onConfirm: function() {
-            apiCall('delete_menu_item', { id: selectedId });
-        }
-    });
+    var isSystem = systemPageSlugs.indexOf(selectedUrl) !== -1;
+    if (isSystem) {
+        showConfirmModal({
+            title: '메뉴에서 제거하시겠습니까?',
+            message: '「' + selectedTitle + '」은(는) 시스템 페이지입니다.\n메뉴에서만 제거되며 페이지는 삭제되지 않습니다.',
+            confirmText: '메뉴에서 제거',
+            danger: false,
+            onConfirm: function() {
+                apiCall('delete_menu_item', { id: selectedId });
+            }
+        });
+    } else {
+        showConfirmModal({
+            title: '이 메뉴 항목을 삭제하시겠습니까?',
+            message: selectedTitle ? '「' + selectedTitle + '」' : '',
+            checkLabel: '연결된 페이지(게시판)도 함께 삭제된다는 것을 알고 있습니다.',
+            confirmText: '삭제',
+            danger: true,
+            onConfirm: function() {
+                apiCall('delete_menu_item', { id: selectedId });
+            }
+        });
+    }
 }
 
 function toggleHomeMenu() {

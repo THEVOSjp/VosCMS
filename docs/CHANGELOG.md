@@ -4,6 +4,36 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.1.4] - 2026-04-17
+
+### Added
+- **download-hero 위젯** — 소프트웨어 다운로드 페이지 (version.json 실시간 연동, 4개 언어 내장, 주요 기능/시스템 요구사항/버전 히스토리)
+- **/downloads 페이지** — widget 타입 시스템 페이지, 13개 언어 메뉴 번역, `is_system=1`
+- **contact-form 위젯** (v0.1.0) — 비공개 1:1 문의 폼 위젯 (비회원 가능, 분류 선택, 허니팟 스팸 방지, AJAX 전송)
+- **contact-info 위젯** — 연락처 정보 표시 위젯
+- **location-map 위젯** — 위치 지도 위젯
+- **rzx_send_mail() 공용 헬퍼** — `rzxlib/Core/Helpers/mail.php`에 SMTP 메일 발송 함수 신설
+- **rzx_contact_messages 테이블** — 문의 저장용 DB 테이블
+- **/contact 페이지** — widget 타입 시스템 페이지, 13개 언어 메뉴 번역
+
+### Fixed
+- **시스템 페이지 삭제 보호** — 메뉴에서 시스템 페이지 삭제 시 페이지 콘텐츠/위젯 보존 (메뉴 항목만 제거)
+  - `menus-api.php`: DB `is_system` + `config/system-pages.php` slug 이중 체크
+  - `menus-js.php`: 시스템 페이지 삭제 시 "메뉴에서만 제거됩니다" 안내 메시지
+- **시스템 페이지 메뉴 다국어** — 시스템 페이지를 메뉴에 추가 시 `site.pages.*` 번역 키에서 13개 언어 자동 등록
+- **다운로드 페이지 번역** — `site.pages.downloads` 13개 언어 번역 추가
+
+### Changed
+- **홈페이지 히어로** — Download 버튼 → `/download/voscms-latest.zip` 직접 다운로드, 버전 v2.1.1 업데이트
+- **Auth.php** — `sendSmtpMail` → `rzx_send_mail()` 공용 헬퍼 우선 호출 (폴백 유지)
+- **index.php** — `mail.php` 헬퍼 자동 로드 추가
+
+### Docs
+- **COMPONENT_MANUAL.md** — `rzx_send_mail()` 함수 레퍼런스 추가
+- **WIDGET_MANUAL.md** — download-hero, contact-form, contact-info, location-map 위젯 문서 추가
+
+---
+
 ## [VosCMS 2.1.3] - 2026-04-17
 
 ### Changed — 마이페이지 서비스 상세 리디자인

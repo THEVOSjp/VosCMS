@@ -215,7 +215,7 @@ if ($_primaryColor) echo '<style>:root { --page-primary: ' . htmlspecialchars($_
     <!-- 위젯 페이지: WidgetRenderer로 렌더링 -->
     <?php
     // 전체폭 위젯 타입 (컨테이너 밖에서 렌더링)
-    $_fullWidthTypes = ['hero', 'hero-slider', 'cta', 'cta001', 'stats', 'testimonials', 'shop-map'];
+    $_fullWidthTypes = ['hero', 'hero-slider', 'cta', 'cta001', 'stats', 'testimonials', 'shop-map', 'location-map', 'contact-info', 'contact-form'];
     ?>
     <?php if ($_showBreadcrumb && !$_hasTitleBg): ?>
     <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 pt-6">

@@ -102,6 +102,9 @@ Translator::init($langPath);
 // 다국어 UI 헬퍼 (rzx_multilang_btn, rzx_multilang_input 등)
 require_once BASE_PATH . '/rzxlib/Core/Helpers/multilang.php';
 
+// 공용 메일 발송 헬퍼 (rzx_send_mail)
+require_once BASE_PATH . '/rzxlib/Core/Helpers/mail.php';
+
 // 세션/쿠키에서 로케일 로드 (초기화 전)
 $_requestLocale = null;
 if (!empty($_SESSION['locale'])) {

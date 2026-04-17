@@ -181,6 +181,79 @@ widgets/board-showcase/
 └── render.php    — PHP 렌더러 (DB 조회 + HTML/CSS/JS 생성)
 ```
 
+### download-hero — 다운로드 히어로 (v1.0.0)
+
+| 항목 | 내용 |
+|------|------|
+| **slug** | `download-hero` |
+| **카테고리** | content |
+| **파일** | `widgets/download-hero/` |
+
+**기능**: 소프트웨어 다운로드 페이지. `version.json`에서 실시간 버전/코드네임/릴리즈 날짜/채널 로드. dist 디렉토리에서 파일 크기/버전 히스토리 자동 스캔.
+
+**섹션**:
+- 히어로 배너 (버전 배지 + 다운로드/변경이력/GitHub 버튼)
+- 주요 기능 6개 카드
+- 시스템 요구사항 (필수 + PHP 확장)
+- 버전 히스토리 (자동 스캔, 최신 강조)
+
+**다국어**: 위젯 내장 `$_i18n` 배열 (ko/en/ja/zh_CN). 타이틀/서브타이틀은 위젯 config에서 다국어 입력.
+
+**설정**:
+| 키 | 타입 | 설명 |
+|---|---|---|
+| `title` | text (i18n) | 메인 타이틀 |
+| `subtitle` | textarea (i18n) | 서브타이틀 |
+| `bg_style` | select | gradient / dark / light |
+| `download_url` | text | 다운로드 URL (기본: `/download/voscms-latest.zip`) |
+| `changelog_url` | text | 변경 이력 URL |
+| `github_url` | text | GitHub URL |
+| `show_requirements` | toggle | 시스템 요구사항 표시 |
+| `show_features` | toggle | 주요 기능 표시 |
+| `show_history` | toggle | 버전 히스토리 표시 |
+
+---
+
+### contact-form — 문의하기 (v0.1.0)
+
+비공개 1:1 문의 폼. 비회원도 이용 가능하며, DB 저장 + SMTP 메일 알림을 지원합니다.
+위젯 타입이므로 어떤 페이지에든 배치할 수 있습니다.
+
+**주요 기능:**
+- 이름, 이메일, 분류, 제목, 내용 입력 폼
+- 로그인 시 이름/이메일 자동 입력
+- 분류 선택: 일반 문의 / 사업 제안 / 라이선스 / 버그 리포트 / 보안 취약점 / 기타
+- 허니팟 스팸 방지
+- AJAX 전송 + 성공/실패 피드백
+- `rzx_contact_messages` 테이블에 저장
+- `rzx_send_mail()` 공용 헬퍼로 관리자 이메일 알림 (SMTP)
+- 13개 언어 폼 레이블/메시지/플레이스홀더
+- 개인정보 안내 문구 표시
+- 다크모드 완전 대응
+
+| 설정 | 설명 | 기본값 |
+|------|------|--------|
+| 섹션 제목 | 상단 표시 제목 (다국어) | 문의하기 |
+| 부제 | 안내 문구 (다국어) | 궁금한 점이 있으시면... |
+| 분류 선택 표시 | 카테고리 드롭다운 표시 여부 | ON |
+| 수신 이메일 | 문의 알림 받을 이메일 | — |
+| 배경색 | 섹션 배경색 | 투명 |
+
+**사용법:**
+1. 위젯 빌더에서 **시스템** 카테고리 → `문의하기` 위젯 추가
+2. 설정에서 수신 이메일 입력 (SMTP 메일 알림용)
+3. [적용] → [레이아웃 저장]
+
+**데이터 소스:** `rzx_contact_messages` 테이블
+**메일 발송:** `rzx_send_mail()` — DB SMTP 설정 자동 사용
+
+**파일 구조:**
+```
+widgets/contact-form/
+├── widget.json   — 위젯 설정 스키마 (13개 언어)
+└── render.php    — PHP 렌더러 (폼 + API + 메일 발송)
+```
+
 ---
 
 ## 3. 마케팅 위젯

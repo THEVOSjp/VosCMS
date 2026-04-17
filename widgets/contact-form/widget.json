@@ -1,0 +1,107 @@
+{
+    "slug": "contact-form",
+    "version": "0.1.0",
+    "author": "VosCMS",
+    "category": "system",
+    "icon": "chat",
+    "thumbnail": "thumbnail.png",
+    "name": {
+        "ko": "문의하기", "en": "Contact Form", "ja": "お問い合わせ",
+        "zh_CN": "联系我们", "zh_TW": "聯繫我們", "de": "Kontaktformular",
+        "es": "Formulario de contacto", "fr": "Formulaire de contact",
+        "id": "Formulir Kontak", "mn": "Холбоо барих", "ru": "Форма обратной связи",
+        "tr": "İletişim Formu", "vi": "Liên hệ"
+    },
+    "description": {
+        "ko": "비공개 1:1 문의 폼. 비회원도 이용 가능합니다.",
+        "en": "Private 1:1 inquiry form. Available for non-members.",
+        "ja": "非公開1:1お問い合わせフォーム。非会員でもご利用いただけます。",
+        "zh_CN": "私密1:1咨询表单，非会员也可使用。",
+        "zh_TW": "私密1:1諮詢表單，非會員也可使用。",
+        "de": "Privates 1:1-Kontaktformular. Auch für Nicht-Mitglieder verfügbar.",
+        "es": "Formulario de consulta privado 1:1. Disponible para no miembros.",
+        "fr": "Formulaire de contact privé 1:1. Disponible pour les non-membres.",
+        "id": "Formulir pertanyaan pribadi 1:1. Tersedia untuk non-anggota.",
+        "mn": "Хувийн 1:1 лавлагааны маягт. Гишүүн бус хэрэглэгчдэд бас боломжтой.",
+        "ru": "Приватная форма обратной связи 1:1. Доступна для незарегистрированных.",
+        "tr": "Özel 1:1 iletişim formu. Üye olmayanlar da kullanabilir.",
+        "vi": "Biểu mẫu liên hệ riêng tư 1:1. Không cần đăng ký."
+    },
+    "config_schema": {
+        "fields": [
+            {
+                "key": "title",
+                "type": "text",
+                "label": {
+                    "ko": "섹션 제목", "en": "Section Title", "ja": "セクションタイトル",
+                    "zh_CN": "栏目标题", "zh_TW": "欄目標題", "de": "Abschnittstitel",
+                    "es": "Título", "fr": "Titre", "id": "Judul",
+                    "mn": "Гарчиг", "ru": "Заголовок", "tr": "Başlık", "vi": "Tiêu đề"
+                },
+                "i18n": true,
+                "default": "문의하기"
+            },
+            {
+                "key": "subtitle",
+                "type": "text",
+                "label": {
+                    "ko": "부제", "en": "Subtitle", "ja": "サブタイトル",
+                    "zh_CN": "副标题", "zh_TW": "副標題", "de": "Untertitel",
+                    "es": "Subtítulo", "fr": "Sous-titre", "id": "Subjudul",
+                    "mn": "Дэд гарчиг", "ru": "Подзаголовок", "tr": "Alt başlık", "vi": "Phụ đề"
+                },
+                "i18n": true,
+                "default": "궁금한 점이나 제안이 있으시면 언제든 문의해 주세요."
+            },
+            {
+                "key": "show_category",
+                "type": "toggle",
+                "label": {
+                    "ko": "분류 선택 표시", "en": "Show Category", "ja": "カテゴリ表示",
+                    "zh_CN": "显示分类", "zh_TW": "顯示分類", "de": "Kategorie anzeigen",
+                    "es": "Mostrar categoría", "fr": "Afficher la catégorie",
+                    "id": "Tampilkan Kategori", "mn": "Ангилал харуулах",
+                    "ru": "Показать категорию", "tr": "Kategori göster", "vi": "Hiển thị danh mục"
+                },
+                "default": true
+            },
+            {
+                "key": "categories",
+                "type": "textarea",
+                "label": {
+                    "ko": "분류 목록 (줄당 1개)", "en": "Categories (one per line)", "ja": "カテゴリ一覧（1行に1つ）",
+                    "zh_CN": "分类列表（每行一个）", "zh_TW": "分類列表（每行一個）", "de": "Kategorien (eine pro Zeile)",
+                    "es": "Categorías (una por línea)", "fr": "Catégories (une par ligne)",
+                    "id": "Kategori (satu per baris)", "mn": "Ангилал (мөр бүрт нэг)",
+                    "ru": "Категории (по одной на строку)", "tr": "Kategoriler (satır başına bir)", "vi": "Danh mục (mỗi dòng một mục)"
+                },
+                "i18n": true,
+                "default": "일반 문의\n사업 제안·제휴\n라이선스 문의\n버그 리포트\n보안 취약점 신고\n기타"
+            },
+            {
+                "key": "receive_email",
+                "type": "text",
+                "label": {
+                    "ko": "수신 이메일", "en": "Receive Email", "ja": "受信メール",
+                    "zh_CN": "接收邮箱", "zh_TW": "接收信箱", "de": "Empfangs-E-Mail",
+                    "es": "Email de recepción", "fr": "Email de réception",
+                    "id": "Email Penerima", "mn": "Хүлээн авах имэйл",
+                    "ru": "Email получателя", "tr": "Alıcı e-posta", "vi": "Email nhận"
+                },
+                "default": ""
+            },
+            {
+                "key": "bg_color",
+                "type": "color_transparent",
+                "label": {
+                    "ko": "배경색", "en": "Background Color", "ja": "背景色",
+                    "zh_CN": "背景色", "zh_TW": "背景色", "de": "Hintergrundfarbe",
+                    "es": "Color de fondo", "fr": "Couleur de fond",
+                    "id": "Warna Latar", "mn": "Дэвсгэр өнгө",
+                    "ru": "Цвет фона", "tr": "Arka plan rengi", "vi": "Màu nền"
+                },
+                "default": "transparent"
+            }
+        ]
+    }
+}

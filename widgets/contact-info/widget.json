@@ -1,0 +1,90 @@
+{
+    "slug": "contact-info",
+    "version": "0.1.0",
+    "author": "VosCMS",
+    "category": "content",
+    "icon": "briefcase",
+    "thumbnail": "thumbnail.png",
+    "name": {
+        "ko": "연락처 정보", "en": "Contact Info", "ja": "連絡先情報",
+        "zh_CN": "联系信息", "zh_TW": "聯繫資訊", "de": "Kontaktinformationen",
+        "es": "Información de contacto", "fr": "Coordonnées",
+        "id": "Informasi Kontak", "mn": "Холбоо барих мэдээлэл", "ru": "Контактная информация",
+        "tr": "İletişim Bilgileri", "vi": "Thông tin liên hệ"
+    },
+    "description": {
+        "ko": "주소, 전화, 이메일, 영업시간을 이미지 및 소형 지도와 함께 표시합니다",
+        "en": "Display address, phone, email, hours with image and small map",
+        "ja": "住所・電話・メール・営業時間を画像と小型マップとともに表示します",
+        "zh_CN": "显示地址、电话、邮箱、营业时间，配合图片和小地图",
+        "zh_TW": "顯示地址、電話、信箱、營業時間，搭配圖片和小地圖",
+        "de": "Zeigt Adresse, Telefon, E-Mail, Öffnungszeiten mit Bild und Minikarte",
+        "es": "Muestra dirección, teléfono, email, horario con imagen y mini mapa",
+        "fr": "Affiche adresse, téléphone, email, horaires avec image et mini carte",
+        "id": "Menampilkan alamat, telepon, email, jam kerja dengan gambar dan peta kecil",
+        "mn": "Хаяг, утас, имэйл, ажлын цагийг зураг, жижиг газрын зурагтай хамт харуулна",
+        "ru": "Отображает адрес, телефон, email, часы работы с изображением и мини-картой",
+        "tr": "Adres, telefon, e-posta, çalışma saatlerini resim ve mini harita ile gösterir",
+        "vi": "Hiển thị địa chỉ, điện thoại, email, giờ làm việc kèm hình ảnh và bản đồ nhỏ"
+    },
+    "config_schema": {
+        "fields": [
+            {
+                "key": "title", "type": "text", "i18n": true, "default": "Contact Us",
+                "label": {"ko":"섹션 제목","en":"Section Title","ja":"セクションタイトル","zh_CN":"栏目标题","zh_TW":"欄目標題","de":"Abschnittstitel","es":"Título","fr":"Titre","id":"Judul","mn":"Гарчиг","ru":"Заголовок","tr":"Başlık","vi":"Tiêu đề"}
+            },
+            {
+                "key": "address", "type": "textarea", "i18n": true, "default": "",
+                "label": {"ko":"주소","en":"Address","ja":"住所","zh_CN":"地址","zh_TW":"地址","de":"Adresse","es":"Dirección","fr":"Adresse","id":"Alamat","mn":"Хаяг","ru":"Адрес","tr":"Adres","vi":"Địa chỉ"}
+            },
+            {
+                "key": "phone", "type": "text", "default": "",
+                "label": {"ko":"전화번호","en":"Phone","ja":"電話番号","zh_CN":"电话","zh_TW":"電話","de":"Telefon","es":"Teléfono","fr":"Téléphone","id":"Telepon","mn":"Утас","ru":"Телефон","tr":"Telefon","vi":"Điện thoại"}
+            },
+            {
+                "key": "email", "type": "text", "default": "",
+                "label": {"ko":"이메일","en":"Email","ja":"メール","zh_CN":"邮箱","zh_TW":"信箱","de":"E-Mail","es":"Correo","fr":"E-mail","id":"Email","mn":"Имэйл","ru":"Email","tr":"E-posta","vi":"Email"}
+            },
+            {
+                "key": "business_hours", "type": "textarea", "i18n": true, "default": "",
+                "label": {"ko":"영업시간","en":"Business Hours","ja":"営業時間","zh_CN":"营业时间","zh_TW":"營業時間","de":"Öffnungszeiten","es":"Horario","fr":"Horaires","id":"Jam Kerja","mn":"Ажлын цаг","ru":"Часы работы","tr":"Çalışma Saatleri","vi":"Giờ làm việc"}
+            },
+            {
+                "key": "image", "type": "image", "default": "",
+                "label": {"ko":"이미지","en":"Image","ja":"画像","zh_CN":"图片","zh_TW":"圖片","de":"Bild","es":"Imagen","fr":"Image","id":"Gambar","mn":"Зураг","ru":"Изображение","tr":"Görsel","vi":"Hình ảnh"}
+            },
+            {
+                "key": "show_map", "type": "toggle", "default": true,
+                "label": {"ko":"소형 지도 표시","en":"Show Mini Map","ja":"ミニマップ表示","zh_CN":"显示小地图","zh_TW":"顯示小地圖","de":"Minikarte anzeigen","es":"Mostrar mini mapa","fr":"Afficher mini carte","id":"Tampilkan Peta Kecil","mn":"Жижиг газрын зураг","ru":"Мини-карта","tr":"Mini Harita","vi":"Hiển thị bản đồ nhỏ"}
+            },
+            {
+                "key": "map_query", "type": "text", "default": "Fukuoka, Hakata",
+                "label": {"ko":"지도 주소","en":"Map Address","ja":"地図の住所","zh_CN":"地图地址","zh_TW":"地圖地址","de":"Kartenadresse","es":"Dirección del mapa","fr":"Adresse carte","id":"Alamat Peta","mn":"Газрын зургийн хаяг","ru":"Адрес карты","tr":"Harita Adresi","vi":"Địa chỉ bản đồ"}
+            },
+            {
+                "key": "layout", "type": "select", "default": "right",
+                "label": {"ko":"이미지/지도 위치","en":"Image/Map Position","ja":"画像/マップの位置","zh_CN":"图片/地图位置","zh_TW":"圖片/地圖位置","de":"Bild/Karte Position","es":"Posición imagen/mapa","fr":"Position image/carte","id":"Posisi Gambar/Peta","mn":"Зураг/Газрын зургийн байрлал","ru":"Позиция изображения/карты","tr":"Görsel/Harita Konumu","vi":"Vị trí hình/bản đồ"},
+                "options": [
+                    {"value": "right", "label": {"ko":"오른쪽","en":"Right","ja":"右","zh_CN":"右侧","zh_TW":"右側","de":"Rechts","es":"Derecha","fr":"Droite","id":"Kanan","mn":"Баруун","ru":"Справа","tr":"Sağ","vi":"Bên phải"}},
+                    {"value": "left", "label": {"ko":"왼쪽","en":"Left","ja":"左","zh_CN":"左侧","zh_TW":"左側","de":"Links","es":"Izquierda","fr":"Gauche","id":"Kiri","mn":"Зүүн","ru":"Слева","tr":"Sol","vi":"Bên trái"}}
+                ]
+            },
+            {
+                "key": "content_width", "type": "select", "default": "5xl",
+                "label": {"ko":"컨텐츠 너비","en":"Content Width","ja":"コンテンツ幅","zh_CN":"内容宽度","zh_TW":"內容寬度","de":"Inhaltsbreite","es":"Ancho del contenido","fr":"Largeur du contenu","id":"Lebar Konten","mn":"Агуулгын өргөн","ru":"Ширина контента","tr":"İçerik Genişliği","vi":"Chiều rộng nội dung"},
+                "options": [
+                    {"value": "3xl", "label": "3xl (768px)"},
+                    {"value": "4xl", "label": "4xl (896px)"},
+                    {"value": "5xl", "label": "5xl (1024px)"},
+                    {"value": "6xl", "label": "6xl (1152px)"},
+                    {"value": "7xl", "label": "7xl (1280px)"},
+                    {"value": "full", "label": "Full (100%)"}
+                ]
+            },
+            {
+                "key": "bg_color", "type": "color_transparent", "default": "transparent",
+                "label": {"ko":"배경색","en":"Background Color","ja":"背景色","zh_CN":"背景色","zh_TW":"背景色","de":"Hintergrundfarbe","es":"Color de fondo","fr":"Couleur de fond","id":"Warna Latar","mn":"Дэвсгэр өнгө","ru":"Цвет фона","tr":"Arka Plan Rengi","vi":"Màu nền"}
+            }
+        ]
+    }
+}

@@ -830,8 +830,21 @@ class Auth
 
             // 발송 방법에 따라 분기
             if ($mailSettings['driver'] === 'smtp' && !empty($mailSettings['smtp_host'])) {
-                // SMTP 발송
-                $sent = self::sendSmtpMail($email, $subject, $htmlBody, $mailSettings);
+                // SMTP 발송 (공용 헬퍼 사용)
+                if (function_exists('rzx_send_mail')) {
+                    $sent = rzx_send_mail(null, $email, $subject, $htmlBody, [
+                        'smtp_host' => $mailSettings['smtp_host'],
+                        'smtp_port' => $mailSettings['smtp_port'],
+                        'smtp_encryption' => $mailSettings['smtp_encryption'],
+                        'smtp_username' => $mailSettings['smtp_username'],
+                        'smtp_password' => $mailSettings['smtp_password'],
+                        'from_name' => $mailSettings['from_name'],
+                        'from_email' => $mailSettings['from_email'] ?: $mailSettings['smtp_username'],
+                        'reply_to' => $mailSettings['reply_to'] ?: ($mailSettings['from_email'] ?: $mailSettings['smtp_username']),
+                    ]);
+                } else {
+                    $sent = self::sendSmtpMail($email, $subject, $htmlBody, $mailSettings);
+                }
             } else {
                 // PHP mail() 발송
                 $fromName = $mailSettings['from_name'];

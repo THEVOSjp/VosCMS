@@ -98,6 +98,27 @@ try {
             $stmt->execute([$sitemapId, $parentId, $title, $url, $target, $icon, $cssClass, $desc, $menuType, $maxOrder + 1, $isShortcut, $openWindow, $expand, $groupSrls]);
             $newMenuId = $pdo->lastInsertId();
 
+            // 시스템 페이지 번역 자동 등록
+            // system-pages.php에 정의된 페이지면 site.pages.{key} 번역을 메뉴 번역으로 복사
+            $_sysPages = file_exists(BASE_PATH . '/config/system-pages.php') ? include BASE_PATH . '/config/system-pages.php' : [];
+            $_sysPageMatch = null;
+            foreach ($_sysPages as $_sp) {
+                if (($_sp['slug'] ?? '') === $url) { $_sysPageMatch = $_sp; break; }
+            }
+            if ($_sysPageMatch && !empty($_sysPageMatch['title'])) {
+                // 번역 키에서 다국어 텍스트 가져와서 rzx_translations에 등록
+                $_transKey = $_sysPageMatch['title']; // 예: site.pages.downloads
+                $_locales = ['ko','en','ja','zh_CN','zh_TW','de','es','fr','id','mn','ru','tr','vi'];
+                $_insStmt = $pdo->prepare("INSERT IGNORE INTO rzx_translations (lang_key, locale, content) VALUES (?, ?, ?)");
+                foreach ($_locales as $_loc) {
+                    $_translated = function_exists('__') ? __($_transKey, [], $_loc) : '';
+                    // 번역이 키 자체를 반환하면 스킵
+                    if ($_translated && $_translated !== $_transKey) {
+                        $_insStmt->execute(["menu_item.{$newMenuId}.title", $_loc, $_translated]);
+                    }
+                }
+            }
+
             // 페이지 자동 생성
             $defaultLocale = $config['locale'] ?? 'ko';
             if ($menuType === 'page') {
@@ -183,6 +204,38 @@ try {
         case 'delete_menu_item':
             $id = intval($input['id'] ?? 0);
             if (!$id) { jsonError('ID is required'); }
+
+            // 시스템 페이지 보호 — 메뉴 항목만 삭제, 페이지 콘텐츠는 보존
+            $menuCheck = $pdo->prepare("SELECT url, menu_type FROM rzx_menu_items WHERE id = ?");
+            $menuCheck->execute([$id]);
+            $menuData = $menuCheck->fetch(PDO::FETCH_ASSOC);
+            if ($menuData) {
+                $menuSlug = $menuData['url'] ?? '';
+                $isSystemPage = false;
+
+                // DB is_system 체크
+                if ($menuSlug) {
+                    $sysChk = $pdo->prepare("SELECT is_system FROM rzx_page_contents WHERE page_slug = ? AND is_system = 1 LIMIT 1");
+                    $sysChk->execute([$menuSlug]);
+                    $isSystemPage = (bool)$sysChk->fetchColumn();
+                }
+                // config/system-pages.php 체크
+                if (!$isSystemPage && $menuSlug) {
+                    $sysPagesConf = file_exists(BASE_PATH . '/config/system-pages.php') ? include BASE_PATH . '/config/system-pages.php' : [];
+                    foreach ($sysPagesConf as $spConf) {
+                        if (($spConf['slug'] ?? '') === $menuSlug) { $isSystemPage = true; break; }
+                    }
+                }
+
+                if ($isSystemPage) {
+                    // 시스템 페이지: 메뉴 항목 + 번역만 삭제, 페이지 콘텐츠/위젯은 보존
+                    $pdo->prepare("DELETE FROM rzx_translations WHERE lang_key LIKE ?")->execute(["menu_item.{$id}.%"]);
+                    $pdo->prepare("DELETE FROM rzx_menu_items WHERE id = ?")->execute([$id]);
+                    echo json_encode(['success' => true, 'message' => '메뉴에서 제거되었습니다. 시스템 페이지는 보존됩니다.']);
+                    break;
+                }
+            }
+
             deleteMenuItemRecursive($pdo, $id);
             echo json_encode(['success' => true]);
             break;
@@ -329,9 +382,17 @@ function deleteMenuItemRecursive(PDO $pdo, int $id): void {
         // 시스템 페이지 보호 (삭제 안 함)
         $isSystem = false;
         if ($slug) {
+            // DB is_system 플래그 체크
             $sysCheck = $pdo->prepare("SELECT is_system FROM rzx_page_contents WHERE page_slug = ? AND is_system = 1 LIMIT 1");
             $sysCheck->execute([$slug]);
             $isSystem = (bool)$sysCheck->fetchColumn();
+            // config/system-pages.php에 정의된 slug도 보호
+            if (!$isSystem) {
+                $systemPages = file_exists(BASE_PATH . '/config/system-pages.php') ? include BASE_PATH . '/config/system-pages.php' : [];
+                foreach ($systemPages as $sp) {
+                    if (($sp['slug'] ?? '') === $slug) { $isSystem = true; break; }
+                }
+            }
         }
 
         if ($slug && !$isSystem) {

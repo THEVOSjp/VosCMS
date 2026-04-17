@@ -1,0 +1,35 @@
+{
+    "slug": "download-hero",
+    "version": "1.0.0",
+    "author": "VosCMS",
+    "category": "content",
+    "icon": "download",
+    "name": {
+        "ko": "다운로드 히어로", "en": "Download Hero", "ja": "ダウンロードヒーロー",
+        "zh_CN": "下载主图", "zh_TW": "下載主圖", "de": "Download Hero",
+        "es": "Héroe de Descarga", "fr": "Héros de Téléchargement",
+        "id": "Hero Unduhan", "mn": "Татах Хэсэг", "ru": "Загрузка",
+        "tr": "İndirme", "vi": "Tải xuống"
+    },
+    "description": {
+        "ko": "소프트웨어 다운로드 페이지 (버전 정보 + 다운로드 버튼 + 요구사항)", "en": "Software download page with version info and requirements",
+        "ja": "ソフトウェアダウンロードページ（バージョン情報・要件）"
+    },
+    "config_schema": {
+        "fields": [
+            {"key": "title", "type": "text", "label": "Title", "i18n": true, "default": "VosCMS"},
+            {"key": "subtitle", "type": "textarea", "label": "Subtitle", "i18n": true},
+            {"key": "bg_style", "type": "select", "label": "Background", "options": [
+                {"value": "gradient", "label": "Gradient (Blue → Purple)"},
+                {"value": "dark", "label": "Dark"},
+                {"value": "light", "label": "Light"}
+            ], "default": "gradient"},
+            {"key": "download_url", "type": "text", "label": "Download URL", "default": "/download/voscms-latest.zip"},
+            {"key": "changelog_url", "type": "text", "label": "Changelog URL", "default": "/community/board/notice"},
+            {"key": "github_url", "type": "text", "label": "GitHub URL"},
+            {"key": "show_requirements", "type": "toggle", "label": "Show Requirements", "default": true},
+            {"key": "show_features", "type": "toggle", "label": "Show Features", "default": true},
+            {"key": "show_history", "type": "toggle", "label": "Show Version History", "default": true}
+        ]
+    }
+}

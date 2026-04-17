@@ -1321,6 +1321,54 @@ dd($data);    // 덤프 후 종료
 
 ---
 
+### 9.9 `rzx_send_mail()`
+
+| 항목 | 내용 |
+|------|------|
+| **함수명** | `rzx_send_mail(?PDO $pdo, string $to, string $subject, string $body, array $options = []): bool` |
+| **파일** | `rzxlib/Core/Helpers/mail.php` |
+| **설명** | DB의 SMTP 설정을 사용하여 메일 발송. index.php에서 자동 로드됨 |
+| **반환값** | `bool` — 성공/실패 |
+
+```php
+// 기본 사용 (DB SMTP 설정 자동 로드)
+rzx_send_mail($pdo, 'to@example.com', '제목', '<p>HTML 본문</p>');
+
+// 텍스트 메일 + Reply-To 지정
+rzx_send_mail($pdo, 'admin@example.com', '문의', '본문 텍스트', [
+    'reply_to'      => 'user@example.com',
+    'reply_to_name' => '홍길동',
+    'content_type'  => 'text/plain',
+]);
+
+// SMTP 설정 직접 전달 (DB 조회 없이)
+rzx_send_mail(null, 'to@example.com', '제목', '본문', [
+    'smtp_host'       => 'smtp.gmail.com',
+    'smtp_port'       => 587,
+    'smtp_encryption' => 'tls',
+    'smtp_username'   => 'user@gmail.com',
+    'smtp_password'   => 'app_password',
+    'from_name'       => 'My App',
+    'from_email'      => 'user@gmail.com',
+]);
+```
+
+**옵션:**
+
+| 키 | 설명 | 기본값 |
+|----|------|--------|
+| `reply_to` | 회신 이메일 | from_email |
+| `reply_to_name` | 회신 이름 | — |
+| `content_type` | `text/html` 또는 `text/plain` | `text/html` |
+| `from_name` | 발신자 이름 | DB `mail_from_name` |
+| `from_email` | 발신자 이메일 | DB `mail_from_email` |
+| `smtp_*` | SMTP 설정 직접 지정 | DB 자동 로드 |
+
+**참조하는 DB 설정 (`rzx_settings`):**
+`smtp_host`, `smtp_port`, `smtp_encryption`, `smtp_username`, `smtp_password`, `mail_from_name`, `mail_from_email`
+
+---
+
 ## 10. 클래스 레퍼런스
 
 ### 10.1 MemberSkinLoader
@@ -1462,9 +1510,9 @@ $imageHelper->resizeImage($sourcePath, 200, 200, $destPath);
 
 ## 버전 정보
 
-- **문서 버전**: 1.1.0
-- **최종 수정일**: 2026-03-05
-- **적용 대상**: RezlyX v1.x
+- **문서 버전**: 1.2.0
+- **최종 수정일**: 2026-04-17
+- **적용 대상**: VosCMS v2.1+
 
 ### 관련 문서
 

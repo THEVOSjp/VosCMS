@@ -1264,6 +1264,27 @@ dd($var)                // 변수 덤프 후 종료
 dump($var)              // 변수 덤프 (계속 실행)
 ```
 
+### 메일 발송
+
+`rzxlib/Core/Helpers/mail.php` — DB SMTP 설정 기반 메일 발송 공용 함수.
+
+```php
+// DB 설정 자동 로드 (rzx_settings의 smtp_*, mail_* 참조)
+rzx_send_mail($pdo, 'to@example.com', '제목', '<p>본문</p>');
+
+// 텍스트 메일 + Reply-To
+rzx_send_mail($pdo, 'admin@site.com', '문의', '본문', [
+    'reply_to'     => 'user@example.com',
+    'content_type' => 'text/plain',
+]);
+
+// SMTP 직접 전달 (DB 조회 없이)
+rzx_send_mail(null, 'to@example.com', '제목', '본문', [
+    'smtp_host' => 'smtp.gmail.com', 'smtp_port' => 587,
+    'smtp_encryption' => 'tls', 'smtp_username' => '...', 'smtp_password' => '...',
+]);
+```
+
 ### 이미지 처리 (ImageHelper)
 
 `RzxLib\Core\Helpers\ImageHelper` 클래스는 이미지 업로드 및 처리를 위한 유틸리티입니다.

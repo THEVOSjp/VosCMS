@@ -97,6 +97,7 @@ function renderMenuItem($item, $sitemapId, $depth = 0) {
          draggable="true"
          onclick="event.stopPropagation(); selectMenuItem(<?= $item['id'] ?>, '<?= htmlspecialchars($translatedTitle, ENT_QUOTES) ?>', <?= $sitemapId ?>, <?= $isHome ?>)"
          data-type="menuItem" data-id="<?= $item['id'] ?>"
+         data-url="<?= htmlspecialchars($item['url'] ?? '') ?>"
          data-sitemap-id="<?= $sitemapId ?>"
          data-parent-id="<?= $item['parent_id'] ?? '' ?>"
          data-sort="<?= $item['sort_order'] ?? 0 ?>"
