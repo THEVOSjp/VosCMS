@@ -194,4 +194,11 @@ return [
     'sf_complete' => '完了！',
     'sf_fail' => '失敗',
     'sf_back_list' => '一覧へ',
+    'sf_type_plugin' => 'プラグイン',
+    'sf_type_widget' => 'ウィジェット',
+    'sf_type_theme' => 'テーマ',
+    'sf_type_skin' => 'スキン',
+    'sf_license_proprietary' => '商用',
+    'sf_license_other' => 'その他',
+    'sf_name_local_hint' => '素敵なプラグイン',
 ];

@@ -194,4 +194,11 @@ return [
     'sf_complete' => '¡Listo!',
     'sf_fail' => 'Error',
     'sf_back_list' => 'Volver a la lista',
+    'sf_type_plugin' => 'Plugin',
+    'sf_type_widget' => 'Widget',
+    'sf_type_theme' => 'Tema',
+    'sf_type_skin' => 'Skin',
+    'sf_license_proprietary' => 'Propietario',
+    'sf_license_other' => 'Otro',
+    'sf_name_local_hint' => 'Mi plugin',
 ];

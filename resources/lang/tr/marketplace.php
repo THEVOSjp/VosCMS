@@ -194,4 +194,11 @@ return [
     'sf_complete' => 'Tamam!',
     'sf_fail' => 'Başarısız',
     'sf_back_list' => 'Listeye dön',
+    'sf_type_plugin' => 'Eklenti',
+    'sf_type_widget' => 'Widget',
+    'sf_type_theme' => 'Tema',
+    'sf_type_skin' => 'Skin',
+    'sf_license_proprietary' => 'Ticari',
+    'sf_license_other' => 'Diğer',
+    'sf_name_local_hint' => 'Eklentim',
 ];

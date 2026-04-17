@@ -194,4 +194,11 @@ return [
     'sf_complete' => 'Дууссан!',
     'sf_fail' => 'Амжилтгүй',
     'sf_back_list' => 'Жагсаалт руу',
+    'sf_type_plugin' => 'Плагин',
+    'sf_type_widget' => 'Виджет',
+    'sf_type_theme' => 'Загвар',
+    'sf_type_skin' => 'Скин',
+    'sf_license_proprietary' => 'Худалдааны',
+    'sf_license_other' => 'Бусад',
+    'sf_name_local_hint' => 'Миний плагин',
 ];

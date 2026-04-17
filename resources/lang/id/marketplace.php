@@ -194,4 +194,11 @@ return [
     'sf_complete' => 'Selesai!',
     'sf_fail' => 'Gagal',
     'sf_back_list' => 'Kembali',
+    'sf_type_plugin' => 'Plugin',
+    'sf_type_widget' => 'Widget',
+    'sf_type_theme' => 'Tema',
+    'sf_type_skin' => 'Skin',
+    'sf_license_proprietary' => 'Proprietary',
+    'sf_license_other' => 'Lainnya',
+    'sf_name_local_hint' => 'Plugin saya',
 ];

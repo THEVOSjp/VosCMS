@@ -194,4 +194,11 @@ return [
     'sf_complete' => 'Готово!',
     'sf_fail' => 'Ошибка',
     'sf_back_list' => 'К списку',
+    'sf_type_plugin' => 'Плагин',
+    'sf_type_widget' => 'Виджет',
+    'sf_type_theme' => 'Тема',
+    'sf_type_skin' => 'Скин',
+    'sf_license_proprietary' => 'Коммерческая',
+    'sf_license_other' => 'Другое',
+    'sf_name_local_hint' => 'Мой плагин',
 ];

@@ -31,7 +31,7 @@ $_hint = 'text-xs text-zinc-400 dark:text-zinc-500 mt-1';
 $_card = 'bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6';
 
 // 라이선스 옵션
-$_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGPL-3.0'=>'LGPL v3','BSD'=>'BSD','MIT'=>'MIT','CC'=>'Creative Commons','PD'=>'Public Domain','proprietary'=>'상용 (Proprietary)','other'=>'기타'];
+$_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGPL-3.0'=>'LGPL v3','BSD'=>'BSD','MIT'=>'MIT','CC'=>'Creative Commons','PD'=>'Public Domain','proprietary'=>__mp('sf_license_proprietary'),'other'=>__mp('sf_license_other')];
 ?>
 
 <!-- 탭 네비게이션 -->
@@ -71,10 +71,10 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
             <div>
                 <label class="<?= $_lbl ?>"><?= __mp('sf_item_type') ?> <span class="text-red-500">*</span></label>
                 <select name="item_type" required class="<?= $_inp ?>">
-                    <option value="plugin" <?= ($editItem['type'] ?? '') === 'plugin' ? 'selected' : '' ?>>Plugin (모듈)</option>
-                    <option value="widget" <?= ($editItem['type'] ?? '') === 'widget' ? 'selected' : '' ?>>Widget (위젯)</option>
-                    <option value="theme" <?= ($editItem['type'] ?? '') === 'theme' ? 'selected' : '' ?>>Theme (테마)</option>
-                    <option value="skin" <?= ($editItem['type'] ?? '') === 'skin' ? 'selected' : '' ?>>Skin (스킨)</option>
+                    <option value="plugin" <?= ($editItem['type'] ?? '') === 'plugin' ? 'selected' : '' ?>><?= __mp('sf_type_plugin') ?></option>
+                    <option value="widget" <?= ($editItem['type'] ?? '') === 'widget' ? 'selected' : '' ?>><?= __mp('sf_type_widget') ?></option>
+                    <option value="theme" <?= ($editItem['type'] ?? '') === 'theme' ? 'selected' : '' ?>><?= __mp('sf_type_theme') ?></option>
+                    <option value="skin" <?= ($editItem['type'] ?? '') === 'skin' ? 'selected' : '' ?>><?= __mp('sf_type_skin') ?></option>
                 </select>
             </div>
             <div>
@@ -115,7 +115,7 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
                 </div>
                 <div>
                     <label class="<?= $_lbl ?>"><?= __mp('sf_name_local') ?></label>
-                    <input type="text" id="name_local" class="<?= $_inp ?>" value="<?= htmlspecialchars($eName[$locale] ?? '') ?>" placeholder="나의 멋진 플러그인">
+                    <input type="text" id="name_local" class="<?= $_inp ?>" value="<?= htmlspecialchars($eName[$locale] ?? '') ?>" placeholder="<?= __mp('sf_name_local_hint') ?>">
                 </div>
             </div>
             <div>
@@ -151,7 +151,7 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
             </div>
             <div>
                 <label class="<?= $_lbl ?>"><?= __mp('sf_requires') ?></label>
-                <input type="text" name="requires_plugins" class="<?= $_inp ?>" value="<?= htmlspecialchars(implode(', ', $eReqPlugins)) ?>" placeholder="vos-salon, vos-pos (쉼표로 구분)">
+                <input type="text" name="requires_plugins" class="<?= $_inp ?>" value="<?= htmlspecialchars(implode(', ', $eReqPlugins)) ?>" placeholder="<?= __mp('sf_requires_hint') ?>">
             </div>
         </div>
     </div>

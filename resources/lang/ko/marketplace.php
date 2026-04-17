@@ -200,4 +200,11 @@ return [
     'sf_complete' => '완료!',
     'sf_fail' => '실패',
     'sf_back_list' => '목록으로',
+    'sf_type_plugin' => 'Plugin (모듈)',
+    'sf_type_widget' => 'Widget (위젯)',
+    'sf_type_theme' => 'Theme (테마)',
+    'sf_type_skin' => 'Skin (스킨)',
+    'sf_license_proprietary' => '상용 (Proprietary)',
+    'sf_license_other' => '기타',
+    'sf_name_local_hint' => '나의 멋진 플러그인',
 ];

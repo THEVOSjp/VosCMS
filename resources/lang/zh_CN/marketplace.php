@@ -194,4 +194,11 @@ return [
     'sf_complete' => '完成！',
     'sf_fail' => '失败',
     'sf_back_list' => '返回列表',
+    'sf_type_plugin' => '插件',
+    'sf_type_widget' => '小部件',
+    'sf_type_theme' => '主题',
+    'sf_type_skin' => '皮肤',
+    'sf_license_proprietary' => '商业',
+    'sf_license_other' => '其他',
+    'sf_name_local_hint' => '我的插件',
 ];

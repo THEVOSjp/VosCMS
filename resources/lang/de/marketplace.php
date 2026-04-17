@@ -194,4 +194,11 @@ return [
     'sf_complete' => 'Fertig!',
     'sf_fail' => 'Fehlgeschlagen',
     'sf_back_list' => 'Zurück zur Liste',
+    'sf_type_plugin' => 'Plugin',
+    'sf_type_widget' => 'Widget',
+    'sf_type_theme' => 'Theme',
+    'sf_type_skin' => 'Skin',
+    'sf_license_proprietary' => 'Proprietär',
+    'sf_license_other' => 'Sonstige',
+    'sf_name_local_hint' => 'Mein Plugin',
 ];

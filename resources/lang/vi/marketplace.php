@@ -194,4 +194,11 @@ return [
     'sf_complete' => 'Hoàn tất!',
     'sf_fail' => 'Thất bại',
     'sf_back_list' => 'Quay lại',
+    'sf_type_plugin' => 'Plugin',
+    'sf_type_widget' => 'Widget',
+    'sf_type_theme' => 'Giao diện',
+    'sf_type_skin' => 'Skin',
+    'sf_license_proprietary' => 'Thương mại',
+    'sf_license_other' => 'Khác',
+    'sf_name_local_hint' => 'Plugin của tôi',
 ];
