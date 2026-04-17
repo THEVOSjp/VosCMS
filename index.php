@@ -267,7 +267,12 @@ $__pageFile = null;
 $__noLayout = false; // API, 로그인 등 자체 레이아웃 페이지
 
 // Route to appropriate handler
-if (empty($path) || $path === 'index.php' || $path === 'home') {
+if ($path === 'sitemap.xml') {
+    include BASE_PATH . '/sitemap.php';
+    exit;
+} elseif ($path === 'changelog') {
+    $__pageFile = BASE_PATH . '/resources/views/customer/changelog.php';
+} elseif (empty($path) || $path === 'index.php' || $path === 'home') {
     // home_page 설정에 지정된 위젯 페이지로 연결
     $pageSlug = $siteSettings['home_page'] ?? 'home';
     $__pageFile = BASE_PATH . '/resources/views/customer/page.php';

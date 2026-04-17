@@ -92,14 +92,14 @@
 
 ### 페이지
 - [ ] 가격 정책 (Pricing) 페이지 — 플랜별 비교표
-- [ ] 업데이트 로그 (Changelog) 공개 페이지
+- [x] 업데이트 로그 (Changelog) 공개 페이지 ✅ (`/changelog` — docs/CHANGELOG.md 자동 렌더링)
 
 ### 게시판
 - [ ] 게시판 확장 변수 — 프론트 렌더링 (글쓰기/읽기에 표시)
 - [ ] 게시판 스킨 다양화
 
 ### SEO
-- [ ] sitemap.xml 자동 생성
+- [x] sitemap.xml 자동 생성 ✅ (`/sitemap.xml` — 48개 URL, 1시간 캐시)
 - [ ] robots.txt 관리자 편집
 - [ ] 구조화 데이터 (Schema.org)
 
