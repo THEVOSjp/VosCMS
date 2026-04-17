@@ -6,11 +6,19 @@
     "icon": "megaphone",
     "thumbnail": "thumbnail.png",
     "name": {
-        "ko": "위치 지도", "en": "Location Map", "ja": "ロケーションマップ",
-        "zh_CN": "位置地图", "zh_TW": "位置地圖", "de": "Standortkarte",
-        "es": "Mapa de ubicación", "fr": "Carte de localisation",
-        "id": "Peta Lokasi", "mn": "Байршлын газрын зураг", "ru": "Карта расположения",
-        "tr": "Konum Haritası", "vi": "Bản đồ vị trí"
+        "ko": "지도 (가로형)",
+        "en": "Wide Map",
+        "ja": "マップ（横型）",
+        "zh_CN": "地图（横版）",
+        "zh_TW": "地圖（橫版）",
+        "de": "Karte (breit)",
+        "es": "Mapa (ancho)",
+        "fr": "Carte (large)",
+        "id": "Peta (lebar)",
+        "mn": "Газрын зураг (өргөн)",
+        "ru": "Карта (широкая)",
+        "tr": "Harita (geniş)",
+        "vi": "Bản đồ (rộng)"
     },
     "description": {
         "ko": "가로형 지도와 위치·연락처 정보를 표시합니다",
@@ -32,107 +40,224 @@
             {
                 "key": "map_query",
                 "type": "text",
-                "label": {"ko": "지도 주소/검색어", "en": "Map Address / Query", "ja": "地図の住所/検索語",
-                    "zh_CN": "地图地址/搜索词", "zh_TW": "地圖地址/搜尋詞", "de": "Kartenadresse",
-                    "es": "Dirección del mapa", "fr": "Adresse de la carte",
-                    "id": "Alamat Peta", "mn": "Газрын зургийн хаяг", "ru": "Адрес на карте",
-                    "tr": "Harita Adresi", "vi": "Địa chỉ bản đồ"},
+                "label": {
+                    "ko": "지도 주소/검색어",
+                    "en": "Map Address / Query",
+                    "ja": "地図の住所/検索語",
+                    "zh_CN": "地图地址/搜索词",
+                    "zh_TW": "地圖地址/搜尋詞",
+                    "de": "Kartenadresse",
+                    "es": "Dirección del mapa",
+                    "fr": "Adresse de la carte",
+                    "id": "Alamat Peta",
+                    "mn": "Газрын зургийн хаяг",
+                    "ru": "Адрес на карте",
+                    "tr": "Harita Adresi",
+                    "vi": "Địa chỉ bản đồ"
+                },
                 "default": "Fukuoka, Hakata"
             },
             {
                 "key": "map_width",
                 "type": "select",
-                "label": {"ko": "지도 너비", "en": "Map Width", "ja": "地図の幅",
-                    "zh_CN": "地图宽度", "zh_TW": "地圖寬度", "de": "Kartenbreite",
-                    "es": "Ancho del mapa", "fr": "Largeur de la carte",
-                    "id": "Lebar Peta", "mn": "Газрын зургийн өргөн", "ru": "Ширина карты",
-                    "tr": "Harita Genişliği", "vi": "Chiều rộng bản đồ"},
+                "label": {
+                    "ko": "지도 너비",
+                    "en": "Map Width",
+                    "ja": "地図の幅",
+                    "zh_CN": "地图宽度",
+                    "zh_TW": "地圖寬度",
+                    "de": "Kartenbreite",
+                    "es": "Ancho del mapa",
+                    "fr": "Largeur de la carte",
+                    "id": "Lebar Peta",
+                    "mn": "Газрын зургийн өргөн",
+                    "ru": "Ширина карты",
+                    "tr": "Harita Genişliği",
+                    "vi": "Chiều rộng bản đồ"
+                },
                 "options": [
-                    {"value": "3xl", "label": "3xl (768px)"},
-                    {"value": "4xl", "label": "4xl (896px)"},
-                    {"value": "5xl", "label": "5xl (1024px)"},
-                    {"value": "6xl", "label": "6xl (1152px)"},
-                    {"value": "7xl", "label": "7xl (1280px)"},
-                    {"value": "full", "label": "Full (100%)"}
+                    {
+                        "value": "3xl",
+                        "label": "3xl (768px)"
+                    },
+                    {
+                        "value": "4xl",
+                        "label": "4xl (896px)"
+                    },
+                    {
+                        "value": "5xl",
+                        "label": "5xl (1024px)"
+                    },
+                    {
+                        "value": "6xl",
+                        "label": "6xl (1152px)"
+                    },
+                    {
+                        "value": "7xl",
+                        "label": "7xl (1280px)"
+                    },
+                    {
+                        "value": "full",
+                        "label": "Full (100%)"
+                    }
                 ],
                 "default": "5xl"
             },
             {
                 "key": "map_height",
                 "type": "select",
-                "label": {"ko": "지도 높이", "en": "Map Height", "ja": "地図の高さ",
-                    "zh_CN": "地图高度", "zh_TW": "地圖高度", "de": "Kartenhöhe",
-                    "es": "Altura del mapa", "fr": "Hauteur de la carte",
-                    "id": "Tinggi Peta", "mn": "Газрын зургийн өндөр", "ru": "Высота карты",
-                    "tr": "Harita Yüksekliği", "vi": "Chiều cao bản đồ"},
+                "label": {
+                    "ko": "지도 높이",
+                    "en": "Map Height",
+                    "ja": "地図の高さ",
+                    "zh_CN": "地图高度",
+                    "zh_TW": "地圖高度",
+                    "de": "Kartenhöhe",
+                    "es": "Altura del mapa",
+                    "fr": "Hauteur de la carte",
+                    "id": "Tinggi Peta",
+                    "mn": "Газрын зургийн өндөр",
+                    "ru": "Высота карты",
+                    "tr": "Harita Yüksekliği",
+                    "vi": "Chiều cao bản đồ"
+                },
                 "options": [
-                    {"value": "300", "label": "Small (300px)"},
-                    {"value": "400", "label": "Medium (400px)"},
-                    {"value": "500", "label": "Large (500px)"}
+                    {
+                        "value": "300",
+                        "label": "Small (300px)"
+                    },
+                    {
+                        "value": "400",
+                        "label": "Medium (400px)"
+                    },
+                    {
+                        "value": "500",
+                        "label": "Large (500px)"
+                    }
                 ],
                 "default": "400"
             },
             {
                 "key": "company_name",
                 "type": "text",
-                "label": {"ko": "회사/매장명", "en": "Company Name", "ja": "会社/店舗名",
-                    "zh_CN": "公司名称", "zh_TW": "公司名稱", "de": "Firmenname",
-                    "es": "Nombre de la empresa", "fr": "Nom de l'entreprise",
-                    "id": "Nama Perusahaan", "mn": "Компанийн нэр", "ru": "Название компании",
-                    "tr": "Şirket Adı", "vi": "Tên công ty"},
+                "label": {
+                    "ko": "회사/매장명",
+                    "en": "Company Name",
+                    "ja": "会社/店舗名",
+                    "zh_CN": "公司名称",
+                    "zh_TW": "公司名稱",
+                    "de": "Firmenname",
+                    "es": "Nombre de la empresa",
+                    "fr": "Nom de l'entreprise",
+                    "id": "Nama Perusahaan",
+                    "mn": "Компанийн нэр",
+                    "ru": "Название компании",
+                    "tr": "Şirket Adı",
+                    "vi": "Tên công ty"
+                },
                 "i18n": true,
                 "default": ""
             },
             {
                 "key": "address",
                 "type": "textarea",
-                "label": {"ko": "주소", "en": "Address", "ja": "住所",
-                    "zh_CN": "地址", "zh_TW": "地址", "de": "Adresse",
-                    "es": "Dirección", "fr": "Adresse",
-                    "id": "Alamat", "mn": "Хаяг", "ru": "Адрес",
-                    "tr": "Adres", "vi": "Địa chỉ"},
+                "label": {
+                    "ko": "주소",
+                    "en": "Address",
+                    "ja": "住所",
+                    "zh_CN": "地址",
+                    "zh_TW": "地址",
+                    "de": "Adresse",
+                    "es": "Dirección",
+                    "fr": "Adresse",
+                    "id": "Alamat",
+                    "mn": "Хаяг",
+                    "ru": "Адрес",
+                    "tr": "Adres",
+                    "vi": "Địa chỉ"
+                },
                 "i18n": true,
                 "default": ""
             },
             {
                 "key": "phone",
                 "type": "text",
-                "label": {"ko": "전화번호", "en": "Phone", "ja": "電話番号",
-                    "zh_CN": "电话", "zh_TW": "電話", "de": "Telefon",
-                    "es": "Teléfono", "fr": "Téléphone",
-                    "id": "Telepon", "mn": "Утас", "ru": "Телефон",
-                    "tr": "Telefon", "vi": "Điện thoại"},
+                "label": {
+                    "ko": "전화번호",
+                    "en": "Phone",
+                    "ja": "電話番号",
+                    "zh_CN": "电话",
+                    "zh_TW": "電話",
+                    "de": "Telefon",
+                    "es": "Teléfono",
+                    "fr": "Téléphone",
+                    "id": "Telepon",
+                    "mn": "Утас",
+                    "ru": "Телефон",
+                    "tr": "Telefon",
+                    "vi": "Điện thoại"
+                },
                 "default": ""
             },
             {
                 "key": "email",
                 "type": "text",
-                "label": {"ko": "이메일", "en": "Email", "ja": "メール",
-                    "zh_CN": "邮箱", "zh_TW": "信箱", "de": "E-Mail",
-                    "es": "Correo", "fr": "E-mail",
-                    "id": "Email", "mn": "Имэйл", "ru": "Email",
-                    "tr": "E-posta", "vi": "Email"},
+                "label": {
+                    "ko": "이메일",
+                    "en": "Email",
+                    "ja": "メール",
+                    "zh_CN": "邮箱",
+                    "zh_TW": "信箱",
+                    "de": "E-Mail",
+                    "es": "Correo",
+                    "fr": "E-mail",
+                    "id": "Email",
+                    "mn": "Имэйл",
+                    "ru": "Email",
+                    "tr": "E-posta",
+                    "vi": "Email"
+                },
                 "default": ""
             },
             {
                 "key": "business_hours",
                 "type": "textarea",
-                "label": {"ko": "영업시간", "en": "Business Hours", "ja": "営業時間",
-                    "zh_CN": "营业时间", "zh_TW": "營業時間", "de": "Öffnungszeiten",
-                    "es": "Horario", "fr": "Horaires",
-                    "id": "Jam Kerja", "mn": "Ажлын цаг", "ru": "Часы работы",
-                    "tr": "Çalışma Saatleri", "vi": "Giờ làm việc"},
+                "label": {
+                    "ko": "영업시간",
+                    "en": "Business Hours",
+                    "ja": "営業時間",
+                    "zh_CN": "营业时间",
+                    "zh_TW": "營業時間",
+                    "de": "Öffnungszeiten",
+                    "es": "Horario",
+                    "fr": "Horaires",
+                    "id": "Jam Kerja",
+                    "mn": "Ажлын цаг",
+                    "ru": "Часы работы",
+                    "tr": "Çalışma Saatleri",
+                    "vi": "Giờ làm việc"
+                },
                 "i18n": true,
                 "default": ""
             },
             {
                 "key": "bg_color",
                 "type": "color_transparent",
-                "label": {"ko": "배경색", "en": "Background Color", "ja": "背景色",
-                    "zh_CN": "背景色", "zh_TW": "背景色", "de": "Hintergrundfarbe",
-                    "es": "Color de fondo", "fr": "Couleur de fond",
-                    "id": "Warna Latar", "mn": "Дэвсгэр өнгө", "ru": "Цвет фона",
-                    "tr": "Arka Plan Rengi", "vi": "Màu nền"},
+                "label": {
+                    "ko": "배경색",
+                    "en": "Background Color",
+                    "ja": "背景色",
+                    "zh_CN": "背景色",
+                    "zh_TW": "背景色",
+                    "de": "Hintergrundfarbe",
+                    "es": "Color de fondo",
+                    "fr": "Couleur de fond",
+                    "id": "Warna Latar",
+                    "mn": "Дэвсгэр өнгө",
+                    "ru": "Цвет фона",
+                    "tr": "Arka Plan Rengi",
+                    "vi": "Màu nền"
+                },
                 "default": "transparent"
             }
         ]

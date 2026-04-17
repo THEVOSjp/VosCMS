@@ -4,6 +4,37 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.1.5] - 2026-04-17
+
+### Added — 위젯 신규
+- **contact-info** (v0.1.0) — 연락처 카드 (주소/전화/이메일/영업시간 + 이미지 + 소형 지도)
+- **location-map** (v0.1.0) — 가로형 지도 (Google Maps + 하단 3열 정보, 너비 조절)
+
+### Added — 개발자 포털
+- **아이템 제출 페이지 전면 리팩토링** — 3탭 (기본 정보/릴리즈/판매)
+- 라이선스(GPL/LGPL/BSD/MIT/CC/PD/상용), 저장소 URL, 데모 URL, 의존 플러그인, 배너 이미지
+- 릴리즈 히스토리, 판매 정보 (공개/판매 토글, 할인가/종료일), UX 개선
+
+### Added — 다국어
+- Developer 메뉴(ID:20) 13개 언어, Hero CTA description/typing_words 12개 언어 보강
+
+### Changed
+- 위젯 이름 구분 명확화 (지도/연락처 카드), page.php fullWidthTypes 추가
+- contact-form 카테고리 → 라벨만 (코드 제거, 위젯 설정 편집 가능)
+
+### Fixed
+- board-contents/board-showcase: file_type → mime_type
+- boards-api: is_shown_in_list 누락 + options JSON 제약
+- contact-form POST: ob 버퍼 전체 비우기
+- Hero CTA: typing_words/description \n 이중 이스케이프
+
+### DB Changes
+- rzx_mp_items: license, repo_url, demo_url 추가
+- rzx_board_extra_vars: is_shown_in_list 추가
+- rzx_contact_messages: 신규 테이블
+
+---
+
 ## [VosCMS 2.1.4] - 2026-04-17
 
 ### Added
