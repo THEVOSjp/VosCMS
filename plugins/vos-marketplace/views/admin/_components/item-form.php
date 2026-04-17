@@ -272,8 +272,8 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label class="<?= $_lbl ?>"><?= __mp('sf_price') ?></label>
                     <div class="flex gap-2">
-                        <input type="number" name="price" value="<?= $editItem['price'] ?? '0' ?>" min="0" step="0.01" class="flex-1 <?= $_inp ?>">
-                        <select name="currency" class="w-24 <?= $_inp ?>">
+                        <input type="number" name="price" value="<?= $editItem['price'] ?? '0' ?>" min="0" step="0.01" class="w-32 <?= $_inp ?>">
+                        <select name="currency" class="flex-1 <?= $_inp ?>">
                             <?php foreach (['USD','JPY','KRW','EUR'] as $cur): ?>
                             <option value="<?= $cur ?>" <?= ($editItem['currency'] ?? '') === $cur ? 'selected' : '' ?>><?= $cur ?></option>
                             <?php endforeach; ?>
