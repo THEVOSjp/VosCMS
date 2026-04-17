@@ -175,7 +175,7 @@ return [
     'sf_package' => 'Багц (.zip)',
     'sf_package_hint' => 'Хамгийн ихдээ 50MB',
     'sf_changelog' => 'Өөрчлөлтийн бүртгэл',
-    'sf_changelog_hint' => '- Шинэ функц\n- Засвар',
+    "sf_changelog_hint" => "- Шинэ функц\n- Засвар",
     'sf_sales_info' => 'Борлуулалт',
     'sf_sales_notice' => 'Зөвхөн төлбөртэй.',
     'sf_price_type' => 'Төрөл',

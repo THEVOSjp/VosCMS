@@ -124,7 +124,7 @@ return [
     'new_version_title' => 'Télécharger une nouvelle version',
     'submit_update_btn' => 'Soumettre la mise à jour',
     'cancel' => 'Annuler',
-    'submit_name_en_hint' => 'Nom de l'article en anglais',
+    'submit_name_en_hint' => 'Nom de l\'article en anglais',
     'submit_name_local_hint' => 'Nom en français (facultatif)',
 
     // Submit Form
@@ -175,7 +175,7 @@ return [
     'sf_package' => 'Paquet (.zip)',
     'sf_package_hint' => 'Max 50Mo',
     'sf_changelog' => 'Journal des modifications',
-    'sf_changelog_hint' => '- Nouvelle fonctionnalité\n- Correction',
+    "sf_changelog_hint" => "- Nouvelle fonctionnalité\n- Correction",
     'sf_sales_info' => 'Info ventes',
     'sf_sales_notice' => 'Uniquement pour les articles payants.',
     'sf_price_type' => 'Distribution',

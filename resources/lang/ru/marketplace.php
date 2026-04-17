@@ -175,7 +175,7 @@ return [
     'sf_package' => 'Пакет (.zip)',
     'sf_package_hint' => 'Макс 50МБ',
     'sf_changelog' => 'Журнал изменений',
-    'sf_changelog_hint' => '- Новая функция\n- Исправление',
+    "sf_changelog_hint" => "- Новая функция\n- Исправление",
     'sf_sales_info' => 'Продажи',
     'sf_sales_notice' => 'Только для платных.',
     'sf_price_type' => 'Тип',

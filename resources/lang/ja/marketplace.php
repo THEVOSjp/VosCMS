@@ -175,7 +175,7 @@ return [
     'sf_package' => 'パッケージ (.zip)',
     'sf_package_hint' => '最大50MB',
     'sf_changelog' => '変更履歴',
-    'sf_changelog_hint' => '- 新機能追加\n- バグ修正',
+    "sf_changelog_hint" => "- 新機能追加\n- バグ修正",
     'sf_sales_info' => '販売情報',
     'sf_sales_notice' => '有料販売にのみ該当します。',
     'sf_price_type' => '資料区分',

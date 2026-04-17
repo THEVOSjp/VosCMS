@@ -175,7 +175,7 @@ return [
     'sf_package' => 'Paket (.zip)',
     'sf_package_hint' => 'Maks 50MB',
     'sf_changelog' => 'Catatan Perubahan',
-    'sf_changelog_hint' => '- Fitur baru\n- Perbaikan',
+    "sf_changelog_hint" => "- Fitur baru\n- Perbaikan",
     'sf_sales_info' => 'Info Penjualan',
     'sf_sales_notice' => 'Hanya untuk item berbayar.',
     'sf_price_type' => 'Distribusi',

@@ -175,7 +175,7 @@ return [
     'sf_package' => 'Paquete (.zip)',
     'sf_package_hint' => 'Máx 50MB',
     'sf_changelog' => 'Registro de cambios',
-    'sf_changelog_hint' => '- Nueva función\n- Corrección',
+    "sf_changelog_hint" => "- Nueva función\n- Corrección",
     'sf_sales_info' => 'Info de ventas',
     'sf_sales_notice' => 'Solo para artículos de pago.',
     'sf_price_type' => 'Distribución',

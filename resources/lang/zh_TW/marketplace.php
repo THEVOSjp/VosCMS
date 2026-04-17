@@ -175,7 +175,7 @@ return [
     'sf_package' => '套件檔 (.zip)',
     'sf_package_hint' => '最大50MB',
     'sf_changelog' => '更新日誌',
-    'sf_changelog_hint' => '- 新功能\n- 修復',
+    "sf_changelog_hint" => "- 新功能\n- 修復",
     'sf_sales_info' => '銷售資訊',
     'sf_sales_notice' => '僅適用於付費項目。',
     'sf_price_type' => '類型',

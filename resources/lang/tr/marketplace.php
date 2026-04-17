@@ -175,7 +175,7 @@ return [
     'sf_package' => 'Paket (.zip)',
     'sf_package_hint' => 'Maks 50MB',
     'sf_changelog' => 'Değişiklik Günlüğü',
-    'sf_changelog_hint' => '- Yeni özellik\n- Düzeltme',
+    "sf_changelog_hint" => "- Yeni özellik\n- Düzeltme",
     'sf_sales_info' => 'Satış Bilgisi',
     'sf_sales_notice' => 'Sadece ücretli öğeler için.',
     'sf_price_type' => 'Dağıtım',

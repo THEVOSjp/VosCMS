@@ -181,7 +181,7 @@ return [
     'sf_package' => '패키지 파일 (.zip)',
     'sf_package_hint' => '최대 50MB',
     'sf_changelog' => '변경 이력',
-    'sf_changelog_hint' => '- 새 기능 추가\n- 버그 수정',
+    "sf_changelog_hint" => "- 새 기능 추가\n- 버그 수정",
     'sf_sales_info' => '판매 정보',
     'sf_sales_notice' => '유료 판매 자료에만 해당되는 기능입니다.',
     'sf_price_type' => '자료 구분',

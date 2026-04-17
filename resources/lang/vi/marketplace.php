@@ -175,7 +175,7 @@ return [
     'sf_package' => 'Gói (.zip)',
     'sf_package_hint' => 'Tối đa 50MB',
     'sf_changelog' => 'Nhật ký thay đổi',
-    'sf_changelog_hint' => '- Tính năng mới\n- Sửa lỗi',
+    "sf_changelog_hint" => "- Tính năng mới\n- Sửa lỗi",
     'sf_sales_info' => 'Thông tin bán hàng',
     'sf_sales_notice' => 'Chỉ cho mục trả phí.',
     'sf_price_type' => 'Phân phối',
