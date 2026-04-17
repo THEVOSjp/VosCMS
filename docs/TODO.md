@@ -109,7 +109,7 @@
 
 ### 리팩토링 대상
 - [x] `index.php` — 953줄 → 669줄 ✅ 관리자 라우트 `AdminRouter.php`(295줄)로 분리
-- [ ] `page.php` — 300줄+ → 렌더러 분리
+- [x] `page.php` — 303줄 → 165줄 ✅ 타입별 파셜 분리 (external/widget/document)
 - [ ] 위젯 render.php — 공통 패턴 추출 (CSS/JS 스코핑, 다국어 로드)
 
 ### 테스트
