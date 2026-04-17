@@ -178,6 +178,21 @@ return [
         'position' => 80,
     ],
 
+    // ── 문의 관리 ──
+    [
+        'id' => 'contact-messages',
+        'title' => [
+            'ko'=>'문의 관리','en'=>'Contact Messages','ja'=>'お問い合わせ管理',
+            'de'=>'Kontaktnachrichten','es'=>'Mensajes de contacto','fr'=>'Messages de contact',
+            'id'=>'Pesan Kontak','mn'=>'Холбоо барих мессеж','ru'=>'Сообщения',
+            'tr'=>'İletişim Mesajları','vi'=>'Tin nhắn liên hệ',
+            'zh_CN'=>'联系消息','zh_TW'=>'聯繫訊息',
+        ],
+        'icon' => 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+        'route' => 'contact-messages',
+        'position' => 75,
+    ],
+
     // ── 설정 ──
     [
         'id' => 'settings',

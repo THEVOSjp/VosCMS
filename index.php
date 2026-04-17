@@ -602,6 +602,8 @@ if (empty($path) || $path === 'index.php' || $path === 'home') {
         include BASE_PATH . '/resources/views/admin/plugins.php';
     } elseif ($adminRoute === 'review-queue') {
         include BASE_PATH . '/resources/views/admin/review-queue.php';
+    } elseif ($adminRoute === 'contact-messages') {
+        include BASE_PATH . '/resources/views/admin/contact-messages.php';
     } elseif ($adminRoute === 'plugins/api') {
         $__noLayout = true;
         include BASE_PATH . '/resources/views/admin/plugins-api.php';

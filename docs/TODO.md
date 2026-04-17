@@ -58,7 +58,7 @@
 ## 4. 인프라/시스템
 
 ### 메일 시스템
-- [ ] 관리자 문의 목록 페이지 (rzx_contact_messages 조회/답변)
+- [x] 관리자 문의 목록 페이지 ✅ (`/theadmin/contact-messages`)
 - [ ] 메일 발송 이력 로깅
 - [ ] 메일 템플릿 시스템 (HTML 메일)
 
