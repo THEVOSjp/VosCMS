@@ -162,7 +162,7 @@ $_canShow = function($menu) {
             // ── 서브메뉴 있는 메뉴 ──
 ?>
         <div class="has-submenu" data-submenu="<?= $_submenuId ?>">
-            <button onclick="toggleSubmenu('<?= $_submenuId ?>')" class="flex items-center justify-between w-full px-6 py-3 <?= $_isMenuActive ? 'text-white bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white' ?>">
+            <button onclick="toggleSubmenu('<?= $_submenuId ?>')" class="flex items-center justify-between w-full px-6 py-3 <?= $_isMenuActive ? 'text-white bg-blue-600' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white' ?>">
                 <div class="flex items-center">
                     <?php if ($_icon): ?><svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $_icon ?>"/></svg><?php endif; ?>
                     <span class="sidebar-text"><?= htmlspecialchars($_title) ?></span>
@@ -178,7 +178,7 @@ $_canShow = function($menu) {
                 $_itemIcon = $_item['icon'] ?? '';
                 $_itemActive = $_isActive($_itemRoute);
 ?>
-                <a href="<?= $adminUrl ?>/<?= $_itemRoute ?>" class="flex items-center px-6 py-2.5 pl-14 <?= $_itemActive ? 'text-blue-400 bg-zinc-800' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white' ?> text-sm">
+                <a href="<?= $adminUrl ?>/<?= $_itemRoute ?>" class="flex items-center px-6 py-2.5 pl-14 <?= $_itemActive ? 'text-white bg-blue-600/80' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white' ?> text-sm">
                     <?php if ($_itemIcon): ?><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $_itemIcon ?>"/></svg><?php endif; ?>
                     <?= htmlspecialchars($_itemTitle) ?>
                 </a>
