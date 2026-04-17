@@ -300,6 +300,12 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
         <button type="button" id="nextTabBtn" class="px-5 py-2.5 bg-zinc-600 hover:bg-zinc-700 text-white text-sm font-medium rounded-lg transition inline-flex items-center gap-1.5">
             다음 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </button>
+        <?php if ($context === 'developer' && !$isEdit): ?>
+        <button type="button" id="draftBtn" class="px-5 py-2.5 border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 text-sm font-medium rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition inline-flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+            임시 저장
+        </button>
+        <?php endif; ?>
         <button type="submit" id="submitBtn" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition inline-flex items-center gap-1.5 shadow-lg shadow-indigo-600/25">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
             <?= $isEdit ? '수정 완료' : '작성 완료' ?>
@@ -379,12 +385,23 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
         if (ex) $('#description-editor').summernote('code', ex);
     });
 
-    // 폼 제출
-    document.getElementById('submitForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
+    // 임시 저장
+    var draftBtn = document.getElementById('draftBtn');
+    if (draftBtn) {
+        draftBtn.addEventListener('click', function() {
+            var fd = new FormData(document.getElementById('submitForm'));
+            fd.set('save_draft', '1');
+            submitFormData(fd);
+        });
+    }
+
+    // 공통 제출 함수
+    async function submitFormData(fd) {
         var btn = document.getElementById('submitBtn'); btn.disabled = true;
+        var origHtml = btn.innerHTML;
         btn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> 처리 중...';
-        var fd = new FormData(this);
+
+        // JSON 필드 가공
         var ne = document.getElementById('name_en').value, nl = document.getElementById('name_local').value;
         var no = {en:ne}; if(nl) no['<?= $locale ?>'] = nl;
         fd.set('name', JSON.stringify(no));
@@ -402,15 +419,20 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
             var el = document.getElementById('result');
             if(data.success) {
                 el.className = 'mb-4 p-4 rounded-lg text-sm bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800';
-                el.innerHTML = '<strong>완료!</strong> ' + (data.message||'') + '<br><a href="<?= $backUrl ?>" class="underline font-medium">목록으로</a>';
+                el.innerHTML = '<strong>' + (data.is_draft ? '임시 저장 완료' : '완료') + '!</strong> ' + (data.message||'') + '<br><a href="<?= $backUrl ?>" class="underline font-medium">목록으로</a>';
             } else {
                 el.className = 'mb-4 p-4 rounded-lg text-sm bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800';
                 el.textContent = data.message || '실패';
             }
             el.classList.remove('hidden'); showTab(0); window.scrollTo({top:0,behavior:'smooth'});
         } catch(err) { alert('네트워크 오류'); }
-        btn.disabled = false;
-        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> <?= $isEdit ? '수정 완료' : '작성 완료' ?>';
+        btn.disabled = false; btn.innerHTML = origHtml;
+    }
+
+    // 폼 제출
+    document.getElementById('submitForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        submitFormData(new FormData(this));
     });
 })();
 </script>

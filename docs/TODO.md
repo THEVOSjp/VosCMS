@@ -33,11 +33,12 @@
 - [ ] 탭 시스템 → JS 공용 모듈
 - [ ] 파일 업로드 UI → 드래그 영역 공용 컴포넌트
 
-### 제출 API 보강
-- [ ] `api/developer/submit.php` — 신규 필드 처리 (license, repo_url, demo_url, banner, requires_plugins)
-- [ ] 버전 업데이트 API — 기존 아이템에 새 릴리즈 추가
-- [ ] 임시 저장 (draft) 기능
-- [ ] 제출 전 미리보기
+### ~~제출 API 보강~~ ✅ 완료 (2026-04-18)
+- [x] `api/developer/submit.php` — license, repo_url, demo_url, banner, requires_plugins 처리
+- [x] 배너 이미지 업로드 지원
+- [x] 임시 저장 (draft) — save_draft=1 파라미터, 패키지 미필수
+- [x] vcs_review_queue에 license, repo_url, demo_url 컬럼 추가, status에 draft 추가
+- [ ] 제출 전 미리보기 (향후)
 
 ---
 
