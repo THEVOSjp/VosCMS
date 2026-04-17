@@ -70,6 +70,11 @@
                 "method": "GET"
             },
             {
+                "path": "marketplace\/submit",
+                "view": "admin\/item-submit.php",
+                "method": "GET"
+            },
+            {
                 "path": "marketplace\/api",
                 "view": "admin\/api.php",
                 "method": "POST"
@@ -151,6 +156,24 @@
                             "zh_TW": "尋找外掛"
                         },
                         "route": "marketplace"
+                    },
+                    {
+                        "title": {
+                            "ko": "아이템 등록",
+                            "en": "Submit Item",
+                            "ja": "アイテム登録",
+                            "de": "Eintrag erstellen",
+                            "es": "Registrar elemento",
+                            "fr": "Soumettre un élément",
+                            "id": "Daftarkan Item",
+                            "mn": "Бүтээгдэхүүн бүртгэх",
+                            "ru": "Добавить элемент",
+                            "tr": "Öğe Ekle",
+                            "vi": "Đăng ký mục",
+                            "zh_CN": "提交项目",
+                            "zh_TW": "提交項目"
+                        },
+                        "route": "marketplace/submit"
                     },
                     {
                         "title": {

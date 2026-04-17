@@ -162,6 +162,96 @@ switch ($action) {
         echo json_encode($result);
         break;
 
+    // ─── 아이템 등록/수정 (관리자) ───
+    case 'submit_item':
+        $itemId = (int)($_POST['item_id'] ?? 0);
+        $name = $_POST['name'] ?? '{}';
+        $type = $_POST['item_type'] ?? 'plugin';
+        $shortDesc = $_POST['short_description'] ?? '{}';
+        $description = $_POST['description'] ?? '{}';
+        $categoryId = (int)($_POST['category_id'] ?? 0) ?: null;
+        $tags = $_POST['tags'] ?? '[]';
+        $license = $_POST['license'] ?? null;
+        $repoUrl = $_POST['repo_url'] ?? null;
+        $demoUrl = $_POST['demo_url'] ?? null;
+        $reqPlugins = $_POST['requires_plugins'] ?? '[]';
+        $version = $_POST['version'] ?? '1.0.0';
+        $minVoscms = $_POST['min_voscms'] ?? null;
+        $minPhp = $_POST['min_php'] ?? null;
+        $price = (float)($_POST['price'] ?? 0);
+        $currency = $_POST['currency'] ?? 'USD';
+        $salePrice = !empty($_POST['sale_price']) ? (float)$_POST['sale_price'] : null;
+        $saleEnds = $_POST['sale_ends_at'] ?? null;
+        $changelog = $_POST['changelog'] ?? '';
+
+        // slug 생성 (영문 이름에서)
+        $nameData = json_decode($name, true) ?: [];
+        $slugBase = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $nameData['en'] ?? 'item-' . time()));
+        $slug = trim($slugBase, '-');
+
+        // 파일 업로드 처리
+        $uploadDir = BASE_PATH . '/storage/uploads/marketplace/';
+        if (!is_dir($uploadDir)) @mkdir($uploadDir, 0775, true);
+
+        $iconPath = null;
+        if (!empty($_FILES['icon']) && $_FILES['icon']['error'] === UPLOAD_ERR_OK) {
+            $ext = pathinfo($_FILES['icon']['name'], PATHINFO_EXTENSION) ?: 'png';
+            $fn = 'icon_' . $slug . '_' . time() . '.' . $ext;
+            if (move_uploaded_file($_FILES['icon']['tmp_name'], $uploadDir . $fn)) {
+                $iconPath = '/storage/uploads/marketplace/' . $fn;
+            }
+        }
+
+        $bannerPath = null;
+        if (!empty($_FILES['banner']) && $_FILES['banner']['error'] === UPLOAD_ERR_OK) {
+            $ext = pathinfo($_FILES['banner']['name'], PATHINFO_EXTENSION) ?: 'jpg';
+            $fn = 'banner_' . $slug . '_' . time() . '.' . $ext;
+            if (move_uploaded_file($_FILES['banner']['tmp_name'], $uploadDir . $fn)) {
+                $bannerPath = '/storage/uploads/marketplace/' . $fn;
+            }
+        }
+
+        $screenshots = [];
+        if (!empty($_FILES['screenshots'])) {
+            foreach ($_FILES['screenshots']['tmp_name'] as $i => $tmp) {
+                if ($_FILES['screenshots']['error'][$i] !== UPLOAD_ERR_OK) continue;
+                $ext = pathinfo($_FILES['screenshots']['name'][$i], PATHINFO_EXTENSION) ?: 'jpg';
+                $fn = 'ss_' . $slug . '_' . time() . '_' . $i . '.' . $ext;
+                if (move_uploaded_file($tmp, $uploadDir . $fn)) {
+                    $screenshots[] = '/storage/uploads/marketplace/' . $fn;
+                }
+            }
+        }
+
+        try {
+            if ($itemId) {
+                // 수정
+                $sets = "name=?, type=?, short_description=?, description=?, category_id=?, tags=?, license=?, repo_url=?, demo_url=?, requires_plugins=?, latest_version=?, min_voscms_version=?, min_php_version=?, price=?, currency=?, sale_price=?, sale_ends_at=?, updated_at=NOW()";
+                $params = [$name, $type, $shortDesc, $description, $categoryId, $tags, $license, $repoUrl, $demoUrl, $reqPlugins, $version, $minVoscms, $minPhp, $price, $currency, $salePrice, $saleEnds ?: null];
+
+                if ($iconPath) { $sets .= ", icon=?"; $params[] = $iconPath; }
+                if ($bannerPath) { $sets .= ", banner_image=?"; $params[] = $bannerPath; }
+                if (!empty($screenshots)) { $sets .= ", screenshots=?"; $params[] = json_encode($screenshots); }
+
+                $params[] = $itemId;
+                $pdo->prepare("UPDATE {$prefix}mp_items SET {$sets} WHERE id=?")->execute($params);
+                echo json_encode(['success' => true, 'message' => '아이템이 수정되었습니다.', 'id' => $itemId]);
+            } else {
+                // 신규 등록
+                $stmt = $pdo->prepare("INSERT INTO {$prefix}mp_items (slug, name, type, short_description, description, author_name, category_id, tags, license, repo_url, demo_url, requires_plugins, icon, banner_image, screenshots, latest_version, min_voscms_version, min_php_version, price, currency, sale_price, sale_ends_at, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                $stmt->execute([$slug, $name, $type, $shortDesc, $description, $_SESSION['admin_name'] ?? 'Admin', $categoryId, $tags, $license, $repoUrl, $demoUrl, $reqPlugins, $iconPath, $bannerPath, json_encode($screenshots), $version, $minVoscms, $minPhp, $price, $currency, $salePrice, $saleEnds ?: null, 'active']);
+                $newId = $pdo->lastInsertId();
+
+                // 버전 레코드 생성
+                $pdo->prepare("INSERT INTO {$prefix}mp_item_versions (item_id, version, changelog, min_voscms_version, min_php_version) VALUES (?,?,?,?,?)")->execute([$newId, $version, $changelog, $minVoscms, $minPhp]);
+
+                echo json_encode(['success' => true, 'message' => '아이템이 등록되었습니다.', 'id' => $newId]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'message' => 'DB Error: ' . $e->getMessage()]);
+        }
+        break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Unknown action']);
 }
