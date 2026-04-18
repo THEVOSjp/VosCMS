@@ -17,7 +17,7 @@ class CatalogClient
     private string $apiUrl;
     private int $timeout;
 
-    public function __construct(string $apiUrl = 'https://marketplace.voscms.com/api', int $timeout = 30)
+    public function __construct(string $apiUrl = 'https://market.21ces.com/api/v1', int $timeout = 30)
     {
         $this->apiUrl = rtrim($apiUrl, '/');
         $this->timeout = $timeout;
@@ -55,16 +55,21 @@ class CatalogClient
      */
     public function fetchItem(string $slug): ?array
     {
-        return $this->request('/item', ['slug' => $slug]);
+        return $this->request('/items/' . rawurlencode($slug));
     }
 
     /**
      * 업데이트 확인
+     *   $installedItems: ['slug' => 'current_version', ...]
      */
     public function checkUpdates(array $installedItems): array
     {
-        $response = $this->request('/updates', [
-            'items' => json_encode($installedItems),
+        $parts = [];
+        foreach ($installedItems as $slug => $ver) {
+            $parts[] = $slug . ':' . $ver;
+        }
+        $response = $this->request('/updates/check', [
+            'items' => implode(',', $parts),
         ]);
 
         return $response['updates'] ?? [];

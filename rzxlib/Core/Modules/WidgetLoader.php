@@ -216,7 +216,10 @@ class WidgetLoader
         if (!$widget || !($widget['_has_thumbnail'] ?? false)) return null;
 
         $thumbnailFile = $widget['thumbnail'] ?? 'thumbnail.png';
-        return $baseUrl . '/widgets/' . $slug . '/' . $thumbnailFile;
+        $thumbnailPath = ($widget['_dir'] ?? '') . '/' . $thumbnailFile;
+        // 파일 mtime 기반 캐시버스터 (CDN/브라우저 캐시 무효화)
+        $v = file_exists($thumbnailPath) ? filemtime($thumbnailPath) : '';
+        return $baseUrl . '/widgets/' . $slug . '/' . $thumbnailFile . ($v ? '?v=' . $v : '');
     }
 
     /**

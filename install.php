@@ -717,20 +717,124 @@ LICENSE_SERVER={$licenseServer}
     <?php if ($step === '0'): // 언어 선택 ?>
     <h2 class="text-xl font-bold text-zinc-800 mb-2 text-center">Select Language</h2>
     <p class="text-sm text-zinc-500 mb-6 text-center">Choose your installation language</p>
-    <form method="POST">
+    <form method="POST" id="install-lang-form">
         <input type="hidden" name="step" value="0">
         <div class="grid grid-cols-2 gap-3">
             <?php foreach ($_installLangs as $_lCode => $_lName): ?>
             <label class="flex items-center gap-3 p-3 border border-zinc-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                <input type="radio" name="install_locale" value="<?= $_lCode ?>" <?= $_lCode === 'ko' ? 'checked' : '' ?> class="text-blue-600 focus:ring-blue-500">
+                <input type="radio" name="install_locale" value="<?= $_lCode ?>" <?= $_lCode === 'ko' ? 'checked' : '' ?> class="text-blue-600 focus:ring-blue-500" data-lang="<?= $_lCode ?>">
                 <span class="text-sm font-medium text-zinc-700"><?= $_lName ?></span>
             </label>
             <?php endforeach; ?>
         </div>
-        <button type="submit" class="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">
+        <button type="button" id="btn-start-install" class="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">
             Start Installation &rarr;
         </button>
     </form>
+
+    <!-- 백업 안내 모달 (언어 선택 후 표시) -->
+    <div id="backup-warning-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center p-4 z-50 hidden" style="display:none;">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 sm:p-8">
+                <h3 id="bw-title" class="text-xl sm:text-2xl font-bold text-amber-700 mb-4"></h3>
+                <div id="bw-body" class="text-sm text-zinc-700 leading-relaxed mb-4"></div>
+                <ul class="space-y-2 mb-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <li class="flex items-start gap-2 text-sm"><span class="text-amber-600 font-bold">•</span><span id="bw-item-env"></span></li>
+                    <li class="flex items-start gap-2 text-sm"><span class="text-amber-600 font-bold">•</span><span id="bw-item-db"></span></li>
+                    <li class="flex items-start gap-2 text-sm"><span class="text-amber-600 font-bold">•</span><span id="bw-item-uploads"></span></li>
+                </ul>
+                <div id="bw-warn" class="text-sm bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-5"></div>
+
+                <label class="flex items-start gap-3 p-3 border border-zinc-300 rounded-lg cursor-pointer hover:bg-zinc-50 mb-4 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                    <input type="checkbox" id="bw-check" class="mt-0.5 w-4 h-4 text-blue-600 focus:ring-blue-500 rounded">
+                    <span id="bw-check-label" class="text-sm text-zinc-700"></span>
+                </label>
+
+                <div class="flex gap-3">
+                    <button type="button" id="bw-cancel" class="flex-1 py-2.5 border border-zinc-300 rounded-lg text-zinc-700 hover:bg-zinc-50 font-medium"></button>
+                    <button type="button" id="bw-confirm" disabled class="flex-1 py-2.5 bg-blue-600 text-white rounded-lg font-bold disabled:bg-zinc-300 disabled:cursor-not-allowed hover:bg-blue-700 transition"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        // 언어별 번역 (각 언어 선택에 맞춰 모달 내용 교체)
+        const i18n = <?= json_encode(array_map(function($lang) use ($_it) {
+            return [
+                'title'        => $_it[$lang]['backup_title'] ?? $_it['en']['backup_title'] ?? '',
+                'body'         => $_it[$lang]['backup_body'] ?? $_it['en']['backup_body'] ?? '',
+                'item_env'     => $_it[$lang]['backup_item_env'] ?? $_it['en']['backup_item_env'] ?? '',
+                'item_db'      => $_it[$lang]['backup_item_db'] ?? $_it['en']['backup_item_db'] ?? '',
+                'item_uploads' => $_it[$lang]['backup_item_uploads'] ?? $_it['en']['backup_item_uploads'] ?? '',
+                'warn'         => $_it[$lang]['backup_warn'] ?? $_it['en']['backup_warn'] ?? '',
+                'check'        => $_it[$lang]['backup_check'] ?? $_it['en']['backup_check'] ?? '',
+                'confirm'      => $_it[$lang]['backup_confirm'] ?? $_it['en']['backup_confirm'] ?? '',
+                'cancel'       => $_it[$lang]['backup_cancel'] ?? $_it['en']['backup_cancel'] ?? '',
+            ];
+        }, array_combine(array_keys($_installLangs), array_keys($_installLangs))), JSON_UNESCAPED_UNICODE) ?>;
+
+        const form     = document.getElementById('install-lang-form');
+        const modal    = document.getElementById('backup-warning-modal');
+        const check    = document.getElementById('bw-check');
+        const btnOK    = document.getElementById('bw-confirm');
+        const btnNo    = document.getElementById('bw-cancel');
+        const btnOpen  = document.getElementById('btn-start-install');
+
+        function applyLang(code) {
+            const t = i18n[code] || i18n['en'] || {};
+            document.getElementById('bw-title').innerHTML        = t.title || '';
+            document.getElementById('bw-body').innerHTML         = t.body || '';
+            document.getElementById('bw-item-env').innerHTML     = t.item_env || '';
+            document.getElementById('bw-item-db').innerHTML      = t.item_db || '';
+            document.getElementById('bw-item-uploads').innerHTML = t.item_uploads || '';
+            document.getElementById('bw-warn').innerHTML         = t.warn || '';
+            document.getElementById('bw-check-label').innerHTML  = t.check || '';
+            btnOK.textContent = t.confirm || 'Confirm';
+            btnNo.textContent = t.cancel || 'Cancel';
+        }
+
+        // 선택된 언어로 모달 내용 준비
+        function getSelectedLang() {
+            const r = document.querySelector('input[name="install_locale"]:checked');
+            return r ? r.value : 'ko';
+        }
+
+        btnOpen.addEventListener('click', function() {
+            applyLang(getSelectedLang());
+            modal.style.display = 'flex';
+            check.checked = false;
+            btnOK.disabled = true;
+        });
+
+        // 언어 변경 시 모달 열려있으면 즉시 반영
+        document.querySelectorAll('input[name="install_locale"]').forEach(r => {
+            r.addEventListener('change', () => {
+                if (modal.style.display === 'flex') applyLang(r.value);
+            });
+        });
+
+        check.addEventListener('change', () => { btnOK.disabled = !check.checked; });
+
+        btnNo.addEventListener('click', () => { modal.style.display = 'none'; });
+
+        btnOK.addEventListener('click', () => {
+            if (!check.checked) return;
+            form.submit();
+        });
+
+        // 배경 클릭 시 닫기
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+
+        // ESC 키 닫기
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.style.display === 'flex') modal.style.display = 'none';
+        });
+    })();
+    </script>
 
     <?php elseif ($step === '1' || $step === 1): // 환경 체크 ?>
     <h2 class="text-xl font-bold text-zinc-800 mb-6">1. <?= __t('step1') ?></h2>

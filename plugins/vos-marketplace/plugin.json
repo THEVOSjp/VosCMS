@@ -239,7 +239,7 @@
     },
     "settings": {
         "defaults": {
-            "marketplace_api_url": "https:\/\/marketplace.voscms.com\/api",
+            "marketplace_api_url": "https:\/\/market.21ces.com\/api\/v1",
             "auto_update_check": "1",
             "update_check_interval": "86400"
         }

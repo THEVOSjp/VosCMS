@@ -4,6 +4,7 @@
   "author": "VosCMS",
   "category": "marketing",
   "icon": "presentation-chart-bar",
+  "thumbnail": "thumbnail.png",
   "name": {
     "ko": "기능 소개 투어",
     "en": "Feature Tour",

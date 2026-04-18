@@ -4,6 +4,43 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.2.0] - 2026-04-18 — Marketplace 분리
+
+### Changed — 마켓플레이스 아키텍처 (Breaking)
+
+- **마켓플레이스 제품 분리**: 기존 `plugins/vos-marketplace/` 플러그인이 공유하던 기능을 별도 제품으로 분리 → **[github.com/THEVOSjp/Marketplace](https://github.com/THEVOSjp/Marketplace)** 신규 저장소, `market.21ces.com` 독립 배포
+- 플러그인은 "고객 사이트 사용자측 UI" (탐색·구매·설치·라이선스) 만 유지, 데이터·판매자·정산은 마켓플레이스 서버에서 전담
+- Core 측 API 연동 포인트 갱신
+
+### Added — install.php 백업 안내 모달
+
+- 언어 선택 후 모달 표시 — `.env` + DB + `storage/uploads/` 백업 필요성 + APP_KEY 유실 시 복호화 불가 경고
+- 체크박스 + 확인 버튼 2단계 (무조건 설치 진행 금지)
+- 13개 언어 전체 번역 추가 (`backup_title/body/item_env/db/uploads/warn/check/confirm/cancel`)
+
+### Added — 위젯 마켓플레이스 등록 스크립트
+
+- `scripts/register-widgets-to-marketplace.php` — 파일 기반 위젯 28개를 `rzx_mp_items` 로 일괄 등록
+
+### Changed
+
+- `plugins/vos-marketplace/src/CatalogClient.php` — 기본 API URL `https://market.21ces.com/api/v1`, `fetchItem()` 경로 변경, `checkUpdates()` 쿼리 포맷 변경
+- `plugins/vos-marketplace/plugin.json` — `marketplace_api_url` 기본값 갱신
+- `rzxlib/Core/Modules/WidgetLoader.php` — 썸네일 URL 에 `?v={mtime}` 캐시버스터 추가 (Cloudflare immutable 캐시 대응)
+
+### Fixed
+
+- `widgets/feature-tour/widget.json` — 필드 정리
+- 일부 위젯 썸네일 갱신 (staff, testimonials, feature-tour, shop-map, shop-ranking, stylebook)
+
+### Infrastructure
+
+- Nginx `default_server` 444 반환 설정 — 미등록 호스트 차단 (와일드카드 터널 대응)
+- Cloudflare Tunnel 라우팅: `*.21ces.com` 와일드카드 공개 호스트네임 추가, DNS `CNAME * → 21ces.com` 생성
+- 21ces.com 루트 도메인 A 레코드는 NAS 로 유지 (thevos.jp 리뉴얼 완료 후 처리 예정)
+
+---
+
 ## [VosCMS 2.1.5] - 2026-04-17
 
 ### Added — 위젯 신규
