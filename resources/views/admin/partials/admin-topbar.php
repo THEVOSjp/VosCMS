@@ -45,19 +45,30 @@
 
         <span id="topbarClock" class="text-sm font-mono text-blue-600 dark:text-blue-400"><?= date('Y-m-d H:i:s') ?></span>
         <?php
-        $_adminName = $_SESSION['admin_name'] ?? 'Admin';
+        $_adminName  = $_SESSION['admin_name']  ?? 'Admin';
         $_adminEmail = $_SESSION['admin_email'] ?? '';
+        $_baseUrl    = $config['app_url'] ?? '';
+
+        // enc: 접두사면 복호화 (이름이 암호화 저장됨)
+        if (!empty($_adminName) && str_starts_with($_adminName, 'enc:')) {
+            $_decoded = \RzxLib\Core\Helpers\Encryption::decrypt($_adminName);
+            $_adminName = $_decoded ?: $_adminEmail ?: 'Admin';
+        }
         $_adminInitial = mb_substr($_adminName, 0, 1);
-        $_baseUrl = $config['app_url'] ?? '';
-        // 프로필 사진 조회 (staff avatar → user profile_image)
+
+        // 프로필 사진 — admin_id 는 rzx_users.id 와 통합된 상태
         $_adminAvatar = '';
         if (isset($pdo) && !empty($_SESSION['admin_id'])) {
             try {
                 $_prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
-                $_aStmt = $pdo->prepare("SELECT s.avatar FROM {$_prefix}admins a LEFT JOIN {$_prefix}staff s ON a.staff_id = s.id WHERE a.id = ?");
+                $_aStmt = $pdo->prepare("SELECT profile_image, avatar FROM {$_prefix}users WHERE id = ?");
                 $_aStmt->execute([$_SESSION['admin_id']]);
-                $_aRow = $_aStmt->fetch(PDO::FETCH_ASSOC);
-                $_adminAvatar = $_aRow['avatar'] ?? '';
+                if ($_aRow = $_aStmt->fetch(PDO::FETCH_ASSOC)) {
+                    $_adminAvatar = $_aRow['profile_image'] ?: $_aRow['avatar'] ?: '';
+                    if ($_adminAvatar && !preg_match('#^https?://#i', $_adminAvatar)) {
+                        $_adminAvatar = $_baseUrl . '/' . ltrim($_adminAvatar, '/');
+                    }
+                }
             } catch (Exception $e) {}
         }
         ?>
