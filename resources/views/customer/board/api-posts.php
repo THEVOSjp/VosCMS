@@ -115,6 +115,7 @@ if ($action === 'create') {
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
 
         $fileCount = 0;
+        $uploadedFileIds = []; // $_FILES 인덱스 → board_files.id
         foreach ($_FILES['files']['name'] as $i => $fname) {
             if ($_FILES['files']['error'][$i] !== UPLOAD_ERR_OK) continue;
             $ext = pathinfo($fname, PATHINFO_EXTENSION);
@@ -123,11 +124,19 @@ if ($action === 'create') {
             if (move_uploaded_file($_FILES['files']['tmp_name'][$i], $dest)) {
                 $pdo->prepare("INSERT INTO {$prefix}board_files (post_id, board_id, original_name, stored_name, file_path, file_size, mime_type) VALUES (?,?,?,?,?,?,?)")
                     ->execute([$newId, $boardId, $fname, $stored, '/storage/board/' . $boardId . '/' . $stored, $_FILES['files']['size'][$i], $_FILES['files']['type'][$i] ?? '']);
+                $uploadedFileIds[$i] = (int)$pdo->lastInsertId();
                 $fileCount++;
             }
         }
         if ($fileCount > 0) {
             $pdo->prepare("UPDATE {$prefix}board_posts SET file_count = ? WHERE id = ?")->execute([$fileCount, $newId]);
+
+            // 클라이언트가 지정한 대표 파일(주로 썸네일 캡처)
+            $primaryPos = isset($_POST['primary_file_pos']) ? (int)$_POST['primary_file_pos'] : -1;
+            if ($primaryPos >= 0 && isset($uploadedFileIds[$primaryPos])) {
+                $pdo->prepare("UPDATE {$prefix}board_files SET is_primary = 1 WHERE id = ?")
+                    ->execute([$uploadedFileIds[$primaryPos]]);
+            }
         }
     }
 
@@ -175,6 +184,7 @@ if ($action === 'update') {
         // 원본 언어로 수정 → board_posts 직접 수정
         $pdo->prepare("UPDATE {$prefix}board_posts SET title=?, content=?, is_notice=?, is_secret=?, category_id=?, extra_vars=?, updated_at=NOW() WHERE id=?")
             ->execute([$title, $content, $isNotice, $isSecret, $categoryId, $extraVarsJson, $postId]);
+
     } else {
         // 다른 언어로 수정 → rzx_translations에 저장 (원본 유지)
         $trStmt = $pdo->prepare("INSERT INTO {$prefix}translations (lang_key, locale, source_locale, content) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE content = VALUES(content), source_locale = VALUES(source_locale)");
@@ -201,6 +211,7 @@ if ($action === 'update') {
     if (!empty($_FILES['files']['name'][0])) {
         $uploadDir = BASE_PATH . '/storage/board/' . $boardId . '/';
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+        $uploadedFileIds = [];
         foreach ($_FILES['files']['name'] as $i => $fname) {
             if ($_FILES['files']['error'][$i] !== UPLOAD_ERR_OK) continue;
             $ext = pathinfo($fname, PATHINFO_EXTENSION);
@@ -209,12 +220,20 @@ if ($action === 'update') {
             if (move_uploaded_file($_FILES['files']['tmp_name'][$i], $dest)) {
                 $pdo->prepare("INSERT INTO {$prefix}board_files (post_id, board_id, original_name, stored_name, file_path, file_size, mime_type) VALUES (?,?,?,?,?,?,?)")
                     ->execute([$postId, $boardId, $fname, $stored, '/storage/board/' . $boardId . '/' . $stored, $_FILES['files']['size'][$i], $_FILES['files']['type'][$i] ?? '']);
+                $uploadedFileIds[$i] = (int)$pdo->lastInsertId();
             }
         }
         // file_count 갱신
         $fc = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}board_files WHERE post_id = ?");
         $fc->execute([$postId]);
         $pdo->prepare("UPDATE {$prefix}board_posts SET file_count = ? WHERE id = ?")->execute([(int)$fc->fetchColumn(), $postId]);
+
+        // 클라이언트가 지정한 대표 파일 (썸네일 재캡처 시 기존 대표를 이 파일로 교체)
+        $primaryPos = isset($_POST['primary_file_pos']) ? (int)$_POST['primary_file_pos'] : -1;
+        if ($primaryPos >= 0 && isset($uploadedFileIds[$primaryPos])) {
+            $pdo->prepare("UPDATE {$prefix}board_files SET is_primary = 0 WHERE post_id = ?")->execute([$postId]);
+            $pdo->prepare("UPDATE {$prefix}board_files SET is_primary = 1 WHERE id = ?")->execute([$uploadedFileIds[$primaryPos]]);
+        }
     }
 
     echo json_encode(['success' => true, 'message' => '게시글이 수정되었습니다.', 'post_id' => $postId]);

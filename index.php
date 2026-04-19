@@ -388,6 +388,9 @@ if ($path === 'sitemap.xml') {
     } elseif ($path === 'board/api/comments') {
         $__noLayout = true;
         include BASE_PATH . '/resources/views/customer/board/api-comments.php';
+    } elseif ($path === 'board/api/url-capture') {
+        $__noLayout = true;
+        include BASE_PATH . '/resources/views/customer/board/api-url-capture.php';
     } elseif ($path === 'board/api/files') {
         $__noLayout = true;
         include BASE_PATH . '/resources/views/customer/board/api-files.php';

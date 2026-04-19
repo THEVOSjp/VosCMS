@@ -4,6 +4,36 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.2.1] - 2026-04-19 — URL 캡처 (썸네일 / 스크린샷)
+
+### Added — 게시판 글 작성 폼 URL 캡처 버튼
+
+- 모든 게시판의 `<input type="url">` (확장변수 `url` 타입 포함) 옆에 `[썸네일 가져오기] [스크린샷 가져오기]` 버튼 자동 삽입
+- 썸네일: 1280×960 네이티브 렌더 → **800×600** 출력 (첫 화면 뷰포트)
+- 스크린샷: 1280×full_page 네이티브 렌더 → **800×축소** 출력 (전체 스크롤 페이지, 실제 페이지 높이 사용)
+- 단계별 프로그레스 바 UI — `서버 연결 → 페이지 로딩 → 화면 캡처 → 이미지 생성 → 파일 저장 → 응답 대기`
+- 썸네일 캡처 자동 대표지정 — `board_files.is_primary=1` 로 표식되어 board-showcase 위젯이 우선 사용
+- 새 라우트 `/board/api/url-capture?type={thumbnail|screenshot}&url=...` + `api-url-capture.php` 프록시
+- `/board/api/files` 에 `set_primary` 액션 추가 — 기존 첨부 중 하나를 대표로 지정
+
+### Changed — board-showcase 위젯 대표 이미지 우선
+
+- 첨부 이미지 쿼리 `ORDER BY is_primary DESC, id ASC` — 캡처된 썸네일 우선 노출
+- 게시글 작성 시 `primary_file_pos` 파라미터로 대표 파일 인덱스 서버 전달
+
+### Infrastructure — Puppeteer 기반 캡처
+
+- `api-21ces` 측 `bin/capture.js` 신설 — `puppeteer-core` 사용
+- Chrome CLI `--screenshot` 의 onload 시점 캡처 한계 해소 — `networkIdle` + `<video>.readyState` 대기 후 캡처
+- Chrome `--virtual-time-budget` / `--force-device-scale-factor` 제거 (rezlyx.com 등 hang 이슈)
+- 스크린샷 서버 캐시 비활성 + `Cache-Control: no-store` 응답 헤더
+- nginx `fastcgi_read_timeout 60s → 120s` (api.21ces.com), PHP `set_time_limit(120)`
+- voscms 프록시 `CURLOPT_HTTP_VERSION=HTTP/1.1` 강제 (HTTP/2 stream not closed cleanly 회피)
+- 응답 전송 안정화 — `file_get_contents → unlink → echo` 로 FastCGI 버퍼 cutoff 해결
+- Chrome `HOME=$userDir` 강제 — www-data 의 `/var/www/.local` 권한 오류 (code=133) 해소
+
+---
+
 ## [VosCMS 2.2.0] - 2026-04-18 — Marketplace 분리
 
 ### Changed — 마켓플레이스 아키텍처 (Breaking)

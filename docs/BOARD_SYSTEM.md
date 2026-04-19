@@ -79,8 +79,23 @@ RezlyX 게시판은 커스텀 MVC 아키텍처 기반의 다기능 게시판 시
 |-----|------|--------|------|
 | `/board/api/posts` | `api-posts.php` | POST | 게시글 CRUD + 추천 |
 | `/board/api/comments` | `api-comments.php` | POST | 댓글 작성/삭제 |
-| `/board/api/files` | `api-files.php` | GET/POST | 파일 다운로드/업로드/삭제 |
+| `/board/api/files` | `api-files.php` | GET/POST | 파일 다운로드/업로드/삭제/대표지정 |
 | `/board/api/og` | `api-og.php` | POST | URL → OG 메타데이터 (링크 프리뷰 카드용) |
+| `/board/api/url-capture` | `api-url-capture.php` | GET | URL → 썸네일/전체 페이지 PNG 캡처 |
+
+### URL 캡처 (썸네일 / 스크린샷)
+
+**동작:** 글 작성 폼(`write.php`)의 모든 `<input type="url">` 옆에 `[썸네일 가져오기] [스크린샷 가져오기]` 버튼이 자동 삽입된다. 확장변수 타입 `url` 인 필드도 포함. 클릭 시 `/board/api/url-capture?type={thumbnail|screenshot}&url=...` 호출 → PNG Blob 수신 → `addFiles()` 업로드 파이프라인으로 합류. 썸네일 캡처는 `primary_file_pos` 로 서버에 전달되어 board_files.is_primary=1 로 표식되며, board-showcase 위젯이 우선 사용한다.
+
+**프록시 체인:**
+- `api-url-capture.php` (voscms) → `api.21ces.com/v1/screenshot` (사내 API)
+- api-21ces 는 `bin/capture.js` (Puppeteer) 로 Chrome 제어 — `load` → `networkIdle` → `<video>.readyState` 대기 후 캡처 → GD 로 0.625 축소 → PNG 응답 (캐시 없음, `Cache-Control: no-store`)
+
+**파라미터:**
+- `type=thumbnail`: 1280×960 네이티브 → 800×600 출력 (첫 화면 뷰포트)
+- `type=screenshot`: 1280×full_page 네이티브 → 800×축소 출력 (전체 스크롤 페이지)
+
+**진행 표시:** 예상 시간 기준 스테이지 라벨 (`서버 연결 중` → `페이지 로딩 중` → `화면 캡처 중` → `이미지 생성 중` → `파일 저장 중` → `응답 대기 중`). 완료 시 100% 녹색, 실패 시 빨간색.
 
 ### URL 자동 링크 + OG 카드 프리뷰
 

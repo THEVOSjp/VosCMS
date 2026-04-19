@@ -44,10 +44,11 @@ if ($boardSlug) {
                 $postIds = array_column($posts, 'id');
                 $ph = implode(',', array_fill(0, count($postIds), '?'));
                 try {
+                    // 대표 이미지(is_primary=1) 먼저, 그다음 등록 순
                     $fStmt = $pdo->prepare(
                         "SELECT post_id, file_path FROM {$prefix}board_files
                          WHERE post_id IN ({$ph}) AND mime_type LIKE 'image/%'
-                         ORDER BY id ASC"
+                         ORDER BY is_primary DESC, id ASC"
                     );
                     $fStmt->execute($postIds);
                     while ($f = $fStmt->fetch(\PDO::FETCH_ASSOC)) {

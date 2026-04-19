@@ -106,5 +106,31 @@ if ($action === 'delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
+// === SET PRIMARY (대표 이미지 지정) ===
+if ($action === 'set_primary' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+
+    $fileId = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
+    if (!$fileId) { echo json_encode(['success' => false, 'message' => '파일 ID가 필요합니다.']); exit; }
+
+    $file = $pdo->prepare("SELECT f.*, p.user_id AS post_user_id FROM {$prefix}board_files f JOIN {$prefix}board_posts p ON f.post_id = p.id WHERE f.id = ?");
+    $file->execute([$fileId]);
+    $file = $file->fetch(PDO::FETCH_ASSOC);
+    if (!$file) { echo json_encode(['success' => false, 'message' => '파일을 찾을 수 없습니다.']); exit; }
+
+    if (!$currentUser || ($currentUser['id'] != $file['post_user_id'] && empty($_SESSION['admin_id']))) {
+        echo json_encode(['success' => false, 'message' => '권한이 없습니다.']);
+        exit;
+    }
+
+    // 같은 글의 다른 파일들은 대표 해제
+    $pdo->prepare("UPDATE {$prefix}board_files SET is_primary = 0 WHERE post_id = ?")->execute([$file['post_id']]);
+    // 해당 파일만 대표 설정
+    $pdo->prepare("UPDATE {$prefix}board_files SET is_primary = 1 WHERE id = ?")->execute([$fileId]);
+
+    echo json_encode(['success' => true, 'message' => '대표 이미지로 지정되었습니다.']);
+    exit;
+}
+
 http_response_code(400);
 echo 'Bad request';

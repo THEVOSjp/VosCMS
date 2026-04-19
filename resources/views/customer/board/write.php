@@ -175,8 +175,9 @@ if ($editMode) {
                     <?php foreach ($existingFiles as $file):
                         $isImage = str_starts_with($file['mime_type'] ?? '', 'image/');
                         $fileUrl = ($config['app_url'] ?? '') . '/' . ($file['file_path'] ?? '');
+                        $isPrimary = !empty($file['is_primary']);
                     ?>
-                    <div class="relative group border border-zinc-200 dark:border-zinc-600 rounded-lg overflow-hidden" data-file-id="<?= $file['id'] ?>">
+                    <div class="relative group border rounded-lg overflow-hidden <?= $isPrimary ? 'border-amber-500 border-2 ring-2 ring-amber-200' : 'border-zinc-200 dark:border-zinc-600' ?>" data-file-id="<?= $file['id'] ?>">
                         <?php if ($isImage): ?>
                         <img src="<?= htmlspecialchars($fileUrl) ?>" class="w-full h-24 object-cover">
                         <?php else: ?>
@@ -185,7 +186,13 @@ if ($editMode) {
                         </div>
                         <?php endif; ?>
                         <div class="px-2 py-1 text-xs text-zinc-600 dark:text-zinc-400 truncate"><?= htmlspecialchars($file['original_name']) ?></div>
-                        <button type="button" class="btn-remove-file absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition" data-id="<?= $file['id'] ?>">&times;</button>
+                        <?php if ($isPrimary): ?>
+                        <span class="absolute top-1 left-1 px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">★ 대표</span>
+                        <?php endif; ?>
+                        <?php if ($isImage && !$isPrimary): ?>
+                        <button type="button" class="btn-set-primary absolute top-1 left-1 w-5 h-5 bg-white/90 text-amber-600 border border-amber-400 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:bg-amber-50" data-id="<?= $file['id'] ?>" title="대표 이미지 지정">★</button>
+                        <?php endif; ?>
+                        <button type="button" class="btn-remove-file absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition" data-id="<?= $file['id'] ?>" title="삭제">&times;</button>
                     </div>
                     <?php endforeach; ?>
                 </div>
@@ -245,6 +252,171 @@ if ($editMode) {
 console.log('[BoardWrite] <?= $editMode ? '글 수정' : '글 작성' ?> 페이지 로드');
 const boardApiUrl = '<?= ($config['app_url'] ?? '') ?>/board/api';
 let pendingFiles = [];
+let primaryPendingIdx = -1; // pendingFiles 중 대표로 지정할 인덱스 (썸네일 캡처 시 자동 지정)
+
+// ─── URL 인풋 옆 [썸네일]·[스크린샷] 버튼 자동 삽입 ───
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('input[type="url"]').forEach(inp => {
+        if (inp.dataset.rzxAttached) return;
+        inp.dataset.rzxAttached = '1';
+        const wrap = document.createElement('div');
+        wrap.className = 'flex gap-1.5 mt-1.5';
+        wrap.innerHTML = `
+            <button type="button" data-kind="thumbnail"
+                title="첫 화면 뷰포트 캡처"
+                class="rzx-url-capture-btn px-2.5 py-1 text-xs rounded border border-blue-500 text-blue-600 hover:bg-blue-50 transition inline-flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                썸네일 가져오기
+            </button>
+            <button type="button" data-kind="screenshot"
+                title="전체 스크롤 페이지 캡처"
+                class="rzx-url-capture-btn px-2.5 py-1 text-xs rounded border border-indigo-500 text-indigo-600 hover:bg-indigo-50 transition inline-flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9zM15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                스크린샷 가져오기
+            </button>
+            <div class="rzx-url-capture-progress flex-1 min-w-[120px] self-center ml-1 hidden">
+                <div class="flex items-center gap-2">
+                    <div class="relative flex-1 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+                        <div class="rzx-url-capture-bar absolute inset-y-0 left-0 bg-blue-500 dark:bg-blue-400 rounded-full" style="width:0%;transition:width 0.3s linear"></div>
+                    </div>
+                    <span class="rzx-url-capture-pct text-[11px] text-zinc-500 dark:text-zinc-400 shrink-0 tabular-nums">0%</span>
+                </div>
+                <div class="rzx-url-capture-label text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5"></div>
+            </div>
+            <span class="rzx-url-capture-status text-xs text-zinc-500 self-center ml-1"></span>
+        `;
+        inp.insertAdjacentElement('afterend', wrap);
+
+        wrap.querySelectorAll('.rzx-url-capture-btn').forEach(btn => {
+            btn.addEventListener('click', () => rzxCaptureFromUrl(inp, wrap, btn.dataset.kind));
+        });
+    });
+});
+
+async function rzxCaptureFromUrl(inputEl, wrapEl, kind) {
+    const url      = (inputEl.value || '').trim();
+    const status   = wrapEl.querySelector('.rzx-url-capture-status');
+    const btns     = wrapEl.querySelectorAll('.rzx-url-capture-btn');
+    const progress = wrapEl.querySelector('.rzx-url-capture-progress');
+    const bar      = wrapEl.querySelector('.rzx-url-capture-bar');
+    const pct      = wrapEl.querySelector('.rzx-url-capture-pct');
+    const labelEl  = wrapEl.querySelector('.rzx-url-capture-label');
+
+    if (!/^https?:\/\//i.test(url)) {
+        status.textContent = 'URL 을 먼저 입력하세요';
+        status.className = 'rzx-url-capture-status text-xs text-red-500 self-center ml-1';
+        return;
+    }
+
+    const kindLabel = kind === 'screenshot' ? '스크린샷(전체 페이지)' : '썸네일(첫 화면)';
+    const estimate  = kind === 'screenshot' ? 18000 : 8000;   // 스테이지 끝(저장까지) 기준치
+    const hardLimit = kind === 'screenshot' ? 110000 : 55000; // 요청 상한 (ms)
+
+    // 단계 정의 — 누적 비율(% of estimate) 과 라벨
+    const stages = [
+        { until: 0.05, pct: 5,  label: '서버 연결 중…' },
+        { until: 0.70, pct: 70, label: '페이지 로딩 중…' },
+        { until: 0.90, pct: 90, label: '화면 캡처 중…' },
+        { until: 0.97, pct: 96, label: '이미지 생성 중…' },
+        { until: 1.00, pct: 98, label: '파일 저장 중…' },
+    ];
+
+    // UI 초기화
+    btns.forEach(b => b.disabled = true);
+    status.textContent = '';
+    progress.classList.remove('hidden');
+    labelEl.textContent = kindLabel + ' — ' + stages[0].label;
+    bar.classList.remove('bg-red-500', 'bg-green-500');
+    bar.classList.add('bg-blue-500');
+    bar.style.width = '0%';
+    pct.textContent = '0%';
+
+    // 스테이지 보간 — 각 구간 내부에서도 prevPct → stage.pct 선형 보간
+    const t0 = Date.now();
+    const tick = setInterval(() => {
+        const t = Date.now() - t0;
+        const ratio = t / estimate;
+        if (ratio >= 1) {
+            bar.style.width = '98%';
+            pct.textContent = '98%';
+            labelEl.textContent = kindLabel + ' — 응답 대기 중…';
+            return;
+        }
+        let prevUntil = 0, prevPct = 0;
+        for (const s of stages) {
+            if (ratio < s.until) {
+                const local = (ratio - prevUntil) / (s.until - prevUntil);
+                const p = prevPct + local * (s.pct - prevPct);
+                bar.style.width = p.toFixed(1) + '%';
+                pct.textContent = Math.floor(p) + '%';
+                labelEl.textContent = kindLabel + ' — ' + s.label;
+                return;
+            }
+            prevUntil = s.until;
+            prevPct = s.pct;
+        }
+    }, 150);
+
+    const ac = new AbortController();
+    const killer = setTimeout(() => ac.abort(), hardLimit);
+
+    const finish = (ok, msg) => {
+        clearInterval(tick);
+        clearTimeout(killer);
+        btns.forEach(b => b.disabled = false);
+        if (ok) {
+            bar.style.transition = 'width 0.25s ease-out';
+            bar.style.width = '100%';
+            pct.textContent = '100%';
+            bar.classList.remove('bg-blue-500');
+            bar.classList.add('bg-green-500');
+            labelEl.textContent = '';
+            status.textContent = '✓ ' + msg;
+            status.className = 'rzx-url-capture-status text-xs text-green-600 self-center ml-1';
+            setTimeout(() => progress.classList.add('hidden'), 1500);
+        } else {
+            bar.classList.remove('bg-blue-500');
+            bar.classList.add('bg-red-500');
+            labelEl.textContent = '';
+            status.textContent = msg;
+            status.className = 'rzx-url-capture-status text-xs text-red-500 self-center ml-1';
+        }
+    };
+
+    try {
+        const endpoint = boardApiUrl + '/url-capture?type=' + encodeURIComponent(kind) + '&url=' + encodeURIComponent(url);
+        const resp = await fetch(endpoint, {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            signal: ac.signal,
+        });
+        if (!resp.ok) {
+            let msg = `실패 (HTTP ${resp.status})`;
+            try { const j = await resp.json(); if (j.message) msg += `: ${j.message}`; } catch (_) {}
+            finish(false, msg);
+            return;
+        }
+        const blob = await resp.blob();
+        const ext = (blob.type && blob.type.split('/')[1]) || 'png';
+        const host = (new URL(url)).hostname.replace(/\./g, '-');
+        const filename = `${kind}_${host}_${Date.now()}.${ext}`;
+        const file = new File([blob], filename, { type: blob.type || 'image/png' });
+
+        // 기존 업로드 파이프라인에 합류 (addFiles 가 pendingFiles.push + 프리뷰 + 삭제버튼 처리)
+        const newIdx = pendingFiles.length;
+        addFiles([file]);
+        if (kind === 'thumbnail') primaryPendingIdx = newIdx;
+
+        finish(true, `${kindLabel} 첨부됨${kind === 'thumbnail' ? ' · 대표 이미지' : ''}`);
+    } catch (err) {
+        if (err.name === 'AbortError') {
+            finish(false, '시간 초과. 대상 사이트 응답이 없습니다.');
+        } else {
+            console.error('[url-capture] 에러:', err);
+            finish(false, '오류: ' + err.message);
+        }
+    }
+}
 
 // 에디터용 OG 카드 fetch + 교체
 async function rzxFetchOgAndReplace(node, url) {
@@ -437,9 +609,16 @@ document.getElementById('writeForm').addEventListener('submit', async (e) => {
     // Summernote 내용 가져오기
     form.set('content', $('#boardContent').summernote('code'));
 
-    // 드래그&드롭 파일 추가
+    // 드래그&드롭 파일 추가 + 대표 위치 계산 (filter된 $_FILES 순서 기준)
     form.delete('files[]');
-    pendingFiles.forEach(f => { if (f) form.append('files[]', f); });
+    let primaryPos = -1, pos = 0;
+    pendingFiles.forEach((f, idx) => {
+        if (!f) return;
+        if (idx === primaryPendingIdx) primaryPos = pos;
+        form.append('files[]', f);
+        pos++;
+    });
+    if (primaryPos >= 0) form.set('primary_file_pos', String(primaryPos));
 
     try {
         const resp = await fetch(boardApiUrl + '/posts', {
@@ -463,12 +642,30 @@ document.getElementById('writeForm').addEventListener('submit', async (e) => {
 // 기존 파일 삭제
 document.querySelectorAll('.btn-remove-file').forEach(btn => {
     btn.addEventListener('click', async () => {
+        if (!confirm('이 파일을 삭제하시겠습니까?')) return;
         const fid = btn.dataset.id;
         try {
             const resp = await fetch(boardApiUrl + '/files?action=delete&id=' + fid, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             const data = await resp.json();
             if (data.success) btn.closest('[data-file-id]').remove();
             else alert(data.message || 'Error');
+        } catch (err) { console.error(err); }
+    });
+});
+
+// 기존 파일 → 대표 이미지 지정
+document.querySelectorAll('.btn-set-primary').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const fid = btn.dataset.id;
+        try {
+            const resp = await fetch(boardApiUrl + '/files?action=set_primary&id=' + fid, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await resp.json();
+            if (data.success) {
+                // 페이지 새로고침으로 UI 반영 (가장 단순·확실)
+                location.reload();
+            } else {
+                alert(data.message || 'Error');
+            }
         } catch (err) { console.error(err); }
     });
 });

@@ -1,8 +1,8 @@
 {
-    "version": "2.2.0",
+    "version": "2.2.1",
     "name": "VosCMS",
-    "codename": "Marketplace Split",
-    "release_date": "2026-04-18",
+    "codename": "URL Capture",
+    "release_date": "2026-04-19",
     "commit": null,
     "channel": "dev",
     "github": {
