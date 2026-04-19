@@ -79,7 +79,7 @@ var WBEdit = (function() {
     function renderEditFields(fields) {
         var html = '';
         var i18nFields = fields.filter(function(f) { return f.i18n; });
-        var commonFields = fields.filter(function(f) { return !f.i18n && f.type !== 'buttons' && f.type !== 'hero_images' && f.type !== 'feature_items' && f.type !== 'service_items' && f.type !== 'hero_slides' && f.type !== 'nav_items' && f.type !== 'slider_items' && f.type !== 'grid_cells'; });
+        var commonFields = fields.filter(function(f) { return !f.i18n && f.type !== 'buttons' && f.type !== 'hero_images' && f.type !== 'feature_items' && f.type !== 'service_items' && f.type !== 'hero_slides' && f.type !== 'nav_items' && f.type !== 'slider_items' && f.type !== 'grid_cells' && f.type !== 'stat_items'; });
         var buttonsField = fields.find(function(f) { return f.type === 'buttons'; });
         var heroImagesField = fields.find(function(f) { return f.type === 'hero_images'; });
         var featureItemsField = fields.find(function(f) { return f.type === 'feature_items'; });
@@ -88,6 +88,7 @@ var WBEdit = (function() {
         var navItemsField = fields.find(function(f) { return f.type === 'nav_items'; });
         var sliderItemsField = fields.find(function(f) { return f.type === 'slider_items'; });
         var gridCellsField = fields.find(function(f) { return f.type === 'grid_cells'; });
+        var statItemsField = fields.find(function(f) { return f.type === 'stat_items'; });
 
         if (i18nFields.length > 0) {
             html += '<div class="space-y-3">';
@@ -109,6 +110,7 @@ var WBEdit = (function() {
         if (serviceItemsField && WBEdit.renderServiceItemsSection) html += WBEdit.renderServiceItemsSection();
         if (sliderItemsField && WBEdit.renderSliderItemsSection) html += WBEdit.renderSliderItemsSection();
         if (gridCellsField && WBEdit.renderGridCellsSection) html += WBEdit.renderGridCellsSection();
+        if (statItemsField && WBEdit.renderStatItemsSection) html += WBEdit.renderStatItemsSection();
         else {
             if (heroSlidesField && WBEdit.renderHeroSlidesSection) html += WBEdit.renderHeroSlidesSection();
             if (navItemsField && WBEdit.renderNavItemsSection) html += WBEdit.renderNavItemsSection();
@@ -128,6 +130,7 @@ var WBEdit = (function() {
         if (sliderItemsField && WBEdit.bindSliderItemsEvents) WBEdit.bindSliderItemsEvents();
         if (gridCellsField && WBEdit.bindGridCellsEvents) WBEdit.bindGridCellsEvents();
         else if ((heroSlidesField || navItemsField) && WBEdit.bindHeroSlidesEvents) WBEdit.bindHeroSlidesEvents();
+        if (statItemsField && WBEdit.bindStatItemsEvents) WBEdit.bindStatItemsEvents();
     }
 
     // ===== i18n 필드 =====
@@ -539,6 +542,7 @@ var WBEdit = (function() {
         if (WBEdit.saveFeatureItemsToTemp) WBEdit.saveFeatureItemsToTemp();
         if (WBEdit.saveServiceItemsToTemp) WBEdit.saveServiceItemsToTemp();
         if (WBEdit.saveSliderItemsToTemp) WBEdit.saveSliderItemsToTemp();
+        if (WBEdit.saveStatItemsToTemp) WBEdit.saveStatItemsToTemp();
         if (WBEdit.saveGridCellsToTemp) WBEdit.saveGridCellsToTemp();
         else if (WBEdit.saveHeroSlidesToTemp) WBEdit.saveHeroSlidesToTemp();
     }
@@ -600,5 +604,6 @@ var WBEdit = (function() {
 <?php include __DIR__ . '/pages-widget-builder-edit-services-js.php'; ?>
 <?php include __DIR__ . '/pages-widget-builder-edit-slider-js.php'; ?>
 <?php include __DIR__ . '/pages-widget-builder-edit-grid-js.php'; ?>
+<?php include __DIR__ . '/pages-widget-builder-edit-stats-js.php'; ?>
 <?php include __DIR__ . '/pages-widget-builder-inline-js.php'; ?>
 <?php include __DIR__ . '/pages-widget-builder-grid-js.php'; ?>

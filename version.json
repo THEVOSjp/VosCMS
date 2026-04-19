@@ -1,7 +1,7 @@
 {
-    "version": "2.2.1",
+    "version": "2.2.2",
     "name": "VosCMS",
-    "codename": "URL Capture",
+    "codename": "Stats Widget Overhaul",
     "release_date": "2026-04-19",
     "commit": null,
     "channel": "dev",

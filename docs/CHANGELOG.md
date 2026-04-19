@@ -4,6 +4,30 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.2.2] - 2026-04-19 — stats 위젯 개선 + 관리자 상단 수정
+
+### Added — stats 위젯 CRUD + 카운트업 애니메이션
+
+- 아이템별 **숫자·접미사·라벨(다국어)·아이콘·색상** 필드
+- 관리자 위젯 빌더에서 아이템 **추가/수정/삭제** 가능 (`stat_items` 타입 편집 UI 신규)
+- 16종 아이콘 (users, chart, star, heart, check-circle, clock, calendar, globe, shield, lightning, trophy, cart, dollar, building, chat) + 10종 색상
+- 뷰포트 진입 시 **카운트업 애니메이션** — IntersectionObserver + easeOutCubic 1.4s
+- 숫자형만 카운트 대상 (`24/7` 같은 문자열은 그대로 표시), 콤마 서식·소수점 유지
+- `widget.json` v1.1.0 → v1.2.0
+
+### Fixed — 관리자 상단 프로필 표시
+
+- `admin_name` 이 `enc:` 접두사로 저장되어 복호화 없이 그대로 노출되던 문제 수정
+- 아바타 조회가 존재하지 않는 `staff` 테이블을 LEFT JOIN 하던 문제 — `admin_id = users.id` 통합 구조에 맞게 `rzx_users.profile_image` 로 직접 조회
+- 상대 경로 아바타에 baseUrl prefix 자동 부여
+
+### Infrastructure — 배포 스크립트 + 위젯 구조 원칙
+
+- `deploy-voscms.sh` 권한 재설정 단계에 `storage/sessions` 를 `www-data` 소유로 고정하는 줄 추가 — 배포 후 "Session data file is not created by your uid" 경고로 로그인 불가 현상 방지
+- **원칙 정립**: 모든 위젯의 렌더 로직은 `widgets/{slug}/render.php` 에 두고 `WidgetRenderer` 내장 메서드로 분산하지 않는다. `stats` 의 내장 메서드 제거.
+
+---
+
 ## [VosCMS 2.2.1] - 2026-04-19 — URL 캡처 (썸네일 / 스크린샷)
 
 ### Added — 게시판 글 작성 폼 URL 캡처 버튼

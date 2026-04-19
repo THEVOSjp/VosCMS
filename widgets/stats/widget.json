@@ -1,6 +1,6 @@
 {
     "slug": "stats",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "author": "RezlyX",
     "category": "content",
     "icon": "chart-bar",
@@ -21,25 +21,30 @@
         "vi": "Thống kê"
     },
     "description": {
-        "ko": "숫자 통계 카드",
-        "en": "Counter statistics cards",
-        "ja": "カウンター統計カード",
-        "zh_CN": "数字统计卡片",
-        "zh_TW": "數字統計卡片",
-        "de": "Statistik-Zählerkarten",
-        "es": "Tarjetas de estadísticas",
-        "fr": "Cartes de statistiques",
-        "id": "Kartu statistik angka",
-        "mn": "Тоон статистик карт",
-        "ru": "Карточки статистики",
-        "tr": "Sayısal istatistik kartları",
-        "vi": "Thẻ thống kê"
+        "ko": "숫자 통계 카드 — 아이콘·색상·카운트업 애니메이션 지원",
+        "en": "Counter statistics cards — icons, colors, count-up animation",
+        "ja": "カウンター統計カード — アイコン・色・カウントアップ対応",
+        "zh_CN": "数字统计卡片 — 支持图标·颜色·计数动画",
+        "zh_TW": "數字統計卡片 — 支援圖示·顏色·計數動畫",
+        "de": "Statistik-Zählerkarten mit Icons und Animation",
+        "es": "Tarjetas de estadísticas con iconos y animación",
+        "fr": "Cartes de statistiques avec icônes et animation",
+        "id": "Kartu statistik dengan ikon dan animasi hitung",
+        "mn": "Статистик карт — дүрс, өнгө, тоолох анимэшн",
+        "ru": "Карточки статистики с иконками и анимацией",
+        "tr": "İkonlu, animasyonlu istatistik kartları",
+        "vi": "Thẻ thống kê có biểu tượng và hiệu ứng đếm"
     },
     "config_schema": {
         "fields": [
             {
+                "key": "animate",
+                "type": "toggle",
+                "label": "Count-up Animation"
+            },
+            {
                 "key": "items",
-                "type": "items",
+                "type": "stat_items",
                 "label": "Statistics Items"
             }
         ]

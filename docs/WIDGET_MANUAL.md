@@ -365,9 +365,25 @@ widgets/contact-form/
 
 행동 유도 배너.
 
-### stats — 통계 카운터
+### stats — 통계 카운터 (v1.2.0)
 
-숫자 카운팅 애니메이션.
+숫자 통계 카드 + 카운트업 애니메이션.
+
+**아이템 필드**
+- `number` — 숫자 (예: `10000`) 또는 문자열 (`24/7`). 순수 숫자만 카운트업 대상
+- `suffix` — 접미사 (예: `+`, `%`)
+- `label` — 라벨 (다국어 객체)
+- `icon` — 16종 중 선택 (users, chart, star, heart, check-circle, clock, calendar, globe, shield, lightning, trophy, cart, dollar, building, chat) · 생략 시 아이콘 없음
+- `color` — 10종 (blue, green, purple, red, orange, indigo, pink, teal, amber, zinc)
+
+**전역 옵션**
+- `animate` — 카운트업 애니메이션 on/off (기본 on)
+
+**동작**
+- 관리자 빌더에서 아이템 추가/수정/삭제, 순서는 배열 순서
+- 뷰포트 진입 시 IntersectionObserver 가 `.rzx-stat-item` 별로 0 → 목표값 애니메이션 (1.4s, easeOutCubic)
+- `data-stat-delay` 로 100ms 씩 계단식 지연
+- 콤마 서식·소수점 유지, IO 미지원 환경 폴백 지원
 
 ### testimonials — 고객 후기 (수동)
 
