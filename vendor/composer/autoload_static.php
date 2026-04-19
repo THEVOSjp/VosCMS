@@ -829,6 +829,8 @@ class ComposerStaticInita710d83c04007a8834e3801ffca62bd3
         'RzxLib\\Core\\Http\\UploadedFile' => __DIR__ . '/../..' . '/rzxlib/Core/Http/UploadedFile.php',
         'RzxLib\\Core\\I18n\\Translator' => __DIR__ . '/../..' . '/rzxlib/Core/I18n/Translator.php',
         'RzxLib\\Core\\Layout\\LayoutManager' => __DIR__ . '/../..' . '/rzxlib/Core/Layout/LayoutManager.php',
+        'RzxLib\\Core\\License\\LicenseClient' => __DIR__ . '/../..' . '/rzxlib/Core/License/LicenseClient.php',
+        'RzxLib\\Core\\License\\LicenseStatus' => __DIR__ . '/../..' . '/rzxlib/Core/License/LicenseStatus.php',
         'RzxLib\\Core\\Middleware\\AuthMiddleware' => __DIR__ . '/../..' . '/rzxlib/Core/Middleware/AuthMiddleware.php',
         'RzxLib\\Core\\Middleware\\CsrfMiddleware' => __DIR__ . '/../..' . '/rzxlib/Core/Middleware/CsrfMiddleware.php',
         'RzxLib\\Core\\Middleware\\GuestMiddleware' => __DIR__ . '/../..' . '/rzxlib/Core/Middleware/GuestMiddleware.php',

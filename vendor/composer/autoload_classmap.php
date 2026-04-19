@@ -681,6 +681,8 @@ return array(
     'RzxLib\\Core\\Http\\UploadedFile' => $baseDir . '/rzxlib/Core/Http/UploadedFile.php',
     'RzxLib\\Core\\I18n\\Translator' => $baseDir . '/rzxlib/Core/I18n/Translator.php',
     'RzxLib\\Core\\Layout\\LayoutManager' => $baseDir . '/rzxlib/Core/Layout/LayoutManager.php',
+    'RzxLib\\Core\\License\\LicenseClient' => $baseDir . '/rzxlib/Core/License/LicenseClient.php',
+    'RzxLib\\Core\\License\\LicenseStatus' => $baseDir . '/rzxlib/Core/License/LicenseStatus.php',
     'RzxLib\\Core\\Middleware\\AuthMiddleware' => $baseDir . '/rzxlib/Core/Middleware/AuthMiddleware.php',
     'RzxLib\\Core\\Middleware\\CsrfMiddleware' => $baseDir . '/rzxlib/Core/Middleware/CsrfMiddleware.php',
     'RzxLib\\Core\\Middleware\\GuestMiddleware' => $baseDir . '/rzxlib/Core/Middleware/GuestMiddleware.php',
