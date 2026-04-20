@@ -242,7 +242,14 @@ try {
 
             $configKey = 'page_config_' . $slug;
             $settings['slug'] = $slug;
-            $configJson = json_encode($settings, JSON_UNESCAPED_UNICODE);
+
+            // MERGE 전략 — 기존 설정과 병합. 탭별 UI 에서 한 탭 저장 시 다른 탭 설정이 날아가지 않도록.
+            $cfgStmt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = ?");
+            $cfgStmt->execute([$configKey]);
+            $existing = json_decode($cfgStmt->fetchColumn() ?: '{}', true) ?: [];
+            $merged = array_merge($existing, $settings);
+
+            $configJson = json_encode($merged, JSON_UNESCAPED_UNICODE);
             $stmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
             $stmt->execute([$configKey, $configJson]);
             echo json_encode(['success' => true, 'message' => __('common.msg.saved') ?? 'Settings saved.', 'new_slug' => $slug]);
@@ -274,6 +281,30 @@ try {
     $stmt = $pdo->prepare("SELECT * FROM {$prefix}page_contents WHERE page_slug = ? LIMIT 1");
     $stmt->execute([$pageSlug]);
     $pageData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // DB 에 없으면 시스템 페이지 (config/system-pages.php) 에서 검색
+    if (!$pageData) {
+        $_spCheck = file_exists(BASE_PATH . '/config/system-pages.php') ? include BASE_PATH . '/config/system-pages.php' : [];
+        foreach ($_spCheck as $_sp) {
+            if (($_sp['slug'] ?? '') === $pageSlug) {
+                $_spTitle = $_sp['title'] ?? $pageSlug;
+                // title 이 번역 키면 번역 시도
+                if (is_string($_spTitle) && preg_match('/^site\.pages\.[a-z_]+$/', $_spTitle)) {
+                    $_translated = __($_spTitle);
+                    if ($_translated && $_translated !== $_spTitle) $_spTitle = $_translated;
+                }
+                $pageData = [
+                    'page_slug' => $pageSlug,
+                    'page_type' => $_sp['type'] ?? 'system',
+                    'title'     => $_spTitle,
+                    'content'   => '',
+                    'is_system' => 1,
+                    'is_active' => 1,
+                ];
+                break;
+            }
+        }
+    }
 
     if (!$pageData) {
         header("Location: {$adminUrl}/site/pages");
@@ -325,21 +356,38 @@ try {
 
     $currentTab = $_GET['tab'] ?? 'basic';
 
-    // 시스템 페이지 settings_view 확인
-    $_systemSettingsView = null;
-    $_systemSettingsTab = null;
+    // 시스템 페이지 config 읽기 — settings_tabs 및 레거시 settings_view 모두 지원
+    $_systemSettingsView = null;       // 레거시 (하나의 view 를 스킨 탭 하단에 include)
+    $_systemSettingsTab = null;        // 레거시 탭 라벨
+    $_systemSettingsTabs = [];         // 신규: 최상위 탭 배열 [{key,label,icon,view},...]
     $systemPages = include BASE_PATH . '/config/system-pages.php';
     foreach ($systemPages as $sp) {
-        if (($sp['slug'] ?? '') === $pageSlug && !empty($sp['settings_view'])) {
-            $_systemSettingsView = $sp['settings_view'];
-            $_systemSettingsTab = $sp['settings_tab'] ?? 'site.pages.tab_system_settings';
-            break;
+        if (($sp['slug'] ?? '') !== $pageSlug) continue;
+
+        // 신규 방식: settings_tabs 배열 (최상위 탭으로 등록)
+        if (!empty($sp['settings_tabs']) && is_array($sp['settings_tabs'])) {
+            foreach ($sp['settings_tabs'] as $st) {
+                if (empty($st['key']) || empty($st['view'])) continue;
+                $_systemSettingsTabs[] = [
+                    'key'   => $st['key'],
+                    'label' => $st['label'] ?? $st['key'],
+                    'icon'  => $st['icon']  ?? 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+                    'view'  => $st['view'],
+                ];
+            }
         }
+
+        // 레거시 방식: settings_view (스킨 탭 하단 include — 점진적 제거 예정)
+        if (!empty($sp['settings_view'])) {
+            $_systemSettingsView = $sp['settings_view'];
+            $_systemSettingsTab  = $sp['settings_tab'] ?? 'site.pages.tab_system_settings';
+        }
+        break;
     }
 
-    // 시스템 페이지 전용 설정 로드
+    // 서비스 설정 로드 (레거시 settings_view 및 일부 시스템 탭에서 사용)
     $serviceSettings = [];
-    if ($_systemSettingsView) {
+    if ($_systemSettingsView || $_systemSettingsTabs) {
         $ssStmt = $pdo->prepare("SELECT `key`, `value` FROM {$prefix}settings WHERE `key` LIKE 'service_%'");
         $ssStmt->execute();
         while ($row = $ssStmt->fetch(PDO::FETCH_ASSOC)) {
@@ -397,12 +445,21 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                     <div class="border-b border-zinc-200 dark:border-zinc-700">
                         <nav class="flex -mb-px overflow-x-auto">
                             <?php
+                            // 코어 탭 — 순서 확정: 기본정보 → 권한 → 추가설정 → 스킨
                             $tabs = [
-                                'basic' => ['label' => __('site.pages.tab_basic') ?? '기본 설정', 'icon' => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z'],
-                                'addition' => ['label' => __('site.pages.tab_addition') ?? '추가 설정', 'icon' => 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4'],
+                                'basic'       => ['label' => __('site.pages.tab_basic') ?? '기본 설정', 'icon' => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z'],
                                 'permissions' => ['label' => __('site.pages.tab_permissions') ?? '권한 관리', 'icon' => 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'],
-                                'skin' => ['label' => __('site.pages.tab_skin') ?? '스킨', 'icon' => 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01'],
+                                'addition'    => ['label' => __('site.pages.tab_addition') ?? '추가 설정', 'icon' => 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4'],
+                                'skin'        => ['label' => __('site.pages.tab_skin') ?? '스킨', 'icon' => 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01'],
                             ];
+                            // 시스템 페이지 전용 탭 — 스킨 다음에 추가
+                            foreach ($_systemSettingsTabs as $st) {
+                                $tabs[$st['key']] = [
+                                    'label' => str_starts_with($st['label'], 'site.') ? (__($st['label']) ?? $st['label']) : $st['label'],
+                                    'icon'  => $st['icon'],
+                                    'view'  => $st['view'],
+                                ];
+                            }
                             foreach ($tabs as $key => $tab):
                                 $isActive = $currentTab === $key;
                                 $url = $embedMode
@@ -553,7 +610,7 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                                  class="cursor-pointer rounded-xl border-2 p-1 transition-all <?= $isSelected ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400' ?>">
                                 <div class="h-24 bg-zinc-100 dark:bg-zinc-700 rounded-lg flex items-center justify-center">
                                     <?php if ($lInfo['thumbnail']): ?>
-                                    <img src="<?= htmlspecialchars($lInfo['thumbnail']) ?>" alt="" class="max-h-full max-w-full object-contain rounded-lg" onerror="this.parentElement.innerHTML='<svg class=\'w-8 h-8 text-zinc-400\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z\'/></svg>'">
+                                    <img src="<?= htmlspecialchars($lInfo['thumbnail']) ?>" alt="" class="max-h-full max-w-full object-contain rounded-lg">
                                     <?php else: ?>
                                     <svg class="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
                                     <?php endif; ?>
@@ -567,8 +624,9 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                             </div>
                             <?php endforeach; ?>
                         </div>
-                        <p class="text-xs text-zinc-400 mt-3"><?= __('site.pages.cfg.layout_desc') ?? '게시판에 적용할 레이아웃을 선택합니다. 레이아웃을 변경하면 페이지가 새로고침됩니다.' ?></p>
+                        <p class="text-xs text-zinc-400 mt-3"><?= __('site.pages.cfg.layout_desc') ?? '레이아웃을 변경하면 페이지가 새로고침됩니다.' ?></p>
                     </div>
+
                     <!-- 스킨 선택 (카드형) -->
                     <input type="hidden" id="cfgSkin" value="<?= htmlspecialchars($pageConfig['skin'] ?? '') ?>">
                     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
@@ -581,7 +639,7 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                                  class="cursor-pointer rounded-xl border-2 p-1 transition-all <?= $isSelected ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400' ?>">
                                 <div class="h-24 bg-zinc-100 dark:bg-zinc-700 rounded-lg flex items-center justify-center">
                                     <?php if ($sInfo['thumbnail']): ?>
-                                    <img src="<?= htmlspecialchars($sInfo['thumbnail']) ?>" alt="" class="max-h-full max-w-full object-contain rounded-lg" onerror="this.parentElement.innerHTML='<svg class=\'w-8 h-8 text-zinc-400\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01\'/></svg>'">
+                                    <img src="<?= htmlspecialchars($sInfo['thumbnail']) ?>" alt="" class="max-h-full max-w-full object-contain rounded-lg">
                                     <?php else: ?>
                                     <svg class="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
                                     <?php endif; ?>
@@ -596,23 +654,6 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                             <?php endforeach; ?>
                         </div>
                         <p class="text-xs text-zinc-400 mt-3"><?= __('site.pages.cfg.skin_card_desc') ?? '스킨을 변경하면 페이지가 새로고침됩니다. 스킨별 세부 설정은 스킨 탭에서 할 수 있습니다.' ?></p>
-                    </div>
-                    <!-- 추가 설정 카드 -->
-                    <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700">
-                        <div class="divide-y divide-zinc-100 dark:divide-zinc-700">
-                        <!-- 페이지 너비 -->
-                        <div class="flex items-start px-6 py-4">
-                            <label class="w-40 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300 pt-2"><?= __('site.pages.cfg.page_width') ?? '페이지 너비' ?></label>
-                            <div class="flex-1">
-                                <?php
-                                // full_width (레거시) → page_width 변환
-                                $_curPageWidth = $pageConfig['page_width'] ?? ((!empty($pageConfig['full_width'])) ? 'full' : '5xl');
-                                $__pageWidth = ['id' => 'cfgPageWidth', 'value' => $_curPageWidth];
-                                include BASE_PATH . '/resources/views/components/page-width-select.php';
-                                ?>
-                            </div>
-                        </div>
-                        </div>
                     </div>
 
                     <!-- 저장 -->
@@ -781,29 +822,6 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                 });
                 </script>
 
-                <?php
-                // 시스템 페이지 전용 설정 — 스킨 탭 하단에 표시
-                if ($_systemSettingsView):
-                    $settingsViewPath = BASE_PATH . '/resources/views/' . $_systemSettingsView;
-                    if (file_exists($settingsViewPath)):
-                ?>
-                <div class="mt-10 bg-gradient-to-b from-blue-50 to-transparent dark:from-blue-950/30 dark:to-transparent rounded-2xl p-6 -mx-2">
-                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-blue-200 dark:border-blue-800/50">
-                        <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-bold text-zinc-900 dark:text-white"><?= __($_systemSettingsTab) ?? '서비스 설정' ?></h3>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400">이 페이지 전용 서비스 설정입니다. 위 스킨 설정과 별도로 저장됩니다.</p>
-                        </div>
-                    </div>
-                    <?php include $settingsViewPath; ?>
-                </div>
-                <?php
-                    endif;
-                endif;
-                ?>
-
                 <?php elseif ($currentTab === 'addition'): ?>
                 <?php
                     $editorConfig = $pageConfig;
@@ -906,7 +924,26 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                     </div>
                 </div>
 
-                <?php endif; ?>
+                <?php
+                // ─── 시스템 페이지 전용 탭 (settings_tabs 배열로 선언된 최상위 탭들) ───
+                else:
+                    $_matchedSystemTab = null;
+                    foreach ($_systemSettingsTabs as $st) {
+                        if ($st['key'] === $currentTab) { $_matchedSystemTab = $st; break; }
+                    }
+                    if ($_matchedSystemTab):
+                        $_sysTabView = BASE_PATH . '/resources/views/' . $_matchedSystemTab['view'];
+                        if (file_exists($_sysTabView)):
+                ?>
+                <!-- 시스템 탭 콘텐츠: <?= htmlspecialchars($_matchedSystemTab['key']) ?> -->
+                <?php include $_sysTabView; ?>
+                <?php
+                        else:
+                            echo '<div class="p-8 text-center text-red-600 bg-red-50 dark:bg-red-900/20 rounded-xl">탭 뷰 파일을 찾을 수 없습니다: ' . htmlspecialchars($_matchedSystemTab['view']) . '</div>';
+                        endif;
+                    endif;
+                endif;
+                ?>
 
                 <!-- 하단 바로가기 -->
                 <div class="mt-6 flex items-center gap-3">
@@ -1042,29 +1079,51 @@ function updateOgPreview() {
 }
 
 async function saveSettings() {
+    // 탭별 저장 안전화: 현재 DOM 에 존재하는 필드만 전송.
+    // 서버(save_settings)는 MERGE 방식이라 누락된 필드는 기존값 유지.
     var settings = {
         slug: document.getElementById('cfgSlug')?.value || SLUG,
-        browser_title: document.getElementById('cfgBrowserTitle')?.value || '',
-        page_width: document.getElementById('cfgPageWidth')?.value || '5xl',
-        search_index: document.getElementById('cfgSearchIndex')?.checked ? 'yes' : 'no',
-        layout: document.getElementById('cfgLayout')?.value || 'inherit',
-        skin: document.getElementById('cfgSkin')?.value || '',
-        meta_title: document.getElementById('cfgMetaTitle')?.value || '',
-        meta_description: document.getElementById('cfgMetaDesc')?.value || '',
-        meta_keywords: document.getElementById('cfgMetaKeywords')?.value || '',
-        robots: document.getElementById('cfgRobots')?.value || '',
-        og_image: document.getElementById('cfgOgImage')?.value || '',
-        // 에디터 권한 (추가 설정 탭)
-        ...(typeof getEditorConfig === 'function' ? getEditorConfig() : {}),
-        // 권한
-        perm_access: document.getElementById('permAccess')?.value || 'all',
-        perm_edit: document.getElementById('permEdit')?.value || 'admin',
-        perm_manage: document.getElementById('permManage')?.value || 'admin',
-        perm_doc_manage: document.getElementById('permDocManage')?.checked ? true : false,
-        perm_comment_manage: document.getElementById('permCommentManage')?.checked ? true : false,
-        perm_settings_manage: document.getElementById('permSettingsManage')?.checked ? true : false,
-        module_admins: getModuleAdmins(),
     };
+    var fieldMap = {
+        browser_title:    ['cfgBrowserTitle',   'value'],
+        page_width:       ['cfgPageWidth',      'value'],
+        layout:           ['cfgLayout',         'value'],
+        skin:             ['cfgSkin',           'value'],
+        meta_title:       ['cfgMetaTitle',      'value'],
+        meta_description: ['cfgMetaDesc',       'value'],
+        meta_keywords:    ['cfgMetaKeywords',   'value'],
+        robots:           ['cfgRobots',         'value'],
+        og_image:         ['cfgOgImage',        'value'],
+        perm_access:      ['permAccess',        'value'],
+        perm_edit:        ['permEdit',          'value'],
+        perm_manage:      ['permManage',        'value'],
+    };
+    for (var key in fieldMap) {
+        var el = document.getElementById(fieldMap[key][0]);
+        if (el) settings[key] = el.value;
+    }
+    // checkbox 필드
+    var checkboxMap = {
+        search_index: 'cfgSearchIndex',
+        perm_doc_manage: 'permDocManage',
+        perm_comment_manage: 'permCommentManage',
+        perm_settings_manage: 'permSettingsManage',
+    };
+    for (var key in checkboxMap) {
+        var el = document.getElementById(checkboxMap[key]);
+        if (el) {
+            settings[key] = (key === 'search_index') ? (el.checked ? 'yes' : 'no') : el.checked;
+        }
+    }
+    // 에디터 권한 (추가 설정 탭에서만)
+    if (typeof getEditorConfig === 'function') {
+        var _ec = getEditorConfig();
+        if (_ec && Object.keys(_ec).length) Object.assign(settings, _ec);
+    }
+    // 모듈 관리자
+    if (typeof getModuleAdmins === 'function' && document.getElementById('moduleAdminsList')) {
+        settings.module_admins = getModuleAdmins();
+    }
 
     try {
         var res = await fetch(PAGE_URL + '?slug=' + SLUG, {

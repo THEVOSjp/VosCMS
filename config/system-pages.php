@@ -95,6 +95,20 @@ return [
         'edit' => '{admin}/site/pages/widget-builder?slug=downloads',
     ],
 
+    // ── 변경 이력 (버전별 다국어 저장 + AI 번역 지원) ──
+    // 원칙: 설정(모양+기능)은 설정 페이지, 편집(데이터 관리: 업로드·버전)은 편집 페이지로 분리.
+    [
+        'slug'      => 'changelog',
+        'title'     => 'site.pages.changelog',
+        'icon'      => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+        'emoji'     => '📋',
+        'color'     => 'indigo',
+        'type'      => 'system',
+        'view'      => 'system/changelog/index.php',
+        'edit_view' => 'system/changelog/edit.php',   // 시스템 페이지 전용 편집 뷰
+        'edit'      => '/changelog/edit',             // 편집 URL (프론트 라우트)
+    ],
+
     // ── 시스템 페이지 (본사 전용, 배포 제외 가능) ──
     [
         'slug' => 'service/order',
@@ -104,9 +118,34 @@ return [
         'color' => 'indigo',
         'type' => 'system',
         'view' => 'system/service/order.php',
-        'edit' => '/service/order',
-        'settings_view' => 'system/service/_settings.php',
-        'settings_tab' => 'site.pages.tab_service',
+        'edit' => '{admin}/site/pages/settings?slug=service/order&tab=general',
+        // 평탄화: 기존 config/service-settings-tabs.php 의 탭을 최상위로 노출
+        'settings_tabs' => [
+            [
+                'key'   => 'general',
+                'label' => '기본 설정',
+                'icon'  => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
+                'view'  => 'system/service/settings/general.php',
+            ],
+            [
+                'key'   => 'domain',
+                'label' => '도메인',
+                'icon'  => 'M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9',
+                'view'  => 'system/service/settings/domain.php',
+            ],
+            [
+                'key'   => 'hosting',
+                'label' => '웹 호스팅',
+                'icon'  => 'M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01',
+                'view'  => 'system/service/settings/hosting.php',
+            ],
+            [
+                'key'   => 'addons',
+                'label' => '부가서비스',
+                'icon'  => 'M12 6v6m0 0v6m0-6h6m-6 0H6',
+                'view'  => 'system/service/settings/addons.php',
+            ],
+        ],
     ],
     // 결제 완료 페이지 (페이지 관리 목록에 숨김, 라우팅용)
     [

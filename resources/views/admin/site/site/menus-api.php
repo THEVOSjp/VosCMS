@@ -129,9 +129,13 @@ try {
                 $slug = makeSlug($title) ?: 'ext-' . time();
                 // 메뉴 URL을 slug로 변경 (프론트에서 접근 가능하도록)
                 $pdo->prepare("UPDATE rzx_menu_items SET url = ? WHERE id = ?")->execute([$slug, $newMenuId]);
-                // 페이지 생성
-                $pdo->prepare("INSERT INTO rzx_page_contents (page_slug, page_type, locale, title, content, is_system, is_active) VALUES (?, 'external', ?, ?, ?, 0, 1)")
-                    ->execute([$slug, $defaultLocale, $title, $externalUrl]);
+                // 페이지 생성 (중복 방지: 같은 slug+locale 이 이미 있으면 스킵)
+                $chk = $pdo->prepare("SELECT COUNT(*) FROM rzx_page_contents WHERE page_slug = ? AND locale = ?");
+                $chk->execute([$slug, $defaultLocale]);
+                if ((int)$chk->fetchColumn() === 0) {
+                    $pdo->prepare("INSERT INTO rzx_page_contents (page_slug, page_type, locale, title, content, is_system, is_active) VALUES (?, 'external', ?, ?, ?, 0, 1)")
+                        ->execute([$slug, $defaultLocale, $title, $externalUrl]);
+                }
             }
 
             echo json_encode(['success' => true, 'id' => $newMenuId, 'page_created' => in_array($menuType, ['page', 'widget'])]);
@@ -315,6 +319,9 @@ function deleteMenuItemRecursive(PDO $pdo, int $id): void {
             $pdo->prepare("DELETE FROM rzx_page_contents WHERE page_slug = ?")->execute([$slug]);
         } elseif ($slug && $type === 'widget') {
             $pdo->prepare("DELETE FROM rzx_page_widgets WHERE page_slug = ?")->execute([$slug]);
+            $pdo->prepare("DELETE FROM rzx_page_contents WHERE page_slug = ?")->execute([$slug]);
+        } elseif ($slug && $type === 'external') {
+            $pdo->prepare("DELETE FROM rzx_page_contents WHERE page_slug = ?")->execute([$slug]);
         }
         // 번역 데이터 삭제
         $pdo->prepare("DELETE FROM rzx_translations WHERE lang_key LIKE ?")->execute(["menu_item.{$id}.%"]);

@@ -279,8 +279,6 @@ if ($path === 'sitemap.xml') {
         echo "User-agent: *\nAllow: /\n\nSitemap: {$appUrl}/sitemap.xml\n";
     }
     exit;
-} elseif ($path === 'changelog') {
-    $__pageFile = BASE_PATH . '/resources/views/customer/changelog.php';
 } elseif (empty($path) || $path === 'index.php' || $path === 'home') {
     // home_page 설정에 지정된 위젯 페이지로 연결
     $pageSlug = $siteSettings['home_page'] ?? 'home';
@@ -503,22 +501,55 @@ if ($path === 'sitemap.xml') {
                 if (preg_match('#^(.+?)/(settings|edit)$#', $path, $_prm)) {
                     $_prSlug = $_prm[1];
                     $_prAction = $_prm[2];
-                    $_prCheck = $pdo->prepare("SELECT page_slug FROM {$_pfx}page_contents WHERE page_slug = ? LIMIT 1");
-                    $_prCheck->execute([$_prSlug]);
-                    if ($_prCheck->fetchColumn()) {
+
+                    // 1. DB 에서 먼저 페이지 타입 조회 (document/widget/external)
+                    $_ptChk = $pdo->prepare("SELECT page_type FROM {$_pfx}page_contents WHERE page_slug = ? LIMIT 1");
+                    $_ptChk->execute([$_prSlug]);
+                    $_ptType = $_ptChk->fetchColumn() ?: '';
+                    $_sysPageDef = null;
+
+                    // 2. DB 에 없으면 config/system-pages.php 에서 시스템 페이지 검색 (type=system)
+                    if (!$_ptType) {
+                        $_spCheck = file_exists(BASE_PATH . '/config/system-pages.php')
+                            ? include(BASE_PATH . '/config/system-pages.php') : [];
+                        foreach ($_spCheck as $_sp) {
+                            if (($_sp['slug'] ?? '') === $_prSlug) {
+                                $_ptType = $_sp['type'] ?? 'system';
+                                $_sysPageDef = $_sp;
+                                break;
+                            }
+                        }
+                    }
+
+                    if ($_ptType) {
                         $pageSlug = $_prSlug;
                         if ($_prAction === 'settings') {
                             $__pageFile = BASE_PATH . '/resources/views/customer/page-settings.php';
-                        } else {
-                            // 위젯/시스템 타입이면 위젯 빌더, 그 외 콘텐츠 편집
-                            $_ptChk = $pdo->prepare("SELECT page_type FROM {$_pfx}page_contents WHERE page_slug = ? LIMIT 1");
-                            $_ptChk->execute([$_prSlug]);
-                            $_ptType = $_ptChk->fetchColumn();
-                            if ($_ptType === 'widget' || $_ptType === 'system') {
-                                $__pageFile = BASE_PATH . '/resources/views/customer/page-widget-builder.php';
-                            } else {
-                                $__pageFile = BASE_PATH . '/resources/views/customer/page-edit.php';
+                        } elseif ($_ptType === 'system' && $_sysPageDef && !empty($_sysPageDef['edit_view'])) {
+                            // 시스템 페이지 편집: 전용 뷰 파일 직접 include (데이터 관리 UI)
+                            // 뷰 파일이 자체적으로 layout header/footer include 하므로 여기서 바로 실행.
+                            $_sysEditView = BASE_PATH . '/resources/views/' . $_sysPageDef['edit_view'];
+                            if (file_exists($_sysEditView)) {
+                                include $_sysEditView;
+                                exit;
                             }
+                            http_response_code(404);
+                            echo 'Edit view not found: ' . htmlspecialchars($_sysPageDef['edit_view']);
+                            exit;
+                        } elseif ($_ptType === 'system' && $_sysPageDef && !empty($_sysPageDef['edit'])) {
+                            // 레거시 fallback: edit 필드를 외부 URL 로 쓰는 경우 리다이렉트
+                            $_sysEditUrl = str_replace('{admin}',
+                                rtrim($config['app_url'] ?? '', '/') . '/' . ($config['admin_path'] ?? 'theadmin'),
+                                $_sysPageDef['edit']);
+                            if ($_sysEditUrl[0] === '/') {
+                                $_sysEditUrl = rtrim($config['app_url'] ?? '', '/') . $_sysEditUrl;
+                            }
+                            header('Location: ' . $_sysEditUrl);
+                            exit;
+                        } elseif ($_ptType === 'widget' || $_ptType === 'system') {
+                            $__pageFile = BASE_PATH . '/resources/views/customer/page-widget-builder.php';
+                        } else {
+                            $__pageFile = BASE_PATH . '/resources/views/customer/page-edit.php';
                         }
                         $_pageRouteMatch = true;
                     }

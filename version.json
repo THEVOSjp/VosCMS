@@ -1,8 +1,8 @@
 {
-    "version": "2.2.2",
+    "version": "2.3.0",
     "name": "VosCMS",
-    "codename": "Stats Widget Overhaul",
-    "release_date": "2026-04-19",
+    "codename": "Page Tabs Refactor + Changelog System",
+    "release_date": "2026-04-20",
     "commit": null,
     "channel": "dev",
     "github": {

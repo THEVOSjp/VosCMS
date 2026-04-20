@@ -1,0 +1,151 @@
+{
+  "title": {
+    "ko": "Changelog 기본 스킨", "en": "Changelog Default Skin", "ja": "Changelog デフォルトスキン",
+    "zh_CN": "变更日志默认皮肤", "zh_TW": "變更日誌預設皮膚", "de": "Changelog Standard-Skin",
+    "es": "Skin predeterminado de changelog", "fr": "Skin de journal par défaut",
+    "id": "Skin changelog default", "mn": "Changelog үндсэн скин",
+    "ru": "Стандартный скин журнала изменений", "tr": "Varsayılan changelog teması",
+    "vi": "Giao diện changelog mặc định"
+  },
+  "description": {
+    "ko": "버전별 변경 이력을 카드 형식으로 표시하는 기본 스킨.",
+    "en": "Default skin that displays version history in card format."
+  },
+  "version": "1.0.0",
+  "date": "2026-04-20",
+  "author": { "name": "THEVOS ECO 연구소", "url": "https://voscms.com", "email": "info@voscms.com" },
+  "vars": [
+    {
+      "section": { "ko": "레이아웃", "en": "Layout", "ja": "レイアウト" },
+      "name": "content_width",
+      "type": "select",
+      "title": { "ko": "콘텐츠 너비", "en": "Content width", "ja": "コンテンツ幅" },
+      "options": [
+        { "value": "max-w-3xl", "label": { "ko": "좁게 (768px)", "en": "Narrow (768px)" } },
+        { "value": "max-w-4xl", "label": { "ko": "기본 (896px)", "en": "Default (896px)" } },
+        { "value": "max-w-5xl", "label": { "ko": "넓게 (1024px)", "en": "Wide (1024px)" } }
+      ],
+      "default": "max-w-4xl"
+    },
+    {
+      "name": "card_variant",
+      "type": "radio",
+      "title": { "ko": "카드 스타일", "en": "Card style", "ja": "カードスタイル" },
+      "options": [
+        { "value": "filled", "label": { "ko": "채움 (배경 + 테두리)", "en": "Filled (bg + border)" } },
+        { "value": "outlined", "label": { "ko": "테두리만", "en": "Outlined only" } },
+        { "value": "flat", "label": { "ko": "플랫 (구분선만)", "en": "Flat (divider only)" } }
+      ],
+      "default": "filled"
+    },
+    {
+      "section": { "ko": "버전 배지", "en": "Version Badge", "ja": "バージョンバッジ" },
+      "name": "badge_bg",
+      "type": "color",
+      "title": { "ko": "배지 배경색", "en": "Badge background", "ja": "バッジ背景" },
+      "default": "#eef2ff"
+    },
+    {
+      "name": "badge_fg",
+      "type": "color",
+      "title": { "ko": "배지 글자색", "en": "Badge text", "ja": "バッジ文字" },
+      "default": "#4338ca"
+    },
+    {
+      "name": "badge_shape",
+      "type": "radio",
+      "title": { "ko": "배지 모양", "en": "Badge shape", "ja": "バッジ形状" },
+      "options": [
+        { "value": "pill", "label": { "ko": "알약형", "en": "Pill" } },
+        { "value": "rounded", "label": { "ko": "모서리 둥글게", "en": "Rounded" } },
+        { "value": "square", "label": { "ko": "사각형", "en": "Square" } }
+      ],
+      "default": "pill"
+    },
+    {
+      "section": { "ko": "섹션 색상", "en": "Section Colors", "ja": "セクション色" },
+      "name": "color_added",
+      "type": "color",
+      "title": { "ko": "Added (추가)", "en": "Added" },
+      "default": "#22c55e"
+    },
+    {
+      "name": "color_changed",
+      "type": "color",
+      "title": { "ko": "Changed (변경)", "en": "Changed" },
+      "default": "#3b82f6"
+    },
+    {
+      "name": "color_fixed",
+      "type": "color",
+      "title": { "ko": "Fixed (수정)", "en": "Fixed" },
+      "default": "#f59e0b"
+    },
+    {
+      "name": "color_removed",
+      "type": "color",
+      "title": { "ko": "Removed (제거)", "en": "Removed" },
+      "default": "#ef4444"
+    },
+    {
+      "name": "color_security",
+      "type": "color",
+      "title": { "ko": "Security (보안)", "en": "Security" },
+      "default": "#dc2626"
+    },
+    {
+      "name": "color_deprecated",
+      "type": "color",
+      "title": { "ko": "Deprecated (폐지 예정)", "en": "Deprecated" },
+      "default": "#eab308"
+    },
+    {
+      "section": { "ko": "날짜", "en": "Date" },
+      "name": "date_format",
+      "type": "select",
+      "title": { "ko": "날짜 포맷", "en": "Date format" },
+      "options": [
+        { "value": "iso", "label": { "ko": "2026-04-20 (ISO)", "en": "2026-04-20 (ISO)" } },
+        { "value": "ko_long", "label": { "ko": "2026년 4월 20일", "en": "2026년 4월 20일" } },
+        { "value": "en_long", "label": { "ko": "April 20, 2026", "en": "April 20, 2026" } },
+        { "value": "dmy", "label": { "ko": "20/04/2026", "en": "20/04/2026" } }
+      ],
+      "default": "iso"
+    },
+    {
+      "name": "show_relative_date",
+      "type": "checkbox",
+      "title": { "ko": "상대 시간 표시 (3일 전)", "en": "Show relative time (3 days ago)" },
+      "default": true
+    },
+    {
+      "section": { "ko": "표시 옵션", "en": "Display Options", "ja": "表示オプション" },
+      "name": "show_internal_sections",
+      "type": "checkbox",
+      "title": { "ko": "내부용 섹션 표시", "en": "Show internal sections" },
+      "description": {
+        "ko": "Infrastructure, Internal, Refactor, Chore, Docs, Test 섹션을 공개 페이지에 표시합니다. 개발자 대상 사이트에 유용합니다.",
+        "en": "Show internal sections (Infrastructure, Internal, Refactor, Chore, Docs, Test) on the public page."
+      },
+      "default": false
+    },
+    {
+      "name": "max_versions",
+      "type": "number",
+      "title": { "ko": "최신 N개만 표시", "en": "Show latest N versions" },
+      "description": {
+        "ko": "0=전체 표시. 최신순으로 N개만 보여주려면 숫자 입력.",
+        "en": "0 = show all. Enter a number to display only the N most recent versions."
+      },
+      "default": 0,
+      "min": 0,
+      "max": 500
+    },
+    {
+      "section": { "ko": "사용자 정의", "en": "Custom" },
+      "name": "custom_css",
+      "type": "textarea",
+      "title": { "ko": "커스텀 CSS", "en": "Custom CSS" }
+    }
+  ]
+}

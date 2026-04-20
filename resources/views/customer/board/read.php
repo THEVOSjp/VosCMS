@@ -249,7 +249,7 @@ $seoContext = [
             ?>
 
             <!-- 본문 -->
-            <link rel="stylesheet" href="<?= $config['app_url'] ?? '' ?>/resources/css/board-content.css">
+            <link rel="stylesheet" href="<?= $config['app_url'] ?? '' ?>/resources/css/board-content.css?v=<?= @filemtime(__DIR__.'/../../../../resources/css/board-content.css') ?: time() ?>">
             <div class="board-content p-6 text-zinc-800 dark:text-zinc-200">
                 <?= $post['content'] ?>
             </div>

@@ -166,7 +166,7 @@ elseif ($_darkMode === 'light') $_htmlDarkClass = '';
         document.documentElement.classList.add('dark');
     }
     </script>
-    <link rel="stylesheet" href="<?= $baseUrl ?>/resources/css/board-content.css">
+    <link rel="stylesheet" href="<?= $baseUrl ?>/resources/css/board-content.css?v=<?= @filemtime(__DIR__.'/../../../resources/css/board-content.css') ?: time() ?>">
     <script src="<?= $baseUrl ?>/resources/js/board-autolink.js" defer></script>
 <?= $_seo['meta_tags'] ?>    <?php if (isset($headExtra)) echo $headExtra; ?>
     <?php if ($_headerScript): echo $_headerScript; endif; ?>

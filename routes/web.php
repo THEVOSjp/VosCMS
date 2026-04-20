@@ -422,6 +422,12 @@ $router->group(['prefix' => '/admin', 'middleware' => ['auth', 'admin']], functi
         include BASE_PATH . '/resources/views/admin/site/menus-api.php';
     })->middleware('csrf')->name('admin.site.menus.api');
 
+    // 사이트 관리 - Changelog 관리 API
+    $router->post('/site/changelog/api', function () {
+        global $config, $siteSettings, $pdo;
+        include BASE_PATH . '/resources/views/admin/site/changelog-api.php';
+    })->middleware('csrf')->name('admin.site.changelog.api');
+
     // 사이트 관리 - 디자인
     $router->get('/site/design', function () {
         global $config, $siteSettings;

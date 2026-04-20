@@ -4,6 +4,69 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.3.0] - 2026-04-20 — 페이지 설정 탭 리팩토링 + Changelog 시스템
+
+### Added — Changelog 시스템 (버전별 다국어 + AI 번역 대비)
+
+- **DB 테이블** `rzx_changelog` 신규 — 버전 × locale 별 독립 레코드, `translation_source`(original/ai/manual) + `source_hash` 추적
+- **파서** `RzxLib\Core\Changelog\ChangelogParser` — Keep a Changelog 표준 + 내부 섹션 화이트리스트 (Infrastructure/Internal/Refactor/Chore/Docs/Test 는 비공개)
+- **임포터** `ChangelogImporter` — idempotent 병합, 수동 번역 보호, content_hash 로 변경만 감지
+- **CLI 스크립트** `scripts/import-changelog.php` — `--file --locale --dry-run --silent` 옵션, SemVer pre-release(`2.1.1-hotfix`) 지원
+- **번역 인터페이스** `RzxLib\Core\Translate\{TranslatorInterface, NullTranslator, TranslatorFactory}` — Gemma 4 (ai.21ces.com) GPU 준비 후 `config/translator.php` driver 변경만으로 활성화
+- **시스템 페이지** `/changelog` 등록 (`config/system-pages.php`), `resources/views/system/changelog/index.php` 프론트 뷰
+- **전용 스킨** `skins/page/changelog/skin.json` — 카드 스타일(filled/outlined/flat), 섹션별 색상, 버전 배지, 날짜 포맷, 상대시간 표시, 내부 섹션 노출 토글
+- **편집 페이지** `/changelog/edit` 분리 — MD 업로드 프리뷰, 다국어 커버리지 매트릭스, 버전별 토글·삭제, AI 번역 버튼(준비중)
+- **배포 자동화** `deploy-voscms.sh` 에 `1.5/5 Changelog import` 단계 추가 — ko + 12개 locale `.md` 파일 자동 감지·병합
+- **번역 키** `site.pages.changelog` 13개 locale 추가
+
+### Changed — 페이지 설정 탭 시스템 리팩토링
+
+- **탭 순서 재배치**: `[기본정보] [권한] [추가설정] [스킨]` — 시스템 페이지는 뒤에 자체 탭 추가 가능
+- **`settings_tabs` 스키마 도입** (`config/system-pages.php`) — 시스템 페이지가 최상위 탭 배열 선언, 각 항목 `key/label/icon/view` 로 동적 렌더. 기존 `settings_view` 하단 include 레거시 제거
+- **원칙 확립**: **설정 = 모양 + 기능** / **편집 = 데이터** — 업로드·버전·번역 같은 데이터 관리 UI 는 `/changelog/edit` 로 분리
+- **MERGE 저장 전략** — `save_settings` 핸들러가 기존 설정과 병합. 탭별로 나뉘어도 다른 탭 데이터가 지워지지 않음
+- **`saveSettings()` JS** — DOM 에 존재하는 필드만 전송. 탭 분리 환경에서 일부 필드 미렌더 시 안전
+- **레이아웃·스킨 카드 위치** — 기본정보 탭으로 원위치 (사용자 피드백 반영). 스킨 탭은 skin.json 변수만 전담
+- **페이지 너비 중복 제거** — 기본정보 탭의 `page_width` 필드 삭제 (스킨의 `content_width` 로 통합)
+- **service/order 내부 2차 탭 평탄화** — `config/service-settings-tabs.php` 의 `general/domain/hosting/addons` 를 `settings_tabs` 로 이전, 최상위 탭으로 승격
+
+### Changed — 시스템 페이지 라우팅 확장
+
+- **`/{slug}/settings`, `/{slug}/edit` 가 `config/system-pages.php` 도 인식** — 기존엔 `rzx_page_contents` DB 만 조회해 시스템 페이지가 404. 이제 DB → config 순서로 조회
+- **`edit_view` 필드 신설** — 시스템 페이지 전용 편집 뷰 파일 경로 직접 지정. `/{slug}/edit` 클릭 시 해당 뷰 직접 include (관리자 리다이렉트 hop 제거)
+- **pages-settings.php fallback** — DB 레코드 없는 시스템 페이지도 `$pageData` 를 config 에서 구성해 "페이지 관리 목록" 리다이렉트 방지
+- **admin icon URL 통일** — `/{slug}/settings`, `/{slug}/edit` 프론트 표준 URL 사용
+
+### Fixed — 메뉴 관리 중복 레코드 버그
+
+- `menus-api.php` 외부 페이지(`external`) 타입 **INSERT 전 중복 체크 누락** 수정 — 메뉴 저장 2번 클릭 시 `rzx_page_contents` 중복 row 발생 문제
+- 메뉴 삭제 시 **external 타입 + widget 의 page_contents** 정리 누락 수정 — 고아 레코드 방지
+
+### Fixed — Changelog 페이지 스킨 동기화
+
+- 제목 배경(`title_bg_type`, `title_bg_image`, `title_bg_video`, `title_bg_overlay`, `title_text_color`), `show_title`, `show_breadcrumb`, `custom_css`, `custom_header_html`, `custom_footer_html` — 모든 표준 페이지 스킨 변수가 공개 뷰에 반영되도록 수정
+- `_page-title-bg.php` partial 이 `$_contentWidth` 변수 수용 — 제목 영역이 콘텐츠 너비를 따라감
+- 관리자 아이콘을 제목과 분리 — 콘텐츠 상단 우측으로 독립 배치. `show_title=0` 이어도 항상 표시
+- 제목 영역 위 20px 여백 추가 (배경 레이아웃 균형)
+
+### Added — 페이지·번역 정리
+
+- `site.pages.contact` 번역 키 13개 locale 추가 (ko/en/ja/zh_CN/zh_TW/de/es/fr/id/mn/ru/tr/vi) — 기존 누락 해결
+- **페이지 관리 시스템 가이드** 문서 `docs/PAGE_ADMIN_GUIDE.md` 신규 — 탭 구조·스키마·라우팅·권한·확장 방법 정리
+
+### Infrastructure — 배포 스크립트
+
+- `deploy-voscms.sh` 에 `1.5/5  Changelog import` 스텝 — mysqldump 이전에 개발 DB 병합 → 프로덕션에 자연 전파
+- 파일명 컨벤션 `CHANGELOG.md` (ko 기본) + `CHANGELOG.{locale}.md` (옵션) — locale 자동 감지 업로드 지원
+
+### Refactor — 정리
+
+- `index.php` 하드코딩 `/changelog` 라우트 제거 — 시스템 페이지 라우터로 이관
+- `resources/views/customer/changelog.php` 제거 — 시스템 구조로 이전
+- Phase 1 (현재) + Phase 2 (AI 번역 활성화) 2단계 로드맵 — Phase 2 는 `GemmaTranslator` 클래스 1개 추가 + config driver 변경만으로 전환 가능
+
+---
+
 ## [VosCMS 2.2.2] - 2026-04-19 — stats 위젯 개선 + 관리자 상단 수정
 
 ### Added — stats 위젯 CRUD + 카운트업 애니메이션

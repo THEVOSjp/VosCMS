@@ -5,13 +5,15 @@
  * 필요 변수: $_titleBgType, $_titleBgImage, $_titleBgVideo, $_titleBgHeight,
  *           $_titleBgOverlay, $_titleTextClass, $_showBreadcrumb, $_hasTitleBg,
  *           $pageTitle, $_adminIcons, $config
+ * 선택 변수: $_contentWidth (비어있으면 max-w-7xl)
  */
 $_baseUrl = $config['app_url'] ?? '';
 $_bgSrc = function($path) use ($_baseUrl) {
     return str_starts_with($path, 'http') ? htmlspecialchars($path) : htmlspecialchars($_baseUrl . $path);
 };
+$_titleContainerWidth = !empty($_contentWidth) ? $_contentWidth : 'max-w-7xl';
 ?>
-<div class="max-w-7xl mx-auto px-4">
+<div class="<?= htmlspecialchars($_titleContainerWidth) ?> mx-auto px-4">
     <div class="relative rounded-xl overflow-hidden mb-6" style="height:<?= $_titleBgHeight ?>px">
         <?php if ($_titleBgType === 'video' && $_titleBgVideo): ?>
         <video class="absolute inset-0 w-full h-full object-cover" autoplay muted loop playsinline>
