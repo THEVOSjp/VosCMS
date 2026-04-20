@@ -452,6 +452,63 @@ ob_start();
     </form>
 </div>
 
+<!-- 관련 사이트 링크 -->
+<div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
+    <h3 class="text-md font-semibold text-zinc-900 dark:text-white mb-1"><?= __('settings.seo.resources.title') ?></h3>
+    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4"><?= __('settings.seo.resources.description') ?></p>
+
+    <?php
+    $_linkCard = 'flex items-start gap-3 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition group';
+    $_linkIcon = 'w-5 h-5 text-zinc-400 group-hover:text-blue-500 shrink-0 mt-0.5';
+    $_linkTitle = 'block text-sm font-medium text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400';
+    $_linkDesc = 'block text-xs text-zinc-500 dark:text-zinc-400 mt-0.5';
+
+    // 브랜드명은 전 로케일 동일(번역 불필요), 설명만 다국어
+    $_resources = [
+        'verify' => [
+            ['key' => 'google_search_console', 'url' => 'https://search.google.com/search-console', 'title' => 'Google Search Console'],
+            ['key' => 'naver_search_advisor',  'url' => 'https://searchadvisor.naver.com/',         'title' => 'Naver Search Advisor'],
+            ['key' => 'bing_webmaster',        'url' => 'https://www.bing.com/webmasters',          'title' => 'Bing Webmaster Tools'],
+        ],
+        'analytics' => [
+            ['key' => 'google_analytics',  'url' => 'https://analytics.google.com/',  'title' => 'Google Analytics'],
+            ['key' => 'google_tag_manager','url' => 'https://tagmanager.google.com/', 'title' => 'Google Tag Manager'],
+        ],
+        'test' => [
+            ['key' => 'pagespeed',          'url' => 'https://pagespeed.web.dev/',                              'title' => 'PageSpeed Insights'],
+            ['key' => 'rich_results',       'url' => 'https://search.google.com/test/rich-results',             'title' => 'Rich Results Test'],
+            ['key' => 'facebook_debugger',  'url' => 'https://developers.facebook.com/tools/debug/',            'title' => 'Facebook Sharing Debugger'],
+            ['key' => 'x_card_validator',   'url' => 'https://cards-dev.twitter.com/validator',                 'title' => 'X (Twitter) Card Validator'],
+            ['key' => 'opengraph_xyz',      'url' => 'https://www.opengraph.xyz/',                              'title' => 'OpenGraph.xyz'],
+        ],
+        'learn' => [
+            ['key' => 'search_central', 'url' => 'https://developers.google.com/search/docs', 'title' => 'Google Search Central'],
+            ['key' => 'og_protocol',    'url' => 'https://ogp.me/',                           'title' => 'Open Graph Protocol'],
+            ['key' => 'schema_org',     'url' => 'https://schema.org/',                       'title' => 'Schema.org'],
+        ],
+    ];
+
+    foreach ($_resources as $_gKey => $_items):
+    ?>
+    <div class="mb-5 last:mb-0">
+        <h4 class="text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider mb-2"><?= __('settings.seo.resources.group_' . $_gKey) ?></h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            <?php foreach ($_items as $_item): ?>
+            <a href="<?= htmlspecialchars($_item['url']) ?>" target="_blank" rel="noopener noreferrer" class="<?= $_linkCard ?>">
+                <svg class="<?= $_linkIcon ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                </svg>
+                <span class="flex-1">
+                    <span class="<?= $_linkTitle ?>"><?= htmlspecialchars($_item['title']) ?></span>
+                    <span class="<?= $_linkDesc ?>"><?= __('settings.seo.resources.desc.' . $_item['key']) ?></span>
+                </span>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endforeach; ?>
+</div>
+
 <script>
     function deleteOgImage() {
         if (confirm('<?= __('settings.seo.og.image_delete_confirm') ?>')) {
