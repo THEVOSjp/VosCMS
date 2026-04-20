@@ -1,7 +1,7 @@
 {
-    "version": "2.3.3",
+    "version": "2.3.4",
     "name": "VosCMS",
-    "codename": "Page Translation Single-Table Rollback",
+    "codename": "Content Sanitation + Card Layout Removal",
     "release_date": "2026-04-20",
     "commit": null,
     "channel": "dev",

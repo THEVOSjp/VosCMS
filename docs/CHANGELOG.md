@@ -4,6 +4,27 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.3.4] - 2026-04-20 — 콘텐츠 오염 정화 + 카드형 CSS 제거
+
+### Fixed — 시드/DB 의 Tailwind 변수 오염 정화
+
+`database/seeds/legal_pages.php` 시드 파일에 Tailwind CSS 변수(`--tw-scale-x`, `--tw-pan-x` 등 400+) 가 각 `<h1>/<h2>/<p>` 태그의 `style=""` 속성에 인라인으로 박혀 있던 문제. 설치마다 이 오염이 DB 로 전파되어 `terms`, `privacy` 페이지가 비대화 (특히 `privacy/ko` 는 128KB, 정상은 2KB).
+
+- `database/seeds/legal_pages.php`: 442KB → 131KB (70% 감소, 구문 유효)
+- 개발 DB 의 이미 오염된 26 행 정화: 1.04MB → 56KB (988KB 제거, -95%)
+- `scripts/clean-inline-styles.php` 신규 — `style="... --tw-* ..."` 일괄 정화 도구 (재발시 재사용)
+
+### Changed — `.board-content` 카드형 레이아웃 규칙 전면 제거
+
+`.board-content` CSS 가 모든 문서 페이지에 "h2 를 카드 헤더로, h2+p 를 카드 본문으로" 강제 변환하는 규칙을 포함하고 있었음. 이로 인해 `Brand` 같이 Tailwind 로 직접 디자인된 페이지의 히어로 구조가 깨짐.
+
+- 카드형 블록 103 줄 제거 (149 → 45 줄)
+- 남은 규칙: 기본 타이포그래피 (p/h·/blockquote/code/ul/ol/table), OG 링크 카드, 다크모드 텍스트 오버라이드
+- 결과: Brand 원본 디자인 복구 (왼쪽 파란 선 h2, 중앙정렬 히어로 등)
+- 법적 문서(terms/privacy 등)는 일반 `<h1><h2><p>` 타이포그래피로 충분 — 카드형은 과한 장식이었음
+
+---
+
 ## [VosCMS 2.3.3] - 2026-04-20 — 페이지 번역 구조 롤백 (단일 테이블 복귀)
 
 ### Changed — 2.3.1/2.3.2 의 2-테이블 설계 원복
