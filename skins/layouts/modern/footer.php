@@ -16,13 +16,13 @@
     $_copyright = $_lc['copyright'] ?? '';
     $_footerText = $_lc['footer_text'] ?? '';
     $_footerHtml = $_lc['custom_footer_html'] ?? '';
-    // 푸터 로고 우선순위: 사이트 설정의 footer_logo_image → 사이트의 logo_image → 레이아웃 설정
-    $_footerLogoImg = ($siteSettings['footer_logo_image'] ?? '') ?: (($siteSettings['logo_image'] ?? '') ?: ($_lc['footer_logo_image'] ?? ''));
+    // 푸터 로고 우선순위: 레이아웃 설정 > 사이트 footer_logo_image > 사이트 logo_image (fallback)
+    $_footerLogoImg = ($_lc['footer_logo_image'] ?? '') ?: (($siteSettings['footer_logo_image'] ?? '') ?: ($siteSettings['logo_image'] ?? ''));
     ?>
     <footer class="bg-white dark:bg-zinc-800 border-t dark:border-zinc-700 transition-colors duration-200">
         <div class="<?= $_contentWidth ?> mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <?php
-            $_footerLogoDark = ($siteSettings['logo_image_dark'] ?? '') ?: ($_lc['footer_logo_image_dark'] ?? '');
+            $_footerLogoDark = ($_lc['footer_logo_image_dark'] ?? '') ?: ($siteSettings['logo_image_dark'] ?? '');
             if ($_footerLogoImg): ?>
             <div class="mb-4 flex justify-center md:justify-start">
                 <img src="<?= $baseUrl . htmlspecialchars($_footerLogoImg) ?>" alt="" class="h-8 object-contain <?= $_footerLogoDark ? 'dark:hidden' : '' ?>">
