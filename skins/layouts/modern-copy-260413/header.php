@@ -45,8 +45,9 @@ $_headerScript = $_lc['header_script'] ?? '';
 $_customCss = $_lc['custom_css'] ?? '';
 
 $logoType = $siteSettings['logo_type'] ?? 'text';
-$logoImage = $_lcLogoImage ?: ($siteSettings['logo_image'] ?? '');
-$logoImageDark = $_lcLogoImageDark ?: ($siteSettings['logo_image_dark'] ?? '');
+// 로고 우선순위: 사이트 설정 > 레이아웃 설정(legacy)
+$logoImage = ($siteSettings['logo_image'] ?? '') ?: $_lcLogoImage;
+$logoImageDark = ($siteSettings['logo_image_dark'] ?? '') ?: $_lcLogoImageDark;
 $pageTitle = $pageTitle ?? $siteName;
 
 // SEO 헬퍼 로드

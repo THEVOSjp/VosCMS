@@ -42,7 +42,8 @@ $_showSearch = ($_lc['show_search'] ?? '1') === '1';
 $_lcLogoImage = $_lc['logo_image'] ?? '';
 $_headerScript = $_lc['header_script'] ?? '';
 $_customCss = $_lc['custom_css'] ?? '';
-$logoImage = $_lcLogoImage ?: ($siteSettings['logo_image'] ?? '');
+// 로고 우선순위: 사이트 설정 > 레이아웃 설정(legacy)
+$logoImage = ($siteSettings['logo_image'] ?? '') ?: $_lcLogoImage;
 $pageTitle = $pageTitle ?? $siteName;
 
 // SEO 헬퍼 로드
