@@ -20,36 +20,9 @@ $message = '';
 $messageType = '';
 $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
 
-// AJAX: 페이지 삭제
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
-    header('Content-Type: application/json');
-    $input = json_decode(file_get_contents('php://input'), true);
-    if (($input['action'] ?? '') === 'delete_page') {
-        $slug = trim($input['slug'] ?? '');
-        if (!$slug) { echo json_encode(['success' => false, 'error' => 'Slug is required']); exit; }
-
-        // 시스템 페이지 보호
-        $sysCheck = $pdo->prepare("SELECT is_system FROM {$prefix}page_contents WHERE page_slug = ? AND is_system = 1 LIMIT 1");
-        $sysCheck->execute([$slug]);
-        if ($sysCheck->fetchColumn()) {
-            echo json_encode(['success' => false, 'error' => '시스템 페이지는 삭제할 수 없습니다.']);
-            exit;
-        }
-
-        try {
-            // 페이지 콘텐츠 삭제
-            $pdo->prepare("DELETE FROM {$prefix}page_contents WHERE page_slug = ?")->execute([$slug]);
-            // 위젯 삭제
-            $pdo->prepare("DELETE FROM {$prefix}page_widgets WHERE page_slug = ?")->execute([$slug]);
-            // 번역 삭제
-            $pdo->prepare("DELETE FROM {$prefix}translations WHERE lang_key LIKE ?")->execute(["page.{$slug}.%"]);
-            echo json_encode(['success' => true]);
-        } catch (\Throwable $e) {
-            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-        }
-        exit;
-    }
-}
+// 페이지 삭제 AJAX 핸들러 제거됨 (v2.3.1)
+// 원칙: 페이지는 메뉴를 따라간다. 메뉴 관리에서 메뉴를 삭제하면 페이지도 자동 삭제.
+// 페이지 관리에서 단독 삭제 경로는 제공하지 않음 → 깨진 링크(메뉴는 있는데 페이지 없음) 발생 방지.
 
 // Base URLs for navigation
 $baseUrl = $config['app_url'] ?? '';
@@ -72,7 +45,8 @@ $pageHeaderTitle = __('site.pages.title');
                 $headerTitle = __('site.pages.title');
                 $headerDescription = __('site.pages.description');
                 $headerIconColor = '';
-                $headerActions = '<button class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition flex items-center"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>' . __('site.pages.add') . '</button>';
+                // "새 페이지" 버튼 제거됨 (v2.3.1) — 페이지는 메뉴 관리에서 생성.
+                $headerActions = '';
                 include __DIR__ . '/../components/settings-header.php';
                 ?>
                 </div>
@@ -209,7 +183,6 @@ foreach ($_sysPages as $_sp):
                             <a href="<?= $adminUrl ?>/site/pages/settings?slug=<?= urlencode($_up['page_slug']) ?>" class="p-1.5 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition" title="<?= __('common.settings') ?? '설정' ?>"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></a>
                             <a href="<?= $_upEditUrl ?>" class="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition"><?= __('admin.buttons.edit') ?></a>
                             <a href="<?= $baseUrl ?>/<?= htmlspecialchars($_up['page_slug']) ?>" target="_blank" class="p-1.5 text-zinc-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition" title="<?= __('common.preview') ?? '미리보기' ?>"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></a>
-                            <button onclick="deleteUserPage('<?= htmlspecialchars($_up['page_slug'], ENT_QUOTES) ?>', '<?= htmlspecialchars($_up['title'] ?: $_up['page_slug'], ENT_QUOTES) ?>')" class="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition" title="<?= __('common.delete') ?? '삭제' ?>"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                         </div>
                     </div>
                     <?php endforeach; ?>
@@ -228,33 +201,5 @@ foreach ($_sysPages as $_sp):
         </main>
     </div>
 <?php include __DIR__ . '/../partials/result-modal.php'; ?>
-<script>
-function deleteUserPage(slug, title) {
-    showConfirmModal({
-        title: '「' + title + '」 페이지를 삭제하시겠습니까?',
-        message: '이 작업은 되돌릴 수 없습니다.',
-        checkLabel: '연결된 콘텐츠와 위젯도 함께 삭제된다는 것을 알고 있습니다.',
-        confirmText: '삭제',
-        danger: true,
-        onConfirm: function() {
-            fetch(window.location.href, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify({ action: 'delete_page', slug: slug })
-            })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    showResultModal(true, '페이지가 삭제되었습니다.');
-                    setTimeout(function() { location.reload(); }, 1000);
-                } else {
-                    showResultModal(false, data.error || '삭제에 실패했습니다.');
-                }
-            })
-            .catch(function(err) { showResultModal(false, err.message); });
-        }
-    });
-}
-</script>
 </body>
 </html>
