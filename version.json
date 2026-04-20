@@ -1,7 +1,7 @@
 {
-    "version": "2.3.2",
+    "version": "2.3.3",
     "name": "VosCMS",
-    "codename": "Editor Save Path Split",
+    "codename": "Page Translation Single-Table Rollback",
     "release_date": "2026-04-20",
     "commit": null,
     "channel": "dev",

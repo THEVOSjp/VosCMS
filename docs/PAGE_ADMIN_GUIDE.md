@@ -86,15 +86,15 @@ VosCMS 페이지는 **4가지 타입**으로 분류된다:
 
 ## 3. DB 스키마
 
-### 3.1 `rzx_page_contents` — 페이지 원본 (v2.3.1 이후 ko 원본만)
+### 3.1 `rzx_page_contents` — 페이지 콘텐츠 (locale 당 1행)
 
 ```sql
 id              INT UNSIGNED PK AUTO_INCREMENT
 page_slug       VARCHAR(100) INDEX       -- URL 경로
 page_type       VARCHAR(20)              -- 'document' | 'widget' | 'external' | 'system'
-locale          VARCHAR(10) INDEX        -- 원본 언어 (기본 'ko')
-title           VARCHAR(500)             -- 원본 제목
-content         LONGTEXT                 -- 원본 HTML (document 타입)
+locale          VARCHAR(10) INDEX        -- 'ko', 'en', 'ja', 'zh_CN' ...
+title           VARCHAR(500)
+content         LONGTEXT                 -- HTML (document 타입)
 seo_title       VARCHAR(500)
 seo_description VARCHAR(500)
 seo_keywords    VARCHAR(500)
@@ -104,40 +104,21 @@ is_active       TINYINT(1)               -- 공개 여부
 created_at, updated_at
 ```
 
-**v2.3.1 변경**: 이전엔 locale 당 풀 콘텐츠 행이었으나, **원본 ko 1행만 유지**하도록 통일. 다국어 번역은 `rzx_translations` 로 이전.
+**단일 테이블 원칙** (v2.3.3 복귀): 페이지 본문은 locale 당 풀 콘텐츠 1행으로 여기에 저장. 제목·본문 모두 이 테이블만 읽고 씀. 폴백 체인은 현재 locale → `en` → `ko` 순서.
 
-### 3.2 `rzx_translations` — 페이지 번역본 (v2.3.1 이후 통일)
+> v2.3.1/2.3.2 에서 한때 비원본 locale 을 `rzx_translations` 로 분리했으나 (slug/key + locale + content 로 실질 구조 동일하면서 ko 중복 저장·분기 코드·UI JOIN 비용 발생), v2.3.3 에서 단일 테이블로 복귀. CHANGELOG 참조.
 
-```sql
-lang_key     VARCHAR(255)  -- 'page.{slug}.title' | 'page.{slug}.content'
-locale       VARCHAR(10)   -- 'ko', 'en', 'ja', 'zh_CN' ...
-source_locale VARCHAR(10)  -- 보통 'ko'
-content      MEDIUMTEXT    -- 해당 locale 의 번역 내용
-```
+### 3.2 `rzx_translations` — 짧은 번역 문자열
 
-**키 패턴** (게시판 `board_post.{id}.*` 와 동일 체계):
-- `page.{slug}.title` — 페이지 제목 (locale 당 1행)
-- `page.{slug}.content` — 페이지 본문 HTML (locale 당 1행)
+`rzx_translations` 는 **페이지 본문에는 사용하지 않음**. 아래 용도 전용:
 
-**렌더 흐름** (`page.php:39`):
-```php
-$pageTitle = db_trans('page.' . $slug . '.title', null, $pageData['title']);
-$pageContent = db_trans('page.' . $slug . '.content', null, $pageData['content']);
-```
-- `db_trans()` 가 현재 locale 의 번역 조회 → 없으면 fallback chain
-- 원본 locale(ko) 도 `rzx_translations` 에 저장되어야 정상 fallback (마이그레이션 시 주의)
+- 게시판 본문 (`board_post.{id}.title/content`)
+- UI 라벨 / 메뉴 (`menu.*`, 설정 문자열)
+- 페이지 SEO 메타 (`page.{slug}.browser_title` · `meta_keywords` · `meta_description`) — 짧은 문자열
 
-**적용 페이지** (v2.3.1 현재):
-- Brand, terms, privacy, refund-policy, tokushoho, funds-settlement, data-policy
-
-**에디터 저장 경로** (v2.3.2):
-
-| locale | 저장 대상 |
-| --- | --- |
-| `ko` (원본) | `rzx_page_contents` + `rzx_translations` 미러링 |
-| 비원본 | `rzx_translations` 만 (`page.{slug}.title`·`page.{slug}.content`) |
-
-slug 변경 시 `rzx_translations.lang_key` 의 `page.{old}.*` → `page.{new}.*` 일괄 UPDATE, 페이지 삭제 시 `lang_key LIKE 'page.{slug}.%'` 도 함께 삭제. 읽기 쪽은 비원본 로케일 편집 화면에서 `rzx_translations` 우선, 없으면 레거시 `rzx_page_contents` 폴백.
+**저장소 선택 원칙**:
+- 긴 페이지 본문(수 KB HTML) → `rzx_page_contents`
+- 짧은 번역 문자열(라벨·메타) → `rzx_translations`
 
 ### 3.3 `rzx_page_widgets` — 위젯 배치
 

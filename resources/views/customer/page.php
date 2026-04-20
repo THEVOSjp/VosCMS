@@ -36,8 +36,8 @@ if (!$pageData) {
 }
 
 $pageType = $pageData['page_type'] ?? 'document';
-$pageTitle = function_exists('db_trans') ? db_trans('page.' . $pageSlug . '.title', null, $pageData['title'] ?? $pageSlug) : ($pageData['title'] ?? $pageSlug);
-$pageContent = function_exists('db_trans') ? db_trans('page.' . $pageSlug . '.content', null, $pageData['content'] ?? '') : ($pageData['content'] ?? '');
+$pageTitle = $pageData['title'] ?? $pageSlug;
+$pageContent = $pageData['content'] ?? '';
 
 // POST+JSON 요청: 위젯 render.php AJAX 처리 (HTML 출력 전 실행)
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST'

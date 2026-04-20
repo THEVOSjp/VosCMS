@@ -4,6 +4,49 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.3.3] - 2026-04-20 — 페이지 번역 구조 롤백 (단일 테이블 복귀)
+
+### Changed — 2.3.1/2.3.2 의 2-테이블 설계 원복
+
+**결정 배경**: 2.3.1 에서 `rzx_page_contents` 를 원본 ko + `rzx_translations` 비원본 구조로 분리하고 2.3.2 에서 에디터 저장 분기를 추가했으나, 설계 재검토 결과 **두 테이블의 실질 구조가 동일**하면서 (slug/key + locale + content) 다음 비용을 발생시키는 것으로 확인:
+
+- ko 원문이 두 테이블에 **중복 저장** (db_trans 폴백 체인 미러링 용)
+- 에디터 저장 로직이 ko vs non-ko **분기** 필요
+- 페이지 관리 UI 에서 locale 상태 표시 시 두 테이블 JOIN
+- 원래 명분(“AI 번역 파이프라인 통합 큐”)도 페이지 본문(10KB HTML) 과 UI 문자열(20바이트) 은 청크 분할·태그 보존 등 **다른 워크플로우**가 필요해 통합 가치 미미
+
+**복귀 구조**: `rzx_page_contents` 단일 테이블, locale 당 1행 (원래 설계)
+
+### Migration — DB 역마이그레이션
+
+- `rzx_translations.page.{slug}.title/content` × 7 slug × 12 non-ko locale (168 행) → `rzx_page_contents` 복원
+- `rzx_translations` 에서 `page.*` 키 전체 삭제 (234 행)
+- 대상: Brand, terms, privacy, refund-policy, tokushoho, funds-settlement, data-policy
+- 개발·프로덕션 DB 양쪽 적용
+
+### Changed — 코드 원복
+
+- `resources/views/admin/site/pages-edit-content.php` — ko/non-ko 분기 제거, 단순 UPSERT
+- `resources/views/admin/site/pages-document.php` — 동일
+- `resources/views/customer/page.php` — `db_trans('page.*.title/content')` 제거, `page_contents` 직접 읽기 (폴백 체인 `locale → en → ko` 유지)
+- `resources/views/admin/site/pages.php` — 페이지 목록 제목도 `page_contents.title` 직접 참조
+
+### Kept — rzx_translations 의 다른 용도
+
+`rzx_translations` 자체는 **유지** — 다음 용도로 계속 사용:
+- 게시판 (`board_post.{id}.title/content`)
+- UI 문자열 (`menu.*`, 설정 라벨)
+- 페이지 SEO 메타 (`page.{slug}.browser_title|meta_keywords|meta_description`) — 짧은 문자열이므로 여기 적합
+
+**원칙**: 짧은 UI/메타 문자열 → `rzx_translations`, 긴 페이지 본문 → `rzx_page_contents` 로 데이터 특성에 맞게 저장소 분리.
+
+### Docs
+
+- `PAGE_ADMIN_GUIDE.md` 3.2 절 `rzx_translations — 페이지 번역본` 섹션 제거
+- 2.3.1/2.3.2 항목은 이력 보존을 위해 CHANGELOG 에는 유지
+
+---
+
 ## [VosCMS 2.3.2] - 2026-04-20 — 페이지 에디터 번역 DB 저장 로직 정합
 
 ### Changed — 페이지 에디터 저장·로드 경로 분기
