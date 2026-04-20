@@ -111,8 +111,7 @@ $_isHomePage = ($pageSlug === $_homeSlug);
 
 // 관리자 아이콘 — 모든 페이지 공통 (헤더 아래 고정 바)
 $_editUrl = ($config['app_url'] ?? '') . '/' . urlencode($pageSlug) . '/edit';
-$_settingsUrl = ($pageType !== 'widget' && $pageType !== 'system')
-    ? ($config['app_url'] ?? '') . '/' . urlencode($pageSlug) . '/settings' : '';
+$_settingsUrl = ($config['app_url'] ?? '') . '/' . urlencode($pageSlug) . '/settings';
 $_adminIcons = ''; // 제목 옆 아이콘은 사용하지 않음
 ?>
 

@@ -78,6 +78,10 @@ if ($_seo['keywords_extra'] && !empty($metaKeywords)) {
 } elseif ($_seo['keywords_extra']) {
     $metaKeywords = $_seo['keywords_extra'];
 }
+if (empty($metaRobots)) {
+    $_robotsVal = $siteSettings['seo_robots'] ?? 'index';
+    $metaRobots = ($_robotsVal === 'noindex') ? 'noindex, nofollow' : 'index, follow';
+}
 
 $_pwaS = $siteSettings;
 $pwaFrontEnabled = ($_pwaS['pwa_front_enabled'] ?? '1') === '1';
@@ -169,7 +173,8 @@ elseif ($_darkMode === 'light') $_htmlDarkClass = '';
     </script>
     <link rel="stylesheet" href="<?= $baseUrl ?>/resources/css/board-content.css?v=<?= @filemtime(__DIR__.'/../../../resources/css/board-content.css') ?: time() ?>">
     <script src="<?= $baseUrl ?>/resources/js/board-autolink.js" defer></script>
-<?= $_seo['meta_tags'] ?>    <?php if (isset($headExtra)) echo $headExtra; ?>
+<?= $_seo['meta_tags'] ?>    <?php include BASE_PATH . '/resources/views/partials/seo-analytics.php'; ?>
+    <?php if (isset($headExtra)) echo $headExtra; ?>
     <?php if ($_headerScript): echo $_headerScript; endif; ?>
     <?php if ($_customCss || $_primaryColor !== '#3B82F6'): ?>
     <style>
