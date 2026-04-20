@@ -4,6 +4,44 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.3.2] - 2026-04-20 — 페이지 에디터 번역 DB 저장 로직 정합
+
+### Changed — 페이지 에디터 저장·로드 경로 분기
+
+2.3.1 에서 페이지 콘텐츠 저장 구조를 **원본 ko (`rzx_page_contents`) + 번역 DB (`rzx_translations`)** 로 마이그레이션한 뒤, 관리자 에디터가 여전히 모든 로케일을 `rzx_page_contents` 에만 INSERT/UPDATE 하고 있어 — 번역본 저장시 마이그레이션 형식과 어긋나 렌더 쪽 `db_trans()` 에서 조회 실패하는 문제 해결.
+
+**분기 규칙** (원본 로케일 = `$_ENV['DEFAULT_LOCALE'] ?? 'ko'`):
+
+| locale | 저장 경로 |
+| --- | --- |
+| `ko` (원본) | `rzx_page_contents` + `rzx_translations` 미러링 (`db_trans()` 폴백용) |
+| `en/ja/zh_CN/...` | `rzx_translations` (`page.{slug}.title`, `page.{slug}.content`) 만 |
+
+비원본 로케일 저장 시 `rzx_page_contents` 원본 행이 없으면 stub 행을 자동 생성 (메뉴·설정 연결 보존). `is_active` 는 원본 행에 통일 적용.
+
+### Changed — 읽기(load_locale / savedContents) 경로
+
+비원본 로케일 편집 화면을 열 때:
+1. `rzx_translations` 에서 `page.{slug}.title/content` + `locale` 먼저 조회
+2. 없으면 레거시 `rzx_page_contents` 행 폴백 (마이그레이션 누락 페이지 호환)
+
+원본 로케일은 기존대로 `rzx_page_contents` 만.
+
+### Changed — 삭제 / slug 이름변경 전파
+
+- **페이지 삭제**: `rzx_translations WHERE lang_key LIKE 'page.{slug}.%'` 도 함께 삭제
+- **slug 변경**: `rzx_translations.lang_key` 의 `page.{old_slug}.*` → `page.{new_slug}.*` 일괄 UPDATE
+
+### Infrastructure
+
+- `$sourceLocale` 변수를 세션 UI 로케일(`$config['locale']`)과 분리. 관리자가 영어 UI 로 로그인해도 콘텐츠 원본 언어는 `DEFAULT_LOCALE` 기준으로 일관 처리.
+
+**수정 파일**:
+- `resources/views/admin/site/pages-edit-content.php` (기본 페이지 설정 에디터)
+- `resources/views/admin/site/pages-document.php` (terms, privacy, refund-policy 문서 에디터)
+
+---
+
 ## [VosCMS 2.3.1] - 2026-04-20 — 페이지 번역 DB 마이그레이션 + UI 정리 + 로고 자산
 
 ### Changed — 페이지 콘텐츠 저장 구조 통일 (번역 DB 방식)

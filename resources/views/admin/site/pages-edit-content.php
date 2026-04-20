@@ -21,6 +21,8 @@ try {
     );
     $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
     $defaultLocale = $config['locale'] ?? 'ko';
+    // 콘텐츠 원본 언어 — 세션 UI 로케일과 분리 (저장시 ko/non-ko 분기에 사용)
+    $sourceLocale = $_ENV['DEFAULT_LOCALE'] ?? 'ko';
 
     // AJAX API
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
@@ -57,17 +59,50 @@ try {
                     $pdo->prepare("UPDATE {$prefix}page_widgets SET page_slug = ? WHERE page_slug = ?")->execute([$newSlug, $slug]);
                     // 메뉴 URL도
                     $pdo->prepare("UPDATE {$prefix}menu_items SET url = ? WHERE url = ?")->execute([$newSlug, $slug]);
+                    // rzx_translations page.{slug}.* 키도 이름 변경
+                    $pdo->prepare("UPDATE {$prefix}translations SET lang_key = REPLACE(lang_key, ?, ?) WHERE lang_key LIKE ?")
+                        ->execute(['page.' . $slug . '.', 'page.' . $newSlug . '.', 'page.' . $slug . '.%']);
                 }
 
-                // 해당 로케일 데이터 업데이트 또는 생성
-                $existing = $pdo->prepare("SELECT id FROM {$prefix}page_contents WHERE page_slug = ? AND locale = ?");
-                $existing->execute([$newSlug, $locale]);
-                if ($existing->fetchColumn()) {
-                    $pdo->prepare("UPDATE {$prefix}page_contents SET title = ?, page_type = ?, content = ?, is_active = ?, updated_at = NOW() WHERE page_slug = ? AND locale = ?")
-                        ->execute([$title, $pageType, $content, $isActive, $newSlug, $locale]);
+                // 원본 언어: page_contents 에 저장
+                // 비원본 언어: rzx_translations 의 page.{slug}.title/content 에 저장
+                if ($locale === $sourceLocale) {
+                    // 원본 로케일 → page_contents
+                    $existing = $pdo->prepare("SELECT id FROM {$prefix}page_contents WHERE page_slug = ? AND locale = ?");
+                    $existing->execute([$newSlug, $locale]);
+                    if ($existing->fetchColumn()) {
+                        $pdo->prepare("UPDATE {$prefix}page_contents SET title = ?, page_type = ?, content = ?, is_active = ?, updated_at = NOW() WHERE page_slug = ? AND locale = ?")
+                            ->execute([$title, $pageType, $content, $isActive, $newSlug, $locale]);
+                    } else {
+                        $pdo->prepare("INSERT INTO {$prefix}page_contents (page_slug, page_type, locale, title, content, is_active) VALUES (?, ?, ?, ?, ?, ?)")
+                            ->execute([$newSlug, $pageType, $locale, $title, $content, $isActive]);
+                    }
+                    // 원본 로케일은 rzx_translations 에도 미러링 (db_trans 폴백 체인 지원)
+                    $pdo->prepare("INSERT INTO {$prefix}translations (lang_key, locale, source_locale, content) VALUES (?, ?, ?, ?), (?, ?, ?, ?) ON DUPLICATE KEY UPDATE content = VALUES(content), source_locale = VALUES(source_locale), updated_at = NOW()")
+                        ->execute([
+                            'page.' . $newSlug . '.title', $locale, $sourceLocale, $title,
+                            'page.' . $newSlug . '.content', $locale, $sourceLocale, $content,
+                        ]);
+                    // page_type 은 원본 언어 저장 시 전체 슬러그에 동일 적용
+                    $pdo->prepare("UPDATE {$prefix}page_contents SET page_type = ? WHERE page_slug = ?")
+                        ->execute([$pageType, $newSlug]);
                 } else {
-                    $pdo->prepare("INSERT INTO {$prefix}page_contents (page_slug, page_type, locale, title, content, is_active) VALUES (?, ?, ?, ?, ?, ?)")
-                        ->execute([$newSlug, $pageType, $locale, $title, $content, $isActive]);
+                    // 비원본 로케일 → rzx_translations 에만 저장
+                    $pdo->prepare("INSERT INTO {$prefix}translations (lang_key, locale, source_locale, content) VALUES (?, ?, ?, ?), (?, ?, ?, ?) ON DUPLICATE KEY UPDATE content = VALUES(content), source_locale = VALUES(source_locale), updated_at = NOW()")
+                        ->execute([
+                            'page.' . $newSlug . '.title', $locale, $sourceLocale, $title,
+                            'page.' . $newSlug . '.content', $locale, $sourceLocale, $content,
+                        ]);
+                    // 원본 레코드가 없으면 만들어야 함 (메뉴·설정 연결용 stub)
+                    $chk = $pdo->prepare("SELECT id FROM {$prefix}page_contents WHERE page_slug = ? AND locale = ?");
+                    $chk->execute([$newSlug, $sourceLocale]);
+                    if (!$chk->fetchColumn()) {
+                        $pdo->prepare("INSERT INTO {$prefix}page_contents (page_slug, page_type, locale, title, content, is_active) VALUES (?, ?, ?, '', '', ?)")
+                            ->execute([$newSlug, $pageType, $sourceLocale, $isActive]);
+                    }
+                    // is_active 는 슬러그 단위이므로 원본 행에 반영
+                    $pdo->prepare("UPDATE {$prefix}page_contents SET is_active = ? WHERE page_slug = ? AND locale = ?")
+                        ->execute([$isActive, $newSlug, $sourceLocale]);
                 }
 
                 echo json_encode(['success' => true, 'message' => '저장되었습니다.', 'slug' => $newSlug]);
@@ -79,6 +114,7 @@ try {
                 $pdo->prepare("DELETE FROM {$prefix}page_contents WHERE page_slug = ?")->execute([$slug]);
                 $pdo->prepare("DELETE FROM {$prefix}page_widgets WHERE page_slug = ?")->execute([$slug]);
                 $pdo->prepare("DELETE FROM {$prefix}menu_items WHERE url = ?")->execute([$slug]);
+                $pdo->prepare("DELETE FROM {$prefix}translations WHERE lang_key LIKE ?")->execute(['page.' . $slug . '.%']);
                 echo json_encode(['success' => true, 'message' => '삭제되었습니다.', 'redirect' => $adminUrl . '/site/pages']);
                 exit;
             }
@@ -86,9 +122,30 @@ try {
             if ($action === 'load_locale') {
                 $slug = trim($input['slug'] ?? '');
                 $locale = $input['locale'] ?? $defaultLocale;
-                $stmt = $pdo->prepare("SELECT title, content FROM {$prefix}page_contents WHERE page_slug = ? AND locale = ?");
-                $stmt->execute([$slug, $locale]);
-                $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($locale === $sourceLocale) {
+                    $stmt = $pdo->prepare("SELECT title, content FROM {$prefix}page_contents WHERE page_slug = ? AND locale = ?");
+                    $stmt->execute([$slug, $locale]);
+                    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+                } else {
+                    // 비원본: rzx_translations 우선, 없으면 레거시 page_contents
+                    $tstmt = $pdo->prepare("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN (?, ?) AND locale = ?");
+                    $tstmt->execute(['page.' . $slug . '.title', 'page.' . $slug . '.content', $locale]);
+                    $trans = ['title' => '', 'content' => ''];
+                    $hasTrans = false;
+                    while ($r = $tstmt->fetch(PDO::FETCH_ASSOC)) {
+                        $hasTrans = true;
+                        if ($r['lang_key'] === 'page.' . $slug . '.title') $trans['title'] = $r['content'];
+                        else $trans['content'] = $r['content'];
+                    }
+                    if ($hasTrans) {
+                        $data = $trans;
+                    } else {
+                        $stmt = $pdo->prepare("SELECT title, content FROM {$prefix}page_contents WHERE page_slug = ? AND locale = ?");
+                        $stmt->execute([$slug, $locale]);
+                        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+                    }
+                }
                 echo json_encode(['success' => true, 'data' => $data ?: ['title' => '', 'content' => '']]);
                 exit;
             }

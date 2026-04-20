@@ -130,6 +130,15 @@ $pageContent = db_trans('page.' . $slug . '.content', null, $pageData['content']
 **적용 페이지** (v2.3.1 현재):
 - Brand, terms, privacy, refund-policy, tokushoho, funds-settlement, data-policy
 
+**에디터 저장 경로** (v2.3.2):
+
+| locale | 저장 대상 |
+| --- | --- |
+| `ko` (원본) | `rzx_page_contents` + `rzx_translations` 미러링 |
+| 비원본 | `rzx_translations` 만 (`page.{slug}.title`·`page.{slug}.content`) |
+
+slug 변경 시 `rzx_translations.lang_key` 의 `page.{old}.*` → `page.{new}.*` 일괄 UPDATE, 페이지 삭제 시 `lang_key LIKE 'page.{slug}.%'` 도 함께 삭제. 읽기 쪽은 비원본 로케일 편집 화면에서 `rzx_translations` 우선, 없으면 레거시 `rzx_page_contents` 폴백.
+
 ### 3.3 `rzx_page_widgets` — 위젯 배치
 
 ```sql

@@ -77,12 +77,34 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $settings[$row['key']] = $row['value'];
 }
 
+// 원본 언어
+$sourceLocale = $_ENV['DEFAULT_LOCALE'] ?? 'ko';
+
 // 저장된 콘텐츠 로드
+// 1) 원본 언어: page_contents
+// 2) 비원본 언어: rzx_translations (page.{slug}.title/content) 우선, 없으면 page_contents (레거시)
 $savedContents = [];
 $stmt = $pdo->prepare("SELECT locale, title, content, is_active FROM {$prefix}page_contents WHERE page_slug = ?");
 $stmt->execute([$pageSlug]);
 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $savedContents[$row['locale']] = $row;
+}
+
+// rzx_translations 에서 page.{slug}.* 가져오기 (비원본 로케일 우선)
+$tstmt = $pdo->prepare("SELECT lang_key, locale, content FROM {$prefix}translations WHERE lang_key IN (?, ?)");
+$tstmt->execute(['page.' . $pageSlug . '.title', 'page.' . $pageSlug . '.content']);
+$sourceIsActive = (int)($savedContents[$sourceLocale]['is_active'] ?? 1);
+while ($r = $tstmt->fetch(PDO::FETCH_ASSOC)) {
+    $loc = $r['locale'];
+    if ($loc === $sourceLocale) continue; // 원본은 page_contents 값 유지
+    if (!isset($savedContents[$loc])) {
+        $savedContents[$loc] = ['locale' => $loc, 'title' => '', 'content' => '', 'is_active' => $sourceIsActive];
+    }
+    if ($r['lang_key'] === 'page.' . $pageSlug . '.title') {
+        $savedContents[$loc]['title'] = $r['content'];
+    } else {
+        $savedContents[$loc]['content'] = $r['content'];
+    }
 }
 
 // POST 처리
@@ -96,10 +118,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $isActive = isset($_POST['is_active']) ? 1 : 0;
 
         try {
-            $stmt = $pdo->prepare("INSERT INTO {$prefix}page_contents (page_slug, locale, title, content, is_system, is_active)
-                VALUES (?, ?, ?, ?, 1, ?)
-                ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content), is_active = VALUES(is_active)");
-            $stmt->execute([$pageSlug, $locale, $title, $content, $isActive]);
+            if ($locale === $sourceLocale) {
+                // 원본: page_contents 에 저장 + translations 미러링
+                $stmt = $pdo->prepare("INSERT INTO {$prefix}page_contents (page_slug, locale, title, content, is_system, is_active)
+                    VALUES (?, ?, ?, ?, 1, ?)
+                    ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content), is_active = VALUES(is_active)");
+                $stmt->execute([$pageSlug, $locale, $title, $content, $isActive]);
+                $pdo->prepare("INSERT INTO {$prefix}translations (lang_key, locale, source_locale, content) VALUES (?, ?, ?, ?), (?, ?, ?, ?) ON DUPLICATE KEY UPDATE content = VALUES(content), source_locale = VALUES(source_locale), updated_at = NOW()")
+                    ->execute([
+                        'page.' . $pageSlug . '.title', $locale, $sourceLocale, $title,
+                        'page.' . $pageSlug . '.content', $locale, $sourceLocale, $content,
+                    ]);
+            } else {
+                // 비원본: translations 에만 저장
+                $pdo->prepare("INSERT INTO {$prefix}translations (lang_key, locale, source_locale, content) VALUES (?, ?, ?, ?), (?, ?, ?, ?) ON DUPLICATE KEY UPDATE content = VALUES(content), source_locale = VALUES(source_locale), updated_at = NOW()")
+                    ->execute([
+                        'page.' . $pageSlug . '.title', $locale, $sourceLocale, $title,
+                        'page.' . $pageSlug . '.content', $locale, $sourceLocale, $content,
+                    ]);
+                // is_active 는 원본 행에 반영
+                $pdo->prepare("UPDATE {$prefix}page_contents SET is_active = ? WHERE page_slug = ? AND locale = ?")
+                    ->execute([$isActive, $pageSlug, $sourceLocale]);
+                // 원본 레코드가 없으면 stub 생성
+                $chk = $pdo->prepare("SELECT id FROM {$prefix}page_contents WHERE page_slug = ? AND locale = ?");
+                $chk->execute([$pageSlug, $sourceLocale]);
+                if (!$chk->fetchColumn()) {
+                    $pdo->prepare("INSERT INTO {$prefix}page_contents (page_slug, locale, title, content, is_system, is_active) VALUES (?, ?, '', '', 1, ?)")
+                        ->execute([$pageSlug, $sourceLocale, $isActive]);
+                }
+            }
             $message = __('settings.success');
             $messageType = 'success';
             $savedContents[$locale] = ['locale' => $locale, 'title' => $title, 'content' => $content, 'is_active' => $isActive];
