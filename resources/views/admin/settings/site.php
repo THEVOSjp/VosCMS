@@ -70,6 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
+        // 로고 전용 서브 디렉토리 (없으면 생성 — 배포 환경에서 자동 복구)
+        if (!is_dir($uploadDir . 'logos/')) {
+            @mkdir($uploadDir . 'logos/', 0775, true);
+        }
 
         // 로고 이미지 업로드
         $logoImage = null;
