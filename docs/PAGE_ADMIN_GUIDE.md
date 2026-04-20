@@ -86,30 +86,51 @@ VosCMS 페이지는 **4가지 타입**으로 분류된다:
 
 ## 3. DB 스키마
 
-### 3.1 `rzx_page_contents` — 페이지 콘텐츠 (다국어)
+### 3.1 `rzx_page_contents` — 페이지 원본 (v2.3.1 이후 ko 원본만)
 
 ```sql
 id              INT UNSIGNED PK AUTO_INCREMENT
-page_slug       VARCHAR(100) INDEX       -- URL 경로, locale 당 1행
+page_slug       VARCHAR(100) INDEX       -- URL 경로
 page_type       VARCHAR(20)              -- 'document' | 'widget' | 'external' | 'system'
-locale          VARCHAR(10) INDEX        -- 'ko', 'en', 'ja' ...
-title           VARCHAR(500)
-content         LONGTEXT                 -- HTML(document) | URL/파일경로(external) | NULL(widget/system)
+locale          VARCHAR(10) INDEX        -- 원본 언어 (기본 'ko')
+title           VARCHAR(500)             -- 원본 제목
+content         LONGTEXT                 -- 원본 HTML (document 타입)
 seo_title       VARCHAR(500)
 seo_description VARCHAR(500)
 seo_keywords    VARCHAR(500)
 og_image        VARCHAR(500)
-is_system       TINYINT(1)               -- 시스템 페이지 플래그 (삭제 제한)
-is_active       TINYINT(1)               -- 비활성 시 고객 공개 차단
+is_system       TINYINT(1)               -- 시스템 페이지 플래그
+is_active       TINYINT(1)               -- 공개 여부
 created_at, updated_at
 ```
 
-**핵심 규칙**:
-- `(page_slug, locale)` 조합이 논리적 UNIQUE — 같은 페이지의 다국어는 별도 행
-- `content` 필드 의미는 `page_type` 에 따라 달라짐
-- 페이지 삭제 시 모든 locale 행 일괄 삭제
+**v2.3.1 변경**: 이전엔 locale 당 풀 콘텐츠 행이었으나, **원본 ko 1행만 유지**하도록 통일. 다국어 번역은 `rzx_translations` 로 이전.
 
-### 3.2 `rzx_page_widgets` — 위젯 배치
+### 3.2 `rzx_translations` — 페이지 번역본 (v2.3.1 이후 통일)
+
+```sql
+lang_key     VARCHAR(255)  -- 'page.{slug}.title' | 'page.{slug}.content'
+locale       VARCHAR(10)   -- 'ko', 'en', 'ja', 'zh_CN' ...
+source_locale VARCHAR(10)  -- 보통 'ko'
+content      MEDIUMTEXT    -- 해당 locale 의 번역 내용
+```
+
+**키 패턴** (게시판 `board_post.{id}.*` 와 동일 체계):
+- `page.{slug}.title` — 페이지 제목 (locale 당 1행)
+- `page.{slug}.content` — 페이지 본문 HTML (locale 당 1행)
+
+**렌더 흐름** (`page.php:39`):
+```php
+$pageTitle = db_trans('page.' . $slug . '.title', null, $pageData['title']);
+$pageContent = db_trans('page.' . $slug . '.content', null, $pageData['content']);
+```
+- `db_trans()` 가 현재 locale 의 번역 조회 → 없으면 fallback chain
+- 원본 locale(ko) 도 `rzx_translations` 에 저장되어야 정상 fallback (마이그레이션 시 주의)
+
+**적용 페이지** (v2.3.1 현재):
+- Brand, terms, privacy, refund-policy, tokushoho, funds-settlement, data-policy
+
+### 3.3 `rzx_page_widgets` — 위젯 배치
 
 ```sql
 id            INT UNSIGNED PK
@@ -121,7 +142,7 @@ config        LONGTEXT                  -- JSON 위젯 설정 (다국어 필드 
 is_active     TINYINT(1)
 ```
 
-### 3.3 `rzx_widgets` — 위젯 레지스트리
+### 3.4 `rzx_widgets` — 위젯 레지스트리
 
 ```sql
 id            INT UNSIGNED PK
@@ -138,7 +159,7 @@ is_active     TINYINT(1)
 
 **파일 기반 위젯**: `/widgets/{slug}/` 디렉터리에 `widget.json` + `render.php` 가 있으면 자동 스캔·동기화. DB 는 캐시 역할.
 
-### 3.4 `rzx_settings` — 페이지별 설정 (JSON)
+### 3.5 `rzx_settings` — 페이지별 설정 (JSON)
 
 `key = 'page_config_{slug}'` 로 저장되는 JSON 구조:
 

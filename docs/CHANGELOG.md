@@ -4,6 +4,82 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.3.1] - 2026-04-20 — 페이지 번역 DB 마이그레이션 + UI 정리 + 로고 자산
+
+### Changed — 페이지 콘텐츠 저장 구조 통일 (번역 DB 방식)
+
+기존 `rzx_page_contents` 에 locale 당 풀 콘텐츠 행으로 저장하던 방식을 **원본 ko + 번역 DB (`rzx_translations`)** 방식으로 통일. 게시판(`board_post.*`) 과 동일한 저장 구조 정합성 확보.
+
+**대상 7개 페이지**: Brand, terms, privacy, refund-policy, tokushoho, funds-settlement, data-policy
+
+**Before**:
+```
+rzx_page_contents
+├── Brand / ko  (풀 콘텐츠)
+├── Brand / en  (풀 콘텐츠)
+├── ... (13 locale 행)
+```
+
+**After**:
+```
+rzx_page_contents
+└── Brand / ko  (원본 1행)
+
+rzx_translations
+├── page.Brand.title   × 13 locale (ko 포함)
+└── page.Brand.content × 13 locale
+```
+
+**마이그레이션 결과**:
+- `rzx_page_contents`: 7 slug × 12 non-ko 행 = **84행 삭제**
+- `rzx_translations`: 7 slug × 13 locale × (title + content) = **182행 이전**
+- 개발·프로덕션 DB 양쪽 적용, 렌더 검증 통과 (ko/en 등 locale 별 정상 표시)
+
+### Changed — 페이지 관리 UI 정리
+
+- **"새 페이지" 헤더 버튼 제거** — 동작하지 않던 placeholder 였음. 페이지는 메뉴 관리에서 생성되는 구조가 단일 진실 원천.
+- **"삭제" 🗑 아이콘 + AJAX 핸들러 + `deleteUserPage()` JS 제거** — 메뉴 삭제 시 페이지도 함께 정리되므로 페이지 단독 삭제 경로 불필요. 잘못된 삭제로 깨진 메뉴 발생 방지.
+- 유지: 설정 ⚙ · 편집 ✏ · 미리보기 👁 아이콘
+
+### Fixed — 로고 업로드 + 레이아웃 동기화
+
+- **`설정 > 사이트 > 로고 이미지` 업로드 실패**: `storage/logos/` 서브 디렉토리 미존재로 `move_uploaded_file()` 조용히 실패. 업로드 핸들러에 서브 디렉토리 자동 생성 + 개발·프로덕션 서버에 디렉토리 생성 (`www-data:www-data`, 775).
+- **레이아웃 로고 우선순위 복원**: 잠시 "사이트 설정 우선" 으로 역전시켰다가 "레이아웃 디자인 특성별 로고" 요구에 맞춰 **레이아웃 > 사이트 fallback** 으로 복원. 레이아웃에 지정 없으면 사이트 로고 자동 사용.
+- 대상: `skins/layouts/{default, minimal, modern, modern-copy-260413}/header.php` 및 footer.php
+
+### Fixed — 중복 페이지 레코드 정리
+
+- `bi-guide` / `logo-guide` slug 중복 2행 중 최초 생성본만 유지 (id=186, 187), 중복 id=193, 194 삭제
+- 개발·프로덕션 양쪽 적용. 메뉴 API 의 중복 INSERT 버그는 v2.3.0 에서 이미 수정됨
+
+### Added — 로고 브랜드 자산 (별도 파일, 비배포)
+
+`/var/www/_upload/` 에 로고 자산 생성 — 운영 시 필요에 따라 업로드:
+
+**아이콘 (마크만)**
+- `voscms-logo-color-{256,512,1024}.png` · 컬러 (deep·ocean·sky·ocean + 중앙 deep)
+- `voscms-logo-mono-{256,512,1024}.png` · sky 단색 + opacity 1/0.7/0.48/0.7 그라데이션
+
+**가로 워드마크** (헤더용) — 820×256 비율
+- `voscms-wordmark-{128h,256h,512h}.png` · 라이트 (Vos deep + CMS 회색)
+- `voscms-wordmark-dark-{128h,256h,512h}.png` · 다크 (Vos sky + CMS slate-300)
+
+**세로 워드마크** (앱아이콘·OG 이미지용) — 360×420 비율
+- `voscms-stacked-light-{256h,512h,1024h}.png`
+- `voscms-stacked-dark-{256h,512h,1024h}.png`
+
+SVG 원본 전부 보존. `librsvg2-bin` 설치로 `rsvg-convert` CLI 제공. OKLCH 색상 미지원 이슈는 hex 변환본(`voscms-logo-mono-hex.svg`) 으로 해결.
+
+### Infrastructure — 백업
+
+마이그레이션 전 `mysqldump` 로 백업:
+- `/home/thevos/backups/pre_migration_20260420_181923.sql.gz` (개발)
+- `/home/thevos/backups/prod_pre_migration_20260420_182509.sql.gz` (프로덕션)
+
+롤백 필요 시 두 덤프로 `rzx_page_contents` + `rzx_translations` 복원 가능.
+
+---
+
 ## [VosCMS 2.3.0] - 2026-04-20 — 페이지 설정 탭 리팩토링 + Changelog 시스템
 
 ### Added — Changelog 시스템 (버전별 다국어 + AI 번역 대비)

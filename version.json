@@ -1,7 +1,7 @@
 {
-    "version": "2.3.0",
+    "version": "2.3.1",
     "name": "VosCMS",
-    "codename": "Page Tabs Refactor + Changelog System",
+    "codename": "Page Translation DB Migration",
     "release_date": "2026-04-20",
     "commit": null,
     "channel": "dev",
