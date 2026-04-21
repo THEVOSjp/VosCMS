@@ -1,7 +1,7 @@
 {
-    "version": "2.3.5",
+    "version": "2.3.6",
     "name": "VosCMS",
-    "codename": "License Auto-Registration",
+    "codename": "Marketplace API Live",
     "release_date": "2026-04-21",
     "commit": null,
     "channel": "stable",

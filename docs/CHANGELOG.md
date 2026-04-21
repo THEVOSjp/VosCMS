@@ -4,6 +4,30 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.3.6] - 2026-04-21 — 마켓플레이스 API 라이브 연동
+
+### Changed — 관리자 마켓플레이스 데이터 소스 전환
+
+- `browse.php`: 로컬 DB 조회 → `market.21ces.com/api/market/catalog` 라이브 API 호출
+- `item-detail.php`: 로컬 DB → `/api/market/item`, `/api/market/item/versions` API 호출
+- `CatalogClient.php`: API 베이스 URL `/api/v1` → `/api/market` 변경, 응답 필드 `items[]` → `data[]` 정합
+
+### Fixed — market.21ces.com 플러그인 API 라우트 미동작 버그
+
+**문제:** `market.21ces.com/index.php` 레이아웃 적용 블록에 `$__noLayout = true` 케이스 처리 누락으로 플러그인 API 라우트(`api/market/*`) 전체가 HTTP 200 + 빈 응답 반환.
+
+**수정:** `index.php` 말단에 `elseif ($__pageFile && $__noLayout) { include $__pageFile; }` 추가. `api/market/catalog`, `api/market/item`, `api/market/updates/check` 등 정상화.
+
+### Added — 카탈로그 API 파라미터 확장 (market.21ces.com)
+
+`plugins/vos-market/views/api/catalog.php`에 `sort`, `free`, `featured` 파라미터 추가, 응답 필드 확장 (`sale_price`, `rating_avg`, `is_featured` 등).
+
+### Added — 클라이언트 사이드 API 캐싱
+
+`mpApiFetch()` 헬퍼: 30분 TTL 파일 캐시로 마켓 서버 요청 최소화. API 응답 실패 시 오류 배너 표시.
+
+---
+
 ## [VosCMS 2.3.5] - 2026-04-21 — 라이선스 자동 등록 로직 완성
 
 ### Fixed — LicenseClient::check() 자동 등록 버그 수정
