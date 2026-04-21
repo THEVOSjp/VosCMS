@@ -213,7 +213,7 @@ VosCMS 코어 (무료)
 ### 3.1 전체 흐름
 
 ```
-[설치 시]
+[경로 A — install.php로 설치 시]
 고객이 VosCMS를 서버에 업로드
   → install.php 접속 (ionCube 암호화됨)
   → localhost/127.0.0.1/.local/.test 차단
@@ -221,29 +221,41 @@ VosCMS 코어 (무료)
   → Step 2: DB 설정
   → Step 3: 테이블 생성
   → Step 4: 관리자 계정 + 사이트 설정
-  → Step 5: 라이선스 등록 ★ NEW
-      - 현재 도메인 자동 감지 (https://customer-shop.com)
-      - 도메인 정보를 라이선스 서버로 전송
-        POST voscms.com/api/license/register
+      - POST vos.21ces.com/api/license/register
         { domain, version, php_version, server_ip }
       - 서버에서 키 생성 (중복 체크) + DB 저장
       - 서버 응답: { success, key: "RZX-XXXX-XXXX-XXXX", plan: "free" }
-      - .env에 LICENSE_KEY 저장
+      - 성공 시: .env에 LICENSE_KEY=RZX-XXXX 저장
+      - 실패 시: .env에 LICENSE_KEY= (빈 값) 저장 → 경로 B가 커버
       - 재설치 시: 같은 도메인이면 기존 키 반환 (새 키 발급 안 함)
-  → Step 6: 설치 완료
+  → Step 5: 설치 완료
+
+[경로 B — 직접 설치(수동) 또는 install.php 등록 실패 시]
+LICENSE_KEY가 .env에 없거나 빈 값인 상태에서 관리자 패널 접속
+  → LicenseClient::check() 진입
+  → LICENSE_KEY 없음 감지
+  → POST vos.21ces.com/api/license/register 자동 호출
+      { domain, version, php_version, server_ip }
+  → 성공 시: $this->licenseKey 갱신 + $_ENV 갱신 + .env 저장
+             이어서 verify 단계 진행 → Active 상태 반환
+  → 실패 시: "라이선스가 등록되지 않았습니다." 표시 (서버 응답 없을 때만)
+
+[경로 C — 업데이트로 신규 로직 배포 시]
+기존 사용자(LICENSE_KEY 없이 사용 중) + 업데이트 적용
+  → 다음 관리자 접속 시 경로 B가 자동 실행 → 자동 등록
 
 [플러그인 구매 시]
 관리자 패널 → 마켓플레이스 → 플러그인 탐색 → 구매 클릭
   → 결제 처리 (Stripe)
   → 결제 완료 시:
-      voscms.com/api/license/register-plugin 으로 전송
+      vos.21ces.com/api/license/register-plugin 으로 전송
         { license_key, domain, plugin_id, order_id }
       - 라이선스 서버에 "이 도메인이 이 플러그인을 구매함" 등록
       - 플러그인 다운로드 + 자동 설치
 
 [일상 운영 시]
-관리자 접속 시 → LicenseClient.php가 주기적으로 체크
-  → voscms.com/api/license/verify
+관리자 접속 시 → LicenseClient::check()가 주기적으로 체크
+  → vos.21ces.com/api/license/verify
     { license_key, domain, version, installed_plugins[] }
   → 서버 응답:
     { valid, plan, allowed_plugins[], days_left, latest_version }
@@ -401,7 +413,7 @@ CREATE TABLE vcs_hardware_orders (
 
 | 메서드 | 경로 | 설명 | 호출 시점 |
 |--------|------|------|----------|
-| POST | `/api/license/register` | 새 설치 등록 | install.php Step 5 |
+| POST | `/api/license/register` | 새 설치 등록 / 자동 등록 | install.php Step 4, 또는 LicenseClient::check() (키 없을 시) |
 | POST | `/api/license/verify` | 주기적 인증 확인 | 관리자 접속 시 (24h 주기) |
 | POST | `/api/license/register-plugin` | 플러그인 구매 등록 | 마켓플레이스 구매 완료 시 |
 | GET | `/api/license/check` | 라이선스 상태 조회 | 관리자 설정 페이지 |
@@ -521,17 +533,18 @@ LICENSE_REGISTERED_AT=2026-04-10T12:00:00
 LICENSE_SERVER=https://voscms.com/api
 ```
 
-### 5.2 LicenseClient.php (새로 생성)
+### 5.2 LicenseClient.php
 
-**위치:** `rzxlib/Core/License/LicenseClient.php` (ionCube 암호화 대상)
+**위치:** `rzxlib/Core/License/LicenseClient.php` (ionCube 암호화 대상) ✅ 구현 완료
 
 **역할:**
-- 관리자 접속 시 24시간 주기로 voscms.com에 인증 확인
+- 라이선스 키 없을 시 자동 등록 (install.php 없이 설치한 경우, 업데이트 후 미등록 사용자 포함)
+- 관리자 접속 시 24시간 주기로 vos.21ces.com에 인증 확인
 - 응답을 로컬 캐시에 저장 (7일 유효)
 - 네트워크 장애 시 캐시로 동작
 - 허용되지 않은 플러그인 감지 → 경고
 
-**캐시 구조:** `storage/.license_cache` (JSON, 암호화)
+**캐시 구조:** `storage/.license_cache` (JSON + SHA-256 체크섬)
 ```json
 {
     "license_key": "RZX-K7M2-P9X4-N3H8",
@@ -541,7 +554,7 @@ LICENSE_SERVER=https://voscms.com/api
     "verified_at": "2026-04-10T12:00:00",
     "cache_expires_at": "2026-04-17T12:00:00",
     "latest_version": "2.2.0",
-    "checksum": "sha256(위 데이터 + secret)"
+    "_checksum": "sha256(위 데이터 + secret)"
 }
 ```
 
@@ -550,33 +563,44 @@ LICENSE_SERVER=https://voscms.com/api
 - 다른 도메인에서 캐시 파일을 복사해와도 해시 불일치 → 무효
 - 해시 비밀키는 LicenseClient.php 내부에 하드코딩 (ionCube로 보호)
 
-**동작 흐름:**
+**check() 동작 흐름:**
 ```php
 class LicenseClient {
     public function check(): LicenseStatus {
-        // 1. 캐시 확인
+        // 0. 라이선스 키 없음 → 자동 등록 시도
+        if (empty($this->licenseKey)) {
+            $result = $this->register($this->domain, APP_VERSION, PHP_VERSION);
+            if ($result['success'] && $result['key']) {
+                $this->licenseKey = $result['key'];
+                $_ENV['LICENSE_KEY'] = $result['key'];
+                $this->saveKeyToEnv($result['key']); // .env 저장
+            } else {
+                return LicenseStatus::unregistered(); // 서버 불가 시만
+            }
+        }
+
+        // 1. 캐시 확인 (24시간 이내면 캐시 사용)
         $cache = $this->loadCache();
-        if ($cache && !$cache->isExpired() && $cache->domainMatches()) {
-            return $cache->toStatus();
+        if ($cache && $this->isCacheValid($cache)) {
+            if ($this->isWithinCheckInterval($cache)) {
+                return LicenseStatus::fromCache($cache);
+            }
+            // 24시간 경과 → 서버 재확인
+            $result = $this->verifyWithServer();
+            return $result ?? LicenseStatus::fromCache($cache, 'server_unreachable');
         }
 
-        // 2. 서버 검증
-        $response = $this->callApi('/api/license/verify', [...]);
-        if ($response->success) {
-            $this->saveCache($response);
-            return LicenseStatus::active($response);
-        }
-
-        // 3. 네트워크 실패 → 캐시 기간 내면 OK
-        if ($cache && !$cache->isCacheExpired()) {
-            return $cache->toStatus(); // 경고 포함
-        }
-
-        // 4. 캐시도 만료 → 미인증 상태
-        return LicenseStatus::unverified();
+        // 2. 캐시 없음 → 서버 확인 필수
+        $result = $this->verifyWithServer();
+        return $result ?? LicenseStatus::unverified();
     }
 }
 ```
+
+**saveKeyToEnv() 처리:**
+- `LICENSE_KEY=RZX-...` 이미 있으면 스킵
+- `LICENSE_KEY=` (빈 값, install.php 실패 케이스) 이면 실제 키로 교체
+- 없으면 `LICENSE_KEY`, `LICENSE_DOMAIN`, `LICENSE_REGISTERED_AT`, `LICENSE_SERVER` 추가
 
 ### 5.3 라이선스 체크 통합 (index.php)
 
@@ -793,7 +817,7 @@ HTTPS (SSL 인증서 필수 — localhost 차단과 연계)
 | 파일 | 경로 | 상태 |
 |------|------|------|
 | 설치 마법사 | `/var/www/voscms/install.php` | 기존 (수정 예정) |
-| 라이선스 클라이언트 | `rzxlib/Core/License/LicenseClient.php` | 미생성 |
+| 라이선스 클라이언트 | `rzxlib/Core/License/LicenseClient.php` | ✅ 완료 (자동 등록 포함) |
 | 마켓플레이스 플러그인 | `plugins/vos-marketplace/` | ✅ 40파일 완료 |
 | 플러그인 매니저 | `rzxlib/Core/Plugin/PluginManager.php` | 기존 |
 | 관리자 인증 | `rzxlib/Core/Auth/AdminAuth.php` | 기존 (remember me 추가 완료) |

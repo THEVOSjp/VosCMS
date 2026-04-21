@@ -4,6 +4,27 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.3.5] - 2026-04-21 — 라이선스 자동 등록 로직 완성
+
+### Fixed — LicenseClient::check() 자동 등록 버그 수정
+
+**문제:** AdminRouter에서 `$licenseClient = new LicenseClient()` 인스턴스 생성 후 자동 등록을 시도했으나, `$_ENV['LICENSE_KEY']` 갱신이 인스턴스 내부 `$this->licenseKey`에 반영되지 않아 동일 요청에서 `check()` 호출 시 여전히 `unregistered` 상태를 반환하는 버그.
+
+### Changed — LicenseClient::check() 내부에 자동 등록 로직 통합
+
+- `check()` 진입 시 `$this->licenseKey`가 비어있으면 즉시 `/api/license/register` 호출
+- 성공 시 `$this->licenseKey` 갱신 + `$_ENV['LICENSE_KEY']` 갱신 + `.env` 파일 저장 후 verify 단계로 진행
+- 실패 시(서버 응답 없음)에만 `unregistered` 반환
+- `saveKeyToEnv()` 신규 메서드: 빈 `LICENSE_KEY=` 라인(install.php 실패 케이스)은 실제 키로 교체, 이미 유효한 키가 있으면 스킵
+
+### 효과
+
+- install.php 없이 수동 설치한 사용자 → 관리자 첫 접속 시 자동 라이선스 등록
+- 이전 버전에서 업데이트한 사용자(LICENSE_KEY 없음) → 업데이트 후 관리자 접속 시 자동 등록
+- 대시보드 "라이선스가 등록되지 않았습니다." 메시지는 라이선스 서버 자체가 응답 불가인 경우에만 표시
+
+---
+
 ## [VosCMS 2.3.4] - 2026-04-20 — 콘텐츠 오염 정화 + 카드형 CSS 제거
 
 ### Fixed — 시드/DB 의 Tailwind 변수 오염 정화
