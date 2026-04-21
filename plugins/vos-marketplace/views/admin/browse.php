@@ -192,7 +192,7 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
     </div>
     <?php endif; ?>
 
-    <!-- 아이템 그리드 -->
+    <!-- 아이템 목록 -->
     <div>
         <div class="flex items-center justify-between mb-3">
             <p class="text-sm text-zinc-500 dark:text-zinc-400">
@@ -201,6 +201,18 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
                 <span class="ml-2 text-zinc-400">(<?= $page ?> / <?= $meta['pages'] ?>)</span>
                 <?php endif; ?>
             </p>
+            <!-- 뷰 스타일 전환 버튼 -->
+            <div class="flex items-center gap-1" id="mpViewStyleBtns">
+                <button onclick="mpSetViewStyle('list')" class="vs-btn p-1.5 rounded-lg transition" data-style="list" title="리스트">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                </button>
+                <button onclick="mpSetViewStyle('card')" class="vs-btn p-1.5 rounded-lg transition" data-style="card" title="카드">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                </button>
+                <button onclick="mpSetViewStyle('grid')" class="vs-btn p-1.5 rounded-lg transition" data-style="grid" title="그리드">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
+                </button>
+            </div>
         </div>
 
         <?php if (empty($items)): ?>
@@ -211,11 +223,65 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
             <p class="text-zinc-400 dark:text-zinc-500"><?= __mp('no_items') ?></p>
         </div>
         <?php else: ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+
+        <!-- 리스트 뷰 -->
+        <div id="viewList" class="view-mode hidden bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+            <?php foreach ($items as $item):
+                $_name = json_decode($item['name'] ?? '{}', true);
+                $_locale = current_locale() ?: 'ko';
+                $_itemName = $_name[$_locale] ?? $_name['en'] ?? $item['slug'] ?? '';
+                $_price = (float)($item['price'] ?? 0);
+                $_isFree = $_price <= 0;
+                $_currency = $item['currency'] ?? 'USD';
+                $_typeLabels = ['plugin' => __mp('plugins'), 'theme' => __mp('themes'), 'widget' => __mp('widgets'), 'skin' => __mp('skins')];
+                $_typeColors = ['plugin' => 'indigo', 'theme' => 'purple', 'widget' => 'emerald', 'skin' => 'orange'];
+                $_type = $item['type'] ?? 'plugin';
+                $_color = $_typeColors[$_type] ?? 'indigo';
+            ?>
+            <a href="<?= $adminUrl ?>/marketplace/item?slug=<?= urlencode($item['slug'] ?? '') ?>"
+               class="flex items-center gap-4 px-4 py-3 border-b border-zinc-100 dark:border-zinc-700 last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
+                <!-- 아이콘 -->
+                <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-<?= $_color ?>-100 dark:bg-<?= $_color ?>-900/30 flex items-center justify-center overflow-hidden">
+                    <?php if (!empty($item['icon']) && (str_starts_with($item['icon'], '/') || str_starts_with($item['icon'], 'http'))): ?>
+                    <img src="<?= htmlspecialchars($item['icon']) ?>" alt="" class="w-full h-full object-cover rounded-lg">
+                    <?php else: ?>
+                    <svg class="w-5 h-5 text-<?= $_color ?>-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <?php endif; ?>
+                </div>
+                <!-- 이름/타입 -->
+                <div class="flex-1 min-w-0">
+                    <span class="font-medium text-sm text-zinc-800 dark:text-zinc-200 truncate block"><?= htmlspecialchars($_itemName) ?></span>
+                    <span class="text-xs text-zinc-400"><?= $_typeLabels[$_type] ?? $_type ?> <?= !empty($item['author_name']) ? '· ' . htmlspecialchars($item['author_name']) : '' ?></span>
+                </div>
+                <!-- 평점 -->
+                <?php if (($item['rating_avg'] ?? 0) > 0): ?>
+                <div class="flex items-center gap-0.5 text-xs text-zinc-400 flex-shrink-0">
+                    <svg class="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                    <?= number_format((float)$item['rating_avg'], 1) ?>
+                </div>
+                <?php endif; ?>
+                <!-- 가격 -->
+                <div class="flex-shrink-0 text-sm font-semibold <?= $_isFree ? 'text-green-600 dark:text-green-400' : 'text-zinc-800 dark:text-zinc-200' ?>">
+                    <?= $_isFree ? __mp('free') : number_format($_price, in_array($_currency, ['KRW','JPY']) ? 0 : 2) . ' ' . $_currency ?>
+                </div>
+            </a>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- 카드 뷰 (2열) -->
+        <div id="viewCard" class="view-mode hidden grid grid-cols-1 md:grid-cols-2 gap-4">
             <?php foreach ($items as $item): ?>
                 <?php include __DIR__ . '/_components/item-card.php'; ?>
             <?php endforeach; ?>
         </div>
+
+        <!-- 그리드 뷰 (4열) -->
+        <div id="viewGrid" class="view-mode hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <?php foreach ($items as $item): ?>
+                <?php include __DIR__ . '/_components/item-card.php'; ?>
+            <?php endforeach; ?>
+        </div>
+
         <?php endif; ?>
     </div>
 
@@ -260,5 +326,27 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
     <?php endif; ?>
 
 </div>
+
+<script>
+function mpSetViewStyle(style) {
+    document.querySelectorAll('.view-mode').forEach(function(el) { el.classList.add('hidden'); });
+    var target = document.getElementById('view' + style.charAt(0).toUpperCase() + style.slice(1));
+    if (target) target.classList.remove('hidden');
+
+    document.querySelectorAll('#mpViewStyleBtns .vs-btn').forEach(function(btn) {
+        var isActive = btn.dataset.style === style;
+        btn.className = 'vs-btn p-1.5 rounded-lg transition ' + (isActive
+            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+            : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700');
+    });
+
+    localStorage.setItem('mp_view_style', style);
+}
+
+(function() {
+    var saved = localStorage.getItem('mp_view_style') || 'grid';
+    mpSetViewStyle(saved);
+})();
+</script>
 
 <?php include __DIR__ . '/_foot.php'; ?>
