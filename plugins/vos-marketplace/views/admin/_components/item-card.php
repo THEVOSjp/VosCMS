@@ -19,11 +19,11 @@ $_typeColors = ['plugin' => 'indigo', 'theme' => 'purple', 'widget' => 'emerald'
 $_type = $item['type'] ?? 'plugin';
 $_color = $_typeColors[$_type] ?? 'indigo';
 ?>
-<a href="<?= $adminUrl ?>/marketplace/item?slug=<?= urlencode($item['slug'] ?? '') ?>"
-   class="group bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-600 transition-all">
+<?php $_itemUrl = $adminUrl . '/marketplace/item?slug=' . urlencode($item['slug'] ?? ''); ?>
+<div class="group bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-600 transition-all">
 
     <!-- 배너/아이콘 -->
-    <div class="aspect-[16/9] bg-gradient-to-br from-<?= $_color ?>-50 to-<?= $_color ?>-100 dark:from-<?= $_color ?>-900/20 dark:to-<?= $_color ?>-800/20 flex items-center justify-center relative overflow-hidden">
+    <a href="<?= $_itemUrl ?>" class="block aspect-[16/9] bg-gradient-to-br from-<?= $_color ?>-50 to-<?= $_color ?>-100 dark:from-<?= $_color ?>-900/20 dark:to-<?= $_color ?>-800/20 flex items-center justify-center relative overflow-hidden">
         <?php if (!empty($item['banner_image'])): ?>
             <img src="<?= htmlspecialchars($item['banner_image']) ?>" alt="" class="w-full h-full object-cover">
         <?php elseif (!empty($item['icon'])): ?>
@@ -53,13 +53,13 @@ $_color = $_typeColors[$_type] ?? 'indigo';
             </svg>
         </div>
         <?php endif; ?>
-    </div>
+    </a>
 
     <!-- 정보 -->
     <div class="p-4">
-        <h3 class="font-semibold text-zinc-800 dark:text-zinc-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
+        <a href="<?= $_itemUrl ?>" class="block font-semibold text-zinc-800 dark:text-zinc-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
             <?= htmlspecialchars($_itemName) ?>
-        </h3>
+        </a>
         <?php if ($_itemDesc): ?>
         <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2"><?= htmlspecialchars(mb_substr(strip_tags($_itemDesc), 0, 80)) ?></p>
         <?php endif; ?>
@@ -95,5 +95,17 @@ $_color = $_typeColors[$_type] ?? 'indigo';
         <?php if (!empty($item['author_name'])): ?>
         <p class="text-xs text-zinc-400 mt-2"><?= htmlspecialchars($item['author_name']) ?> &middot; v<?= htmlspecialchars($item['latest_version'] ?? '1.0.0') ?></p>
         <?php endif; ?>
+
+        <!-- 뷰 버튼 -->
+        <div class="flex justify-end mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-700">
+            <a href="<?= $_itemUrl ?>"
+               class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                뷰
+            </a>
+        </div>
     </div>
-</a>
+</div>
