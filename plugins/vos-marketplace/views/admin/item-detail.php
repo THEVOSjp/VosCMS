@@ -93,10 +93,10 @@ if ($pm && $item['type'] === 'plugin') {
                 }
                 ?>
                 <?php if ($_iconSrc): ?>
-                <img src="<?= htmlspecialchars($_iconSrc) ?>" alt="" class="w-16 h-16 rounded-xl shadow-md object-cover">
+                <img src="<?= htmlspecialchars($_iconSrc) ?>" alt="" class="w-24 h-24 rounded-xl shadow-md object-cover">
                 <?php else: ?>
-                <div class="w-16 h-16 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-                    <svg class="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                <div class="w-24 h-24 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                    <svg class="w-12 h-12 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                 </div>
                 <?php endif; ?>
                 <div class="flex-1">
