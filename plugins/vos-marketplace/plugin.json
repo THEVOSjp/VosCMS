@@ -141,19 +141,19 @@
                 "items": [
                     {
                         "title": {
-                            "ko": "플러그인\/위젯 찾기",
-                            "en": "Find Plugins",
-                            "ja": "プラグイン検索",
-                            "de": "Plugins finden",
-                            "es": "Buscar plugins",
-                            "fr": "Trouver des plugins",
-                            "id": "Cari Plugin",
-                            "mn": "Плагин хайх",
-                            "ru": "Найти плагины",
-                            "tr": "Eklenti Bul",
-                            "vi": "Tìm plugin",
-                            "zh_CN": "查找插件",
-                            "zh_TW": "尋找外掛"
+                            "ko": "쉬운 설치",
+                            "en": "Easy Install",
+                            "ja": "かんたんインストール",
+                            "de": "Einfache Installation",
+                            "es": "Instalación fácil",
+                            "fr": "Installation facile",
+                            "id": "Instal Mudah",
+                            "mn": "Хялбар суулгалт",
+                            "ru": "Простая установка",
+                            "tr": "Kolay Kurulum",
+                            "vi": "Cài đặt dễ dàng",
+                            "zh_CN": "一键安装",
+                            "zh_TW": "輕鬆安裝"
                         },
                         "route": "marketplace"
                     },
