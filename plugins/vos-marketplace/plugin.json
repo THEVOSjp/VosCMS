@@ -159,24 +159,6 @@
                     },
                     {
                         "title": {
-                            "ko": "아이템 등록",
-                            "en": "Submit Item",
-                            "ja": "アイテム登録",
-                            "de": "Eintrag erstellen",
-                            "es": "Registrar elemento",
-                            "fr": "Soumettre un élément",
-                            "id": "Daftarkan Item",
-                            "mn": "Бүтээгдэхүүн бүртгэх",
-                            "ru": "Добавить элемент",
-                            "tr": "Öğe Ekle",
-                            "vi": "Đăng ký mục",
-                            "zh_CN": "提交项目",
-                            "zh_TW": "提交項目"
-                        },
-                        "route": "marketplace/submit"
-                    },
-                    {
-                        "title": {
                             "ko": "설치 내역",
                             "en": "Install History",
                             "ja": "インストール履歴",
@@ -192,24 +174,6 @@
                             "zh_TW": "安裝紀錄"
                         },
                         "route": "marketplace\/purchases"
-                    },
-                    {
-                        "title": {
-                            "ko": "라이선스",
-                            "en": "Licenses",
-                            "ja": "ライセンス",
-                            "de": "Lizenzen",
-                            "es": "Licencias",
-                            "fr": "Licences",
-                            "id": "Lisensi",
-                            "mn": "Лиценз",
-                            "ru": "Лицензии",
-                            "tr": "Lisanslar",
-                            "vi": "Giấy phép",
-                            "zh_CN": "许可证",
-                            "zh_TW": "授權"
-                        },
-                        "route": "marketplace\/licenses"
                     },
                     {
                         "title": {
