@@ -81,9 +81,10 @@ foreach (array_keys($typeCounts) as $t) {
     $typeCounts[$t] = $tData['meta']['total'] ?? 0;
 }
 
-// ── 카테고리 목록 (아이템에서 추출) ───────────────────
+// ── 카테고리 목록 (전체 카탈로그에서 추출) ───────────
+$allCatsData = mpApiFetch($marketApiBase . '/catalog?' . http_build_query(['limit' => 100]), $cacheDir);
 $catSlugs = [];
-foreach ($items as $it) {
+foreach ($allCatsData['data'] ?? [] as $it) {
     if (!empty($it['cat_slug'])) $catSlugs[$it['cat_slug']] = $it['cat_slug'];
 }
 if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filterCat;
@@ -120,17 +121,6 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
                     <option value="skin"   <?= $filterType === 'skin'   ? 'selected' : '' ?>><?= __mp('skins') ?>   (<?= $typeCounts['skin'] ?>)</option>
                 </select>
 
-                <!-- 카테고리 필터 -->
-                <?php if (!empty($catSlugs)): ?>
-                <select name="cat" onchange="this.form.submit()"
-                        class="px-3 py-2.5 bg-zinc-50 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-lg text-sm text-zinc-700 dark:text-zinc-300">
-                    <option value=""><?= __mp('all_categories') ?></option>
-                    <?php foreach ($catSlugs as $slug): ?>
-                    <option value="<?= htmlspecialchars($slug) ?>" <?= $filterCat === $slug ? 'selected' : '' ?>><?= htmlspecialchars($slug) ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <?php endif; ?>
-
                 <!-- 정렬 -->
                 <select name="sort" onchange="this.form.submit()"
                         class="px-3 py-2.5 bg-zinc-50 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-lg text-sm text-zinc-700 dark:text-zinc-300">
@@ -166,6 +156,39 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
                 <?php $item = $fi; include __DIR__ . '/_components/item-card.php'; ?>
             <?php endforeach; ?>
         </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- 카테고리 버튼 -->
+    <?php if (!empty($catSlugs)): ?>
+    <?php
+    $catLabels = [
+        'content'   => ['ko' => '콘텐츠',   'en' => 'Content',   'ja' => 'コンテンツ'],
+        'utility'   => ['ko' => '유틸리티', 'en' => 'Utility',   'ja' => 'ユーティリティ'],
+        'design'    => ['ko' => '디자인',   'en' => 'Design',    'ja' => 'デザイン'],
+        'marketing' => ['ko' => '마케팅',   'en' => 'Marketing', 'ja' => 'マーケティング'],
+        'seo'       => ['ko' => 'SEO',      'en' => 'SEO',       'ja' => 'SEO'],
+        'ecommerce' => ['ko' => '이커머스', 'en' => 'E-Commerce','ja' => 'EC'],
+        'security'  => ['ko' => '보안',     'en' => 'Security',  'ja' => 'セキュリティ'],
+        'social'    => ['ko' => '소셜',     'en' => 'Social',    'ja' => 'ソーシャル'],
+    ];
+    $locale = current_locale() ?: 'ko';
+    $catQueryBase = array_filter(['type' => $filterType, 'sort' => $filterSort, 'q' => $filterKeyword, 'free' => $filterFree ? '1' : '']);
+    ?>
+    <div class="flex flex-wrap gap-2">
+        <a href="?<?= http_build_query(array_merge($catQueryBase, ['cat' => ''])) ?>"
+           class="px-4 py-1.5 rounded-full text-sm font-medium border transition-colors
+                  <?= $filterCat === '' ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-indigo-400 hover:text-indigo-600' ?>">
+            <?= __mp('all_categories') ?>
+        </a>
+        <?php foreach ($catSlugs as $slug): ?>
+        <?php $label = $catLabels[$slug][$locale] ?? $catLabels[$slug]['en'] ?? ucfirst($slug); ?>
+        <a href="?<?= http_build_query(array_merge($catQueryBase, ['cat' => $slug])) ?>"
+           class="px-4 py-1.5 rounded-full text-sm font-medium border transition-colors
+                  <?= $filterCat === $slug ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-indigo-400 hover:text-indigo-600' ?>">
+            <?= htmlspecialchars($label) ?>
+        </a>
+        <?php endforeach; ?>
     </div>
     <?php endif; ?>
 
