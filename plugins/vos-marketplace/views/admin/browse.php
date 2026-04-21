@@ -206,6 +206,9 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
                 <button onclick="mpSetViewStyle('list')" class="vs-btn p-1.5 rounded-lg transition" data-style="list" title="리스트">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
                 </button>
+                <button onclick="mpSetViewStyle('webzine')" class="vs-btn p-1.5 rounded-lg transition" data-style="webzine" title="웹진">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+                </button>
                 <button onclick="mpSetViewStyle('card')" class="vs-btn p-1.5 rounded-lg transition" data-style="card" title="카드">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                 </button>
@@ -263,6 +266,91 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
                 <!-- 가격 -->
                 <div class="flex-shrink-0 text-sm font-semibold <?= $_isFree ? 'text-green-600 dark:text-green-400' : 'text-zinc-800 dark:text-zinc-200' ?>">
                     <?= $_isFree ? __mp('free') : number_format($_price, in_array($_currency, ['KRW','JPY']) ? 0 : 2) . ' ' . $_currency ?>
+                </div>
+            </a>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- 웹진 뷰 -->
+        <div id="viewWebzine" class="view-mode hidden space-y-3">
+            <?php foreach ($items as $item):
+                $_name = json_decode($item['name'] ?? '{}', true);
+                $_locale = current_locale() ?: 'ko';
+                $_itemName = $_name[$_locale] ?? $_name['en'] ?? $item['slug'] ?? '';
+                $_desc = json_decode($item['short_description'] ?? $item['description'] ?? '{}', true);
+                $_itemDesc = $_desc[$_locale] ?? $_desc['en'] ?? '';
+                $_price = (float)($item['price'] ?? 0);
+                $_salePrice = isset($item['sale_price']) ? (float)$item['sale_price'] : null;
+                $_onSale = $_salePrice !== null && !empty($item['sale_ends_at']) && strtotime($item['sale_ends_at']) > time();
+                $_effectivePrice = $_onSale ? $_salePrice : $_price;
+                $_isFree = $_effectivePrice <= 0;
+                $_currency = $item['currency'] ?? 'USD';
+                $_typeLabels = ['plugin' => __mp('plugins'), 'theme' => __mp('themes'), 'widget' => __mp('widgets'), 'skin' => __mp('skins')];
+                $_typeColors = ['plugin' => 'indigo', 'theme' => 'purple', 'widget' => 'emerald', 'skin' => 'orange'];
+                $_type = $item['type'] ?? 'plugin';
+                $_color = $_typeColors[$_type] ?? 'indigo';
+                $_hasBanner = !empty($item['banner_image']);
+                $_hasIcon   = !empty($item['icon']) && (str_starts_with($item['icon'], '/') || str_starts_with($item['icon'], 'http'));
+            ?>
+            <a href="<?= $adminUrl ?>/marketplace/item?slug=<?= urlencode($item['slug'] ?? '') ?>"
+               class="group block bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-600 transition-all">
+                <div class="flex flex-col sm:flex-row">
+                    <!-- 썸네일 -->
+                    <div class="sm:w-48 sm:h-36 h-44 flex-shrink-0 bg-gradient-to-br from-<?= $_color ?>-50 to-<?= $_color ?>-100 dark:from-<?= $_color ?>-900/20 dark:to-<?= $_color ?>-800/20 flex items-center justify-center overflow-hidden relative">
+                        <?php if ($_hasBanner): ?>
+                        <img src="<?= htmlspecialchars($item['banner_image']) ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" alt="">
+                        <?php elseif ($_hasIcon): ?>
+                        <img src="<?= htmlspecialchars($item['icon']) ?>" class="w-16 h-16 rounded-xl shadow-lg" loading="lazy" alt="">
+                        <?php else: ?>
+                        <svg class="w-12 h-12 text-<?= $_color ?>-300 dark:text-<?= $_color ?>-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        <?php endif; ?>
+                        <!-- 타입 배지 -->
+                        <span class="absolute top-2 left-2 px-2 py-0.5 text-xs font-medium rounded-full bg-<?= $_color ?>-100 text-<?= $_color ?>-700 dark:bg-<?= $_color ?>-900/60 dark:text-<?= $_color ?>-300">
+                            <?= $_typeLabels[$_type] ?? $_type ?>
+                        </span>
+                    </div>
+                    <!-- 내용 -->
+                    <div class="flex-1 p-4 sm:p-5 min-w-0 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1.5">
+                                <?php if ($item['is_verified'] ?? false): ?>
+                                <svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                <?php endif; ?>
+                                <span class="text-xs text-zinc-400"><?= !empty($item['author_name']) ? htmlspecialchars($item['author_name']) : '' ?> <?= !empty($item['latest_version']) ? '· v' . htmlspecialchars($item['latest_version']) : '' ?></span>
+                            </div>
+                            <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors mb-1.5 line-clamp-1">
+                                <?= htmlspecialchars($_itemName) ?>
+                            </h3>
+                            <?php if ($_itemDesc): ?>
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-relaxed"><?= htmlspecialchars(strip_tags($_itemDesc)) ?></p>
+                            <?php endif; ?>
+                        </div>
+                        <!-- 하단: 가격 + 평점/다운로드 -->
+                        <div class="flex items-center justify-between mt-3 text-xs text-zinc-400">
+                            <div class="font-semibold text-sm <?= $_isFree ? 'text-green-600 dark:text-green-400' : ($_onSale ? 'text-red-600 dark:text-red-400' : 'text-zinc-800 dark:text-zinc-200') ?>">
+                                <?php if ($_isFree): ?>
+                                <?= __mp('free') ?>
+                                <?php elseif ($_onSale): ?>
+                                <span class="line-through text-zinc-400 mr-1 text-xs font-normal"><?= number_format($_price, in_array($_currency, ['KRW','JPY']) ? 0 : 2) ?></span>
+                                <?= number_format($_effectivePrice, in_array($_currency, ['KRW','JPY']) ? 0 : 2) ?> <?= $_currency ?>
+                                <?php else: ?>
+                                <?= number_format($_price, in_array($_currency, ['KRW','JPY']) ? 0 : 2) ?> <?= $_currency ?>
+                                <?php endif; ?>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <?php if (($item['rating_avg'] ?? 0) > 0): ?>
+                                <span class="flex items-center gap-0.5">
+                                    <svg class="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                    <?= number_format((float)$item['rating_avg'], 1) ?>
+                                </span>
+                                <?php endif; ?>
+                                <span class="flex items-center gap-0.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    <?= number_format((int)($item['download_count'] ?? 0)) ?>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </a>
             <?php endforeach; ?>
