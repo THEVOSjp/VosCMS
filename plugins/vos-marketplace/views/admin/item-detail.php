@@ -83,8 +83,17 @@ if ($pm && $item['type'] === 'plugin') {
         <!-- 헤더 -->
         <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
             <div class="flex items-start gap-4">
-                <?php if (!empty($item['icon'])): ?>
-                <img src="<?= htmlspecialchars($item['icon']) ?>" alt="" class="w-16 h-16 rounded-xl shadow-md">
+                <?php
+                // icon 필드가 실제 이미지 경로인지 확인, 아니면 banner_image 폴백
+                $_iconSrc = '';
+                if (!empty($item['icon']) && (str_starts_with($item['icon'], '/') || str_starts_with($item['icon'], 'http'))) {
+                    $_iconSrc = $item['icon'];
+                } elseif (!empty($item['banner_image'])) {
+                    $_iconSrc = $item['banner_image'];
+                }
+                ?>
+                <?php if ($_iconSrc): ?>
+                <img src="<?= htmlspecialchars($_iconSrc) ?>" alt="" class="w-16 h-16 rounded-xl shadow-md object-cover">
                 <?php else: ?>
                 <div class="w-16 h-16 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
                     <svg class="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
