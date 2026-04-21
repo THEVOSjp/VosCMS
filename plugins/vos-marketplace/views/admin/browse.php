@@ -1,85 +1,102 @@
 <?php
 /**
  * VosCMS Marketplace - 카탈로그 탐색 페이지
+ * 데이터 소스: market.21ces.com API (30분 캐시)
  */
 include __DIR__ . '/_head.php';
 
 $pageHeaderTitle = __mp('title');
-$pageSubTitle = __mp('browse');
+$pageSubTitle    = __mp('browse');
 
-// DB 연결
-$prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
-try {
-    $pdo = new PDO(
-        "mysql:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_DATABASE']};charset=utf8mb4",
-        $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'],
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-    );
-} catch (PDOException $e) {
-    echo '<div class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg">DB 연결 실패</div>';
-    include __DIR__ . '/_foot.php';
-    return;
+$marketApiBase = rtrim($_ENV['MARKET_API_URL'] ?? 'https://market.21ces.com/api/market', '/');
+$cacheDir      = (defined('BASE_PATH') ? BASE_PATH : __DIR__ . '/../../../../..') . '/storage/cache';
+
+// ── 필터 파라미터 ─────────────────────────────────────
+$filterType     = $_GET['type']     ?? '';
+$filterCat      = $_GET['cat']      ?? '';
+$filterSort     = $_GET['sort']     ?? 'newest';
+$filterKeyword  = $_GET['q']        ?? '';
+$filterFree     = !empty($_GET['free']);
+$page           = max(1, (int)($_GET['page'] ?? 1));
+$limit          = 24;
+
+// ── API 호출 헬퍼 (캐시 30분) ────────────────────────
+function mpApiFetch(string $url, string $cacheDir, int $ttl = 1800): ?array {
+    $cacheFile = $cacheDir . '/mp_api_' . md5($url) . '.json';
+    if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $ttl) {
+        $cached = json_decode(file_get_contents($cacheFile), true);
+        if (!empty($cached['ok'])) return $cached;
+    }
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL            => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_HTTPHEADER     => ['Accept: application/json', 'User-Agent: VosCMS/' . ($_ENV['APP_VERSION'] ?? '2.0')],
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    $response = curl_exec($ch);
+    $code     = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($code !== 200 || !$response) return null;
+    $data = json_decode($response, true);
+    if (!empty($data['ok']) && is_dir($cacheDir)) {
+        file_put_contents($cacheFile, $response, LOCK_EX);
+    }
+    return $data;
 }
 
-// 필터 파라미터
-$filterType = $_GET['type'] ?? '';
-$filterCategory = $_GET['category'] ?? '';
-$filterSort = $_GET['sort'] ?? 'popular';
-$filterKeyword = $_GET['q'] ?? '';
-$filterFree = isset($_GET['free']) ? (bool)$_GET['free'] : false;
+// ── 카탈로그 조회 ─────────────────────────────────────
+$catalogParams = array_filter([
+    'limit' => $limit,
+    'page'  => $page,
+    'sort'  => $filterSort,
+    'type'  => $filterType,
+    'cat'   => $filterCat,
+    'q'     => $filterKeyword,
+    'free'  => $filterFree ? '1' : '',
+]);
+$catalogUrl  = $marketApiBase . '/catalog?' . http_build_query($catalogParams);
+$catalogData = mpApiFetch($catalogUrl, $cacheDir);
+$items       = $catalogData['data'] ?? [];
+$meta        = $catalogData['meta'] ?? ['total' => 0, 'page' => 1, 'pages' => 1];
+$apiError    = empty($catalogData['ok']);
 
-// 카테고리 로드
-$categories = $pdo->query("SELECT * FROM {$prefix}mp_categories WHERE is_active = 1 ORDER BY sort_order")->fetchAll(PDO::FETCH_ASSOC);
-
-// 아이템 쿼리
-$where = ["status = 'active'"];
-$params = [];
-
-if ($filterType) {
-    $where[] = "type = ?";
-    $params[] = $filterType;
-}
-if ($filterCategory) {
-    $where[] = "category_id = ?";
-    $params[] = $filterCategory;
-}
-if ($filterFree) {
-    $where[] = "price = 0";
-}
-if ($filterKeyword) {
-    $where[] = "(slug LIKE ? OR author_name LIKE ?)";
-    $params[] = "%{$filterKeyword}%";
-    $params[] = "%{$filterKeyword}%";
+// ── 추천 아이템 (첫 페이지 + 필터 없을 때) ─────────────
+$featuredItems = [];
+if ($page === 1 && !$filterType && !$filterKeyword && !$filterCat) {
+    $featuredUrl   = $marketApiBase . '/catalog?' . http_build_query(['featured' => '1', 'limit' => 4, 'sort' => 'popular']);
+    $featuredData  = mpApiFetch($featuredUrl, $cacheDir);
+    $featuredItems = $featuredData['data'] ?? [];
 }
 
-$whereClause = implode(' AND ', $where);
-$orderBy = match ($filterSort) {
-    'newest' => 'created_at DESC',
-    'price_asc' => 'price ASC',
-    'price_desc' => 'price DESC',
-    'rating' => 'rating_avg DESC',
-    default => 'download_count DESC',
-};
-
-$stmt = $pdo->prepare("SELECT * FROM {$prefix}mp_items WHERE {$whereClause} ORDER BY is_featured DESC, {$orderBy} LIMIT 48");
-$stmt->execute($params);
-$items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// 타입별 카운트
-$typeCounts = [];
-foreach (['plugin', 'theme', 'widget', 'skin'] as $t) {
-    $cs = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}mp_items WHERE status='active' AND type=?");
-    $cs->execute([$t]);
-    $typeCounts[$t] = (int)$cs->fetchColumn();
+// ── 타입별 카운트 ─────────────────────────────────────
+$typeCounts = ['plugin' => 0, 'theme' => 0, 'widget' => 0, 'skin' => 0];
+$countUrl   = $marketApiBase . '/catalog?' . http_build_query(['limit' => 1]);
+$countData  = mpApiFetch($countUrl, $cacheDir);
+$totalCount = $countData['meta']['total'] ?? 0;
+foreach (array_keys($typeCounts) as $t) {
+    $tData = mpApiFetch($marketApiBase . '/catalog?' . http_build_query(['type' => $t, 'limit' => 1]), $cacheDir);
+    $typeCounts[$t] = $tData['meta']['total'] ?? 0;
 }
-$totalCount = array_sum($typeCounts);
 
-// featured 아이템
-$featuredStmt = $pdo->query("SELECT * FROM {$prefix}mp_items WHERE status='active' AND is_featured=1 ORDER BY download_count DESC LIMIT 4");
-$featuredItems = $featuredStmt->fetchAll(PDO::FETCH_ASSOC);
+// ── 카테고리 목록 (아이템에서 추출) ───────────────────
+$catSlugs = [];
+foreach ($items as $it) {
+    if (!empty($it['cat_slug'])) $catSlugs[$it['cat_slug']] = $it['cat_slug'];
+}
+if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filterCat;
 ?>
 
-<div x-data="{ showFilters: true }" class="space-y-6">
+<div class="space-y-6">
+
+    <?php if ($apiError): ?>
+    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 flex items-center gap-3 text-sm text-amber-700 dark:text-amber-400">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        마켓 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.
+    </div>
+    <?php endif; ?>
 
     <!-- 검색 바 -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-4">
@@ -96,33 +113,32 @@ $featuredItems = $featuredStmt->fetchAll(PDO::FETCH_ASSOC);
                 <!-- 타입 필터 -->
                 <select name="type" onchange="this.form.submit()"
                         class="px-3 py-2.5 bg-zinc-50 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-lg text-sm text-zinc-700 dark:text-zinc-300">
-                    <option value=""><?= __mp('all_types') ?> (<?= $totalCount ?>)</option>
+                    <option value=""><?= __mp('all_types') ?> (<?= number_format($totalCount) ?>)</option>
                     <option value="plugin" <?= $filterType === 'plugin' ? 'selected' : '' ?>><?= __mp('plugins') ?> (<?= $typeCounts['plugin'] ?>)</option>
-                    <option value="theme" <?= $filterType === 'theme' ? 'selected' : '' ?>><?= __mp('themes') ?> (<?= $typeCounts['theme'] ?>)</option>
+                    <option value="theme"  <?= $filterType === 'theme'  ? 'selected' : '' ?>><?= __mp('themes') ?>  (<?= $typeCounts['theme'] ?>)</option>
                     <option value="widget" <?= $filterType === 'widget' ? 'selected' : '' ?>><?= __mp('widgets') ?> (<?= $typeCounts['widget'] ?>)</option>
-                    <option value="skin" <?= $filterType === 'skin' ? 'selected' : '' ?>><?= __mp('skins') ?> (<?= $typeCounts['skin'] ?>)</option>
+                    <option value="skin"   <?= $filterType === 'skin'   ? 'selected' : '' ?>><?= __mp('skins') ?>   (<?= $typeCounts['skin'] ?>)</option>
                 </select>
 
                 <!-- 카테고리 필터 -->
-                <select name="category" onchange="this.form.submit()"
+                <?php if (!empty($catSlugs)): ?>
+                <select name="cat" onchange="this.form.submit()"
                         class="px-3 py-2.5 bg-zinc-50 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-lg text-sm text-zinc-700 dark:text-zinc-300">
                     <option value=""><?= __mp('all_categories') ?></option>
-                    <?php foreach ($categories as $cat):
-                        $catName = json_decode($cat['name'], true);
-                        $catLabel = $catName[$locale] ?? $catName['en'] ?? $cat['slug'];
-                    ?>
-                    <option value="<?= $cat['id'] ?>" <?= $filterCategory == $cat['id'] ? 'selected' : '' ?>><?= htmlspecialchars($catLabel) ?></option>
+                    <?php foreach ($catSlugs as $slug): ?>
+                    <option value="<?= htmlspecialchars($slug) ?>" <?= $filterCat === $slug ? 'selected' : '' ?>><?= htmlspecialchars($slug) ?></option>
                     <?php endforeach; ?>
                 </select>
+                <?php endif; ?>
 
                 <!-- 정렬 -->
                 <select name="sort" onchange="this.form.submit()"
                         class="px-3 py-2.5 bg-zinc-50 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-lg text-sm text-zinc-700 dark:text-zinc-300">
-                    <option value="popular" <?= $filterSort === 'popular' ? 'selected' : '' ?>><?= __mp('sort_popular') ?></option>
-                    <option value="newest" <?= $filterSort === 'newest' ? 'selected' : '' ?>><?= __mp('sort_newest') ?></option>
-                    <option value="price_asc" <?= $filterSort === 'price_asc' ? 'selected' : '' ?>><?= __mp('sort_price_asc') ?></option>
+                    <option value="newest"     <?= $filterSort === 'newest'     ? 'selected' : '' ?>><?= __mp('sort_newest') ?></option>
+                    <option value="popular"    <?= $filterSort === 'popular'    ? 'selected' : '' ?>><?= __mp('sort_popular') ?></option>
+                    <option value="price_asc"  <?= $filterSort === 'price_asc'  ? 'selected' : '' ?>><?= __mp('sort_price_asc') ?></option>
                     <option value="price_desc" <?= $filterSort === 'price_desc' ? 'selected' : '' ?>><?= __mp('sort_price_desc') ?></option>
-                    <option value="rating" <?= $filterSort === 'rating' ? 'selected' : '' ?>><?= __mp('sort_rating') ?></option>
+                    <option value="rating"     <?= $filterSort === 'rating'     ? 'selected' : '' ?>><?= __mp('sort_rating') ?></option>
                 </select>
 
                 <!-- 무료 필터 -->
@@ -138,7 +154,7 @@ $featuredItems = $featuredStmt->fetchAll(PDO::FETCH_ASSOC);
         </form>
     </div>
 
-    <?php if (!empty($featuredItems) && empty($filterType) && empty($filterKeyword)): ?>
+    <?php if (!empty($featuredItems)): ?>
     <!-- 추천 아이템 -->
     <div>
         <h2 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-3">
@@ -156,7 +172,12 @@ $featuredItems = $featuredStmt->fetchAll(PDO::FETCH_ASSOC);
     <!-- 아이템 그리드 -->
     <div>
         <div class="flex items-center justify-between mb-3">
-            <p class="text-sm text-zinc-500 dark:text-zinc-400"><?= count($items) ?><?= __mp('items_count') ?></p>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                <?= number_format($meta['total']) ?><?= __mp('items_count') ?>
+                <?php if ($meta['pages'] > 1): ?>
+                <span class="ml-2 text-zinc-400">(<?= $page ?> / <?= $meta['pages'] ?>)</span>
+                <?php endif; ?>
+            </p>
         </div>
 
         <?php if (empty($items)): ?>
@@ -174,6 +195,47 @@ $featuredItems = $featuredStmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
         <?php endif; ?>
     </div>
+
+    <!-- 페이지네이션 -->
+    <?php if ($meta['pages'] > 1): ?>
+    <div class="flex items-center justify-center gap-2 pt-2">
+        <?php
+        $baseQuery = array_filter(['type' => $filterType, 'cat' => $filterCat, 'sort' => $filterSort, 'q' => $filterKeyword, 'free' => $filterFree ? '1' : '']);
+        $prevPage  = $page > 1 ? $page - 1 : null;
+        $nextPage  = $page < $meta['pages'] ? $page + 1 : null;
+        $btnBase   = 'px-3 py-1.5 text-sm rounded-lg border transition-colors';
+        $btnActive = 'bg-indigo-600 border-indigo-600 text-white';
+        $btnNormal = 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:border-indigo-400';
+        $btnDisabled = 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 text-zinc-300 dark:text-zinc-600 cursor-not-allowed';
+        ?>
+        <?php if ($prevPage): ?>
+        <a href="?<?= http_build_query(array_merge($baseQuery, ['page' => $prevPage])) ?>" class="<?= $btnBase ?> <?= $btnNormal ?>">←</a>
+        <?php else: ?>
+        <span class="<?= $btnBase ?> <?= $btnDisabled ?>">←</span>
+        <?php endif; ?>
+
+        <?php
+        $startPage = max(1, $page - 2);
+        $endPage   = min($meta['pages'], $page + 2);
+        if ($startPage > 1) echo '<span class="text-zinc-400 text-sm px-1">…</span>';
+        for ($p = $startPage; $p <= $endPage; $p++):
+        ?>
+        <a href="?<?= http_build_query(array_merge($baseQuery, ['page' => $p])) ?>"
+           class="<?= $btnBase ?> <?= $p === $page ? $btnActive : $btnNormal ?>">
+            <?= $p ?>
+        </a>
+        <?php endfor;
+        if ($endPage < $meta['pages']) echo '<span class="text-zinc-400 text-sm px-1">…</span>';
+        ?>
+
+        <?php if ($nextPage): ?>
+        <a href="?<?= http_build_query(array_merge($baseQuery, ['page' => $nextPage])) ?>" class="<?= $btnBase ?> <?= $btnNormal ?>">→</a>
+        <?php else: ?>
+        <span class="<?= $btnBase ?> <?= $btnDisabled ?>">→</span>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
+
 </div>
 
 <?php include __DIR__ . '/_foot.php'; ?>

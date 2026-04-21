@@ -5,24 +5,41 @@
 include __DIR__ . '/_head.php';
 $pageHeaderTitle = __mp('title');
 
-$prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
-$slug = $_GET['slug'] ?? '';
+$slug          = trim($_GET['slug'] ?? '');
+$marketApiBase = rtrim($_ENV['MARKET_API_URL'] ?? 'https://market.21ces.com/api/market', '/');
+$cacheDir      = (defined('BASE_PATH') ? BASE_PATH : __DIR__ . '/../../../../..') . '/storage/cache';
 
-try {
-    $pdo = new PDO(
-        "mysql:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_DATABASE']};charset=utf8mb4",
-        $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'],
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-    );
-} catch (PDOException $e) {
-    echo '<div class="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-lg">DB Error</div>';
-    include __DIR__ . '/_foot.php';
-    return;
+if (!function_exists('mpApiFetch')) {
+    function mpApiFetch(string $url, string $cacheDir, int $ttl = 1800): ?array {
+        $cacheFile = $cacheDir . '/mp_api_' . md5($url) . '.json';
+        if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $ttl) {
+            $cached = json_decode(file_get_contents($cacheFile), true);
+            if (!empty($cached['ok'])) return $cached;
+        }
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_HTTPHEADER     => ['Accept: application/json', 'User-Agent: VosCMS/' . ($_ENV['APP_VERSION'] ?? '2.0')],
+            CURLOPT_SSL_VERIFYPEER => true,
+        ]);
+        $response = curl_exec($ch);
+        $code     = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($code !== 200 || !$response) return null;
+        $data = json_decode($response, true);
+        if (!empty($data['ok']) && is_dir($cacheDir)) {
+            file_put_contents($cacheFile, $response, LOCK_EX);
+        }
+        return $data;
+    }
 }
 
-$stmt = $pdo->prepare("SELECT * FROM {$prefix}mp_items WHERE slug = ? LIMIT 1");
-$stmt->execute([$slug]);
-$item = $stmt->fetch(PDO::FETCH_ASSOC);
+// ── market API에서 아이템 조회 ─────────────────────────
+$itemData = mpApiFetch($marketApiBase . '/item?slug=' . rawurlencode($slug), $cacheDir, 900);
+$item = $itemData['data'] ?? null;
 
 if (!$item) {
     echo '<div class="p-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded-lg text-center">Item not found</div>';
@@ -30,41 +47,63 @@ if (!$item) {
     return;
 }
 
-$name = json_decode($item['name'], true);
-$itemName = $name[$locale] ?? $name['en'] ?? $item['slug'];
-$desc = json_decode($item['description'] ?? '{}', true);
-$itemDesc = $desc[$locale] ?? $desc['en'] ?? '';
-$shortDesc = json_decode($item['short_description'] ?? '{}', true);
-$itemShortDesc = $shortDesc[$locale] ?? $shortDesc['en'] ?? '';
-$screenshots = json_decode($item['screenshots'] ?? '[]', true);
-$tags = json_decode($item['tags'] ?? '[]', true);
-$price = (float)$item['price'];
-$isFree = $price <= 0;
-$currency = $item['currency'] ?? 'USD';
-
-// 버전 이력
-$versions = $pdo->prepare("SELECT * FROM {$prefix}mp_item_versions WHERE item_id = ? ORDER BY released_at DESC");
-$versions->execute([$item['id']]);
-$versionList = $versions->fetchAll(PDO::FETCH_ASSOC);
-
-// 리뷰
-$reviews = $pdo->prepare("SELECT * FROM {$prefix}mp_reviews WHERE item_id = ? AND status = 'active' ORDER BY created_at DESC LIMIT 10");
-$reviews->execute([$item['id']]);
-$reviewList = $reviews->fetchAll(PDO::FETCH_ASSOC);
-
-// 구매 여부 확인
-$adminId = $_SESSION['admin_id'] ?? '';
-$hasPurchased = false;
-if ($adminId) {
-    $pStmt = $pdo->prepare("SELECT oi.id FROM {$prefix}mp_order_items oi JOIN {$prefix}mp_orders o ON o.id = oi.order_id WHERE o.admin_id = ? AND oi.item_id = ? AND o.status = 'paid' LIMIT 1");
-    $pStmt->execute([$adminId, $item['id']]);
-    $hasPurchased = (bool)$pStmt->fetch();
+// author 필드 정규화 (market API: author, local: author_name)
+if (empty($item['author_name']) && !empty($item['author'])) {
+    $item['author_name'] = $item['author'];
 }
 
-// 설치 여부
-$isInstalled = false;
+$name          = json_decode($item['name'] ?? '{}', true);
+$itemName      = $name[$locale] ?? $name['en'] ?? $item['slug'];
+$desc          = json_decode($item['description'] ?? '{}', true);
+$itemDesc      = $desc[$locale] ?? $desc['en'] ?? '';
+$shortDesc     = json_decode($item['short_description'] ?? '{}', true);
+$itemShortDesc = $shortDesc[$locale] ?? $shortDesc['en'] ?? '';
+$screenshots   = json_decode($item['screenshots'] ?? '[]', true);
+$tags          = json_decode($item['tags'] ?? '[]', true);
+$price         = (float)($item['price'] ?? 0);
+$isFree        = $price <= 0;
+$currency      = $item['currency'] ?? 'USD';
+
+// ── 버전 이력 (market API) ────────────────────────────
+$versionsData = mpApiFetch($marketApiBase . '/item/versions?slug=' . rawurlencode($slug), $cacheDir, 900);
+$versionList  = $versionsData['data'] ?? [];
+
+// released_at → created_at 정규화
+foreach ($versionList as &$v) {
+    if (empty($v['released_at']) && !empty($v['created_at'])) {
+        $v['released_at'] = $v['created_at'];
+    }
+}
+unset($v);
+
+// ── 리뷰 (향후 API 추가 시 연동, 현재 빈 배열) ──────────
+$reviewList = [];
+
+// ── 구매/설치 여부 (로컬 DB) ──────────────────────────
+$hasPurchased = false;
+$isInstalled  = false;
+$prefix       = $_ENV['DB_PREFIX'] ?? 'rzx_';
+try {
+    $pdo = new PDO(
+        "mysql:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_DATABASE']};charset=utf8mb4",
+        $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'],
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+    );
+    $adminId = $_SESSION['admin_id'] ?? '';
+    if ($adminId && !empty($item['id'])) {
+        $pStmt = $pdo->prepare(
+            "SELECT oi.id FROM {$prefix}mp_order_items oi
+             JOIN {$prefix}mp_orders o ON o.id = oi.order_id
+             WHERE o.admin_id = ? AND oi.item_id = ? AND o.status = 'paid' LIMIT 1"
+        );
+        $pStmt->execute([$adminId, $item['id']]);
+        $hasPurchased = (bool)$pStmt->fetch();
+    }
+} catch (PDOException $e) {
+    // 구매 여부 확인 실패 시 무시
+}
 $pm = $pluginManager ?? \RzxLib\Core\Plugin\PluginManager::getInstance();
-if ($pm && $item['type'] === 'plugin') {
+if ($pm && ($item['type'] ?? '') === 'plugin') {
     $isInstalled = $pm->isInstalled($item['slug']);
 }
 ?>

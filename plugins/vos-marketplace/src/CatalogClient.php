@@ -17,7 +17,7 @@ class CatalogClient
     private string $apiUrl;
     private int $timeout;
 
-    public function __construct(string $apiUrl = 'https://market.21ces.com/api/v1', int $timeout = 30)
+    public function __construct(string $apiUrl = 'https://market.21ces.com/api/market', int $timeout = 30)
     {
         $this->apiUrl = rtrim($apiUrl, '/');
         $this->timeout = $timeout;
@@ -28,13 +28,13 @@ class CatalogClient
      */
     public function syncCatalog(): array
     {
-        $response = $this->request('/catalog');
-        if (!$response || empty($response['items'])) {
+        $response = $this->request('/catalog', ['limit' => 50]);
+        if (!$response || empty($response['data'])) {
             return ['success' => false, 'message' => 'Failed to fetch catalog', 'synced' => 0];
         }
 
         $synced = 0;
-        foreach ($response['items'] as $remoteItem) {
+        foreach ($response['data'] as $remoteItem) {
             if ($this->upsertItem($remoteItem)) {
                 $synced++;
             }
@@ -55,7 +55,8 @@ class CatalogClient
      */
     public function fetchItem(string $slug): ?array
     {
-        return $this->request('/items/' . rawurlencode($slug));
+        $response = $this->request('/item', ['slug' => $slug]);
+        return $response['data'] ?? null;
     }
 
     /**
@@ -72,7 +73,7 @@ class CatalogClient
             'items' => implode(',', $parts),
         ]);
 
-        return $response['updates'] ?? [];
+        return $response['updates'] ?? $response['data'] ?? [];
     }
 
     /**
