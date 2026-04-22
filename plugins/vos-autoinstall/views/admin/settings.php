@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_action'] ?? '') === 'save
 function syncCatalog(btn) {
     btn.disabled = true;
     btn.textContent = 'Syncing...';
-    fetch('<?= $adminUrl ?>/marketplace/api', {
+    fetch('<?= $adminUrl ?>/autoinstall/api', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'action=sync_catalog'

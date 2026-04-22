@@ -152,7 +152,7 @@ $typeLabels = [
 <script>
 function deactivateDomain(licenseId, domain) {
     if (!confirm('<?= __mp('deactivate') ?>: ' + domain + '?')) return;
-    fetch('<?= $adminUrl ?>/marketplace/api', {
+    fetch('<?= $adminUrl ?>/autoinstall/api', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'action=deactivate_domain&license_id=' + licenseId + '&domain=' + encodeURIComponent(domain)

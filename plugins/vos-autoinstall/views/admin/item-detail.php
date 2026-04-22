@@ -305,7 +305,7 @@ if ($pm && ($item['type'] ?? '') === 'plugin') {
 <script>
 function purchaseItem(itemId) {
     if (!confirm('<?= $isFree ? __mp('install_now') : __mp('purchase') ?>?')) return;
-    fetch('<?= $adminUrl ?>/marketplace/api', {
+    fetch('<?= $adminUrl ?>/autoinstall/api', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'action=purchase&item_id=' + itemId
@@ -330,7 +330,7 @@ function installItem(itemId) {
     btn.disabled = true;
     btn.textContent = '<?= __mp('installing') ?>';
 
-    fetch('<?= $adminUrl ?>/marketplace/install', {
+    fetch('<?= $adminUrl ?>/autoinstall/install', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'item_id=' + itemId

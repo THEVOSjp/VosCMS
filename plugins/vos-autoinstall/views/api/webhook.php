@@ -1,9 +1,9 @@
 <?php
 /**
  * Marketplace API - 결제 웹훅
- * POST /api/marketplace/webhook
+ * POST /api/autoinstall/webhook
  *
- * Stripe 결제 완료 시 호출. metadata.type === 'marketplace' 인 것만 처리.
+ * Stripe 결제 완료 시 호출. metadata.type === 'autoinstall' 인 것만 처리.
  */
 header('Content-Type: application/json; charset=utf-8');
 
@@ -32,7 +32,7 @@ $session = $event['data']['object'] ?? [];
 $metadata = $session['metadata'] ?? [];
 
 // 마켓플레이스 결제인지 확인
-if (($metadata['type'] ?? '') !== 'marketplace') {
+if (($metadata['type'] ?? '') !== 'autoinstall') {
     echo json_encode(['received' => true, 'ignored' => true]);
     return;
 }

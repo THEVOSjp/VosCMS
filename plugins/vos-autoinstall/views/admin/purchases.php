@@ -226,7 +226,7 @@ function renderSection(string $title, string $icon, array $items, string $adminU
 <?php endif; ?>
 
 <script>
-var _apiUrl = '<?= $adminUrl ?>/marketplace/api';
+var _apiUrl = '<?= $adminUrl ?>/autoinstall/api';
 
 // 페이지 로드 시 미등록 아이템 자동 등록 — 순차 처리 (market API 워커 고갈 방지)
 document.addEventListener('DOMContentLoaded', function() {

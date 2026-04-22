@@ -1,7 +1,7 @@
 <?php
 /**
  * Marketplace API - 라이선스 검증
- * POST /api/marketplace/license/validate
+ * POST /api/autoinstall/license/validate
  *
  * Body: { license_key, domain, action: activate|deactivate|heartbeat, instance_id?, voscms_version? }
  */

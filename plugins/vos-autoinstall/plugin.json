@@ -1,0 +1,120 @@
+{
+    "id": "vos-autoinstall",
+    "name": {
+        "ko": "자동 설치",
+        "en": "Auto Install",
+        "ja": "自動インストール",
+        "de": "Auto-Installation",
+        "es": "Instalación automática",
+        "fr": "Installation auto",
+        "id": "Instal Otomatis",
+        "mn": "Автомат суулгалт",
+        "ru": "Автоустановка",
+        "tr": "Otomatik Kurulum",
+        "vi": "Cài đặt tự động",
+        "zh_CN": "自动安装",
+        "zh_TW": "自動安裝"
+    },
+    "description": {
+        "ko": "market.21ces.com에서 플러그인·위젯·스킨을 원클릭으로 설치하고 라이선스를 관리합니다",
+        "en": "One-click install plugins, widgets and skins from market.21ces.com and manage licenses",
+        "ja": "market.21ces.comからプラグイン・ウィジェット・スキンをワンクリックでインストールし、ライセンスを管理します"
+    },
+    "version": "2.0.0",
+    "author": {
+        "name": "VosCMS",
+        "url": "https://voscms.com"
+    },
+    "license": "proprietary",
+    "category": "system",
+    "tags": ["marketplace", "autoinstall", "plugins", "widgets", "skins"],
+    "requires": {
+        "php": ">=8.0"
+    },
+    "migrations": [
+        "migrations/001_create_marketplace_tables.sql",
+        "migrations/002_create_license_tables.sql",
+        "migrations/003_create_review_tables.sql"
+    ],
+    "routes": {
+        "admin": [
+            { "path": "autoinstall",           "view": "admin/browse.php",          "method": "GET"  },
+            { "path": "autoinstall/item",       "view": "admin/item-detail.php",     "method": "GET"  },
+            { "path": "autoinstall/purchases",  "view": "admin/purchases.php",       "method": "GET"  },
+            { "path": "autoinstall/api",        "view": "admin/api.php",             "method": "POST" },
+            { "path": "autoinstall/install",    "view": "admin/install-handler.php", "method": "POST" }
+        ],
+        "front": [],
+        "api": []
+    },
+    "menus": {
+        "admin": [
+            {
+                "title": {
+                    "ko": "자동 설치",
+                    "en": "Auto Install",
+                    "ja": "自動インストール",
+                    "de": "Auto-Installation",
+                    "es": "Instalación automática",
+                    "fr": "Installation auto",
+                    "id": "Instal Otomatis",
+                    "mn": "Автомат суулгалт",
+                    "ru": "Автоустановка",
+                    "tr": "Otomatik Kurulum",
+                    "vi": "Cài đặt tự động",
+                    "zh_CN": "自动安装",
+                    "zh_TW": "自動安裝"
+                },
+                "icon": "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4",
+                "items": [
+                    {
+                        "title": {
+                            "ko": "쉬운 설치",
+                            "en": "Easy Install",
+                            "ja": "かんたんインストール",
+                            "de": "Einfache Installation",
+                            "es": "Instalación fácil",
+                            "fr": "Installation facile",
+                            "id": "Instal Mudah",
+                            "mn": "Хялбар суулгалт",
+                            "ru": "Простая установка",
+                            "tr": "Kolay Kurulum",
+                            "vi": "Cài đặt dễ dàng",
+                            "zh_CN": "一键安装",
+                            "zh_TW": "輕鬆安裝"
+                        },
+                        "route": "autoinstall"
+                    },
+                    {
+                        "title": {
+                            "ko": "설치 내역",
+                            "en": "Install History",
+                            "ja": "インストール履歴",
+                            "de": "Installationsverlauf",
+                            "es": "Historial de instalación",
+                            "fr": "Historique d'installation",
+                            "id": "Riwayat Instalasi",
+                            "mn": "Суулгалтын түүх",
+                            "ru": "История установок",
+                            "tr": "Kurulum Geçmişi",
+                            "vi": "Lịch sử cài đặt",
+                            "zh_CN": "安装记录",
+                            "zh_TW": "安裝紀錄"
+                        },
+                        "route": "autoinstall/purchases"
+                    }
+                ]
+            }
+        ]
+    },
+    "hooks": {
+        "plugin.update.check": "hooks/update-check.php"
+    },
+    "settings": {
+        "defaults": {
+            "market_api_url": "https://market.21ces.com/api/market",
+            "auto_update_check": "1",
+            "update_check_interval": "86400"
+        }
+    }
+}

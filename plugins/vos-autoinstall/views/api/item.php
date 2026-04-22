@@ -1,7 +1,7 @@
 <?php
 /**
  * Marketplace API - 아이템 상세 조회
- * GET /api/marketplace/item?slug=xxx
+ * GET /api/autoinstall/item?slug=xxx
  */
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');

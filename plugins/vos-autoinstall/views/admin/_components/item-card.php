@@ -26,7 +26,7 @@ $_priceInt = (int)$_effectivePrice;
 <div class="group bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-600 transition-all flex flex-col">
 
     <!-- 배너/아이콘 (클릭 → 상세) -->
-    <a href="<?= $adminUrl ?>/marketplace/item?slug=<?= urlencode($item['slug'] ?? '') ?>" class="block">
+    <a href="<?= $adminUrl ?>/autoinstall/item?slug=<?= urlencode($item['slug'] ?? '') ?>" class="block">
         <div class="aspect-[16/9] bg-gradient-to-br from-<?= $_color ?>-50 to-<?= $_color ?>-100 dark:from-<?= $_color ?>-900/20 dark:to-<?= $_color ?>-800/20 flex items-center justify-center relative overflow-hidden">
             <?php if (!empty($item['banner_image'])): ?>
                 <img src="<?= htmlspecialchars($item['banner_image']) ?>" alt="" class="w-full h-full object-cover">
@@ -55,7 +55,7 @@ $_priceInt = (int)$_effectivePrice;
 
     <!-- 정보 -->
     <div class="p-4 flex flex-col flex-1">
-        <a href="<?= $adminUrl ?>/marketplace/item?slug=<?= urlencode($item['slug'] ?? '') ?>" class="block">
+        <a href="<?= $adminUrl ?>/autoinstall/item?slug=<?= urlencode($item['slug'] ?? '') ?>" class="block">
             <h3 class="font-semibold text-zinc-800 dark:text-zinc-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
                 <?= htmlspecialchars($_itemName) ?>
             </h3>

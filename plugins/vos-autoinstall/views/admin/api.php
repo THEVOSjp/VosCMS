@@ -77,7 +77,7 @@ switch ($action) {
             $uuid, $adminId, $orderNum, $price, $price, $item['currency'],
             $isFree ? 'paid' : 'pending',
             $isFree ? date('Y-m-d H:i:s') : null,
-            json_encode(['type' => 'marketplace'])
+            json_encode(['type' => 'autoinstall'])
         ]);
         $orderId = (int)$pdo->lastInsertId();
 
@@ -114,7 +114,7 @@ switch ($action) {
                 'success' => true,
                 'is_free' => false,
                 'order_uuid' => $uuid,
-                'redirect' => $adminUrl . '/marketplace/purchases',
+                'redirect' => $adminUrl . '/autoinstall/purchases',
                 'message' => 'Order created. Payment integration pending.',
             ]);
         }
@@ -190,7 +190,7 @@ switch ($action) {
         $slug = trim($slugBase, '-');
 
         // 파일 업로드 처리
-        $uploadDir = BASE_PATH . '/storage/uploads/marketplace/';
+        $uploadDir = BASE_PATH . '/storage/uploads/autoinstall/';
         if (!is_dir($uploadDir)) @mkdir($uploadDir, 0775, true);
 
         $iconPath = null;
@@ -198,7 +198,7 @@ switch ($action) {
             $ext = pathinfo($_FILES['icon']['name'], PATHINFO_EXTENSION) ?: 'png';
             $fn = 'icon_' . $slug . '_' . time() . '.' . $ext;
             if (move_uploaded_file($_FILES['icon']['tmp_name'], $uploadDir . $fn)) {
-                $iconPath = '/storage/uploads/marketplace/' . $fn;
+                $iconPath = '/storage/uploads/autoinstall/' . $fn;
             }
         }
 
@@ -207,7 +207,7 @@ switch ($action) {
             $ext = pathinfo($_FILES['banner']['name'], PATHINFO_EXTENSION) ?: 'jpg';
             $fn = 'banner_' . $slug . '_' . time() . '.' . $ext;
             if (move_uploaded_file($_FILES['banner']['tmp_name'], $uploadDir . $fn)) {
-                $bannerPath = '/storage/uploads/marketplace/' . $fn;
+                $bannerPath = '/storage/uploads/autoinstall/' . $fn;
             }
         }
 
@@ -218,7 +218,7 @@ switch ($action) {
                 $ext = pathinfo($_FILES['screenshots']['name'][$i], PATHINFO_EXTENSION) ?: 'jpg';
                 $fn = 'ss_' . $slug . '_' . time() . '_' . $i . '.' . $ext;
                 if (move_uploaded_file($tmp, $uploadDir . $fn)) {
-                    $screenshots[] = '/storage/uploads/marketplace/' . $fn;
+                    $screenshots[] = '/storage/uploads/autoinstall/' . $fn;
                 }
             }
         }

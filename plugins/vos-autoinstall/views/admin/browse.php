@@ -11,7 +11,7 @@ $pageSubTitle    = __mp('browse');
 $marketApiBase  = rtrim($_ENV['MARKET_API_URL'] ?? 'https://market.21ces.com/api/market', '/');
 $cacheDir       = (defined('BASE_PATH') ? BASE_PATH : __DIR__ . '/../../../../..') . '/storage/cache';
 $payjpPublicKey = $_ENV['PAYJP_PUBLIC_KEY'] ?? '';
-$_apiUrl        = $adminUrl . '/marketplace/api';
+$_apiUrl        = $adminUrl . '/autoinstall/api';
 
 // ── 필터 파라미터 ─────────────────────────────────────
 $filterType     = $_GET['type']     ?? '';
@@ -243,7 +243,7 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
                 $_type = $item['type'] ?? 'plugin';
                 $_color = $_typeColors[$_type] ?? 'indigo';
             ?>
-            <a href="<?= $adminUrl ?>/marketplace/item?slug=<?= urlencode($item['slug'] ?? '') ?>"
+            <a href="<?= $adminUrl ?>/autoinstall/item?slug=<?= urlencode($item['slug'] ?? '') ?>"
                class="flex items-center gap-4 px-4 py-3 border-b border-zinc-100 dark:border-zinc-700 last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
                 <!-- 아이콘 -->
                 <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-<?= $_color ?>-100 dark:bg-<?= $_color ?>-900/30 flex items-center justify-center overflow-hidden">
@@ -294,7 +294,7 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
                 $_hasBanner = !empty($item['banner_image']);
                 $_hasIcon   = !empty($item['icon']) && (str_starts_with($item['icon'], '/') || str_starts_with($item['icon'], 'http'));
             ?>
-            <a href="<?= $adminUrl ?>/marketplace/item?slug=<?= urlencode($item['slug'] ?? '') ?>"
+            <a href="<?= $adminUrl ?>/autoinstall/item?slug=<?= urlencode($item['slug'] ?? '') ?>"
                class="group block bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-600 transition-all">
                 <div class="flex flex-col sm:flex-row">
                     <!-- 썸네일 -->
@@ -492,19 +492,19 @@ function mpInstallItem(btn) {
     var slug = btn.dataset.slug;
     btn.disabled = true;
     btn.textContent = '설치 중…';
-    fetch('<?= $_apiUrl ?>', {
+    fetch('<?= $adminUrl ?>/autoinstall/install', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: 'action=register_license&slug=' + encodeURIComponent(slug) + '&id=' + encodeURIComponent(slug)
+        body: 'item_slug=' + encodeURIComponent(slug)
     })
     .then(function(r) { return r.json(); })
     .then(function(d) {
         if (d.success) {
-            btn.textContent = '설치됨';
+            btn.textContent = '설치됨 ✓';
             btn.className = btn.className.replace('bg-indigo-600 hover:bg-indigo-700', 'bg-zinc-400 cursor-not-allowed');
         } else {
             btn.disabled = false;
-            btn.textContent = '설치 실패';
+            btn.textContent = d.message || '설치 실패';
         }
     })
     .catch(function() { btn.disabled = false; btn.textContent = '오류'; });

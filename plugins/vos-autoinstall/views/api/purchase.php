@@ -1,7 +1,7 @@
 <?php
 /**
  * Marketplace API - 구매 처리
- * POST /api/marketplace/purchase
+ * POST /api/autoinstall/purchase
  */
 header('Content-Type: application/json; charset=utf-8');
 

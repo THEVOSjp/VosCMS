@@ -1,7 +1,7 @@
 <?php
 /**
  * Marketplace API - 패키지 다운로드
- * GET /api/marketplace/download?license_key=xxx&item_slug=xxx
+ * GET /api/autoinstall/download?license_key=xxx&item_slug=xxx
  */
 $licenseKey = trim($_GET['license_key'] ?? '');
 $itemSlug = trim($_GET['item_slug'] ?? '');
