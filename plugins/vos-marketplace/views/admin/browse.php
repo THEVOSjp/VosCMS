@@ -8,8 +8,10 @@ include __DIR__ . '/_head.php';
 $pageHeaderTitle = __mp('title');
 $pageSubTitle    = __mp('browse');
 
-$marketApiBase = rtrim($_ENV['MARKET_API_URL'] ?? 'https://market.21ces.com/api/market', '/');
-$cacheDir      = (defined('BASE_PATH') ? BASE_PATH : __DIR__ . '/../../../../..') . '/storage/cache';
+$marketApiBase  = rtrim($_ENV['MARKET_API_URL'] ?? 'https://market.21ces.com/api/market', '/');
+$cacheDir       = (defined('BASE_PATH') ? BASE_PATH : __DIR__ . '/../../../../..') . '/storage/cache';
+$payjpPublicKey = $_ENV['PAYJP_PUBLIC_KEY'] ?? '';
+$_apiUrl        = $adminUrl . '/marketplace/api';
 
 // ── 필터 파라미터 ─────────────────────────────────────
 $filterType     = $_GET['type']     ?? '';
@@ -414,6 +416,151 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
     <?php endif; ?>
 
 </div>
+
+<!-- ── PAY.JP 구매 모달 ──────────────────────────────────────── -->
+<div id="mpPurchaseModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50" onclick="mpClosePurchase()"></div>
+    <div class="relative bg-white dark:bg-zinc-800 rounded-2xl shadow-xl w-full max-w-md p-6">
+        <button onclick="mpClosePurchase()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+
+        <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-1" id="mpPurchaseTitle">아이템 구매</h3>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4" id="mpPurchasePrice"></p>
+
+        <div class="space-y-3">
+            <div>
+                <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">이메일 (영수증·시리얼 키 발송)</label>
+                <input type="email" id="mpBuyerEmail" placeholder="your@email.com"
+                       class="w-full px-3 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">카드 정보</label>
+                <div id="mpCardForm" class="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white min-h-[42px]"></div>
+            </div>
+        </div>
+
+        <div id="mpPurchaseError" class="hidden mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-sm text-red-600 dark:text-red-400"></div>
+        <div id="mpPurchaseSuccess" class="hidden mt-3 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-sm text-green-700 dark:text-green-400"></div>
+
+        <button id="mpPurchaseBtn" onclick="mpSubmitPurchase()"
+                class="mt-4 w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition-colors text-sm">
+            결제하기
+        </button>
+    </div>
+</div>
+
+<script src="https://js.pay.jp/v2/pay.js"></script>
+<script>
+var _mpPurchaseSlug   = '';
+var _mpPurchaseAmount = 0;
+var _mpPurchaseCurr   = 'JPY';
+var _payjp            = null;
+var _mpCardElement    = null;
+
+(function() {
+    if (typeof Payjp !== 'undefined' && '<?= htmlspecialchars($payjpPublicKey) ?>') {
+        _payjp = Payjp('<?= htmlspecialchars($payjpPublicKey) ?>');
+        var elements = _payjp.elements();
+        _mpCardElement = elements.create('card');
+    }
+})();
+
+function mpOpenPurchase(btn) {
+    _mpPurchaseSlug   = btn.dataset.slug;
+    _mpPurchaseAmount = parseInt(btn.dataset.price, 10);
+    _mpPurchaseCurr   = btn.dataset.currency || 'JPY';
+    document.getElementById('mpPurchaseTitle').textContent = btn.dataset.name + ' 구매';
+    document.getElementById('mpPurchasePrice').textContent = btn.dataset.priceLabel;
+    document.getElementById('mpPurchaseError').classList.add('hidden');
+    document.getElementById('mpPurchaseSuccess').classList.add('hidden');
+    document.getElementById('mpPurchaseBtn').disabled = false;
+    document.getElementById('mpPurchaseBtn').textContent = '결제하기';
+    document.getElementById('mpPurchaseModal').classList.remove('hidden');
+    if (_mpCardElement) {
+        _mpCardElement.unmount();
+        _mpCardElement.mount('#mpCardForm');
+    }
+}
+
+function mpClosePurchase() {
+    document.getElementById('mpPurchaseModal').classList.add('hidden');
+    if (_mpCardElement) _mpCardElement.unmount();
+}
+
+function mpInstallItem(btn) {
+    var slug = btn.dataset.slug;
+    btn.disabled = true;
+    btn.textContent = '설치 중…';
+    fetch('<?= $_apiUrl ?>', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'action=register_license&slug=' + encodeURIComponent(slug) + '&id=' + encodeURIComponent(slug)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.success) {
+            btn.textContent = '설치됨';
+            btn.className = btn.className.replace('bg-indigo-600 hover:bg-indigo-700', 'bg-zinc-400 cursor-not-allowed');
+        } else {
+            btn.disabled = false;
+            btn.textContent = '설치 실패';
+        }
+    })
+    .catch(function() { btn.disabled = false; btn.textContent = '오류'; });
+}
+
+function mpSubmitPurchase() {
+    if (!_payjp || !_mpCardElement) {
+        document.getElementById('mpPurchaseError').textContent = 'PAY.JP가 초기화되지 않았습니다.';
+        document.getElementById('mpPurchaseError').classList.remove('hidden');
+        return;
+    }
+    var btn = document.getElementById('mpPurchaseBtn');
+    btn.disabled = true;
+    btn.textContent = '처리 중…';
+    document.getElementById('mpPurchaseError').classList.add('hidden');
+
+    _payjp.createToken(_mpCardElement).then(function(result) {
+        if (result.error) {
+            document.getElementById('mpPurchaseError').textContent = result.error.message;
+            document.getElementById('mpPurchaseError').classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = '결제하기';
+            return;
+        }
+        fetch('<?= $_apiUrl ?>', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=purchase_item'
+                + '&item_slug=' + encodeURIComponent(_mpPurchaseSlug)
+                + '&payjp_token=' + encodeURIComponent(result.token.id)
+                + '&buyer_email=' + encodeURIComponent(document.getElementById('mpBuyerEmail').value)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.success) {
+                document.getElementById('mpPurchaseSuccess').innerHTML =
+                    '구매 완료! 라이선스 키: <strong>' + (d.license_key || '') + '</strong>'
+                    + (d.serial_key ? '<br>시리얼: <strong>' + d.serial_key + '</strong>' : '');
+                document.getElementById('mpPurchaseSuccess').classList.remove('hidden');
+                btn.textContent = '완료';
+            } else {
+                document.getElementById('mpPurchaseError').textContent = d.message || '결제 실패';
+                document.getElementById('mpPurchaseError').classList.remove('hidden');
+                btn.disabled = false;
+                btn.textContent = '결제하기';
+            }
+        })
+        .catch(function() {
+            document.getElementById('mpPurchaseError').textContent = '네트워크 오류';
+            document.getElementById('mpPurchaseError').classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = '결제하기';
+        });
+    });
+}
+</script>
 
 <script>
 function mpSetViewStyle(style) {

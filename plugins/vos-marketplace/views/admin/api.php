@@ -369,6 +369,98 @@ switch ($action) {
         ]);
         break;
 
+    case 'purchase_item':
+        // ── 유료 아이템 구매: PAY.JP 토큰 → market API → 라이선스 저장 ──
+        $itemSlug   = trim($_POST['item_slug']   ?? '');
+        $payjpToken = trim($_POST['payjp_token'] ?? '');
+        $buyerEmail = trim($_POST['buyer_email'] ?? '');
+
+        if (!$itemSlug || !$payjpToken) {
+            echo json_encode(['success' => false, 'message' => 'item_slug, payjp_token 필수']);
+            break;
+        }
+
+        // VosCMS 라이선스 키
+        $cacheFile = (defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 4)) . '/storage/.license_cache';
+        $vosKey    = '';
+        if (file_exists($cacheFile)) {
+            $cacheData = json_decode(file_get_contents($cacheFile), true);
+            $vosKey    = $cacheData['license_key'] ?? '';
+        }
+        if (!$vosKey) {
+            echo json_encode(['success' => false, 'message' => 'VosCMS 라이선스 키를 찾을 수 없습니다']);
+            break;
+        }
+
+        // 사이트 도메인
+        $siteUrl = '';
+        try {
+            $stSite  = $pdo->prepare("SELECT value FROM {$prefix}settings WHERE `key` = 'site_url' LIMIT 1");
+            $stSite->execute();
+            $siteUrl = $stSite->fetchColumn() ?: '';
+        } catch (Throwable $e) {}
+        $domain = strtolower(preg_replace('#^https?://#', '', rtrim($siteUrl, '/')));
+        $domain = preg_replace('#^www\.#', '', $domain);
+        $domain = explode('/', $domain)[0];
+        $domain = explode('?', $domain)[0];
+
+        if (!$domain) {
+            echo json_encode(['success' => false, 'message' => '사이트 URL을 확인할 수 없습니다']);
+            break;
+        }
+
+        // market API 호출
+        $marketUrl = rtrim($_ENV['MARKET_API_URL'] ?? 'https://market.21ces.com/api/market', '/');
+        $payload   = json_encode([
+            'vos_key'     => $vosKey,
+            'domain'      => $domain,
+            'item_slug'   => $itemSlug,
+            'payjp_token' => $payjpToken,
+            'buyer_email' => $buyerEmail,
+            'cms_version' => $_ENV['APP_VERSION'] ?? null,
+        ]);
+
+        $ch = curl_init($marketUrl . '/item/purchase');
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'Accept: application/json'],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_SSL_VERIFYPEER => true,
+        ]);
+        $resp    = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        $result = $resp ? json_decode($resp, true) : null;
+        if (!$result || !($result['ok'] ?? false)) {
+            $msg = $result['message'] ?? '결제 처리 중 오류가 발생했습니다';
+            echo json_encode(['success' => false, 'message' => $msg], JSON_UNESCAPED_UNICODE);
+            break;
+        }
+
+        // 라이선스 정보 로컬 저장
+        $nsId = $itemSlug;
+        $upsert = "INSERT INTO {$prefix}plugin_settings (plugin_id, setting_key, setting_value)
+                        VALUES (?, ?, ?)
+                   ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)";
+        $pdo->prepare($upsert)->execute([$nsId, 'market_license_key',    $result['license_key']  ?? '']);
+        $pdo->prepare($upsert)->execute([$nsId, 'market_product_key',    $result['product_key']  ?? '']);
+        $pdo->prepare($upsert)->execute([$nsId, 'market_serial_key',     $result['serial_key']   ?? '']);
+        $pdo->prepare($upsert)->execute([$nsId, 'market_order_number',   $result['order_number'] ?? '']);
+        $pdo->prepare($upsert)->execute([$nsId, 'market_license_status', 'valid']);
+
+        echo json_encode([
+            'success'      => true,
+            'license_key'  => $result['license_key']  ?? '',
+            'serial_key'   => $result['serial_key']   ?? '',
+            'order_number' => $result['order_number'] ?? '',
+            'product_key'  => $result['product_key']  ?? '',
+            'is_new'       => $result['is_new'] ?? true,
+        ], JSON_UNESCAPED_UNICODE);
+        break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Unknown action']);
 }
