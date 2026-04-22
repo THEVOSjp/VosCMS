@@ -174,24 +174,6 @@
                             "zh_TW": "安裝紀錄"
                         },
                         "route": "marketplace\/purchases"
-                    },
-                    {
-                        "title": {
-                            "ko": "설정",
-                            "en": "Settings",
-                            "ja": "設定",
-                            "de": "Einstellungen",
-                            "es": "Configuración",
-                            "fr": "Paramètres",
-                            "id": "Pengaturan",
-                            "mn": "Тохиргоо",
-                            "ru": "Настройки",
-                            "tr": "Ayarlar",
-                            "vi": "Cài đặt",
-                            "zh_CN": "设置",
-                            "zh_TW": "設定"
-                        },
-                        "route": "marketplace\/settings"
                     }
                 ]
             }

@@ -252,6 +252,123 @@ switch ($action) {
         }
         break;
 
+    case 'register_license':
+        $slug = trim($_POST['slug'] ?? '');
+        $id   = trim($_POST['id'] ?? '') ?: $slug; // widget:slug, layout:slug 등 네임스페이스
+        if (!$slug) { echo json_encode(['success' => false, 'message' => 'slug 필수']); return; }
+
+        // VosCMS 라이선스 키
+        $licCache = @json_decode(file_get_contents(BASE_PATH . '/storage/.license_cache'), true);
+        $vosKey = $licCache['license_key'] ?? '';
+        if (!$vosKey) { echo json_encode(['success' => false, 'message' => 'VosCMS 라이선스 키 없음']); return; }
+
+        // 사이트 도메인
+        $domainSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'site_url'");
+        $domainSt->execute();
+        $siteUrl = $domainSt->fetchColumn() ?: ($_SERVER['HTTP_HOST'] ?? '');
+        $domain  = strtolower(preg_replace('#^https?://#', '', rtrim($siteUrl, '/')));
+
+        // market API 호출
+        $marketUrl = 'https://market.21ces.com/api/market/item/install';
+        $payload   = json_encode(['domain' => $domain, 'vos_key' => $vosKey, 'item_slug' => $slug]);
+        $ch = curl_init($marketUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Accept: application/json'],
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_SSL_VERIFYPEER => true,
+        ]);
+        $resp = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        $result = $resp ? json_decode($resp, true) : null;
+        if (!$result || !($result['ok'] ?? false)) {
+            $msg = $result['message'] ?? '마켓 API 오류 (HTTP ' . $httpCode . ')';
+            echo json_encode(['success' => false, 'message' => $msg]);
+            return;
+        }
+
+        $licKey     = $result['license_key'] ?? '';
+        $productKey = $result['product_key'] ?? '';
+        if (!$licKey) { echo json_encode(['success' => false, 'message' => '라이선스 키 수신 실패']); return; }
+
+        // 로컬 저장 (id 기준 — widget:slug, layout:slug 등 포함)
+        $saves = [
+            'market_license_key'    => $licKey,
+            'market_license_status' => 'valid',
+        ];
+        if ($productKey) $saves['market_product_key'] = $productKey;
+
+        foreach ($saves as $k => $v) {
+            $pdo->prepare(
+                "INSERT INTO {$prefix}plugin_settings (plugin_id, setting_key, setting_value)
+                 VALUES (?, ?, ?)
+                 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)"
+            )->execute([$id, $k, $v]);
+        }
+
+        echo json_encode([
+            'success'     => true,
+            'key_preview' => substr($licKey, 0, 8) . '...' . substr($licKey, -4),
+            'product_key' => $productKey,
+            'type'        => $result['type'] ?? 'free',
+            'is_new'      => $result['is_new'] ?? true,
+        ]);
+        break;
+
+    case 'validate_license':
+        $slug = trim($_POST['slug'] ?? '');
+        $id   = trim($_POST['id'] ?? '') ?: $slug;
+        if (!$slug) { echo json_encode(['success' => false, 'message' => 'slug 필수']); return; }
+
+        // 저장된 라이선스 키 (id 기준)
+        $keySt = $pdo->prepare(
+            "SELECT setting_value FROM {$prefix}plugin_settings WHERE plugin_id = ? AND setting_key = 'market_license_key'"
+        );
+        $keySt->execute([$id]);
+        $licKey = $keySt->fetchColumn();
+        if (!$licKey) { echo json_encode(['success' => false, 'valid' => false, 'message' => '등록된 라이선스 없음']); return; }
+
+        // 도메인
+        $domainSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'site_url'");
+        $domainSt->execute();
+        $siteUrl = $domainSt->fetchColumn() ?: ($_SERVER['HTTP_HOST'] ?? '');
+        $domain  = strtolower(preg_replace('#^https?://#', '', rtrim($siteUrl, '/')));
+
+        // market API validate
+        $marketUrl = 'https://market.21ces.com/api/market/license/validate';
+        $ch = curl_init($marketUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query(['license_key' => $licKey, 'slug' => $slug, 'domain' => $domain]),
+            CURLOPT_HTTPHEADER => ['Accept: application/json'],
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_SSL_VERIFYPEER => true,
+        ]);
+        $resp = curl_exec($ch);
+        curl_close($ch);
+
+        $result = $resp ? json_decode($resp, true) : null;
+        $isValid = ($result['ok'] ?? false) && ($result['valid'] ?? false);
+
+        // 상태 업데이트
+        $pdo->prepare(
+            "INSERT INTO {$prefix}plugin_settings (plugin_id, setting_key, setting_value)
+             VALUES (?, 'market_license_status', ?)
+             ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)"
+        )->execute([$id, $isValid ? 'valid' : 'invalid']);
+
+        echo json_encode([
+            'success' => true,
+            'valid'   => $isValid,
+            'message' => $result['msg'] ?? ($isValid ? '유효한 라이선스' : '유효하지 않은 라이선스'),
+        ]);
+        break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Unknown action']);
 }
