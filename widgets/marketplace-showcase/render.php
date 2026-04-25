@@ -105,16 +105,9 @@ $fmtPrice = function ($item) {
 
 $uid = 'mp-showcase-' . mt_rand(1000, 9999);
 
-// ── 링크: 어드민이면 자동설치 페이지, 아니면 market.21ces.com/marketplace ──
-$_isAdmin = !empty($_SESSION['admin_id']);
-if ($_isAdmin) {
-    $_adminPath = $_ENV['ADMIN_PATH'] ?? 'admin';
-    $mpListUrl  = rtrim($baseUrl, '/') . '/' . $_adminPath . '/autoinstall';
-    $itemUrlFn  = fn(string $slug) => $mpListUrl . '/' . urlencode($slug);
-} else {
-    $mpListUrl = $marketSiteBase . '/marketplace';
-    $itemUrlFn = fn(string $slug) => $marketSiteBase . '/marketplace?slug=' . urlencode($slug);
-}
+// ── 링크: 항상 market.21ces.com/marketplace 상세 페이지로 이동 (어드민 여부 무관) ──
+$mpListUrl = $marketSiteBase . '/marketplace';
+$itemUrlFn = fn(string $slug) => $marketSiteBase . '/marketplace?slug=' . urlencode($slug);
 
 // ── 배경 스타일 ──
 $sectionStyle = '';
@@ -186,7 +179,7 @@ if ($sTitle || $showMore) {
         $html .= '<h2 class="text-xl font-bold text-zinc-900 dark:text-white border-l-4 border-blue-500 pl-3">' . $sTitle . '</h2>';
     }
     if ($showMore) {
-        $extAttr = !$_isAdmin ? ' target="_blank" rel="noopener"' : '';
+        $extAttr = ' target="_blank" rel="noopener"';
         $html .= '<a href="' . htmlspecialchars($mpListUrl) . '"' . $extAttr . ' class="text-sm text-zinc-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center">'
               . htmlspecialchars($moreText)
               . '<svg class="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></a>';
@@ -210,7 +203,7 @@ if (empty($items)) {
     $html .= '<button class="mp-nav-btn mp-nav-next" data-dir="next" aria-label="Next"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>';
     $html .= '<div class="mp-scroll-container">';
 
-    $extAttr = !$_isAdmin ? ' target="_blank" rel="noopener"' : '';
+    $extAttr = ' target="_blank" rel="noopener"';
     foreach ($items as $item) {
         $name      = htmlspecialchars($item['name'] ?? $item['slug'] ?? '');
         $rawDesc   = $item['short_description'] ?? '';
