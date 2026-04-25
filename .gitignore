@@ -16,3 +16,9 @@
 .DS_Store
 Thumbs.db
 storage/sessions/
+
+# DB 덤프 (수동 백업) — 절대 깃에 올리지 말 것
+/database/*.sql
+/database/*.sql.gz
+!/database/migrate_*.sql
+
