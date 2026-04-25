@@ -128,9 +128,7 @@ if [ ! -x "$IC_SH" ]; then
     echo "  ⚠ ionCube encoder not found at $IC_SH — falling back to obfuscate.php"
     php8.3 "${DIST}/obfuscate.php"
 else
-    # 인코딩 대상 (배포 디렉토리 기준 상대 경로)
-    # ⚠ install.php 는 인코딩 제외 — Loader 없는 신규 설치자가 환경 체크
-    #   페이지를 정상적으로 봐야 ionCube 설치 안내 UI 가 노출됨
+    # 일반 인코딩 대상 (배포 디렉토리 기준 상대 경로)
     IC_TARGETS=(
         "rzxlib/Core/License/LicenseClient.php"
         "rzxlib/Core/License/LicenseStatus.php"
@@ -163,6 +161,23 @@ else
             IC_SKIP=$((IC_SKIP+1))
         fi
     done
+
+    # install-core.php — Step 2~5 핵심 로직 인코딩
+    # ⚠ install.php (Step 0+1: 언어/환경 체크) 는 평문 유지 — Loader 없는
+    #   환경에서도 사전 진단 + 호스팅 안내 UI 가 노출되어야 함
+    INSTALL_CORE_F="${TARGET}/install-core.php"
+    if [ -f "$INSTALL_CORE_F" ]; then
+        TMP_F="${INSTALL_CORE_F}.enc"
+        if bash "$IC_SH" "$INSTALL_CORE_F" -o "$TMP_F" >/dev/null 2>&1; then
+            mv -f "$TMP_F" "$INSTALL_CORE_F"
+            IC_OK=$((IC_OK+1))
+            echo "  install-core.php: encoded (install.php remains plain for env-check)"
+        else
+            rm -f "$TMP_F"
+            echo "  ⚠ install-core.php encoding failed"
+            IC_SKIP=$((IC_SKIP+1))
+        fi
+    fi
     echo "  → encoded: ${IC_OK}, skipped/failed: ${IC_SKIP}"
 fi
 
