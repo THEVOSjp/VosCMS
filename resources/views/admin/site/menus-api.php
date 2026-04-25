@@ -29,6 +29,33 @@ try {
     exit;
 }
 
+/**
+ * shortcut(링크) 메뉴: 가리키는 페이지가 실제로 존재해야 한다.
+ * - 외부 URL (http://, https://, //) → 통과
+ * - 앵커 (#) → 통과
+ * - 시스템 페이지 (config/system-pages.php) → 통과
+ * - rzx_page_contents 매칭 → 통과
+ * - 그 외 → false
+ */
+function mn_link_target_exists(\PDO $pdo, string $url): bool
+{
+    $url = trim($url);
+    if ($url === '') return false;
+    if (preg_match('#^(https?://|//|#)#i', $url)) return true;
+
+    $slug = trim($url, '/');
+    // 시스템 페이지
+    $sysPages = file_exists(BASE_PATH . '/config/system-pages.php')
+        ? include BASE_PATH . '/config/system-pages.php' : [];
+    foreach ($sysPages as $sp) {
+        if (($sp['slug'] ?? '') === $slug) return true;
+    }
+    // 동적 페이지
+    $st = $pdo->prepare("SELECT 1 FROM rzx_page_contents WHERE page_slug = ? LIMIT 1");
+    $st->execute([$slug]);
+    return (bool)$st->fetchColumn();
+}
+
 try {
     switch ($action) {
 
@@ -77,6 +104,16 @@ try {
             $isShortcut = ($menuType === 'shortcut') ? 1 : 0;
             $expand     = intval($input['expand'] ?? 0);
             $groupSrls  = trim($input['group_srls'] ?? '');
+
+            // shortcut(링크) 메뉴는 기존 페이지 연결만 — url 필수, 페이지 존재 검증
+            if ($menuType === 'shortcut') {
+                if (!$url) {
+                    jsonError('링크 메뉴는 연결할 페이지(URL)를 반드시 지정해야 합니다.');
+                }
+                if (!mn_link_target_exists($pdo, $url)) {
+                    jsonError("연결할 페이지를 찾을 수 없습니다: '/{$url}'. 페이지를 먼저 만든 후 다시 시도해주세요.");
+                }
+            }
 
             // URL 미입력 시 자동 생성
             if (!$url) {
@@ -185,6 +222,19 @@ try {
             $openWindow = intval($input['open_window'] ?? 0);
             $expand     = intval($input['expand'] ?? 0);
             $groupSrls  = trim($input['group_srls'] ?? '');
+
+            // shortcut 메뉴는 페이지 존재 검증
+            $curStmt = $pdo->prepare("SELECT menu_type FROM rzx_menu_items WHERE id = ? LIMIT 1");
+            $curStmt->execute([$id]);
+            $curType = (string)($curStmt->fetchColumn() ?: '');
+            if ($curType === 'shortcut') {
+                if (!$url) {
+                    jsonError('링크 메뉴는 연결할 페이지(URL)를 반드시 지정해야 합니다.');
+                }
+                if (!mn_link_target_exists($pdo, $url)) {
+                    jsonError("연결할 페이지를 찾을 수 없습니다: '/{$url}'. 페이지를 먼저 만든 후 다시 시도해주세요.");
+                }
+            }
 
             $stmt = $pdo->prepare(
                 "UPDATE rzx_menu_items SET title=?, url=?, target=?, icon=?, css_class=?, description=?, open_window=?, `expand`=?, group_srls=?, updated_at=NOW() WHERE id=?"

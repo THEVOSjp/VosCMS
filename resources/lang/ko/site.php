@@ -216,6 +216,9 @@ return [
         'ev_options' => '선택 항목', 'ev_options_help' => '한 줄에 하나씩 입력. select, radio, checkbox 타입에서 사용됩니다.',
         'ev_default_value' => '기본값',
         'ev_is_required' => '필수 입력', 'ev_is_searchable' => '검색 가능', 'ev_is_shown_in_list' => '목록에 표시',
+        'ev_permission' => '편집 권한',
+        'ev_perm_all' => '누구나', 'ev_perm_member' => '로그인 회원', 'ev_perm_admin' => '관리자만',
+        'ev_permission_help' => '권한이 없는 사용자에게는 입력 폼이 노출되지 않으며, 기존 값이 유지됩니다. (예: 처리 단계 → 관리자만)',
         'ev_delete_confirm' => '이 확장 변수를 삭제하시겠습니까?',
         // 추가 설정 탭
         'add_merge_title' => '통합 게시판', 'add_merge_select' => '포함할 게시판 선택',

@@ -11,13 +11,32 @@ $_collapsed = $_collapsed ?? false;
 $_currentSkin = $_b['skin'] ?? 'default';
 $_locale = $config['locale'] ?? 'ko';
 
-// 사용 가능한 스킨 목록
+// 사용 가능한 게시판 스킨 목록
+//   표준 위치: /skins/board/{name}/skin.json
+//   레거시: /skins/{name}/board/skin.json
 $_skinsDir = BASE_PATH . '/skins';
 $_availableSkins = [];
+
+// 표준: /skins/board/*/skin.json
+foreach (glob($_skinsDir . '/board/*/skin.json') as $_sjf) {
+    $_slug = basename(dirname($_sjf));
+    $_r = new SkinConfigRenderer($_sjf, [], $_locale);
+    $meta = $_r->getMeta();
+    $meta['_thumbDir']   = '/skins/board/' . $_slug;
+    $meta['_thumbFile']  = $_skinsDir . '/board/' . $_slug;
+    $_availableSkins[$_slug] = $meta;
+}
+
+// 레거시: /skins/*/board/skin.json
 foreach (glob($_skinsDir . '/*/board/skin.json') as $_sjf) {
     $_slug = basename(dirname(dirname($_sjf)));
+    if ($_slug === 'board') continue; // 위 표준 검색과 중복 방지
+    if (isset($_availableSkins[$_slug])) continue;
     $_r = new SkinConfigRenderer($_sjf, [], $_locale);
-    $_availableSkins[$_slug] = $_r->getMeta();
+    $meta = $_r->getMeta();
+    $meta['_thumbDir']   = '/skins/' . $_slug . '/board';
+    $meta['_thumbFile']  = $_skinsDir . '/' . $_slug . '/board';
+    $_availableSkins[$_slug] = $meta;
 }
 ?>
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700" data-section="skin-select">
@@ -37,8 +56,10 @@ foreach (glob($_skinsDir . '/*/board/skin.json') as $_sjf) {
                     peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20
                     border-zinc-200 dark:border-zinc-600 hover:border-zinc-300 dark:hover:border-zinc-500">
                     <?php
-                    $_thumbFile = $_skinsDir . '/' . $_slug . '/board/' . ($_meta['thumbnail'] ?? 'thumbnail.png');
-                    $_thumbUrl = ($config['app_url'] ?? '') . '/skins/' . $_slug . '/board/' . ($_meta['thumbnail'] ?? 'thumbnail.png');
+                    // skin.json의 thumbnail이 비어있을 수 있음 → 'thumbnail.png' 기본값 사용
+                    $_thumbName = !empty($_meta['thumbnail']) ? $_meta['thumbnail'] : 'thumbnail.png';
+                    $_thumbFile = ($_meta['_thumbFile'] ?? ($_skinsDir . '/' . $_slug . '/board')) . '/' . $_thumbName;
+                    $_thumbUrl  = ($config['app_url'] ?? '') . ($_meta['_thumbDir'] ?? ('/skins/' . $_slug . '/board')) . '/' . $_thumbName;
                     ?>
                     <?php if (file_exists($_thumbFile)): ?>
                     <div class="h-24 bg-zinc-100 dark:bg-zinc-700 rounded-lg mb-2 overflow-hidden">
@@ -76,7 +97,8 @@ function onSkinSelectChange(skin) {
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
         body: form
     }).then(() => {
-        location.href = '<?= ($adminUrl ?? '') ?>/site/boards/edit?id=<?= $boardId ?? 0 ?>&tab=basic';
+        // 현재 페이지를 그대로 reload — 어드민이든 프론트엔드 settings든 같은 레이아웃 유지
+        location.reload();
     });
 }
 </script>

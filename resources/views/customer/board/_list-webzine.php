@@ -17,9 +17,9 @@
         $_wp['_is_notice'] = false;
         $_wpTitle = $postTitleTranslations[$_wp['id']] ?? $_wp['title'];
         $_wpContent = $postContentTranslations[$_wp['id']] ?? $_wp['content'] ?? '';
-        // 본문에서 첫 이미지 추출
-        $_wpImg = '';
-        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $_wpContent, $_im)) $_wpImg = $_im[1];
+        // 대표 이미지 우선 (첨부 is_primary), 없으면 본문 첫 이미지
+        $_wpImg = $_wp['_primary_image'] ?? '';
+        if (!$_wpImg && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $_wpContent, $_im)) $_wpImg = $_im[1];
         // 본문 미리보기 (HTML 태그 제거, 150자)
         $_wpText = strip_tags($_wpContent);
         $_wpText = preg_replace('/\s+/', ' ', $_wpText);
@@ -33,11 +33,12 @@
         $_wpSecret = !empty($_wp['is_secret']);
     ?>
     <a href="<?= $boardUrl ?>/<?= $_wp['id'] ?>" class="group block bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-600 transition-all">
-        <div class="flex flex-col sm:flex-row">
-            <!-- 썸네일 -->
+        <!-- grid: row align이 기본 stretch이므로 두 셀이 항상 같은 height. 이미지 자연 height가 카드를 늘리지 않음 -->
+        <div<?php if ($_wpImg): ?> class="grid grid-cols-1 sm:grid-cols-[12rem_minmax(0,1fr)]"<?php endif; ?>>
+            <!-- 썸네일: background-image로 컨테이너 height에 100% 종속 (height는 grid row에 의해 결정) -->
             <?php if ($_wpImg): ?>
-            <div class="sm:w-48 sm:h-36 h-44 flex-shrink-0 bg-zinc-100 dark:bg-zinc-700 overflow-hidden relative">
-                <img src="<?= htmlspecialchars($_wpImg) ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" alt="">
+            <div class="h-44 sm:h-auto bg-zinc-100 dark:bg-zinc-700 bg-center bg-cover relative"
+                 style="background-image:url('<?= htmlspecialchars($_wpImg) ?>')">
                 <?php if ($_wp['_is_notice']): ?>
                 <span class="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded"><?= __('board.notice') ?></span>
                 <?php endif; ?>
@@ -45,7 +46,7 @@
             <?php endif; ?>
 
             <!-- 내용 -->
-            <div class="flex-1 p-4 sm:p-5 min-w-0 flex flex-col justify-between">
+            <div class="p-4 sm:p-5 min-w-0 flex flex-col justify-between">
                 <div>
                     <!-- 상단: 카테고리 + 날짜 -->
                     <div class="flex items-center gap-2 mb-2">

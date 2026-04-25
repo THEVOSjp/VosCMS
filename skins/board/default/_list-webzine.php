@@ -17,9 +17,19 @@
         $_wp['_is_notice'] = false;
         $_wpTitle = $postTitleTranslations[$_wp['id']] ?? $_wp['title'];
         $_wpContent = $postContentTranslations[$_wp['id']] ?? $_wp['content'] ?? '';
-        // 본문에서 첫 이미지 추출
-        $_wpImg = '';
-        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $_wpContent, $_im)) $_wpImg = $_im[1];
+        // 대표 이미지 우선 (첨부 is_primary), 없으면 본문 첫 이미지
+        $_wpImg = $_wp['_primary_image'] ?? '';
+        if (!$_wpImg && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $_wpContent, $_im)) $_wpImg = $_im[1];
+        // 처리 단계 배지 (extra_vars.status)
+        $_wpStatusBadge = '';
+        if (!empty($_wp['extra_vars'])) {
+            $_evRow = is_string($_wp['extra_vars']) ? json_decode($_wp['extra_vars'], true) : $_wp['extra_vars'];
+            if (is_array($_evRow) && !empty($_evRow['status'])) {
+                require_once BASE_PATH . '/rzxlib/Core/Modules/ExtraVarRenderer.php';
+                $_wpStatusLabel = \RzxLib\Core\Modules\ExtraVarRenderer::getOptionLabel($boardId, 'status', (string)$_evRow['status']);
+                $_wpStatusBadge = \RzxLib\Core\Modules\ExtraVarRenderer::renderStatusBadge((string)$_evRow['status'], 'px-2 py-0.5 text-xs', $_wpStatusLabel);
+            }
+        }
         // 본문 미리보기 (HTML 태그 제거, 150자)
         $_wpText = strip_tags($_wpContent);
         $_wpText = preg_replace('/\s+/', ' ', $_wpText);
@@ -33,11 +43,12 @@
         $_wpSecret = !empty($_wp['is_secret']);
     ?>
     <a href="<?= $boardUrl ?>/<?= $_wp['id'] ?>" class="group block bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-600 transition-all">
-        <div class="flex flex-col sm:flex-row">
-            <!-- 썸네일 -->
+        <!-- grid: row 셀들이 자동으로 같은 height. 이미지 자연 height가 카드를 늘리지 않음 -->
+        <div<?php if ($_wpImg): ?> class="grid grid-cols-1 sm:grid-cols-[12rem_minmax(0,1fr)]"<?php endif; ?>>
+            <!-- 썸네일: background-image로 height는 grid row가 결정 -->
             <?php if ($_wpImg): ?>
-            <div class="sm:w-48 sm:h-36 h-44 flex-shrink-0 bg-zinc-100 dark:bg-zinc-700 overflow-hidden relative">
-                <img src="<?= htmlspecialchars($_wpImg) ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" alt="">
+            <div class="h-44 sm:h-auto bg-zinc-100 dark:bg-zinc-700 bg-center bg-cover relative"
+                 style="background-image:url('<?= htmlspecialchars($_wpImg) ?>')">
                 <?php if ($_wp['_is_notice']): ?>
                 <span class="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded"><?= __('board.notice') ?></span>
                 <?php endif; ?>
@@ -45,7 +56,7 @@
             <?php endif; ?>
 
             <!-- 내용 -->
-            <div class="flex-1 p-4 sm:p-5 min-w-0 flex flex-col justify-between">
+            <div class="p-4 sm:p-5 min-w-0 flex flex-col justify-between">
                 <div>
                     <!-- 상단: 카테고리 + 날짜 -->
                     <div class="flex items-center gap-2 mb-2">
@@ -64,6 +75,7 @@
 
                     <!-- 제목 -->
                     <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1.5 line-clamp-1">
+                        <?php if ($_wpStatusBadge): ?><?= $_wpStatusBadge ?> <?php endif; ?>
                         <?php if ($_wpSecret): ?>
                         <svg class="w-3.5 h-3.5 inline mr-0.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         <?php endif; ?>

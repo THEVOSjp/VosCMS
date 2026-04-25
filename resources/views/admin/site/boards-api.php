@@ -5,6 +5,23 @@
  */
 header('Content-Type: application/json; charset=utf-8');
 
+/**
+ * 확장 변수 옵션 정규화 — JSON 배열 또는 줄바꿈 입력을 모두 받아 JSON 배열로 저장
+ *  - "[\"a\",\"b\"]"  → "[\"a\",\"b\"]" (그대로)
+ *  - "a\nb\nc"        → "[\"a\",\"b\",\"c\"]"
+ *  - ""               → null
+ */
+function ev_normalize_options($raw): ?string {
+    $raw = trim((string)$raw);
+    if ($raw === '') return null;
+    if ($raw[0] === '[') {
+        $arr = json_decode($raw, true);
+        if (is_array($arr)) return json_encode(array_values(array_filter(array_map('strval', $arr), fn($x) => $x !== '')), JSON_UNESCAPED_UNICODE);
+    }
+    $lines = array_values(array_filter(array_map('trim', preg_split('/\r?\n/', $raw))));
+    return $lines ? json_encode($lines, JSON_UNESCAPED_UNICODE) : null;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'GET') {
     echo json_encode(['success' => false, 'message' => 'Method not allowed']);
     exit;
@@ -127,7 +144,7 @@ if ($action === 'update') {
     }
 
     $fields = [
-        'slug', 'title', 'category', 'description',
+        'slug', 'title', 'category', 'description', 'layout',
         'seo_keywords', 'seo_description', 'robots_tag',
         'skin', 'per_page', 'search_per_page', 'page_count',
         'header_content', 'footer_content',
@@ -140,10 +157,16 @@ if ($action === 'update') {
         'is_active',
     ];
 
+    // 실제 DB에 존재하는 컬럼만 사용 (스키마 누락 컬럼은 자동 무시)
+    $existingCols = [];
+    foreach ($pdo->query("SHOW COLUMNS FROM {$prefix}boards") as $colRow) {
+        $existingCols[$colRow['Field']] = true;
+    }
+
     $sets = [];
     $vals = [];
     foreach ($fields as $f) {
-        if (isset($_POST[$f])) {
+        if (isset($_POST[$f]) && isset($existingCols[$f])) {
             $sets[] = "{$f} = ?";
             $vals[] = $_POST[$f];
         }
@@ -179,9 +202,13 @@ if ($action === 'update') {
 
     $vals[] = $boardId;
     $sql = "UPDATE {$prefix}boards SET " . implode(', ', $sets) . " WHERE id = ?";
-    $pdo->prepare($sql)->execute($vals);
-
-    echo json_encode(['success' => true, 'message' => '게시판이 수정되었습니다.']);
+    try {
+        $pdo->prepare($sql)->execute($vals);
+        echo json_encode(['success' => true, 'message' => '게시판이 수정되었습니다.']);
+    } catch (\Throwable $e) {
+        error_log('[boards-api update] ' . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'DB 오류: ' . $e->getMessage()]);
+    }
     exit;
 }
 
@@ -411,7 +438,21 @@ if ($action === 'extra_var_get') {
     $stmt = $pdo->prepare("SELECT * FROM {$prefix}board_extra_vars WHERE id = ?");
     $stmt->execute([$evId]);
     $ev = $stmt->fetch(PDO::FETCH_ASSOC);
-    echo json_encode(['success' => (bool)$ev, 'extra_var' => $ev ?: null]);
+
+    // 현재 로케일 번역값 (있으면 모달에서 우선 표시)
+    $localized = null;
+    if ($ev && function_exists('db_trans')) {
+        $bid = (int)$ev['board_id'];
+        $vn  = $ev['var_name'];
+        $localized = [
+            'title'         => db_trans("board_ev.{$bid}.{$vn}.title",         null, ''),
+            'description'   => db_trans("board_ev.{$bid}.{$vn}.description",   null, ''),
+            'options'       => db_trans("board_ev.{$bid}.{$vn}.options",       null, ''),
+            'default_value' => db_trans("board_ev.{$bid}.{$vn}.default_value", null, ''),
+        ];
+    }
+
+    echo json_encode(['success' => (bool)$ev, 'extra_var' => $ev ?: null, 'localized' => $localized]);
     exit;
 }
 
@@ -429,15 +470,15 @@ if ($action === 'extra_var_add') {
         $maxSort->execute([$boardId]);
         $nextSort = ((int)$maxSort->fetchColumn()) + 1;
 
-        $optionsRaw = trim($_POST['options'] ?? '');
-        $optionsJson = ($optionsRaw !== '' && json_decode($optionsRaw) !== null) ? $optionsRaw : null;
+        $optionsJson = ev_normalize_options($_POST['options'] ?? '');
 
-        $stmt = $pdo->prepare("INSERT INTO {$prefix}board_extra_vars (board_id, var_name, var_type, title, description, options, default_value, is_required, is_searchable, is_shown_in_list, sort_order) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+        $perm = in_array($_POST['permission'] ?? 'all', ['all','member','admin'], true) ? $_POST['permission'] : 'all';
+        $stmt = $pdo->prepare("INSERT INTO {$prefix}board_extra_vars (board_id, var_name, var_type, title, description, options, default_value, is_required, is_searchable, is_shown_in_list, permission, sort_order) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
         $stmt->execute([
             $boardId, $varName, $_POST['var_type'] ?? 'text', $title,
             $_POST['description'] ?? '', $optionsJson, $_POST['default_value'] ?? '',
             (int)($_POST['is_required'] ?? 0), (int)($_POST['is_searchable'] ?? 0), (int)($_POST['is_shown_in_list'] ?? 0),
-            $nextSort
+            $perm, $nextSort
         ]);
         echo json_encode(['success' => true, 'message' => '확장 변수가 추가되었습니다.', 'ev_id' => $pdo->lastInsertId()]);
     } catch (\PDOException $e) {
@@ -455,16 +496,48 @@ if ($action === 'extra_var_update') {
         exit;
     }
     try {
-        $optionsRaw = trim($_POST['options'] ?? '');
-        $optionsJson = ($optionsRaw !== '' && json_decode($optionsRaw) !== null) ? $optionsRaw : null;
+        // 변수 정보 조회 (board_id, var_name)
+        $info = $pdo->prepare("SELECT board_id, var_name FROM {$prefix}board_extra_vars WHERE id = ?");
+        $info->execute([$evId]);
+        $info = $info->fetch(PDO::FETCH_ASSOC);
+        if (!$info) {
+            echo json_encode(['success' => false, 'message' => '확장 변수를 찾을 수 없습니다.']);
+            exit;
+        }
+        $bid = (int)$info['board_id'];
+        $vn  = $info['var_name'];
 
-        $stmt = $pdo->prepare("UPDATE {$prefix}board_extra_vars SET var_type=?, title=?, description=?, options=?, default_value=?, is_required=?, is_searchable=?, is_shown_in_list=? WHERE id=?");
-        $stmt->execute([
-            $_POST['var_type'] ?? 'text', $title,
-            $_POST['description'] ?? '', $optionsJson, $_POST['default_value'] ?? '',
-            (int)($_POST['is_required'] ?? 0), (int)($_POST['is_searchable'] ?? 0), (int)($_POST['is_shown_in_list'] ?? 0),
-            $evId
-        ]);
+        $optionsJson = ev_normalize_options($_POST['options'] ?? '');
+        $perm = in_array($_POST['permission'] ?? 'all', ['all','member','admin'], true) ? $_POST['permission'] : 'all';
+
+        $curLoc = function_exists('current_locale') ? current_locale() : 'ko';
+        $defLoc = $_ENV['DEFAULT_LOCALE'] ?? 'ko';
+
+        if ($curLoc === $defLoc) {
+            // 소스 로케일: 소스 row에 모든 필드 저장 (기존 동작)
+            $stmt = $pdo->prepare("UPDATE {$prefix}board_extra_vars SET var_type=?, title=?, description=?, options=?, default_value=?, is_required=?, is_searchable=?, is_shown_in_list=?, permission=? WHERE id=?");
+            $stmt->execute([
+                $_POST['var_type'] ?? 'text', $title,
+                $_POST['description'] ?? '', $optionsJson, $_POST['default_value'] ?? '',
+                (int)($_POST['is_required'] ?? 0), (int)($_POST['is_searchable'] ?? 0), (int)($_POST['is_shown_in_list'] ?? 0),
+                $perm, $evId
+            ]);
+        } else {
+            // 비소스 로케일: 메타(변경 불필요한 공통 속성)만 소스에 저장, 번역 가능 필드는 translations에 저장
+            $stmt = $pdo->prepare("UPDATE {$prefix}board_extra_vars SET var_type=?, is_required=?, is_searchable=?, is_shown_in_list=?, permission=? WHERE id=?");
+            $stmt->execute([
+                $_POST['var_type'] ?? 'text',
+                (int)($_POST['is_required'] ?? 0), (int)($_POST['is_searchable'] ?? 0), (int)($_POST['is_shown_in_list'] ?? 0),
+                $perm, $evId
+            ]);
+            $trIns = $pdo->prepare("INSERT INTO {$prefix}translations (lang_key, locale, source_locale, content, created_at, updated_at)
+                                    VALUES (?, ?, ?, ?, NOW(), NOW())
+                                    ON DUPLICATE KEY UPDATE content = VALUES(content), updated_at = NOW()");
+            $trIns->execute(["board_ev.{$bid}.{$vn}.title", $curLoc, $defLoc, $title]);
+            $trIns->execute(["board_ev.{$bid}.{$vn}.description", $curLoc, $defLoc, $_POST['description'] ?? '']);
+            $trIns->execute(["board_ev.{$bid}.{$vn}.options", $curLoc, $defLoc, $optionsJson ?? '']);
+            $trIns->execute(["board_ev.{$bid}.{$vn}.default_value", $curLoc, $defLoc, $_POST['default_value'] ?? '']);
+        }
         echo json_encode(['success' => true, 'message' => '확장 변수가 수정되었습니다.']);
     } catch (\PDOException $e) {
         echo json_encode(['success' => false, 'message' => 'DB Error: ' . $e->getMessage()]);

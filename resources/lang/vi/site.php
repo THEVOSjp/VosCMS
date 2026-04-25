@@ -274,6 +274,9 @@ return [
         'ev_options' => 'Tùy chọn', 'ev_options_help' => 'Nhập mỗi dòng một mục. Dùng cho loại lựa chọn, radio và hộp kiểm.',
         'ev_default_value' => 'Giá trị Mặc định',
         'ev_is_required' => 'Bắt buộc', 'ev_is_searchable' => 'Có thể Tìm kiếm', 'ev_is_shown_in_list' => 'Hiển thị trong Danh sách',
+        'ev_permission' => 'Quyền chỉnh sửa',
+        'ev_perm_all' => 'Mọi người', 'ev_perm_member' => 'Thành viên đã đăng nhập', 'ev_perm_admin' => 'Chỉ quản trị viên',
+        'ev_permission_help' => 'Người dùng không có quyền sẽ không thấy biểu mẫu nhập; giá trị hiện tại được giữ nguyên. (vd., Trạng thái → Chỉ quản trị viên)',
         'ev_delete_confirm' => 'Bạn có chắc chắn muốn xóa biến mở rộng này không?',
         // Tab Cài đặt Bổ sung
         'add_merge_title' => 'Diễn đàn Hợp nhất', 'add_merge_select' => 'Chọn Diễn đàn để Bao gồm',

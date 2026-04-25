@@ -154,7 +154,7 @@ if ($editMode) {
                 if ($editMode && !empty($post['extra_vars'])) {
                     $evValues = json_decode($post['extra_vars'], true) ?: [];
                 }
-                \RzxLib\Core\Modules\ExtraVarRenderer::renderAll($extraVarDefs, $evValues, 'input');
+                \RzxLib\Core\Modules\ExtraVarRenderer::renderAll($extraVarDefs, $evValues, 'input', $boardId);
             }
             ?>
 
@@ -191,6 +191,9 @@ if ($editMode) {
                         <?php endif; ?>
                         <?php if ($isImage && !$isPrimary): ?>
                         <button type="button" class="btn-set-primary absolute top-1 left-1 w-5 h-5 bg-white/90 text-amber-600 border border-amber-400 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:bg-amber-50" data-id="<?= $file['id'] ?>" title="대표 이미지 지정">★</button>
+                        <?php endif; ?>
+                        <?php if ($isImage): ?>
+                        <button type="button" class="btn-insert-content absolute bottom-7 right-1 w-5 h-5 bg-white/90 text-blue-600 border border-blue-400 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:bg-blue-50" data-url="<?= htmlspecialchars($fileUrl) ?>" title="본문에 삽입">+</button>
                         <?php endif; ?>
                         <button type="button" class="btn-remove-file absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition" data-id="<?= $file['id'] ?>" title="삭제">&times;</button>
                     </div>
@@ -579,6 +582,8 @@ function addFiles(files) {
             reader.onload = (e) => {
                 div.innerHTML = `<img src="${e.target.result}" class="w-full h-24 object-cover">
                     <div class="px-2 py-1 text-xs text-zinc-600 dark:text-zinc-400 truncate">${file.name}</div>
+                    <button type="button" onclick="setPendingPrimary(${idx})" class="absolute top-1 left-1 w-5 h-5 bg-white/90 text-amber-600 border border-amber-400 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:bg-amber-50" title="대표 이미지 지정">★</button>
+                    <button type="button" onclick="mpInsertPendingToContent(pendingFiles[${idx}])" class="absolute bottom-7 right-1 w-5 h-5 bg-white/90 text-blue-600 border border-blue-400 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:bg-blue-50" title="본문에 삽입">+</button>
                     <button type="button" onclick="removeFile(${idx})" class="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition">&times;</button>`;
             };
             reader.readAsDataURL(file);
@@ -598,6 +603,24 @@ function removeFile(idx) {
     pendingFiles[idx] = null;
     const el = document.getElementById('pending-file-' + idx);
     if (el) el.remove();
+}
+
+// 신규 파일 중 대표 이미지로 지정 (저장 시 primary_file_pos 로 전송)
+function setPendingPrimary(idx) {
+    primaryPendingIdx = idx;
+    // 시각 피드백: 모든 신규 파일 카드에서 대표 표시 제거 → 선택 카드에 ★ 배지
+    document.querySelectorAll('[id^=pending-file-]').forEach(el => {
+        el.querySelectorAll('.pending-primary-badge').forEach(b => b.remove());
+        el.classList.remove('border-amber-500','border-2','ring-2','ring-amber-200');
+    });
+    const target = document.getElementById('pending-file-' + idx);
+    if (target) {
+        target.classList.add('border-amber-500','border-2','ring-2','ring-amber-200');
+        const badge = document.createElement('span');
+        badge.className = 'pending-primary-badge absolute top-1 left-1 px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded';
+        badge.textContent = '★ 대표';
+        target.appendChild(badge);
+    }
 }
 
 // 폼 전송
@@ -669,4 +692,27 @@ document.querySelectorAll('.btn-set-primary').forEach(btn => {
         } catch (err) { console.error(err); }
     });
 });
+
+// 기존 파일 → 본문에 이미지 삽입
+document.querySelectorAll('.btn-insert-content').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const url = btn.dataset.url;
+        if (!url) return;
+        try {
+            $('#boardContent').summernote('insertImage', url);
+        } catch (e) { console.warn('insertImage failed:', e); }
+    });
+});
+
+// 신규 파일 (pendingFiles) → 본문에 이미지 삽입 (FileReader → base64 데이터 URL)
+function mpInsertPendingToContent(file) {
+    if (!file || !file.type || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try { $('#boardContent').summernote('insertImage', e.target.result); }
+        catch (err) { console.warn('insertImage failed:', err); }
+    };
+    reader.readAsDataURL(file);
+}
+window.mpInsertPendingToContent = mpInsertPendingToContent;
 </script>

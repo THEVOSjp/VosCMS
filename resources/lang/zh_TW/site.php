@@ -274,6 +274,9 @@ return [
         'ev_options' => '選項', 'ev_options_help' => '每行輸入一個。用於下拉選單、單選和核取方塊類型。',
         'ev_default_value' => '預設值',
         'ev_is_required' => '必填', 'ev_is_searchable' => '可搜尋', 'ev_is_shown_in_list' => '在列表中顯示',
+        'ev_permission' => '編輯權限',
+        'ev_perm_all' => '任何人', 'ev_perm_member' => '登入會員', 'ev_perm_admin' => '僅管理員',
+        'ev_permission_help' => '無權限使用者不會看到輸入表單，現有值會保留。（例如：處理階段 → 僅管理員）',
         'ev_delete_confirm' => '確定要刪除此擴充變數嗎？',
         // 附加設定標籤
         'add_merge_title' => '合併版塊', 'add_merge_select' => '選擇要包含的版塊',

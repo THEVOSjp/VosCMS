@@ -17,9 +17,10 @@
     <?php $_gp['_is_notice'] = false; ?>
     <?php
         $_gpTitle = $postTitleTranslations[$_gp['id']] ?? $_gp['title'];
-        $_gpImg = '';
         $_gpContent = $postContentTranslations[$_gp['id']] ?? $_gp['content'] ?? '';
-        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $_gpContent, $_gm)) $_gpImg = $_gm[1];
+        // 대표 이미지 우선 (첨부 is_primary), 없으면 본문 첫 이미지
+        $_gpImg = $_gp['_primary_image'] ?? '';
+        if (!$_gpImg && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $_gpContent, $_gm)) $_gpImg = $_gm[1];
         $_gpCat = $catMap[$_gp['category_id'] ?? 0] ?? null;
         $_gpNew = (time() - strtotime($_gp['created_at'] ?? 'now')) < 86400;
     ?>

@@ -274,6 +274,9 @@ return [
             'ev_options' => 'Optionen', 'ev_options_help' => 'Eine pro Zeile eingeben. Wird für Auswahl-, Radio- und Kontrollkästchen-Typen verwendet.',
             'ev_default_value' => 'Standardwert',
             'ev_is_required' => 'Pflichtfeld', 'ev_is_searchable' => 'Durchsuchbar', 'ev_is_shown_in_list' => 'In Liste anzeigen',
+            'ev_permission' => 'Bearbeitungsberechtigung',
+            'ev_perm_all' => 'Alle', 'ev_perm_member' => 'Eingeloggte Mitglieder', 'ev_perm_admin' => 'Nur Administratoren',
+            'ev_permission_help' => 'Benutzer ohne Berechtigung sehen das Eingabeformular nicht; vorhandene Werte bleiben erhalten. (z. B. Status → Nur Administratoren)',
             'ev_delete_confirm' => 'Möchten Sie diese Zusatzvariable wirklich löschen?',
             // Zusätzliche Einstellungen Tab
             'add_merge_title' => 'Zusammengeführtes Forum', 'add_merge_select' => 'Foren zum Einschließen auswählen',

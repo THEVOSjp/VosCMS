@@ -14,6 +14,8 @@
     $_lc = $__layoutConfig ?? [];
     $_contentWidth = $_lc['content_width'] ?? 'max-w-7xl';
     $_copyright = $_lc['copyright'] ?? '';
+    if (is_array($_copyright)) $_copyright = $_copyright[\RzxLib\Core\I18n\Translator::getLocale()] ?? $_copyright['en'] ?? reset($_copyright) ?: '';
+    $_copyright = str_replace('{year}', date('Y'), (string)$_copyright);
     $_footerText = $_lc['footer_text'] ?? '';
     $_footerHtml = $_lc['custom_footer_html'] ?? '';
     // 푸터 로고 우선순위: 레이아웃 설정 > 사이트 footer_logo_image > 사이트 logo_image (fallback)

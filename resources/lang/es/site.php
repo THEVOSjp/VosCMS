@@ -274,6 +274,9 @@ return [
             'ev_options' => 'Opciones', 'ev_options_help' => 'Ingrese una por línea. Se usa para los tipos selección, radio y casilla de verificación.',
             'ev_default_value' => 'Valor Predeterminado',
             'ev_is_required' => 'Obligatorio', 'ev_is_searchable' => 'Buscable', 'ev_is_shown_in_list' => 'Mostrar en Lista',
+            'ev_permission' => 'Permiso de edición',
+            'ev_perm_all' => 'Cualquiera', 'ev_perm_member' => 'Miembros registrados', 'ev_perm_admin' => 'Solo administradores',
+            'ev_permission_help' => 'Los usuarios sin permiso no verán el formulario; se mantienen los valores existentes. (p. ej., Estado → Solo administradores)',
             'ev_delete_confirm' => '¿Está seguro de que desea eliminar esta variable extra?',
             // Pestaña de Configuración Adicional
             'add_merge_title' => 'Foro Combinado', 'add_merge_select' => 'Seleccionar Foros a Incluir',

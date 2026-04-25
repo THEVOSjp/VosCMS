@@ -13,6 +13,24 @@ $expandFirst = !empty($skinConfig['expand_first']);
 $showCategoryFilter = $skinConfig['show_category_filter'] ?? true;
 $contentWidth = $skinConfig['content_width'] ?? 'max-w-3xl';
 
+// 타이틀 영역 설정 (v1.0.1)
+$showTitle = !isset($skinConfig['show_title']) || $skinConfig['show_title'];
+
+$_resolveLocale = function ($v, $loc) {
+    if (is_array($v)) return $v[$loc] ?? $v['en'] ?? reset($v) ?: '';
+    return (string)($v ?? '');
+};
+$titleText    = $_resolveLocale($skinConfig['title_text']    ?? ['ko'=>'FAQ','en'=>'FAQ','ja'=>'FAQ'], $currentLocale ?? 'ko') ?: 'FAQ';
+$subtitleText = $_resolveLocale($skinConfig['subtitle_text'] ?? ['ko'=>'자주 묻는 질문','en'=>'Frequently Asked Questions','ja'=>'よくある質問'], $currentLocale ?? 'ko');
+
+// 타이틀 배경
+$titleBgType    = $skinConfig['title_bg_type']    ?? 'none';
+$titleBgImage   = $skinConfig['title_bg_image']   ?? '';
+$titleBgVideo   = $skinConfig['title_bg_video']   ?? '';
+$titleBgHeight  = (int)($skinConfig['title_bg_height']  ?? 280);
+$titleBgOverlay = (int)($skinConfig['title_bg_overlay'] ?? 40);
+$hasBg = ($titleBgType === 'image' && $titleBgImage) || ($titleBgType === 'video' && $titleBgVideo);
+
 // 다국어 폴백 헬퍼
 $_faqTr = function(int $postId, string $field, string $original) use ($pdo, $prefix, $currentLocale) {
     if (empty($currentLocale)) return $original;
@@ -53,21 +71,48 @@ $_loc = $currentLocale ?? 'ko';
 .faq-skin .faq-item.open .faq-answer { max-height: 2000px; }
 </style>
 
+<?php if ($showTitle && $hasBg): ?>
+<!-- 타이틀 배경 영역 (이미지/동영상) -->
+<div class="relative w-full overflow-hidden mb-8" style="height: <?= $titleBgHeight ?>px">
+    <?php if ($titleBgType === 'image'): ?>
+    <img src="<?= htmlspecialchars($titleBgImage) ?>" alt="" class="absolute inset-0 w-full h-full object-cover">
+    <?php elseif ($titleBgType === 'video'): ?>
+    <video class="absolute inset-0 w-full h-full object-cover" autoplay muted loop playsinline>
+        <source src="<?= htmlspecialchars($titleBgVideo) ?>">
+    </video>
+    <?php endif; ?>
+    <?php if ($titleBgOverlay > 0): ?>
+    <div class="absolute inset-0 bg-black" style="opacity: <?= $titleBgOverlay / 100 ?>"></div>
+    <?php endif; ?>
+    <div class="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
+        <?php if ($subtitleText): ?>
+        <p class="text-sm font-medium tracking-widest uppercase mb-2 text-white/90"><?= htmlspecialchars($subtitleText) ?></p>
+        <?php endif; ?>
+        <h1 class="text-5xl font-black text-white">
+            <?= htmlspecialchars($titleText) ?>
+        </h1>
+    </div>
+</div>
+<?php endif; ?>
+
 <div class="faq-skin <?= $contentWidth ?> mx-auto px-4 py-8">
 
-    <!-- 타이틀 + 검색창 통합 -->
+    <?php if ($showTitle && !$hasBg): ?>
+    <!-- 타이틀 (배경 없음) -->
     <div class="text-center mb-10">
+        <?php if ($subtitleText): ?>
         <p class="text-sm font-medium tracking-widest uppercase mb-2" style="color: var(--faq-primary);">
-            <?= $faqLabel[$_loc] ?? $faqLabel['en'] ?>
+            <?= htmlspecialchars($subtitleText) ?>
         </p>
-        <h1 class="text-5xl font-black text-zinc-900 dark:text-white mb-8 inline-flex items-center gap-3">
-            FAQ
-            <?php if (!empty($_SESSION['admin_id'])): ?>
-            <a href="<?= ($config['app_url'] ?? '') ?>/board/<?= htmlspecialchars($board['slug']) ?>/settings" class="text-zinc-300 hover:text-zinc-500 dark:text-zinc-600 dark:hover:text-zinc-400 transition" title="<?= __('board.settings') ?? 'Settings' ?>">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            </a>
-            <?php endif; ?>
+        <?php endif; ?>
+        <h1 class="text-5xl font-black text-zinc-900 dark:text-white mb-8">
+            <?= htmlspecialchars($titleText) ?>
         </h1>
+    </div>
+    <?php endif; ?>
+
+    <!-- 검색창 영역 -->
+    <div class="text-center mb-4">
 
         <form method="GET" action="<?= $boardUrl ?>">
             <input type="hidden" name="search_target" value="title_content">
@@ -92,6 +137,13 @@ $_loc = $currentLocale ?? 'ko';
             <?= htmlspecialchars($cat['name']) ?>
         </a>
         <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+
+    <?php if (!empty($_SESSION['admin_id'])): ?>
+    <!-- 관리자 설정 아이콘 (검색창 아래, 목록 위) -->
+    <div class="flex justify-end mb-4">
+        <?= rzx_admin_icons($boardUrl . '/settings', '') ?>
     </div>
     <?php endif; ?>
 

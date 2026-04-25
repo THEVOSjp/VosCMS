@@ -211,6 +211,18 @@ class SkinConfigRenderer
         $desc  = $this->t($var['description'] ?? '');
         $value = $this->getValue($var);
         $multilang = !empty($var['multilang']);
+
+        // type='text_multilang' / 'textarea_multilang' 처리: multilang 플래그 켜고 base type으로 정규화
+        if ($type === 'text_multilang')     { $type = 'text';     $multilang = true; }
+        if ($type === 'textarea_multilang') { $type = 'textarea'; $multilang = true; }
+
+        // value가 다국어 배열이면 현재 locale로 resolve (htmlspecialchars(array) 방지)
+        if (is_array($value)) {
+            $value = $this->t($value);
+        }
+        if ($value === null) $value = '';
+        if (!is_scalar($value)) $value = ''; // 안전망
+
         $inputId = 'skin_cfg_' . $name;
         $dependsOn = $var['depends_on'] ?? null;
         $depAttr = $dependsOn ? ' data-depends-on="' . htmlspecialchars($dependsOn) . '"' : '';

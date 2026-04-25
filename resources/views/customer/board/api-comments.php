@@ -17,6 +17,21 @@ $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
 $action = $_POST['action'] ?? '';
 $currentUser = Auth::check() ? Auth::user() : null;
 
+// 모든 예외/PHP 에러를 JSON으로 응답 (SQL 에러 등으로 응답이 끊겨 JSON 파싱 실패하는 것 방지)
+set_exception_handler(function ($e) {
+    error_log('[api-comments] ' . $e->getMessage());
+    if (!headers_sent()) header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
+    exit;
+});
+register_shutdown_function(function () {
+    $err = error_get_last();
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        if (!headers_sent()) header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => false, 'message' => 'Fatal: ' . $err['message']]);
+    }
+});
+
 // === CREATE ===
 if ($action === 'create') {
     $postId = (int)($_POST['post_id'] ?? 0);
@@ -122,6 +137,38 @@ if ($action === 'create') {
     }
 
     echo json_encode(['success' => true, 'message' => '댓글이 작성되었습니다.']);
+    exit;
+}
+
+// === UPDATE ===
+if ($action === 'update') {
+    $commentId = (int)($_POST['comment_id'] ?? 0);
+    $content   = trim($_POST['content'] ?? '');
+    if (!$commentId || !$content) { echo json_encode(['success' => false, 'message' => '내용을 입력해주세요.']); exit; }
+
+    $comment = $pdo->prepare("SELECT * FROM {$prefix}board_comments WHERE id = ?");
+    $comment->execute([$commentId]);
+    $comment = $comment->fetch(PDO::FETCH_ASSOC);
+    if (!$comment) { echo json_encode(['success' => false, 'message' => '댓글을 찾을 수 없습니다.']); exit; }
+
+    if (!$currentUser || ($currentUser['id'] != $comment['user_id'] && empty($_SESSION['admin_id']))) {
+        echo json_encode(['success' => false, 'message' => '수정 권한이 없습니다.']);
+        exit;
+    }
+
+    // 글자 수 제한
+    $boardStmt = $pdo->prepare("SELECT comment_length_limit FROM {$prefix}boards WHERE id = ?");
+    $boardStmt->execute([(int)$comment['board_id']]);
+    $commentLimit = (int)($boardStmt->fetchColumn() ?: 0);
+    if ($commentLimit > 0 && mb_strlen($content) > $commentLimit) {
+        echo json_encode(['success' => false, 'message' => "댓글은 {$commentLimit}자를 초과할 수 없습니다."]);
+        exit;
+    }
+
+    $pdo->prepare("UPDATE {$prefix}board_comments SET content = ?, updated_at = NOW() WHERE id = ?")
+        ->execute([$content, $commentId]);
+
+    echo json_encode(['success' => true, 'message' => '댓글이 수정되었습니다.', 'content' => $content]);
     exit;
 }
 

@@ -136,6 +136,17 @@ skins/layouts/{name}/
 | `tab` | string | 소속 탭 (tabs에 정의된 키) |
 | `section` | object | 섹션 제목 (구분선 + 제목) |
 
+### 푸터 카피라이트 `{year}` 플레이스홀더 (v2.3.8)
+
+레이아웃 설정의 `copyright` 필드는 텍스트 안의 `{year}` 토큰을 렌더링 시점에 현재 연도로 자동 치환합니다.
+
+- 입력 예: `© 2009-{year} <strong>MyCompany</strong>. All rights reserved.`
+- 렌더 결과: `© 2009-2026 MyCompany. All rights reserved.`
+
+DB에는 원본(`{year}` 포함)이 저장되므로 매년 손댈 필요 없음. 다국어 값(배열)인 경우 `Translator::getLocale()` 로 현재 로케일 → en → 첫 값 폴백 후 치환. 적용 푸터: `default`, `minimal`, `modern`(+ backup), `resources/views/layouts/base-footer.php`.
+
+레이아웃 설정 모달의 카피라이트 필드 description에 13개국어 사용 안내 자동 표시 (예: 영어 → "Use {year} to auto-substitute the current year. (e.g., © 2009-{year} MyCompany)").
+
 ## 레이아웃 제작 가이드
 
 ### 새 레이아웃 만들기

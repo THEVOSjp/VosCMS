@@ -28,6 +28,20 @@ if (!$board) {
 $boardId = (int)$board['id'];
 $boardUrl = ($config['app_url'] ?? '') . '/' . $board['slug'];
 
+// 게시판 다국어 (title, description, header_content, footer_content, seo_*) — 현재 로케일 → en → 원본
+$_boardLocale = $currentLocale ?? 'ko';
+foreach (['title', 'description', 'header_content', 'footer_content', 'seo_keywords', 'seo_description'] as $_field) {
+    $_key = "board.{$boardId}.{$_field}";
+    $_tr = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = ? AND locale = ?");
+    $_tr->execute([$_key, $_boardLocale]);
+    $_val = $_tr->fetchColumn();
+    if ($_val === false && $_boardLocale !== 'en') {
+        $_tr->execute([$_key, 'en']);
+        $_val = $_tr->fetchColumn();
+    }
+    if ($_val !== false) $board[$_field] = $_val;
+}
+
 // 현재 사용자 정보
 $currentUser = null;
 if (isset($_SESSION['user_id'])) {

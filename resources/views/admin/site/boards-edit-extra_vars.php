@@ -45,12 +45,18 @@ $varTypes = [
         <?php else: ?>
         <div id="evSortList" class="space-y-2">
             <?php foreach ($extraVars as $ev): ?>
+            <?php
+                // 현재 로케일 번역 적용 (없으면 원본)
+                $_evDisplayTitle = function_exists('db_trans')
+                    ? (db_trans("board_ev.{$ev['board_id']}.{$ev['var_name']}.title", null, '') ?: $ev['title'])
+                    : $ev['title'];
+            ?>
             <div class="ev-item flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-700/30 rounded-lg border border-zinc-200 dark:border-zinc-600 group" data-id="<?= $ev['id'] ?>">
                 <span class="ev-drag-handle cursor-grab active:cursor-grabbing text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
                 </span>
                 <div class="flex-1 min-w-0">
-                    <span class="text-sm font-medium text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($ev['title']) ?></span>
+                    <span class="text-sm font-medium text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($_evDisplayTitle) ?></span>
                     <span class="text-xs text-zinc-500 dark:text-zinc-400 ml-2"><?= htmlspecialchars($ev['var_name']) ?></span>
                 </div>
                 <span class="px-2 py-0.5 text-xs rounded-full bg-zinc-200 dark:bg-zinc-600 text-zinc-600 dark:text-zinc-300"><?= $varTypes[$ev['var_type']] ?? $ev['var_type'] ?></span>
@@ -143,6 +149,17 @@ $varTypes = [
                     <input type="text" id="evDefault" class="<?= $inp ?> pr-8">
                     <button type="button" onclick="openMultilangModal(getEvLangKey('default_value'), 'evDefault')" class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition"><?= RZX_MULTILANG_SVG ?></button>
                 </div>
+            </div>
+
+            <!-- 편집 권한 -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('site.boards.ev_permission') ?></label>
+                <select id="evPermission" class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg">
+                    <option value="all"><?= __('site.boards.ev_perm_all') ?></option>
+                    <option value="member"><?= __('site.boards.ev_perm_member') ?></option>
+                    <option value="admin"><?= __('site.boards.ev_perm_admin') ?></option>
+                </select>
+                <p class="text-xs text-zinc-500 mt-1"><?= __('site.boards.ev_permission_help') ?></p>
             </div>
 
             <!-- 옵션 체크박스 -->

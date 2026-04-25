@@ -4,6 +4,91 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.3.8] - 2026-04-25 — 게시판 다국어 완성 + FAQ/Q&A 스킨
+
+이슈 게시판을 13개국어로 완성하면서 게시판 시스템 전반의 다국어 인프라를 정리했다. 게시판 메타·확장변수 정의·옵션 라벨까지 모두 자국어로 노출되며, 색상 배지는 원본 키 매핑을 유지해 시각적 일관성 확보. FAQ/Q&A 아코디언 스킨을 신설하고 댓글 트리·인라인 편집/답글까지 완비했다.
+
+### Added — 게시판 메타 다국어 (`board.{id}.*`)
+
+`_init.php` 가 `rzx_translations` 에서 `board.{id}.{title|description|header_content|footer_content|seo_keywords|seo_description}` 을 직접 조회 (현재 로케일 → en → 원본). list/read/write/settings 어느 페이지에서도 `$board[$field]` 가 자동 번역값으로 채워짐. 게시판 설정 페이지의 "← 돌아가기" 버튼도 같은 메커니즘으로 자동 번역.
+
+이슈 게시판(id=6) 의 `title` + `header_content` 13개국어 시드 (안내문 HTML 구조 유지, 텍스트만 번역, 처리 단계 배지도 각 언어로). 시드 스크립트: [scripts/seed_issue_i18n.php](../scripts/seed_issue_i18n.php) + [scripts/seed_issue_i18n_data.php](../scripts/seed_issue_i18n_data.php).
+
+### Added — 확장 변수 정의 다국어 (`board_ev.{boardId}.{varName}.*`)
+
+`rzx_board_extra_vars` 의 정의(라벨·설명·선택지·기본값)를 13개국어로 번역. 4개 필드 × 13 = 52 row.
+
+- `ExtraVarRenderer::renderAll($vars, $values, $mode, $boardId)` — boardId 인자 추가, `applyDefTranslations()` 가 한 쿼리로 모든 var의 번역을 일괄 로드.
+- `ExtraVarRenderer::getOptionLabel($boardId, $varName, $value)` — 목록 뷰용 단일 옵션 번역 라벨 조회 (정적 캐시).
+- `renderStatusBadge($value, $size, $displayLabel = null)` — 색상은 원본(ko) 매핑 유지, 텍스트만 번역 → 어느 언어에서 보든 색상 일관 (받음=장미색, 해결됨=에메랄드색).
+- select/radio/checkbox: `value=원본 / label=번역` 패턴. 게시글 저장 시 항상 원본 값이 들어가 데이터 호환성 보장.
+- 호출부 업데이트: `read.php`, `write.php`, `_list-row.php`, default 스킨의 `_list-card`/`_list-webzine`/`_list-gallery`.
+
+이슈 게시판 status 확장변수 13개국어 시드: [scripts/seed_ev_status_i18n.php](../scripts/seed_ev_status_i18n.php).
+
+### Added — 확장 변수 편집 모달 로케일 인식
+
+`extra_var_get` API가 `db_trans()` 로 현재 로케일 번역값을 `localized` 객체로 함께 반환. JS 모달은 `localized.title || ev.title` 로 우선 표시 → 일본어 모드에서 모달 열면 "処理ステージ"가 자동 표시.
+
+`extra_var_update` 는 로케일에 따라 분기:
+- 소스 로케일(ko) → 소스 row 전체 갱신 (기존 동작)
+- 비소스 로케일(ja/en/…) → 메타(`var_type`/권한/체크박스 3종)만 소스에 저장, 4개 번역 필드(`title`/`description`/`options`/`default_value`)는 `rzx_translations` 에 현재 로케일로 저장 → **소스 무결성 보장**
+
+확장 변수 일람의 표시 이름도 `db_trans('board_ev.{boardId}.{varName}.title')` 적용.
+
+### Added — 편집 권한 섹션 13개국어
+
+확장 변수 편집 모달의 "편집 권한" 섹션(라벨·드롭다운 옵션·도움말)을 13개국어 lang 파일로 분리. 신규 키: `site.boards.ev_permission`, `ev_perm_all`, `ev_perm_member`, `ev_perm_admin`, `ev_permission_help`.
+
+### Added — 옵션 입력 양식 정규화
+
+확장 변수 편집 모달의 "선택 항목" 필드를 양방향 정규화:
+- **모달 로드**: DB의 JSON 배열(`["a","b","c"]`)을 줄바꿈 형식으로 변환해 textarea 에 표시 (안내 문구와 일치)
+- **저장 API**: `ev_normalize_options()` 헬퍼가 줄바꿈 또는 JSON 입력 모두 받아 일관되게 JSON 배열로 저장. 기존엔 줄바꿈 입력 시 NULL 로 저장되던 버그 수정.
+
+### Added — FAQ/Q&A 아코디언 스킨
+
+이슈/공지 외 새로운 콘텐츠 패턴을 위한 두 스킨 신설.
+
+**FAQ** (`skins/board/faq/`) — 글 = 질문, 본문 = 답변. 검색창·카테고리 필터·페이지네이션 포함. 타이틀 영역 표시 토글, 타이틀/서브타이틀 다국어, 배경(이미지·동영상·없음) 지원, 오버레이 투명도 조절. v1.0.1.
+
+**Q&A** (`skins/board/qna/`) — 글 = 질문(제목+본문), 댓글 = 답변. 미답변 배지, 첫 항목 자동 펼침, 트리 정렬(parent_id/depth) 댓글 표시. 답글의 답글은 들여쓰기 + "↳ 답글" 라벨로 구분 (최상위는 "A."). 인라인 편집/답글 폼 (작성자/관리자만 편집, perm_comment 권한자만 답글). v1.0.0.
+
+두 스킨 공통: 관리자 설정 톱니 아이콘을 검색창 아래 우측에 배치 (제목 영역에서 분리). `boardSkinFile()` 의 `_list-full.php` 우선순위로 동작.
+
+### Added — 댓글 수정 API
+
+`api-comments.php` 에 `update` 액션 추가. `comment.user_id == 현재 사용자` 또는 관리자만 수정 가능. 글자 수 제한 검증 후 `content` + `updated_at` 갱신.
+
+### Added — 푸터 카피라이트 `{year}` 플레이스홀더
+
+레이아웃 설정의 `copyright` 필드 안에서 `{year}` 토큰을 렌더링 시점에 현재 연도로 자동 치환. DB에는 원본(`{year}` 포함)이 보존되어 매년 손댈 필요 없음. 적용: `default`/`minimal`/`modern`/`base-footer.php`. 4개 layout.json 의 카피라이트 description을 13개국어로 확장하면서 `{year}` 사용 안내도 자국어로 표시.
+
+`default`/`minimal` 푸터에서 `$_lc['copyright']` 를 무시하던 버그도 함께 수정 — 이제 레이아웃 설정값이 실제로 렌더링된다.
+
+### Added — VosCMS 소개 메뉴 13개국어
+
+`menu_item.38.title` 13개국어 시드 (VosCMS 소개 / About VosCMS / VosCMSについて / Über VosCMS / Acerca de VosCMS / À propos de VosCMS / Tentang VosCMS / VosCMS-ийн тухай / О VosCMS / VosCMS Hakkında / Giới thiệu VosCMS / 关于 VosCMS / 關於 VosCMS).
+
+### Added — 이슈 게시판 샘플 글 13개국어
+
+처리 단계별 샘플 1개씩 + 기존 해결됨 1개 = 총 4개. 각 글의 title/content 13개국어 번역 (104 row).
+
+| 단계 | 제목 (ko) | 상태 |
+|---|---|---|
+| 접수 | [버그] 모바일 햄버거 메뉴 X 버튼이 동작하지 않습니다 | 신규 |
+| 확인 중 | [기능 요청] 댓글 작성 시 게시글 작성자에게 메일 알림 | 신규 |
+| 진행 중 | [성능] 마켓플레이스 상세 페이지 첫 로딩 속도 개선 | 신규 |
+| 해결됨 | 게시판에 첨부한 이미지를 본문에 삽입... | 기존 |
+
+기존 post 34 (Tailwind 인라인 스타일 누적된 테스트글) 삭제.
+
+### Fixed — `_list-full.php` 스킨 헬퍼 로딩
+
+`customer/board/list.php` 가 `rzx_admin_icons` 헬퍼를 line 167에서 require 했는데, line 161에서 스킨 파일을 include 하면서 return 으로 빠져나갔기 때문에 FAQ/Q&A 스킨에서 `rzx_admin_icons()` 호출 시 500 에러 발생. require_once 를 스킨 include 위로 이동.
+
+---
+
 ## [VosCMS 2.3.7] - 2026-04-25 — 자동설치(AutoInstall) UX 통합 개편
 
 마켓플레이스 → **자동설치** 리네임 후속 작업. 상세 페이지·목록 페이지·결제·리뷰 흐름을 일관성 있게 다듬고, 마켓 API에서 로케일을 처리하도록 책임을 이관해 클라이언트 코드를 단순화했다.

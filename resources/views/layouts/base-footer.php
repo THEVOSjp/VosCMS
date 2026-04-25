@@ -1,11 +1,17 @@
     </main>
 
     <!-- Footer -->
+    <?php
+    $_lc = $__layoutConfig ?? [];
+    $_copyright = $_lc['copyright'] ?? '';
+    if (is_array($_copyright)) $_copyright = $_copyright[\RzxLib\Core\I18n\Translator::getLocale()] ?? $_copyright['en'] ?? reset($_copyright) ?: '';
+    $_copyright = str_replace('{year}', date('Y'), (string)$_copyright);
+    ?>
     <footer class="bg-white dark:bg-zinc-800 border-t dark:border-zinc-700 transition-colors duration-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="flex flex-col md:flex-row items-center justify-between">
                 <p class="text-gray-500 dark:text-zinc-400 text-sm">
-                    <?= __('common.footer.copyright', ['year' => date('Y')]) ?>
+                    <?= $_copyright ?: __('common.footer.copyright', ['year' => date('Y')]) ?>
                 </p>
                 <div class="flex items-center space-x-6 mt-4 md:mt-0">
                     <a href="<?= $baseUrl ?>/terms" class="text-sm text-gray-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400"><?= __('common.footer.terms') ?></a>

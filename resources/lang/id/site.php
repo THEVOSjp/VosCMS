@@ -210,6 +210,9 @@ return [
         'ev_options' => 'Opsi', 'ev_options_help' => 'Masukkan satu per baris. Digunakan untuk tipe pilihan, radio, dan kotak centang.',
         'ev_default_value' => 'Nilai Default',
         'ev_is_required' => 'Wajib Diisi', 'ev_is_searchable' => 'Dapat Dicari', 'ev_is_shown_in_list' => 'Tampilkan di Daftar',
+        'ev_permission' => 'Izin Edit',
+        'ev_perm_all' => 'Semua orang', 'ev_perm_member' => 'Anggota terdaftar', 'ev_perm_admin' => 'Hanya admin',
+        'ev_permission_help' => 'Pengguna tanpa izin tidak akan melihat formulir input; nilai yang ada dipertahankan. (mis. Status → Hanya admin)',
         'ev_delete_confirm' => 'Apakah Anda yakin ingin menghapus variabel tambahan ini?',
         // Tab Pengaturan Tambahan
         'add_merge_title' => 'Forum Gabungan', 'add_merge_select' => 'Pilih Forum untuk Disertakan',

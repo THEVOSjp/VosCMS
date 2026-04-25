@@ -1,7 +1,7 @@
 {
-    "version": "2.3.7",
+    "version": "2.3.8",
     "name": "VosCMS",
-    "codename": "AutoInstall UX Refresh",
+    "codename": "Board i18n & FAQ/Q&A Skin",
     "release_date": "2026-04-25",
     "commit": null,
     "channel": "stable",

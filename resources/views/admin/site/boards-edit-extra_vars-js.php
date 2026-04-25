@@ -30,6 +30,7 @@ async function openEvModal(evId) {
     document.getElementById('evRequired').checked = false;
     document.getElementById('evSearchable').checked = false;
     document.getElementById('evShownInList').checked = false;
+    document.getElementById('evPermission').value = 'all';
     document.getElementById('evVarName').removeAttribute('readonly');
     toggleEvOptions();
 
@@ -41,16 +42,27 @@ async function openEvModal(evId) {
             const data = await resp.json();
             if (data.success && data.extra_var) {
                 const ev = data.extra_var;
+                // 현재 로케일 번역이 있으면 우선 표시 (없으면 원본)
+                const L = data.localized || {};
                 document.getElementById('evVarName').value = ev.var_name || '';
                 document.getElementById('evVarName').setAttribute('readonly', 'readonly');
-                document.getElementById('evTitle').value = ev.title || '';
+                document.getElementById('evTitle').value = L.title || ev.title || '';
                 document.getElementById('evVarType').value = ev.var_type || 'text';
-                document.getElementById('evDesc').value = ev.description || '';
-                document.getElementById('evOptions').value = ev.options || '';
-                document.getElementById('evDefault').value = ev.default_value || '';
+                document.getElementById('evDesc').value = L.description || ev.description || '';
+                // 옵션: DB에 JSON 배열로 저장되어 있으면 줄바꿈 형식으로 변환해 표시
+                let optsStr = L.options || ev.options || '';
+                if (optsStr) {
+                    try {
+                        const parsed = JSON.parse(optsStr);
+                        if (Array.isArray(parsed)) optsStr = parsed.join('\n');
+                    } catch (e) { /* 줄바꿈 형식이면 그대로 사용 */ }
+                }
+                document.getElementById('evOptions').value = optsStr;
+                document.getElementById('evDefault').value = L.default_value || ev.default_value || '';
                 document.getElementById('evRequired').checked = ev.is_required == 1;
                 document.getElementById('evSearchable').checked = ev.is_searchable == 1;
                 document.getElementById('evShownInList').checked = ev.is_shown_in_list == 1;
+                document.getElementById('evPermission').value = ev.permission || 'all';
                 toggleEvOptions();
             }
         } catch (err) { console.error('[ExtraVars] load error:', err); }
@@ -81,6 +93,7 @@ async function saveEv() {
         is_required: document.getElementById('evRequired').checked ? 1 : 0,
         is_searchable: document.getElementById('evSearchable').checked ? 1 : 0,
         is_shown_in_list: document.getElementById('evShownInList').checked ? 1 : 0,
+        permission: document.getElementById('evPermission').value || 'all',
     };
     if (evId != '0') params.ev_id = evId;
 

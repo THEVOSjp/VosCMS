@@ -29,6 +29,17 @@ $_linkTarget = (!empty($_skinUseLinkBoard) && $postUrl !== $boardUrl . '/' . $po
 
     <?php elseif ($col === 'title'): ?>
     <td class="py-3 px-4">
+        <?php
+        // 처리 단계 배지 (extra_vars.status 값이 있으면 제목 앞에 표시)
+        if (!empty($post['extra_vars'])) {
+            $_evRow = is_string($post['extra_vars']) ? json_decode($post['extra_vars'], true) : $post['extra_vars'];
+            if (is_array($_evRow) && !empty($_evRow['status'])) {
+                require_once BASE_PATH . '/rzxlib/Core/Modules/ExtraVarRenderer.php';
+                $_statusLabel = \RzxLib\Core\Modules\ExtraVarRenderer::getOptionLabel($boardId, 'status', (string)$_evRow['status']);
+                echo \RzxLib\Core\Modules\ExtraVarRenderer::renderStatusBadge((string)$_evRow['status'], 'px-2 py-0.5 text-xs', $_statusLabel) . ' ';
+            }
+        }
+        ?>
         <a href="<?= $postUrl ?>" <?= $_linkTarget ? 'target="' . $_linkTarget . '"' : '' ?> class="text-zinc-800 dark:text-zinc-200 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
             <?php if ($post['is_secret'] ?? 0): ?>
             <svg class="w-3.5 h-3.5 inline mr-1 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>

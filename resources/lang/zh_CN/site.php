@@ -274,6 +274,9 @@ return [
         'ev_options' => '选项', 'ev_options_help' => '每行输入一个。用于下拉选择、单选和复选框类型。',
         'ev_default_value' => '默认值',
         'ev_is_required' => '必填', 'ev_is_searchable' => '可搜索', 'ev_is_shown_in_list' => '在列表中显示',
+        'ev_permission' => '编辑权限',
+        'ev_perm_all' => '任何人', 'ev_perm_member' => '登录会员', 'ev_perm_admin' => '仅管理员',
+        'ev_permission_help' => '无权限用户不会看到输入表单，现有值会保留。（例如：处理阶段 → 仅管理员）',
         'ev_delete_confirm' => '确定要删除此扩展变量吗？',
         // 附加设置标签
         'add_merge_title' => '合并版块', 'add_merge_select' => '选择要包含的版块',

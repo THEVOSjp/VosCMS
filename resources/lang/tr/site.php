@@ -271,6 +271,9 @@ return [
         'ev_options' => 'Seçenekler', 'ev_options_help' => 'Her satıra bir tane girin. Seçim, radyo ve onay kutusu türlerinde kullanılır.',
         'ev_default_value' => 'Varsayılan Değer',
         'ev_is_required' => 'Zorunlu', 'ev_is_searchable' => 'Aranabilir', 'ev_is_shown_in_list' => 'Listede Göster',
+        'ev_permission' => 'Düzenleme yetkisi',
+        'ev_perm_all' => 'Herkes', 'ev_perm_member' => 'Giriş yapmış üyeler', 'ev_perm_admin' => 'Yalnızca yöneticiler',
+        'ev_permission_help' => 'İzni olmayan kullanıcılar giriş formunu görmez; mevcut değerler korunur. (örn., Durum → Yalnızca yöneticiler)',
         'ev_delete_confirm' => 'Bu ek değişkeni silmek istediğinizden emin misiniz?',
         // Ek Ayarlar sekmesi
         'add_merge_title' => 'Birleşik Forum', 'add_merge_select' => 'Dahil Edilecek Forumları Seçin',

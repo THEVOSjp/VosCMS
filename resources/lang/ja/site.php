@@ -264,6 +264,9 @@ return [
         'ev_options' => '選択項目', 'ev_options_help' => '1行に1つずつ入力。select、radio、checkboxタイプで使用されます。',
         'ev_default_value' => 'デフォルト値',
         'ev_is_required' => '必須入力', 'ev_is_searchable' => '検索可能', 'ev_is_shown_in_list' => '一覧に表示',
+        'ev_permission' => '編集権限',
+        'ev_perm_all' => '誰でも', 'ev_perm_member' => 'ログイン会員', 'ev_perm_admin' => '管理者のみ',
+        'ev_permission_help' => '権限のないユーザーには入力フォームが表示されず、既存の値が保持されます。(例: 処理ステージ → 管理者のみ)',
         'ev_delete_confirm' => 'この拡張変数を削除しますか？',
         // 追加設定タブ
         'add_merge_title' => '統合掲示板', 'add_merge_select' => '含める掲示板を選択',

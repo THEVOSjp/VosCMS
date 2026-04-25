@@ -1,0 +1,105 @@
+{
+  "title": { "ko": "Q&A 아코디언 스킨", "en": "Q&A Accordion Skin", "ja": "Q&Aアコーディオンスキン", "de": "Q&A Akkordeon Skin", "es": "Skin Q&A Acordeón", "fr": "Skin Q&A Accordéon", "id": "Skin Q&A Akordeon", "mn": "Q&A Аккордеон скин", "ru": "Q&A Аккордеон скин", "tr": "Q&A Akordeon Skin", "vi": "Skin Q&A Accordion", "zh_CN": "Q&A手风琴皮肤", "zh_TW": "Q&A手風琴面板" },
+  "description": { "ko": "질문(글)과 답변(댓글)을 아코디언으로 표시합니다. 검색창·페이지네이션 포함, 타이틀/서브타이틀 편집과 배경(이미지·동영상) 지원.", "en": "Show question (post) and answers (comments) in accordion. Search bar, pagination, editable title/subtitle, background (image·video).", "ja": "質問（投稿）と回答（コメント）をアコーディオンで表示。検索バー・ページネーション、タイトル/サブタイトル編集、背景（画像・動画）対応。" },
+  "version": "1.0.0",
+  "date": "2026-04-25",
+  "thumbnail": "thumbnail.png",
+  "author": { "name": "VosCMS", "url": "https://voscms.com" },
+  "vars": [
+    {
+      "section": { "ko": "타이틀", "en": "Title", "ja": "タイトル" },
+      "name": "show_title",
+      "type": "checkbox",
+      "title": { "ko": "타이틀 영역 표시", "en": "Show title area", "ja": "タイトル領域表示" },
+      "description": { "ko": "타이틀과 서브타이틀 영역의 표시 여부", "en": "Toggle title and subtitle visibility", "ja": "タイトル・サブタイトルの表示切替" },
+      "default": true
+    },
+    {
+      "name": "title_text",
+      "type": "text_multilang",
+      "title": { "ko": "타이틀", "en": "Title", "ja": "タイトル" },
+      "default": { "ko": "Q&A", "en": "Q&A", "ja": "Q&A" }
+    },
+    {
+      "name": "subtitle_text",
+      "type": "text_multilang",
+      "title": { "ko": "서브타이틀", "en": "Subtitle", "ja": "サブタイトル" },
+      "description": { "ko": "타이틀 위에 작은 글씨로 표시되는 라벨", "en": "Small label shown above the title", "ja": "タイトルの上に小さく表示されるラベル" },
+      "default": { "ko": "질문과 답변", "en": "Questions and Answers", "ja": "質問と回答" }
+    },
+    {
+      "section": { "ko": "타이틀 배경", "en": "Title Background", "ja": "タイトル背景" },
+      "name": "title_bg_type",
+      "type": "radio",
+      "title": { "ko": "배경 타입", "en": "Background type", "ja": "背景タイプ" },
+      "options": [
+        { "value": "none", "label": { "ko": "없음", "en": "None", "ja": "なし" } },
+        { "value": "image", "label": { "ko": "이미지", "en": "Image", "ja": "画像" } },
+        { "value": "video", "label": { "ko": "동영상", "en": "Video", "ja": "動画" } }
+      ],
+      "default": "none"
+    },
+    {
+      "name": "title_bg_image",
+      "type": "image",
+      "title": { "ko": "배경 이미지", "en": "Background image", "ja": "背景画像" }
+    },
+    {
+      "name": "title_bg_video",
+      "type": "video",
+      "title": { "ko": "배경 동영상", "en": "Background video", "ja": "背景動画" }
+    },
+    {
+      "name": "title_bg_height",
+      "type": "number",
+      "title": { "ko": "배경 높이(px)", "en": "Background height(px)", "ja": "背景高さ(px)" },
+      "default": 280, "min": 100, "max": 600
+    },
+    {
+      "name": "title_bg_overlay",
+      "type": "number",
+      "title": { "ko": "오버레이 투명도(%)", "en": "Overlay opacity(%)", "ja": "オーバーレイ透明度(％)" },
+      "default": 40, "min": 0, "max": 100
+    },
+    {
+      "section": { "ko": "Q&A 설정", "en": "Q&A Settings", "ja": "Q&A設定" },
+      "name": "primary_color",
+      "type": "color",
+      "title": { "ko": "프라이머리 색상", "en": "Primary Color", "ja": "プライマリカラー" },
+      "default": "#3b82f6"
+    },
+    {
+      "name": "posts_per_page",
+      "type": "number",
+      "title": { "ko": "페이지당 표시 수", "en": "Items per page", "ja": "1ページの表示数" },
+      "default": 10, "min": 5, "max": 50
+    },
+    {
+      "name": "show_no_answer_badge",
+      "type": "checkbox",
+      "title": { "ko": "미답변 배지 표시", "en": "Show 'no answer' badge", "ja": "未回答バッジ表示" },
+      "description": { "ko": "댓글이 없는 질문에 [미답변] 배지를 표시합니다.", "en": "Show a [No answer] badge on questions without comments.", "ja": "コメントがない質問に[未回答]バッジを表示します。" },
+      "default": true
+    },
+    {
+      "name": "expand_first",
+      "type": "checkbox",
+      "title": { "ko": "첫 번째 항목 펼치기", "en": "Expand first item", "ja": "最初の項目を展開" },
+      "default": false
+    },
+    {
+      "name": "content_width",
+      "type": "select",
+      "title": { "ko": "게시판 너비", "en": "Content Width", "ja": "コンテンツ幅" },
+      "options": [
+        { "value": "max-w-xl",  "label": { "ko": "좁게 (576px)",   "en": "Narrow (576px)",   "ja": "狭い (576px)" } },
+        { "value": "max-w-2xl", "label": { "ko": "보통 (672px)",   "en": "Medium (672px)",   "ja": "普通 (672px)" } },
+        { "value": "max-w-3xl", "label": { "ko": "넓게 (768px)",   "en": "Wide (768px)",     "ja": "広い (768px)" } },
+        { "value": "max-w-4xl", "label": { "ko": "더 넓게 (896px)","en": "Wider (896px)",    "ja": "より広い (896px)" } },
+        { "value": "max-w-5xl", "label": { "ko": "최대 (1024px)",  "en": "Max (1024px)",     "ja": "最大 (1024px)" } },
+        { "value": "max-w-7xl", "label": { "ko": "전체 (1280px)",  "en": "Full (1280px)",    "ja": "フル (1280px)" } }
+      ],
+      "default": "max-w-3xl"
+    }
+  ]
+}

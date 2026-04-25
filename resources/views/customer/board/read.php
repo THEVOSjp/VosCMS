@@ -242,7 +242,7 @@ $seoContext = [
                 if ($hasValues) {
                     require_once BASE_PATH . '/rzxlib/Core/Modules/ExtraVarRenderer.php';
                     echo '<div class="px-6 py-3 border-b border-zinc-100 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-700/20">';
-                    \RzxLib\Core\Modules\ExtraVarRenderer::renderAll($extraVarDefs, $evValues, 'display');
+                    \RzxLib\Core\Modules\ExtraVarRenderer::renderAll($extraVarDefs, $evValues, 'display', $boardId);
                     echo '</div>';
                 }
             }

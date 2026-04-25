@@ -339,8 +339,33 @@ ExtraVarRenderer::renderDisplay($var, $value);  // 표시
 
 ### 게시판 설정 다국어
 
-`_init.php`에서 `db_trans('board.{id}.{field}')` 으로 폴백:
-- `title`, `description`, `seo_keywords`, `seo_description`, `header_content`, `footer_content`
+`_init.php`에서 `rzx_translations.lang_key = 'board.{id}.{field}'` 직접 조회 (현재 로케일 → en → 원본):
+- `title`, `description`, `header_content`, `footer_content`, `seo_keywords`, `seo_description`
+
+수정 후 `$board[$field]` 가 자동으로 현재 로케일 값으로 대체되므로 list/read/write/settings 어느 페이지에서도 별도 lookup 없이 사용 가능. 게시판 설정 페이지의 "← 돌아가기" 버튼도 이 메커니즘을 통해 자동 번역.
+
+### 확장 변수 정의 다국어 (v2.3.8)
+
+`rzx_board_extra_vars` 의 정의 자체(필드 라벨/설명/선택 항목/기본값)도 13개국어 번역 지원.
+
+**저장 키 패턴**: `board_ev.{boardId}.{varName}.{field}` (field = `title` / `description` / `options` / `default_value`)
+
+**적용 위치**:
+- `ExtraVarRenderer::renderAll($vars, $values, $mode, $boardId)` — `applyDefTranslations()` 가 한 쿼리로 모든 var의 4개 필드 번역을 로드해 적용. 옵션은 원본/번역 배열 길이가 같으면 `_option_labels` 매핑 자동 구성 (원본 → 번역).
+- `ExtraVarRenderer::getOptionLabel($boardId, $varName, $value)` — 목록 뷰에서 단일 옵션 값을 번역 라벨로 빠르게 조회 (정적 캐시).
+- `renderStatusBadge($value, $size, $displayLabel = null)` — 색상은 원본(주로 ko) 값으로 매핑, 텍스트만 번역 라벨로 표시 → 다국어 환경에서도 색상 일관.
+
+**select/radio/checkbox 입력**:
+- `value` 속성에는 원본 값 (DB에 일관되게 저장)
+- 표시 라벨은 번역값 (사용자에게 친숙)
+- 게시글 저장 시 원본 값이 들어가므로 언어가 바뀌어도 데이터 호환
+
+**관리자 모달 (확장 변수 편집)**:
+- `extra_var_get` API가 `db_trans()` 로 현재 로케일 번역값을 `localized` 객체로 함께 반환
+- JS 모달은 `localized.title || ev.title` 패턴으로 우선 표시 → 일본어 모드에서 모달 열면 일본어 값이 자동 표시
+- **저장 분기** (`extra_var_update`):
+  - 소스 로케일 (보통 ko) 에서 저장 → 소스 row 전체 갱신 (기존 동작)
+  - 비소스 로케일 (ja/en/…) 에서 저장 → 메타(`var_type`/권한/체크박스 3종)만 소스에 저장, 번역 가능 필드 4종(`title`/`description`/`options`/`default_value`)은 `rzx_translations` 에 현재 로케일로 저장 → **소스 무결성 유지**
 
 ### 다국어 입력 컴포넌트
 

@@ -88,6 +88,28 @@ $listStmt = $pdo->prepare("SELECT * FROM {$prefix}board_posts WHERE {$where} ORD
 $listStmt->execute($params);
 $posts = $listStmt->fetchAll(PDO::FETCH_ASSOC);
 
+// 대표 이미지 (is_primary=1, 없으면 첫 이미지) — 카드/갤러리/웹진 뷰에서 사용
+if ($posts) {
+    $_postIds = array_column($posts, 'id');
+    $_in = implode(',', array_map('intval', $_postIds));
+    $_primaryRows = $pdo->query(
+        "SELECT post_id, file_path, mime_type, is_primary
+           FROM {$prefix}board_files
+          WHERE post_id IN ($_in) AND mime_type LIKE 'image/%'
+          ORDER BY is_primary DESC, id ASC"
+    )->fetchAll(PDO::FETCH_ASSOC);
+    $_primaryByPost = [];
+    foreach ($_primaryRows as $_pr) {
+        if (!isset($_primaryByPost[$_pr['post_id']])) {
+            $_primaryByPost[$_pr['post_id']] = ($config['app_url'] ?? '') . '/' . ltrim($_pr['file_path'], '/');
+        }
+    }
+    foreach ($posts as &$_p) {
+        $_p['_primary_image'] = $_primaryByPost[$_p['id']] ?? '';
+    }
+    unset($_p);
+}
+
 // 글 번호 계산
 $startNo = $totalCount - $offset;
 ?>
@@ -132,6 +154,7 @@ $startNo = $totalCount - $offset;
     </style>
 
     <div class="board-skin-wrap <?= $_skinContentWidth ?> mx-auto px-4 sm:px-6 py-6">
+        <?php require_once BASE_PATH . '/rzxlib/Core/Helpers/admin-icons.php'; ?>
         <?php
         // 전용 스킨: _list-full.php가 있으면 제목/필터/테이블 모두 스킨에 위임
         $_fullSkinFile = boardSkinFile('_list-full.php');
@@ -142,7 +165,6 @@ $startNo = $totalCount - $offset;
         }
         ?>
         <!-- 게시판 제목 (배경 이미지/동영상 지원) -->
-        <?php require_once BASE_PATH . '/rzxlib/Core/Helpers/admin-icons.php'; ?>
         <?php if ($_hasTitleBg): ?>
         <?php
             $_txtColorClass = $_skinTitleTextColor === 'white' ? 'text-white' : ($_skinTitleTextColor === 'dark' ? 'text-zinc-800' : 'text-white');
@@ -164,7 +186,6 @@ $startNo = $totalCount - $offset;
             <div class="relative z-10 flex flex-col justify-center items-center h-full p-6 text-center">
                 <h1 class="text-2xl font-bold <?= $_txtColorClass ?> inline-flex items-center gap-2 drop-shadow-sm">
                     <?= htmlspecialchars($board['title']) ?>
-                    <?= rzx_admin_icons($baseUrl . '/board/' . htmlspecialchars($board['slug']) . '/settings', '') ?>
                 </h1>
                 <?php if (!empty($board['description'])): ?>
                 <p class="mt-1 text-sm <?= $_descColorClass ?> drop-shadow-sm"><?= htmlspecialchars($board['description']) ?></p>
@@ -176,7 +197,6 @@ $startNo = $totalCount - $offset;
         <div class="mb-6">
             <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 inline-flex items-center gap-2">
                 <?= htmlspecialchars($board['title']) ?>
-                <?= rzx_admin_icons($baseUrl . '/board/' . htmlspecialchars($board['slug']) . '/settings', '') ?>
             </h1>
             <?php if (!empty($board['description'])): ?>
             <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars($board['description']) ?></p>
@@ -209,10 +229,13 @@ $startNo = $totalCount - $offset;
         </div>
         <?php endif; ?>
             </div>
-            <!-- 스타일 전환 버튼 -->
+            <!-- 설정 아이콘 + 스타일 전환 버튼 -->
             <?php $allowSwitch = !empty($skinConfig['allow_style_switch']) && $skinConfig['allow_style_switch'] !== '0' && $skinConfig['allow_style_switch'] !== false; ?>
+            <div class="flex items-center gap-1 ml-4 flex-shrink-0">
+                <!-- 게시판 설정 (관리자 전용 — 뷰 아이콘 앞에 배치) -->
+                <?= rzx_admin_icons($baseUrl . '/board/' . htmlspecialchars($board['slug']) . '/settings', '') ?>
             <?php if ($allowSwitch): ?>
-            <div class="flex items-center gap-1 ml-4 flex-shrink-0" id="viewStyleBtns">
+            <div class="flex items-center gap-1" id="viewStyleBtns">
                 <button onclick="setViewStyle('table')" class="vs-btn p-1.5 rounded-lg transition" data-style="table" title="<?= __('board.style_table') ?>">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
                 </button>
@@ -227,6 +250,7 @@ $startNo = $totalCount - $offset;
                 </button>
             </div>
             <?php endif; ?>
+            </div><!-- /.flex items-center gap-1 ml-4 flex-shrink-0 (설정 + 뷰 wrapper) -->
         </div>
 
         <!-- 글 목록 테이블 -->

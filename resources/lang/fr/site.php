@@ -273,6 +273,9 @@ return [
             'ev_options' => 'Options', 'ev_options_help' => 'Entrez une par ligne. Utilisé pour les types sélection, radio et case à cocher.',
             'ev_default_value' => 'Valeur par Défaut',
             'ev_is_required' => 'Obligatoire', 'ev_is_searchable' => 'Recherchable', 'ev_is_shown_in_list' => 'Afficher dans la Liste',
+            'ev_permission' => 'Autorisation d\'édition',
+            'ev_perm_all' => 'Tout le monde', 'ev_perm_member' => 'Membres connectés', 'ev_perm_admin' => 'Administrateurs uniquement',
+            'ev_permission_help' => 'Les utilisateurs sans autorisation ne verront pas le formulaire ; les valeurs existantes sont conservées. (ex. : Statut → Administrateurs uniquement)',
             'ev_delete_confirm' => 'Êtes-vous sûr de vouloir supprimer cette variable supplémentaire ?',
             // Onglet Paramètres Supplémentaires
             'add_merge_title' => 'Forum Fusionné', 'add_merge_select' => 'Sélectionner les Forums à Inclure',

@@ -29,9 +29,14 @@ $_GET['embed'] = '1';
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
     <!-- 돌아가기 링크 -->
     <div class="mb-4">
+        <?php
+            $_backTitle = function_exists('db_trans')
+                ? (db_trans("board.{$board['id']}.title", null, '') ?: $board['title'])
+                : $board['title'];
+        ?>
         <a href="<?= $baseUrl ?>/board/<?= htmlspecialchars($boardSlug) ?>" class="inline-flex items-center gap-1 text-sm text-zinc-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            <?= htmlspecialchars($board['title']) ?>
+            <?= htmlspecialchars($_backTitle) ?>
         </a>
     </div>
 

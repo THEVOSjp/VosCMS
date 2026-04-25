@@ -266,6 +266,9 @@ return [
         'ev_options' => 'Options', 'ev_options_help' => 'Enter one per line. Used for select, radio, and checkbox types.',
         'ev_default_value' => 'Default Value',
         'ev_is_required' => 'Required', 'ev_is_searchable' => 'Searchable', 'ev_is_shown_in_list' => 'Show in List',
+        'ev_permission' => 'Edit Permission',
+        'ev_perm_all' => 'Anyone', 'ev_perm_member' => 'Logged-in members', 'ev_perm_admin' => 'Admins only',
+        'ev_permission_help' => 'Users without permission will not see the input form; existing values are preserved. (e.g., Status → Admins only)',
         'ev_delete_confirm' => 'Are you sure you want to delete this extra variable?',
         // Additional Settings tab
         'add_merge_title' => 'Merged Board', 'add_merge_select' => 'Select Boards to Include',

@@ -1,10 +1,74 @@
 {
   "title": { "ko": "FAQ 아코디언 스킨", "en": "FAQ Accordion Skin", "ja": "FAQアコーディオンスキン", "de": "FAQ Akkordeon Skin", "es": "Skin FAQ Acordeón", "fr": "Skin FAQ Accordéon", "id": "Skin FAQ Akordeon", "mn": "FAQ Аккордеон скин", "ru": "FAQ Аккордеон скин", "tr": "FAQ Akordeon Skin", "vi": "Skin FAQ Accordion", "zh_CN": "FAQ手风琴皮肤", "zh_TW": "FAQ手風琴面板" },
-  "description": { "ko": "Q&A 형태의 아코디언 FAQ 스킨. 큼지막한 검색창, 페이지네이션 포함.", "en": "Accordion-style FAQ skin with large search bar and pagination.", "ja": "アコーディオン形式のFAQスキン。大型検索バー、ページネーション付き。" },
-  "version": "1.0.0",
-  "date": "2026-04-11",
+  "description": { "ko": "Q&A 형태의 아코디언 FAQ 스킨. 큼지막한 검색창, 페이지네이션 포함. 타이틀/서브타이틀 편집 + 배경(이미지·동영상) 지원.", "en": "Accordion-style FAQ skin with large search bar and pagination. Editable title/subtitle and background (image·video).", "ja": "アコーディオン形式のFAQスキン。大型検索バー、ページネーション付き。タイトル/サブタイトル編集と背景（画像・動画）対応。" },
+  "version": "1.0.1",
+  "date": "2026-04-25",
+  "thumbnail": "thumbnail.png",
   "author": { "name": "VosCMS", "url": "https://voscms.com" },
   "vars": [
+    {
+      "section": { "ko": "타이틀", "en": "Title", "ja": "タイトル" },
+      "name": "show_title",
+      "type": "checkbox",
+      "title": { "ko": "타이틀 영역 표시", "en": "Show title area", "ja": "タイトル領域表示" },
+      "description": { "ko": "타이틀과 서브타이틀 영역의 표시 여부", "en": "Toggle title and subtitle visibility", "ja": "タイトル・サブタイトルの表示切替" },
+      "default": true
+    },
+    {
+      "name": "title_text",
+      "type": "text_multilang",
+      "title": { "ko": "타이틀", "en": "Title", "ja": "タイトル" },
+      "default": { "ko": "FAQ", "en": "FAQ", "ja": "FAQ" }
+    },
+    {
+      "name": "subtitle_text",
+      "type": "text_multilang",
+      "title": { "ko": "서브타이틀", "en": "Subtitle", "ja": "サブタイトル" },
+      "description": { "ko": "타이틀 위에 작은 글씨로 표시되는 라벨", "en": "Small label shown above the title", "ja": "タイトルの上に小さく表示されるラベル" },
+      "default": { "ko": "자주 묻는 질문", "en": "Frequently Asked Questions", "ja": "よくある質問" }
+    },
+    {
+      "section": { "ko": "타이틀 배경", "en": "Title Background", "ja": "タイトル背景" },
+      "name": "title_bg_type",
+      "type": "radio",
+      "title": { "ko": "배경 타입", "en": "Background type", "ja": "背景タイプ" },
+      "options": [
+        { "value": "none", "label": { "ko": "없음", "en": "None", "ja": "なし" } },
+        { "value": "image", "label": { "ko": "이미지", "en": "Image", "ja": "画像" } },
+        { "value": "video", "label": { "ko": "동영상", "en": "Video", "ja": "動画" } }
+      ],
+      "default": "none"
+    },
+    {
+      "name": "title_bg_image",
+      "type": "image",
+      "title": { "ko": "배경 이미지", "en": "Background image", "ja": "背景画像" },
+      "description": { "ko": "타이틀 영역의 배경 이미지를 업로드합니다. (JPG, PNG, WebP)", "en": "Upload a background image for the title area.", "ja": "タイトル領域の背景画像をアップロードします。" }
+    },
+    {
+      "name": "title_bg_video",
+      "type": "video",
+      "title": { "ko": "배경 동영상", "en": "Background video", "ja": "背景動画" },
+      "description": { "ko": "MP4, WebM 형식의 동영상을 업로드하거나 URL을 입력합니다. 자동 재생, 반복, 음소거 처리됩니다.", "en": "Upload MP4/WebM video or enter URL. Auto-play, loop, muted.", "ja": "MP4、WebM形式の動画をアップロードまたはURLを入力。自動再生、ループ、ミュート。" }
+    },
+    {
+      "name": "title_bg_height",
+      "type": "number",
+      "title": { "ko": "배경 높이(px)", "en": "Background height(px)", "ja": "背景高さ(px)" },
+      "description": { "ko": "타이틀 배경 영역의 높이 (기본: 280)", "en": "Height of the title background area (default: 280)", "ja": "タイトル背景領域の高さ（デフォルト: 280）" },
+      "default": 280,
+      "min": 100,
+      "max": 600
+    },
+    {
+      "name": "title_bg_overlay",
+      "type": "number",
+      "title": { "ko": "오버레이 투명도(%)", "en": "Overlay opacity(%)", "ja": "オーバーレイ透明度(％)" },
+      "description": { "ko": "배경 위에 어두운 오버레이를 적용합니다. 0=투명, 100=완전 어둡게", "en": "Apply dark overlay. 0=transparent, 100=fully dark", "ja": "暗いオーバーレイを適用。0=透明、100=完全に暗く" },
+      "default": 40,
+      "min": 0,
+      "max": 100
+    },
     {
       "section": { "ko": "FAQ 설정", "en": "FAQ Settings", "ja": "FAQ設定" },
       "name": "primary_color",

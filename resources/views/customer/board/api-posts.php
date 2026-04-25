@@ -88,13 +88,27 @@ if ($action === 'create') {
     // 현재 로케일
     $currentLocale = function_exists('current_locale') ? current_locale() : ($config['locale'] ?? 'ko');
 
-    // 확장 변수 수집
+    // 확장 변수 수집 (권한 검증 — 권한 없는 변수는 무시)
+    require_once BASE_PATH . '/rzxlib/Core/Modules/ExtraVarRenderer.php';
     $extraVarsJson = null;
     $evData = [];
+    $_evDefStmt = $pdo->prepare("SELECT var_name, permission, default_value FROM {$prefix}board_extra_vars WHERE board_id = ? AND is_active = 1");
+    $_evDefStmt->execute([$boardId]);
+    $_evDefs = [];
+    foreach ($_evDefStmt->fetchAll(PDO::FETCH_ASSOC) as $_d) $_evDefs[$_d['var_name']] = $_d;
+
     foreach ($_POST as $k => $v) {
-        if (strpos($k, 'extra_') === 0) {
-            $evKey = substr($k, 6);
-            $evData[$evKey] = is_array($v) ? implode(',', $v) : $v;
+        if (strpos($k, 'extra_') !== 0) continue;
+        $evKey = substr($k, 6);
+        // 정의된 변수만 + 권한 있는 사용자만
+        if (!isset($_evDefs[$evKey])) continue;
+        if (!\RzxLib\Core\Modules\ExtraVarRenderer::canEdit($_evDefs[$evKey])) continue;
+        $evData[$evKey] = is_array($v) ? implode(',', $v) : $v;
+    }
+    // 권한 없어 입력 못 한 변수는 default_value로 채움 (신규 글)
+    foreach ($_evDefs as $evKey => $_d) {
+        if (!isset($evData[$evKey]) && !empty($_d['default_value'])) {
+            $evData[$evKey] = $_d['default_value'];
         }
     }
     if (!empty($evData)) $extraVarsJson = json_encode($evData, JSON_UNESCAPED_UNICODE);
@@ -131,11 +145,22 @@ if ($action === 'create') {
         if ($fileCount > 0) {
             $pdo->prepare("UPDATE {$prefix}board_posts SET file_count = ? WHERE id = ?")->execute([$fileCount, $newId]);
 
-            // 클라이언트가 지정한 대표 파일(주로 썸네일 캡처)
+            // 클라이언트가 지정한 대표 파일이 있으면 우선
             $primaryPos = isset($_POST['primary_file_pos']) ? (int)$_POST['primary_file_pos'] : -1;
-            if ($primaryPos >= 0 && isset($uploadedFileIds[$primaryPos])) {
+            $targetPrimaryId = ($primaryPos >= 0 && isset($uploadedFileIds[$primaryPos])) ? $uploadedFileIds[$primaryPos] : null;
+
+            // 명시 지정 없으면 첫 번째 이미지 파일을 자동 대표로
+            if (!$targetPrimaryId) {
+                foreach ($uploadedFileIds as $i => $fid) {
+                    if (str_starts_with($_FILES['files']['type'][$i] ?? '', 'image/')) {
+                        $targetPrimaryId = $fid;
+                        break;
+                    }
+                }
+            }
+            if ($targetPrimaryId) {
                 $pdo->prepare("UPDATE {$prefix}board_files SET is_primary = 1 WHERE id = ?")
-                    ->execute([$uploadedFileIds[$primaryPos]]);
+                    ->execute([$targetPrimaryId]);
             }
         }
     }
@@ -167,13 +192,21 @@ if ($action === 'update') {
     $isSecret = (int)($_POST['is_secret'] ?? 0);
     $categoryId = (int)($_POST['category_id'] ?? 0) ?: null;
 
-    // 확장 변수 수집
-    $evData = [];
+    // 확장 변수 수집 (권한 검증 — 권한 없는 변수는 기존값 유지)
+    require_once BASE_PATH . '/rzxlib/Core/Modules/ExtraVarRenderer.php';
+    $_evDefStmt = $pdo->prepare("SELECT var_name, permission FROM {$prefix}board_extra_vars WHERE board_id = ? AND is_active = 1");
+    $_evDefStmt->execute([$boardId]);
+    $_evDefs = [];
+    foreach ($_evDefStmt->fetchAll(PDO::FETCH_ASSOC) as $_d) $_evDefs[$_d['var_name']] = $_d;
+
+    $_existingEv = !empty($post['extra_vars']) ? (json_decode($post['extra_vars'], true) ?: []) : [];
+    $evData = $_existingEv; // 시작점은 기존값
     foreach ($_POST as $k => $v) {
-        if (strpos($k, 'extra_') === 0) {
-            $evKey = substr($k, 6);
-            $evData[$evKey] = is_array($v) ? implode(',', $v) : $v;
-        }
+        if (strpos($k, 'extra_') !== 0) continue;
+        $evKey = substr($k, 6);
+        if (!isset($_evDefs[$evKey])) continue;
+        if (!\RzxLib\Core\Modules\ExtraVarRenderer::canEdit($_evDefs[$evKey])) continue;
+        $evData[$evKey] = is_array($v) ? implode(',', $v) : $v;
     }
     $extraVarsJson = !empty($evData) ? json_encode($evData, JSON_UNESCAPED_UNICODE) : $post['extra_vars'];
 
@@ -228,11 +261,24 @@ if ($action === 'update') {
         $fc->execute([$postId]);
         $pdo->prepare("UPDATE {$prefix}board_posts SET file_count = ? WHERE id = ?")->execute([(int)$fc->fetchColumn(), $postId]);
 
-        // 클라이언트가 지정한 대표 파일 (썸네일 재캡처 시 기존 대표를 이 파일로 교체)
+        // 클라이언트가 지정한 대표 파일 (있으면 우선)
         $primaryPos = isset($_POST['primary_file_pos']) ? (int)$_POST['primary_file_pos'] : -1;
-        if ($primaryPos >= 0 && isset($uploadedFileIds[$primaryPos])) {
+        $targetPrimaryId = ($primaryPos >= 0 && isset($uploadedFileIds[$primaryPos])) ? $uploadedFileIds[$primaryPos] : null;
+        if ($targetPrimaryId) {
             $pdo->prepare("UPDATE {$prefix}board_files SET is_primary = 0 WHERE post_id = ?")->execute([$postId]);
-            $pdo->prepare("UPDATE {$prefix}board_files SET is_primary = 1 WHERE id = ?")->execute([$uploadedFileIds[$primaryPos]]);
+            $pdo->prepare("UPDATE {$prefix}board_files SET is_primary = 1 WHERE id = ?")->execute([$targetPrimaryId]);
+        } else {
+            // 명시 지정 없고 현재 글에 대표 이미지가 없는 경우만 첫 신규 이미지를 자동 대표로
+            $hasPrimary = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}board_files WHERE post_id = ? AND is_primary = 1");
+            $hasPrimary->execute([$postId]);
+            if ((int)$hasPrimary->fetchColumn() === 0) {
+                foreach ($uploadedFileIds as $i => $fid) {
+                    if (str_starts_with($_FILES['files']['type'][$i] ?? '', 'image/')) {
+                        $pdo->prepare("UPDATE {$prefix}board_files SET is_primary = 1 WHERE id = ?")->execute([$fid]);
+                        break;
+                    }
+                }
+            }
         }
     }
 

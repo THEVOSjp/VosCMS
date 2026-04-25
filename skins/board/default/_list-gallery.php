@@ -17,9 +17,20 @@
     <?php $_gp['_is_notice'] = false; ?>
     <?php
         $_gpTitle = $postTitleTranslations[$_gp['id']] ?? $_gp['title'];
-        $_gpImg = '';
         $_gpContent = $postContentTranslations[$_gp['id']] ?? $_gp['content'] ?? '';
-        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $_gpContent, $_gm)) $_gpImg = $_gm[1];
+        // 대표 이미지 우선 (첨부 is_primary), 없으면 본문 첫 이미지
+        $_gpImg = $_gp['_primary_image'] ?? '';
+        if (!$_gpImg && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $_gpContent, $_gm)) $_gpImg = $_gm[1];
+        // 처리 단계 배지 (extra_vars.status)
+        $_gpStatusBadge = '';
+        if (!empty($_gp['extra_vars'])) {
+            $_evRow = is_string($_gp['extra_vars']) ? json_decode($_gp['extra_vars'], true) : $_gp['extra_vars'];
+            if (is_array($_evRow) && !empty($_evRow['status'])) {
+                require_once BASE_PATH . '/rzxlib/Core/Modules/ExtraVarRenderer.php';
+                $_gpStatusLabel = \RzxLib\Core\Modules\ExtraVarRenderer::getOptionLabel($boardId, 'status', (string)$_evRow['status']);
+                $_gpStatusBadge = \RzxLib\Core\Modules\ExtraVarRenderer::renderStatusBadge((string)$_evRow['status'], 'px-2 py-0.5 text-xs', $_gpStatusLabel);
+            }
+        }
         $_gpCat = $catMap[$_gp['category_id'] ?? 0] ?? null;
         $_gpNew = (time() - strtotime($_gp['created_at'] ?? 'now')) < 86400;
     ?>
@@ -50,6 +61,10 @@
                 <?= $_gp['comment_count'] ?>
             </span>
         </div>
+        <?php endif; ?>
+
+        <?php if ($_gpStatusBadge): ?>
+        <div class="absolute bottom-2 left-2 z-10"><?= $_gpStatusBadge ?></div>
         <?php endif; ?>
 
         <!-- 호버 시 오버레이 + 정보 (아래에서 위로 슬라이드) -->

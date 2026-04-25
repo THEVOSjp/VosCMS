@@ -340,14 +340,25 @@
             "name": "copyright",
             "type": "textarea",
             "title": {
-                "ko": "카피라이트",
-                "en": "Copyright",
-                "ja": "コピーライト"
+                "ko": "카피라이트", "en": "Copyright", "ja": "コピーライト",
+                "de": "Copyright", "es": "Copyright", "fr": "Copyright",
+                "id": "Hak Cipta", "mn": "Зохиогчийн эрх", "ru": "Авторские права",
+                "tr": "Telif Hakkı", "vi": "Bản quyền", "zh_CN": "版权", "zh_TW": "版權"
             },
             "description": {
-                "ko": "푸터 하단에 표시되는 저작권 문구입니다.",
-                "en": "Copyright text displayed at the bottom of the footer.",
-                "ja": "フッター下部に表示される著作権表記です。"
+                "ko": "푸터 하단에 표시되는 저작권 문구입니다. {year} 를 입력하면 현재 연도로 자동 대체됩니다. (예: © 2009-{year} MyCompany)",
+                "en": "Copyright text displayed at the bottom of the footer. Use {year} to auto-substitute the current year. (e.g., © 2009-{year} MyCompany)",
+                "ja": "フッター下部に表示される著作権表記です。{year} を入力すると現在の年に自動置換されます。(例: © 2009-{year} MyCompany)",
+                "de": "Copyright-Text in der Fußzeile. Verwenden Sie {year}, um das aktuelle Jahr automatisch einzufügen. (z. B. © 2009-{year} MyCompany)",
+                "es": "Texto de copyright mostrado en el pie de página. Use {year} para insertar automáticamente el año actual. (ej. © 2009-{year} MyCompany)",
+                "fr": "Texte de copyright affiché en bas du pied de page. Utilisez {year} pour insérer automatiquement l'année en cours. (ex. © 2009-{year} MyCompany)",
+                "id": "Teks hak cipta di bagian bawah footer. Gunakan {year} untuk mengganti tahun saat ini secara otomatis. (mis. © 2009-{year} MyCompany)",
+                "mn": "Хөлд харуулагдах зохиогчийн эрхийн текст. {year}-ийг бичвэл одоогийн он автоматаар орлуулагдана. (жишээ: © 2009-{year} MyCompany)",
+                "ru": "Текст копирайта внизу футера. Используйте {year} для автоматической подстановки текущего года. (напр. © 2009-{year} MyCompany)",
+                "tr": "Alt bilgide görünen telif hakkı metni. Geçerli yılı otomatik eklemek için {year} kullanın. (örn. © 2009-{year} MyCompany)",
+                "vi": "Văn bản bản quyền ở cuối footer. Dùng {year} để tự động thay năm hiện tại. (vd. © 2009-{year} MyCompany)",
+                "zh_CN": "页脚底部显示的版权文本。使用 {year} 自动替换为当前年份。(例如：© 2009-{year} MyCompany)",
+                "zh_TW": "頁尾底部顯示的版權文字。使用 {year} 自動替換為目前年份。(例如：© 2009-{year} MyCompany)"
             },
             "multilang": true
         },

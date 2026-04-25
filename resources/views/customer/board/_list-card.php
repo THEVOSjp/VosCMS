@@ -13,8 +13,9 @@
     <?php
         $_cpTitle = $postTitleTranslations[$_cp['id']] ?? $_cp['title'];
         $_cpContent = $postContentTranslations[$_cp['id']] ?? $_cp['content'] ?? '';
-        $_cpImg = '';
-        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $_cpContent, $_cm)) $_cpImg = $_cm[1];
+        // 대표 이미지 우선 (첨부 is_primary), 없으면 본문 첫 이미지 추출
+        $_cpImg = $_cp['_primary_image'] ?? '';
+        if (!$_cpImg && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $_cpContent, $_cm)) $_cpImg = $_cm[1];
         $_cpExcerpt = mb_substr(strip_tags($_cpContent), 0, 80);
     ?>
     <a href="<?= $boardUrl ?>/<?= $_cp['id'] ?>" class="block bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-md transition group">
