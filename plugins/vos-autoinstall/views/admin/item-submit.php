@@ -36,8 +36,8 @@ $marketAdminUrl = $_ENV['MARKET_ADMIN_URL'] ?? 'https://market.21ces.com/admin/i
                         market 관리자 포털로 이동
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                     </a>
-                    <a href="<?= $adminUrl ?>/marketplace" class="px-5 py-2.5 text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">
-                        &larr; 마켓플레이스 돌아가기
+                    <a href="<?= $adminUrl ?>/autoinstall" class="px-5 py-2.5 text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">
+                        &larr; <?= __('autoinstall.title') ?>
                     </a>
                 </div>
             </div>

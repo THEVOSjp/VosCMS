@@ -31,7 +31,7 @@ $_hint = 'text-xs text-zinc-400 dark:text-zinc-500 mt-1';
 $_card = 'bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6';
 
 // 라이선스 옵션
-$_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGPL-3.0'=>'LGPL v3','BSD'=>'BSD','MIT'=>'MIT','CC'=>'Creative Commons','PD'=>'Public Domain','proprietary'=>__mp('sf_license_proprietary'),'other'=>__mp('sf_license_other')];
+$_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGPL-3.0'=>'LGPL v3','BSD'=>'BSD','MIT'=>'MIT','CC'=>'Creative Commons','PD'=>'Public Domain','proprietary'=>__('autoinstall.sf_license_proprietary'),'other'=>__('autoinstall.sf_license_other')];
 ?>
 
 <!-- 탭 네비게이션 -->
@@ -40,19 +40,19 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
         <button type="button" data-tab="basic" class="tab-btn px-5 py-3 text-sm font-semibold border-b-2 transition-colors border-indigo-600 text-indigo-600 dark:text-indigo-400">
             <span class="inline-flex items-center gap-1.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                <?= __mp('sf_tab_basic') ?>
+                <?= __('autoinstall.sf_tab_basic') ?>
             </span>
         </button>
         <button type="button" data-tab="release" class="tab-btn px-5 py-3 text-sm font-semibold border-b-2 transition-colors border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300">
             <span class="inline-flex items-center gap-1.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-                <?= __mp('sf_tab_release') ?>
+                <?= __('autoinstall.sf_tab_release') ?>
             </span>
         </button>
         <button type="button" data-tab="sales" class="tab-btn px-5 py-3 text-sm font-semibold border-b-2 transition-colors border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300">
             <span class="inline-flex items-center gap-1.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <?= __mp('sf_tab_sales') ?>
+                <?= __('autoinstall.sf_tab_sales') ?>
             </span>
         </button>
     </nav>
@@ -62,25 +62,25 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
 <input type="hidden" name="action" value="submit_item">
 <?php if ($isEdit): ?><input type="hidden" name="item_id" value="<?= $editItem['id'] ?>"><?php endif; ?>
 
-<!-- ==================== 탭1: <?= __mp('sf_tab_basic') ?> ==================== -->
+<!-- ==================== 탭1: <?= __('autoinstall.sf_tab_basic') ?> ==================== -->
 <div id="tab-basic" class="tab-content space-y-6">
     <!-- 유형 + 분류 -->
     <div class="<?= $_card ?>">
-        <h2 class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-4"><?= __mp('sf_type_category') ?></h2>
+        <h2 class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-4"><?= __('autoinstall.sf_type_category') ?></h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-                <label class="<?= $_lbl ?>"><?= __mp('sf_item_type') ?> <span class="text-red-500">*</span></label>
+                <label class="<?= $_lbl ?>"><?= __('autoinstall.sf_item_type') ?> <span class="text-red-500">*</span></label>
                 <select name="item_type" required class="<?= $_inp ?>">
-                    <option value="plugin" <?= ($editItem['type'] ?? '') === 'plugin' ? 'selected' : '' ?>><?= __mp('sf_type_plugin') ?></option>
-                    <option value="widget" <?= ($editItem['type'] ?? '') === 'widget' ? 'selected' : '' ?>><?= __mp('sf_type_widget') ?></option>
-                    <option value="theme" <?= ($editItem['type'] ?? '') === 'theme' ? 'selected' : '' ?>><?= __mp('sf_type_theme') ?></option>
-                    <option value="skin" <?= ($editItem['type'] ?? '') === 'skin' ? 'selected' : '' ?>><?= __mp('sf_type_skin') ?></option>
+                    <option value="plugin" <?= ($editItem['type'] ?? '') === 'plugin' ? 'selected' : '' ?>><?= __('autoinstall.sf_type_plugin') ?></option>
+                    <option value="widget" <?= ($editItem['type'] ?? '') === 'widget' ? 'selected' : '' ?>><?= __('autoinstall.sf_type_widget') ?></option>
+                    <option value="theme" <?= ($editItem['type'] ?? '') === 'theme' ? 'selected' : '' ?>><?= __('autoinstall.sf_type_theme') ?></option>
+                    <option value="skin" <?= ($editItem['type'] ?? '') === 'skin' ? 'selected' : '' ?>><?= __('autoinstall.sf_type_skin') ?></option>
                 </select>
             </div>
             <div>
-                <label class="<?= $_lbl ?>"><?= __mp('sf_category') ?></label>
+                <label class="<?= $_lbl ?>"><?= __('autoinstall.sf_category') ?></label>
                 <select name="category_id" class="<?= $_inp ?>">
-                    <option value=""><?= __mp('sf_category_none') ?></option>
+                    <option value=""><?= __('autoinstall.sf_category_none') ?></option>
                     <?php foreach ($categories as $cat):
                         $cn = json_decode($cat['name'], true);
                         $sel = ($editItem['category_id'] ?? '') == $cat['id'] ? 'selected' : '';
@@ -90,98 +90,98 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
                 </select>
             </div>
             <div>
-                <label class="<?= $_lbl ?>"><?= __mp('sf_license') ?></label>
+                <label class="<?= $_lbl ?>"><?= __('autoinstall.sf_license') ?></label>
                 <select name="license" class="<?= $_inp ?>">
-                    <option value=""><?= __mp('sf_license_select') ?></option>
+                    <option value=""><?= __('autoinstall.sf_license_select') ?></option>
                     <?php foreach ($_licenses as $lv => $ll):
                         $sel = ($editItem['license'] ?? '') === $lv ? 'selected' : '';
                     ?>
                     <option value="<?= $lv ?>" <?= $sel ?>><?= $ll ?></option>
                     <?php endforeach; ?>
                 </select>
-                <p class="<?= $_hint ?>"><?= __mp('sf_license_hint') ?></p>
+                <p class="<?= $_hint ?>"><?= __('autoinstall.sf_license_hint') ?></p>
             </div>
         </div>
     </div>
 
-    <!-- <?= __mp('sf_tab_basic') ?> -->
+    <!-- <?= __('autoinstall.sf_tab_basic') ?> -->
     <div class="<?= $_card ?>">
-        <h2 class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-4"><?= __mp('sf_tab_basic') ?></h2>
+        <h2 class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-4"><?= __('autoinstall.sf_tab_basic') ?></h2>
         <div class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="<?= $_lbl ?>"><?= __mp('sf_name_en') ?> <span class="text-red-500">*</span></label>
+                    <label class="<?= $_lbl ?>"><?= __('autoinstall.sf_name_en') ?> <span class="text-red-500">*</span></label>
                     <input type="text" id="name_en" required class="<?= $_inp ?>" value="<?= htmlspecialchars($eName['en'] ?? '') ?>" placeholder="My Awesome Plugin">
                 </div>
                 <div>
-                    <label class="<?= $_lbl ?>"><?= __mp('sf_name_local') ?></label>
-                    <input type="text" id="name_local" class="<?= $_inp ?>" value="<?= htmlspecialchars($eName[$locale] ?? '') ?>" placeholder="<?= __mp('sf_name_local_hint') ?>">
+                    <label class="<?= $_lbl ?>"><?= __('autoinstall.sf_name_local') ?></label>
+                    <input type="text" id="name_local" class="<?= $_inp ?>" value="<?= htmlspecialchars($eName[$locale] ?? '') ?>" placeholder="<?= __('autoinstall.sf_name_local_hint') ?>">
                 </div>
             </div>
             <div>
-                <label class="<?= $_lbl ?>"><?= __mp('sf_short_desc') ?> <span class="text-red-500">*</span></label>
-                <input type="text" id="short_desc" maxlength="200" class="<?= $_inp ?>" value="<?= htmlspecialchars($eShortDesc[$locale] ?? $eShortDesc['en'] ?? '') ?>" placeholder="<?= __mp('sf_short_desc_hint') ?>">
+                <label class="<?= $_lbl ?>"><?= __('autoinstall.sf_short_desc') ?> <span class="text-red-500">*</span></label>
+                <input type="text" id="short_desc" maxlength="200" class="<?= $_inp ?>" value="<?= htmlspecialchars($eShortDesc[$locale] ?? $eShortDesc['en'] ?? '') ?>" placeholder="<?= __('autoinstall.sf_short_desc_hint') ?>">
                 <p class="<?= $_hint ?>"><span id="shortDescCount">0</span>/200</p>
             </div>
             <div>
-                <label class="<?= $_lbl ?>"><?= __mp('sf_description') ?></label>
+                <label class="<?= $_lbl ?>"><?= __('autoinstall.sf_description') ?></label>
                 <div id="description-editor"></div>
                 <textarea id="description" class="hidden"><?= htmlspecialchars($eDesc[$locale] ?? $eDesc['en'] ?? '') ?></textarea>
             </div>
             <div>
-                <label class="<?= $_lbl ?>"><?= __mp('sf_tags') ?></label>
-                <input type="text" name="tags" class="<?= $_inp ?>" value="<?= htmlspecialchars(implode(', ', $eTags)) ?>" placeholder="<?= __mp('sf_tags_hint') ?>">
+                <label class="<?= $_lbl ?>"><?= __('autoinstall.sf_tags') ?></label>
+                <input type="text" name="tags" class="<?= $_inp ?>" value="<?= htmlspecialchars(implode(', ', $eTags)) ?>" placeholder="<?= __('autoinstall.sf_tags_hint') ?>">
             </div>
         </div>
     </div>
 
     <!-- URL 정보 -->
     <div class="<?= $_card ?>">
-        <h2 class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-4"><?= __mp('sf_urls') ?></h2>
+        <h2 class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-4"><?= __('autoinstall.sf_urls') ?></h2>
         <div class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="<?= $_lbl ?>"><?= __mp('sf_repo_url') ?></label>
+                    <label class="<?= $_lbl ?>"><?= __('autoinstall.sf_repo_url') ?></label>
                     <input type="url" name="repo_url" class="<?= $_inp ?>" value="<?= htmlspecialchars($editItem['repo_url'] ?? '') ?>" placeholder="https://github.com/username/repo">
                 </div>
                 <div>
-                    <label class="<?= $_lbl ?>"><?= __mp('sf_demo_url') ?></label>
+                    <label class="<?= $_lbl ?>"><?= __('autoinstall.sf_demo_url') ?></label>
                     <input type="url" name="demo_url" class="<?= $_inp ?>" value="<?= htmlspecialchars($editItem['demo_url'] ?? '') ?>" placeholder="https://demo.example.com">
                 </div>
             </div>
             <div>
-                <label class="<?= $_lbl ?>"><?= __mp('sf_requires') ?></label>
-                <input type="text" name="requires_plugins" class="<?= $_inp ?>" value="<?= htmlspecialchars(implode(', ', $eReqPlugins)) ?>" placeholder="<?= __mp('sf_requires_hint') ?>">
+                <label class="<?= $_lbl ?>"><?= __('autoinstall.sf_requires') ?></label>
+                <input type="text" name="requires_plugins" class="<?= $_inp ?>" value="<?= htmlspecialchars(implode(', ', $eReqPlugins)) ?>" placeholder="<?= __('autoinstall.sf_requires_hint') ?>">
             </div>
         </div>
     </div>
 
     <!-- 이미지 -->
     <div class="<?= $_card ?>">
-        <h2 class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-4"><?= __mp('sf_images') ?></h2>
+        <h2 class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-4"><?= __('autoinstall.sf_images') ?></h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <label class="<?= $_lbl ?>"><?= __mp('sf_icon') ?></label>
+                <label class="<?= $_lbl ?>"><?= __('autoinstall.sf_icon') ?></label>
                 <?php if ($isEdit && $editItem['icon']): ?>
                 <div class="mb-2"><img src="<?= htmlspecialchars($editItem['icon']) ?>" class="h-16 rounded-lg border border-zinc-200 dark:border-zinc-600" alt=""></div>
                 <?php endif; ?>
                 <input type="file" name="icon" accept="image/*" class="w-full text-sm text-zinc-700 dark:text-zinc-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-50 dark:file:bg-indigo-900/30 file:text-indigo-700 dark:file:text-indigo-300 file:font-medium cursor-pointer">
-                <p class="<?= $_hint ?>"><?= __mp('sf_icon_hint') ?></p>
+                <p class="<?= $_hint ?>"><?= __('autoinstall.sf_icon_hint') ?></p>
             </div>
             <div>
-                <label class="<?= $_lbl ?>"><?= __mp('sf_banner') ?></label>
+                <label class="<?= $_lbl ?>"><?= __('autoinstall.sf_banner') ?></label>
                 <?php if ($isEdit && $editItem['banner_image']): ?>
                 <div class="mb-2"><img src="<?= htmlspecialchars($editItem['banner_image']) ?>" class="h-16 rounded-lg border border-zinc-200 dark:border-zinc-600" alt=""></div>
                 <?php endif; ?>
                 <input type="file" name="banner" accept="image/*" class="w-full text-sm text-zinc-700 dark:text-zinc-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-zinc-50 dark:file:bg-zinc-700 file:text-zinc-700 dark:file:text-zinc-300 file:font-medium cursor-pointer">
-                <p class="<?= $_hint ?>"><?= __mp('sf_banner_hint') ?></p>
+                <p class="<?= $_hint ?>"><?= __('autoinstall.sf_banner_hint') ?></p>
             </div>
         </div>
         <div class="mt-4">
-            <label class="<?= $_lbl ?>"><?= __mp('sf_screenshots') ?></label>
+            <label class="<?= $_lbl ?>"><?= __('autoinstall.sf_screenshots') ?></label>
             <div class="border-2 border-dashed border-zinc-300 dark:border-zinc-600 rounded-xl p-6 text-center hover:border-indigo-400 transition cursor-pointer" onclick="document.getElementById('screenshots').click()">
                 <svg class="w-8 h-8 text-zinc-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                <p class="text-sm text-zinc-500"><?= __mp('sf_drop_files') ?></p>
+                <p class="text-sm text-zinc-500"><?= __('autoinstall.sf_drop_files') ?></p>
                 <input type="file" id="screenshots" name="screenshots[]" accept="image/*" multiple class="hidden">
             </div>
             <div id="screenshotPreview" class="flex flex-wrap gap-2 mt-3"></div>
@@ -189,22 +189,22 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
     </div>
 </div>
 
-<!-- ==================== 탭2: <?= __mp('sf_tab_release') ?> ==================== -->
+<!-- ==================== 탭2: <?= __('autoinstall.sf_tab_release') ?> ==================== -->
 <div id="tab-release" class="tab-content hidden space-y-6">
     <div class="<?= $_card ?>">
-        <h2 class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-4"><?= __mp('sf_release') ?></h2>
+        <h2 class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-4"><?= __('autoinstall.sf_release') ?></h2>
         <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-4 text-xs text-amber-700 dark:text-amber-300">
-            <span class="font-semibold"><?= __mp('sf_release') ?>:</span> <?= __mp('sf_release_notice') ?>
+            <span class="font-semibold"><?= __('autoinstall.sf_release') ?>:</span> <?= __('autoinstall.sf_release_notice') ?>
         </div>
 
         <?php if ($isEdit && !empty($editVersions)): ?>
         <div class="overflow-x-auto mb-4">
             <table class="w-full text-sm border-collapse">
                 <thead><tr class="bg-zinc-50 dark:bg-zinc-700/50">
-                    <th class="px-4 py-2.5 text-left font-semibold text-zinc-700 dark:text-zinc-300 border-b dark:border-zinc-600"><?= __mp('sf_version') ?></th>
-                    <th class="px-4 py-2.5 text-left font-semibold text-zinc-700 dark:text-zinc-300 border-b dark:border-zinc-600"><?= __mp('sf_filename') ?></th>
-                    <th class="px-4 py-2.5 text-left font-semibold text-zinc-700 dark:text-zinc-300 border-b dark:border-zinc-600"><?= __mp('sf_date') ?></th>
-                    <th class="px-4 py-2.5 text-center font-semibold text-zinc-700 dark:text-zinc-300 border-b dark:border-zinc-600"><?= __mp('sf_status') ?></th>
+                    <th class="px-4 py-2.5 text-left font-semibold text-zinc-700 dark:text-zinc-300 border-b dark:border-zinc-600"><?= __('autoinstall.sf_version') ?></th>
+                    <th class="px-4 py-2.5 text-left font-semibold text-zinc-700 dark:text-zinc-300 border-b dark:border-zinc-600"><?= __('autoinstall.sf_filename') ?></th>
+                    <th class="px-4 py-2.5 text-left font-semibold text-zinc-700 dark:text-zinc-300 border-b dark:border-zinc-600"><?= __('autoinstall.sf_date') ?></th>
+                    <th class="px-4 py-2.5 text-center font-semibold text-zinc-700 dark:text-zinc-300 border-b dark:border-zinc-600"><?= __('autoinstall.sf_status') ?></th>
                 </tr></thead>
                 <tbody>
                 <?php foreach ($editVersions as $v): ?>
@@ -221,56 +221,56 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
             </table>
         </div>
         <?php elseif ($isEdit): ?>
-        <p class="text-sm text-zinc-400 py-4 text-center"><?= __mp('sf_no_releases') ?></p>
+        <p class="text-sm text-zinc-400 py-4 text-center"><?= __('autoinstall.sf_no_releases') ?></p>
         <?php endif; ?>
 
         <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-5 bg-zinc-50/50 dark:bg-zinc-800/50">
             <h3 class="text-sm font-bold text-zinc-800 dark:text-zinc-200 mb-4 flex items-center gap-2">
                 <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <?= $isEdit ? __mp('sf_new_release') : __mp('sf_initial_release') ?>
+                <?= $isEdit ? __('autoinstall.sf_new_release') : __('autoinstall.sf_initial_release') ?>
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div><label class="<?= $_lbl ?>"><?= __mp('sf_version') ?> <span class="text-red-500">*</span></label>
+                <div><label class="<?= $_lbl ?>"><?= __('autoinstall.sf_version') ?> <span class="text-red-500">*</span></label>
                     <input type="text" name="version" required value="<?= htmlspecialchars($editItem['latest_version'] ?? '1.0.0') ?>" class="<?= $_inp ?>"></div>
-                <div><label class="<?= $_lbl ?>"><?= __mp('sf_min_voscms') ?></label>
+                <div><label class="<?= $_lbl ?>"><?= __('autoinstall.sf_min_voscms') ?></label>
                     <input type="text" name="min_voscms" class="<?= $_inp ?>" value="<?= htmlspecialchars($editItem['min_voscms_version'] ?? '') ?>" placeholder="2.0.0"></div>
-                <div><label class="<?= $_lbl ?>"><?= __mp('sf_min_php') ?></label>
+                <div><label class="<?= $_lbl ?>"><?= __('autoinstall.sf_min_php') ?></label>
                     <input type="text" name="min_php" class="<?= $_inp ?>" value="<?= htmlspecialchars($editItem['min_php_version'] ?? '') ?>" placeholder="8.1"></div>
             </div>
             <div class="mb-4">
-                <label class="<?= $_lbl ?>"><?= __mp('sf_package') ?> <?= $isEdit ? '' : '<span class="text-red-500">*</span>' ?></label>
+                <label class="<?= $_lbl ?>"><?= __('autoinstall.sf_package') ?> <?= $isEdit ? '' : '<span class="text-red-500">*</span>' ?></label>
                 <input type="file" name="package" accept=".zip" <?= $isEdit ? '' : 'required' ?> class="w-full text-sm text-zinc-700 dark:text-zinc-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-50 dark:file:bg-indigo-900/30 file:text-indigo-700 dark:file:text-indigo-300 file:font-medium cursor-pointer">
-                <p class="<?= $_hint ?>"><?= __mp('sf_package_hint') ?></p>
+                <p class="<?= $_hint ?>"><?= __('autoinstall.sf_package_hint') ?></p>
             </div>
-            <div><label class="<?= $_lbl ?>"><?= __mp('sf_changelog') ?></label>
-                <textarea name="changelog" rows="3" class="<?= $_inp ?>" placeholder="<?= __mp('sf_changelog_hint') ?>"><?= htmlspecialchars($editVersions[0]['changelog'] ?? '') ?></textarea></div>
+            <div><label class="<?= $_lbl ?>"><?= __('autoinstall.sf_changelog') ?></label>
+                <textarea name="changelog" rows="3" class="<?= $_inp ?>" placeholder="<?= __('autoinstall.sf_changelog_hint') ?>"><?= htmlspecialchars($editVersions[0]['changelog'] ?? '') ?></textarea></div>
         </div>
     </div>
 </div>
 
-<!-- ==================== 탭3: <?= __mp('sf_tab_sales') ?> ==================== -->
+<!-- ==================== 탭3: <?= __('autoinstall.sf_tab_sales') ?> ==================== -->
 <div id="tab-sales" class="tab-content hidden space-y-6">
     <div class="<?= $_card ?>">
-        <h2 class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-4"><?= __mp('sf_tab_sales') ?></h2>
+        <h2 class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-4"><?= __('autoinstall.sf_tab_sales') ?></h2>
         <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4 text-xs text-blue-700 dark:text-blue-300">
-            <?= __mp('sf_sales_notice') ?>
+            <?= __('autoinstall.sf_sales_notice') ?>
         </div>
         <div class="mb-6">
-            <label class="<?= $_lbl ?>"><?= __mp('sf_price_type') ?></label>
+            <label class="<?= $_lbl ?>"><?= __('autoinstall.sf_price_type') ?></label>
             <div class="flex gap-4">
                 <label class="flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-lg border transition">
                     <input type="radio" name="price_type" value="free" <?= (float)($editItem['price'] ?? 0) <= 0 ? 'checked' : '' ?> class="w-4 h-4 text-indigo-600">
-                    <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __mp('sf_price_free') ?></span>
+                    <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('autoinstall.sf_price_free') ?></span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-lg border transition">
                     <input type="radio" name="price_type" value="paid" <?= (float)($editItem['price'] ?? 0) > 0 ? 'checked' : '' ?> class="w-4 h-4 text-indigo-600">
-                    <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __mp('sf_price_paid') ?></span>
+                    <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300"><?= __('autoinstall.sf_price_paid') ?></span>
                 </label>
             </div>
         </div>
         <div id="paidSettings" class="<?= (float)($editItem['price'] ?? 0) <= 0 ? 'hidden' : '' ?> space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label class="<?= $_lbl ?>"><?= __mp('sf_price') ?></label>
+                <div><label class="<?= $_lbl ?>"><?= __('autoinstall.sf_price') ?></label>
                     <div class="flex gap-2">
                         <input type="number" name="price" value="<?= $editItem['price'] ?? '0' ?>" min="0" step="0.01" class="w-32 <?= $_inp ?>">
                         <select name="currency" class="flex-1 <?= $_inp ?>">
@@ -280,9 +280,9 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
                         </select>
                     </div>
                 </div>
-                <div><label class="<?= $_lbl ?>"><?= __mp('sf_sale_price') ?></label>
-                    <input type="number" name="sale_price" value="<?= $editItem['sale_price'] ?? '' ?>" min="0" step="0.01" class="<?= $_inp ?>" placeholder="<?= __mp('sf_sale_price') ?>"></div>
-                <div><label class="<?= $_lbl ?>"><?= __mp('sf_sale_ends') ?></label>
+                <div><label class="<?= $_lbl ?>"><?= __('autoinstall.sf_sale_price') ?></label>
+                    <input type="number" name="sale_price" value="<?= $editItem['sale_price'] ?? '' ?>" min="0" step="0.01" class="<?= $_inp ?>" placeholder="<?= __('autoinstall.sf_sale_price') ?>"></div>
+                <div><label class="<?= $_lbl ?>"><?= __('autoinstall.sf_sale_ends') ?></label>
                     <input type="datetime-local" name="sale_ends_at" value="<?= !empty($editItem['sale_ends_at']) ? date('Y-m-d\TH:i', strtotime($editItem['sale_ends_at'])) : '' ?>" class="<?= $_inp ?>"></div>
             </div>
         </div>
@@ -293,22 +293,22 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
 <div class="flex items-center justify-between mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-700">
     <div>
         <button type="button" id="prevTabBtn" class="hidden px-4 py-2.5 border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 text-sm font-medium rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition inline-flex items-center gap-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> <?= __mp('sf_prev') ?>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> <?= __('autoinstall.sf_prev') ?>
         </button>
     </div>
     <div class="flex items-center gap-3">
         <button type="button" id="nextTabBtn" class="px-5 py-2.5 bg-zinc-600 hover:bg-zinc-700 text-white text-sm font-medium rounded-lg transition inline-flex items-center gap-1.5">
-            <?= __mp('sf_next') ?> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <?= __('autoinstall.sf_next') ?> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </button>
         <?php if ($context === 'developer' && !$isEdit): ?>
         <button type="button" id="draftBtn" class="px-5 py-2.5 border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 text-sm font-medium rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition inline-flex items-center gap-1.5">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-            <?= __mp('sf_draft') ?>
+            <?= __('autoinstall.sf_draft') ?>
         </button>
         <?php endif; ?>
         <button type="submit" id="submitBtn" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition inline-flex items-center gap-1.5 shadow-lg shadow-indigo-600/25">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            <?= $isEdit ? __mp('sf_edit') : __mp('sf_submit') ?>
+            <?= $isEdit ? __('autoinstall.sf_edit') : __('autoinstall.sf_submit') ?>
         </button>
     </div>
 </div>
@@ -378,7 +378,7 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
     // Summernote
     $(function() {
         var ex = document.getElementById('description').value;
-        $('#description-editor').summernote({ placeholder: '<?= __mp('sf_desc_placeholder') ?>', height: 300,
+        $('#description-editor').summernote({ placeholder: '<?= __('autoinstall.sf_desc_placeholder') ?>', height: 300,
             toolbar: [['style',['style']],['font',['bold','italic','underline','strikethrough']],['color',['color']],['para',['ul','ol','paragraph']],['table',['table']],['insert',['link','picture','video']],['view',['codeview','help']]],
             callbacks: { onChange: function(c) { document.getElementById('description').value = c; } }
         });
@@ -399,7 +399,7 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
     async function submitFormData(fd) {
         var btn = document.getElementById('submitBtn'); btn.disabled = true;
         var origHtml = btn.innerHTML;
-        btn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> <?= __mp('sf_processing') ?>';
+        btn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> <?= __('autoinstall.sf_processing') ?>';
 
         // JSON 필드 가공
         var ne = document.getElementById('name_en').value, nl = document.getElementById('name_local').value;
@@ -419,10 +419,10 @@ $_licenses = ['GPL-2.0'=>'GPL v2','GPL-3.0'=>'GPL v3','LGPL-2.0'=>'LGPL v2','LGP
             var el = document.getElementById('result');
             if(data.success) {
                 el.className = 'mb-4 p-4 rounded-lg text-sm bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800';
-                el.innerHTML = '<strong>' + (data.is_draft ? '<?= __mp("sf_draft_saved") ?>' : '<?= __mp("sf_complete") ?>') + '!</strong> ' + (data.message||'') + '<br><a href="<?= $backUrl ?>" class="underline font-medium"><?= __mp('sf_back_list') ?></a>';
+                el.innerHTML = '<strong>' + (data.is_draft ? '<?= __("marketplace.sf_draft_saved") ?>' : '<?= __("marketplace.sf_complete") ?>') + '!</strong> ' + (data.message||'') + '<br><a href="<?= $backUrl ?>" class="underline font-medium"><?= __('autoinstall.sf_back_list') ?></a>';
             } else {
                 el.className = 'mb-4 p-4 rounded-lg text-sm bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800';
-                el.textContent = data.message || '<?= __mp("sf_fail") ?>';
+                el.textContent = data.message || '<?= __("marketplace.sf_fail") ?>';
             }
             el.classList.remove('hidden'); showTab(0); window.scrollTo({top:0,behavior:'smooth'});
         } catch(err) { alert('Network error'); }

@@ -7,7 +7,7 @@ return function () {
     $pm = \RzxLib\Core\Plugin\PluginManager::getInstance();
     if (!$pm) return;
 
-    $autoCheck = $pm->getSetting('vos-marketplace', 'auto_update_check', '1');
+    $autoCheck = $pm->getSetting('vos-autoinstall', 'auto_update_check', '1');
     if ($autoCheck !== '1') return;
 
     $baseUrl = $_ENV['APP_URL'] ?? '';
@@ -34,7 +34,7 @@ return function () {
                     <h3 class="font-semibold text-zinc-800 dark:text-zinc-200"><?= $l['title'] ?></h3>
                 </div>
             </div>
-            <a href="<?= $adminUrl ?>/marketplace"
+            <a href="<?= $adminUrl ?>/autoinstall"
                class="px-3 py-1.5 text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors">
                 <?= $l['browse'] ?> &rarr;
             </a>

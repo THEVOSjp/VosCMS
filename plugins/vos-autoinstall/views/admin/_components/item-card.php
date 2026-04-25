@@ -3,10 +3,9 @@
  * 마켓플레이스 아이템 카드 컴포넌트
  * $item (배열) 필요
  */
-$_name = json_decode($item['name'] ?? '{}', true);
-$_itemName = $_name[$locale] ?? $_name['en'] ?? $item['slug'] ?? '';
-$_desc = json_decode($item['short_description'] ?? $item['description'] ?? '{}', true);
-$_itemDesc = $_desc[$locale] ?? $_desc['en'] ?? '';
+// API에서 locale 처리된 단일 문자열로 옴
+$_itemName = $item['name'] ?: ($item['slug'] ?? '');
+$_itemDesc = $item['short_description'] ?? '';
 $_price = (float)($item['price'] ?? 0);
 $_salePrice = isset($item['sale_price']) ? (float)$item['sale_price'] : null;
 $_saleEnds = $item['sale_ends_at'] ?? null;
@@ -14,12 +13,12 @@ $_onSale = $_salePrice !== null && $_saleEnds && strtotime($_saleEnds) > time();
 $_effectivePrice = $_onSale ? $_salePrice : $_price;
 $_isFree = $_effectivePrice <= 0;
 $_currency = $item['currency'] ?? 'JPY';
-$_typeLabels = ['plugin' => __mp('plugins'), 'theme' => __mp('themes'), 'widget' => __mp('widgets'), 'skin' => __mp('skins')];
+$_typeLabels = ['plugin' => __('autoinstall.plugins'), 'theme' => __('autoinstall.themes'), 'widget' => __('autoinstall.widgets'), 'skin' => __('autoinstall.skins')];
 $_typeColors = ['plugin' => 'indigo', 'theme' => 'purple', 'widget' => 'emerald', 'skin' => 'orange'];
 $_type = $item['type'] ?? 'plugin';
 $_color = $_typeColors[$_type] ?? 'indigo';
 $_priceLabel = $_isFree
-    ? __mp('free')
+    ? __('autoinstall.free')
     : number_format((int)$_effectivePrice, 0) . ' ' . $_currency;
 $_priceInt = (int)$_effectivePrice;
 ?>
@@ -38,11 +37,11 @@ $_priceInt = (int)$_effectivePrice;
                 </svg>
             <?php endif; ?>
             <div class="absolute top-2 left-2 flex gap-1.5">
-                <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-<?= $_color ?>-100 text-<?= $_color ?>-700 dark:bg-<?= $_color ?>-900/40 dark:text-<?= $_color ?>-400">
+                <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-zinc-900/85 text-<?= $_color ?>-400 backdrop-blur-sm">
                     <?= $_typeLabels[$_type] ?? $_type ?>
                 </span>
                 <?php if ($item['is_featured'] ?? false): ?>
-                <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400"><?= __mp('featured') ?></span>
+                <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400"><?= __('autoinstall.featured') ?></span>
                 <?php endif; ?>
             </div>
             <?php if ($item['is_verified'] ?? false): ?>
@@ -67,7 +66,7 @@ $_priceInt = (int)$_effectivePrice;
         <div class="flex items-center justify-between mt-3">
             <div>
                 <?php if ($_isFree): ?>
-                <span class="text-sm font-bold text-green-600 dark:text-green-400"><?= __mp('free') ?></span>
+                <span class="text-sm font-bold text-green-600 dark:text-green-400"><?= __('autoinstall.free') ?></span>
                 <?php elseif ($_onSale): ?>
                 <span class="text-xs text-zinc-400 line-through mr-1"><?= number_format((int)$_price) ?></span>
                 <span class="text-sm font-bold text-red-600 dark:text-red-400"><?= number_format((int)$_salePrice) ?> <?= $_currency ?></span>
@@ -93,14 +92,21 @@ $_priceInt = (int)$_effectivePrice;
         <p class="text-xs text-zinc-400 mt-1"><?= htmlspecialchars($item['author_name']) ?> &middot; v<?= htmlspecialchars($item['latest_version'] ?? '1.0.0') ?></p>
         <?php endif; ?>
 
-        <!-- 구매/설치 버튼 -->
-        <div class="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-700">
-            <?php if ($_isFree): ?>
+        <!-- 구매/설치/다운로드/미리보기 버튼 -->
+        <?php $_canInstall = $_isFree || (isset($purchasedSlugs) && isset($purchasedSlugs[$item['slug']])); ?>
+        <div class="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-700 flex flex-wrap gap-1.5">
+            <?php if ($_canInstall): ?>
             <button type="button"
                     onclick="mpInstallItem(this)"
                     data-slug="<?= htmlspecialchars($item['slug']) ?>"
-                    class="w-full py-1.5 px-3 text-xs font-medium rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors">
+                    class="flex-1 py-1.5 px-2 text-xs font-medium rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors">
                 설치
+            </button>
+            <button type="button"
+                    onclick="mpDownloadItem(this)"
+                    data-slug="<?= htmlspecialchars($item['slug']) ?>"
+                    class="py-1.5 px-2 text-xs font-medium rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-zinc-600 dark:text-zinc-300 transition-colors">
+                다운로드
             </button>
             <?php else: ?>
             <button type="button"
@@ -110,9 +116,15 @@ $_priceInt = (int)$_effectivePrice;
                     data-price="<?= $_priceInt ?>"
                     data-currency="<?= htmlspecialchars($_currency) ?>"
                     data-price-label="<?= htmlspecialchars($_priceLabel) ?>"
-                    class="w-full py-1.5 px-3 text-xs font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors">
+                    class="flex-1 py-1.5 px-2 text-xs font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors">
                 구매 <?= htmlspecialchars($_priceLabel) ?>
             </button>
+            <?php endif; ?>
+            <?php if (!empty($item['demo_url'])): ?>
+            <a href="<?= htmlspecialchars($item['demo_url']) ?>" target="_blank" rel="noopener"
+               class="py-1.5 px-2 text-xs font-medium rounded-lg bg-violet-100 hover:bg-violet-200 dark:bg-violet-900/30 dark:hover:bg-violet-800/40 text-violet-600 dark:text-violet-400 transition-colors">
+                미리보기
+            </a>
             <?php endif; ?>
         </div>
     </div>

@@ -17,7 +17,7 @@ document.addEventListener('alpine:init', () => {
             this.error = '';
 
             try {
-                const response = await fetch(`${adminUrl}/marketplace/install`, {
+                const response = await fetch(`${adminUrl}/autoinstall/install`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: `item_id=${itemId}`

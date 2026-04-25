@@ -1,8 +1,8 @@
 {
-    "version": "2.3.6",
+    "version": "2.3.7",
     "name": "VosCMS",
-    "codename": "Marketplace API Live",
-    "release_date": "2026-04-21",
+    "codename": "AutoInstall UX Refresh",
+    "release_date": "2026-04-25",
     "commit": null,
     "channel": "stable",
     "github": {

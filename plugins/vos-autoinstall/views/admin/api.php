@@ -145,9 +145,84 @@ switch ($action) {
         echo json_encode(['success' => true]);
         break;
 
+    case 'submit_review':
+        // 리뷰 작성을 마켓플레이스 API로 중계 (VosCMS 라이선스 키 + 도메인 자동 첨부)
+        $slug    = trim($_POST['slug']    ?? '');
+        $rating  = (int)($_POST['rating'] ?? 0);
+        $bodyTxt = trim($_POST['body']    ?? '');
+        $rname   = trim($_POST['reviewer_name'] ?? '');
+
+        if (!$slug || $rating < 1 || $rating > 5) {
+            echo json_encode(['success'=>false,'message'=>'slug, rating(1-5) 필수']);
+            break;
+        }
+
+        $cacheFile = (defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 4)) . '/storage/.license_cache';
+        $vosKey = '';
+        if (file_exists($cacheFile)) {
+            $cd = json_decode(file_get_contents($cacheFile), true);
+            $vosKey = $cd['license_key'] ?? '';
+        }
+        if (!$vosKey) { echo json_encode(['success'=>false,'message'=>'VosCMS 라이선스 키를 찾을 수 없습니다']); break; }
+
+        $siteUrl = '';
+        try {
+            $st = $pdo->prepare("SELECT value FROM {$prefix}settings WHERE `key` = 'site_url' LIMIT 1");
+            $st->execute();
+            $siteUrl = $st->fetchColumn() ?: '';
+        } catch (Throwable $e) {}
+        $domain = strtolower(preg_replace('#^https?://#', '', rtrim($siteUrl, '/')));
+        $domain = preg_replace('#^www\.#', '', $domain);
+        $domain = explode('/', $domain)[0];
+        if (!$domain) { echo json_encode(['success'=>false,'message'=>'사이트 URL 확인 불가']); break; }
+
+        $pm        = $pluginManager ?? \RzxLib\Core\Plugin\PluginManager::getInstance();
+        $marketUrl = rtrim($pm ? $pm->getSetting('vos-autoinstall', 'market_api_url', 'https://market.21ces.com/api/market') : 'https://market.21ces.com/api/market', '/');
+        $payload   = json_encode([
+            'vos_key'       => $vosKey,
+            'domain'        => $domain,
+            'slug'          => $slug,
+            'rating'        => $rating,
+            'body'          => $bodyTxt,
+            'reviewer_name' => $rname,
+        ]);
+
+        $ch = curl_init($marketUrl . '/item/review');
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'Accept: application/json'],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 15,
+        ]);
+        $resp = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        $remote = json_decode($resp, true) ?: [];
+
+        if ($code === 200 && !empty($remote['ok'])) {
+            // 리뷰 캐시도 비워서 즉시 반영
+            $cacheDir = (defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 4)) . '/storage/cache';
+            foreach (glob($cacheDir . '/mp_api_*.json') ?: [] as $f) { @unlink($f); }
+            echo json_encode(['success'=>true, 'status'=>$remote['status'] ?? 'pending', 'is_verified'=>!empty($remote['is_verified'])]);
+        } else {
+            echo json_encode(['success'=>false, 'message'=>$remote['msg'] ?? '리뷰 등록 실패']);
+        }
+        break;
+
+    case 'clear_cache':
+        // 마켓 API 캐시 파일 모두 삭제
+        $cacheDir = (defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 4)) . '/storage/cache';
+        $count = 0;
+        foreach (glob($cacheDir . '/mp_api_*.json') ?: [] as $f) {
+            if (@unlink($f)) $count++;
+        }
+        echo json_encode(['success' => true, 'cleared' => $count, 'message' => 'Cache cleared']);
+        break;
+
     case 'sync_catalog':
         $pm = $pluginManager ?? \RzxLib\Core\Plugin\PluginManager::getInstance();
-        $apiUrl = $pm ? $pm->getSetting('vos-marketplace', 'marketplace_api_url', 'https://marketplace.voscms.com/api') : '';
+        $apiUrl = $pm ? $pm->getSetting('vos-autoinstall', 'market_api_url', 'https://market.21ces.com/api/market') : '';
 
         if (!$apiUrl) {
             echo json_encode(['success' => false, 'message' => 'API URL not configured']);

@@ -570,7 +570,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             ],
                         ], JSON_UNESCAPED_UNICODE);
 
-                        $pwStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}page_widgets (page_slug, widget_id, sort_order, config) VALUES ('home', ?, ?, ?)");
+                        // 혹시 기존 항목이 있으면 제거 후 새로 삽입 (중복 방지)
+                        $pdo->exec("DELETE FROM {$pfx}page_widgets WHERE page_slug = 'home'");
+                        $pwStmt = $pdo->prepare("INSERT INTO {$pfx}page_widgets (page_slug, widget_id, sort_order, config) VALUES ('home', ?, ?, ?)");
                         $pwStmt->execute([$_widgetIds['hero-cta2'], 0, $heroConfig]);
                         $pwStmt->execute([$_widgetIds['stats'], 1, $statsConfig]);
                         $pwStmt->execute([$_widgetIds['features'], 2, $featuresConfig]);
@@ -656,6 +658,34 @@ LICENSE_REGISTERED_AT=" . date('c') . "
 LICENSE_SERVER={$licenseServer}
 ";
                     file_put_contents(BASE_PATH . '/.env', $envContent);
+
+                    // 필수 스토리지 디렉토리 생성
+                    $storageDirs = [
+                        'storage/cache',
+                        'storage/tmp',
+                        'storage/app',
+                        'storage/logs',
+                        'storage/uploads',
+                        'storage/uploads/images',
+                        'storage/uploads/files',
+                    ];
+                    foreach ($storageDirs as $dir) {
+                        $path = BASE_PATH . '/' . $dir;
+                        if (!is_dir($path)) {
+                            @mkdir($path, 0775, true);
+                        }
+                        @chmod($path, 0775);
+                    }
+
+                    // 번들 플러그인 자동 활성화 (vos-autoinstall)
+                    try {
+                        require_once BASE_PATH . '/rzxlib/Core/Plugin/PluginManager.php';
+                        $pm = \RzxLib\Core\Plugin\PluginManager::init($pdo, BASE_PATH . '/plugins', $pfx);
+                        $pm->install('vos-autoinstall');
+                    } catch (\Throwable $e) {
+                        // 플러그인 설치 실패해도 전체 설치는 계속
+                        error_log('vos-autoinstall auto-install failed: ' . $e->getMessage());
+                    }
 
                     // 설치 완료 플래그
                     file_put_contents(BASE_PATH . '/storage/.installed', date('Y-m-d H:i:s'));
@@ -944,11 +974,26 @@ LICENSE_SERVER={$licenseServer}
                     <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('site_url') ?></label>
                     <input type="url" name="site_url" placeholder="https://example.com" required class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                <div class="grid grid-cols-3 gap-3 mt-3">
-                    <div>
-                        <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('admin_path') ?></label>
-                        <input type="text" name="admin_path" value="admin" class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <div class="mt-3">
+                    <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('admin_path') ?></label>
+                    <input type="text" id="adminPathInput" name="admin_path" value="admin"
+                           class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           oninput="updateAdminPathPreview()">
+                    <p class="mt-1.5 text-xs text-amber-600 dark:text-amber-400"><?= __t('admin_path_hint') ?></p>
+                    <div id="adminPathPreview" class="mt-1.5 text-xs text-zinc-400 font-mono hidden">
+                        → <span id="adminPathPreviewUrl"></span>
                     </div>
+                    <details class="mt-2 group">
+                        <summary class="cursor-pointer text-xs font-medium text-blue-600 hover:text-blue-800 select-none list-none flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            <?= __t('admin_path_why_title') ?>
+                        </summary>
+                        <div class="mt-2 p-3 rounded-lg bg-blue-50 border border-blue-100 text-xs text-zinc-700 leading-relaxed">
+                            <?= __t('admin_path_why_body') ?>
+                        </div>
+                    </details>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mt-3">
                     <div>
                         <label class="block text-sm font-medium text-zinc-700 mb-1"><?= __t('language') ?></label>
                         <select name="locale" class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -994,6 +1039,23 @@ LICENSE_SERVER={$licenseServer}
         </div>
         <button type="submit" class="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition"><?= __t('finish_install') ?> &rarr;</button>
     </form>
+    <script>
+    function updateAdminPathPreview() {
+        var siteUrlEl = document.querySelector('input[name="site_url"]');
+        var pathEl    = document.getElementById('adminPathInput');
+        var preview   = document.getElementById('adminPathPreview');
+        var previewUrl = document.getElementById('adminPathPreviewUrl');
+        var base = (siteUrlEl ? siteUrlEl.value.replace(/\/$/, '') : '') || 'https://your-domain.com';
+        var path = pathEl.value.trim() || 'admin';
+        previewUrl.textContent = base + '/' + path;
+        preview.classList.remove('hidden');
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        var siteUrlEl = document.querySelector('input[name="site_url"]');
+        if (siteUrlEl) siteUrlEl.addEventListener('input', updateAdminPathPreview);
+        updateAdminPathPreview();
+    });
+    </script>
 
     <?php elseif ($step === '5'): // 완료 ?>
     <div class="text-center py-6">

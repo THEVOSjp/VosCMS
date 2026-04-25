@@ -207,6 +207,22 @@ return [
         'msg_no_save_info' => 'No file information to save.',
         'msg_error_save' => 'An error occurred while saving translations.',
     ],
+    'marketplace_cache' => [
+        'title'        => 'Marketplace Cache',
+        'description'  => 'Time the autoinstall page keeps marketplace API responses in local cache. Shorter means faster reflection of marketplace changes (price/content) but more requests to the marketplace.',
+        'ttl_label'    => 'Cache TTL',
+        'ttl_60'       => '1 minute',
+        'ttl_300'      => '5 minutes (recommended)',
+        'ttl_600'      => '10 minutes',
+        'ttl_1800'     => '30 minutes',
+        'ttl_3600'     => '1 hour',
+        'save'         => 'Save',
+        'saved'        => 'Cache settings saved.',
+        'refresh_now'  => 'Refresh Cache Now',
+        'refreshed'    => 'Cache refreshed (%d files deleted).',
+        'refresh_desc' => 'Immediately deletes stored cache files so the next request fetches fresh data from the marketplace.',
+    ],
+
     'admin_path' => [
         'title' => 'Admin Access Path',
         'description' => 'Change the admin page access path for security.',

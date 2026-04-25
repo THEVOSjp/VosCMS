@@ -142,6 +142,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if ($action === 'update_marketplace_cache') {
+        $newTtl = (int)($_POST['cache_ttl'] ?? 300);
+        if (!in_array($newTtl, [60, 300, 600, 1800, 3600], true)) $newTtl = 300;
+        $pm = \RzxLib\Core\Plugin\PluginManager::getInstance();
+        if ($pm) {
+            $pm->setSetting('vos-autoinstall', 'cache_ttl', (string)$newTtl);
+            // 기존 캐시 즉시 무효화
+            foreach (glob(BASE_PATH . '/storage/cache/mp_api_*.json') ?: [] as $f) { @unlink($f); }
+            $message = __('settings.marketplace_cache.saved');
+            $messageType = 'success';
+        }
+    }
+
+    if ($action === 'refresh_marketplace_cache') {
+        $count = 0;
+        foreach (glob(BASE_PATH . '/storage/cache/mp_api_*.json') ?: [] as $f) {
+            if (@unlink($f)) $count++;
+        }
+        $message = sprintf(__('settings.marketplace_cache.refreshed'), $count);
+        $messageType = 'success';
+    }
+
     if ($action === 'update_admin_path') {
         $newAdminPath = trim($_POST['admin_path'] ?? '');
 
@@ -177,6 +199,54 @@ ob_start();
 
 <!-- Sub Navigation Tabs (Link style) -->
 <?php include __DIR__ . '/_settings_nav.php'; ?>
+
+<!-- Marketplace Cache Settings -->
+<div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">
+    <?php
+    $headerIcon = 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4';
+    $headerTitle = __('settings.marketplace_cache.title');
+    $headerDescription = __('settings.marketplace_cache.description');
+    $headerIconColor = ''; $headerActions = '';
+    include __DIR__ . '/../components/settings-header.php';
+
+    $_pmCache = \RzxLib\Core\Plugin\PluginManager::getInstance();
+    $_currentTtl = $_pmCache ? (string)$_pmCache->getSetting('vos-autoinstall', 'cache_ttl', '300') : '300';
+    $_cacheCount = count(glob(BASE_PATH . '/storage/cache/mp_api_*.json') ?: []);
+    ?>
+
+    <form method="POST" class="space-y-4">
+        <input type="hidden" name="action" value="update_marketplace_cache">
+        <div>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= __('settings.marketplace_cache.ttl_label') ?></label>
+            <select name="cache_ttl"
+                    class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="60"   <?= $_currentTtl === '60'   ? 'selected' : '' ?>><?= __('settings.marketplace_cache.ttl_60') ?></option>
+                <option value="300"  <?= $_currentTtl === '300'  ? 'selected' : '' ?>><?= __('settings.marketplace_cache.ttl_300') ?></option>
+                <option value="600"  <?= $_currentTtl === '600'  ? 'selected' : '' ?>><?= __('settings.marketplace_cache.ttl_600') ?></option>
+                <option value="1800" <?= $_currentTtl === '1800' ? 'selected' : '' ?>><?= __('settings.marketplace_cache.ttl_1800') ?></option>
+                <option value="3600" <?= $_currentTtl === '3600' ? 'selected' : '' ?>><?= __('settings.marketplace_cache.ttl_3600') ?></option>
+            </select>
+        </div>
+        <div class="flex items-center justify-end pt-4 border-t dark:border-zinc-700">
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                <?= __('settings.marketplace_cache.save') ?>
+            </button>
+        </div>
+    </form>
+
+    <!-- 즉시 캐시 갱신 -->
+    <form method="POST" class="mt-4 pt-4 border-t dark:border-zinc-700 flex items-center justify-between gap-4">
+        <input type="hidden" name="action" value="refresh_marketplace_cache">
+        <p class="text-xs text-zinc-500 dark:text-zinc-400 flex-1">
+            <?= __('settings.marketplace_cache.refresh_desc') ?>
+            <span class="ml-1 text-zinc-400">(<?= $_cacheCount ?> files)</span>
+        </p>
+        <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-600 transition-colors whitespace-nowrap">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            <?= __('settings.marketplace_cache.refresh_now') ?>
+        </button>
+    </form>
+</div>
 
 <!-- Admin Path Settings -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6 transition-colors">

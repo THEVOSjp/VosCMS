@@ -114,7 +114,8 @@
         "defaults": {
             "market_api_url": "https://market.21ces.com/api/market",
             "auto_update_check": "1",
-            "update_check_interval": "86400"
+            "update_check_interval": "86400",
+            "cache_ttl": "300"
         }
     }
 }

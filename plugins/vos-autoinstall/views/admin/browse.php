@@ -5,20 +5,23 @@
  */
 include __DIR__ . '/_head.php';
 
-$pageHeaderTitle = __mp('title');
-$pageSubTitle    = __mp('browse');
+$pageHeaderTitle = __('autoinstall.title');
+$pageSubTitle    = __('autoinstall.browse');
 
-$marketApiBase  = rtrim($_ENV['MARKET_API_URL'] ?? 'https://market.21ces.com/api/market', '/');
+$_pm            = \RzxLib\Core\Plugin\PluginManager::getInstance();
+$marketApiBase  = rtrim($_pm ? $_pm->getSetting('vos-autoinstall', 'market_api_url', $_ENV['MARKET_API_URL'] ?? 'https://market.21ces.com/api/market') : ($_ENV['MARKET_API_URL'] ?? 'https://market.21ces.com/api/market'), '/');
 $cacheDir       = (defined('BASE_PATH') ? BASE_PATH : __DIR__ . '/../../../../..') . '/storage/cache';
 $payjpPublicKey = $_ENV['PAYJP_PUBLIC_KEY'] ?? '';
 $_apiUrl        = $adminUrl . '/autoinstall/api';
+$_cacheTtl      = (int)($_pm ? $_pm->getSetting('vos-autoinstall', 'cache_ttl', '300') : 300);
 
 // ── 필터 파라미터 ─────────────────────────────────────
 $filterType     = $_GET['type']     ?? '';
-$filterCat      = $_GET['cat']      ?? '';
 $filterSort     = $_GET['sort']     ?? 'newest';
 $filterKeyword  = $_GET['q']        ?? '';
-$filterFree     = !empty($_GET['free']);
+$filterPricing  = $_GET['pricing'] ?? '';  // '', 'free', 'paid'
+$filterFree     = $filterPricing === 'free';
+$filterPaid     = $filterPricing === 'paid';
 $page           = max(1, (int)($_GET['page'] ?? 1));
 $limit          = 24;
 
@@ -50,49 +53,76 @@ function mpApiFetch(string $url, string $cacheDir, int $ttl = 1800): ?array {
 }
 
 // ── 카탈로그 조회 ─────────────────────────────────────
+$_locale = current_locale() ?: 'ko';
 $catalogParams = array_filter([
-    'limit' => $limit,
-    'page'  => $page,
-    'sort'  => $filterSort,
-    'type'  => $filterType,
-    'cat'   => $filterCat,
-    'q'     => $filterKeyword,
-    'free'  => $filterFree ? '1' : '',
+    'limit'  => $limit,
+    'page'   => $page,
+    'sort'   => $filterSort,
+    'type'   => $filterType,
+    'q'      => $filterKeyword,
+    'free'   => $filterFree ? '1' : '',
+    'paid'   => $filterPaid ? '1' : '',
+    'locale' => $_locale,
 ]);
 $catalogUrl  = $marketApiBase . '/catalog?' . http_build_query($catalogParams);
-$catalogData = mpApiFetch($catalogUrl, $cacheDir);
+$catalogData = mpApiFetch($catalogUrl, $cacheDir, $_cacheTtl);
 $items       = $catalogData['data'] ?? [];
 $meta        = $catalogData['meta'] ?? ['total' => 0, 'page' => 1, 'pages' => 1];
 $apiError    = empty($catalogData['ok']);
 
 // ── 추천 아이템 (첫 페이지 + 필터 없을 때) ─────────────
 $featuredItems = [];
-if ($page === 1 && !$filterType && !$filterKeyword && !$filterCat) {
-    $featuredUrl   = $marketApiBase . '/catalog?' . http_build_query(['featured' => '1', 'limit' => 4, 'sort' => 'popular']);
-    $featuredData  = mpApiFetch($featuredUrl, $cacheDir);
+if ($page === 1 && !$filterType && !$filterKeyword) {
+    $featuredUrl   = $marketApiBase . '/catalog?' . http_build_query(['featured' => '1', 'limit' => 4, 'sort' => 'popular', 'locale' => $_locale]);
+    $featuredData  = mpApiFetch($featuredUrl, $cacheDir, $_cacheTtl);
     $featuredItems = $featuredData['data'] ?? [];
 }
 
 // ── 타입별 카운트 ─────────────────────────────────────
 $typeCounts = ['plugin' => 0, 'theme' => 0, 'widget' => 0, 'skin' => 0];
 $countUrl   = $marketApiBase . '/catalog?' . http_build_query(['limit' => 1]);
-$countData  = mpApiFetch($countUrl, $cacheDir);
+$countData  = mpApiFetch($countUrl, $cacheDir, $_cacheTtl);
 $totalCount = $countData['meta']['total'] ?? 0;
 foreach (array_keys($typeCounts) as $t) {
-    $tData = mpApiFetch($marketApiBase . '/catalog?' . http_build_query(['type' => $t, 'limit' => 1]), $cacheDir);
+    $tData = mpApiFetch($marketApiBase . '/catalog?' . http_build_query(['type' => $t, 'limit' => 1]), $cacheDir, $_cacheTtl);
     $typeCounts[$t] = $tData['meta']['total'] ?? 0;
 }
 
-// ── 카테고리 목록 (전체 카탈로그에서 추출) ───────────
-$allCatsData = mpApiFetch($marketApiBase . '/catalog?' . http_build_query(['limit' => 100]), $cacheDir);
-$catSlugs = [];
-foreach ($allCatsData['data'] ?? [] as $it) {
-    if (!empty($it['cat_slug'])) $catSlugs[$it['cat_slug']] = $it['cat_slug'];
-}
-if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filterCat;
+// ── 구매 완료 아이템 슬러그 셋 (유료 아이템 버튼 분기용) ─
+$purchasedSlugs = [];
+try {
+    $_pfx = $_ENV['DB_PREFIX'] ?? 'rzx_';
+    $_pdo = new PDO(
+        "mysql:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_DATABASE']};charset=utf8mb4",
+        $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'],
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+    );
+    $_adminId = $_SESSION['admin_id'] ?? 0;
+    if ($_adminId) {
+        $_st = $_pdo->prepare(
+            "SELECT DISTINCT i.slug
+               FROM {$_pfx}mp_order_items oi
+               JOIN {$_pfx}mp_orders o ON o.id = oi.order_id
+               JOIN {$_pfx}mp_items  i ON i.id = oi.item_id
+              WHERE o.admin_id = ? AND o.status = 'paid'"
+        );
+        $_st->execute([$_adminId]);
+        $purchasedSlugs = array_flip($_st->fetchAll(PDO::FETCH_COLUMN));
+    }
+} catch (Throwable $e) { /* 무시 */ }
+
 ?>
 
 <div class="space-y-6">
+
+    <!-- 우상단 캐시 갱신 버튼 -->
+    <div class="flex justify-end">
+        <button type="button" id="mpCacheRefreshBtn" onclick="mpRefreshCache(this)"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            <span><?= __('autoinstall.cache_refresh') ?></span>
+        </button>
+    </div>
 
     <?php if ($apiError): ?>
     <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 flex items-center gap-3 text-sm text-amber-700 dark:text-amber-400">
@@ -101,48 +131,28 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
     </div>
     <?php endif; ?>
 
-    <!-- 검색 바 -->
+    <!-- 검색 바 (밝은 녹색 강조) -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-4">
-        <form method="GET" action="<?= $adminUrl ?>/marketplace" class="flex flex-col md:flex-row gap-3">
+        <form method="GET" action="<?= $adminUrl ?>/autoinstall" class="flex gap-2">
+            <!-- type/sort/pricing 유지를 위한 hidden -->
+            <?php if ($filterType !== ''): ?><input type="hidden" name="type" value="<?= htmlspecialchars($filterType) ?>"><?php endif; ?>
+            <?php if ($filterSort !== '' && $filterSort !== 'newest'): ?><input type="hidden" name="sort" value="<?= htmlspecialchars($filterSort) ?>"><?php endif; ?>
+            <?php if ($filterPricing !== ''): ?><input type="hidden" name="pricing" value="<?= htmlspecialchars($filterPricing) ?>"><?php endif; ?>
+
             <div class="flex-1 relative">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
+                <span class="absolute left-1.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-md bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </span>
                 <input type="text" name="q" value="<?= htmlspecialchars($filterKeyword) ?>"
-                       placeholder="<?= __mp('search_placeholder') ?>"
-                       class="w-full pl-10 pr-4 py-2.5 bg-zinc-50 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-lg text-sm text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                       placeholder="<?= __('autoinstall.search_placeholder') ?>"
+                       class="w-full pl-12 pr-4 py-2.5 bg-white dark:bg-zinc-700 border-2 border-emerald-300 dark:border-emerald-700 rounded-lg text-sm text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400">
             </div>
-            <div class="flex gap-2 flex-wrap">
-                <!-- 타입 필터 -->
-                <select name="type" onchange="this.form.submit()"
-                        class="px-3 py-2.5 bg-zinc-50 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-lg text-sm text-zinc-700 dark:text-zinc-300">
-                    <option value=""><?= __mp('all_types') ?> (<?= number_format($totalCount) ?>)</option>
-                    <option value="plugin" <?= $filterType === 'plugin' ? 'selected' : '' ?>><?= __mp('plugins') ?> (<?= $typeCounts['plugin'] ?>)</option>
-                    <option value="theme"  <?= $filterType === 'theme'  ? 'selected' : '' ?>><?= __mp('themes') ?>  (<?= $typeCounts['theme'] ?>)</option>
-                    <option value="widget" <?= $filterType === 'widget' ? 'selected' : '' ?>><?= __mp('widgets') ?> (<?= $typeCounts['widget'] ?>)</option>
-                    <option value="skin"   <?= $filterType === 'skin'   ? 'selected' : '' ?>><?= __mp('skins') ?>   (<?= $typeCounts['skin'] ?>)</option>
-                </select>
-
-                <!-- 정렬 -->
-                <select name="sort" onchange="this.form.submit()"
-                        class="px-3 py-2.5 bg-zinc-50 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-lg text-sm text-zinc-700 dark:text-zinc-300">
-                    <option value="newest"     <?= $filterSort === 'newest'     ? 'selected' : '' ?>><?= __mp('sort_newest') ?></option>
-                    <option value="popular"    <?= $filterSort === 'popular'    ? 'selected' : '' ?>><?= __mp('sort_popular') ?></option>
-                    <option value="price_asc"  <?= $filterSort === 'price_asc'  ? 'selected' : '' ?>><?= __mp('sort_price_asc') ?></option>
-                    <option value="price_desc" <?= $filterSort === 'price_desc' ? 'selected' : '' ?>><?= __mp('sort_price_desc') ?></option>
-                    <option value="rating"     <?= $filterSort === 'rating'     ? 'selected' : '' ?>><?= __mp('sort_rating') ?></option>
-                </select>
-
-                <!-- 무료 필터 -->
-                <label class="flex items-center gap-2 px-3 py-2.5 bg-zinc-50 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-lg text-sm text-zinc-700 dark:text-zinc-300 cursor-pointer">
-                    <input type="checkbox" name="free" value="1" <?= $filterFree ? 'checked' : '' ?> onchange="this.form.submit()" class="rounded border-zinc-300 dark:border-zinc-600 text-indigo-600 focus:ring-indigo-500">
-                    <?= __mp('free_only') ?>
-                </label>
-
-                <button type="submit" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                </button>
-            </div>
+            <button type="submit" aria-label="<?= __('autoinstall.search') ?>"
+                    class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </button>
         </form>
     </div>
 
@@ -151,7 +161,7 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
     <div>
         <h2 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-3">
             <svg class="w-5 h-5 inline-block text-yellow-500 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-            <?= __mp('featured') ?>
+            <?= __('autoinstall.featured') ?>
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <?php foreach ($featuredItems as $fi): ?>
@@ -161,62 +171,101 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
     </div>
     <?php endif; ?>
 
-    <!-- 카테고리 버튼 -->
-    <?php if (!empty($catSlugs)): ?>
+    <!-- 타입 버튼 -->
     <?php
-    $catLabels = [
-        'content'   => ['ko' => '콘텐츠',   'en' => 'Content',   'ja' => 'コンテンツ'],
-        'utility'   => ['ko' => '유틸리티', 'en' => 'Utility',   'ja' => 'ユーティリティ'],
-        'design'    => ['ko' => '디자인',   'en' => 'Design',    'ja' => 'デザイン'],
-        'marketing' => ['ko' => '마케팅',   'en' => 'Marketing', 'ja' => 'マーケティング'],
-        'seo'       => ['ko' => 'SEO',      'en' => 'SEO',       'ja' => 'SEO'],
-        'ecommerce' => ['ko' => '이커머스', 'en' => 'E-Commerce','ja' => 'EC'],
-        'security'  => ['ko' => '보안',     'en' => 'Security',  'ja' => 'セキュリティ'],
-        'social'    => ['ko' => '소셜',     'en' => 'Social',    'ja' => 'ソーシャル'],
+    $typeQueryBase = array_filter(['sort' => $filterSort, 'q' => $filterKeyword, 'pricing' => $filterPricing]);
+    $typeList = [
+        ''       => [__('autoinstall.all_types'),  $totalCount],
+        'plugin' => [__('autoinstall.plugins'),    $typeCounts['plugin']],
+        'theme'  => [__('autoinstall.themes'),     $typeCounts['theme']],
+        'widget' => [__('autoinstall.widgets'),    $typeCounts['widget']],
+        'skin'   => [__('autoinstall.skins'),      $typeCounts['skin']],
     ];
-    $locale = current_locale() ?: 'ko';
-    $catQueryBase = array_filter(['type' => $filterType, 'sort' => $filterSort, 'q' => $filterKeyword, 'free' => $filterFree ? '1' : '']);
     ?>
     <div class="flex flex-wrap gap-2">
-        <a href="?<?= http_build_query(array_merge($catQueryBase, ['cat' => ''])) ?>"
+        <?php foreach ($typeList as $val => [$label, $count]): ?>
+        <a href="?<?= http_build_query(array_merge($typeQueryBase, ['type' => $val])) ?>"
            class="px-4 py-1.5 rounded-full text-sm font-medium border transition-colors
-                  <?= $filterCat === '' ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-indigo-400 hover:text-indigo-600' ?>">
-            <?= __mp('all_categories') ?>
-        </a>
-        <?php foreach ($catSlugs as $slug): ?>
-        <?php $label = $catLabels[$slug][$locale] ?? $catLabels[$slug]['en'] ?? ucfirst($slug); ?>
-        <a href="?<?= http_build_query(array_merge($catQueryBase, ['cat' => $slug])) ?>"
-           class="px-4 py-1.5 rounded-full text-sm font-medium border transition-colors
-                  <?= $filterCat === $slug ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-indigo-400 hover:text-indigo-600' ?>">
-            <?= htmlspecialchars($label) ?>
+                  <?= $filterType === $val ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-indigo-400 hover:text-indigo-600' ?>">
+            <?= $label ?> (<?= number_format($count) ?>)
         </a>
         <?php endforeach; ?>
     </div>
-    <?php endif; ?>
 
     <!-- 아이템 목록 -->
     <div>
         <div class="flex items-center justify-between mb-3">
             <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                <?= number_format($meta['total']) ?><?= __mp('items_count') ?>
+                <?= number_format($meta['total']) ?><?= __('autoinstall.items_count') ?>
                 <?php if ($meta['pages'] > 1): ?>
                 <span class="ml-2 text-zinc-400">(<?= $page ?> / <?= $meta['pages'] ?>)</span>
                 <?php endif; ?>
             </p>
-            <!-- 뷰 스타일 전환 버튼 -->
-            <div class="flex items-center gap-1" id="mpViewStyleBtns">
-                <button onclick="mpSetViewStyle('list')" class="vs-btn p-1.5 rounded-lg transition" data-style="list" title="리스트">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+            <!-- 정렬 + 무료/유료 필터 + 뷰 스타일 전환 -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <!-- 정렬 -->
+                <form method="GET" action="<?= $adminUrl ?>/autoinstall" class="inline-flex">
+                    <?php if ($filterType !== ''): ?><input type="hidden" name="type" value="<?= htmlspecialchars($filterType) ?>"><?php endif; ?>
+                    <?php if ($filterKeyword !== ''): ?><input type="hidden" name="q" value="<?= htmlspecialchars($filterKeyword) ?>"><?php endif; ?>
+                    <?php if ($filterPricing !== ''): ?><input type="hidden" name="pricing" value="<?= htmlspecialchars($filterPricing) ?>"><?php endif; ?>
+                    <select name="sort" onchange="this.form.submit()"
+                            class="px-2.5 py-1.5 bg-white dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-lg text-xs text-zinc-700 dark:text-zinc-300">
+                        <option value="newest"     <?= $filterSort === 'newest'     ? 'selected' : '' ?>><?= __('autoinstall.sort_newest') ?></option>
+                        <option value="popular"    <?= $filterSort === 'popular'    ? 'selected' : '' ?>><?= __('autoinstall.sort_popular') ?></option>
+                        <option value="price_asc"  <?= $filterSort === 'price_asc'  ? 'selected' : '' ?>><?= __('autoinstall.sort_price_asc') ?></option>
+                        <option value="price_desc" <?= $filterSort === 'price_desc' ? 'selected' : '' ?>><?= __('autoinstall.sort_price_desc') ?></option>
+                        <option value="rating"     <?= $filterSort === 'rating'     ? 'selected' : '' ?>><?= __('autoinstall.sort_rating') ?></option>
+                    </select>
+                </form>
+
+                <!-- 가격 필터 (전체 / 무료 / 유료) -->
+                <?php
+                    $_pricingBase = array_filter([
+                        'type' => $filterType,
+                        'q'    => $filterKeyword,
+                        'sort' => $filterSort !== 'newest' ? $filterSort : '',
+                    ]);
+                    $_pricingOptions = [
+                        ''     => __('autoinstall.all_types'),
+                        'free' => __('autoinstall.free'),
+                        'paid' => __('autoinstall.paid'),
+                    ];
+                ?>
+                <div class="inline-flex rounded-lg border border-zinc-200 dark:border-zinc-600 overflow-hidden text-xs">
+                    <?php foreach ($_pricingOptions as $val => $label):
+                        $_pUrl = '?' . http_build_query(array_merge($_pricingBase, $val !== '' ? ['pricing' => $val] : []));
+                        $_active = $filterPricing === $val;
+                    ?>
+                    <a href="<?= $_pUrl ?>"
+                       class="px-3 py-1.5 transition-colors <?= $_active ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-600' ?>">
+                        <?= htmlspecialchars($label) ?>
+                    </a>
+                    <?php endforeach; ?>
+                </div>
+
+                <!-- 뷰 스타일 전환 버튼 -->
+                <div class="flex items-center gap-1" id="mpViewStyleBtns">
+                <button type="button" onclick="mpSetViewStyle('list')" data-style="list"
+                        title="<?= __('autoinstall.view_list') ?>" aria-label="<?= __('autoinstall.view_list') ?>"
+                        class="vs-btn p-2 rounded-lg transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
                 </button>
-                <button onclick="mpSetViewStyle('webzine')" class="vs-btn p-1.5 rounded-lg transition" data-style="webzine" title="웹진">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+                <button type="button" onclick="mpSetViewStyle('webzine')" data-style="webzine"
+                        title="<?= __('autoinstall.view_webzine') ?>" aria-label="<?= __('autoinstall.view_webzine') ?>"
+                        class="vs-btn p-2 rounded-lg transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
                 </button>
-                <button onclick="mpSetViewStyle('card')" class="vs-btn p-1.5 rounded-lg transition" data-style="card" title="카드">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                <button type="button" onclick="mpSetViewStyle('card')" data-style="card"
+                        title="<?= __('autoinstall.view_card') ?>" aria-label="<?= __('autoinstall.view_card') ?>"
+                        class="vs-btn p-2 rounded-lg transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                 </button>
-                <button onclick="mpSetViewStyle('grid')" class="vs-btn p-1.5 rounded-lg transition" data-style="grid" title="그리드">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
+                <button type="button" onclick="mpSetViewStyle('grid')" data-style="grid"
+                        title="<?= __('autoinstall.view_grid') ?>" aria-label="<?= __('autoinstall.view_grid') ?>"
+                        class="vs-btn p-2 rounded-lg transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
                 </button>
+                </div>
             </div>
         </div>
 
@@ -225,26 +274,30 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
             <svg class="w-16 h-16 mx-auto mb-4 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
             </svg>
-            <p class="text-zinc-400 dark:text-zinc-500"><?= __mp('no_items') ?></p>
+            <p class="text-zinc-400 dark:text-zinc-500"><?= __('autoinstall.no_items') ?></p>
         </div>
         <?php else: ?>
 
         <!-- 리스트 뷰 -->
         <div id="viewList" class="view-mode hidden bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden">
             <?php foreach ($items as $item):
-                $_name = json_decode($item['name'] ?? '{}', true);
-                $_locale = current_locale() ?: 'ko';
-                $_itemName = $_name[$_locale] ?? $_name['en'] ?? $item['slug'] ?? '';
+                $_itemName = $item['name'] ?: ($item['slug'] ?? '');
                 $_price = (float)($item['price'] ?? 0);
-                $_isFree = $_price <= 0;
-                $_currency = $item['currency'] ?? 'USD';
-                $_typeLabels = ['plugin' => __mp('plugins'), 'theme' => __mp('themes'), 'widget' => __mp('widgets'), 'skin' => __mp('skins')];
+                $_salePrice = isset($item['sale_price']) ? (float)$item['sale_price'] : null;
+                $_onSale = $_salePrice !== null && !empty($item['sale_ends_at']) && strtotime($item['sale_ends_at']) > time();
+                $_effectivePrice = $_onSale ? $_salePrice : $_price;
+                $_isFree = $_effectivePrice <= 0;
+                $_currency = $item['currency'] ?? 'JPY';
+                $_priceInt = (int)$_effectivePrice;
+                $_priceLabel = $_isFree ? __('autoinstall.free') : number_format($_priceInt) . ' ' . $_currency;
+                $_typeLabels = ['plugin' => __('autoinstall.plugins'), 'theme' => __('autoinstall.themes'), 'widget' => __('autoinstall.widgets'), 'skin' => __('autoinstall.skins')];
                 $_typeColors = ['plugin' => 'indigo', 'theme' => 'purple', 'widget' => 'emerald', 'skin' => 'orange'];
                 $_type = $item['type'] ?? 'plugin';
                 $_color = $_typeColors[$_type] ?? 'indigo';
+                $_detailUrl = $adminUrl . '/autoinstall/item?slug=' . urlencode($item['slug'] ?? '');
             ?>
-            <a href="<?= $adminUrl ?>/autoinstall/item?slug=<?= urlencode($item['slug'] ?? '') ?>"
-               class="flex items-center gap-4 px-4 py-3 border-b border-zinc-100 dark:border-zinc-700 last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
+            <div onclick="window.location='<?= $_detailUrl ?>'"
+                 class="flex items-center gap-4 px-4 py-3 border-b border-zinc-100 dark:border-zinc-700 last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors cursor-pointer">
                 <!-- 아이콘 -->
                 <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-<?= $_color ?>-100 dark:bg-<?= $_color ?>-900/30 flex items-center justify-center overflow-hidden">
                     <?php if (!empty($item['icon']) && (str_starts_with($item['icon'], '/') || str_starts_with($item['icon'], 'http'))): ?>
@@ -267,35 +320,67 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
                 <?php endif; ?>
                 <!-- 가격 -->
                 <div class="flex-shrink-0 text-sm font-semibold <?= $_isFree ? 'text-green-600 dark:text-green-400' : 'text-zinc-800 dark:text-zinc-200' ?>">
-                    <?= $_isFree ? __mp('free') : number_format($_price, in_array($_currency, ['KRW','JPY']) ? 0 : 2) . ' ' . $_currency ?>
+                    <?= $_priceLabel ?>
                 </div>
-            </a>
+                <!-- 버튼 -->
+                <?php $_canInstall = $_isFree || isset($purchasedSlugs[$item['slug']]); ?>
+                <div class="flex items-center gap-1.5 flex-shrink-0" onclick="event.stopPropagation()">
+                    <?php if ($_canInstall): ?>
+                    <button type="button" onclick="mpInstallItem(this)"
+                            data-slug="<?= htmlspecialchars($item['slug']) ?>"
+                            class="px-3 py-1 text-xs font-medium rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors">
+                        설치
+                    </button>
+                    <button type="button" onclick="mpDownloadItem(this)"
+                            data-slug="<?= htmlspecialchars($item['slug']) ?>"
+                            class="px-3 py-1 text-xs font-medium rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-zinc-500 dark:text-zinc-400 transition-colors">
+                        다운로드
+                    </button>
+                    <?php else: ?>
+                    <button type="button" onclick="mpOpenPurchase(this)"
+                            data-slug="<?= htmlspecialchars($item['slug']) ?>"
+                            data-name="<?= htmlspecialchars($_itemName) ?>"
+                            data-price="<?= $_priceInt ?>"
+                            data-currency="<?= htmlspecialchars($_currency) ?>"
+                            data-price-label="<?= htmlspecialchars($_priceLabel) ?>"
+                            class="px-3 py-1 text-xs font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors">
+                        구매
+                    </button>
+                    <?php endif; ?>
+                    <?php if (!empty($item['demo_url'])): ?>
+                    <a href="<?= htmlspecialchars($item['demo_url']) ?>" target="_blank" rel="noopener"
+                       class="px-3 py-1 text-xs font-medium rounded-lg bg-violet-100 hover:bg-violet-200 dark:bg-violet-900/30 dark:hover:bg-violet-800/40 text-violet-600 dark:text-violet-400 transition-colors">
+                        미리보기
+                    </a>
+                    <?php endif; ?>
+                </div>
+            </div>
             <?php endforeach; ?>
         </div>
 
         <!-- 웹진 뷰 -->
         <div id="viewWebzine" class="view-mode hidden space-y-3">
             <?php foreach ($items as $item):
-                $_name = json_decode($item['name'] ?? '{}', true);
-                $_locale = current_locale() ?: 'ko';
-                $_itemName = $_name[$_locale] ?? $_name['en'] ?? $item['slug'] ?? '';
-                $_desc = json_decode($item['short_description'] ?? $item['description'] ?? '{}', true);
-                $_itemDesc = $_desc[$_locale] ?? $_desc['en'] ?? '';
+                $_itemName = $item['name'] ?: ($item['slug'] ?? '');
+                $_itemDesc = $item['short_description'] ?? '';
                 $_price = (float)($item['price'] ?? 0);
                 $_salePrice = isset($item['sale_price']) ? (float)$item['sale_price'] : null;
                 $_onSale = $_salePrice !== null && !empty($item['sale_ends_at']) && strtotime($item['sale_ends_at']) > time();
                 $_effectivePrice = $_onSale ? $_salePrice : $_price;
                 $_isFree = $_effectivePrice <= 0;
                 $_currency = $item['currency'] ?? 'USD';
-                $_typeLabels = ['plugin' => __mp('plugins'), 'theme' => __mp('themes'), 'widget' => __mp('widgets'), 'skin' => __mp('skins')];
+                $_typeLabels = ['plugin' => __('autoinstall.plugins'), 'theme' => __('autoinstall.themes'), 'widget' => __('autoinstall.widgets'), 'skin' => __('autoinstall.skins')];
                 $_typeColors = ['plugin' => 'indigo', 'theme' => 'purple', 'widget' => 'emerald', 'skin' => 'orange'];
                 $_type = $item['type'] ?? 'plugin';
                 $_color = $_typeColors[$_type] ?? 'indigo';
                 $_hasBanner = !empty($item['banner_image']);
                 $_hasIcon   = !empty($item['icon']) && (str_starts_with($item['icon'], '/') || str_starts_with($item['icon'], 'http'));
+                $_priceInt  = (int)$_effectivePrice;
+                $_priceLabel = $_isFree ? __('autoinstall.free') : number_format($_priceInt) . ' ' . $_currency;
+                $_detailUrl = $adminUrl . '/autoinstall/item?slug=' . urlencode($item['slug'] ?? '');
             ?>
-            <a href="<?= $adminUrl ?>/autoinstall/item?slug=<?= urlencode($item['slug'] ?? '') ?>"
-               class="group block bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-600 transition-all">
+            <div onclick="window.location='<?= $_detailUrl ?>'"
+                 class="group block bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-600 transition-all cursor-pointer">
                 <div class="flex flex-col sm:flex-row">
                     <!-- 썸네일 -->
                     <div class="sm:w-48 sm:h-36 h-44 flex-shrink-0 bg-gradient-to-br from-<?= $_color ?>-50 to-<?= $_color ?>-100 dark:from-<?= $_color ?>-900/20 dark:to-<?= $_color ?>-800/20 flex items-center justify-center overflow-hidden relative">
@@ -307,7 +392,7 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
                         <svg class="w-12 h-12 text-<?= $_color ?>-300 dark:text-<?= $_color ?>-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                         <?php endif; ?>
                         <!-- 타입 배지 -->
-                        <span class="absolute top-2 left-2 px-2 py-0.5 text-xs font-medium rounded-full bg-<?= $_color ?>-100 text-<?= $_color ?>-700 dark:bg-<?= $_color ?>-900/60 dark:text-<?= $_color ?>-300">
+                        <span class="absolute top-2 left-2 px-2 py-0.5 text-xs font-medium rounded-full bg-zinc-900/85 text-<?= $_color ?>-400 backdrop-blur-sm">
                             <?= $_typeLabels[$_type] ?? $_type ?>
                         </span>
                     </div>
@@ -327,19 +412,19 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
                             <p class="text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-relaxed"><?= htmlspecialchars(strip_tags($_itemDesc)) ?></p>
                             <?php endif; ?>
                         </div>
-                        <!-- 하단: 가격 + 평점/다운로드 -->
-                        <div class="flex items-center justify-between mt-3 text-xs text-zinc-400">
-                            <div class="font-semibold text-sm <?= $_isFree ? 'text-green-600 dark:text-green-400' : ($_onSale ? 'text-red-600 dark:text-red-400' : 'text-zinc-800 dark:text-zinc-200') ?>">
-                                <?php if ($_isFree): ?>
-                                <?= __mp('free') ?>
-                                <?php elseif ($_onSale): ?>
-                                <span class="line-through text-zinc-400 mr-1 text-xs font-normal"><?= number_format($_price, in_array($_currency, ['KRW','JPY']) ? 0 : 2) ?></span>
-                                <?= number_format($_effectivePrice, in_array($_currency, ['KRW','JPY']) ? 0 : 2) ?> <?= $_currency ?>
-                                <?php else: ?>
-                                <?= number_format($_price, in_array($_currency, ['KRW','JPY']) ? 0 : 2) ?> <?= $_currency ?>
-                                <?php endif; ?>
-                            </div>
-                            <div class="flex items-center gap-3">
+                        <!-- 하단: 가격 + 평점 + 버튼 -->
+                        <div class="flex items-center justify-between mt-3 gap-3" onclick="event.stopPropagation()">
+                            <div class="flex items-center gap-3 text-xs text-zinc-400 flex-shrink-0">
+                                <span class="font-semibold text-sm <?= $_isFree ? 'text-green-600 dark:text-green-400' : ($_onSale ? 'text-red-600 dark:text-red-400' : 'text-zinc-800 dark:text-zinc-200') ?>">
+                                    <?php if ($_isFree): ?>
+                                    <?= __('autoinstall.free') ?>
+                                    <?php elseif ($_onSale): ?>
+                                    <span class="line-through text-zinc-400 mr-1 text-xs font-normal"><?= number_format((int)$_price) ?></span>
+                                    <?= number_format($_priceInt) ?> <?= $_currency ?>
+                                    <?php else: ?>
+                                    <?= number_format($_priceInt) ?> <?= $_currency ?>
+                                    <?php endif; ?>
+                                </span>
                                 <?php if (($item['rating_avg'] ?? 0) > 0): ?>
                                 <span class="flex items-center gap-0.5">
                                     <svg class="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
@@ -351,24 +436,171 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
                                     <?= number_format((int)($item['download_count'] ?? 0)) ?>
                                 </span>
                             </div>
+                            <!-- 버튼 -->
+                            <?php $_canInstall = $_isFree || isset($purchasedSlugs[$item['slug']]); ?>
+                            <div class="flex items-center gap-1.5">
+                                <?php if ($_canInstall): ?>
+                                <button type="button" onclick="mpInstallItem(this)"
+                                        data-slug="<?= htmlspecialchars($item['slug']) ?>"
+                                        class="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors">
+                                    설치
+                                </button>
+                                <button type="button" onclick="mpDownloadItem(this)"
+                                        data-slug="<?= htmlspecialchars($item['slug']) ?>"
+                                        class="px-3 py-1.5 text-xs font-medium rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-zinc-500 dark:text-zinc-400 transition-colors">
+                                    다운로드
+                                </button>
+                                <?php else: ?>
+                                <button type="button" onclick="mpOpenPurchase(this)"
+                                        data-slug="<?= htmlspecialchars($item['slug']) ?>"
+                                        data-name="<?= htmlspecialchars($_itemName) ?>"
+                                        data-price="<?= $_priceInt ?>"
+                                        data-currency="<?= htmlspecialchars($_currency) ?>"
+                                        data-price-label="<?= htmlspecialchars($_priceLabel) ?>"
+                                        class="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors">
+                                    구매
+                                </button>
+                                <?php endif; ?>
+                                <?php if (!empty($item['demo_url'])): ?>
+                                <a href="<?= htmlspecialchars($item['demo_url']) ?>" target="_blank" rel="noopener"
+                                   class="px-3 py-1.5 text-xs font-medium rounded-lg bg-violet-100 hover:bg-violet-200 dark:bg-violet-900/30 dark:hover:bg-violet-800/40 text-violet-600 dark:text-violet-400 transition-colors">
+                                    미리보기
+                                </a>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </a>
+            </div>
             <?php endforeach; ?>
         </div>
 
         <!-- 카드 뷰 (2열) -->
-        <div id="viewCard" class="view-mode hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div id="viewCard" class="view-mode hidden grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             <?php foreach ($items as $item): ?>
                 <?php include __DIR__ . '/_components/item-card.php'; ?>
             <?php endforeach; ?>
         </div>
 
-        <!-- 그리드 뷰 (4열) -->
-        <div id="viewGrid" class="view-mode hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            <?php foreach ($items as $item): ?>
-                <?php include __DIR__ . '/_components/item-card.php'; ?>
+        <!-- 그리드 뷰 — 배경 이미지 전체, 호버 슬라이드인 -->
+        <div id="viewGrid" class="view-mode hidden grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+            <?php foreach ($items as $item):
+                $_itemName = $item['name'] ?: ($item['slug'] ?? '');
+                $_itemDesc = $item['short_description'] ?? '';
+                $_price = (float)($item['price'] ?? 0);
+                $_salePrice = isset($item['sale_price']) ? (float)$item['sale_price'] : null;
+                $_onSale = $_salePrice !== null && !empty($item['sale_ends_at']) && strtotime($item['sale_ends_at']) > time();
+                $_effectivePrice = $_onSale ? $_salePrice : $_price;
+                $_isFree = $_effectivePrice <= 0;
+                $_currency = $item['currency'] ?? 'JPY';
+                $_typeColors = ['plugin' => 'indigo', 'theme' => 'purple', 'widget' => 'emerald', 'skin' => 'orange'];
+                $_typeLabels = ['plugin' => __('autoinstall.plugins'), 'theme' => __('autoinstall.themes'), 'widget' => __('autoinstall.widgets'), 'skin' => __('autoinstall.skins')];
+                $_type = $item['type'] ?? 'plugin';
+                $_color = $_typeColors[$_type] ?? 'indigo';
+                $_hasBanner = !empty($item['banner_image']);
+                $_hasIcon   = !empty($item['icon']);
+                $_priceInt  = (int)$_effectivePrice;
+                $_priceLabel = $_isFree ? __('autoinstall.free') : number_format($_priceInt) . ' ' . $_currency;
+            ?>
+            <div class="group relative overflow-hidden rounded-xl aspect-square bg-zinc-900 cursor-pointer shadow-sm hover:shadow-xl transition-shadow duration-300"
+                 onclick="window.location='<?= $adminUrl ?>/autoinstall/item?slug=<?= urlencode($item['slug'] ?? '') ?>'"
+            >
+                <!-- 배경 이미지 -->
+                <?php if ($_hasBanner): ?>
+                <img src="<?= htmlspecialchars($item['banner_image']) ?>" alt=""
+                     class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                <?php elseif ($_hasIcon): ?>
+                <div class="absolute inset-0 bg-gradient-to-br from-<?= $_color ?>-800 to-<?= $_color ?>-950 flex items-center justify-center">
+                    <img src="<?= htmlspecialchars($item['icon']) ?>" alt="" class="w-16 h-16 rounded-2xl shadow-xl opacity-80">
+                </div>
+                <?php else: ?>
+                <div class="absolute inset-0 bg-gradient-to-br from-<?= $_color ?>-800 to-<?= $_color ?>-950 flex items-center justify-center">
+                    <svg class="w-14 h-14 text-<?= $_color ?>-400 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                </div>
+                <?php endif; ?>
+
+                <!-- 어두운 그라데이션 오버레이 -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+
+                <!-- 기본 상태: 제목 + 타입 배지 -->
+                <div class="absolute bottom-0 left-0 right-0 p-3 transition-transform duration-300 group-hover:translate-y-full">
+                    <span class="inline-block px-1.5 py-0.5 text-[10px] font-medium rounded bg-zinc-900/85 text-<?= $_color ?>-400 backdrop-blur-sm mb-1">
+                        <?= $_typeLabels[$_type] ?? $_type ?>
+                    </span>
+                    <h3 class="text-white text-xs font-semibold leading-tight line-clamp-2">
+                        <?= htmlspecialchars($_itemName) ?>
+                    </h3>
+                </div>
+
+                <!-- 호버 슬라이드인 패널 -->
+                <div class="absolute inset-x-0 bottom-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out bg-gradient-to-t from-black/95 to-black/80 p-3 flex flex-col gap-2">
+                    <div>
+                        <span class="inline-block px-1.5 py-0.5 text-[10px] font-medium rounded bg-<?= $_color ?>-500/80 text-white mb-1">
+                            <?= $_typeLabels[$_type] ?? $_type ?>
+                        </span>
+                        <h3 class="text-white text-xs font-bold leading-tight line-clamp-1 mb-1">
+                            <?= htmlspecialchars($_itemName) ?>
+                        </h3>
+                        <?php if ($_itemDesc): ?>
+                        <p class="text-zinc-300 text-[10px] leading-relaxed line-clamp-2">
+                            <?= htmlspecialchars(mb_substr(strip_tags($_itemDesc), 0, 60)) ?>
+                        </p>
+                        <?php endif; ?>
+                    </div>
+                    <!-- 가격 -->
+                    <div class="flex items-center justify-between">
+                        <?php if ($_isFree): ?>
+                        <span class="text-xs font-bold text-green-400"><?= __('autoinstall.free') ?></span>
+                        <?php elseif ($_onSale): ?>
+                        <div>
+                            <span class="text-[10px] text-zinc-400 line-through"><?= number_format((int)$_price) ?></span>
+                            <span class="text-xs font-bold text-red-400 ml-1"><?= number_format($_priceInt) ?> <?= $_currency ?></span>
+                        </div>
+                        <?php else: ?>
+                        <span class="text-xs font-bold text-white"><?= number_format($_priceInt) ?> <?= $_currency ?></span>
+                        <?php endif; ?>
+                        <?php if (($item['rating_avg'] ?? 0) > 0): ?>
+                        <span class="flex items-center gap-0.5 text-[10px] text-yellow-400">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            <?= number_format((float)$item['rating_avg'], 1) ?>
+                        </span>
+                        <?php endif; ?>
+                    </div>
+                    <!-- 버튼 -->
+                    <?php $_canInstall = $_isFree || isset($purchasedSlugs[$item['slug']]); ?>
+                    <div class="flex gap-1.5">
+                        <?php if ($_canInstall): ?>
+                        <button type="button" onclick="event.stopPropagation(); mpInstallItem(this)"
+                                data-slug="<?= htmlspecialchars($item['slug']) ?>"
+                                class="flex-1 py-1 text-[11px] font-medium rounded-md bg-indigo-600 hover:bg-indigo-500 text-white transition-colors">
+                            설치
+                        </button>
+                        <button type="button" onclick="event.stopPropagation(); mpDownloadItem(this)"
+                                data-slug="<?= htmlspecialchars($item['slug']) ?>"
+                                class="py-1 px-2 text-[11px] font-medium rounded-md bg-white/10 hover:bg-white/20 text-white transition-colors">
+                            다운로드
+                        </button>
+                        <?php else: ?>
+                        <button type="button" onclick="event.stopPropagation(); mpOpenPurchase(this)"
+                                data-slug="<?= htmlspecialchars($item['slug']) ?>"
+                                data-name="<?= htmlspecialchars($_itemName) ?>"
+                                data-price="<?= $_priceInt ?>"
+                                data-currency="<?= htmlspecialchars($_currency) ?>"
+                                data-price-label="<?= htmlspecialchars($_priceLabel) ?>"
+                                class="flex-1 py-1 text-[11px] font-medium rounded-md bg-emerald-600 hover:bg-emerald-500 text-white transition-colors">
+                            구매
+                        </button>
+                        <?php endif; ?>
+                        <?php if (!empty($item['demo_url'])): ?>
+                        <a href="<?= htmlspecialchars($item['demo_url']) ?>" target="_blank" rel="noopener"
+                           onclick="event.stopPropagation()"
+                           class="py-1 px-2 text-[11px] font-medium rounded-md bg-violet-500/30 hover:bg-violet-500/50 text-violet-200 transition-colors">
+                            미리보기
+                        </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
             <?php endforeach; ?>
         </div>
 
@@ -379,7 +611,7 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
     <?php if ($meta['pages'] > 1): ?>
     <div class="flex items-center justify-center gap-2 pt-2">
         <?php
-        $baseQuery = array_filter(['type' => $filterType, 'cat' => $filterCat, 'sort' => $filterSort, 'q' => $filterKeyword, 'free' => $filterFree ? '1' : '']);
+        $baseQuery = array_filter(['type' => $filterType, 'sort' => $filterSort, 'q' => $filterKeyword, 'free' => $filterFree ? '1' : '']);
         $prevPage  = $page > 1 ? $page - 1 : null;
         $nextPage  = $page < $meta['pages'] ? $page + 1 : null;
         $btnBase   = 'px-3 py-1.5 text-sm rounded-lg border transition-colors';
@@ -417,150 +649,7 @@ if ($filterCat && !isset($catSlugs[$filterCat])) $catSlugs[$filterCat] = $filter
 
 </div>
 
-<!-- ── PAY.JP 구매 모달 ──────────────────────────────────────── -->
-<div id="mpPurchaseModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black/50" onclick="mpClosePurchase()"></div>
-    <div class="relative bg-white dark:bg-zinc-800 rounded-2xl shadow-xl w-full max-w-md p-6">
-        <button onclick="mpClosePurchase()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-
-        <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-1" id="mpPurchaseTitle">아이템 구매</h3>
-        <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4" id="mpPurchasePrice"></p>
-
-        <div class="space-y-3">
-            <div>
-                <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">이메일 (영수증·시리얼 키 발송)</label>
-                <input type="email" id="mpBuyerEmail" placeholder="your@email.com"
-                       class="w-full px-3 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">카드 정보</label>
-                <div id="mpCardForm" class="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white min-h-[42px]"></div>
-            </div>
-        </div>
-
-        <div id="mpPurchaseError" class="hidden mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-sm text-red-600 dark:text-red-400"></div>
-        <div id="mpPurchaseSuccess" class="hidden mt-3 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-sm text-green-700 dark:text-green-400"></div>
-
-        <button id="mpPurchaseBtn" onclick="mpSubmitPurchase()"
-                class="mt-4 w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition-colors text-sm">
-            결제하기
-        </button>
-    </div>
-</div>
-
-<script src="https://js.pay.jp/v2/pay.js"></script>
-<script>
-var _mpPurchaseSlug   = '';
-var _mpPurchaseAmount = 0;
-var _mpPurchaseCurr   = 'JPY';
-var _payjp            = null;
-var _mpCardElement    = null;
-
-(function() {
-    if (typeof Payjp !== 'undefined' && '<?= htmlspecialchars($payjpPublicKey) ?>') {
-        _payjp = Payjp('<?= htmlspecialchars($payjpPublicKey) ?>');
-        var elements = _payjp.elements();
-        _mpCardElement = elements.create('card');
-    }
-})();
-
-function mpOpenPurchase(btn) {
-    _mpPurchaseSlug   = btn.dataset.slug;
-    _mpPurchaseAmount = parseInt(btn.dataset.price, 10);
-    _mpPurchaseCurr   = btn.dataset.currency || 'JPY';
-    document.getElementById('mpPurchaseTitle').textContent = btn.dataset.name + ' 구매';
-    document.getElementById('mpPurchasePrice').textContent = btn.dataset.priceLabel;
-    document.getElementById('mpPurchaseError').classList.add('hidden');
-    document.getElementById('mpPurchaseSuccess').classList.add('hidden');
-    document.getElementById('mpPurchaseBtn').disabled = false;
-    document.getElementById('mpPurchaseBtn').textContent = '결제하기';
-    document.getElementById('mpPurchaseModal').classList.remove('hidden');
-    if (_mpCardElement) {
-        _mpCardElement.unmount();
-        _mpCardElement.mount('#mpCardForm');
-    }
-}
-
-function mpClosePurchase() {
-    document.getElementById('mpPurchaseModal').classList.add('hidden');
-    if (_mpCardElement) _mpCardElement.unmount();
-}
-
-function mpInstallItem(btn) {
-    var slug = btn.dataset.slug;
-    btn.disabled = true;
-    btn.textContent = '설치 중…';
-    fetch('<?= $adminUrl ?>/autoinstall/install', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: 'item_slug=' + encodeURIComponent(slug)
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-        if (d.success) {
-            btn.textContent = '설치됨 ✓';
-            btn.className = btn.className.replace('bg-indigo-600 hover:bg-indigo-700', 'bg-zinc-400 cursor-not-allowed');
-        } else {
-            btn.disabled = false;
-            btn.textContent = d.message || '설치 실패';
-        }
-    })
-    .catch(function() { btn.disabled = false; btn.textContent = '오류'; });
-}
-
-function mpSubmitPurchase() {
-    if (!_payjp || !_mpCardElement) {
-        document.getElementById('mpPurchaseError').textContent = 'PAY.JP가 초기화되지 않았습니다.';
-        document.getElementById('mpPurchaseError').classList.remove('hidden');
-        return;
-    }
-    var btn = document.getElementById('mpPurchaseBtn');
-    btn.disabled = true;
-    btn.textContent = '처리 중…';
-    document.getElementById('mpPurchaseError').classList.add('hidden');
-
-    _payjp.createToken(_mpCardElement).then(function(result) {
-        if (result.error) {
-            document.getElementById('mpPurchaseError').textContent = result.error.message;
-            document.getElementById('mpPurchaseError').classList.remove('hidden');
-            btn.disabled = false;
-            btn.textContent = '결제하기';
-            return;
-        }
-        fetch('<?= $_apiUrl ?>', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: 'action=purchase_item'
-                + '&item_slug=' + encodeURIComponent(_mpPurchaseSlug)
-                + '&payjp_token=' + encodeURIComponent(result.token.id)
-                + '&buyer_email=' + encodeURIComponent(document.getElementById('mpBuyerEmail').value)
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-            if (d.success) {
-                document.getElementById('mpPurchaseSuccess').innerHTML =
-                    '구매 완료! 라이선스 키: <strong>' + (d.license_key || '') + '</strong>'
-                    + (d.serial_key ? '<br>시리얼: <strong>' + d.serial_key + '</strong>' : '');
-                document.getElementById('mpPurchaseSuccess').classList.remove('hidden');
-                btn.textContent = '완료';
-            } else {
-                document.getElementById('mpPurchaseError').textContent = d.message || '결제 실패';
-                document.getElementById('mpPurchaseError').classList.remove('hidden');
-                btn.disabled = false;
-                btn.textContent = '결제하기';
-            }
-        })
-        .catch(function() {
-            document.getElementById('mpPurchaseError').textContent = '네트워크 오류';
-            document.getElementById('mpPurchaseError').classList.remove('hidden');
-            btn.disabled = false;
-            btn.textContent = '결제하기';
-        });
-    });
-}
-</script>
+<?php include __DIR__ . '/_components/mp-actions.php'; ?>
 
 <script>
 function mpSetViewStyle(style) {
@@ -582,6 +671,23 @@ function mpSetViewStyle(style) {
     var saved = localStorage.getItem('mp_view_style') || 'grid';
     mpSetViewStyle(saved);
 })();
+
+function mpRefreshCache(btn) {
+    var orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.querySelector('svg').classList.add('animate-spin');
+    fetch('<?= $adminUrl ?>/autoinstall/api', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'action=clear_cache'
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.success) { window.location.reload(); }
+        else { alert(d.message || 'Failed'); btn.disabled = false; btn.innerHTML = orig; }
+    })
+    .catch(function() { btn.disabled = false; btn.innerHTML = orig; });
+}
 </script>
 
 <?php include __DIR__ . '/_foot.php'; ?>

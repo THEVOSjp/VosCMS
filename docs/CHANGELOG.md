@@ -4,6 +4,80 @@ RezlyX 프로젝트 변경 이력입니다.
 
 ---
 
+## [VosCMS 2.3.7] - 2026-04-25 — 자동설치(AutoInstall) UX 통합 개편
+
+마켓플레이스 → **자동설치** 리네임 후속 작업. 상세 페이지·목록 페이지·결제·리뷰 흐름을 일관성 있게 다듬고, 마켓 API에서 로케일을 처리하도록 책임을 이관해 클라이언트 코드를 단순화했다.
+
+### Changed — 자동설치 페이지 라우트/링크 정리
+
+이전 이름 `/marketplace` 잔존 참조 제거. 검색 폼이 `/marketplace`로 GET 제출되어 대시보드로 리디렉트되던 버그(검색·정렬·필터 변경 시 페이지 이탈) 해결. `browse.php`, `item-detail.php`, `item-submit.php`, `purchases.php`, `assets/js/marketplace.js` 모두 `/autoinstall`로 통일.
+
+### Added — 설치 마법사 보안 안내 강화
+
+`install.php` Step 4에서 관리자 경로 입력란 아래에 황색 힌트 + URL 실시간 미리보기 + 펼침형 "왜 변경해야 하나요?" 안내 추가. 자동 해킹 시도(브루트포스), 취약점 스캔, 강한 비밀번호의 한계 등 일반인도 이해할 수 있는 언어로 3가지 이유 제시. 13개 언어 모두 적용.
+
+### Added — 번들 플러그인 자동 활성화
+
+`install.php` 설치 완료 단계에서 `vos-autoinstall` 플러그인을 자동 등록·활성화 (`PluginManager::install()` 직접 호출). 사용자가 별도 설치 없이 어드민 진입 즉시 마켓플레이스 사용 가능.
+
+### Added — 마켓 API 로케일 처리
+
+`market.21ces.com/api/market/catalog`, `/item`에 `?locale=xx` 파라미터 지원. `name`, `description`, `short_description`, `cat_name` 다국어 JSON을 서버에서 단일 문자열로 반환 (폴백: 요청 로케일 → en → 첫 값). VosCMS 측 `json_decode + locale 폴백` 중복 로직 모두 제거 (`browse.php`, `item-detail.php`, `_components/item-card.php`).
+
+### Added — 캐시 TTL 환경설정 + 갱신 버튼
+
+자동설치 마켓 API 응답 캐시(파일 기반)의 TTL을 PluginManager 설정으로 통합 관리. 하드코딩 30분 → 기본 5분, 1·5·10·30·60분 옵션. `https://vos.21ces.com/theadmin/settings/general` 마켓플레이스 캐시 섹션과 `/theadmin/autoinstall/settings` 양쪽에서 동일 설정을 읽고/쓰며 자동 동기화. 자동설치 페이지 우상단·일반 설정 페이지 양쪽에 즉시 캐시 갱신 버튼 추가. TTL 변경 시 기존 캐시 자동 무효화.
+
+### Added — 메타 정보 테이블 (상세 페이지)
+
+마켓플레이스 어드민과 동일한 자료 유형 / 간단한 소개 / 슬러그 / Product Key / 최소 VosCMS·PHP 버전 / 파트너 / 가격 / 라이선스 테이블을 헤더 직후에 표시. 좌:우 영역 비율 2:1 → 3:1로 변경해 콘텐츠 영역 확대.
+
+### Added — 리뷰 작성 모달 + 마켓플레이스 저장
+
+상세 페이지 리뷰 탭 우상단에 "리뷰 작성" 버튼. 별점·닉네임·본문 입력 모달 → VosCMS API → 마켓플레이스 `POST /api/market/item/review`로 중계. VosCMS 라이선스 키 + 도메인 자동 첨부, 동일 도메인 1회 작성 제한, 구매자는 `is_verified=1` 자동 설정. 리뷰는 마켓 DB(`rzx_mkt_reviews`)에 `status='pending'`으로 저장 후 운영자 승인 시 공개. `GET /api/market/item/reviews?slug=...` 신설로 승인된 리뷰만 조회. 도메인은 부분 마스킹(`mys***.com`) 표시.
+
+### Added — 가격 필터 (전체/무료/유료)
+
+기존 `무료만` 체크박스 → `전체 / 무료 / 유료` 3-way 토글로 확장. 마켓 catalog API에 `paid=1` 파라미터 추가 (`i.price>0`). 검색창에서 분리해 뷰 토글 영역 앞으로 이동, 정렬 select와 함께 헤더 도구열로 통합.
+
+### Changed — 검색창 디자인 (밝은 녹색 강조)
+
+검색 input 보더 `border-2 border-emerald-300`, 좌측 검색 아이콘에 녹색 배경 박스, 검색 버튼 `bg-emerald-500`. 키워드 입력만 남기고 정렬·필터 기능은 본문 헤더로 이동해 검색창 단순화.
+
+### Changed — 상세 페이지 버튼 분기
+
+| 상태 | 표시 |
+| --- | --- |
+| 무료 | 설치 + 다운로드 |
+| 유료 (미구매) | 구매 (마켓플레이스 PAY.JP 결제 모달) |
+| 유료 (구매 완료) | 설치 + 다운로드 |
+| 이미 설치됨 | "설치됨" |
+
+목록 페이지 4개 뷰(리스트/웹진/카드/그리드)도 동일 분기. 구매 슬러그 셋을 페이지 진입 시 한 번 조회해 사용. 결제는 마켓 `POST /api/market/item/purchase`에서 PAY.JP 결제 + 라이선스 발급 수행.
+
+### Changed — UI 디테일
+
+- 뷰 스타일 토글: 텍스트 라벨 제거 → 아이콘 only + `title` / `aria-label` (접근성 유지)
+- 타입 배지: `bg-<color>-100` 밝은 배경 → `bg-zinc-900/85 backdrop-blur-sm` 검정 반투명 + 컬러 글씨 (이미지 위 가독성 확보)
+- 스크린샷 섹션: 헤더 직후 → 탭 콘텐츠 아래로 재배치, 마켓처럼 `(개수)` 카운트 표시
+- 상세 페이지 `dark:prose-invert` 작동 안 하던 문제 → CDN Tailwind에 typography 플러그인 추가
+- 상세 페이지 설명 영역: 마켓 어드민과 동일한 방식으로 `<script>/<iframe>/<style>/onXX` 등 위험 요소만 제거하고 HTML 마크업은 그대로 렌더링
+
+### Fixed — 다양한 잠재 버그
+
+- **PAY.JP 카드 폼 입력 불가**: 모달 hidden 상태에서 미리 mount되어 iframe이 0px로 그려지던 문제. lazy 초기화 + `requestAnimationFrame` mount로 해결
+- **위젯 thumbnail 누락**: 마켓 DB에는 28개 위젯 등록됐으나 `/var/www/market/widgets/`에는 무료 위젯 12개만 복사된 상태. 14개 누락분 동기화. catalog/item API에 `screenshots` 절대 URL 변환 + 비존재 파일 자동 필터 추가
+- **번들 플러그인 미인증 경고**: `vos-autoinstall`이 `unauthorizedPlugins`로 잡히던 문제. `LicenseStatus.php`에 `BUNDLE_PLUGINS = ['vos-autoinstall', 'vos-marketplace']` 상수 추가, `active()`/`fromCache()`/`canUsePlugin()` 모두 필터링. 라이선스 서버 `verify.php`에도 동일 처리
+- **위젯 중복 추가 가능성**: install.php 시딩이 `INSERT IGNORE`만 사용했지만 `rzx_page_widgets`에 UNIQUE 제약이 없어 중복 가능. 시딩 시 `DELETE FROM page_widgets WHERE page_slug='home'` 후 INSERT로 변경 (DB UNIQUE 제약은 게시판 위젯 같은 의도적 중복 케이스 때문에 추가하지 않음)
+
+### Migration Notes
+
+- `vos-autoinstall` 플러그인 메뉴/라우트/마이그레이션이 새 설치에서 자동 활성화됨 (기존 설치는 어드민에서 한번 활성화 필요)
+- 마켓플레이스 API 캐시 기본 TTL 30분 → 5분 (가격·내용 변경 빠른 반영)
+- `vos-autoinstall.cache_ttl` 플러그인 설정 신규
+
+---
+
 ## [VosCMS 2.3.6] - 2026-04-21 — 마켓플레이스 API 라이브 연동
 
 ### Changed — 관리자 마켓플레이스 데이터 소스 전환

@@ -3,8 +3,8 @@
  * VosCMS Marketplace - 라이선스 관리 페이지
  */
 include __DIR__ . '/_head.php';
-$pageHeaderTitle = __mp('title');
-$pageSubTitle = __mp('licenses');
+$pageHeaderTitle = __('autoinstall.title');
+$pageSubTitle = __('autoinstall.licenses');
 
 $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
 $adminId = $_SESSION['admin_id'] ?? '';
@@ -32,10 +32,10 @@ $stmt->execute([$adminId]);
 $licenses = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $statusLabels = [
-    'active' => __mp('license_active'),
-    'expired' => __mp('license_expired'),
-    'revoked' => __mp('license_revoked'),
-    'suspended' => __mp('license_suspended'),
+    'active' => __('autoinstall.license_active'),
+    'expired' => __('autoinstall.license_expired'),
+    'revoked' => __('autoinstall.license_revoked'),
+    'suspended' => __('autoinstall.license_suspended'),
 ];
 $statusColors = [
     'active' => 'green',
@@ -44,9 +44,9 @@ $statusColors = [
     'suspended' => 'yellow',
 ];
 $typeLabels = [
-    'single' => __mp('type_single'),
-    'unlimited' => __mp('type_unlimited'),
-    'subscription' => __mp('type_subscription'),
+    'single' => __('autoinstall.type_single'),
+    'unlimited' => __('autoinstall.type_unlimited'),
+    'subscription' => __('autoinstall.type_subscription'),
 ];
 ?>
 
@@ -56,7 +56,7 @@ $typeLabels = [
         <svg class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
         </svg>
-        <p><?= __mp('no_licenses') ?></p>
+        <p><?= __('autoinstall.no_licenses') ?></p>
     </div>
     <?php else: ?>
     <?php foreach ($licenses as $lic):
@@ -83,7 +83,7 @@ $typeLabels = [
                     <div class="flex items-center gap-3 mt-1 text-xs text-zinc-400">
                         <span class="font-mono"><?= htmlspecialchars(substr($lic['license_key'], 0, 8)) ?>...<?= htmlspecialchars(substr($lic['license_key'], -4)) ?></span>
                         <span><?= $typeLabels[$lic['type']] ?? $lic['type'] ?></span>
-                        <span><?= __mp('license_activations') ?>: <?= $activeCount ?>/<?= $lic['max_activations'] ?></span>
+                        <span><?= __('autoinstall.license_activations') ?>: <?= $activeCount ?>/<?= $lic['max_activations'] ?></span>
                     </div>
                 </div>
             </div>
@@ -101,26 +101,26 @@ $typeLabels = [
                 <code class="flex-1 text-sm font-mono text-zinc-600 dark:text-zinc-300 select-all"><?= htmlspecialchars($lic['license_key']) ?></code>
                 <button @click="navigator.clipboard.writeText('<?= htmlspecialchars($lic['license_key']) ?>'); copied = true; setTimeout(() => copied = false, 2000)"
                         class="px-3 py-1 text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors">
-                    <span x-show="!copied"><?= __mp('copy_key') ?></span>
-                    <span x-show="copied" x-cloak><?= __mp('copied') ?></span>
+                    <span x-show="!copied"><?= __('autoinstall.copy_key') ?></span>
+                    <span x-show="copied" x-cloak><?= __('autoinstall.copied') ?></span>
                 </button>
             </div>
 
             <div class="grid grid-cols-2 gap-4 text-sm mb-4">
                 <div>
-                    <span class="text-zinc-500"><?= __mp('license_expires') ?>:</span>
-                    <span class="text-zinc-800 dark:text-zinc-200 ml-1"><?= $lic['expires_at'] ? date('Y-m-d', strtotime($lic['expires_at'])) : __mp('perpetual') ?></span>
+                    <span class="text-zinc-500"><?= __('autoinstall.license_expires') ?>:</span>
+                    <span class="text-zinc-800 dark:text-zinc-200 ml-1"><?= $lic['expires_at'] ? date('Y-m-d', strtotime($lic['expires_at'])) : __('autoinstall.perpetual') ?></span>
                 </div>
                 <div>
-                    <span class="text-zinc-500"><?= __mp('order_date') ?>:</span>
+                    <span class="text-zinc-500"><?= __('autoinstall.order_date') ?>:</span>
                     <span class="text-zinc-800 dark:text-zinc-200 ml-1"><?= $lic['created_at'] ? date('Y-m-d', strtotime($lic['created_at'])) : '-' ?></span>
                 </div>
             </div>
 
             <!-- 활성화 도메인 -->
-            <h5 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __mp('license_activations') ?></h5>
+            <h5 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"><?= __('autoinstall.license_activations') ?></h5>
             <?php if (empty($activations)): ?>
-            <p class="text-sm text-zinc-400"><?= __mp('no_activations') ?></p>
+            <p class="text-sm text-zinc-400"><?= __('autoinstall.no_activations') ?></p>
             <?php else: ?>
             <div class="space-y-2">
                 <?php foreach ($activations as $act): ?>
@@ -133,7 +133,7 @@ $typeLabels = [
                         <?php if ($act['is_active']): ?>
                         <span class="w-2 h-2 rounded-full bg-green-500"></span>
                         <button onclick="deactivateDomain(<?= $lic['id'] ?>, '<?= htmlspecialchars($act['domain']) ?>')"
-                                class="text-xs text-red-500 hover:text-red-600"><?= __mp('deactivate') ?></button>
+                                class="text-xs text-red-500 hover:text-red-600"><?= __('autoinstall.deactivate') ?></button>
                         <?php else: ?>
                         <span class="w-2 h-2 rounded-full bg-zinc-300 dark:bg-zinc-600"></span>
                         <span class="text-xs text-zinc-400">Inactive</span>
@@ -151,7 +151,7 @@ $typeLabels = [
 
 <script>
 function deactivateDomain(licenseId, domain) {
-    if (!confirm('<?= __mp('deactivate') ?>: ' + domain + '?')) return;
+    if (!confirm('<?= __('autoinstall.deactivate') ?>: ' + domain + '?')) return;
     fetch('<?= $adminUrl ?>/autoinstall/api', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},

@@ -45,8 +45,11 @@ class LicenseStatus
         $s = new self();
         $s->state = 'active';
         $s->plan = $response['plan'] ?? 'free';
-        $s->allowedPlugins = $response['allowed_plugins'] ?? [];
-        $s->unauthorizedPlugins = $response['unauthorized_plugins'] ?? [];
+        $s->allowedPlugins      = $response['allowed_plugins'] ?? [];
+        $s->unauthorizedPlugins = array_values(array_filter(
+            $response['unauthorized_plugins'] ?? [],
+            fn($id) => !in_array($id, self::BUNDLE_PLUGINS)
+        ));
         $s->daysLeft = $response['days_left'] ?? null;
         $s->expiresAt = $response['expires_at'] ?? null;
         $s->latestVersion = $response['latest_version'] ?? null;
@@ -76,8 +79,11 @@ class LicenseStatus
         $s = new self();
         $s->state = 'cached';
         $s->plan = $cache['plan'] ?? 'free';
-        $s->allowedPlugins = $cache['allowed_plugins'] ?? [];
-        $s->unauthorizedPlugins = $cache['unauthorized_plugins'] ?? [];
+        $s->allowedPlugins      = $cache['allowed_plugins'] ?? [];
+        $s->unauthorizedPlugins = array_values(array_filter(
+            $cache['unauthorized_plugins'] ?? [],
+            fn($id) => !in_array($id, self::BUNDLE_PLUGINS)
+        ));
         $s->daysLeft = $cache['days_left'] ?? null;
         $s->expiresAt = $cache['expires_at'] ?? null;
         $s->latestVersion = $cache['latest_version'] ?? null;
@@ -147,13 +153,15 @@ class LicenseStatus
         return in_array($this->state, ['active', 'cached']);
     }
 
+    /** 기본 번들 플러그인 — 플랜 무관 항상 허용 */
+    private const BUNDLE_PLUGINS = ['vos-autoinstall', 'vos-marketplace'];
+
     /**
      * 플러그인 사용 가능 여부
      */
     public function canUsePlugin(string $pluginId): bool
     {
-        // 마켓플레이스 플러그인은 항상 허용
-        if ($pluginId === 'vos-marketplace') return true;
+        if (in_array($pluginId, self::BUNDLE_PLUGINS)) return true;
 
         // 라이선스 미확인 상태에서는 일단 허용 (경고만)
         if ($this->state === 'unregistered' || $this->state === 'cached') return true;

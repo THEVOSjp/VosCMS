@@ -3,7 +3,7 @@
  * VosCMS Marketplace - 설치 내역
  */
 include __DIR__ . '/_head.php';
-$pageHeaderTitle = __mp('title');
+$pageHeaderTitle = __('autoinstall.title');
 $pageSubTitle    = '설치 내역';
 
 $prefix  = $_ENV['DB_PREFIX'] ?? 'rzx_';
@@ -221,7 +221,7 @@ function renderSection(string $title, string $icon, array $items, string $adminU
 <?php if ($totalCount === 0): ?>
 <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 px-6 py-12 text-center text-zinc-400">
     <p>설치된 항목이 없습니다.</p>
-    <a href="<?= $adminUrl ?>/marketplace" class="inline-block mt-3 text-sm text-indigo-600 dark:text-indigo-400 hover:underline">마켓플레이스 둘러보기 →</a>
+    <a href="<?= $adminUrl ?>/autoinstall" class="inline-block mt-3 text-sm text-indigo-600 dark:text-indigo-400 hover:underline"><?= __('autoinstall.title') ?> →</a>
 </div>
 <?php endif; ?>
 
