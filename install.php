@@ -869,8 +869,20 @@ LICENSE_SERVER={$licenseServer}
     <?php elseif ($step === '1' || $step === 1): // 환경 체크 ?>
     <h2 class="text-xl font-bold text-zinc-800 mb-6">1. <?= __t('step1') ?></h2>
     <?php
+    // ionCube Loader 감지 (확장 이름 변형 대응: 'ionCube Loader' / 'ioncube_loader' / 'ionCube')
+    $_ic_loaded = extension_loaded('ionCube Loader')
+               || extension_loaded('ionCube')
+               || extension_loaded('ioncube_loader')
+               || function_exists('ioncube_loader_version');
+    $_ic_version = '';
+    if ($_ic_loaded && function_exists('ioncube_loader_version')) {
+        $_ic_version = @ioncube_loader_version();
+    }
+    $_ic_label = 'ionCube Loader' . ($_ic_version ? ' v' . $_ic_version : '');
+
     $checks = [
         ['PHP Version >= 8.1', version_compare(PHP_VERSION, '8.1.0', '>=')],
+        [$_ic_label, $_ic_loaded],
         ['PDO MySQL', extension_loaded('pdo_mysql')],
         ['mbstring', extension_loaded('mbstring')],
         ['json', extension_loaded('json')],
@@ -895,6 +907,26 @@ LICENSE_SERVER={$licenseServer}
     <?php endforeach; ?>
 
     <div class="mt-4 text-xs text-zinc-400">PHP <?= PHP_VERSION ?></div>
+
+    <?php if (!$_ic_loaded): ?>
+    <!-- ionCube Loader 설치 안내 -->
+    <div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+        <div class="flex items-start gap-2">
+            <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"/></svg>
+            <div class="text-sm text-amber-800">
+                <p class="font-semibold mb-1"><?= __t('ic_required_title') ?? 'ionCube Loader가 필요합니다' ?></p>
+                <p class="mb-2"><?= __t('ic_required_desc') ?? 'VosCMS 코어 보안 모듈이 ionCube로 인코딩되어 있어, ionCube Loader 확장 모듈이 PHP에 설치되어 있어야 동작합니다.' ?></p>
+                <ol class="list-decimal pl-5 space-y-1 text-xs">
+                    <li><a href="https://www.ioncube.com/loaders.php" target="_blank" rel="noopener" class="text-blue-600 underline">ionCube Loader 다운로드</a> (PHP <?= PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION ?> · <?= PHP_OS_FAMILY ?> · <?= PHP_INT_SIZE === 8 ? 'x86_64' : 'x86' ?>)</li>
+                    <li><code class="bg-amber-100 px-1 rounded">php.ini</code> 에 <code class="bg-amber-100 px-1 rounded">zend_extension = /path/to/ioncube_loader_lin_<?= PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION ?>.so</code> 추가</li>
+                    <li>웹 서버 (php-fpm / apache) 재시작</li>
+                    <li>이 페이지 새로고침 → 설치 마법사 자동 통과</li>
+                </ol>
+                <p class="mt-2 text-xs text-amber-700">ⓘ 호스팅 환경이라면 호스팅사에 ionCube Loader 활성화를 요청하세요. 대부분 공유 호스팅에서 무료로 제공됩니다.</p>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <?php if ($allPassed): ?>
     <form method="GET" class="mt-6">

@@ -120,9 +120,50 @@ LICENSE_REGISTERED_AT=
 LICENSE_SERVER=https://vos.21ces.com/api
 ENVEOF
 
-# 7. 코드 난독화
-echo "[7/8] Obfuscating..."
-php8.3 "${DIST}/obfuscate.php"
+# 7. 코드 인코딩 (ionCube)
+#    핵심 보안 모듈을 ionCube 바이트코드로 인코딩 → Loader 필요
+echo "[7/8] Encoding with ionCube..."
+IC_SH="${DIST}/ioncube/ioncube_encoder_evaluation/ioncube_encoder.sh"
+if [ ! -x "$IC_SH" ]; then
+    echo "  ⚠ ionCube encoder not found at $IC_SH — falling back to obfuscate.php"
+    php8.3 "${DIST}/obfuscate.php"
+else
+    # 인코딩 대상 (배포 디렉토리 기준 상대 경로)
+    IC_TARGETS=(
+        "rzxlib/Core/License/LicenseClient.php"
+        "rzxlib/Core/License/LicenseStatus.php"
+        "rzxlib/Core/Auth/AdminAuth.php"
+        "rzxlib/Core/Auth/Auth.php"
+        "rzxlib/Core/Auth/SessionGuard.php"
+        "rzxlib/Core/Plugin/PluginManager.php"
+        "rzxlib/Core/Plugin/Hook.php"
+        "install.php"
+        "plugins/vos-autoinstall/src/MarketplaceService.php"
+        "plugins/vos-autoinstall/src/LicenseService.php"
+        "plugins/vos-autoinstall/src/InstallerService.php"
+        "plugins/vos-autoinstall/src/CatalogClient.php"
+    )
+    IC_OK=0
+    IC_SKIP=0
+    for rel in "${IC_TARGETS[@]}"; do
+        SRC_F="${TARGET}/${rel}"
+        if [ ! -f "$SRC_F" ]; then
+            echo "  skip (missing): $rel"
+            IC_SKIP=$((IC_SKIP+1))
+            continue
+        fi
+        TMP_F="${SRC_F}.enc"
+        if bash "$IC_SH" "$SRC_F" -o "$TMP_F" >/dev/null 2>&1; then
+            mv -f "$TMP_F" "$SRC_F"
+            IC_OK=$((IC_OK+1))
+        else
+            rm -f "$TMP_F"
+            echo "  ⚠ encoding failed: $rel"
+            IC_SKIP=$((IC_SKIP+1))
+        fi
+    done
+    echo "  → encoded: ${IC_OK}, skipped/failed: ${IC_SKIP}"
+fi
 
 # 8. ZIP 패키징
 echo "[8/8] Packaging..."
