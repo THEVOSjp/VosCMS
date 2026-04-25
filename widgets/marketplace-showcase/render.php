@@ -105,15 +105,15 @@ $fmtPrice = function ($item) {
 
 $uid = 'mp-showcase-' . mt_rand(1000, 9999);
 
-// ── 링크: 어드민이면 자동설치 페이지, 아니면 market.21ces.com ──
+// ── 링크: 어드민이면 자동설치 페이지, 아니면 market.21ces.com/marketplace ──
 $_isAdmin = !empty($_SESSION['admin_id']);
 if ($_isAdmin) {
     $_adminPath = $_ENV['ADMIN_PATH'] ?? 'admin';
     $mpListUrl  = rtrim($baseUrl, '/') . '/' . $_adminPath . '/autoinstall';
     $itemUrlFn  = fn(string $slug) => $mpListUrl . '/' . urlencode($slug);
 } else {
-    $mpListUrl = $marketSiteBase;
-    $itemUrlFn = fn(string $slug) => $marketSiteBase; // 마켓 사이트 홈 (공개 detail 페이지 미제공)
+    $mpListUrl = $marketSiteBase . '/marketplace';
+    $itemUrlFn = fn(string $slug) => $marketSiteBase . '/marketplace?slug=' . urlencode($slug);
 }
 
 // ── 배경 스타일 ──
