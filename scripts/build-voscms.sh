@@ -129,6 +129,8 @@ if [ ! -x "$IC_SH" ]; then
     php8.3 "${DIST}/obfuscate.php"
 else
     # 인코딩 대상 (배포 디렉토리 기준 상대 경로)
+    # ⚠ install.php 는 인코딩 제외 — Loader 없는 신규 설치자가 환경 체크
+    #   페이지를 정상적으로 봐야 ionCube 설치 안내 UI 가 노출됨
     IC_TARGETS=(
         "rzxlib/Core/License/LicenseClient.php"
         "rzxlib/Core/License/LicenseStatus.php"
@@ -137,7 +139,6 @@ else
         "rzxlib/Core/Auth/SessionGuard.php"
         "rzxlib/Core/Plugin/PluginManager.php"
         "rzxlib/Core/Plugin/Hook.php"
-        "install.php"
         "plugins/vos-autoinstall/src/MarketplaceService.php"
         "plugins/vos-autoinstall/src/LicenseService.php"
         "plugins/vos-autoinstall/src/InstallerService.php"
