@@ -6,20 +6,26 @@
     "icon": "document-text",
     "thumbnail": "thumbnail.png",
     "name": {
-        "ko": "텍스트", "en": "Rich Text", "ja": "テキスト",
-        "zh_CN": "富文本", "zh_TW": "富文本", "de": "Text",
-        "es": "Texto", "fr": "Texte",
-        "id": "Teks", "mn": "Текст", "ru": "Текст",
-        "tr": "Metin", "vi": "Văn bản"
+        "ko": "자유 콘텐츠", "en": "Free Content", "ja": "自由コンテンツ",
+        "zh_CN": "自由内容", "zh_TW": "自由內容",
+        "de": "Freier Inhalt", "es": "Contenido libre", "fr": "Contenu libre",
+        "id": "Konten Bebas", "mn": "Чөлөөт агуулга", "ru": "Свободный контент",
+        "tr": "Serbest İçerik", "vi": "Nội dung tự do"
     },
     "description": {
-        "ko": "자유 HTML 콘텐츠", "en": "Free HTML content block (Summernote editor)",
-        "ja": "自由HTMLコンテンツブロック",
-        "zh_CN": "自由HTML内容块", "zh_TW": "自由HTML內容區塊",
-        "de": "Freier HTML-Inhaltsblock", "es": "Bloque de contenido HTML libre",
-        "fr": "Bloc de contenu HTML libre", "id": "Blok konten HTML bebas",
-        "mn": "Чөлөөт HTML агуулгын блок", "ru": "Блок HTML-контента",
-        "tr": "Serbest HTML içerik bloğu", "vi": "Khối nội dung HTML tự do"
+        "ko": "원하는 내용을 자유롭게 작성하는 영역 (HTML 에디터)",
+        "en": "Free-form content block — write anything (rich-text editor)",
+        "ja": "好きな内容を自由に書ける領域(リッチエディタ)",
+        "zh_CN": "可自由撰写的内容区块(富文本编辑器)",
+        "zh_TW": "可自由撰寫的內容區塊(富文本編輯器)",
+        "de": "Frei beschreibbarer Inhaltsblock (Rich-Text-Editor)",
+        "es": "Bloque de contenido libre — escribe lo que quieras (editor de texto enriquecido)",
+        "fr": "Bloc de contenu libre — écrivez ce que vous voulez (éditeur enrichi)",
+        "id": "Blok konten bebas — tulis apa pun (editor teks kaya)",
+        "mn": "Чөлөөт бичих агуулгын блок (rich-text эдитор)",
+        "ru": "Блок свободного контента — пишите что угодно (rich-text редактор)",
+        "tr": "Serbest içerik bloğu — istediğinizi yazın (zengin metin düzenleyici)",
+        "vi": "Khối nội dung tự do — viết bất cứ điều gì (trình soạn thảo rich-text)"
     },
     "config_schema": {
         "fields": [
