@@ -48,5 +48,6 @@
                 "label": "Statistics Items"
             }
         ]
-    }
+    },
+    "bundled": true
 }

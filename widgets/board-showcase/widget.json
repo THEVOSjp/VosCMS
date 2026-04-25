@@ -41,11 +41,19 @@
                 "key": "title",
                 "type": "text",
                 "label": {
-                    "ko": "섹션 제목", "en": "Section Title", "ja": "セクションタイトル",
-                    "zh_CN": "栏目标题", "zh_TW": "欄目標題", "de": "Abschnittstitel",
-                    "es": "Título de sección", "fr": "Titre de section",
-                    "id": "Judul Bagian", "mn": "Хэсгийн гарчиг", "ru": "Заголовок раздела",
-                    "tr": "Bölüm Başlığı", "vi": "Tiêu đề mục"
+                    "ko": "섹션 제목",
+                    "en": "Section Title",
+                    "ja": "セクションタイトル",
+                    "zh_CN": "栏目标题",
+                    "zh_TW": "欄目標題",
+                    "de": "Abschnittstitel",
+                    "es": "Título de sección",
+                    "fr": "Titre de section",
+                    "id": "Judul Bagian",
+                    "mn": "Хэсгийн гарчиг",
+                    "ru": "Заголовок раздела",
+                    "tr": "Bölüm Başlığı",
+                    "vi": "Tiêu đề mục"
                 },
                 "i18n": true,
                 "default": "쇼케이스"
@@ -54,22 +62,38 @@
                 "key": "board_slug",
                 "type": "board_select",
                 "label": {
-                    "ko": "게시판 선택", "en": "Select Board", "ja": "掲示板を選択",
-                    "zh_CN": "选择版块", "zh_TW": "選擇版塊", "de": "Board auswählen",
-                    "es": "Seleccionar tablero", "fr": "Sélectionner le forum",
-                    "id": "Pilih Papan", "mn": "Самбар сонгох", "ru": "Выбрать доску",
-                    "tr": "Pano Seçin", "vi": "Chọn bảng"
+                    "ko": "게시판 선택",
+                    "en": "Select Board",
+                    "ja": "掲示板を選択",
+                    "zh_CN": "选择版块",
+                    "zh_TW": "選擇版塊",
+                    "de": "Board auswählen",
+                    "es": "Seleccionar tablero",
+                    "fr": "Sélectionner le forum",
+                    "id": "Pilih Papan",
+                    "mn": "Самбар сонгох",
+                    "ru": "Выбрать доску",
+                    "tr": "Pano Seçin",
+                    "vi": "Chọn bảng"
                 }
             },
             {
                 "key": "count",
                 "type": "number",
                 "label": {
-                    "ko": "게시물 수", "en": "Post Count", "ja": "表示件数",
-                    "zh_CN": "帖子数量", "zh_TW": "帖子數量", "de": "Beitragsanzahl",
-                    "es": "Cantidad de publicaciones", "fr": "Nombre d'articles",
-                    "id": "Jumlah Postingan", "mn": "Бичлэгийн тоо", "ru": "Количество постов",
-                    "tr": "Gönderi Sayısı", "vi": "Số bài viết"
+                    "ko": "게시물 수",
+                    "en": "Post Count",
+                    "ja": "表示件数",
+                    "zh_CN": "帖子数量",
+                    "zh_TW": "帖子數量",
+                    "de": "Beitragsanzahl",
+                    "es": "Cantidad de publicaciones",
+                    "fr": "Nombre d'articles",
+                    "id": "Jumlah Postingan",
+                    "mn": "Бичлэгийн тоо",
+                    "ru": "Количество постов",
+                    "tr": "Gönderi Sayısı",
+                    "vi": "Số bài viết"
                 },
                 "default": 10
             },
@@ -77,11 +101,19 @@
                 "key": "show_more_link",
                 "type": "toggle",
                 "label": {
-                    "ko": "더보기 링크 표시", "en": "Show More Link", "ja": "もっと見るリンク",
-                    "zh_CN": "显示更多链接", "zh_TW": "顯示更多連結", "de": "Mehr anzeigen Link",
-                    "es": "Mostrar enlace Ver más", "fr": "Afficher le lien Voir plus",
-                    "id": "Tampilkan Tautan Lainnya", "mn": "Дэлгэрэнгүй холбоос", "ru": "Ссылка «Ещё»",
-                    "tr": "Daha Fazla Bağlantısı", "vi": "Hiển thị liên kết Xem thêm"
+                    "ko": "더보기 링크 표시",
+                    "en": "Show More Link",
+                    "ja": "もっと見るリンク",
+                    "zh_CN": "显示更多链接",
+                    "zh_TW": "顯示更多連結",
+                    "de": "Mehr anzeigen Link",
+                    "es": "Mostrar enlace Ver más",
+                    "fr": "Afficher le lien Voir plus",
+                    "id": "Tampilkan Tautan Lainnya",
+                    "mn": "Дэлгэрэнгүй холбоос",
+                    "ru": "Ссылка «Ещё»",
+                    "tr": "Daha Fazla Bağlantısı",
+                    "vi": "Hiển thị liên kết Xem thêm"
                 },
                 "default": true
             },
@@ -89,14 +121,23 @@
                 "key": "bg_color",
                 "type": "color_transparent",
                 "label": {
-                    "ko": "배경색", "en": "Background Color", "ja": "背景色",
-                    "zh_CN": "背景色", "zh_TW": "背景色", "de": "Hintergrundfarbe",
-                    "es": "Color de fondo", "fr": "Couleur de fond",
-                    "id": "Warna Latar", "mn": "Дэвсгэр өнгө", "ru": "Цвет фона",
-                    "tr": "Arka Plan Rengi", "vi": "Màu nền"
+                    "ko": "배경색",
+                    "en": "Background Color",
+                    "ja": "背景色",
+                    "zh_CN": "背景色",
+                    "zh_TW": "背景色",
+                    "de": "Hintergrundfarbe",
+                    "es": "Color de fondo",
+                    "fr": "Couleur de fond",
+                    "id": "Warna Latar",
+                    "mn": "Дэвсгэр өнгө",
+                    "ru": "Цвет фона",
+                    "tr": "Arka Plan Rengi",
+                    "vi": "Màu nền"
                 },
                 "default": "transparent"
             }
         ]
-    }
+    },
+    "bundled": true
 }

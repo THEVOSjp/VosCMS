@@ -37,35 +37,142 @@
     },
     "config_schema": {
         "fields": [
-            {"key": "title", "type": "text", "label": "Title", "i18n": true, "default": "Welcome"},
-            {"key": "subtitle", "type": "textarea", "label": "Subtitle", "i18n": true},
-            {"key": "layout", "type": "select", "label": "Layout", "options": [
-                {"value": "center", "label": "Center Aligned"},
-                {"value": "fullscreen", "label": "Full Screen"},
-                {"value": "left-image", "label": "Left Image + Right Text"},
-                {"value": "right-image", "label": "Right Image + Left Text"}
-            ], "default": "center"},
-            {"key": "height", "type": "select", "label": "Height", "options": [
-                {"value": "small", "label": "Small"},
-                {"value": "medium", "label": "Medium"},
-                {"value": "large", "label": "Large"},
-                {"value": "full", "label": "Full Screen"}
-            ], "default": "medium"},
-            {"key": "bg_type", "type": "select", "label": "Background Type", "options": [
-                {"value": "gradient", "label": "Gradient"},
-                {"value": "solid", "label": "Solid Color"},
-                {"value": "image", "label": "Image"},
-                {"value": "video", "label": "Video"}
-            ], "default": "gradient"},
-            {"key": "bg_color", "type": "color", "label": "Background Color", "default": "#2563eb"},
-            {"key": "bg_gradient_from", "type": "color", "label": "Gradient From", "default": "#2563eb"},
-            {"key": "bg_gradient_to", "type": "color", "label": "Gradient To", "default": "#1e40af"},
-            {"key": "bg_image", "type": "image", "label": "Background Image"},
-            {"key": "bg_video", "type": "video", "label": "Background Video"},
-            {"key": "bg_overlay", "type": "range", "label": "Overlay Opacity", "min": 0, "max": 100, "default": 50},
-            {"key": "hero_images", "type": "hero_images", "label": "Hero Images"},
-            {"key": "buttons", "type": "buttons", "label": "Buttons"},
-            {"key": "element_positions", "type": "hidden"}
+            {
+                "key": "title",
+                "type": "text",
+                "label": "Title",
+                "i18n": true,
+                "default": "Welcome"
+            },
+            {
+                "key": "subtitle",
+                "type": "textarea",
+                "label": "Subtitle",
+                "i18n": true
+            },
+            {
+                "key": "layout",
+                "type": "select",
+                "label": "Layout",
+                "options": [
+                    {
+                        "value": "center",
+                        "label": "Center Aligned"
+                    },
+                    {
+                        "value": "fullscreen",
+                        "label": "Full Screen"
+                    },
+                    {
+                        "value": "left-image",
+                        "label": "Left Image + Right Text"
+                    },
+                    {
+                        "value": "right-image",
+                        "label": "Right Image + Left Text"
+                    }
+                ],
+                "default": "center"
+            },
+            {
+                "key": "height",
+                "type": "select",
+                "label": "Height",
+                "options": [
+                    {
+                        "value": "small",
+                        "label": "Small"
+                    },
+                    {
+                        "value": "medium",
+                        "label": "Medium"
+                    },
+                    {
+                        "value": "large",
+                        "label": "Large"
+                    },
+                    {
+                        "value": "full",
+                        "label": "Full Screen"
+                    }
+                ],
+                "default": "medium"
+            },
+            {
+                "key": "bg_type",
+                "type": "select",
+                "label": "Background Type",
+                "options": [
+                    {
+                        "value": "gradient",
+                        "label": "Gradient"
+                    },
+                    {
+                        "value": "solid",
+                        "label": "Solid Color"
+                    },
+                    {
+                        "value": "image",
+                        "label": "Image"
+                    },
+                    {
+                        "value": "video",
+                        "label": "Video"
+                    }
+                ],
+                "default": "gradient"
+            },
+            {
+                "key": "bg_color",
+                "type": "color",
+                "label": "Background Color",
+                "default": "#2563eb"
+            },
+            {
+                "key": "bg_gradient_from",
+                "type": "color",
+                "label": "Gradient From",
+                "default": "#2563eb"
+            },
+            {
+                "key": "bg_gradient_to",
+                "type": "color",
+                "label": "Gradient To",
+                "default": "#1e40af"
+            },
+            {
+                "key": "bg_image",
+                "type": "image",
+                "label": "Background Image"
+            },
+            {
+                "key": "bg_video",
+                "type": "video",
+                "label": "Background Video"
+            },
+            {
+                "key": "bg_overlay",
+                "type": "range",
+                "label": "Overlay Opacity",
+                "min": 0,
+                "max": 100,
+                "default": 50
+            },
+            {
+                "key": "hero_images",
+                "type": "hero_images",
+                "label": "Hero Images"
+            },
+            {
+                "key": "buttons",
+                "type": "buttons",
+                "label": "Buttons"
+            },
+            {
+                "key": "element_positions",
+                "type": "hidden"
+            }
         ]
-    }
+    },
+    "bundled": true
 }

@@ -6,11 +6,19 @@
     "icon": "view-grid",
     "thumbnail": "thumbnail.png",
     "name": {
-        "ko": "그리드 섹션", "en": "Grid Section", "ja": "グリッドセクション",
-        "zh_CN": "网格区块", "zh_TW": "網格區塊", "de": "Rasterabschnitt",
-        "es": "Sección Grid", "fr": "Section Grille",
-        "id": "Bagian Grid", "mn": "Грид хэсэг", "ru": "Секция сетки",
-        "tr": "Grid Bölümü", "vi": "Phần Grid"
+        "ko": "그리드 섹션",
+        "en": "Grid Section",
+        "ja": "グリッドセクション",
+        "zh_CN": "网格区块",
+        "zh_TW": "網格區塊",
+        "de": "Rasterabschnitt",
+        "es": "Sección Grid",
+        "fr": "Section Grille",
+        "id": "Bagian Grid",
+        "mn": "Грид хэсэг",
+        "ru": "Секция сетки",
+        "tr": "Grid Bölümü",
+        "vi": "Phần Grid"
     },
     "description": {
         "ko": "다중 컬럼 레이아웃으로 게시판/텍스트/이미지를 자유롭게 배치",
@@ -19,23 +27,78 @@
     },
     "config_schema": {
         "fields": [
-            {"key": "layout", "type": "select", "label": "Layout", "options": [
-                {"value": "2-equal", "label": "2 Equal (50/50)"},
-                {"value": "3-equal", "label": "3 Equal (33/33/33)"},
-                {"value": "sidebar-right", "label": "Main + Sidebar (70/30)"},
-                {"value": "sidebar-left", "label": "Sidebar + Main (30/70)"},
-                {"value": "portal", "label": "Portal (25/50/25)"},
-                {"value": "wide-narrow", "label": "Wide + Narrow (60/40)"},
-                {"value": "1-col", "label": "1 Column (100%)"}
-            ], "default": "sidebar-right"},
-            {"key": "gap", "type": "select", "label": "Gap", "options": [
-                {"value": "0", "label": "None"},
-                {"value": "2", "label": "Small"},
-                {"value": "4", "label": "Medium"},
-                {"value": "6", "label": "Large"}
-            ], "default": "4"},
-            {"key": "bg_color", "type": "color_transparent", "label": "Background", "default": "transparent"},
-            {"key": "cells", "type": "grid_cells", "label": "Grid Cells"}
+            {
+                "key": "layout",
+                "type": "select",
+                "label": "Layout",
+                "options": [
+                    {
+                        "value": "2-equal",
+                        "label": "2 Equal (50/50)"
+                    },
+                    {
+                        "value": "3-equal",
+                        "label": "3 Equal (33/33/33)"
+                    },
+                    {
+                        "value": "sidebar-right",
+                        "label": "Main + Sidebar (70/30)"
+                    },
+                    {
+                        "value": "sidebar-left",
+                        "label": "Sidebar + Main (30/70)"
+                    },
+                    {
+                        "value": "portal",
+                        "label": "Portal (25/50/25)"
+                    },
+                    {
+                        "value": "wide-narrow",
+                        "label": "Wide + Narrow (60/40)"
+                    },
+                    {
+                        "value": "1-col",
+                        "label": "1 Column (100%)"
+                    }
+                ],
+                "default": "sidebar-right"
+            },
+            {
+                "key": "gap",
+                "type": "select",
+                "label": "Gap",
+                "options": [
+                    {
+                        "value": "0",
+                        "label": "None"
+                    },
+                    {
+                        "value": "2",
+                        "label": "Small"
+                    },
+                    {
+                        "value": "4",
+                        "label": "Medium"
+                    },
+                    {
+                        "value": "6",
+                        "label": "Large"
+                    }
+                ],
+                "default": "4"
+            },
+            {
+                "key": "bg_color",
+                "type": "color_transparent",
+                "label": "Background",
+                "default": "transparent"
+            },
+            {
+                "key": "cells",
+                "type": "grid_cells",
+                "label": "Grid Cells"
+            }
         ]
-    }
+    },
+    "bundled": true
 }

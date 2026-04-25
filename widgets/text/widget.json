@@ -6,11 +6,19 @@
     "icon": "document-text",
     "thumbnail": "thumbnail.png",
     "name": {
-        "ko": "자유 콘텐츠", "en": "Free Content", "ja": "自由コンテンツ",
-        "zh_CN": "自由内容", "zh_TW": "自由內容",
-        "de": "Freier Inhalt", "es": "Contenido libre", "fr": "Contenu libre",
-        "id": "Konten Bebas", "mn": "Чөлөөт агуулга", "ru": "Свободный контент",
-        "tr": "Serbest İçerik", "vi": "Nội dung tự do"
+        "ko": "자유 콘텐츠",
+        "en": "Free Content",
+        "ja": "自由コンテンツ",
+        "zh_CN": "自由内容",
+        "zh_TW": "自由內容",
+        "de": "Freier Inhalt",
+        "es": "Contenido libre",
+        "fr": "Contenu libre",
+        "id": "Konten Bebas",
+        "mn": "Чөлөөт агуулга",
+        "ru": "Свободный контент",
+        "tr": "Serbest İçerik",
+        "vi": "Nội dung tự do"
     },
     "description": {
         "ko": "원하는 내용을 자유롭게 작성하는 영역 (HTML 에디터)",
@@ -29,9 +37,25 @@
     },
     "config_schema": {
         "fields": [
-            {"key": "content", "type": "richtext", "label": "Content (HTML)", "i18n": true},
-            {"key": "custom_css", "type": "code", "label": "Custom CSS", "lang": "css"},
-            {"key": "custom_js", "type": "code", "label": "Custom JavaScript", "lang": "javascript"}
+            {
+                "key": "content",
+                "type": "richtext",
+                "label": "Content (HTML)",
+                "i18n": true
+            },
+            {
+                "key": "custom_css",
+                "type": "code",
+                "label": "Custom CSS",
+                "lang": "css"
+            },
+            {
+                "key": "custom_js",
+                "type": "code",
+                "label": "Custom JavaScript",
+                "lang": "javascript"
+            }
         ]
-    }
+    },
+    "bundled": true
 }
