@@ -75,6 +75,20 @@ return [
             'save_fail' => '설정 저장 실패',
             'storage_perm' => 'storage/ 쓰기 권한',
             'env_perm' => '.env 쓰기 권한',
+            'ic_warning_html' => <<<'HTML'
+<p class="font-semibold mb-1">ionCube Loader가 필요합니다</p>
+<p class="mb-2">VosCMS 코어 보안 모듈이 ionCube로 인코딩되어 있어, ionCube Loader 확장이 PHP에 설치되어 있어야 동작합니다.</p>
+<ol class="list-decimal pl-5 space-y-1 text-xs">
+<li><a href="https://www.ioncube.com/loaders.php" target="_blank" rel="noopener" class="text-blue-600 underline">ionCube Loader 다운로드</a> (PHP %1$s · %2$s · %3$s)</li>
+<li><code class="bg-amber-100 px-1 rounded">php.ini</code> 에 <code class="bg-amber-100 px-1 rounded">zend_extension = /path/to/ioncube_loader_lin_%4$s.so</code> 추가</li>
+<li>웹 서버 (php-fpm / apache) 재시작</li>
+<li>이 페이지 새로고침 → 설치 마법사 자동 통과</li>
+</ol>
+<p class="mt-2 text-xs text-amber-700">ⓘ 호스팅 환경이라면 호스팅사에 ionCube Loader 활성화를 요청하세요. 대부분 공유 호스팅에서 무료로 제공됩니다.</p>
+<div class="mt-3 pt-3 border-t border-amber-200">
+<p class="text-xs text-amber-800">ⓘ 테스트를 원하시면 <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">VosCMS 무료 웹호스팅</a> 서비스를 이용해보세요.</p>
+</div>
+HTML,
             'backup_title' => '⚠️ 중요 안내 — 데이터 백업',
             'backup_body' => 'VosCMS는 개인정보(이메일·이름 등)를 <code>APP_KEY</code>로 암호화하여 저장합니다.<br><br><strong>설치 직후 반드시 아래 파일을 안전한 곳에 백업하세요:</strong>',
             'backup_item_env' => '<code>.env</code> 파일 (APP_KEY 포함 — 복호화 키)',
@@ -141,6 +155,20 @@ return [
             'save_fail' => 'Failed to save settings',
             'storage_perm' => 'storage/ write permission',
             'env_perm' => '.env write permission',
+            'ic_warning_html' => <<<'HTML'
+<p class="font-semibold mb-1">ionCube Loader Required</p>
+<p class="mb-2">VosCMS core security modules are encoded with ionCube. The ionCube Loader extension must be installed in PHP.</p>
+<ol class="list-decimal pl-5 space-y-1 text-xs">
+<li><a href="https://www.ioncube.com/loaders.php" target="_blank" rel="noopener" class="text-blue-600 underline">Download ionCube Loader</a> (PHP %1$s · %2$s · %3$s)</li>
+<li>Add <code class="bg-amber-100 px-1 rounded">zend_extension = /path/to/ioncube_loader_lin_%4$s.so</code> to <code class="bg-amber-100 px-1 rounded">php.ini</code></li>
+<li>Restart your web server (php-fpm / apache)</li>
+<li>Refresh this page — installer should pass automatically</li>
+</ol>
+<p class="mt-2 text-xs text-amber-700">ⓘ On shared/managed hosting, ask your provider to enable ionCube Loader. Most providers offer this for free.</p>
+<div class="mt-3 pt-3 border-t border-amber-200">
+<p class="text-xs text-amber-800">ⓘ For testing, try the <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">VosCMS Free Hosting</a> service.</p>
+</div>
+HTML,
             'backup_title' => '⚠️ Important Notice — Data Backup',
             'backup_body' => 'VosCMS encrypts personal data (email, names, etc.) using <code>APP_KEY</code>.<br><br><strong>Right after installation, back up the following files to a safe place:</strong>',
             'backup_item_env' => '<code>.env</code> file (contains APP_KEY — decryption key)',
@@ -207,6 +235,20 @@ return [
             'save_fail' => '設定の保存に失敗',
             'storage_perm' => 'storage/ 書き込み権限',
             'env_perm' => '.env 書き込み権限',
+            'ic_warning_html' => <<<'HTML'
+<p class="font-semibold mb-1">ionCube Loader が必要です</p>
+<p class="mb-2">VosCMS のコアセキュリティモジュールは ionCube でエンコードされており、PHP に ionCube Loader 拡張が必要です。</p>
+<ol class="list-decimal pl-5 space-y-1 text-xs">
+<li><a href="https://www.ioncube.com/loaders.php" target="_blank" rel="noopener" class="text-blue-600 underline">ionCube Loader をダウンロード</a>(PHP %1$s · %2$s · %3$s)</li>
+<li><code class="bg-amber-100 px-1 rounded">php.ini</code> に <code class="bg-amber-100 px-1 rounded">zend_extension = /path/to/ioncube_loader_lin_%4$s.so</code> を追加</li>
+<li>Webサーバ(php-fpm / apache)を再起動</li>
+<li>このページを再読み込み → インストールウィザード自動通過</li>
+</ol>
+<p class="mt-2 text-xs text-amber-700">ⓘ 共有・マネージドホスティングの場合、事業者に ionCube Loader 有効化を依頼してください。多くは無料で対応します。</p>
+<div class="mt-3 pt-3 border-t border-amber-200">
+<p class="text-xs text-amber-800">ⓘ テストするなら <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">VosCMS 無料ホスティング</a>サービスをお試しください。</p>
+</div>
+HTML,
             'backup_title' => '⚠️ 重要なお知らせ — データバックアップ',
             'backup_body' => 'VosCMSは個人情報（メール・氏名など）を<code>APP_KEY</code>で暗号化して保存します。<br><br><strong>インストール後、必ず以下のファイルを安全な場所にバックアップしてください：</strong>',
             'backup_item_env' => '<code>.env</code>ファイル（APP_KEY含む — 復号キー）',
@@ -273,6 +315,20 @@ return [
             'save_fail' => '设置保存失败',
             'storage_perm' => 'storage/ 写入权限',
             'env_perm' => '.env 写入权限',
+            'ic_warning_html' => <<<'HTML'
+<p class="font-semibold mb-1">需要 ionCube Loader</p>
+<p class="mb-2">VosCMS 核心安全模块使用 ionCube 编码，需要在 PHP 中安装 ionCube Loader 扩展。</p>
+<ol class="list-decimal pl-5 space-y-1 text-xs">
+<li><a href="https://www.ioncube.com/loaders.php" target="_blank" rel="noopener" class="text-blue-600 underline">下载 ionCube Loader</a>（PHP %1$s · %2$s · %3$s）</li>
+<li>在 <code class="bg-amber-100 px-1 rounded">php.ini</code> 中添加 <code class="bg-amber-100 px-1 rounded">zend_extension = /path/to/ioncube_loader_lin_%4$s.so</code></li>
+<li>重启 Web 服务器（php-fpm / apache）</li>
+<li>刷新此页面 — 安装向导将自动通过</li>
+</ol>
+<p class="mt-2 text-xs text-amber-700">ⓘ 如果使用共享/托管主机，请要求服务商启用 ionCube Loader。大多数免费提供。</p>
+<div class="mt-3 pt-3 border-t border-amber-200">
+<p class="text-xs text-amber-800">ⓘ 如需测试，请尝试 <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">VosCMS 免费虚拟主机</a> 服务。</p>
+</div>
+HTML,
             'backup_title' => '⚠️ 重要提示 — 数据备份',
             'backup_body' => 'VosCMS 使用 <code>APP_KEY</code> 加密存储个人信息（邮箱、姓名等）。<br><br><strong>安装后请立即将以下文件备份至安全位置：</strong>',
             'backup_item_env' => '<code>.env</code> 文件（包含 APP_KEY — 解密密钥）',
@@ -339,6 +395,20 @@ return [
             'save_fail' => '設定儲存失敗',
             'storage_perm' => 'storage/ 寫入權限',
             'env_perm' => '.env 寫入權限',
+            'ic_warning_html' => <<<'HTML'
+<p class="font-semibold mb-1">需要 ionCube Loader</p>
+<p class="mb-2">VosCMS 核心安全模組使用 ionCube 編碼，需要在 PHP 中安裝 ionCube Loader 擴充。</p>
+<ol class="list-decimal pl-5 space-y-1 text-xs">
+<li><a href="https://www.ioncube.com/loaders.php" target="_blank" rel="noopener" class="text-blue-600 underline">下載 ionCube Loader</a>（PHP %1$s · %2$s · %3$s）</li>
+<li>在 <code class="bg-amber-100 px-1 rounded">php.ini</code> 中加入 <code class="bg-amber-100 px-1 rounded">zend_extension = /path/to/ioncube_loader_lin_%4$s.so</code></li>
+<li>重新啟動 Web 伺服器（php-fpm / apache）</li>
+<li>重新整理此頁面 — 安裝精靈將自動通過</li>
+</ol>
+<p class="mt-2 text-xs text-amber-700">ⓘ 若使用共享/託管主機，請要求服務商啟用 ionCube Loader。大多數免費提供。</p>
+<div class="mt-3 pt-3 border-t border-amber-200">
+<p class="text-xs text-amber-800">ⓘ 如需測試，請嘗試 <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">VosCMS 免費虛擬主機</a> 服務。</p>
+</div>
+HTML,
             'backup_title' => '⚠️ 重要提示 — 資料備份',
             'backup_body' => 'VosCMS 使用 <code>APP_KEY</code> 加密儲存個人資料（信箱、姓名等）。<br><br><strong>安裝後請立即將以下檔案備份至安全位置：</strong>',
             'backup_item_env' => '<code>.env</code> 檔案（含 APP_KEY — 解密金鑰）',
@@ -405,6 +475,20 @@ return [
             'save_fail' => 'Einstellungen konnten nicht gespeichert werden',
             'storage_perm' => 'storage/ Schreibberechtigung',
             'env_perm' => '.env Schreibberechtigung',
+            'ic_warning_html' => <<<'HTML'
+<p class="font-semibold mb-1">ionCube Loader erforderlich</p>
+<p class="mb-2">VosCMS-Kern-Sicherheitsmodule sind mit ionCube verschlüsselt. Die ionCube Loader-Erweiterung muss in PHP installiert sein.</p>
+<ol class="list-decimal pl-5 space-y-1 text-xs">
+<li><a href="https://www.ioncube.com/loaders.php" target="_blank" rel="noopener" class="text-blue-600 underline">ionCube Loader herunterladen</a> (PHP %1$s · %2$s · %3$s)</li>
+<li>Fügen Sie <code class="bg-amber-100 px-1 rounded">zend_extension = /path/to/ioncube_loader_lin_%4$s.so</code> in <code class="bg-amber-100 px-1 rounded">php.ini</code> hinzu</li>
+<li>Webserver neu starten (php-fpm / apache)</li>
+<li>Diese Seite neu laden — Installation läuft automatisch weiter</li>
+</ol>
+<p class="mt-2 text-xs text-amber-700">ⓘ Bei Shared/Managed-Hosting bitten Sie Ihren Anbieter, ionCube Loader zu aktivieren. Die meisten bieten dies kostenlos an.</p>
+<div class="mt-3 pt-3 border-t border-amber-200">
+<p class="text-xs text-amber-800">ⓘ Zum Testen, nutzen Sie das <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">kostenlose VosCMS-Hosting</a>.</p>
+</div>
+HTML,
             'backup_title' => '⚠️ Wichtiger Hinweis — Datensicherung',
             'backup_body' => 'VosCMS verschlüsselt persönliche Daten (E-Mail, Namen usw.) mit <code>APP_KEY</code>.<br><br><strong>Sichern Sie sofort nach der Installation folgende Dateien an einem sicheren Ort:</strong>',
             'backup_item_env' => '<code>.env</code>-Datei (enthält APP_KEY — Entschlüsselungsschlüssel)',
@@ -471,6 +555,20 @@ return [
             'save_fail' => 'Error al guardar la configuración',
             'storage_perm' => 'Permiso de escritura en storage/',
             'env_perm' => 'Permiso de escritura en .env',
+            'ic_warning_html' => <<<'HTML'
+<p class="font-semibold mb-1">Se requiere ionCube Loader</p>
+<p class="mb-2">Los módulos de seguridad principales de VosCMS están codificados con ionCube. La extensión ionCube Loader debe estar instalada en PHP.</p>
+<ol class="list-decimal pl-5 space-y-1 text-xs">
+<li><a href="https://www.ioncube.com/loaders.php" target="_blank" rel="noopener" class="text-blue-600 underline">Descargar ionCube Loader</a> (PHP %1$s · %2$s · %3$s)</li>
+<li>Añade <code class="bg-amber-100 px-1 rounded">zend_extension = /path/to/ioncube_loader_lin_%4$s.so</code> a <code class="bg-amber-100 px-1 rounded">php.ini</code></li>
+<li>Reinicia el servidor web (php-fpm / apache)</li>
+<li>Refresca esta página — el instalador continuará automáticamente</li>
+</ol>
+<p class="mt-2 text-xs text-amber-700">ⓘ En hosting compartido/administrado, pide al proveedor que active ionCube Loader. La mayoría lo ofrece gratis.</p>
+<div class="mt-3 pt-3 border-t border-amber-200">
+<p class="text-xs text-amber-800">ⓘ Para probar, prueba el <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">hosting gratuito de VosCMS</a>.</p>
+</div>
+HTML,
             'backup_title' => '⚠️ Aviso Importante — Copia de seguridad',
             'backup_body' => 'VosCMS encripta datos personales (correo, nombres, etc.) con <code>APP_KEY</code>.<br><br><strong>Inmediatamente después de la instalación, respalde los siguientes archivos en un lugar seguro:</strong>',
             'backup_item_env' => 'Archivo <code>.env</code> (contiene APP_KEY — clave de descifrado)',
@@ -537,6 +635,20 @@ return [
             'save_fail' => 'Échec de l\'enregistrement des paramètres',
             'storage_perm' => 'Permission d\'écriture storage/',
             'env_perm' => 'Permission d\'écriture .env',
+            'ic_warning_html' => <<<'HTML'
+<p class="font-semibold mb-1">ionCube Loader requis</p>
+<p class="mb-2">Les modules de sécurité principaux de VosCMS sont encodés avec ionCube. L'extension ionCube Loader doit être installée dans PHP.</p>
+<ol class="list-decimal pl-5 space-y-1 text-xs">
+<li><a href="https://www.ioncube.com/loaders.php" target="_blank" rel="noopener" class="text-blue-600 underline">Télécharger ionCube Loader</a> (PHP %1$s · %2$s · %3$s)</li>
+<li>Ajouter <code class="bg-amber-100 px-1 rounded">zend_extension = /path/to/ioncube_loader_lin_%4$s.so</code> dans <code class="bg-amber-100 px-1 rounded">php.ini</code></li>
+<li>Redémarrer le serveur web (php-fpm / apache)</li>
+<li>Rafraîchir cette page — l'installateur continuera automatiquement</li>
+</ol>
+<p class="mt-2 text-xs text-amber-700">ⓘ Sur hébergement mutualisé/géré, demandez à votre fournisseur d'activer ionCube Loader. La plupart le proposent gratuitement.</p>
+<div class="mt-3 pt-3 border-t border-amber-200">
+<p class="text-xs text-amber-800">ⓘ Pour tester, essayez l'<a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">hébergement gratuit VosCMS</a>.</p>
+</div>
+HTML,
         ],
 
         // ── Bahasa Indonesia ──
@@ -594,6 +706,20 @@ return [
             'save_fail' => 'Gagal menyimpan pengaturan',
             'storage_perm' => 'Izin tulis storage/',
             'env_perm' => 'Izin tulis .env',
+            'ic_warning_html' => <<<'HTML'
+<p class="font-semibold mb-1">ionCube Loader Diperlukan</p>
+<p class="mb-2">Modul keamanan inti VosCMS dienkode dengan ionCube. Ekstensi ionCube Loader harus terpasang di PHP.</p>
+<ol class="list-decimal pl-5 space-y-1 text-xs">
+<li><a href="https://www.ioncube.com/loaders.php" target="_blank" rel="noopener" class="text-blue-600 underline">Unduh ionCube Loader</a> (PHP %1$s · %2$s · %3$s)</li>
+<li>Tambahkan <code class="bg-amber-100 px-1 rounded">zend_extension = /path/to/ioncube_loader_lin_%4$s.so</code> ke <code class="bg-amber-100 px-1 rounded">php.ini</code></li>
+<li>Restart server web (php-fpm / apache)</li>
+<li>Muat ulang halaman ini — installer otomatis melanjutkan</li>
+</ol>
+<p class="mt-2 text-xs text-amber-700">ⓘ Pada hosting berbagi/terkelola, minta penyedia mengaktifkan ionCube Loader. Sebagian besar menawarkan gratis.</p>
+<div class="mt-3 pt-3 border-t border-amber-200">
+<p class="text-xs text-amber-800">ⓘ Untuk pengujian, coba layanan <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">Hosting Gratis VosCMS</a>.</p>
+</div>
+HTML,
             'backup_title' => '⚠️ Pemberitahuan Penting — Cadangan Data',
             'backup_body' => 'VosCMS mengenkripsi data pribadi (email, nama, dll.) menggunakan <code>APP_KEY</code>.<br><br><strong>Segera setelah instalasi, cadangkan file berikut ke tempat yang aman:</strong>',
             'backup_item_env' => 'File <code>.env</code> (berisi APP_KEY — kunci dekripsi)',
@@ -669,6 +795,20 @@ return [
             'save_fail' => 'Тохиргоо хадгалж чадсангүй',
             'storage_perm' => 'storage/ бичих зөвшөөрөл',
             'env_perm' => '.env бичих зөвшөөрөл',
+            'ic_warning_html' => <<<'HTML'
+<p class="font-semibold mb-1">ionCube Loader шаардлагатай</p>
+<p class="mb-2">VosCMS-ийн үндсэн аюулгүй байдлын модулиуд ionCube-ээр кодлогдсон. ionCube Loader өргөтгөл PHP-д суусан байх ёстой.</p>
+<ol class="list-decimal pl-5 space-y-1 text-xs">
+<li><a href="https://www.ioncube.com/loaders.php" target="_blank" rel="noopener" class="text-blue-600 underline">ionCube Loader татах</a> (PHP %1$s · %2$s · %3$s)</li>
+<li><code class="bg-amber-100 px-1 rounded">php.ini</code>-д <code class="bg-amber-100 px-1 rounded">zend_extension = /path/to/ioncube_loader_lin_%4$s.so</code> мөр нэмэх</li>
+<li>Веб серверийг (php-fpm / apache) дахин эхлүүлэх</li>
+<li>Хуудсыг шинэчлэх → суулгах визард автоматаар нэвтэрнэ</li>
+</ol>
+<p class="mt-2 text-xs text-amber-700">ⓘ Хуваалцсан хостинг бол үйлчилгээ үзүүлэгчээс ionCube Loader идэвхжүүлэхийг хүсэлт гаргана уу. Ихэнх нь үнэгүй.</p>
+<div class="mt-3 pt-3 border-t border-amber-200">
+<p class="text-xs text-amber-800">ⓘ Туршихыг хүсвэл <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">VosCMS үнэгүй хостинг</a> үйлчилгээг ашиглаарай.</p>
+</div>
+HTML,
             'backup_title' => '⚠️ Чухал мэдэгдэл — Өгөгдлийн нөөц',
             'backup_body' => 'VosCMS нь хувийн мэдээлэл (и-мэйл, нэр зэрэг)-ийг <code>APP_KEY</code>-ээр шифрлэн хадгалдаг.<br><br><strong>Суулгасны дараа дараах файлуудыг аюулгүй газар нөөцлөнө үү:</strong>',
             'backup_item_env' => '<code>.env</code> файл (APP_KEY агуулсан — шифр тайлах түлхүүр)',
@@ -735,6 +875,20 @@ return [
             'save_fail' => 'Ошибка сохранения настроек',
             'storage_perm' => 'Права записи storage/',
             'env_perm' => 'Права записи .env',
+            'ic_warning_html' => <<<'HTML'
+<p class="font-semibold mb-1">Требуется ionCube Loader</p>
+<p class="mb-2">Основные модули безопасности VosCMS закодированы с помощью ionCube. Расширение ionCube Loader должно быть установлено в PHP.</p>
+<ol class="list-decimal pl-5 space-y-1 text-xs">
+<li><a href="https://www.ioncube.com/loaders.php" target="_blank" rel="noopener" class="text-blue-600 underline">Скачать ionCube Loader</a> (PHP %1$s · %2$s · %3$s)</li>
+<li>Добавьте <code class="bg-amber-100 px-1 rounded">zend_extension = /path/to/ioncube_loader_lin_%4$s.so</code> в <code class="bg-amber-100 px-1 rounded">php.ini</code></li>
+<li>Перезапустите веб-сервер (php-fpm / apache)</li>
+<li>Обновите эту страницу — установщик продолжится автоматически</li>
+</ol>
+<p class="mt-2 text-xs text-amber-700">ⓘ На общем/управляемом хостинге попросите провайдера включить ionCube Loader. Большинство предлагает это бесплатно.</p>
+<div class="mt-3 pt-3 border-t border-amber-200">
+<p class="text-xs text-amber-800">ⓘ Для тестирования попробуйте <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">бесплатный хостинг VosCMS</a>.</p>
+</div>
+HTML,
             'backup_title' => '⚠️ Важное уведомление — Резервная копия',
             'backup_body' => 'VosCMS шифрует персональные данные (email, имена и т.д.) с помощью <code>APP_KEY</code>.<br><br><strong>Сразу после установки сохраните следующие файлы в безопасном месте:</strong>',
             'backup_item_env' => 'Файл <code>.env</code> (содержит APP_KEY — ключ расшифровки)',
@@ -801,6 +955,20 @@ return [
             'save_fail' => 'Ayarlar kaydedilemedi',
             'storage_perm' => 'storage/ yazma izni',
             'env_perm' => '.env yazma izni',
+            'ic_warning_html' => <<<'HTML'
+<p class="font-semibold mb-1">ionCube Loader Gerekli</p>
+<p class="mb-2">VosCMS çekirdek güvenlik modülleri ionCube ile kodlanmıştır. ionCube Loader uzantısı PHP'ye kurulu olmalıdır.</p>
+<ol class="list-decimal pl-5 space-y-1 text-xs">
+<li><a href="https://www.ioncube.com/loaders.php" target="_blank" rel="noopener" class="text-blue-600 underline">ionCube Loader indir</a> (PHP %1$s · %2$s · %3$s)</li>
+<li><code class="bg-amber-100 px-1 rounded">php.ini</code>'ye <code class="bg-amber-100 px-1 rounded">zend_extension = /path/to/ioncube_loader_lin_%4$s.so</code> ekleyin</li>
+<li>Web sunucusunu yeniden başlatın (php-fpm / apache)</li>
+<li>Sayfayı yenileyin — kurulum otomatik devam edecek</li>
+</ol>
+<p class="mt-2 text-xs text-amber-700">ⓘ Paylaşımlı/yönetilen hostingde sağlayıcınızdan ionCube Loader'ı etkinleştirmesini isteyin. Çoğu ücretsiz sunar.</p>
+<div class="mt-3 pt-3 border-t border-amber-200">
+<p class="text-xs text-amber-800">ⓘ Test için <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">VosCMS Ücretsiz Hosting</a> hizmetini deneyin.</p>
+</div>
+HTML,
             'backup_title' => '⚠️ Önemli Bildirim — Veri Yedeklemesi',
             'backup_body' => 'VosCMS kişisel verileri (e-posta, isimler vb.) <code>APP_KEY</code> ile şifreleyerek saklar.<br><br><strong>Kurulumdan hemen sonra aşağıdaki dosyaları güvenli bir yere yedekleyin:</strong>',
             'backup_item_env' => '<code>.env</code> dosyası (APP_KEY içerir — şifre çözme anahtarı)',
@@ -867,6 +1035,20 @@ return [
             'save_fail' => 'Lưu cài đặt thất bại',
             'storage_perm' => 'Quyền ghi storage/',
             'env_perm' => 'Quyền ghi .env',
+            'ic_warning_html' => <<<'HTML'
+<p class="font-semibold mb-1">Cần ionCube Loader</p>
+<p class="mb-2">Các module bảo mật cốt lõi của VosCMS được mã hóa bằng ionCube. Tiện ích ionCube Loader phải được cài đặt trong PHP.</p>
+<ol class="list-decimal pl-5 space-y-1 text-xs">
+<li><a href="https://www.ioncube.com/loaders.php" target="_blank" rel="noopener" class="text-blue-600 underline">Tải ionCube Loader</a> (PHP %1$s · %2$s · %3$s)</li>
+<li>Thêm <code class="bg-amber-100 px-1 rounded">zend_extension = /path/to/ioncube_loader_lin_%4$s.so</code> vào <code class="bg-amber-100 px-1 rounded">php.ini</code></li>
+<li>Khởi động lại máy chủ web (php-fpm / apache)</li>
+<li>Tải lại trang — trình cài đặt sẽ tự động tiếp tục</li>
+</ol>
+<p class="mt-2 text-xs text-amber-700">ⓘ Trên hosting chia sẻ/quản lý, yêu cầu nhà cung cấp bật ionCube Loader. Hầu hết miễn phí.</p>
+<div class="mt-3 pt-3 border-t border-amber-200">
+<p class="text-xs text-amber-800">ⓘ Để thử, hãy dùng dịch vụ <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">Hosting miễn phí VosCMS</a>.</p>
+</div>
+HTML,
             'backup_title' => '⚠️ Thông báo quan trọng — Sao lưu dữ liệu',
             'backup_body' => 'VosCMS mã hóa thông tin cá nhân (email, tên, v.v.) bằng <code>APP_KEY</code>.<br><br><strong>Ngay sau khi cài đặt, hãy sao lưu các tệp sau vào nơi an toàn:</strong>',
             'backup_item_env' => 'Tệp <code>.env</code> (chứa APP_KEY — khóa giải mã)',

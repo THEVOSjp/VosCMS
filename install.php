@@ -284,20 +284,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="mt-4 text-xs text-zinc-400">PHP <?= PHP_VERSION ?></div>
 
     <?php if (!$_ic_loaded): ?>
-    <!-- ionCube Loader 설치 안내 -->
+    <!-- ionCube Loader 설치 안내 (단일 다국어 키 ic_warning_html) -->
     <div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
         <div class="flex items-start gap-2">
             <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"/></svg>
             <div class="text-sm text-amber-800">
-                <p class="font-semibold mb-1"><?= __t('ic_required_title') ?? 'ionCube Loader가 필요합니다' ?></p>
-                <p class="mb-2"><?= __t('ic_required_desc') ?? 'VosCMS 코어 보안 모듈이 ionCube로 인코딩되어 있어, ionCube Loader 확장 모듈이 PHP에 설치되어 있어야 동작합니다.' ?></p>
-                <ol class="list-decimal pl-5 space-y-1 text-xs">
-                    <li><a href="https://www.ioncube.com/loaders.php" target="_blank" rel="noopener" class="text-blue-600 underline">ionCube Loader 다운로드</a> (PHP <?= PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION ?> · <?= PHP_OS_FAMILY ?> · <?= PHP_INT_SIZE === 8 ? 'x86_64' : 'x86' ?>)</li>
-                    <li><code class="bg-amber-100 px-1 rounded">php.ini</code> 에 <code class="bg-amber-100 px-1 rounded">zend_extension = /path/to/ioncube_loader_lin_<?= PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION ?>.so</code> 추가</li>
-                    <li>웹 서버 (php-fpm / apache) 재시작</li>
-                    <li>이 페이지 새로고침 → 설치 마법사 자동 통과</li>
-                </ol>
-                <p class="mt-2 text-xs text-amber-700">ⓘ 호스팅 환경이라면 호스팅사에 ionCube Loader 활성화를 요청하세요. 대부분 공유 호스팅에서 무료로 제공됩니다.</p>
+                <?php
+                    $_ic_phpver = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+                    $_ic_os     = PHP_OS_FAMILY;
+                    $_ic_arch   = PHP_INT_SIZE === 8 ? 'x86_64' : 'x86';
+                    echo sprintf(__t('ic_warning_html'), $_ic_phpver, $_ic_os, $_ic_arch, $_ic_phpver);
+                ?>
             </div>
         </div>
     </div>
