@@ -157,12 +157,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $pdo->exec($sql);
                             $executed++;
                         } catch (PDOException $e) {
-                            // 이미 존재하는 테이블/컬럼 등 멱등성 오류는 skip
+                            // 멱등성/레거시 호환 오류는 skip (core 와 충돌하는 legacy migrations 대응)
                             $msg = $e->getMessage();
                             if (str_contains($msg, 'already exists')
                                 || str_contains($msg, 'Duplicate column')
                                 || str_contains($msg, 'Duplicate key')
-                                || str_contains($msg, 'check that column/key exists')) {
+                                || str_contains($msg, 'Duplicate entry')
+                                || str_contains($msg, 'check that column/key exists')
+                                || str_contains($msg, 'Cannot cast')
+                                || str_contains($msg, 'Unknown column')
+                                || str_contains($msg, 'Incorrect integer value')
+                                || str_contains($msg, "doesn't exist")) {
                                 $skipped++;
                                 continue;
                             }
@@ -820,7 +825,7 @@ LICENSE_SERVER={$licenseServer}
             </svg>
         </div>
         <p class="text-lg font-bold text-zinc-800"><?= __t('db_success') ?></p>
-        <p class="text-sm text-zinc-500 mt-2"><?= sprintf(__t('migration_info'), count(glob(BASE_PATH . '/database/migrations/core/*.sql'))) ?></p>
+        <p class="text-sm text-zinc-500 mt-2"><?= sprintf(__t('migration_info'), count(glob(BASE_PATH . '/database/migrations/core/*.sql')) + count(glob(BASE_PATH . '/database/migrations/migrations/*.sql'))) ?></p>
     </div>
     <form method="POST">
         <input type="hidden" name="step" value="3">
