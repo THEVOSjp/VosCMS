@@ -635,6 +635,27 @@ $_payGatewaysJson = json_encode($_payGateways, JSON_UNESCAPED_UNICODE | JSON_HEX
             <p id="paySecSavedHint" class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 <?= $_paySecKey ? '' : 'hidden' ?>"><?= $_paySecKey ? (__('settings.payment_config.key_saved') ?? '키가 저장되어 있습니다.') . ' (' . $_payMaskedSec . ')' : '' ?></p>
         </div>
 
+        <!-- Webhook URL (PG사 대시보드에 등록할 주소) -->
+        <?php
+        $_appUrl = rtrim($_ENV['APP_URL'] ?? ('https://' . ($_SERVER['HTTP_HOST'] ?? '')), '/');
+        $_webhookUrl = $_appUrl . '/api/webhook-payjp.php';
+        ?>
+        <div>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Webhook URL</label>
+            <div class="flex gap-2">
+                <input type="text" id="payWebhookUrl" value="<?= htmlspecialchars($_webhookUrl) ?>" readonly
+                       class="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-lg font-mono text-sm cursor-text">
+                <button type="button"
+                        onclick="var el=document.getElementById('payWebhookUrl'); el.select(); navigator.clipboard.writeText(el.value).then(function(){var b=event.currentTarget;var t=b.textContent;b.textContent='복사됨!';setTimeout(function(){b.textContent=t;},1500);});"
+                        class="px-3 py-2 text-sm font-medium border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 whitespace-nowrap">
+                    복사
+                </button>
+            </div>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                PG사 대시보드 (예: PAY.JP → Webhook 설정)에 위 주소를 등록하세요. 결제 완료·실패·환불 등 이벤트가 이 주소로 전달됩니다.
+            </p>
+        </div>
+
         <!-- Webhook Token -->
         <?php
         $_payWebhookToken = $_payCurrentGw['webhook_token'] ?? '';
