@@ -560,4 +560,11 @@ return [
         'label_public_key_portone' => 'Merchant ID',
         'label_secret_key_portone' => 'API Secret',
     ],
+    // Business Hours
+    'business_hours_title' => 'Giờ làm việc',
+    'business_hours_desc' => 'Đặt giờ làm việc dùng cho lịch và hệ thống đặt chỗ.',
+    'business_hour_start' => 'Giờ mở cửa',
+    'business_hour_end' => 'Giờ đóng cửa',
+    'business_hours_hint' => 'Áp dụng cho khoảng thời gian mặc định của chế độ xem tuần/ngày trong lịch. Các đặt chỗ ngoài giờ làm việc sẽ tự động mở rộng khoảng.',
+
 ];

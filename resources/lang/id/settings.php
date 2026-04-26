@@ -562,4 +562,11 @@ return [
         'label_public_key_portone' => 'Merchant ID',
         'label_secret_key_portone' => 'API Secret',
     ],
+    // Business Hours
+    'business_hours_title' => 'Jam Operasional',
+    'business_hours_desc' => 'Atur jam operasional yang digunakan oleh sistem kalender dan reservasi.',
+    'business_hour_start' => 'Jam Buka',
+    'business_hour_end' => 'Jam Tutup',
+    'business_hours_hint' => 'Berlaku untuk rentang waktu default tampilan mingguan/harian kalender. Reservasi di luar jam operasional akan memperluas rentang secara otomatis.',
+
 ];

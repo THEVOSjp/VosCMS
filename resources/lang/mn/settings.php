@@ -456,4 +456,11 @@ return [
         'label_public_key_portone' => 'Merchant ID',
         'label_secret_key_portone' => 'API Secret',
     ],
+    // Business Hours
+    'business_hours_title' => 'Ажлын цаг',
+    'business_hours_desc' => 'Календарь болон захиалгын системд хэрэглэх ажлын цагийг тохируулна.',
+    'business_hour_start' => 'Эхлэх цаг',
+    'business_hour_end' => 'Дуусах цаг',
+    'business_hours_hint' => 'Календарийн долоо хоног/өдөр харагдацын анхдагч цагийн мужид хэрэглэгдэнэ. Ажлын цагнаас гадуурх захиалга байвал муж автоматаар өргөтгөгдөнө.',
+
 ];

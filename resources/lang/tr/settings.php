@@ -456,4 +456,11 @@ return [
         'label_public_key_portone' => 'Merchant ID',
         'label_secret_key_portone' => 'API Secret',
     ],
+    // Business Hours
+    'business_hours_title' => 'Çalışma Saatleri',
+    'business_hours_desc' => 'Takvim ve rezervasyon sisteminde kullanılacak çalışma saatlerini ayarlayın.',
+    'business_hour_start' => 'Açılış Saati',
+    'business_hour_end' => 'Kapanış Saati',
+    'business_hours_hint' => 'Takvimin hafta/gün görünümlerindeki varsayılan zaman aralığına uygulanır. Çalışma saatleri dışındaki rezervasyonlar aralığı otomatik genişletir.',
+
 ];

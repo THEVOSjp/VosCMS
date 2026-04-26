@@ -522,4 +522,11 @@ return [
         'label_public_key_portone' => 'Merchant ID',
         'label_secret_key_portone' => 'API Secret',
     ],
+    // Business Hours
+    'business_hours_title' => 'Часы работы',
+    'business_hours_desc' => 'Настройте часы работы, используемые календарём и системой бронирования.',
+    'business_hour_start' => 'Время открытия',
+    'business_hour_end' => 'Время закрытия',
+    'business_hours_hint' => 'Применяется к диапазону времени по умолчанию в неделе/дне календаря. Бронирования вне рабочих часов автоматически расширяют диапазон.',
+
 ];

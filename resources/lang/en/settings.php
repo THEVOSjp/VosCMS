@@ -550,6 +550,13 @@ return [
     'pwa_status_failed' => 'Failed',
 
     // Tax Settings
+    // 영업시간 / Business Hours
+    'business_hours_title' => 'Business Hours',
+    'business_hours_desc' => 'Set business hours used by the calendar and reservation system.',
+    'business_hour_start' => 'Opening Hour',
+    'business_hour_end' => 'Closing Hour',
+    'business_hours_hint' => 'Applies to the calendar\'s default time range in week/day views. Reservations outside business hours will automatically extend the range.',
+
     'tax' => [
         'title' => 'Tax Settings',
         'desc' => 'Manage consumption tax and withholding tax settings.',

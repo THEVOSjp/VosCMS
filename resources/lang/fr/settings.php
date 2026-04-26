@@ -563,4 +563,11 @@ return [
         'label_public_key_portone' => 'Merchant ID',
         'label_secret_key_portone' => 'API Secret',
     ],
+    // Business Hours
+    'business_hours_title' => 'Horaires d\'ouverture',
+    'business_hours_desc' => 'Configurez les horaires d\'ouverture utilisés par le calendrier et le système de réservation.',
+    'business_hour_start' => 'Heure d\'ouverture',
+    'business_hour_end' => 'Heure de fermeture',
+    'business_hours_hint' => 'S\'applique à la plage horaire par défaut des vues semaine/jour du calendrier. Les réservations hors horaires étendent automatiquement la plage.',
+
 ];

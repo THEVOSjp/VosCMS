@@ -562,4 +562,11 @@ return [
         'label_public_key_portone' => 'Merchant ID',
         'label_secret_key_portone' => 'API Secret',
     ],
+    // Business Hours
+    'business_hours_title' => '营业时间',
+    'business_hours_desc' => '设置日历和预约系统使用的营业时间。',
+    'business_hour_start' => '开始营业时间',
+    'business_hour_end' => '结束营业时间',
+    'business_hours_hint' => '适用于日历周/日视图的默认时间范围。营业时间外的预约会自动扩展范围。',
+
 ];

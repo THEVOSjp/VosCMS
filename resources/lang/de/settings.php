@@ -560,4 +560,11 @@ return [
         'label_public_key_portone' => 'Merchant ID',
         'label_secret_key_portone' => 'API Secret',
     ],
+    // Business Hours
+    'business_hours_title' => 'Geschäftszeiten',
+    'business_hours_desc' => 'Geschäftszeiten für Kalender und Reservierungssystem festlegen.',
+    'business_hour_start' => 'Öffnungszeit',
+    'business_hour_end' => 'Schließzeit',
+    'business_hours_hint' => 'Gilt für den Standard-Zeitbereich der Wochen-/Tagesansicht im Kalender. Reservierungen außerhalb der Geschäftszeiten erweitern den Bereich automatisch.',
+
 ];

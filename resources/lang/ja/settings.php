@@ -550,6 +550,13 @@ return [
     'pwa_status_failed' => '失敗',
 
     // 課税設定
+    // 영업시간 / Business Hours
+    'business_hours_title' => '営業時間',
+    'business_hours_desc' => 'カレンダーと予約システムで使用する営業時間を設定します。',
+    'business_hour_start' => '営業開始時刻',
+    'business_hour_end' => '営業終了時刻',
+    'business_hours_hint' => 'カレンダーの週/日表示のデフォルト時間範囲に適用されます。営業時間外の予約があると自動的に範囲が拡張されます。',
+
     'tax' => [
         'title' => '課税設定',
         'desc' => '消費税および源泉徴収税の設定を管理します。',

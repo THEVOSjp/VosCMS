@@ -559,4 +559,11 @@ return [
         'label_public_key_portone' => 'Merchant ID',
         'label_secret_key_portone' => 'API Secret',
     ],
+    // Business Hours
+    'business_hours_title' => 'Horario comercial',
+    'business_hours_desc' => 'Configura el horario comercial utilizado por el calendario y el sistema de reservas.',
+    'business_hour_start' => 'Hora de apertura',
+    'business_hour_end' => 'Hora de cierre',
+    'business_hours_hint' => 'Se aplica al rango horario predeterminado de las vistas semana/día del calendario. Las reservas fuera del horario comercial extenderán el rango automáticamente.',
+
 ];

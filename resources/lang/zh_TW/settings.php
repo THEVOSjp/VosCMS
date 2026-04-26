@@ -562,4 +562,11 @@ return [
         'label_public_key_portone' => 'Merchant ID',
         'label_secret_key_portone' => 'API Secret',
     ],
+    // Business Hours
+    'business_hours_title' => '營業時間',
+    'business_hours_desc' => '設定日曆和預約系統使用的營業時間。',
+    'business_hour_start' => '開始營業時間',
+    'business_hour_end' => '結束營業時間',
+    'business_hours_hint' => '適用於日曆週/日檢視的預設時間範圍。營業時間外的預約會自動擴展範圍。',
+
 ];
