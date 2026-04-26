@@ -55,7 +55,16 @@ if (!isset($_POST['step']) && !isset($_GET['step']) && !file_exists(BASE_PATH . 
     session_start();
 }
 
+// 세션 → URL ?lang= 폴백 → 브라우저 Accept-Language → 'en'
+// 세션이 어떤 이유로 끊겨도 install.php 가 ?lang= 를 넘겨주면 복구됨
 $installLocale = $_SESSION['install_locale'] ?? null;
+if (!$installLocale && !empty($_GET['lang'])) {
+    $_lang = $_GET['lang'];
+    if (isset($_installLangs[$_lang])) {
+        $installLocale = $_lang;
+        $_SESSION['install_locale'] = $_lang;  // 세션 복구
+    }
+}
 $step = $_POST['step'] ?? $_GET['step'] ?? ($installLocale ? '1' : '0');
 
 // Step 0/1 은 install.php 가 처리. 직접 접근하면 되돌려보냄

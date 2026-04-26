@@ -305,6 +305,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php if ($allPassed): ?>
     <form method="GET" action="install-core.php" class="mt-6">
         <input type="hidden" name="step" value="2">
+        <input type="hidden" name="lang" value="<?= htmlspecialchars($installLocale ?? 'en') ?>">
         <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition"><?= __t('next') ?> &rarr;</button>
     </form>
     <?php else: ?>
