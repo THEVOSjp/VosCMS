@@ -50,10 +50,7 @@ $_installLangs = $_langData['languages'];
 $_it = $_langData['translations'];
 
 // .env 없이 최초 접속 = 새 설치 → 이전 세션 전체 초기화
-// 단, install_locale 이 이미 있으면 진행 중인 설치 세션이므로 보존 (재방문/새로고침 호환)
-if (!isset($_POST['step']) && !isset($_GET['step'])
-    && !file_exists(BASE_PATH . '/.env')
-    && empty($_SESSION['install_locale'])) {
+if (!isset($_POST['step']) && !isset($_GET['step']) && !file_exists(BASE_PATH . '/.env')) {
     session_destroy();
     session_start();
 }
@@ -76,8 +73,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $installLocale = $_POST['install_locale'] ?? 'en';
             if (!isset($_installLangs[$installLocale])) $installLocale = 'en';
             $_SESSION['install_locale'] = $installLocale;
-            $step = '1';
-            break;
+            session_write_close();
+            // Post-Redirect-Get: 새로고침 시 POST 재전송 / destroy 발동 방지
+            header('Location: install.php?step=1');
+            exit;
     }
 }
 ?>
