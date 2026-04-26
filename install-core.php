@@ -133,22 +133,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
                 );
 
-                // 코어 마이그레이션만 실행
-                $migrationDir = BASE_PATH . '/database/migrations/core';
-                $files = glob($migrationDir . '/*.sql');
-                sort($files);
+                // 코어 + 기능 마이그레이션 모두 실행 (core 먼저, 그다음 migrations)
+                //  - core/*.sql : 필수 부트스트랩 (users, settings, sessions 등)
+                //  - migrations/*.sql : 기능별 (reservations, orders, payments, boards 등)
+                $dirs = [
+                    BASE_PATH . '/database/migrations/core',
+                    BASE_PATH . '/database/migrations/migrations',
+                ];
                 $executed = 0;
-                foreach ($files as $file) {
-                    $sql = file_get_contents($file);
-                    if ($sql) {
+                $skipped = 0;
+                foreach ($dirs as $migrationDir) {
+                    if (!is_dir($migrationDir)) continue;
+                    $files = glob($migrationDir . '/*.sql');
+                    sort($files);
+                    foreach ($files as $file) {
+                        $sql = file_get_contents($file);
+                        if (!$sql) continue;
                         // prefix 치환
                         if ($db['dbPrefix'] !== 'rzx_') {
                             $sql = str_replace('rzx_', $db['dbPrefix'], $sql);
                         }
-                        $pdo->exec($sql);
-                        $executed++;
+                        try {
+                            $pdo->exec($sql);
+                            $executed++;
+                        } catch (PDOException $e) {
+                            // 이미 존재하는 테이블/컬럼 등 멱등성 오류는 skip
+                            $msg = $e->getMessage();
+                            if (str_contains($msg, 'already exists')
+                                || str_contains($msg, 'Duplicate column')
+                                || str_contains($msg, 'Duplicate key')
+                                || str_contains($msg, 'check that column/key exists')) {
+                                $skipped++;
+                                continue;
+                            }
+                            throw $e;
+                        }
                     }
                 }
+                $_SESSION['install_tables_skipped'] = $skipped;
 
                 $_SESSION['install_tables_done'] = true;
                 $_SESSION['install_tables_count'] = $executed;
