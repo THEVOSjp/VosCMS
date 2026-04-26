@@ -86,7 +86,7 @@ return [
 </ol>
 <p class="mt-2 text-xs text-amber-700">ⓘ 호스팅 환경이라면 호스팅사에 ionCube Loader 활성화를 요청하세요. 대부분 공유 호스팅에서 무료로 제공됩니다.</p>
 <div class="mt-3 pt-3 border-t border-amber-200">
-<p class="text-xs text-amber-800">ⓘ 테스트를 원하시면 <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">VosCMS 무료 웹호스팅</a> 서비스를 이용해보세요.</p>
+<p class="text-base text-amber-900 font-semibold leading-relaxed">ⓘ 테스트를 원하시면 <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="inline-block font-bold text-blue-700 hover:text-blue-800 underline decoration-2 underline-offset-2 px-1">VosCMS 무료 웹호스팅</a> 서비스를 이용해보세요.</p>
 </div>
 HTML,
             'backup_title' => '⚠️ 중요 안내 — 데이터 백업',
@@ -166,7 +166,7 @@ HTML,
 </ol>
 <p class="mt-2 text-xs text-amber-700">ⓘ On shared/managed hosting, ask your provider to enable ionCube Loader. Most providers offer this for free.</p>
 <div class="mt-3 pt-3 border-t border-amber-200">
-<p class="text-xs text-amber-800">ⓘ For testing, try the <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">VosCMS Free Hosting</a> service.</p>
+<p class="text-base text-amber-900 font-semibold leading-relaxed">ⓘ For testing, try the <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="inline-block font-bold text-blue-700 hover:text-blue-800 underline decoration-2 underline-offset-2 px-1">VosCMS Free Hosting</a> service.</p>
 </div>
 HTML,
             'backup_title' => '⚠️ Important Notice — Data Backup',
@@ -246,7 +246,7 @@ HTML,
 </ol>
 <p class="mt-2 text-xs text-amber-700">ⓘ 共有・マネージドホスティングの場合、事業者に ionCube Loader 有効化を依頼してください。多くは無料で対応します。</p>
 <div class="mt-3 pt-3 border-t border-amber-200">
-<p class="text-xs text-amber-800">ⓘ テストするなら <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">VosCMS 無料ホスティング</a>サービスをお試しください。</p>
+<p class="text-base text-amber-900 font-semibold leading-relaxed">ⓘ テストするなら <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="inline-block font-bold text-blue-700 hover:text-blue-800 underline decoration-2 underline-offset-2 px-1">VosCMS 無料ホスティング</a>サービスをお試しください。</p>
 </div>
 HTML,
             'backup_title' => '⚠️ 重要なお知らせ — データバックアップ',
@@ -326,7 +326,7 @@ HTML,
 </ol>
 <p class="mt-2 text-xs text-amber-700">ⓘ 如果使用共享/托管主机，请要求服务商启用 ionCube Loader。大多数免费提供。</p>
 <div class="mt-3 pt-3 border-t border-amber-200">
-<p class="text-xs text-amber-800">ⓘ 如需测试，请尝试 <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">VosCMS 免费虚拟主机</a> 服务。</p>
+<p class="text-base text-amber-900 font-semibold leading-relaxed">ⓘ 如需测试，请尝试 <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="inline-block font-bold text-blue-700 hover:text-blue-800 underline decoration-2 underline-offset-2 px-1">VosCMS 免费虚拟主机</a> 服务。</p>
 </div>
 HTML,
             'backup_title' => '⚠️ 重要提示 — 数据备份',
@@ -406,7 +406,7 @@ HTML,
 </ol>
 <p class="mt-2 text-xs text-amber-700">ⓘ 若使用共享/託管主機，請要求服務商啟用 ionCube Loader。大多數免費提供。</p>
 <div class="mt-3 pt-3 border-t border-amber-200">
-<p class="text-xs text-amber-800">ⓘ 如需測試，請嘗試 <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">VosCMS 免費虛擬主機</a> 服務。</p>
+<p class="text-base text-amber-900 font-semibold leading-relaxed">ⓘ 如需測試，請嘗試 <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="inline-block font-bold text-blue-700 hover:text-blue-800 underline decoration-2 underline-offset-2 px-1">VosCMS 免費虛擬主機</a> 服務。</p>
 </div>
 HTML,
             'backup_title' => '⚠️ 重要提示 — 資料備份',
@@ -486,7 +486,7 @@ HTML,
 </ol>
 <p class="mt-2 text-xs text-amber-700">ⓘ Bei Shared/Managed-Hosting bitten Sie Ihren Anbieter, ionCube Loader zu aktivieren. Die meisten bieten dies kostenlos an.</p>
 <div class="mt-3 pt-3 border-t border-amber-200">
-<p class="text-xs text-amber-800">ⓘ Zum Testen, nutzen Sie das <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">kostenlose VosCMS-Hosting</a>.</p>
+<p class="text-base text-amber-900 font-semibold leading-relaxed">ⓘ Zum Testen, nutzen Sie das <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="inline-block font-bold text-blue-700 hover:text-blue-800 underline decoration-2 underline-offset-2 px-1">kostenlose VosCMS-Hosting</a>.</p>
 </div>
 HTML,
             'backup_title' => '⚠️ Wichtiger Hinweis — Datensicherung',
@@ -566,7 +566,7 @@ HTML,
 </ol>
 <p class="mt-2 text-xs text-amber-700">ⓘ En hosting compartido/administrado, pide al proveedor que active ionCube Loader. La mayoría lo ofrece gratis.</p>
 <div class="mt-3 pt-3 border-t border-amber-200">
-<p class="text-xs text-amber-800">ⓘ Para probar, prueba el <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">hosting gratuito de VosCMS</a>.</p>
+<p class="text-base text-amber-900 font-semibold leading-relaxed">ⓘ Para probar, prueba el <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="inline-block font-bold text-blue-700 hover:text-blue-800 underline decoration-2 underline-offset-2 px-1">hosting gratuito de VosCMS</a>.</p>
 </div>
 HTML,
             'backup_title' => '⚠️ Aviso Importante — Copia de seguridad',
@@ -646,7 +646,7 @@ HTML,
 </ol>
 <p class="mt-2 text-xs text-amber-700">ⓘ Sur hébergement mutualisé/géré, demandez à votre fournisseur d'activer ionCube Loader. La plupart le proposent gratuitement.</p>
 <div class="mt-3 pt-3 border-t border-amber-200">
-<p class="text-xs text-amber-800">ⓘ Pour tester, essayez l'<a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">hébergement gratuit VosCMS</a>.</p>
+<p class="text-base text-amber-900 font-semibold leading-relaxed">ⓘ Pour tester, essayez l'<a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="inline-block font-bold text-blue-700 hover:text-blue-800 underline decoration-2 underline-offset-2 px-1">hébergement gratuit VosCMS</a>.</p>
 </div>
 HTML,
         ],
@@ -717,7 +717,7 @@ HTML,
 </ol>
 <p class="mt-2 text-xs text-amber-700">ⓘ Pada hosting berbagi/terkelola, minta penyedia mengaktifkan ionCube Loader. Sebagian besar menawarkan gratis.</p>
 <div class="mt-3 pt-3 border-t border-amber-200">
-<p class="text-xs text-amber-800">ⓘ Untuk pengujian, coba layanan <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">Hosting Gratis VosCMS</a>.</p>
+<p class="text-base text-amber-900 font-semibold leading-relaxed">ⓘ Untuk pengujian, coba layanan <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="inline-block font-bold text-blue-700 hover:text-blue-800 underline decoration-2 underline-offset-2 px-1">Hosting Gratis VosCMS</a>.</p>
 </div>
 HTML,
             'backup_title' => '⚠️ Pemberitahuan Penting — Cadangan Data',
@@ -806,7 +806,7 @@ HTML,
 </ol>
 <p class="mt-2 text-xs text-amber-700">ⓘ Хуваалцсан хостинг бол үйлчилгээ үзүүлэгчээс ionCube Loader идэвхжүүлэхийг хүсэлт гаргана уу. Ихэнх нь үнэгүй.</p>
 <div class="mt-3 pt-3 border-t border-amber-200">
-<p class="text-xs text-amber-800">ⓘ Туршихыг хүсвэл <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">VosCMS үнэгүй хостинг</a> үйлчилгээг ашиглаарай.</p>
+<p class="text-base text-amber-900 font-semibold leading-relaxed">ⓘ Туршихыг хүсвэл <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="inline-block font-bold text-blue-700 hover:text-blue-800 underline decoration-2 underline-offset-2 px-1">VosCMS үнэгүй хостинг</a> үйлчилгээг ашиглаарай.</p>
 </div>
 HTML,
             'backup_title' => '⚠️ Чухал мэдэгдэл — Өгөгдлийн нөөц',
@@ -886,7 +886,7 @@ HTML,
 </ol>
 <p class="mt-2 text-xs text-amber-700">ⓘ На общем/управляемом хостинге попросите провайдера включить ionCube Loader. Большинство предлагает это бесплатно.</p>
 <div class="mt-3 pt-3 border-t border-amber-200">
-<p class="text-xs text-amber-800">ⓘ Для тестирования попробуйте <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">бесплатный хостинг VosCMS</a>.</p>
+<p class="text-base text-amber-900 font-semibold leading-relaxed">ⓘ Для тестирования попробуйте <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="inline-block font-bold text-blue-700 hover:text-blue-800 underline decoration-2 underline-offset-2 px-1">бесплатный хостинг VosCMS</a>.</p>
 </div>
 HTML,
             'backup_title' => '⚠️ Важное уведомление — Резервная копия',
@@ -966,7 +966,7 @@ HTML,
 </ol>
 <p class="mt-2 text-xs text-amber-700">ⓘ Paylaşımlı/yönetilen hostingde sağlayıcınızdan ionCube Loader'ı etkinleştirmesini isteyin. Çoğu ücretsiz sunar.</p>
 <div class="mt-3 pt-3 border-t border-amber-200">
-<p class="text-xs text-amber-800">ⓘ Test için <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">VosCMS Ücretsiz Hosting</a> hizmetini deneyin.</p>
+<p class="text-base text-amber-900 font-semibold leading-relaxed">ⓘ Test için <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="inline-block font-bold text-blue-700 hover:text-blue-800 underline decoration-2 underline-offset-2 px-1">VosCMS Ücretsiz Hosting</a> hizmetini deneyin.</p>
 </div>
 HTML,
             'backup_title' => '⚠️ Önemli Bildirim — Veri Yedeklemesi',
@@ -1046,7 +1046,7 @@ HTML,
 </ol>
 <p class="mt-2 text-xs text-amber-700">ⓘ Trên hosting chia sẻ/quản lý, yêu cầu nhà cung cấp bật ionCube Loader. Hầu hết miễn phí.</p>
 <div class="mt-3 pt-3 border-t border-amber-200">
-<p class="text-xs text-amber-800">ⓘ Để thử, hãy dùng dịch vụ <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:text-blue-700 underline">Hosting miễn phí VosCMS</a>.</p>
+<p class="text-base text-amber-900 font-semibold leading-relaxed">ⓘ Để thử, hãy dùng dịch vụ <a href="https://voscms.com/service/order" target="_blank" rel="noopener" class="inline-block font-bold text-blue-700 hover:text-blue-800 underline decoration-2 underline-offset-2 px-1">Hosting miễn phí VosCMS</a>.</p>
 </div>
 HTML,
             'backup_title' => '⚠️ Thông báo quan trọng — Sao lưu dữ liệu',
