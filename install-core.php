@@ -50,7 +50,9 @@ $_installLangs = $_langData['languages'];
 $_it = $_langData['translations'];
 
 // .env 없이 최초 접속 = 새 설치 → 이전 세션 전체 초기화
-if (!isset($_POST['step']) && !isset($_GET['step']) && !file_exists(BASE_PATH . '/.env')) {
+if (!isset($_POST['step']) && !isset($_GET['step'])
+    && !file_exists(BASE_PATH . '/.env')
+    && empty($_SESSION['install_locale'])) {
     session_destroy();
     session_start();
 }
