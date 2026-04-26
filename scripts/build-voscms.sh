@@ -76,6 +76,25 @@ for d in "${TARGET}"/widgets/*/; do
 done
 echo "  → kept: ${KEPT}, removed: ${REMOVED}"
 
+# 4b. 사내 전용 기능 제거 (voscms.com 호스팅 서비스 주문 시스템)
+#     배포판은 일반 사용자 사이트에서 동작하므로, 호스팅 신청/결제/관리
+#     모듈은 배포판에서 완전 제거 (voscms.com 본 사이트에만 존재해야 함)
+echo "[4b/8] Removing company-internal features (hosting service order)..."
+
+# 4b-1. 뷰 디렉토리/파일 삭제
+rm -rf "${TARGET}/resources/views/admin/service-orders"
+rm -rf "${TARGET}/resources/views/system/service"
+rm -f  "${TARGET}/resources/views/customer/mypage/services.php"
+rm -f  "${TARGET}/resources/views/customer/mypage/service-detail.php"
+rm -rf "${TARGET}/resources/views/customer/mypage/service-partials"
+
+# 4b-2. 마이그레이션 삭제 (서비스 주문 관련 테이블 생성 SQL)
+rm -f "${TARGET}/database/migrations/migrations/030_create_orders_tables.sql"
+rm -f "${TARGET}/database/migrations/migrations/031_service_management_expansion.sql"
+
+# 4b-3. 코드 패치 (별도 PHP 스크립트 호출 — quoting 안정)
+php8.3 "${DIST}/strip-hosting-service.php" "${TARGET}"
+
 # 5. storage 디렉토리 생성
 echo "[5/8] Creating storage directories..."
 mkdir -p "${TARGET}/storage/"{cache,logs,sessions,tmp,uploads}
@@ -122,6 +141,12 @@ ENVEOF
 
 # 7. 코드 인코딩 (ionCube)
 #    핵심 보안 모듈을 ionCube 바이트코드로 인코딩 → Loader 필요
+#    환경변수 NO_ENCODE=1 또는 인자 --no-encode 지정 시 건너뜀 (테스트용)
+if [ "${NO_ENCODE:-}" = "1" ] || [ "${1:-}" = "--no-encode" ]; then
+    echo "[7/8] Skipping encode (NO_ENCODE=1) — files remain in plain text"
+elif false; then
+    : # placeholder for shell flow
+else
 echo "[7/8] Encoding with ionCube..."
 IC_SH="${DIST}/ioncube/ioncube_encoder_evaluation/ioncube_encoder.sh"
 if [ ! -x "$IC_SH" ]; then
@@ -179,6 +204,7 @@ else
         fi
     fi
     echo "  → encoded: ${IC_OK}, skipped/failed: ${IC_SKIP}"
+fi
 fi
 
 # 8. ZIP 패키징
