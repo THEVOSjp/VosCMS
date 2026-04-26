@@ -167,7 +167,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 || str_contains($msg, 'Cannot cast')
                                 || str_contains($msg, 'Unknown column')
                                 || str_contains($msg, 'Incorrect integer value')
-                                || str_contains($msg, "doesn't exist")) {
+                                || str_contains($msg, "doesn't exist")
+                                // FK 제약 형식 불일치 (legacy migrations 의 UUID vs INT 등)
+                                || str_contains($msg, 'Foreign key constraint is incorrectly formed')
+                                || str_contains($msg, 'errno: 150')
+                                // 컬럼 타입 변경 불가 등 ALTER 호환성
+                                || str_contains($msg, 'Cannot change column')
+                                || str_contains($msg, 'errno: 121')   // duplicate FK name
+                                || str_contains($msg, 'errno: 152')   // FK 이름 충돌
+                                || str_contains($msg, 'check that')) {
                                 $skipped++;
                                 continue;
                             }
