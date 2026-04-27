@@ -63,7 +63,7 @@
                 "key": "download_url",
                 "type": "text",
                 "label": "Download URL",
-                "default": "/download/voscms-latest.zip"
+                "default": "https://voscms.com/download/voscms-latest.zip"
             },
             {
                 "key": "changelog_url",

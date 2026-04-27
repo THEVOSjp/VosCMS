@@ -143,7 +143,7 @@ $_codename = $_vData['codename'] ?? '';
 $_releaseDate = $_latestZip ? $_latestZip['date'] : ($_vData['release_date'] ?? '');
 $_channel = $_vData['channel'] ?? 'stable';
 
-$_downloadUrl = $_cfg['download_url'] ?? '/download/voscms-latest.zip';
+$_downloadUrl = $_cfg['download_url'] ?? 'https://voscms.com/download/voscms-latest.zip';
 $_changelogUrl = $_cfg['changelog_url'] ?? '';
 $_githubUrl = $_cfg['github_url'] ?? '';
 $_showReqs = ($_cfg['show_requirements'] ?? true) !== false;
@@ -283,7 +283,7 @@ $_textLight = $_bgStyle !== 'light';
                         <p class="text-xs text-zinc-400"><?= htmlspecialchars($v['date']) ?> · <?= $v['size'] ?>MB</p>
                     </div>
                 </div>
-                <a href="/download/voscms-<?= htmlspecialchars($v['version']) ?>.zip" class="text-sm font-medium text-blue-600 hover:underline flex items-center gap-1">
+                <a href="https://voscms.com/download/voscms-<?= htmlspecialchars($v['version']) ?>.zip" class="text-sm font-medium text-blue-600 hover:underline flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     <?= $_l('download') ?>
                 </a>

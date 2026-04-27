@@ -13,7 +13,7 @@
        ↓
 테스트: test.21ces.com (배포본 ZIP 직접 전개)
        ↓
-배포: ① 외부 고객  → vos.21ces.com/download/voscms-latest.zip
+배포: ① 외부 고객  → voscms.com/download/voscms-latest.zip
       ② 본사 사이트 → voscms.com (rsync + mysqldump 동기화)
 ```
 
@@ -105,7 +105,7 @@ GitHub: `git@github.com:THEVOSjp/VosCMS.git` / 메인 브랜치: `main`
 
 **대상**: 자체 호스팅 환경에서 VosCMS 를 설치하는 일반 사용자
 **산출물**: `/var/www/voscms-dist/voscms-2.3.9.zip` (58 MB)
-**다운로드**: `https://vos.21ces.com/download/voscms-latest.zip`
+**다운로드**: `https://voscms.com/download/voscms-latest.zip`
 
 이 ZIP 1개가 모든 외부 사용자에게 동일하게 배포된다. 살롱·포털·일반 사이트 모두 같은 ZIP을 받아 설치 후 마켓(`vos-autoinstall`)에서 필요한 플러그인/위젯/스킨을 추가 다운로드한다.
 
@@ -375,7 +375,7 @@ ssh voscms.com 'rm -f /var/www/voscms-com/storage/.{license_cache,update_cache,w
 ### 7.1 신규 설치
 
 ```
-1. vos.21ces.com/download/voscms-latest.zip 다운로드
+1. voscms.com/download/voscms-latest.zip 다운로드
 2. 서버에 업로드 + 압축 해제
 3. .env 권한 설정 (chmod 640, chgrp www-data)
 4. 브라우저에서 install.php 접속
