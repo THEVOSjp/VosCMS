@@ -266,6 +266,18 @@ return [
         'install_description' => 'Add to home screen',
         'offline' => 'You are offline',
         'online' => 'Back online',
+        // Install prompt modal
+        'modal_title' => 'Install as an App',
+        'modal_subtitle' => 'One tap to launch — just like a native app',
+        'modal_bullet_1_icon' => '⚡',
+        'modal_bullet_1' => 'Launch instantly, no browser',
+        'modal_bullet_2_icon' => '🪟',
+        'modal_bullet_2' => 'Cleaner, fullscreen view',
+        'modal_bullet_3_icon' => '📲',
+        'modal_bullet_3' => 'Add icon to home screen',
+        'modal_install_btn' => 'Install App',
+        'modal_later' => 'Later',
+        'modal_dismiss' => "Don't show again",
     ],
 
     'table_view' => 'Table View',

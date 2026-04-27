@@ -266,6 +266,18 @@ return [
         'install_description' => 'Zum Startbildschirm hinzufuegen',
         'offline' => 'Sie sind offline',
         'online' => 'Wieder online',
+        // Installations-Modal
+        'modal_title' => 'Als App installieren',
+        'modal_subtitle' => 'Mit einem Tipp starten — wie eine native App',
+        'modal_bullet_1_icon' => '⚡',
+        'modal_bullet_1' => 'Sofortiger Start, ohne Browser',
+        'modal_bullet_2_icon' => '🪟',
+        'modal_bullet_2' => 'Übersichtliche Vollbildansicht',
+        'modal_bullet_3_icon' => '📲',
+        'modal_bullet_3' => 'Symbol zum Startbildschirm hinzufügen',
+        'modal_install_btn' => 'App installieren',
+        'modal_later' => 'Später',
+        'modal_dismiss' => 'Nicht mehr anzeigen',
     ],
 
     'selected' => 'ausgewählt',

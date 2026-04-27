@@ -7,16 +7,33 @@
  *   $config, $widget, $renderer, $baseUrl, $locale
  */
 
+// {version} placeholder 치환을 위한 최신 빌드 버전 자동 검출
+//   /var/www/voscms-dist/voscms-X.Y.Z.zip 중 가장 큰 SemVer
+$_latestVersion = '';
+$_distGlob = (defined('BASE_PATH') ? '/var/www/voscms-dist/' : '/var/www/voscms-dist/');
+foreach (glob($_distGlob . 'voscms-*.zip') as $_zip) {
+    if (preg_match('/voscms-([\d.]+)\.zip$/', basename($_zip), $_m)) {
+        if ($_latestVersion === '' || version_compare($_m[1], $_latestVersion, '>')) {
+            $_latestVersion = $_m[1];
+        }
+    }
+}
+// 빌드본 없으면 version.json 폴백
+if ($_latestVersion === '' && is_file($_vF = (defined('BASE_PATH') ? BASE_PATH : '/var/www/voscms') . '/version.json')) {
+    $_latestVersion = (json_decode(@file_get_contents($_vF), true)['version'] ?? '') ?: '1.0.0';
+}
+$_replaceVersion = fn(string $s) => str_replace('{version}', $_latestVersion, $s);
+
 $taglineTop = htmlspecialchars($renderer->t($config, 'tagline_top', ''));
 $highlightWord = htmlspecialchars($renderer->t($config, 'highlight_word', 'VosCMS'));
 $taglineBottom = htmlspecialchars($renderer->t($config, 'tagline_bottom', ''));
 $description = $renderer->t($config, 'description', '');
-$primaryText = $renderer->t($config, 'primary_btn_text', '');
-$primaryUrl = $config['primary_btn_url'] ?? '#';
-$primarySub = $renderer->t($config, 'primary_btn_sub', '');
-$secondaryText = $renderer->t($config, 'secondary_btn_text', '');
-$secondaryUrl = $config['secondary_btn_url'] ?? '/marketplace';
-$secondarySub = $renderer->t($config, 'secondary_btn_sub', '');
+$primaryText = $_replaceVersion($renderer->t($config, 'primary_btn_text', ''));
+$primaryUrl = $_replaceVersion($config['primary_btn_url'] ?? '#');
+$primarySub = $_replaceVersion($renderer->t($config, 'primary_btn_sub', ''));
+$secondaryText = $_replaceVersion($renderer->t($config, 'secondary_btn_text', ''));
+$secondaryUrl = $_replaceVersion($config['secondary_btn_url'] ?? '/marketplace');
+$secondarySub = $_replaceVersion($renderer->t($config, 'secondary_btn_sub', ''));
 $requirements = $config['requirements'] ?? '';
 $highlightColor = $config['highlight_color'] ?? '#4f46e5';
 $primaryBtnColor = $config['primary_btn_color'] ?? '#4f46e5';

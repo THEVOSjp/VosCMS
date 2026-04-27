@@ -18,6 +18,7 @@
 /storage/og_image_*
 /storage/logos/
 /storage/skins/
+/storage/pwa/
 
 !/storage/.gitkeep
 !/storage/uploads/.gitkeep

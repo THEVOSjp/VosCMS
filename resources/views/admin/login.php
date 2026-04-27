@@ -1,6 +1,6 @@
 <?php
 /**
- * RezlyX 관리자 로그인 페이지
+ * VosCMS 관리자 로그인 페이지
  * 고객 로그인과 별도 세션 (admin_id)
  */
 
@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     if (empty($email) || empty($password)) {
-        $error = '이메일과 비밀번호를 입력해주세요.';
+        $error = __('auth.login.required');
     } else {
         require_once BASE_PATH . '/rzxlib/Core/Auth/AdminAuth.php';
         \RzxLib\Core\Auth\AdminAuth::init($pdo);
@@ -30,28 +30,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: ' . $basePath . '/' . ($config['admin_path'] ?? 'admin'));
             exit;
         } else {
-            // 로그인 실패
+            // 로그인 실패 — 에러 메시지 다국어 매핑
             $errorMessages = [
-                'invalid_credentials' => '이메일 또는 비밀번호가 올바르지 않습니다.',
-                'account_inactive'    => '비활성화된 계정입니다. 관리자에게 문의하세요.',
-                'not_admin'           => '관리자 권한이 없는 계정입니다.',
-                'user_inactive'       => '연동된 회원 계정이 비활성 상태입니다.',
-                'staff_inactive'      => '연동된 스태프 계정이 비활성 상태입니다.',
+                'invalid_credentials' => __('auth.login.failed'),
+                'account_inactive'    => __('auth.admin_login.errors.account_inactive'),
+                'not_admin'           => __('auth.admin_login.errors.not_admin'),
+                'user_inactive'       => __('auth.admin_login.errors.user_inactive'),
+                'staff_inactive'      => __('auth.admin_login.errors.staff_inactive'),
             ];
-            $error = $errorMessages[$result] ?? '로그인에 실패했습니다.';
+            $error = $errorMessages[$result] ?? __('auth.admin_login.errors.login_failed');
         }
     }
     error_log('[Admin Login] Attempt: ' . $email . ' → ' . (is_array($result ?? null) ? 'success' : ($result ?? 'unknown')));
 }
 
-$siteName = $siteSettings['site_name'] ?? 'RezlyX';
+// site_name 이 다국어 JSON 으로 저장될 수 있으므로 헬퍼로 현재 로케일 추출
+$siteName = function_exists('get_site_name') ? get_site_name() : ($siteSettings['site_name'] ?? 'RezlyX');
+$_locale = function_exists('current_locale') ? current_locale() : ($config['locale'] ?? 'ko');
 ?>
 <!DOCTYPE html>
-<html lang="ko" class="h-full">
+<html lang="<?= htmlspecialchars($_locale) ?>" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($siteName) ?> - 관리자 로그인</title>
+    <title><?= htmlspecialchars($siteName) ?> - <?= htmlspecialchars(__('auth.admin_login.title')) ?></title>
+    <?php if ($pwaSettings = $siteSettings ?? []): ?>
+        <?php include __DIR__ . '/partials/pwa-head.php'; ?>
+    <?php endif; ?>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -69,7 +74,7 @@ $siteName = $siteSettings['site_name'] ?? 'RezlyX';
                     </svg>
                 </div>
                 <h1 class="text-2xl font-bold text-zinc-900 dark:text-white"><?= htmlspecialchars($siteName) ?></h1>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">관리자 로그인</p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"><?= htmlspecialchars(__('auth.admin_login.title')) ?></p>
             </div>
 
             <!-- 로그인 폼 -->
@@ -87,7 +92,7 @@ $siteName = $siteSettings['site_name'] ?? 'RezlyX';
 
                 <form method="POST" action="" class="space-y-5">
                     <div>
-                        <label for="email" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">이메일</label>
+                        <label for="email" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5"><?= htmlspecialchars(__('auth.login.email')) ?></label>
                         <input type="email" id="email" name="email" autocomplete="email" required
                                value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
                                class="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-600 rounded-xl bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
@@ -95,7 +100,7 @@ $siteName = $siteSettings['site_name'] ?? 'RezlyX';
                     </div>
 
                     <div>
-                        <label for="password" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">비밀번호</label>
+                        <label for="password" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5"><?= htmlspecialchars(__('auth.login.password')) ?></label>
                         <input type="password" id="password" name="password" autocomplete="current-password" required
                                class="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-600 rounded-xl bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                                placeholder="••••••••">
@@ -104,25 +109,24 @@ $siteName = $siteSettings['site_name'] ?? 'RezlyX';
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" name="remember" value="1" checked
                                class="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-blue-600 focus:ring-blue-500">
-                        <span class="text-sm text-zinc-600 dark:text-zinc-400">로그인 상태 유지</span>
+                        <span class="text-sm text-zinc-600 dark:text-zinc-400"><?= htmlspecialchars(__('auth.login.remember')) ?></span>
                     </label>
 
                     <button type="submit"
                             class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                        로그인
+                        <?= htmlspecialchars(__('auth.login.submit')) ?>
                     </button>
                 </form>
             </div>
 
             <!-- 하단 -->
             <p class="text-center text-xs text-zinc-400 dark:text-zinc-500 mt-6">
-                &copy; <?= date('Y') ?> <?= htmlspecialchars($siteName) ?>. Powered by RezlyX.
+                &copy; <?= date('Y') ?> <?= htmlspecialchars($siteName) ?>. Powered by VosCMS.
             </p>
         </div>
     </div>
 
     <script>
-    console.log('[Admin Login] Page loaded');
     // 자동 포커스
     document.getElementById('email').focus();
     </script>

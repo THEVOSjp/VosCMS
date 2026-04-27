@@ -50,17 +50,9 @@
         document.body.style.overflow = '';
     }
     </script>
+    <?php /* PWA Service Worker 등록은 main.php 에서 수행 — 중복 등록 방지 */ ?>
     <?php if (($siteSettings['pwa_front_enabled'] ?? '1') === '1'): ?>
-    <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', async () => {
-            try {
-                const bp = '<?= rtrim($baseUrl, "/") ?>';
-                await navigator.serviceWorker.register(bp + '/sw.js', { scope: bp + '/' });
-            } catch (e) { console.error('[PWA] SW failed:', e); }
-        });
-    }
-    </script>
+        <?php include BASE_PATH . '/resources/views/components/pwa-install-modal.php'; ?>
     <?php endif; ?>
     <?php if (isset($footerExtra)) echo $footerExtra; ?>
 

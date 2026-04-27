@@ -30,8 +30,13 @@ rsync -a \
   --exclude='storage/.migration_checked' --exclude='storage/cache/*' \
   --exclude='docs' \
   --exclude='plugins/vos-license-manager' \
+  --exclude='plugins/vos-license-server' \
+  --exclude='plugins/vos-developer' \
+  --exclude='plugins/vos-hosting' \
+  --exclude='plugins/vos-market' \
   --exclude='plugins/vos-shop' \
   --exclude='plugins/vos-marketplace' \
+  --exclude='skins/layouts/modern-copy-260413' \
   --exclude='api/license' \
   --exclude='api/developer' \
   --exclude='api/notices.php' \
@@ -136,7 +141,7 @@ CACHE_PREFIX=vos_
 LICENSE_KEY=
 LICENSE_DOMAIN=
 LICENSE_REGISTERED_AT=
-LICENSE_SERVER=https://vos.21ces.com/api
+LICENSE_SERVER=https://voscms.com/api
 ENVEOF
 
 # 7. 코드 인코딩 (ionCube)

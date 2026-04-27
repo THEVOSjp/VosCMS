@@ -217,6 +217,18 @@ return [
         'install_description' => '添加到主屏幕',
         'offline' => '您已离线',
         'online' => '已恢复在线',
+        // 安装引导模态框
+        'modal_title' => '安装为应用',
+        'modal_subtitle' => '添加到主屏幕，轻点即可快速启动',
+        'modal_bullet_1_icon' => '⚡',
+        'modal_bullet_1' => '无需浏览器，即刻启动',
+        'modal_bullet_2_icon' => '🪟',
+        'modal_bullet_2' => '全屏体验，界面更简洁',
+        'modal_bullet_3_icon' => '📲',
+        'modal_bullet_3' => '主屏幕添加图标',
+        'modal_install_btn' => '安装应用',
+        'modal_later' => '稍后',
+        'modal_dismiss' => '不再显示',
     ],
 
     'selected' => '已选',

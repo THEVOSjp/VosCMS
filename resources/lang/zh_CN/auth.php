@@ -27,6 +27,18 @@ return [
     ],
 
     // Register
+    'admin_login' => [
+        'title' => '管理员登录',
+        'subtitle' => '使用管理员账户登录',
+        'errors' => [
+            'account_inactive' => '账户已停用，请联系管理员。',
+            'not_admin' => '该账户没有管理员权限。',
+            'user_inactive' => '关联的会员账户已停用。',
+            'staff_inactive' => '关联的员工账户已停用。',
+            'login_failed' => '登录失败。',
+        ],
+    ],
+
     'register' => [
         'title' => '注册',
         'description' => '使用RezlyX开始预约',

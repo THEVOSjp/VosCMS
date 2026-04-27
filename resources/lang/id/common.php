@@ -266,6 +266,18 @@ return [
         'install_description' => 'Tambahkan ke layar beranda',
         'offline' => 'Anda sedang offline',
         'online' => 'Kembali online',
+        // Modal pasang aplikasi
+        'modal_title' => 'Pasang sebagai Aplikasi',
+        'modal_subtitle' => 'Sekali ketuk untuk membuka, seperti aplikasi asli',
+        'modal_bullet_1_icon' => '⚡',
+        'modal_bullet_1' => 'Buka langsung tanpa browser',
+        'modal_bullet_2_icon' => '🪟',
+        'modal_bullet_2' => 'Tampilan layar penuh yang bersih',
+        'modal_bullet_3_icon' => '📲',
+        'modal_bullet_3' => 'Tambah ikon ke layar utama',
+        'modal_install_btn' => 'Pasang Aplikasi',
+        'modal_later' => 'Nanti',
+        'modal_dismiss' => 'Jangan tampilkan lagi',
     ],
 
     'selected' => 'dipilih',

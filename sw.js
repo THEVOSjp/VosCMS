@@ -5,15 +5,14 @@
 
 // Auto-detect base path from SW file location
 const BASE_PATH = self.location.pathname.replace('/sw.js', '');
-const CACHE_NAME = 'rezlyx-front-v2';
+const CACHE_NAME = 'voscms-front-v3';
 const OFFLINE_URL = BASE_PATH + '/offline.html';
 
-// Assets to cache on install (using dynamic base path)
+// 동일 출처 자원만 precache — 외부 CDN(tailwind, pretendard)은 CORS 거부되어
+// 캐시 실패하므로 제외. 실제 fetch 시점에 브라우저 HTTP 캐시가 처리.
 const PRECACHE_ASSETS = [
   BASE_PATH + '/',
-  BASE_PATH + '/offline.html',
-  'https://cdn.tailwindcss.com',
-  'https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css'
+  BASE_PATH + '/offline.html'
 ];
 
 // Install event - cache essential assets

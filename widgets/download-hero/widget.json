@@ -96,5 +96,5 @@
             }
         ]
     },
-    "bundled": true
+    "bundled": false
 }

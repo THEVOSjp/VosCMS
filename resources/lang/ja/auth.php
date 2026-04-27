@@ -27,6 +27,18 @@ return [
     ],
 
     // 新規登録
+    'admin_login' => [
+        'title' => '管理者ログイン',
+        'subtitle' => '管理者アカウントでサインインしてください',
+        'errors' => [
+            'account_inactive' => 'アカウントが無効です。管理者にお問い合わせください。',
+            'not_admin' => 'このアカウントには管理者権限がありません。',
+            'user_inactive' => '連携された会員アカウントが無効です。',
+            'staff_inactive' => '連携されたスタッフアカウントが無効です。',
+            'login_failed' => 'ログインに失敗しました。',
+        ],
+    ],
+
     'register' => [
         'title' => '新規登録',
         'description' => 'RezlyXで予約を始めましょう',

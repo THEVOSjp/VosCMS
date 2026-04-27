@@ -240,6 +240,18 @@ return [
         'install_description' => 'ホーム画面に追加',
         'offline' => 'オフライン状態です',
         'online' => 'オンラインに戻りました',
+        // インストール案内モーダル
+        'modal_title' => 'アプリでもっと快適に',
+        'modal_subtitle' => 'ホーム画面に追加すれば、ワンタップですぐに起動',
+        'modal_bullet_1_icon' => '⚡',
+        'modal_bullet_1' => 'ブラウザ不要、すぐ起動',
+        'modal_bullet_2_icon' => '🪟',
+        'modal_bullet_2' => 'フルスクリーンですっきり',
+        'modal_bullet_3_icon' => '📲',
+        'modal_bullet_3' => 'ホームにアイコン追加',
+        'modal_install_btn' => 'アプリをインストール',
+        'modal_later' => 'あとで',
+        'modal_dismiss' => '今後表示しない',
     ],
 
     'selected' => '選択',

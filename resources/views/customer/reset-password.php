@@ -10,7 +10,7 @@ use RzxLib\Core\Skin\MemberSkinLoader;
 use RzxLib\Core\Auth\Auth;
 
 // 로고 설정
-$siteName = $siteSettings['site_name'] ?? ($config['app_name'] ?? 'RezlyX');
+$siteName = function_exists('get_site_name') ? get_site_name() : ($siteSettings['site_name'] ?? ($config['app_name'] ?? 'RezlyX'));
 $logoType = $siteSettings['logo_type'] ?? 'text';
 $logoImage = $siteSettings['logo_image'] ?? '';
 

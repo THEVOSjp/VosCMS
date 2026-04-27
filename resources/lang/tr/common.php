@@ -268,6 +268,18 @@ return [
         'install_description' => 'Ana ekrana ekle',
         'offline' => 'Çevrimdışısınız',
         'online' => 'Tekrar çevrimiçi',
+        // Yükleme modalı
+        'modal_title' => 'Uygulama Olarak Yükle',
+        'modal_subtitle' => 'Tek dokunuşla aç — yerel uygulama gibi',
+        'modal_bullet_1_icon' => '⚡',
+        'modal_bullet_1' => 'Tarayıcısız anında başlat',
+        'modal_bullet_2_icon' => '🪟',
+        'modal_bullet_2' => 'Daha geniş, daha temiz tam ekran',
+        'modal_bullet_3_icon' => '📲',
+        'modal_bullet_3' => 'Ana ekrana simge ekle',
+        'modal_install_btn' => 'Uygulamayı Yükle',
+        'modal_later' => 'Daha sonra',
+        'modal_dismiss' => 'Bir daha gösterme',
     ],
 
     'selected' => 'seçildi',

@@ -32,6 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pwaAdminThemeColor = trim($_POST['pwa_admin_theme_color'] ?? '#18181b');
         $pwaAdminBgColor = trim($_POST['pwa_admin_bg_color'] ?? '#18181b');
 
+        require_once BASE_PATH . '/rzxlib/Core/Helpers/pwa-manifest.php';
+        $pwaSizesDir = BASE_PATH . '/storage/pwa/sizes';
+
         // Frontend PWA icon upload
         $pwaFrontIcon = null;
         if (isset($_FILES['pwa_front_icon']) && $_FILES['pwa_front_icon']['error'] === UPLOAD_ERR_OK) {
@@ -54,6 +57,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($oldIcon && file_exists(BASE_PATH . $oldIcon)) {
                         @unlink(BASE_PATH . $oldIcon);
                     }
+                    // 옛 사이즈 정리 + 새 8개 사이즈 생성 (72/96/128/144/152/192/384/512)
+                    pwa_cleanup_icon_sizes($oldIcon, $pwaSizesDir);
+                    pwa_generate_icon_sizes($targetPath, $pwaSizesDir);
                 }
             } else {
                 $message = __('settings.pwa.error_icon_type');
@@ -83,6 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($oldIcon && file_exists(BASE_PATH . $oldIcon)) {
                         @unlink(BASE_PATH . $oldIcon);
                     }
+                    pwa_cleanup_icon_sizes($oldIcon, $pwaSizesDir);
+                    pwa_generate_icon_sizes($targetPath, $pwaSizesDir);
                 }
             } else {
                 $message = __('settings.pwa.error_icon_type');

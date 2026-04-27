@@ -27,6 +27,18 @@ return [
     ],
 
     // Register
+    'admin_login' => [
+        'title' => 'Administrator-Anmeldung',
+        'subtitle' => 'Mit Administratorkonto anmelden',
+        'errors' => [
+            'account_inactive' => 'Konto ist deaktiviert. Bitte wenden Sie sich an den Administrator.',
+            'not_admin' => 'Dieses Konto hat keine Administratorrechte.',
+            'user_inactive' => 'Verknüpftes Benutzerkonto ist deaktiviert.',
+            'staff_inactive' => 'Verknüpftes Mitarbeiterkonto ist deaktiviert.',
+            'login_failed' => 'Anmeldung fehlgeschlagen.',
+        ],
+    ],
+
     'register' => [
         'title' => 'Registrieren',
         'description' => 'Starten Sie mit RezlyX Ihre Reservierungen',

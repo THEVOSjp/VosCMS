@@ -267,6 +267,18 @@ return [
         'install_description' => 'Thêm vào màn hình chính',
         'offline' => 'Bạn đang ngoại tuyến',
         'online' => 'Đã kết nối lại',
+        // Modal cài đặt ứng dụng
+        'modal_title' => 'Cài đặt như Ứng dụng',
+        'modal_subtitle' => 'Một chạm để mở — như ứng dụng gốc',
+        'modal_bullet_1_icon' => '⚡',
+        'modal_bullet_1' => 'Mở ngay không cần trình duyệt',
+        'modal_bullet_2_icon' => '🪟',
+        'modal_bullet_2' => 'Toàn màn hình, giao diện gọn gàng',
+        'modal_bullet_3_icon' => '📲',
+        'modal_bullet_3' => 'Thêm biểu tượng vào màn hình chính',
+        'modal_install_btn' => 'Cài đặt ứng dụng',
+        'modal_later' => 'Để sau',
+        'modal_dismiss' => 'Không hiện lại',
     ],
 
     'selected' => 'đã chọn',

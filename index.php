@@ -270,6 +270,14 @@ $__noLayout = false; // API, 로그인 등 자체 레이아웃 페이지
 if ($path === 'sitemap.xml') {
     include BASE_PATH . '/sitemap.php';
     exit;
+} elseif ($path === 'manifest.json') {
+    require_once BASE_PATH . '/rzxlib/Core/Helpers/pwa-manifest.php';
+    pwa_serve_manifest('front');
+    exit;
+} elseif ($path === 'admin-manifest.json') {
+    require_once BASE_PATH . '/rzxlib/Core/Helpers/pwa-manifest.php';
+    pwa_serve_manifest('admin');
+    exit;
 } elseif ($path === 'robots.txt') {
     header('Content-Type: text/plain');
     $robotsCustom = $siteSettings['robots_txt'] ?? '';

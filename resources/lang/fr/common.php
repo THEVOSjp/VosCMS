@@ -267,6 +267,18 @@ return [
         'install_description' => 'Ajouter a l\'ecran d\'accueil',
         'offline' => 'Vous etes hors ligne',
         'online' => 'De retour en ligne',
+        // Modale d\'installation
+        'modal_title' => 'Installer comme appli',
+        'modal_subtitle' => 'Lancez d\'un seul geste, comme une appli native',
+        'modal_bullet_1_icon' => '⚡',
+        'modal_bullet_1' => 'Démarrage instantané, sans navigateur',
+        'modal_bullet_2_icon' => '🪟',
+        'modal_bullet_2' => 'Vue plein écran épurée',
+        'modal_bullet_3_icon' => '📲',
+        'modal_bullet_3' => 'Ajouter l\'icône à l\'écran d\'accueil',
+        'modal_install_btn' => 'Installer l\'application',
+        'modal_later' => 'Plus tard',
+        'modal_dismiss' => 'Ne plus afficher',
     ],
 
     'selected' => 'sélectionné',

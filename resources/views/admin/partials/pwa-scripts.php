@@ -85,3 +85,6 @@ if (!$pwaAdminEnabled) return;
         adminDeferredPrompt = null;
     });
 </script>
+
+<?php /* PWA 설치 안내 모달 (어드민 영역에서도 동일 컴포넌트 재사용) */ ?>
+<?php include BASE_PATH . '/resources/views/components/pwa-install-modal.php'; ?>

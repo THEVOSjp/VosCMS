@@ -279,23 +279,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $pdo->exec("INSERT IGNORE INTO {$pfx}sitemaps (id, title, sort_order) VALUES (3, 'Footer Menu', 2)");
                     $pdo->exec("INSERT IGNORE INTO {$pfx}sitemaps (id, title, sort_order) VALUES (4, 'Unlinked', 99)");
 
-                    // Main Menu
+                    // Main Menu — IDs를 캡처해 다국어 번역에 재사용 (auto_increment 의존 제거)
                     $menuStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}menu_items (sitemap_id, parent_id, title, url, target, menu_type, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                    $_menuIds = [];
+
+                    // 1. Home (단일 페이지)
                     $menuStmt->execute([1, null, 'Home', 'home', '_self', 'page', 1, 1]);
-                    $menuStmt->execute([1, null, 'Notice', 'notice', '_self', 'board', 2, 1]);
-                    $menuStmt->execute([1, null, 'Free Board', 'free', '_self', 'board', 3, 1]);
-                    $menuStmt->execute([1, null, 'Q&A', 'qna', '_self', 'board', 4, 1]);
-                    $menuStmt->execute([1, null, 'FAQ', 'faq', '_self', 'board', 5, 1]);
+                    $_menuIds['home'] = (int)$pdo->lastInsertId();
 
-                    // 메뉴 다국어 번역은 푸터/언링크드 메뉴를 모두 추가한 후 한 번에 처리 (아래 _menuTranslations 블록)
+                    // 2. Community (부모 — 게시판 4개 묶음. URL 비움 → '#' 으로 렌더링)
+                    $menuStmt->execute([1, null, 'Community', '', '_self', 'page', 2, 1]);
+                    $_menuIds['community'] = (int)$pdo->lastInsertId();
 
-                    // Footer Menu — 법적 페이지
+                    // 2-1 ~ 2-4. 게시판 (Community 자식)
+                    $menuStmt->execute([1, $_menuIds['community'], 'Notice',     'notice', '_self', 'board', 1, 1]);
+                    $_menuIds['notice'] = (int)$pdo->lastInsertId();
+                    $menuStmt->execute([1, $_menuIds['community'], 'Free Board', 'free',   '_self', 'board', 2, 1]);
+                    $_menuIds['free'] = (int)$pdo->lastInsertId();
+                    $menuStmt->execute([1, $_menuIds['community'], 'Q&A',        'qna',    '_self', 'board', 3, 1]);
+                    $_menuIds['qna'] = (int)$pdo->lastInsertId();
+                    $menuStmt->execute([1, $_menuIds['community'], 'FAQ',        'faq',    '_self', 'board', 4, 1]);
+                    $_menuIds['faq'] = (int)$pdo->lastInsertId();
+
+                    // 3. Contact Us
+                    $menuStmt->execute([1, null, 'Contact Us', 'contact', '_self', 'page', 3, 1]);
+                    $_menuIds['contact'] = (int)$pdo->lastInsertId();
+
+                    // Footer Menu — 법적 페이지 (하단 기본 제공)
                     $menuStmt->execute([3, null, 'Terms of Service', 'terms', '_self', 'page', 1, 1]);
+                    $_menuIds['terms'] = (int)$pdo->lastInsertId();
                     $menuStmt->execute([3, null, 'Privacy Policy', 'privacy', '_self', 'page', 2, 1]);
+                    $_menuIds['privacy'] = (int)$pdo->lastInsertId();
                     $menuStmt->execute([3, null, 'Refund Policy', 'refund-policy', '_self', 'page', 3, 1]);
+                    $_menuIds['refund'] = (int)$pdo->lastInsertId();
                     $menuStmt->execute([3, null, 'Data Policy', 'data-policy', '_self', 'page', 4, 1]);
+                    $_menuIds['data'] = (int)$pdo->lastInsertId();
                     $menuStmt->execute([3, null, '特定商取引法に基づく表記', 'tokushoho', '_self', 'page', 5, 1]);
+                    $_menuIds['tokushoho'] = (int)$pdo->lastInsertId();
                     $menuStmt->execute([3, null, '資金決済法に基づく表示', 'funds-settlement', '_self', 'page', 6, 1]);
+                    $_menuIds['funds'] = (int)$pdo->lastInsertId();
 
                     // Unlinked — 메뉴 미연결 페이지 관리용
                     $menuStmt->execute([4, null, $siteName, 'index', '_self', 'page', 1, 1]);
@@ -308,6 +330,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // 기본 페이지 — index (사용자, 리뉴얼용)
                     $pdo->prepare("INSERT IGNORE INTO {$pfx}page_contents (page_slug, page_type, locale, title, content, is_system, is_active) VALUES ('index', 'widget', ?, ?, '', 0, 1)")
                         ->execute([$locale, $siteName]);
+
+                    // 기본 페이지 — Contact Us (위젯 빌더 페이지, 사용자가 콘텐츠 구성)
+                    $_contactTitle = ['ko'=>'문의하기','en'=>'Contact Us','ja'=>'お問い合わせ','de'=>'Kontakt','es'=>'Contáctanos','fr'=>'Contactez-nous'][$locale] ?? 'Contact Us';
+                    $pdo->prepare("INSERT IGNORE INTO {$pfx}page_contents (page_slug, page_type, locale, title, content, is_system, is_active) VALUES ('contact', 'widget', ?, ?, '', 1, 1)")
+                        ->execute([$locale, $_contactTitle]);
 
                     // 법적 페이지 13개국어 (시드 파일에서 로드)
                     $_seedFile = BASE_PATH . '/database/seeds/legal_pages.php';
@@ -413,23 +440,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ];
                     ]; 기존 인라인 샘플 제거됨 */
 
-                    // 메뉴 항목 13개국어 번역 (menu_item.{id}.title)
-                    // ID: 1=Home, 2=Notice, 3=Free Board, 4=Q&A, 5=FAQ, 6=Terms, 7=Privacy, 8=Refund, 9=Data, 10=Tokushoho, 11=Funds
+                    // 메뉴 항목 13개국어 번역 (menu_item.{id}.title) — 캡처한 ID 사용
                     $_menuTranslations = [
-                        1 => ['ko'=>'홈','en'=>'Home','ja'=>'ホーム','de'=>'Startseite','es'=>'Inicio','fr'=>'Accueil','id'=>'Beranda','mn'=>'Нүүр','ru'=>'Главная','tr'=>'Ana Sayfa','vi'=>'Trang chủ','zh_CN'=>'首页','zh_TW'=>'首頁'],
-                        2 => ['ko'=>'공지사항','en'=>'Notice','ja'=>'お知らせ','de'=>'Ankündigungen','es'=>'Avisos','fr'=>'Annonces','id'=>'Pengumuman','mn'=>'Мэдэгдэл','ru'=>'Объявления','tr'=>'Duyurular','vi'=>'Thông báo','zh_CN'=>'公告','zh_TW'=>'公告'],
-                        3 => ['ko'=>'자유게시판','en'=>'Free Board','ja'=>'自由掲示板','de'=>'Freies Forum','es'=>'Foro Libre','fr'=>'Forum Libre','id'=>'Forum Bebas','mn'=>'Чөлөөт самбар','ru'=>'Свободный форум','tr'=>'Serbest Forum','vi'=>'Diễn đàn tự do','zh_CN'=>'自由论坛','zh_TW'=>'自由論壇'],
-                        4 => ['ko'=>'질문과 답변','en'=>'Q&A','ja'=>'質問と回答','de'=>'Fragen & Antworten','es'=>'Preguntas','fr'=>'Questions','id'=>'Tanya Jawab','mn'=>'Асуулт хариулт','ru'=>'Вопросы','tr'=>'Soru Cevap','vi'=>'Hỏi đáp','zh_CN'=>'问答','zh_TW'=>'問答'],
-                        5 => ['ko'=>'자주 묻는 질문','en'=>'FAQ','ja'=>'よくある質問','de'=>'FAQ','es'=>'FAQ','fr'=>'FAQ','id'=>'FAQ','mn'=>'Түгээмэл асуулт','ru'=>'FAQ','tr'=>'SSS','vi'=>'FAQ','zh_CN'=>'常见问题','zh_TW'=>'常見問題'],
-                        6 => ['ko'=>'이용약관','en'=>'Terms of Use','ja'=>'利用規約','de'=>'Nutzungsbedingungen','es'=>'Términos','fr'=>'Conditions','id'=>'Ketentuan','mn'=>'Нөхцөл','ru'=>'Условия','tr'=>'Kullanım Şartları','vi'=>'Điều khoản','zh_CN'=>'使用条款','zh_TW'=>'使用條款'],
-                        7 => ['ko'=>'개인정보처리방침','en'=>'Privacy Policy','ja'=>'個人情報処理方針','de'=>'Datenschutz','es'=>'Privacidad','fr'=>'Confidentialité','id'=>'Privasi','mn'=>'Нууцлал','ru'=>'Конфиденциальность','tr'=>'Gizlilik','vi'=>'Quyền riêng tư','zh_CN'=>'隐私政策','zh_TW'=>'隱私政策'],
-                        8 => ['ko'=>'취소 환불 규정','en'=>'Cancellation Policy','ja'=>'キャンセル規定','de'=>'Stornierung','es'=>'Cancelación','fr'=>'Annulation','id'=>'Pembatalan','mn'=>'Цуцлалт','ru'=>'Отмена','tr'=>'İptal','vi'=>'Hủy hoàn tiền','zh_CN'=>'取消退款','zh_TW'=>'取消退款'],
-                        9 => ['ko'=>'데이터 관리 정책','en'=>'Data Policy','ja'=>'データ管理ポリシー','de'=>'Datenrichtlinie','es'=>'Política de datos','fr'=>'Politique des données','id'=>'Kebijakan Data','mn'=>'Дата бодлого','ru'=>'Политика данных','tr'=>'Veri Politikası','vi'=>'Chính sách dữ liệu','zh_CN'=>'数据管理政策','zh_TW'=>'資料管理政策'],
-                        10 => ['ko'=>'특정상거래법 표기','en'=>'Commercial Transactions Act','ja'=>'特定商取引法に基づく表記','de'=>'Handelsgesetz','es'=>'Ley de Comercio','fr'=>'Loi commerciale','id'=>'UU Perdagangan','mn'=>'Худалдааны хууль','ru'=>'Закон о торговле','tr'=>'Ticaret Kanunu','vi'=>'Luật Thương mại','zh_CN'=>'特定商业交易法','zh_TW'=>'特定商業交易法'],
-                        11 => ['ko'=>'자금결제법 표시','en'=>'Funds Settlement Act','ja'=>'資金決済法に基づく表示','de'=>'Zahlungsgesetz','es'=>'Ley de Pagos','fr'=>'Loi sur les paiements','id'=>'UU Pembayaran','mn'=>'Төлбөрийн хууль','ru'=>'Закон о расчётах','tr'=>'Ödeme Kanunu','vi'=>'Luật Thanh toán','zh_CN'=>'资金结算法','zh_TW'=>'資金結算法'],
+                        $_menuIds['home']      => ['ko'=>'홈','en'=>'Home','ja'=>'ホーム','de'=>'Startseite','es'=>'Inicio','fr'=>'Accueil','id'=>'Beranda','mn'=>'Нүүр','ru'=>'Главная','tr'=>'Ana Sayfa','vi'=>'Trang chủ','zh_CN'=>'首页','zh_TW'=>'首頁'],
+                        $_menuIds['community'] => ['ko'=>'커뮤니티','en'=>'Community','ja'=>'コミュニティ','de'=>'Gemeinschaft','es'=>'Comunidad','fr'=>'Communauté','id'=>'Komunitas','mn'=>'Хамт олон','ru'=>'Сообщество','tr'=>'Topluluk','vi'=>'Cộng đồng','zh_CN'=>'社区','zh_TW'=>'社群'],
+                        $_menuIds['notice']    => ['ko'=>'공지사항','en'=>'Notice','ja'=>'お知らせ','de'=>'Ankündigungen','es'=>'Avisos','fr'=>'Annonces','id'=>'Pengumuman','mn'=>'Мэдэгдэл','ru'=>'Объявления','tr'=>'Duyurular','vi'=>'Thông báo','zh_CN'=>'公告','zh_TW'=>'公告'],
+                        $_menuIds['free']      => ['ko'=>'자유게시판','en'=>'Free Board','ja'=>'自由掲示板','de'=>'Freies Forum','es'=>'Foro Libre','fr'=>'Forum Libre','id'=>'Forum Bebas','mn'=>'Чөлөөт самбар','ru'=>'Свободный форум','tr'=>'Serbest Forum','vi'=>'Diễn đàn tự do','zh_CN'=>'自由论坛','zh_TW'=>'自由論壇'],
+                        $_menuIds['qna']       => ['ko'=>'질문과 답변','en'=>'Q&A','ja'=>'質問と回答','de'=>'Fragen & Antworten','es'=>'Preguntas','fr'=>'Questions','id'=>'Tanya Jawab','mn'=>'Асуулт хариулт','ru'=>'Вопросы','tr'=>'Soru Cevap','vi'=>'Hỏi đáp','zh_CN'=>'问答','zh_TW'=>'問答'],
+                        $_menuIds['faq']       => ['ko'=>'자주 묻는 질문','en'=>'FAQ','ja'=>'よくある質問','de'=>'FAQ','es'=>'FAQ','fr'=>'FAQ','id'=>'FAQ','mn'=>'Түгээмэл асуулт','ru'=>'FAQ','tr'=>'SSS','vi'=>'FAQ','zh_CN'=>'常见问题','zh_TW'=>'常見問題'],
+                        $_menuIds['contact']   => ['ko'=>'문의하기','en'=>'Contact Us','ja'=>'お問い合わせ','de'=>'Kontakt','es'=>'Contáctanos','fr'=>'Contactez-nous','id'=>'Kontak Kami','mn'=>'Холбоо барих','ru'=>'Связаться','tr'=>'İletişim','vi'=>'Liên hệ','zh_CN'=>'联系我们','zh_TW'=>'聯繫我們'],
+                        $_menuIds['terms']     => ['ko'=>'이용약관','en'=>'Terms of Use','ja'=>'利用規約','de'=>'Nutzungsbedingungen','es'=>'Términos','fr'=>'Conditions','id'=>'Ketentuan','mn'=>'Нөхцөл','ru'=>'Условия','tr'=>'Kullanım Şartları','vi'=>'Điều khoản','zh_CN'=>'使用条款','zh_TW'=>'使用條款'],
+                        $_menuIds['privacy']   => ['ko'=>'개인정보처리방침','en'=>'Privacy Policy','ja'=>'個人情報処理方針','de'=>'Datenschutz','es'=>'Privacidad','fr'=>'Confidentialité','id'=>'Privasi','mn'=>'Нууцлал','ru'=>'Конфиденциальность','tr'=>'Gizlilik','vi'=>'Quyền riêng tư','zh_CN'=>'隐私政策','zh_TW'=>'隱私政策'],
+                        $_menuIds['refund']    => ['ko'=>'취소 환불 규정','en'=>'Cancellation Policy','ja'=>'キャンセル規定','de'=>'Stornierung','es'=>'Cancelación','fr'=>'Annulation','id'=>'Pembatalan','mn'=>'Цуцлалт','ru'=>'Отмена','tr'=>'İptal','vi'=>'Hủy hoàn tiền','zh_CN'=>'取消退款','zh_TW'=>'取消退款'],
+                        $_menuIds['data']      => ['ko'=>'데이터 관리 정책','en'=>'Data Policy','ja'=>'データ管理ポリシー','de'=>'Datenrichtlinie','es'=>'Política de datos','fr'=>'Politique des données','id'=>'Kebijakan Data','mn'=>'Дата бодлого','ru'=>'Политика данных','tr'=>'Veri Politikası','vi'=>'Chính sách dữ liệu','zh_CN'=>'数据管理政策','zh_TW'=>'資料管理政策'],
+                        $_menuIds['tokushoho'] => ['ko'=>'특정상거래법 표기','en'=>'Commercial Transactions Act','ja'=>'特定商取引法に基づく表記','de'=>'Handelsgesetz','es'=>'Ley de Comercio','fr'=>'Loi commerciale','id'=>'UU Perdagangan','mn'=>'Худалдааны хууль','ru'=>'Закон о торговле','tr'=>'Ticaret Kanunu','vi'=>'Luật Thương mại','zh_CN'=>'特定商业交易法','zh_TW'=>'特定商業交易法'],
+                        $_menuIds['funds']     => ['ko'=>'자금결제법 표시','en'=>'Funds Settlement Act','ja'=>'資金決済法に基づく表示','de'=>'Zahlungsgesetz','es'=>'Ley de Pagos','fr'=>'Loi sur les paiements','id'=>'UU Pembayaran','mn'=>'Төлбөрийн хууль','ru'=>'Закон о расчётах','tr'=>'Ödeme Kanunu','vi'=>'Luật Thanh toán','zh_CN'=>'资金结算法','zh_TW'=>'資金結算法'],
                     ];
                     $trStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}translations (lang_key, locale, content) VALUES (?, ?, ?)");
                     foreach ($_menuTranslations as $_mid => $_tr) {
+                        if (!$_mid) continue;
                         foreach ($_tr as $_loc => $_content) {
                             $trStmt->execute(["menu_item.{$_mid}.title", $_loc, $_content]);
                         }
@@ -624,7 +653,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // ─── 라이선스 서버에서 키 발급 ───
                     $licenseDomain = strtolower(preg_replace('#^https?://#', '', rtrim($siteUrl, '/')));
                     $licenseDomain = preg_replace('#^www\.#', '', $licenseDomain);
-                    $licenseServer = 'https://vos.21ces.com/api'; // 향후 https://voscms.com/api
+                    $licenseServer = 'https://voscms.com/api'; // 본사 라이선스 서버 — 모든 외부 고객의 라이선스 발급/검증 단일 엔드포인트
                     $licenseKey = '';
                     $licenseRegistered = false;
 

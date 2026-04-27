@@ -27,6 +27,18 @@ return [
     ],
 
     // Register
+    'admin_login' => [
+        'title' => 'Đăng nhập Quản trị',
+        'subtitle' => 'Đăng nhập bằng tài khoản quản trị viên',
+        'errors' => [
+            'account_inactive' => 'Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.',
+            'not_admin' => 'Tài khoản này không có quyền quản trị.',
+            'user_inactive' => 'Tài khoản người dùng liên kết đã bị vô hiệu hóa.',
+            'staff_inactive' => 'Tài khoản nhân viên liên kết đã bị vô hiệu hóa.',
+            'login_failed' => 'Đăng nhập thất bại.',
+        ],
+    ],
+
     'register' => [
         'title' => 'Đăng ký',
         'description' => 'Bắt đầu đặt chỗ với RezlyX',

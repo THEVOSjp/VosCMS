@@ -27,6 +27,18 @@ return [
     ],
 
     // Register
+    'admin_login' => [
+        'title' => 'Login Admin',
+        'subtitle' => 'Masuk dengan akun administrator Anda',
+        'errors' => [
+            'account_inactive' => 'Akun dinonaktifkan. Silakan hubungi administrator.',
+            'not_admin' => 'Akun ini tidak memiliki hak akses admin.',
+            'user_inactive' => 'Akun pengguna yang terhubung dinonaktifkan.',
+            'staff_inactive' => 'Akun staf yang terhubung dinonaktifkan.',
+            'login_failed' => 'Login gagal.',
+        ],
+    ],
+
     'register' => [
         'title' => 'Daftar',
         'description' => 'Mulai membuat reservasi dengan RezlyX',

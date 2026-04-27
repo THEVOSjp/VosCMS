@@ -657,7 +657,36 @@ class MemberSkinLoader
             ],
         ];
 
-        return $translations[$this->currentLocale] ?? $translations['ko'];
+        // 1. 회원가입/마이페이지/비번재설정 등 — 기존 ko/en/ja 폴백 유지
+        $localized = $translations[$this->currentLocale] ?? $translations['en'] ?? $translations['ko'];
+
+        // 2. 로그인 키 — auth.login.* (13개국어 완비) 에서 직접 조회
+        //    함수 미정의 환경(예: 일부 단일 페이지) 에서는 기존 폴백 그대로 사용
+        if (function_exists('__')) {
+            $loginKeys = [
+                'login_title'         => __('auth.login.title'),
+                'login_subtitle'      => __('auth.login.description'),
+                'login_button'        => __('auth.login.submit'),
+                'email'               => __('auth.login.email'),
+                'email_placeholder'   => __('auth.login.email_placeholder'),
+                'password'            => __('auth.login.password'),
+                'password_placeholder'=> __('auth.login.password_placeholder'),
+                'remember_me'         => __('auth.login.remember'),
+                'forgot_password'     => __('auth.login.forgot'),
+                'no_account'          => __('auth.login.no_account'),
+                'register_link'       => __('auth.login.register_link'),
+                'back_to_home'        => __('auth.login.back_home'),
+            ];
+            // __() 가 키를 못 찾아 원래 키 문자열을 반환한 경우 (마침표 포함) 폴백 유지
+            foreach ($loginKeys as $skinKey => $value) {
+                if (is_string($value) && strpos($value, 'auth.login.') !== false) {
+                    continue; // 번역 미반영 → 폴백 사용
+                }
+                $localized[$skinKey] = $value;
+            }
+        }
+
+        return $localized;
     }
 
     /**

@@ -265,6 +265,18 @@ return [
         'install_description' => 'Agregar a la pantalla de inicio',
         'offline' => 'Esta sin conexion',
         'online' => 'De vuelta en linea',
+        // Modal de instalación
+        'modal_title' => 'Instalar como App',
+        'modal_subtitle' => 'Un toque para iniciar, como una app nativa',
+        'modal_bullet_1_icon' => '⚡',
+        'modal_bullet_1' => 'Inicio instantáneo, sin navegador',
+        'modal_bullet_2_icon' => '🪟',
+        'modal_bullet_2' => 'Vista a pantalla completa más limpia',
+        'modal_bullet_3_icon' => '📲',
+        'modal_bullet_3' => 'Añade el icono a la pantalla de inicio',
+        'modal_install_btn' => 'Instalar aplicación',
+        'modal_later' => 'Más tarde',
+        'modal_dismiss' => 'No mostrar de nuevo',
     ],
 
     'selected' => 'seleccionado',

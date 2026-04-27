@@ -39,7 +39,7 @@ class LicenseClient
     public function __construct()
     {
         $this->cacheFile = ($_ENV['BASE_PATH'] ?? (defined('BASE_PATH') ? BASE_PATH : __DIR__ . '/../../..')) . '/storage/.license_cache';
-        $this->serverUrl = rtrim($_ENV['LICENSE_SERVER'] ?? 'https://vos.21ces.com/api', '/');
+        $this->serverUrl = rtrim($_ENV['LICENSE_SERVER'] ?? 'https://voscms.com/api', '/');
         $this->marketUrl = rtrim($_ENV['MARKET_SERVER'] ?? 'https://market.21ces.com/api', '/');
         $this->licenseKey = $_ENV['LICENSE_KEY'] ?? '';
         $this->domain = $this->detectDomain();
@@ -181,7 +181,7 @@ class LicenseClient
         if (preg_match('/^LICENSE_KEY=\S+/m', $envContent)) return;
 
         $domain = self::normalizeDomain($_ENV['APP_URL'] ?? $_SERVER['HTTP_HOST'] ?? $this->domain);
-        $serverUrl = $_ENV['LICENSE_SERVER'] ?? 'https://vos.21ces.com/api';
+        $serverUrl = $_ENV['LICENSE_SERVER'] ?? 'https://voscms.com/api';
         // 빈 LICENSE_KEY= 라인이 있으면 교체, 없으면 추가
         if (preg_match('/^LICENSE_KEY=$/m', $envContent)) {
             $envContent = preg_replace('/^LICENSE_KEY=$/m', "LICENSE_KEY={$key}", $envContent);

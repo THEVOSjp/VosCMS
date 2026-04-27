@@ -27,6 +27,18 @@ return [
     ],
 
     // Register
+    'admin_login' => [
+        'title' => 'Inicio de sesión de administrador',
+        'subtitle' => 'Inicie sesión con su cuenta de administrador',
+        'errors' => [
+            'account_inactive' => 'La cuenta está desactivada. Por favor, contacte al administrador.',
+            'not_admin' => 'Esta cuenta no tiene privilegios de administrador.',
+            'user_inactive' => 'La cuenta de usuario vinculada está desactivada.',
+            'staff_inactive' => 'La cuenta de personal vinculada está desactivada.',
+            'login_failed' => 'Error al iniciar sesión.',
+        ],
+    ],
+
     'register' => [
         'title' => 'Registrarse',
         'description' => 'Comience a hacer reservas con RezlyX',

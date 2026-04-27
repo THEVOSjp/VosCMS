@@ -27,6 +27,18 @@ return [
     ],
 
     // 회원가입
+    'admin_login' => [
+        'title' => '관리자 로그인',
+        'subtitle' => '관리자 계정으로 로그인하세요',
+        'errors' => [
+            'account_inactive' => '비활성화된 계정입니다. 관리자에게 문의하세요.',
+            'not_admin' => '관리자 권한이 없는 계정입니다.',
+            'user_inactive' => '연동된 회원 계정이 비활성 상태입니다.',
+            'staff_inactive' => '연동된 스태프 계정이 비활성 상태입니다.',
+            'login_failed' => '로그인에 실패했습니다.',
+        ],
+    ],
+
     'register' => [
         'title' => '회원가입',
         'description' => 'RezlyX와 함께 예약을 시작하세요',

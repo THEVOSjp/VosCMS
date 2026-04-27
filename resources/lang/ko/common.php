@@ -266,6 +266,18 @@ return [
         'install_description' => '홈 화면에 앱을 추가하세요',
         'offline' => '오프라인 상태입니다',
         'online' => '온라인 상태로 돌아왔습니다',
+        // 설치 안내 모달
+        'modal_title' => '앱으로 더 빠르게',
+        'modal_subtitle' => '홈 화면에 추가하면 한 번의 터치로 바로 시작합니다',
+        'modal_bullet_1_icon' => '⚡',
+        'modal_bullet_1' => '브라우저 없이 즉시 실행',
+        'modal_bullet_2_icon' => '🪟',
+        'modal_bullet_2' => '더 넓은 화면, 더 깔끔한 UI',
+        'modal_bullet_3_icon' => '📲',
+        'modal_bullet_3' => '홈 화면에 아이콘 추가',
+        'modal_install_btn' => '앱 설치',
+        'modal_later' => '나중에',
+        'modal_dismiss' => '다시 보지 않기',
     ],
 
     'table_view' => '목록 보기',

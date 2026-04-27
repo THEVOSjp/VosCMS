@@ -27,6 +27,18 @@ return [
     ],
 
     // Register
+    'admin_login' => [
+        'title' => 'Yönetici Girişi',
+        'subtitle' => 'Yönetici hesabınızla giriş yapın',
+        'errors' => [
+            'account_inactive' => 'Hesap devre dışı. Lütfen yöneticiye başvurun.',
+            'not_admin' => 'Bu hesabın yönetici yetkisi yok.',
+            'user_inactive' => 'Bağlı kullanıcı hesabı devre dışı.',
+            'staff_inactive' => 'Bağlı personel hesabı devre dışı.',
+            'login_failed' => 'Giriş başarısız.',
+        ],
+    ],
+
     'register' => [
         'title' => 'Kayıt Ol',
         'description' => 'RezlyX ile rezervasyon yapmaya başlayın',

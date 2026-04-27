@@ -2,7 +2,7 @@
 /**
  * RezlyX Admin - 403 Forbidden
  */
-$siteName = $siteSettings['site_name'] ?? 'RezlyX';
+$siteName = function_exists('get_site_name') ? get_site_name() : ($siteSettings['site_name'] ?? 'RezlyX');
 $adminPath = $config['admin_path'] ?? 'admin';
 ?>
 <!DOCTYPE html>

@@ -27,6 +27,18 @@ return [
     ],
 
     // Register
+    'admin_login' => [
+        'title' => '管理員登入',
+        'subtitle' => '使用管理員帳號登入',
+        'errors' => [
+            'account_inactive' => '帳號已停用，請聯繫管理員。',
+            'not_admin' => '此帳號沒有管理員權限。',
+            'user_inactive' => '關聯的會員帳號已停用。',
+            'staff_inactive' => '關聯的員工帳號已停用。',
+            'login_failed' => '登入失敗。',
+        ],
+    ],
+
     'register' => [
         'title' => '註冊',
         'description' => '使用RezlyX開始預約',

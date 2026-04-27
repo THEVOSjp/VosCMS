@@ -217,6 +217,18 @@ return [
         'install_description' => '新增至主畫面',
         'offline' => '您已離線',
         'online' => '已恢復連線',
+        // 安裝引導模態框
+        'modal_title' => '安裝為應用程式',
+        'modal_subtitle' => '加到主畫面，輕觸即刻啟動',
+        'modal_bullet_1_icon' => '⚡',
+        'modal_bullet_1' => '無需瀏覽器，立即啟動',
+        'modal_bullet_2_icon' => '🪟',
+        'modal_bullet_2' => '全螢幕體驗，介面更簡潔',
+        'modal_bullet_3_icon' => '📲',
+        'modal_bullet_3' => '主畫面新增圖示',
+        'modal_install_btn' => '安裝應用程式',
+        'modal_later' => '稍後',
+        'modal_dismiss' => '不再顯示',
     ],
 
     'selected' => '已選',

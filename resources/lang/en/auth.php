@@ -27,6 +27,18 @@ return [
     ],
 
     // Register
+    'admin_login' => [
+        'title' => 'Admin Login',
+        'subtitle' => 'Sign in with your administrator account',
+        'errors' => [
+            'account_inactive' => 'Account is inactive. Please contact the administrator.',
+            'not_admin' => 'This account does not have administrator privileges.',
+            'user_inactive' => 'Linked user account is inactive.',
+            'staff_inactive' => 'Linked staff account is inactive.',
+            'login_failed' => 'Login failed.',
+        ],
+    ],
+
     'register' => [
         'title' => 'Register',
         'description' => 'Start making reservations with RezlyX',

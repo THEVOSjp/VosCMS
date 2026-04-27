@@ -27,6 +27,18 @@ return [
     ],
 
     // Register
+    'admin_login' => [
+        'title' => 'Connexion administrateur',
+        'subtitle' => 'Connectez-vous avec votre compte administrateur',
+        'errors' => [
+            'account_inactive' => 'Le compte est désactivé. Veuillez contacter l\'administrateur.',
+            'not_admin' => 'Ce compte n\'a pas de privilèges administrateur.',
+            'user_inactive' => 'Le compte utilisateur lié est désactivé.',
+            'staff_inactive' => 'Le compte personnel lié est désactivé.',
+            'login_failed' => 'Échec de la connexion.',
+        ],
+    ],
+
     'register' => [
         'title' => 'Inscription',
         'description' => 'Commencez a effectuer des reservations avec RezlyX',

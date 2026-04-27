@@ -266,6 +266,18 @@ return [
         'install_description' => 'Нүүр дэлгэцэнд нэмэх',
         'offline' => 'Та офлайн байна',
         'online' => 'Дахин онлайн болсон',
+        // Суулгах урих модал
+        'modal_title' => 'Аппликейшн болгон суулгах',
+        'modal_subtitle' => 'Нэг товшилтоор шууд нээгдэнэ',
+        'modal_bullet_1_icon' => '⚡',
+        'modal_bullet_1' => 'Хөтөч хэрэггүй, тэр даруй ажиллана',
+        'modal_bullet_2_icon' => '🪟',
+        'modal_bullet_2' => 'Бүтэн дэлгэц, цэвэр харагдац',
+        'modal_bullet_3_icon' => '📲',
+        'modal_bullet_3' => 'Үндсэн дэлгэцэнд дүрс нэмэх',
+        'modal_install_btn' => 'Апп суулгах',
+        'modal_later' => 'Дараа',
+        'modal_dismiss' => 'Дахин харуулахгүй',
     ],
 
     'selected' => 'сонгосон',
