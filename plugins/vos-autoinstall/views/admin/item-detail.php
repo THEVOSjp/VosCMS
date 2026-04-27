@@ -8,7 +8,6 @@ $pageHeaderTitle = __('autoinstall.title');
 $slug           = trim($_GET['slug'] ?? '');
 $_pm            = \RzxLib\Core\Plugin\PluginManager::getInstance();
 $marketApiBase  = rtrim($_pm ? $_pm->getSetting('vos-autoinstall', 'market_api_url', $_ENV['MARKET_API_URL'] ?? 'https://market.21ces.com/api/market') : ($_ENV['MARKET_API_URL'] ?? 'https://market.21ces.com/api/market'), '/');
-$payjpPublicKey = $_ENV['PAYJP_PUBLIC_KEY'] ?? '';
 $_apiUrl        = $adminUrl . '/autoinstall/api';
 $cacheDir       = (defined('BASE_PATH') ? BASE_PATH : __DIR__ . '/../../../../..') . '/storage/cache';
 $_cacheTtl      = (int)($_pm ? $_pm->getSetting('vos-autoinstall', 'cache_ttl', '300') : 300);
@@ -44,6 +43,11 @@ if (!function_exists('mpApiFetch')) {
 // ── market API에서 아이템 조회 (locale 지정 → 서버에서 다국어 해석 후 단일 문자열 반환) ─
 $itemData = mpApiFetch($marketApiBase . '/item?slug=' . rawurlencode($slug) . '&locale=' . urlencode($locale), $cacheDir, $_cacheTtl);
 $item = $itemData['data'] ?? null;
+
+// ── 마켓플레이스 결제 설정 (PAY.JP 공개키 등) — 마켓이 판매자 ─
+$paymentConfig  = mpApiFetch($marketApiBase . '/payment/config', $cacheDir, $_cacheTtl) ?: [];
+$payjpPublicKey = ($paymentConfig['gateway'] ?? '') === 'payjp' ? ($paymentConfig['public_key'] ?? '') : '';
+$paymentEnabled = !empty($paymentConfig['enabled']);
 
 if (!$item) {
     echo '<div class="p-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded-lg text-center">Item not found</div>';
@@ -87,6 +91,12 @@ unset($v);
 $reviewsData = mpApiFetch($marketApiBase . '/item/reviews?slug=' . rawurlencode($slug), $cacheDir, $_cacheTtl);
 $reviewList  = $reviewsData['data'] ?? [];
 
+// ── 이슈 / Q&A (답변 포함) ─────────────────────────────
+$issuesData = mpApiFetch($marketApiBase . '/item/issues?slug=' . rawurlencode($slug) . '&type=issue&with_replies=1', $cacheDir, $_cacheTtl);
+$issueList  = $issuesData['data'] ?? [];
+$qnaData    = mpApiFetch($marketApiBase . '/item/issues?slug=' . rawurlencode($slug) . '&type=qna&with_replies=1', $cacheDir, $_cacheTtl);
+$qnaList    = $qnaData['data'] ?? [];
+
 // ── 구매/설치 여부 (로컬 DB) ──────────────────────────
 $hasPurchased   = false;
 $isInstalled    = false;
@@ -98,21 +108,18 @@ try {
         $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'],
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
-    $adminId = $_SESSION['admin_id'] ?? '';
-    if ($adminId && !empty($item['id'])) {
+    // mp_purchases — 결제 후 저장되는 구매 내역. 한 슬러그라도 있으면 구매 완료
+    if (!empty($item['slug'])) {
         $pStmt = $pdo->prepare(
-            "SELECT oi.id FROM {$prefix}mp_order_items oi
-             JOIN {$prefix}mp_orders o ON o.id = oi.order_id
-             WHERE o.admin_id = ? AND oi.item_id = ? AND o.status = 'paid' LIMIT 1"
+            "SELECT license_key FROM {$prefix}mp_purchases
+              WHERE item_slug = ? ORDER BY id DESC LIMIT 1"
         );
-        $pStmt->execute([$adminId, $item['id']]);
-        $hasPurchased = (bool)$pStmt->fetch();
-    }
-    // 무료/구매완료 항목의 다운로드용 라이선스 키 조회
-    if ($hasPurchased && !empty($item['slug'])) {
-        $lStmt = $pdo->prepare("SELECT license_key FROM {$prefix}mp_licenses WHERE item_slug = ? ORDER BY id DESC LIMIT 1");
-        $lStmt->execute([$item['slug']]);
-        $itemLicenseKey = (string)($lStmt->fetchColumn() ?: '');
+        $pStmt->execute([$item['slug']]);
+        $row = $pStmt->fetch(PDO::FETCH_ASSOC);
+        if ($row) {
+            $hasPurchased   = true;
+            $itemLicenseKey = (string)($row['license_key'] ?? '');
+        }
     }
 } catch (PDOException $e) {
     // 구매 여부 확인 실패 시 무시
@@ -127,7 +134,7 @@ if ($pm && ($item['type'] ?? '') === 'plugin') {
 <div class="mb-4">
     <a href="<?= $adminUrl ?>/autoinstall" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        <?= __('autoinstall.title') ?>
+        <?= __('autoinstall.easy_install') ?>
     </a>
 </div>
 
@@ -258,6 +265,8 @@ if ($pm && ($item['type'] ?? '') === 'plugin') {
                 <button @click="tab='description'" :class="tab==='description' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-zinc-500'" class="px-5 py-3 text-sm font-medium border-b-2 transition-colors"><?= __('autoinstall.description_tab') ?></button>
                 <button @click="tab='changelog'" :class="tab==='changelog' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-zinc-500'" class="px-5 py-3 text-sm font-medium border-b-2 transition-colors"><?= __('autoinstall.changelog_tab') ?></button>
                 <button @click="tab='reviews'" :class="tab==='reviews' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-zinc-500'" class="px-5 py-3 text-sm font-medium border-b-2 transition-colors"><?= __('autoinstall.reviews_tab') ?> (<?= $item['rating_count'] ?>)</button>
+                <button @click="tab='issues'"  :class="tab==='issues'  ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-zinc-500'" class="px-5 py-3 text-sm font-medium border-b-2 transition-colors"><?= __('autoinstall.issues_tab') ?> (<?= count($issueList) ?>)</button>
+                <button @click="tab='qna'"     :class="tab==='qna'     ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-zinc-500'" class="px-5 py-3 text-sm font-medium border-b-2 transition-colors"><?= __('autoinstall.qna_tab') ?> (<?= count($qnaList) ?>)</button>
             </div>
             <div class="p-6">
                 <div x-show="tab==='description'" class="prose dark:prose-invert max-w-none text-sm">
@@ -319,6 +328,43 @@ if ($pm && ($item['type'] ?? '') === 'plugin') {
                     <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
+
+                <!-- 이슈 탭 -->
+                <div x-show="tab==='issues'" x-cloak class="space-y-3">
+                    <div class="flex justify-end pb-3 border-b border-zinc-100 dark:border-zinc-700">
+                        <button type="button" onclick="mpOpenIssueForm('issue')"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"/></svg>
+                            <?= __('autoinstall.write_issue') ?>
+                        </button>
+                    </div>
+                    <?php if (empty($issueList)): ?>
+                    <p class="text-sm text-zinc-400"><?= __('autoinstall.no_issues') ?></p>
+                    <?php else: ?>
+                    <?php foreach ($issueList as $is): ?>
+                        <?php include __DIR__ . '/_components/issue-thread.php'; ?>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Q&A 탭 -->
+                <div x-show="tab==='qna'" x-cloak class="space-y-3">
+                    <div class="flex justify-end pb-3 border-b border-zinc-100 dark:border-zinc-700">
+                        <button type="button" onclick="mpOpenIssueForm('qna')"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <?= __('autoinstall.write_question') ?>
+                        </button>
+                    </div>
+                    <?php if (empty($qnaList)): ?>
+                    <p class="text-sm text-zinc-400"><?= __('autoinstall.no_qna') ?></p>
+                    <?php else: ?>
+                    <?php foreach ($qnaList as $is): ?>
+                        <?php include __DIR__ . '/_components/issue-thread.php'; ?>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+
             </div>
         </div>
 
@@ -437,11 +483,12 @@ if ($pm && ($item['type'] ?? '') === 'plugin') {
                     <?php endfor; ?>
                 </div>
             </div>
-            <!-- 닉네임 -->
+            <!-- 이름 (현재 사용자, 수정 불가) -->
             <div>
                 <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1"><?= __('autoinstall.reviewer_name') ?></label>
-                <input type="text" id="mpReviewerName" maxlength="100" placeholder="(선택)"
-                       class="w-full px-3 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="text" id="mpReviewerName" maxlength="100" readonly
+                       value="<?= htmlspecialchars($_SESSION['admin_name'] ?? '') ?>"
+                       class="w-full px-3 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 cursor-not-allowed">
             </div>
             <!-- 본문 -->
             <div>
@@ -467,7 +514,6 @@ var _mpRating       = 0;
 function mpOpenReview() {
     _mpRating = 0;
     mpUpdateStars();
-    document.getElementById('mpReviewerName').value = '';
     document.getElementById('mpReviewBody').value   = '';
     document.getElementById('mpReviewError').classList.add('hidden');
     document.getElementById('mpReviewSuccess').classList.add('hidden');
@@ -536,6 +582,179 @@ function mpSubmitReview() {
         errEl.classList.remove('hidden');
         sb.disabled = false;
         sb.textContent = '<?= __('autoinstall.submit_review') ?>';
+    });
+}
+</script>
+
+<!-- 이슈/Q&A 작성 모달 -->
+<div id="mpIssueModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50" onclick="mpCloseIssue()"></div>
+    <div class="relative bg-white dark:bg-zinc-800 rounded-2xl shadow-xl w-full max-w-md p-6">
+        <button onclick="mpCloseIssue()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <h3 id="mpIssueTitle" class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-1"></h3>
+        <p id="mpIssueSubtitle" class="text-xs text-zinc-500 dark:text-zinc-400 mb-4"></p>
+        <div class="space-y-3">
+            <div>
+                <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1"><?= __('autoinstall.reviewer_name') ?></label>
+                <input type="text" id="mpIssueAuthor" maxlength="100" readonly
+                       value="<?= htmlspecialchars($_SESSION['admin_name'] ?? '') ?>"
+                       class="w-full px-3 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 cursor-not-allowed">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1"><?= __('autoinstall.issue_title') ?></label>
+                <input type="text" id="mpIssueTitleInput" maxlength="200"
+                       class="w-full px-3 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1"><?= __('autoinstall.issue_body') ?></label>
+                <textarea id="mpIssueBody" rows="5" maxlength="5000"
+                          class="w-full px-3 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+            </div>
+        </div>
+        <div id="mpIssueError" class="hidden mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-sm text-red-600 dark:text-red-400"></div>
+        <div id="mpIssueSuccess" class="hidden mt-3 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-sm text-green-700 dark:text-green-400"></div>
+        <button id="mpIssueSubmitBtn" onclick="mpSubmitIssue()"
+                class="mt-4 w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors text-sm">
+            <?= __('autoinstall.submit') ?>
+        </button>
+    </div>
+</div>
+
+<!-- 답변 작성 모달 -->
+<div id="mpReplyModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50" onclick="mpCloseReply()"></div>
+    <div class="relative bg-white dark:bg-zinc-800 rounded-2xl shadow-xl w-full max-w-md p-6">
+        <button onclick="mpCloseReply()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <h3 class="text-lg font-semibold text-zinc-800 dark:text-zinc-200 mb-1"><?= __('autoinstall.write_reply') ?></h3>
+        <p id="mpReplyTargetTitle" class="text-xs text-zinc-500 dark:text-zinc-400 mb-4 truncate"></p>
+        <div class="space-y-3">
+            <div>
+                <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1"><?= __('autoinstall.reviewer_name') ?></label>
+                <input type="text" id="mpReplyAuthor" maxlength="100" readonly
+                       value="<?= htmlspecialchars($_SESSION['admin_name'] ?? '') ?>"
+                       class="w-full px-3 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 cursor-not-allowed">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1"><?= __('autoinstall.reply_body') ?></label>
+                <textarea id="mpReplyBody" rows="5" maxlength="5000"
+                          class="w-full px-3 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+            </div>
+        </div>
+        <div id="mpReplyError" class="hidden mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-sm text-red-600 dark:text-red-400"></div>
+        <div id="mpReplySuccess" class="hidden mt-3 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-sm text-green-700 dark:text-green-400"></div>
+        <button id="mpReplySubmitBtn" onclick="mpSubmitReply()"
+                class="mt-4 w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors text-sm">
+            <?= __('autoinstall.submit') ?>
+        </button>
+    </div>
+</div>
+
+<script>
+var _mpIssueSlug = '<?= addslashes($item['slug']) ?>';
+var _mpIssueType = 'issue';
+var _mpReplyId   = 0;
+
+function mpOpenIssueForm(type) {
+    _mpIssueType = type;
+    document.getElementById('mpIssueTitle').textContent = type === 'qna' ? '<?= __('autoinstall.write_question') ?>' : '<?= __('autoinstall.write_issue') ?>';
+    document.getElementById('mpIssueSubtitle').textContent = type === 'qna' ? '<?= __('autoinstall.qna_hint') ?>' : '<?= __('autoinstall.issue_hint') ?>';
+    document.getElementById('mpIssueTitleInput').value = '';
+    document.getElementById('mpIssueBody').value = '';
+    document.getElementById('mpIssueError').classList.add('hidden');
+    document.getElementById('mpIssueSuccess').classList.add('hidden');
+    var sb = document.getElementById('mpIssueSubmitBtn'); sb.disabled = false; sb.textContent = '<?= __('autoinstall.submit') ?>';
+    document.getElementById('mpIssueModal').classList.remove('hidden');
+}
+function mpCloseIssue() { document.getElementById('mpIssueModal').classList.add('hidden'); }
+
+function mpSubmitIssue() {
+    var errEl = document.getElementById('mpIssueError');
+    var okEl  = document.getElementById('mpIssueSuccess');
+    var title = document.getElementById('mpIssueTitleInput').value.trim();
+    if (!title) {
+        errEl.textContent = '<?= __('autoinstall.title_required') ?>';
+        errEl.classList.remove('hidden'); return;
+    }
+    var sb = document.getElementById('mpIssueSubmitBtn');
+    sb.disabled = true; sb.textContent = '...';
+    var body = new URLSearchParams({
+        action: 'submit_issue',
+        slug:   _mpIssueSlug,
+        type:   _mpIssueType,
+        title:  title,
+        body:   document.getElementById('mpIssueBody').value,
+        author_name: document.getElementById('mpIssueAuthor').value,
+    });
+    fetch('<?= $adminUrl ?>/autoinstall/api', {
+        method: 'POST',
+        headers: {'Content-Type':'application/x-www-form-urlencoded'},
+        body: body.toString()
+    }).then(function(r){return r.json();}).then(function(d){
+        if (d.success) {
+            okEl.textContent = '<?= __('autoinstall.issue_submitted') ?>';
+            okEl.classList.remove('hidden');
+            setTimeout(function(){ mpCloseIssue(); window.location.reload(); }, 1000);
+        } else {
+            errEl.textContent = d.message || '<?= __('autoinstall.submit_failed') ?>';
+            errEl.classList.remove('hidden');
+            sb.disabled = false; sb.textContent = '<?= __('autoinstall.submit') ?>';
+        }
+    }).catch(function(){
+        errEl.textContent = '<?= __('autoinstall.network_error') ?>';
+        errEl.classList.remove('hidden');
+        sb.disabled = false; sb.textContent = '<?= __('autoinstall.submit') ?>';
+    });
+}
+
+function mpOpenIssueReply(issueId, title) {
+    _mpReplyId = issueId;
+    document.getElementById('mpReplyTargetTitle').textContent = '↳ ' + title;
+    document.getElementById('mpReplyBody').value = '';
+    document.getElementById('mpReplyError').classList.add('hidden');
+    document.getElementById('mpReplySuccess').classList.add('hidden');
+    var sb = document.getElementById('mpReplySubmitBtn'); sb.disabled = false; sb.textContent = '<?= __('autoinstall.submit') ?>';
+    document.getElementById('mpReplyModal').classList.remove('hidden');
+}
+function mpCloseReply() { document.getElementById('mpReplyModal').classList.add('hidden'); }
+
+function mpSubmitReply() {
+    var errEl = document.getElementById('mpReplyError');
+    var okEl  = document.getElementById('mpReplySuccess');
+    var bodyTxt = document.getElementById('mpReplyBody').value.trim();
+    if (!bodyTxt) {
+        errEl.textContent = '<?= __('autoinstall.body_required') ?>';
+        errEl.classList.remove('hidden'); return;
+    }
+    var sb = document.getElementById('mpReplySubmitBtn');
+    sb.disabled = true; sb.textContent = '...';
+    var body = new URLSearchParams({
+        action: 'submit_issue_reply',
+        issue_id: _mpReplyId,
+        body: bodyTxt,
+        author_name: document.getElementById('mpReplyAuthor').value,
+    });
+    fetch('<?= $adminUrl ?>/autoinstall/api', {
+        method: 'POST',
+        headers: {'Content-Type':'application/x-www-form-urlencoded'},
+        body: body.toString()
+    }).then(function(r){return r.json();}).then(function(d){
+        if (d.success) {
+            okEl.textContent = '<?= __('autoinstall.reply_submitted') ?>';
+            okEl.classList.remove('hidden');
+            setTimeout(function(){ mpCloseReply(); window.location.reload(); }, 800);
+        } else {
+            errEl.textContent = d.message || '<?= __('autoinstall.submit_failed') ?>';
+            errEl.classList.remove('hidden');
+            sb.disabled = false; sb.textContent = '<?= __('autoinstall.submit') ?>';
+        }
+    }).catch(function(){
+        errEl.textContent = '<?= __('autoinstall.network_error') ?>';
+        errEl.classList.remove('hidden');
+        sb.disabled = false; sb.textContent = '<?= __('autoinstall.submit') ?>';
     });
 }
 </script>

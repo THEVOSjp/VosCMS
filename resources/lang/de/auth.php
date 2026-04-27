@@ -134,6 +134,7 @@ return [
             'reservations' => 'Reservierungen',
             'profile' => 'Profil',
             'services' => 'Dienstverwaltung',
+            'messages' => 'Nachrichten',
             'settings' => 'Einstellungen',
             'password' => 'Passwort aendern',
             'withdraw' => 'Konto löschen',

@@ -121,6 +121,7 @@ return [
         'member_skin' => '會員',
     ],
     'pages' => [
+        'service_complete' => '訂單完成',
         'title' => '頁面管理',
         'description' => '建立和管理自訂頁面。',
         'list' => '頁面列表',

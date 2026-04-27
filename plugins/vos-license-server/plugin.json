@@ -1,0 +1,30 @@
+{
+  "id": "vos-license-server",
+  "name": {
+    "ko": "라이선스 서버",
+    "en": "License Server",
+    "ja": "ライセンスサーバー",
+    "de": "Lizenzserver",
+    "es": "Servidor de licencias",
+    "fr": "Serveur de licences",
+    "id": "Server Lisensi",
+    "mn": "Лицензийн сервер",
+    "ru": "Сервер лицензий",
+    "tr": "Lisans Sunucusu",
+    "vi": "Máy chủ giấy phép",
+    "zh_CN": "许可证服务器",
+    "zh_TW": "授權伺服器"
+  },
+  "description": {
+    "ko": "VosCMS 라이선스 발급/검증/플러그인 등록을 처리하는 본사 전용 백엔드 API",
+    "en": "Backend API for VosCMS license issuance, verification, and plugin registration (HQ only)",
+    "ja": "VosCMSライセンス発行・検証・プラグイン登録を処理する本社専用バックエンドAPI"
+  },
+  "version": "1.0.0",
+  "author": { "name": "VosCMS", "url": "https://voscms.com" },
+  "license": "proprietary",
+  "category": "system",
+  "scope": "hq_only",
+  "requires": { "php": ">=8.0" },
+  "_routes_note": "외부 API 경로는 /api/license/* 유지 (LicenseClient 호환). 코어 wrapper가 PluginManager::isActive() 체크 후 plugin/api/* 로 dispatch."
+}

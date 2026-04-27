@@ -1,0 +1,128 @@
+{
+    "id": "vos-hosting",
+    "name": {
+        "ko": "호스팅 관리",
+        "en": "Hosting Management",
+        "ja": "ホスティング管理",
+        "de": "Hosting-Verwaltung",
+        "es": "Gestión de Hosting",
+        "fr": "Gestion d'hébergement",
+        "id": "Manajemen Hosting",
+        "mn": "Хостинг удирдлага",
+        "ru": "Управление хостингом",
+        "tr": "Hosting Yönetimi",
+        "vi": "Quản lý Hosting",
+        "zh_CN": "托管管理",
+        "zh_TW": "託管管理"
+    },
+    "description": {
+        "ko": "VosCMS 호스팅 사업자용 — 서비스 주문·구독·도메인·메일·문의 관리. voscms.com 본 사이트 전용",
+        "en": "For VosCMS hosting providers — service orders, subscriptions, domains, mail accounts, inquiries. Exclusive to voscms.com",
+        "ja": "VosCMSホスティング事業者向け — サービス注文・サブスクリプション・ドメイン・メール・問い合わせ管理。voscms.com本サイト専用"
+    },
+    "version": "0.1.0",
+    "status": "migrating",
+    "author": { "name": "VosCMS", "url": "https://voscms.com" },
+    "license": "proprietary",
+    "category": "system",
+    "tags": ["hosting", "service-order", "domain", "mail", "subscription", "payjp", "whois"],
+    "requires": { "php": ">=8.1" },
+    "icon": "M5 12H3l9-9 9 9h-2M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7M9 21V12h6v9",
+    "menus": {
+        "admin": [
+            {
+                "id": "hosting",
+                "title": {
+                    "ko": "호스팅 관리",
+                    "en": "Hosting Management",
+                    "ja": "ホスティング管理",
+                    "de": "Hosting-Verwaltung",
+                    "es": "Gestión de Hosting",
+                    "fr": "Gestion d'hébergement",
+                    "id": "Manajemen Hosting",
+                    "mn": "Хостинг удирдлага",
+                    "ru": "Управление хостингом",
+                    "tr": "Hosting Yönetimi",
+                    "vi": "Quản lý Hosting",
+                    "zh_CN": "托管管理",
+                    "zh_TW": "託管管理"
+                },
+                "icon": "M5 12H3l9-9 9 9h-2M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7M9 21V12h6v9",
+                "permission": "services",
+                "position": 65,
+                "items": [
+                    {
+                        "title": {
+                            "ko": "서비스 관리",
+                            "en": "Service Orders",
+                            "ja": "サービス管理",
+                            "de": "Serviceaufträge",
+                            "es": "Pedidos de servicio",
+                            "fr": "Commandes de service",
+                            "id": "Pesanan Layanan",
+                            "mn": "Үйлчилгээний захиалга",
+                            "ru": "Заказы услуг",
+                            "tr": "Hizmet Siparişleri",
+                            "vi": "Đơn hàng dịch vụ",
+                            "zh_CN": "服务订单",
+                            "zh_TW": "服務訂單"
+                        },
+                        "route": "service-orders",
+                        "icon": "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                    },
+                    {
+                        "title": {
+                            "ko": "문의 관리",
+                            "en": "Contact Messages",
+                            "ja": "お問い合わせ管理",
+                            "de": "Kontaktnachrichten",
+                            "es": "Mensajes de contacto",
+                            "fr": "Messages de contact",
+                            "id": "Pesan Kontak",
+                            "mn": "Холбоо барих мессеж",
+                            "ru": "Сообщения",
+                            "tr": "İletişim Mesajları",
+                            "vi": "Tin nhắn liên hệ",
+                            "zh_CN": "联系消息",
+                            "zh_TW": "聯繫訊息"
+                        },
+                        "route": "contact-messages",
+                        "icon": "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    }
+                ]
+            }
+        ],
+        "mypage": [
+            {
+                "key": "services",
+                "url": "/mypage/services",
+                "label": "auth.mypage.menu.services",
+                "icon": "<path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4\"/>",
+                "position": 25,
+                "section": "main"
+            }
+        ]
+    },
+    "routes": {
+        "admin": [
+            { "path": "service-orders",         "view": "admin/service-orders/index.php",     "method": "GET"  },
+            { "path": "contact-messages",       "view": "admin/contact-messages.php",         "method": "GET"  }
+        ],
+        "front": [
+            { "path": "service/complete",       "view": "system/service/complete.php",        "method": "GET"  },
+            { "path": "mypage/services",        "view": "customer/mypage/services.php",       "method": "GET"  }
+        ],
+        "api": []
+    },
+    "_routes_note": "service-orders/{id}, mypage/services/{order}, /api/* 는 PluginManager 단순 매칭으로는 처리 불가 — 코어 라우트가 plugin view 를 우선 include (file_exists fallback). API 는 코어 /api/ 위치 유지 (nginx 직접 호출).",
+    "migrations": [
+        "migrations/001_create_orders_tables.sql",
+        "migrations/002_service_management_expansion.sql"
+    ],
+    "settings": {
+        "defaults": {
+            "free_domains": ".21ces.net",
+            "currency_default": "JPY"
+        }
+    }
+}

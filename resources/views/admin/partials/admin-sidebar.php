@@ -142,7 +142,31 @@ $_canShow = function($menu) {
         if ($_isGroupActive($_menu)) { $_anyActive = true; break; }
     }
 
-    foreach ($_allMenus as $_menu):
+    // 3개 영역 분리: top (코어 상단) / main (자동 추가/플러그인) / bottom (코어 하단)
+    $_sectioned = ['top' => [], 'main' => [], 'bottom' => []];
+    foreach ($_allMenus as $_m) {
+        $_sec = $_m['section'] ?? 'main';
+        if (!isset($_sectioned[$_sec])) $_sec = 'main';
+        $_sectioned[$_sec][] = $_m;
+    }
+
+    $_sectionRendered = false;
+    foreach ($_sectioned as $_sectionKey => $_sectionMenus):
+        // 영역 내 표시 가능한 메뉴가 하나도 없으면 구분선 포함 통째로 건너뛰기
+        $_hasVisible = false;
+        foreach ($_sectionMenus as $_chk) {
+            if ($_canShow($_chk)) { $_hasVisible = true; break; }
+        }
+        if (!$_hasVisible) continue;
+
+        if ($_sectionRendered):
+?>
+        <div class="my-2 mx-3 border-t border-zinc-800/60"></div>
+<?php
+        endif;
+        $_sectionRendered = true;
+
+    foreach ($_sectionMenus as $_menu):
         if (!$_canShow($_menu)) continue;
 
         $_id = $_menu['id'] ?? 'menu_' . $_menuIdx;
@@ -207,6 +231,7 @@ $_canShow = function($menu) {
         </div>
 <?php
         endif;
+    endforeach;
     endforeach;
 ?>
     </nav>

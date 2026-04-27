@@ -121,6 +121,7 @@ return [
         'member_skin' => '会员',
     ],
     'pages' => [
+        'service_complete' => '订单完成',
         'title' => '页面管理',
         'description' => '创建和管理自定义页面。',
         'list' => '页面列表',

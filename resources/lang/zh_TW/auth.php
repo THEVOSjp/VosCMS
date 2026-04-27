@@ -134,6 +134,7 @@ return [
             'reservations' => '預約',
             'profile' => '個人資料',
             'services' => '服務管理',
+            'messages' => '訊息',
             'settings' => '設定',
             'password' => '變更密碼',
             'withdraw' => '刪除帳戶',

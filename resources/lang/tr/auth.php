@@ -134,6 +134,7 @@ return [
             'reservations' => 'Rezervasyonlar',
             'profile' => 'Profil',
             'services' => 'Hizmet Yönetimi',
+            'messages' => 'Mesajlar',
             'settings' => 'Ayarlar',
             'password' => 'Şifre Değiştir',
             'withdraw' => 'Hesabı Sil',

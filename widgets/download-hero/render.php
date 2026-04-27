@@ -117,19 +117,7 @@ $_l = function($key) use ($_i18n, $_locale) {
     return $_i18n[$_locale][$key] ?? $_i18n['en'][$key] ?? $_i18n['ko'][$key] ?? $key;
 };
 
-// version.json에서 실시간 버전 정보
-$_vFile = BASE_PATH . '/version.json';
-$_vData = file_exists($_vFile) ? json_decode(file_get_contents($_vFile), true) : [];
-$_version = $_vData['version'] ?? '1.0.0';
-$_codename = $_vData['codename'] ?? '';
-$_releaseDate = $_vData['release_date'] ?? '';
-$_channel = $_vData['channel'] ?? 'stable';
-
-// dist 파일 크기
-$_distFile = '/var/www/voscms-dist/voscms-' . $_version . '.zip';
-$_fileSize = file_exists($_distFile) ? round(filesize($_distFile) / 1024 / 1024, 1) : null;
-
-// 이전 버전 목록
+// dist zip 목록에서 버전 정보 결정 (version.json이 아닌 실제 빌드 기준)
 $_distDir = '/var/www/voscms-dist/';
 $_versions = [];
 foreach (glob($_distDir . 'voscms-*.zip') as $f) {
@@ -142,6 +130,18 @@ foreach (glob($_distDir . 'voscms-*.zip') as $f) {
     }
 }
 usort($_versions, fn($a, $b) => version_compare($b['version'], $a['version']));
+
+// 히어로는 최신 zip 기준 버전 사용 (version.json과 괴리 방지)
+$_latestZip = $_versions[0] ?? null;
+$_version = $_latestZip ? $_latestZip['version'] : '1.0.0';
+$_fileSize = $_latestZip ? $_latestZip['size'] : null;
+
+// version.json에서 코드네임·채널 등 보조 정보만 참조
+$_vFile = BASE_PATH . '/version.json';
+$_vData = file_exists($_vFile) ? json_decode(file_get_contents($_vFile), true) : [];
+$_codename = $_vData['codename'] ?? '';
+$_releaseDate = $_latestZip ? $_latestZip['date'] : ($_vData['release_date'] ?? '');
+$_channel = $_vData['channel'] ?? 'stable';
 
 $_downloadUrl = $_cfg['download_url'] ?? '/download/voscms-latest.zip';
 $_changelogUrl = $_cfg['changelog_url'] ?? '';

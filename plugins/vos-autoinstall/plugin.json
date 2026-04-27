@@ -41,6 +41,7 @@
             { "path": "autoinstall",           "view": "admin/browse.php",          "method": "GET"  },
             { "path": "autoinstall/item",       "view": "admin/item-detail.php",     "method": "GET"  },
             { "path": "autoinstall/purchases",  "view": "admin/purchases.php",       "method": "GET"  },
+            { "path": "autoinstall/orders",     "view": "admin/orders.php",          "method": "GET"  },
             { "path": "autoinstall/api",        "view": "admin/api.php",             "method": "POST" },
             { "path": "autoinstall/install",    "view": "admin/install-handler.php", "method": "POST" }
         ],
@@ -66,6 +67,8 @@
                     "zh_TW": "自動安裝"
                 },
                 "icon": "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4",
+                "position": 30,
+                "section": "top",
                 "items": [
                     {
                         "title": {
@@ -84,6 +87,24 @@
                             "zh_TW": "輕鬆安裝"
                         },
                         "route": "autoinstall"
+                    },
+                    {
+                        "title": {
+                            "ko": "구매 내역",
+                            "en": "Purchase History",
+                            "ja": "購入履歴",
+                            "de": "Kaufverlauf",
+                            "es": "Historial de compras",
+                            "fr": "Historique d'achat",
+                            "id": "Riwayat Pembelian",
+                            "mn": "Худалдан авалтын түүх",
+                            "ru": "История покупок",
+                            "tr": "Satın Alma Geçmişi",
+                            "vi": "Lịch sử mua",
+                            "zh_CN": "购买记录",
+                            "zh_TW": "購買紀錄"
+                        },
+                        "route": "autoinstall/orders"
                     },
                     {
                         "title": {

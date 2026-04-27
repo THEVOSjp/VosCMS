@@ -957,7 +957,7 @@
         },
         {
             "tld": ".eu",
-            "registration": 5.19,
+            "registration": 5.49,
             "renew": 9.99,
             "transfer": 5.99,
             "currency": "USD"
@@ -1475,7 +1475,7 @@
         },
         {
             "tld": ".id",
-            "registration": 20.75,
+            "registration": 17.99,
             "renew": 20.75,
             "transfer": 19.75,
             "currency": "USD"
@@ -2450,7 +2450,7 @@
             "tld": ".sbs",
             "registration": 1.88,
             "renew": 11.95,
-            "transfer": 14.95,
+            "transfer": 13.95,
             "currency": "USD"
         },
         {
@@ -2924,7 +2924,7 @@
         },
         {
             "tld": ".us",
-            "registration": 2.75,
+            "registration": 5.49,
             "renew": 7.99,
             "transfer": 7.49,
             "currency": "USD"
@@ -3140,6 +3140,6 @@
             "currency": "USD"
         }
     ],
-    "fetched_at": 1776185214,
+    "fetched_at": 1777208656,
     "source": "api"
 }

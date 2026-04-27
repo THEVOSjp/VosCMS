@@ -411,6 +411,8 @@ CREATE TABLE vcs_hardware_orders (
 
 ### 4.2 API 엔드포인트 (voscms.com)
 
+> **2.3.9 변경**: API 구현체는 **`vos-license-server` 플러그인** (`scope: hq_only`) 으로 분리. 코어 `/api/license/*.php` 는 wrapper 만 유지하며 `_plugin_dispatch.php` 가 `rzx_plugins.is_active` 확인 후 dispatch (비활성 시 404). 빌드 시 `api/license/`, `api/notices.php`, `vos-license-server` 디렉토리 모두 제외 → 고객 사이트에 외부 노출 차단. 개발자 포털 API 도 동일 방식으로 **`vos-developer`** 플러그인으로 분리.
+
 | 메서드 | 경로 | 설명 | 호출 시점 |
 |--------|------|------|----------|
 | POST | `/api/license/register` | 새 설치 등록 / 자동 등록 | install.php Step 4, 또는 LicenseClient::check() (키 없을 시) |
@@ -418,6 +420,8 @@ CREATE TABLE vcs_hardware_orders (
 | POST | `/api/license/register-plugin` | 플러그인 구매 등록 | 마켓플레이스 구매 완료 시 |
 | GET | `/api/license/check` | 라이선스 상태 조회 | 관리자 설정 페이지 |
 | POST | `/api/license/deactivate` | 라이선스 해제 | 도메인 이전 시 (본사만) |
+| GET | `/api/license/stats` | 라이선스 통계 (본사 어드민용) | 라이선스 매니저 대시보드 |
+| GET | `/api/license/updates` | 업데이트 알림 조회 | 고객 사이트 24h 주기 |
 
 **등록 API (install.php → 라이선스 서버):**
 ```json

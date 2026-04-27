@@ -5,6 +5,7 @@
 include __DIR__ . '/_head.php';
 $pageHeaderTitle = __('autoinstall.title');
 $pageSubTitle = __('autoinstall.licenses');
+include __DIR__ . '/_components/page-title.php';
 
 $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
 $adminId = $_SESSION['admin_id'] ?? '';

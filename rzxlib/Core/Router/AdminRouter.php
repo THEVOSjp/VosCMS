@@ -112,12 +112,13 @@ $adminRoute = trim($adminRoute, '/') ?: 'dashboard';
         }
     }
 
-    // 서비스 주문 관리 (코어)
-    if ($adminRoute === 'service-orders') {
-        include BASE_PATH . '/resources/views/admin/service-orders/index.php';
-    } elseif (preg_match('#^service-orders/([a-zA-Z0-9_-]+)$#', $adminRoute, $m)) {
+    // 서비스 주문 상세 (vos-hosting 플러그인 — 정규식 라우트만 코어가 처리)
+    //   service-orders 단순 라우트는 PluginManager (plugin.json routes.admin) 가 자동 매칭
+    if (preg_match('#^service-orders/([a-zA-Z0-9_-]+)$#', $adminRoute, $m)) {
         $adminOrderNumber = $m[1];
-        include BASE_PATH . '/resources/views/admin/service-orders/detail.php';
+        $_pf = BASE_PATH . '/plugins/vos-hosting/views/admin/service-orders/detail.php';
+        if (file_exists($_pf)) { include $_pf; }
+        else { http_response_code(404); include BASE_PATH . '/resources/views/admin/dashboard.php'; }
     // 서비스 설정 (정규식 라우트 — 플러그인에서 직접 처리)
     } elseif (preg_match('#^services/settings(?:/(\w+))?$#', $adminRoute, $m)) {
         $settingsTab = $m[1] ?? 'general';
@@ -265,8 +266,7 @@ $adminRoute = trim($adminRoute, '/') ?: 'dashboard';
         include BASE_PATH . '/resources/views/admin/plugins.php';
     } elseif ($adminRoute === 'review-queue') {
         include BASE_PATH . '/resources/views/admin/review-queue.php';
-    } elseif ($adminRoute === 'contact-messages') {
-        include BASE_PATH . '/resources/views/admin/contact-messages.php';
+    // contact-messages 라우트는 vos-hosting plugin.json routes.admin 가 PluginManager 통해 자동 매칭
     } elseif ($adminRoute === 'plugins/api') {
         $__noLayout = true;
         include BASE_PATH . '/resources/views/admin/plugins-api.php';

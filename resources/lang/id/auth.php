@@ -134,6 +134,7 @@ return [
             'reservations' => 'Reservasi',
             'profile' => 'Profil',
             'services' => 'Manajemen Layanan',
+            'messages' => 'Pesan',
             'settings' => 'Pengaturan',
             'password' => 'Ubah Kata Sandi',
             'withdraw' => 'Hapus Akun',

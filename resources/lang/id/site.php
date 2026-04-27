@@ -57,6 +57,7 @@ return [
         'member_skin' => 'Anggota',
     ],
     'pages' => [
+        'service_complete' => 'Pesanan Selesai',
         'title' => 'Manajemen Halaman',
         'description' => 'Buat dan kelola halaman kustom.',
         'list' => 'Daftar Halaman',
@@ -123,7 +124,7 @@ return [
         'refund_policy' => 'Kebijakan Pembatalan & Pengembalian Dana',
         'tokushoho' => 'UU Perdagangan', 'funds_settlement' => 'UU Pembayaran',
         'staff_intro' => 'Staf Kami', 'booking' => 'Pesan', 'lookup' => 'Cari Reservasi',
-        'service_order' => 'Permintaan Layanan',
+        'service_order' => 'Pesanan Layanan',
         'contact' => 'Hubungi Kami',
         'changelog' => 'Riwayat Perubahan',
         'tab_changelog_manage' => 'Manajemen changelog',

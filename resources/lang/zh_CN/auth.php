@@ -134,6 +134,7 @@ return [
             'reservations' => '预约',
             'profile' => '个人资料',
             'services' => '服务管理',
+            'messages' => '消息',
             'settings' => '设置',
             'password' => '修改密码',
             'withdraw' => '注销账户',

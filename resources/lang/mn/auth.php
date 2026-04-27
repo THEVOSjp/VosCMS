@@ -134,6 +134,7 @@ return [
             'reservations' => 'Захиалгууд',
             'profile' => 'Профайл',
             'services' => 'Үйлчилгээний удирдлага',
+            'messages' => 'Зурвас',
             'settings' => 'Тохиргоо',
             'password' => 'Нууц үг солих',
             'withdraw' => 'Бүртгэл устгах',

@@ -134,6 +134,7 @@ return [
             'reservations' => 'Бронирования',
             'profile' => 'Профиль',
             'services' => 'Управление услугами',
+            'messages' => 'Сообщения',
             'settings' => 'Настройки',
             'password' => 'Изменить пароль',
             'withdraw' => 'Удалить аккаунт',

@@ -121,6 +121,7 @@ return [
         'member_skin' => 'Mitglied',
     ],
     'pages' => [
+        'service_complete' => 'Bestellung abgeschlossen',
         'title' => 'Seitenverwaltung',
         'description' => 'Erstellen und verwalten Sie benutzerdefinierte Seiten.',
         'list' => 'Seitenliste',
@@ -187,7 +188,7 @@ return [
         'refund_policy' => 'Stornierungs- und Rückerstattungsrichtlinie',
         'tokushoho' => 'Handelsgesetz', 'funds_settlement' => 'Zahlungsgesetz',
         'staff_intro' => 'Unser Team', 'booking' => 'Buchen', 'lookup' => 'Buchung suchen',
-        'service_order' => 'Serviceanfrage',
+        'service_order' => 'Service-Bestellung',
         'contact' => 'Kontakt',
         'changelog' => 'Änderungsprotokoll',
         'tab_changelog_manage' => 'Changelog-Verwaltung',

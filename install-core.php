@@ -196,6 +196,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
 
         case '4': // 관리자 계정 생성
+            // 대량 인서트(메뉴/시드/번역 ~900건) + 라이선스 서버 호출 → 30초 기본 한계 초과 가능
+            // PHP-FPM 워커 타임아웃 시 502 Bad Gateway. 5분으로 확장.
+            @set_time_limit(300);
             $db = $_SESSION['install_db'] ?? null;
             if (!$db && !empty($_POST['_db'])) {
                 $db = json_decode(base64_decode($_POST['_db']), true);
@@ -224,6 +227,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
                     );
                     $pfx = $db['dbPrefix'];
+
+                    // 트랜잭션 시작 — 1,400+건의 INSERT를 단일 fsync로 처리 (autocommit 시 17초 → 1초 미만)
+                    $pdo->beginTransaction();
 
                     // 관리자 계정 생성 (v2.1: rzx_users에 supervisor role로 통합)
                     $userId = bin2hex(random_bytes(4)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(2)) . '-' . bin2hex(random_bytes(6));
@@ -281,20 +287,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $menuStmt->execute([1, null, 'Q&A', 'qna', '_self', 'board', 4, 1]);
                     $menuStmt->execute([1, null, 'FAQ', 'faq', '_self', 'board', 5, 1]);
 
-                    // 메뉴 다국어 번역
-                    $_menuTrStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}translations (lang_key, locale, content) VALUES (?, ?, ?)");
-                    $_menuTranslations = [
-                        1 => ['ko'=>'홈','en'=>'Home','ja'=>'ホーム','de'=>'Startseite','es'=>'Inicio','fr'=>'Accueil','id'=>'Beranda','mn'=>'Нүүр','ru'=>'Главная','tr'=>'Ana Sayfa','vi'=>'Trang chủ','zh_CN'=>'首页','zh_TW'=>'首頁'],
-                        2 => ['ko'=>'공지사항','en'=>'Notice','ja'=>'お知らせ','de'=>'Ankündigungen','es'=>'Avisos','fr'=>'Annonces','id'=>'Pengumuman','mn'=>'Мэдэгдэл','ru'=>'Объявления','tr'=>'Duyurular','vi'=>'Thông báo','zh_CN'=>'公告','zh_TW'=>'公告'],
-                        3 => ['ko'=>'자유게시판','en'=>'Free Board','ja'=>'自由掲示板','de'=>'Freies Forum','es'=>'Foro Libre','fr'=>'Forum Libre','id'=>'Forum Bebas','mn'=>'Чөлөөт самбар','ru'=>'Свободный форум','tr'=>'Serbest Forum','vi'=>'Diễn đàn tự do','zh_CN'=>'自由论坛','zh_TW'=>'自由論壇'],
-                        4 => ['ko'=>'질문과 답변','en'=>'Q&A','ja'=>'Q&A','de'=>'F&A','es'=>'Preguntas','fr'=>'Questions','id'=>'Tanya Jawab','mn'=>'Асуулт хариулт','ru'=>'Вопросы','tr'=>'Sorular','vi'=>'Hỏi đáp','zh_CN'=>'问答','zh_TW'=>'問答'],
-                        5 => ['ko'=>'자주 묻는 질문','en'=>'FAQ','ja'=>'よくある質問','de'=>'FAQ','es'=>'FAQ','fr'=>'FAQ','id'=>'FAQ','mn'=>'Түгээмэл асуулт','ru'=>'FAQ','tr'=>'SSS','vi'=>'FAQ','zh_CN'=>'常见问题','zh_TW'=>'常見問題'],
-                    ];
-                    foreach ($_menuTranslations as $_menuId => $_trs) {
-                        foreach ($_trs as $_tLocale => $_tContent) {
-                            $_menuTrStmt->execute(["menu_item.{$_menuId}.title", $_tLocale, $_tContent]);
-                        }
-                    }
+                    // 메뉴 다국어 번역은 푸터/언링크드 메뉴를 모두 추가한 후 한 번에 처리 (아래 _menuTranslations 블록)
 
                     // Footer Menu — 법적 페이지
                     $menuStmt->execute([3, null, 'Terms of Service', 'terms', '_self', 'page', 1, 1]);
@@ -625,6 +618,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
 
+                    // 모든 INSERT 작업 완료 → 트랜잭션 커밋 (네트워크 호출 전 disk flush)
+                    $pdo->commit();
+
                     // ─── 라이선스 서버에서 키 발급 ───
                     $licenseDomain = strtolower(preg_replace('#^https?://#', '', rtrim($siteUrl, '/')));
                     $licenseDomain = preg_replace('#^www\.#', '', $licenseDomain);
@@ -643,7 +639,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 'server_ip' => $_SERVER['SERVER_ADDR'] ?? '',
                             ]),
                             CURLOPT_RETURNTRANSFER => true,
-                            CURLOPT_TIMEOUT => 15,
+                            CURLOPT_TIMEOUT => 5,
+                            CURLOPT_CONNECTTIMEOUT => 3,
                             CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Accept: application/json'],
                             CURLOPT_SSL_VERIFYPEER => true,
                         ]);
@@ -740,6 +737,7 @@ LICENSE_SERVER={$licenseServer}
                     $_SESSION['install_license_registered'] = $licenseRegistered;
                     $step = '5';
                 } catch (PDOException $e) {
+                    if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
                     $errors[] = __t('save_fail') . ': ' . $e->getMessage();
                 }
             }

@@ -4,7 +4,7 @@
  */
 include __DIR__ . '/_head.php';
 $pageHeaderTitle = __('autoinstall.title');
-$pageSubTitle    = '설치 내역';
+$pageSubTitle    = __('autoinstall.my_purchases');
 
 $prefix  = $_ENV['DB_PREFIX'] ?? 'rzx_';
 $locale  = $_SESSION['locale'] ?? 'ko';
@@ -140,16 +140,20 @@ function keyPreview(?string $key): string {
 }
 ?>
 
-<div class="mb-5 flex items-center justify-between">
+<?php
+ob_start(); ?>
+<div class="flex items-center gap-3">
     <p class="text-sm text-zinc-500 dark:text-zinc-400">총 <strong class="text-zinc-700 dark:text-zinc-300"><?= $totalCount ?></strong>개 설치됨</p>
     <button onclick="validateAll()"
-            class="flex items-center gap-2 px-3 py-2 text-sm bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-        </svg>
-        전체 라이선스 갱신
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        <span>전체 라이선스 갱신</span>
     </button>
 </div>
+<?php
+$pageTitleAction = ob_get_clean();
+include __DIR__ . '/_components/page-title.php';
+?>
 
 <?php
 // 섹션 렌더 헬퍼

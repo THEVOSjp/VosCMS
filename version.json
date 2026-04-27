@@ -1,8 +1,8 @@
 {
-    "version": "2.3.8",
+    "version": "2.3.9",
     "name": "VosCMS",
-    "codename": "Board i18n & FAQ/Q&A Skin",
-    "release_date": "2026-04-25",
+    "codename": "Service Order i18n & 3-Section Menu",
+    "release_date": "2026-04-27",
     "commit": null,
     "channel": "stable",
     "github": {

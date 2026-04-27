@@ -136,6 +136,7 @@ return [
             'reservations' => '予約履歴',
             'profile' => 'プロフィール',
             'services' => 'サービス管理',
+            'messages' => 'メッセージ',
             'settings' => '設定',
             'password' => 'パスワード変更',
             'withdraw' => '退会',

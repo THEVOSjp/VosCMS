@@ -134,6 +134,7 @@ return [
             'reservations' => 'Reservations',
             'profile' => 'Profile',
             'services' => 'Service Management',
+            'messages' => 'Messages',
             'settings' => 'Settings',
             'password' => 'Change Password',
             'withdraw' => 'Delete Account',

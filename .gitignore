@@ -8,6 +8,17 @@
 /storage/framework/cache/*
 /storage/framework/views/*
 /storage/.installed
+
+# 런타임 캐시·업로드 자산 (관리자 화면에서 생성/업로드)
+/storage/cache/mp_api_*.json
+/storage/cache/sitemap.xml
+/storage/cache/voscms_notices_*.json
+/storage/favicon_*
+/storage/mobile_icon_*
+/storage/og_image_*
+/storage/logos/
+/storage/skins/
+
 !/storage/.gitkeep
 !/storage/uploads/.gitkeep
 !/storage/board/.gitkeep

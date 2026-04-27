@@ -22,10 +22,11 @@ try {
     $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
     $defaultLocale = $config['locale'] ?? 'ko';
 
-    // AJAX 처리 - 서비스(시스템 페이지) 설정 저장
+    // AJAX 처리 - 서비스(시스템 페이지) 설정 저장 — 탭별 저장 (탭에서 보낸 필드만 업데이트)
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_service_settings') {
         header('Content-Type: application/json; charset=utf-8');
-        $fields = [
+        // 허용 필드 화이트리스트 (다른 탭의 데이터를 덮어쓰지 않도록 클라이언트가 보낸 키만 업데이트)
+        $allowedFields = [
             'service_currency', 'service_exchange_rate', 'service_rate_jpy',
             'service_rate_cny', 'service_rate_eur', 'service_exchange_auto',
             'service_addons', 'service_maintenance',
@@ -35,15 +36,16 @@ try {
             'service_hosting_plans', 'service_hosting_periods',
             'service_hosting_storage', 'service_hosting_features',
         ];
-        foreach ($fields as $f) {
-            $val = $_POST[$f] ?? '';
-            if ($f === 'service_namesilo_sandbox') {
-                $val = isset($_POST[$f]) ? '1' : '0';
-            }
-            $stmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+        $stmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+        $updated = 0;
+        foreach ($allowedFields as $f) {
+            // 클라이언트가 보낸 키만 업데이트 (다른 탭 데이터 보존)
+            if (!array_key_exists($f, $_POST)) continue;
+            $val = $_POST[$f];
             $stmt->execute([$f, $val]);
+            $updated++;
         }
-        echo json_encode(['success' => true, 'message' => __('common.msg.saved') ?? '저장되었습니다.']);
+        echo json_encode(['success' => true, 'updated' => $updated, 'message' => __('common.msg.saved') ?? '저장되었습니다.']);
         exit;
     }
 
@@ -282,6 +284,21 @@ try {
     $stmt->execute([$pageSlug]);
     $pageData = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    // 시스템 페이지(is_system=1)는 system-pages.php 의 lang 키 title 로 덮어쓰기 (다국어 자동 적용)
+    if ($pageData && !empty($pageData['is_system'])) {
+        $_spCheck = file_exists(BASE_PATH . '/config/system-pages.php') ? include BASE_PATH . '/config/system-pages.php' : [];
+        foreach ($_spCheck as $_sp) {
+            if (($_sp['slug'] ?? '') === $pageSlug) {
+                $_spTitle = $_sp['title'] ?? null;
+                if (is_string($_spTitle) && preg_match('/^site\.pages\.[a-z_]+$/', $_spTitle)) {
+                    $_translated = __($_spTitle);
+                    if ($_translated && $_translated !== $_spTitle) $pageData['title'] = $_translated;
+                }
+                break;
+            }
+        }
+    }
+
     // DB 에 없으면 시스템 페이지 (config/system-pages.php) 에서 검색
     if (!$pageData) {
         $_spCheck = file_exists(BASE_PATH . '/config/system-pages.php') ? include BASE_PATH . '/config/system-pages.php' : [];
@@ -366,13 +383,29 @@ try {
 
         // 신규 방식: settings_tabs 배열 (최상위 탭으로 등록)
         if (!empty($sp['settings_tabs']) && is_array($sp['settings_tabs'])) {
+            $_pageSpPlugin = $sp['plugin'] ?? null; // 부모 시스템 페이지의 plugin 정보 상속
+
+            // plugin 지정된 경우 lang 파일 자동 로드 (탭 label 풀이용)
+            if (!empty($_pageSpPlugin) && class_exists('\RzxLib\Core\I18n\Translator')) {
+                $_curLocale = $config['locale'] ?? 'ko';
+                foreach ([$_curLocale, 'en', 'ko'] as $_tryLocale) {
+                    $_langPath = BASE_PATH . '/plugins/' . $_pageSpPlugin . '/lang/' . $_tryLocale . '/services.php';
+                    if (file_exists($_langPath)) {
+                        $_pluginLang = include $_langPath;
+                        if (is_array($_pluginLang)) \RzxLib\Core\I18n\Translator::merge('services', $_pluginLang);
+                        break;
+                    }
+                }
+            }
+
             foreach ($sp['settings_tabs'] as $st) {
                 if (empty($st['key']) || empty($st['view'])) continue;
                 $_systemSettingsTabs[] = [
-                    'key'   => $st['key'],
-                    'label' => $st['label'] ?? $st['key'],
-                    'icon'  => $st['icon']  ?? 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-                    'view'  => $st['view'],
+                    'key'    => $st['key'],
+                    'label'  => $st['label'] ?? $st['key'],
+                    'icon'   => $st['icon']  ?? 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+                    'view'   => $st['view'],
+                    'plugin' => $_pageSpPlugin, // plugin view 우선 매핑용
                 ];
             }
         }
@@ -432,7 +465,7 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                         </a>
                         <div>
-                            <h1 class="text-xl font-bold text-zinc-900 dark:text-white"><?= htmlspecialchars($pageData['title'] ?? $pageSlug) ?> — <?= __('site.pages.settings_title') ?? '환경 설정' ?></h1>
+                            <h1 class="text-xl font-bold text-zinc-900 dark:text-white"><?= htmlspecialchars($pageData['title'] ?? $pageSlug) ?> — <?= __('site.pages.settings_title') ?? '페이지 설정' ?></h1>
                             <p class="text-sm text-zinc-500 dark:text-zinc-400">/<?= htmlspecialchars($pageSlug) ?> · <?= ucfirst($pageData['page_type'] ?? 'document') ?></p>
                         </div>
                     </div>
@@ -454,8 +487,12 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                             ];
                             // 시스템 페이지 전용 탭 — 스킨 다음에 추가
                             foreach ($_systemSettingsTabs as $st) {
+                                // label 이 lang 키 형식 (예: 'site.foo' 또는 'services.bar') 이면 __() 로 풀이
+                                $_lblRaw = $st['label'];
+                                $_isKey = (bool) preg_match('/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_.]*$/', $_lblRaw);
+                                $_lblText = $_isKey ? __($_lblRaw) : $_lblRaw;
                                 $tabs[$st['key']] = [
-                                    'label' => str_starts_with($st['label'], 'site.') ? (__($st['label']) ?? $st['label']) : $st['label'],
+                                    'label' => ($_lblText && $_lblText !== $_lblRaw) ? $_lblText : $_lblRaw,
                                     'icon'  => $st['icon'],
                                     'view'  => $st['view'],
                                 ];
@@ -932,11 +969,61 @@ $pageHeaderTitle = __('site.pages.settings_title') ?? '페이지 설정';
                         if ($st['key'] === $currentTab) { $_matchedSystemTab = $st; break; }
                     }
                     if ($_matchedSystemTab):
-                        $_sysTabView = BASE_PATH . '/resources/views/' . $_matchedSystemTab['view'];
+                        // plugin 지정된 경우 plugin view 우선 + plugin lang 자동 로드, 코어 fallback
+                        $_sysTabView = null;
+                        if (!empty($_matchedSystemTab['plugin'])) {
+                            $_pluginId = $_matchedSystemTab['plugin'];
+                            $_pf = BASE_PATH . '/plugins/' . $_pluginId . '/views/' . $_matchedSystemTab['view'];
+                            if (file_exists($_pf)) $_sysTabView = $_pf;
+                            // plugin 의 lang 파일 자동 로드 (services 그룹)
+                            if (class_exists('\RzxLib\Core\I18n\Translator')) {
+                                $_curLocale = $config['locale'] ?? 'ko';
+                                foreach ([$_curLocale, 'en', 'ko'] as $_tryLocale) {
+                                    $_langPath = BASE_PATH . '/plugins/' . $_pluginId . '/lang/' . $_tryLocale . '/services.php';
+                                    if (file_exists($_langPath)) {
+                                        $_pluginLang = include $_langPath;
+                                        if (is_array($_pluginLang)) \RzxLib\Core\I18n\Translator::merge('services', $_pluginLang);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (!$_sysTabView) {
+                            $_sysTabView = BASE_PATH . '/resources/views/' . $_matchedSystemTab['view'];
+                        }
                         if (file_exists($_sysTabView)):
                 ?>
                 <!-- 시스템 탭 콘텐츠: <?= htmlspecialchars($_matchedSystemTab['key']) ?> -->
-                <?php include $_sysTabView; ?>
+                <?php
+                // service/settings/* 탭은 _footer.php의 JS 함수 + 변수 세팅이 필요
+                $_isSvcTab = strpos($_matchedSystemTab['view'], 'system/service/settings/') === 0;
+                if ($_isSvcTab && !isset($_inp)) {
+                    $_inp = 'w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500';
+                    $_sel = 'px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500';
+                    $_curSymbol = ['KRW'=>'₩','USD'=>'$','JPY'=>'¥','CNY'=>'¥','EUR'=>'€'];
+                    $_dispCur = $serviceSettings['service_currency'] ?? 'KRW';
+                    $_dispSym = $_curSymbol[$_dispCur] ?? $_dispCur;
+                    $_dispRateMap = [
+                        'KRW' => floatval($serviceSettings['service_exchange_rate'] ?? 1380),
+                        'JPY' => floatval($serviceSettings['service_rate_jpy'] ?? 150),
+                        'CNY' => floatval($serviceSettings['service_rate_cny'] ?? 7),
+                        'EUR' => floatval($serviceSettings['service_rate_eur'] ?? 0.85),
+                        'USD' => 1,
+                    ];
+                    $_dispRate = $_dispRateMap[$_dispCur] ?? 1380;
+                }
+                include $_sysTabView;
+                if ($_isSvcTab) {
+                    // _footer.php 도 plugin 우선, 코어 fallback
+                    $_pfooter = !empty($_matchedSystemTab['plugin'])
+                        ? BASE_PATH . '/plugins/' . $_matchedSystemTab['plugin'] . '/views/system/service/settings/_footer.php'
+                        : BASE_PATH . '/resources/views/system/service/settings/_footer.php';
+                    if (!file_exists($_pfooter)) {
+                        $_pfooter = BASE_PATH . '/resources/views/system/service/settings/_footer.php';
+                    }
+                    if (file_exists($_pfooter)) include $_pfooter;
+                }
+                ?>
                 <?php
                         else:
                             echo '<div class="p-8 text-center text-red-600 bg-red-50 dark:bg-red-900/20 rounded-xl">탭 뷰 파일을 찾을 수 없습니다: ' . htmlspecialchars($_matchedSystemTab['view']) . '</div>';

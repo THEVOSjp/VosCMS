@@ -404,11 +404,16 @@ if ($path === 'sitemap.xml') {
     } elseif (preg_match('#^mypage/reservations/([a-zA-Z0-9_-]+)$#', $path, $m)) {
         $reservationId = $m[1];
         $__pageFile = BASE_PATH . '/resources/views/customer/mypage/reservation-detail.php';
-    } elseif ($path === 'mypage/services') {
-        $__pageFile = BASE_PATH . '/resources/views/customer/mypage/services.php';
+    // mypage/services 단순 라우트는 vos-hosting plugin.json routes.front 가 PluginManager 통해 자동 매칭
+    // mypage/services/{order} 정규식 라우트는 코어가 plugin view 로 직접 dispatch (plugin 없으면 마이페이지로 redirect)
     } elseif (preg_match('#^mypage/services/([a-zA-Z0-9_-]+)$#', $path, $m)) {
         $serviceOrderNumber = $m[1];
-        $__pageFile = BASE_PATH . '/resources/views/customer/mypage/service-detail.php';
+        $_pf = BASE_PATH . '/plugins/vos-hosting/views/customer/mypage/service-detail.php';
+        if (file_exists($_pf)) {
+            $__pageFile = $_pf;
+        } else {
+            header('Location: ' . $basePath . '/mypage'); exit;
+        }
     } elseif ($path === 'mypage/password') {
         $__pageFile = BASE_PATH . '/resources/views/customer/mypage/password.php';
     } elseif ($path === 'mypage/settings') {
@@ -561,6 +566,11 @@ if ($path === 'sitemap.xml') {
                     foreach ($_spConfig as $_sp) {
                         if (($_sp['slug'] ?? '') === $path && !empty($_sp['view'])) {
                             $__noLayout = true;
+                            // plugin 지정된 경우 plugin view 우선, 코어 fallback
+                            if (!empty($_sp['plugin'])) {
+                                $_pf = BASE_PATH . '/plugins/' . $_sp['plugin'] . '/views/' . $_sp['view'];
+                                if (file_exists($_pf)) { include $_pf; exit; }
+                            }
                             include BASE_PATH . '/resources/views/' . $_sp['view'];
                             exit;
                         }

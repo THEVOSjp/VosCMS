@@ -1,0 +1,30 @@
+{
+  "id": "vos-developer",
+  "name": {
+    "ko": "개발자 포털",
+    "en": "Developer Portal",
+    "ja": "デベロッパーポータル",
+    "de": "Entwicklerportal",
+    "es": "Portal de desarrolladores",
+    "fr": "Portail développeur",
+    "id": "Portal Pengembang",
+    "mn": "Хөгжүүлэгчийн портал",
+    "ru": "Портал разработчика",
+    "tr": "Geliştirici Portalı",
+    "vi": "Cổng nhà phát triển",
+    "zh_CN": "开发者门户",
+    "zh_TW": "開發者入口"
+  },
+  "description": {
+    "ko": "VosCMS 마켓플레이스 개발자 회원가입/로그인/아이템 제출/매출 정산을 처리하는 본사 전용 백엔드+UI",
+    "en": "Backend and UI for VosCMS marketplace developers — registration, login, item submission, earnings (HQ only)",
+    "ja": "VosCMSマーケットプレイス開発者向け会員登録・ログイン・アイテム提出・売上精算を処理する本社専用バックエンド+UI"
+  },
+  "version": "1.0.0",
+  "author": { "name": "VosCMS", "url": "https://voscms.com" },
+  "license": "proprietary",
+  "category": "system",
+  "scope": "hq_only",
+  "requires": { "php": ">=8.0" },
+  "_routes_note": "API 외부 path는 /api/developer/* 유지 (호환성). 코어 wrapper가 plugin 활성 체크 후 dispatch. 향후 frontend UI 추가 예정."
+}

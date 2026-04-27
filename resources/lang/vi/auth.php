@@ -134,6 +134,7 @@ return [
             'reservations' => 'Đặt chỗ',
             'profile' => 'Hồ sơ',
             'services' => 'Quản lý dịch vụ',
+            'messages' => 'Tin nhắn',
             'settings' => 'Cài đặt',
             'password' => 'Đổi mật khẩu',
             'withdraw' => 'Xóa tài khoản',

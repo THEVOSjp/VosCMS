@@ -1,11 +1,29 @@
 <?php
 /**
- * VosCMS Public API - 공지사항
+ * VosCMS Public API - 공지사항 (본사 전용)
  * GET /api/notices
  *
  * 각 VosCMS 사이트의 대시보드에서 본사 공지사항을 가져갈 때 사용.
  * 요청 시 locale 파라미터로 해당 언어 번역을 반환.
+ *
+ * 보안: 본사 voscms.com 도메인에서만 응답. .env 의 HQ_HOSTS 로 화이트리스트 변경 가능.
  */
+
+// .env 로드 (HQ_HOSTS 사용)
+if (empty($_ENV['DB_HOST']) && file_exists(dirname(__DIR__) . '/.env')) {
+    foreach (file(dirname(__DIR__) . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        if (strpos(trim($line), '#') === 0 || strpos($line, '=') === false) continue;
+        [$k, $v] = explode('=', $line, 2);
+        $_ENV[trim($k)] = trim($v, "\"' ");
+    }
+}
+
+$_hqHosts = array_filter(array_map('trim', explode(',', $_ENV['HQ_HOSTS'] ?? 'voscms.com,www.voscms.com')));
+if (!in_array($_SERVER['HTTP_HOST'] ?? '', $_hqHosts, true)) {
+    http_response_code(404);
+    exit;
+}
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Cache-Control: public, max-age=3600');

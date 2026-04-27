@@ -385,3 +385,94 @@ ALTER TABLE rzx_subscriptions
 5. ~~**마이페이지 서비스 관리**~~ ✅ 서비스 목록/상세/탭/API
 6. ~~**무료 플랜**~~ ✅ 서브도메인 + 즉시 활성화
 7. ~~**관리자 대시보드**~~ ✅ 주문 목록/상세/1회성 상태 관리
+8. ~~**13개국어 다국어**~~ ✅ 신청/마이페이지/어드민 전 영역 (2026-04-27)
+9. ~~**결제 직전 확인 모달**~~ ✅ 검증 + 요약 모달 (2026-04-27)
+10. ~~**설치 지원 서비스**~~ ✅ 관리자 정보 입력 + 비밀번호 토글 (2026-04-27)
+
+---
+
+## 13개국어 다국어 (2.3.9)
+
+신청 페이지·마이페이지·어드민의 모든 텍스트를 13개국어(ko/en/ja/de/es/fr/id/mn/ru/tr/vi/zh_CN/zh_TW)로 번역.
+
+### 키 네임스페이스
+
+| 영역 | 네임스페이스 | 키 개수 | 위치 |
+|------|--------------|--------|------|
+| 신청 페이지 6영역 + 완료 | `services.order.*` | 200+ | `plugins/vos-hosting/lang/{locale}/services.php` |
+| 마이페이지 서비스 상세 | `services.detail.*` | 70+ | 동일 파일 |
+| 어드민 주문 관리 | `services.admin_orders.*` | 115+ | 동일 파일 |
+
+### JS i18n 패턴
+
+JS alert/모달 텍스트는 PHP에서 `var I18N = {...}` 으로 주입 후 `t(key, replace)` 헬퍼로 사용.
+
+```php
+// order.php
+<script>
+var I18N = {
+    confirm_remove: <?= json_encode(__('services.order.confirm.remove')) ?>,
+    invalid_domain: <?= json_encode(__('services.order.checkout.invalid_domain')) ?>,
+    ...
+};
+function t(key, replace) {
+    var v = I18N[key] || key;
+    if (replace) for (var k in replace) v = v.replace('{' + k + '}', replace[k]);
+    return v;
+}
+</script>
+```
+
+### DB 저장 라벨 다국어 (`_localizeLabel` 패턴)
+
+호스팅 플랜·메인터넌스·애드온 라벨은 DB(`rzx_settings`)에 한국어로 저장되어 있어 `__()` 만으로는 번역 불가. `_localizeLabel($sub)` 클로저가 settings ID 매핑 후 `db_trans()` 로 번역값을 가져온다 — 마이페이지/어드민 양쪽에서 동일 로직 사용.
+
+```php
+$_localizeLabel = function($sub) use ($_addonIdByLabel, $_maintIdByLabel, $_hostingPlansData) {
+    if ($sub['type'] === 'hosting') {
+        // service_hosting_plans._id → db_trans("service.hosting.plan.{id}.label")
+    } elseif ($sub['type'] === 'maintenance') {
+        // service_maintenance_options._id → db_trans("service.maintenance.{id}.label")
+    } elseif ($sub['type'] === 'addon') {
+        // service_addon_options._id → db_trans("service.addon.{id}.label")
+    }
+};
+```
+
+---
+
+## 결제 직전 확인 모달 (2.3.9)
+
+결제 버튼 클릭 시 신청 내역 검증 → 요약 모달 출력 → 사용자 확인 → 결제 진행.
+
+### 검증 항목
+- 도메인 선택 (빈 서브도메인 차단)
+- 호스팅 플랜 선택
+- 신청자 정보 (이름/이메일/전화번호)
+- 약관 동의
+- 설치 지원 체크 시 → 관리자 정보 4개 필드 필수
+
+### 구현
+- [order.js](../plugins/vos-hosting/views/system/service/order.js) — `showOrderConfirmModal()`, `closeOrderConfirmModal()`, `confirmAndPay()`
+- 결제 완료 후 모달 잔여 레이어 제거: DOM 삭제 + `body.style.overflow = ''` + `documentElement.style.overflow = ''`
+
+---
+
+## 설치 지원 서비스 (2.3.9)
+
+부가서비스에서 "설치 지원"(`service_addon_options._id = 'install'`) 체크 시 관리자 정보 입력 폼이 자동 노출.
+
+### 입력 필드
+- 관리자 ID
+- 관리자 이메일
+- 관리자 비밀번호 (마스킹 + 눈 아이콘 토글)
+- 사이트명
+
+비밀번호 아래에 "임시 비밀번호를 입력하세요. 설치 후 변경하실 수 있습니다" 안내 표시.
+
+### 저장 위치
+주문 시 subscription metadata 의 `install_info` 키로 평문 저장 (관리자가 보고 설치하기 위함).
+
+### 표시
+- 마이페이지 [service-partials/addon.php](../plugins/vos-hosting/views/customer/mypage/service-partials/addon.php) — 파란 배경 박스 + 비밀번호 토글
+- 어드민 [admin/service-orders/partials/addon.php](../plugins/vos-hosting/views/admin/service-orders/partials/addon.php) — 동일 디자인

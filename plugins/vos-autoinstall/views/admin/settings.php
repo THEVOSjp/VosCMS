@@ -5,6 +5,7 @@
 include __DIR__ . '/_head.php';
 $pageHeaderTitle = __('autoinstall.title');
 $pageSubTitle = __('autoinstall.settings');
+include __DIR__ . '/_components/page-title.php';
 
 $pm = $pluginManager ?? \RzxLib\Core\Plugin\PluginManager::getInstance();
 $apiUrl = $pm ? $pm->getSetting('vos-autoinstall', 'market_api_url', 'https://market.21ces.com/api/market') : '';

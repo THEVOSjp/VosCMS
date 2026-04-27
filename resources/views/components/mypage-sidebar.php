@@ -17,11 +17,15 @@ $sidebarActive = $sidebarActive ?? 'dashboard';
 // ── 메뉴 로드 (load_menu 공통 헬퍼 사용) ──
 $_allMypageMenus = function_exists('load_menu') ? load_menu('mypage') : [];
 
-// main / bottom 분리
-$menuItems = [];
+// 3개 영역 분리: top (코어 상단) / main (자동 추가/플러그인) / bottom (코어 하단)
+$topItems = [];
+$menuItems = [];   // 'main' 영역 — 플러그인 자동 추가
 $bottomItems = [];
 foreach ($_allMypageMenus as $_mi) {
-    if (($_mi['section'] ?? 'main') === 'bottom') {
+    $_sec = $_mi['section'] ?? 'main';
+    if ($_sec === 'top') {
+        $topItems[] = $_mi;
+    } elseif ($_sec === 'bottom') {
         $bottomItems[] = $_mi;
     } else {
         $menuItems[] = $_mi;
@@ -121,9 +125,10 @@ var mypageSidebar = {
             <h2 class="text-base font-bold text-gray-900 dark:text-white"><?= htmlspecialchars($user['name'] ?? '') ?></h2>
             <p class="text-xs text-gray-500 dark:text-zinc-400"><?= htmlspecialchars($user['email'] ?? '') ?></p>
         </div>
-        <!-- 메뉴 -->
+        <!-- 상단 코어 메뉴 -->
+        <?php if (!empty($topItems)): ?>
         <nav class="px-3 space-y-1">
-            <?php foreach ($menuItems as $item):
+            <?php foreach ($topItems as $item):
                 $isActive = $sidebarActive === $item['key'];
                 $cls = $isActive
                     ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
@@ -135,10 +140,31 @@ var mypageSidebar = {
             </a>
             <?php endforeach; ?>
         </nav>
+        <?php endif; ?>
+
+        <!-- 자동 추가 영역 (플러그인 메뉴) -->
+        <?php if (!empty($menuItems)): ?>
+        <div class="mx-3 mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700 space-y-1">
+            <?php foreach ($menuItems as $item):
+                $isActive = $sidebarActive === $item['key'];
+                $cls = $isActive
+                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700';
+            ?>
+            <a href="<?= $baseUrl ?><?= $item['url'] ?>" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg <?= $cls ?>">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><?= $item['icon'] ?></svg>
+                <?= $item['label'] ?>
+            </a>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
+        <!-- 하단 코어 메뉴 -->
+        <?php if (!empty($bottomItems)): ?>
         <div class="mx-3 mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700 space-y-1 pb-6">
             <?php foreach ($bottomItems as $bItem):
                 $isActive = $sidebarActive === $bItem['key'];
-                if ($bItem['style'] === 'danger') {
+                if (($bItem['style'] ?? '') === 'danger') {
                     $cls = 'text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20';
                 } elseif ($isActive) {
                     $cls = 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400';
@@ -152,6 +178,7 @@ var mypageSidebar = {
             </a>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -170,9 +197,10 @@ var mypageSidebar = {
             <?php endif; ?>
         </div>
 
-        <!-- 메인 메뉴 -->
+        <!-- 상단 코어 메뉴 -->
+        <?php if (!empty($topItems)): ?>
         <nav class="space-y-1">
-            <?php foreach ($menuItems as $item):
+            <?php foreach ($topItems as $item):
                 $isActive = $sidebarActive === $item['key'];
                 $cls = $isActive
                     ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
@@ -184,12 +212,31 @@ var mypageSidebar = {
             </a>
             <?php endforeach; ?>
         </nav>
+        <?php endif; ?>
 
-        <!-- 하단 메뉴 (탈퇴/로그아웃) -->
+        <!-- 자동 추가 영역 (플러그인 메뉴) -->
+        <?php if (!empty($menuItems)): ?>
+        <div class="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700 space-y-1">
+            <?php foreach ($menuItems as $item):
+                $isActive = $sidebarActive === $item['key'];
+                $cls = $isActive
+                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700';
+            ?>
+            <a href="<?= $baseUrl ?><?= $item['url'] ?>" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg <?= $cls ?>">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><?= $item['icon'] ?></svg>
+                <?= $item['label'] ?>
+            </a>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
+        <!-- 하단 코어 메뉴 -->
+        <?php if (!empty($bottomItems)): ?>
         <div class="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700 space-y-1">
             <?php foreach ($bottomItems as $bItem):
                 $isActive = $sidebarActive === $bItem['key'];
-                if ($bItem['style'] === 'danger') {
+                if (($bItem['style'] ?? '') === 'danger') {
                     $cls = 'text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20';
                 } elseif ($isActive) {
                     $cls = 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400';
@@ -203,6 +250,7 @@ var mypageSidebar = {
             </a>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
     </div>
 </aside>
 <?php endif; ?>

@@ -1,257 +1,603 @@
 {
-  "title": {
-    "ko": "기본 페이지 스킨", "en": "Default Page Skin", "ja": "デフォルトページスキン",
-    "zh_CN": "默认页面皮肤", "zh_TW": "預設頁面皮膚", "de": "Standard-Seitenskin",
-    "es": "Skin de página predeterminado", "fr": "Skin de page par défaut",
-    "id": "Skin halaman default", "mn": "Үндсэн хуудасны скин",
-    "ru": "Скин страницы по умолчанию", "tr": "Varsayılan sayfa teması", "vi": "Giao diện trang mặc định"
-  },
-  "description": {
-    "ko": "RezlyX 기본 페이지 스킨입니다.", "en": "RezlyX default page skin.", "ja": "RezlyXデフォルトページスキンです。",
-    "zh_CN": "RezlyX默认页面皮肤。", "zh_TW": "RezlyX預設頁面皮膚。", "de": "RezlyX Standard-Seitenskin.",
-    "es": "Skin de página predeterminado de RezlyX.", "fr": "Skin de page par défaut de RezlyX.",
-    "id": "Skin halaman default RezlyX.", "mn": "RezlyX үндсэн хуудасны скин.",
-    "ru": "Скин страницы RezlyX по умолчанию.", "tr": "RezlyX varsayılan sayfa teması.", "vi": "Giao diện trang mặc định RezlyX."
-  },
-  "version": "1.0.0",
-  "date": "2026-03-21",
-  "thumbnail": "thumbnail.png",
-  "author": { "name": "RezlyX", "url": "https://rezlyx.com", "email": "info@rezlyx.com" },
-  "vars": [
-    {
-      "section": {
-        "ko": "기본 설정", "en": "Basic Settings", "ja": "基本設定",
-        "zh_CN": "基本设置", "zh_TW": "基本設定", "de": "Grundeinstellungen",
-        "es": "Configuración básica", "fr": "Paramètres de base",
-        "id": "Pengaturan dasar", "mn": "Үндсэн тохиргоо",
-        "ru": "Основные настройки", "tr": "Temel ayarlar", "vi": "Cài đặt cơ bản"
-      },
-      "name": "content_width",
-      "type": "select",
-      "title": {
-        "ko": "콘텐츠 너비", "en": "Content width", "ja": "コンテンツ幅",
-        "zh_CN": "内容宽度", "zh_TW": "內容寬度", "de": "Inhaltsbreite",
-        "es": "Ancho del contenido", "fr": "Largeur du contenu",
-        "id": "Lebar konten", "mn": "Агуулгын өргөн",
-        "ru": "Ширина контента", "tr": "İçerik genişliği", "vi": "Chiều rộng nội dung"
-      },
-      "options": [
-        { "value": "max-w-3xl", "label": {
-          "ko": "좁게 (768px)", "en": "Narrow (768px)", "ja": "狭い (768px)",
-          "zh_CN": "窄 (768px)", "zh_TW": "窄 (768px)", "de": "Schmal (768px)",
-          "es": "Estrecho (768px)", "fr": "Étroit (768px)",
-          "id": "Sempit (768px)", "mn": "Нарийн (768px)",
-          "ru": "Узкий (768px)", "tr": "Dar (768px)", "vi": "Hẹp (768px)"
-        }},
-        { "value": "max-w-5xl", "label": {
-          "ko": "기본 (1024px)", "en": "Default (1024px)", "ja": "標準 (1024px)",
-          "zh_CN": "默认 (1024px)", "zh_TW": "預設 (1024px)", "de": "Standard (1024px)",
-          "es": "Predeterminado (1024px)", "fr": "Par défaut (1024px)",
-          "id": "Default (1024px)", "mn": "Үндсэн (1024px)",
-          "ru": "По умолчанию (1024px)", "tr": "Varsayılan (1024px)", "vi": "Mặc định (1024px)"
-        }},
-        { "value": "max-w-7xl", "label": {
-          "ko": "넓게 (1280px)", "en": "Wide (1280px)", "ja": "広い (1280px)",
-          "zh_CN": "宽 (1280px)", "zh_TW": "寬 (1280px)", "de": "Breit (1280px)",
-          "es": "Ancho (1280px)", "fr": "Large (1280px)",
-          "id": "Lebar (1280px)", "mn": "Өргөн (1280px)",
-          "ru": "Широкий (1280px)", "tr": "Geniş (1280px)", "vi": "Rộng (1280px)"
-        }},
-        { "value": "max-w-full", "label": {
-          "ko": "전체 너비", "en": "Full width", "ja": "全幅",
-          "zh_CN": "全宽", "zh_TW": "全寬", "de": "Volle Breite",
-          "es": "Ancho completo", "fr": "Pleine largeur",
-          "id": "Lebar penuh", "mn": "Бүтэн өргөн",
-          "ru": "Полная ширина", "tr": "Tam genişlik", "vi": "Toàn chiều rộng"
-        }}
-      ],
-      "default": "max-w-5xl"
+    "title": {
+        "ko": "기본 페이지 스킨",
+        "en": "Default Page Skin",
+        "ja": "デフォルトページスキン",
+        "zh_CN": "默认页面皮肤",
+        "zh_TW": "預設頁面皮膚",
+        "de": "Standard-Seitenskin",
+        "es": "Skin de página predeterminado",
+        "fr": "Skin de page par défaut",
+        "id": "Skin halaman default",
+        "mn": "Үндсэн хуудасны скин",
+        "ru": "Скин страницы по умолчанию",
+        "tr": "Varsayılan sayfa teması",
+        "vi": "Giao diện trang mặc định"
     },
-    {
-      "name": "show_title",
-      "type": "checkbox",
-      "title": {
-        "ko": "제목 표시", "en": "Show title", "ja": "タイトル表示",
-        "zh_CN": "显示标题", "zh_TW": "顯示標題", "de": "Titel anzeigen",
-        "es": "Mostrar título", "fr": "Afficher le titre",
-        "id": "Tampilkan judul", "mn": "Гарчиг харуулах",
-        "ru": "Показать заголовок", "tr": "Başlığı göster", "vi": "Hiển thị tiêu đề"
-      },
-      "description": {
-        "ko": "문서의 제목을 표시 할지 결정합니다.", "en": "Whether to display the document title.", "ja": "ドキュメントのタイトルを表示するかどうかを決定します。",
-        "zh_CN": "决定是否显示文档标题。", "zh_TW": "決定是否顯示文件標題。", "de": "Bestimmt, ob der Dokumenttitel angezeigt wird.",
-        "es": "Determina si se muestra el título del documento.", "fr": "Détermine si le titre du document est affiché.",
-        "id": "Menentukan apakah judul dokumen ditampilkan.", "mn": "Баримт бичгийн гарчгийг харуулах эсэхийг тодорхойлно.",
-        "ru": "Определяет, отображать ли заголовок документа.", "tr": "Belge başlığının gösterilip gösterilmeyeceğini belirler.", "vi": "Quyết định có hiển thị tiêu đề tài liệu hay không."
-      },
-      "default": true
+    "description": {
+        "ko": "RezlyX 기본 페이지 스킨입니다.",
+        "en": "RezlyX default page skin.",
+        "ja": "RezlyXデフォルトページスキンです。",
+        "zh_CN": "RezlyX默认页面皮肤。",
+        "zh_TW": "RezlyX預設頁面皮膚。",
+        "de": "RezlyX Standard-Seitenskin.",
+        "es": "Skin de página predeterminado de RezlyX.",
+        "fr": "Skin de page par défaut de RezlyX.",
+        "id": "Skin halaman default RezlyX.",
+        "mn": "RezlyX үндсэн хуудасны скин.",
+        "ru": "Скин страницы RezlyX по умолчанию.",
+        "tr": "RezlyX varsayılan sayfa teması.",
+        "vi": "Giao diện trang mặc định RezlyX."
     },
-    {
-      "section": { "ko": "제목 배경", "en": "Title Background", "ja": "タイトル背景" },
-      "name": "title_bg_type",
-      "depends_on": "show_title",
-      "type": "radio",
-      "title": { "ko": "배경 타입", "en": "Background type", "ja": "背景タイプ" },
-      "options": [
-        { "value": "none", "label": { "ko": "없음", "en": "None", "ja": "なし" } },
-        { "value": "image", "label": { "ko": "이미지", "en": "Image", "ja": "画像" } },
-        { "value": "video", "label": { "ko": "동영상", "en": "Video", "ja": "動画" } }
-      ],
-      "default": "none"
+    "version": "1.0.0",
+    "date": "2026-03-21",
+    "thumbnail": "thumbnail.png",
+    "author": {
+        "name": "RezlyX",
+        "url": "https://rezlyx.com",
+        "email": "info@rezlyx.com"
     },
-    {
-      "name": "title_bg_image",
-      "depends_on": "show_title",
-      "type": "image",
-      "title": { "ko": "배경 이미지", "en": "Background image", "ja": "背景画像" },
-      "description": { "ko": "게시판 제목 영역의 배경 이미지를 업로드합니다. (JPG, PNG, WebP)", "en": "Upload a background image for the board title area.", "ja": "掲示板タイトル領域の背景画像をアップロードします。" }
-    },
-    {
-      "name": "title_bg_video",
-      "depends_on": "show_title",
-      "type": "video",
-      "title": { "ko": "배경 동영상", "en": "Background video", "ja": "背景動画" },
-      "description": { "ko": "MP4, WebM 형식의 동영상을 업로드하거나 URL을 입력합니다. 자동 재생, 반복, 음소거 처리됩니다.", "en": "Upload MP4/WebM video or enter URL. Auto-play, loop, muted.", "ja": "MP4、WebM形式の動画をアップロードまたはURLを入力。自動再生、ループ、ミュート。" }
-    },
-    {
-      "name": "title_bg_height",
-      "depends_on": "show_title",
-      "type": "number",
-      "title": { "ko": "배경 높이(px)", "en": "Background height(px)", "ja": "背景高さ(px)" },
-      "description": { "ko": "제목 배경 영역의 높이 (기본: 200)", "en": "Height of the title background area (default: 200)", "ja": "タイトル背景領域の高さ（デフォルト: 200）" },
-      "default": 200,
-      "min": 100,
-      "max": 600
-    },
-    {
-      "name": "title_bg_overlay",
-      "depends_on": "show_title",
-      "type": "number",
-      "title": { "ko": "오버레이 투명도(%)", "en": "Overlay opacity(%)", "ja": "オーバーレイ透明度(％)" },
-      "description": { "ko": "배경 위에 어두운 오버레이를 적용합니다. 0=투명, 100=완전 어둡게", "en": "Apply dark overlay. 0=transparent, 100=fully dark", "ja": "暗いオーバーレイを適用。0=透明、100=完全に暗く" },
-      "default": 40,
-      "min": 0,
-      "max": 100
-    },
-    {
-      "name": "title_text_color",
-      "depends_on": "show_title",
-      "type": "radio",
-      "title": { "ko": "제목 텍스트 색상", "en": "Title text color", "ja": "タイトルテキスト色" },
-      "options": [
-        { "value": "auto", "label": { "ko": "자동(기본)", "en": "Auto (default)", "ja": "自動（デフォルト）" } },
-        { "value": "white", "label": { "ko": "흰색", "en": "White", "ja": "白" } },
-        { "value": "dark", "label": { "ko": "어두운색", "en": "Dark", "ja": "暗い色" } }
-      ],
-      "default": "auto"
-    },
-    {
-      "name": "show_breadcrumb",
-      "type": "checkbox",
-      "title": {
-        "ko": "브레드크럼 표시", "en": "Show breadcrumb", "ja": "パンくずリスト表示",
-        "zh_CN": "显示面包屑", "zh_TW": "顯示麵包屑", "de": "Brotkrumen anzeigen",
-        "es": "Mostrar migas de pan", "fr": "Afficher le fil d'Ariane",
-        "id": "Tampilkan breadcrumb", "mn": "Навигаци харуулах",
-        "ru": "Показать хлебные крошки", "tr": "İçerik haritası göster", "vi": "Hiển thị breadcrumb"
-      },
-      "description": {
-        "ko": "페이지 상단에 경로 탐색을 표시합니다.", "en": "Show path navigation at the top of the page.", "ja": "ページ上部にパス案内を表示します。",
-        "zh_CN": "在页面顶部显示路径导航。", "zh_TW": "在頁面頂部顯示路徑導航。", "de": "Zeigt die Pfadnavigation oben auf der Seite an.",
-        "es": "Muestra la navegación de ruta en la parte superior de la página.", "fr": "Affiche la navigation par chemin en haut de la page.",
-        "id": "Menampilkan navigasi jalur di bagian atas halaman.", "mn": "Хуудасны дээд хэсэгт замын навигацийг харуулна.",
-        "ru": "Показывает навигацию по пути вверху страницы.", "tr": "Sayfanın üstünde yol navigasyonunu gösterir.", "vi": "Hiển thị điều hướng đường dẫn ở đầu trang."
-      },
-      "default": false
-    },
-    {
-      "section": {
-        "ko": "디자인", "en": "Design", "ja": "デザイン",
-        "zh_CN": "设计", "zh_TW": "設計", "de": "Design",
-        "es": "Diseño", "fr": "Design",
-        "id": "Desain", "mn": "Дизайн",
-        "ru": "Дизайн", "tr": "Tasarım", "vi": "Thiết kế"
-      },
-      "name": "primary_color",
-      "type": "color",
-      "title": {
-        "ko": "메인 색상", "en": "Primary color", "ja": "メインカラー",
-        "zh_CN": "主色调", "zh_TW": "主色調", "de": "Hauptfarbe",
-        "es": "Color principal", "fr": "Couleur principale",
-        "id": "Warna utama", "mn": "Үндсэн өнгө",
-        "ru": "Основной цвет", "tr": "Ana renk", "vi": "Màu chính"
-      },
-      "default": "#3B82F6"
-    },
-    {
-      "name": "content_bg",
-      "type": "radio",
-      "title": {
-        "ko": "콘텐츠 배경", "en": "Content background", "ja": "コンテンツ背景",
-        "zh_CN": "内容背景", "zh_TW": "內容背景", "de": "Inhaltshintergrund",
-        "es": "Fondo del contenido", "fr": "Arrière-plan du contenu",
-        "id": "Latar belakang konten", "mn": "Агуулгын дэвсгэр",
-        "ru": "Фон контента", "tr": "İçerik arka planı", "vi": "Nền nội dung"
-      },
-      "options": [
-        { "value": "transparent", "label": {
-          "ko": "투명 (기본)", "en": "Transparent (default)", "ja": "透明（デフォルト）",
-          "zh_CN": "透明（默认）", "zh_TW": "透明（預設）", "de": "Transparent (Standard)",
-          "es": "Transparente (predeterminado)", "fr": "Transparent (par défaut)",
-          "id": "Transparan (default)", "mn": "Тунгалаг (үндсэн)",
-          "ru": "Прозрачный (по умолчанию)", "tr": "Şeffaf (varsayılan)", "vi": "Trong suốt (mặc định)"
-        }},
-        { "value": "white", "label": {
-          "ko": "흰색 카드", "en": "White card", "ja": "白カード",
-          "zh_CN": "白色卡片", "zh_TW": "白色卡片", "de": "Weiße Karte",
-          "es": "Tarjeta blanca", "fr": "Carte blanche",
-          "id": "Kartu putih", "mn": "Цагаан карт",
-          "ru": "Белая карточка", "tr": "Beyaz kart", "vi": "Thẻ trắng"
-        }}
-      ],
-      "default": "transparent"
-    },
-    {
-      "section": {
-        "ko": "사용자 정의", "en": "Custom", "ja": "カスタム",
-        "zh_CN": "自定义", "zh_TW": "自訂", "de": "Benutzerdefiniert",
-        "es": "Personalizado", "fr": "Personnalisé",
-        "id": "Kustom", "mn": "Тохируулга",
-        "ru": "Пользовательский", "tr": "Özel", "vi": "Tùy chỉnh"
-      },
-      "name": "custom_css",
-      "type": "textarea",
-      "title": {
-        "ko": "커스텀 CSS", "en": "Custom CSS", "ja": "カスタムCSS",
-        "zh_CN": "自定义CSS", "zh_TW": "自訂CSS", "de": "Benutzerdefiniertes CSS",
-        "es": "CSS personalizado", "fr": "CSS personnalisé",
-        "id": "CSS kustom", "mn": "Тохируулсан CSS",
-        "ru": "Пользовательский CSS", "tr": "Özel CSS", "vi": "CSS tùy chỉnh"
-      }
-    },
-    {
-      "name": "custom_header_html",
-      "type": "textarea",
-      "multilang": true,
-      "title": {
-        "ko": "커스텀 헤더 HTML", "en": "Custom header HTML", "ja": "カスタムヘッダーHTML",
-        "zh_CN": "自定义页头HTML", "zh_TW": "自訂頁首HTML", "de": "Benutzerdefiniertes Header-HTML",
-        "es": "HTML de encabezado personalizado", "fr": "HTML d'en-tête personnalisé",
-        "id": "HTML header kustom", "mn": "Тохируулсан толгой HTML",
-        "ru": "Пользовательский HTML заголовка", "tr": "Özel başlık HTML", "vi": "HTML header tùy chỉnh"
-      }
-    },
-    {
-      "name": "custom_footer_html",
-      "type": "textarea",
-      "multilang": true,
-      "title": {
-        "ko": "커스텀 푸터 HTML", "en": "Custom footer HTML", "ja": "カスタムフッターHTML",
-        "zh_CN": "自定义页脚HTML", "zh_TW": "自訂頁尾HTML", "de": "Benutzerdefiniertes Footer-HTML",
-        "es": "HTML de pie de página personalizado", "fr": "HTML de pied de page personnalisé",
-        "id": "HTML footer kustom", "mn": "Тохируулсан хөл HTML",
-        "ru": "Пользовательский HTML подвала", "tr": "Özel altbilgi HTML", "vi": "HTML footer tùy chỉnh"
-      }
-    }
-  ]
+    "vars": [
+        {
+            "section": {
+                "ko": "기본 설정",
+                "en": "Basic Settings",
+                "ja": "基本設定",
+                "zh_CN": "基本设置",
+                "zh_TW": "基本設定",
+                "de": "Grundeinstellungen",
+                "es": "Configuración básica",
+                "fr": "Paramètres de base",
+                "id": "Pengaturan dasar",
+                "mn": "Үндсэн тохиргоо",
+                "ru": "Основные настройки",
+                "tr": "Temel ayarlar",
+                "vi": "Cài đặt cơ bản"
+            },
+            "name": "content_width",
+            "type": "select",
+            "title": {
+                "ko": "콘텐츠 너비",
+                "en": "Content width",
+                "ja": "コンテンツ幅",
+                "zh_CN": "内容宽度",
+                "zh_TW": "內容寬度",
+                "de": "Inhaltsbreite",
+                "es": "Ancho del contenido",
+                "fr": "Largeur du contenu",
+                "id": "Lebar konten",
+                "mn": "Агуулгын өргөн",
+                "ru": "Ширина контента",
+                "tr": "İçerik genişliği",
+                "vi": "Chiều rộng nội dung"
+            },
+            "options": [
+                {
+                    "value": "max-w-3xl",
+                    "label": {
+                        "ko": "좁게 (768px)",
+                        "en": "Narrow (768px)",
+                        "ja": "狭い (768px)",
+                        "zh_CN": "窄 (768px)",
+                        "zh_TW": "窄 (768px)",
+                        "de": "Schmal (768px)",
+                        "es": "Estrecho (768px)",
+                        "fr": "Étroit (768px)",
+                        "id": "Sempit (768px)",
+                        "mn": "Нарийн (768px)",
+                        "ru": "Узкий (768px)",
+                        "tr": "Dar (768px)",
+                        "vi": "Hẹp (768px)"
+                    }
+                },
+                {
+                    "value": "max-w-5xl",
+                    "label": {
+                        "ko": "기본 (1024px)",
+                        "en": "Default (1024px)",
+                        "ja": "標準 (1024px)",
+                        "zh_CN": "默认 (1024px)",
+                        "zh_TW": "預設 (1024px)",
+                        "de": "Standard (1024px)",
+                        "es": "Predeterminado (1024px)",
+                        "fr": "Par défaut (1024px)",
+                        "id": "Default (1024px)",
+                        "mn": "Үндсэн (1024px)",
+                        "ru": "По умолчанию (1024px)",
+                        "tr": "Varsayılan (1024px)",
+                        "vi": "Mặc định (1024px)"
+                    }
+                },
+                {
+                    "value": "max-w-7xl",
+                    "label": {
+                        "ko": "넓게 (1280px)",
+                        "en": "Wide (1280px)",
+                        "ja": "広い (1280px)",
+                        "zh_CN": "宽 (1280px)",
+                        "zh_TW": "寬 (1280px)",
+                        "de": "Breit (1280px)",
+                        "es": "Ancho (1280px)",
+                        "fr": "Large (1280px)",
+                        "id": "Lebar (1280px)",
+                        "mn": "Өргөн (1280px)",
+                        "ru": "Широкий (1280px)",
+                        "tr": "Geniş (1280px)",
+                        "vi": "Rộng (1280px)"
+                    }
+                },
+                {
+                    "value": "max-w-full",
+                    "label": {
+                        "ko": "전체 너비",
+                        "en": "Full width",
+                        "ja": "全幅",
+                        "zh_CN": "全宽",
+                        "zh_TW": "全寬",
+                        "de": "Volle Breite",
+                        "es": "Ancho completo",
+                        "fr": "Pleine largeur",
+                        "id": "Lebar penuh",
+                        "mn": "Бүтэн өргөн",
+                        "ru": "Полная ширина",
+                        "tr": "Tam genişlik",
+                        "vi": "Toàn chiều rộng"
+                    }
+                }
+            ],
+            "default": "max-w-5xl"
+        },
+        {
+            "name": "show_title",
+            "type": "checkbox",
+            "title": {
+                "ko": "제목 표시",
+                "en": "Show title",
+                "ja": "タイトル表示",
+                "zh_CN": "显示标题",
+                "zh_TW": "顯示標題",
+                "de": "Titel anzeigen",
+                "es": "Mostrar título",
+                "fr": "Afficher le titre",
+                "id": "Tampilkan judul",
+                "mn": "Гарчиг харуулах",
+                "ru": "Показать заголовок",
+                "tr": "Başlığı göster",
+                "vi": "Hiển thị tiêu đề"
+            },
+            "description": {
+                "ko": "문서의 제목을 표시 할지 결정합니다.",
+                "en": "Whether to display the document title.",
+                "ja": "ドキュメントのタイトルを表示するかどうかを決定します。",
+                "zh_CN": "决定是否显示文档标题。",
+                "zh_TW": "決定是否顯示文件標題。",
+                "de": "Bestimmt, ob der Dokumenttitel angezeigt wird.",
+                "es": "Determina si se muestra el título del documento.",
+                "fr": "Détermine si le titre du document est affiché.",
+                "id": "Menentukan apakah judul dokumen ditampilkan.",
+                "mn": "Баримт бичгийн гарчгийг харуулах эсэхийг тодорхойлно.",
+                "ru": "Определяет, отображать ли заголовок документа.",
+                "tr": "Belge başlığının gösterilip gösterilmeyeceğini belirler.",
+                "vi": "Quyết định có hiển thị tiêu đề tài liệu hay không."
+            },
+            "default": true
+        },
+        {
+            "name": "page_title",
+            "type": "text_multilang",
+            "title": {
+                "ko": "페이지 제목",
+                "en": "Page Title",
+                "ja": "ページタイトル",
+                "zh_CN": "页面标题",
+                "zh_TW": "頁面標題",
+                "de": "Seitentitel",
+                "es": "Título de página",
+                "fr": "Titre de la page",
+                "id": "Judul Halaman",
+                "mn": "Хуудасны гарчиг",
+                "ru": "Заголовок страницы",
+                "tr": "Sayfa Başlığı",
+                "vi": "Tiêu đề trang"
+            },
+            "description": {
+                "ko": "비워두면 기본 페이지 제목이 사용됩니다.",
+                "en": "Leave empty to use the default page title.",
+                "ja": "空欄の場合、デフォルトのページタイトルが使用されます。",
+                "zh_CN": "留空则使用默认页面标题。",
+                "zh_TW": "留空則使用預設頁面標題。",
+                "de": "Leer lassen, um den Standard-Seitentitel zu verwenden.",
+                "es": "Dejar vacío para usar el título de página predeterminado.",
+                "fr": "Laisser vide pour utiliser le titre de page par défaut.",
+                "id": "Kosongkan untuk menggunakan judul halaman default.",
+                "mn": "Хоосон үлдээвэл анхдагч хуудасны гарчиг ашиглагдана.",
+                "ru": "Оставьте пустым для использования заголовка по умолчанию.",
+                "tr": "Varsayılan sayfa başlığını kullanmak için boş bırakın.",
+                "vi": "Để trống để dùng tiêu đề trang mặc định."
+            },
+            "default": ""
+        },
+        {
+            "name": "page_subtitle",
+            "type": "text_multilang",
+            "title": {
+                "ko": "부제목",
+                "en": "Subtitle",
+                "ja": "サブタイトル",
+                "zh_CN": "副标题",
+                "zh_TW": "副標題",
+                "de": "Untertitel",
+                "es": "Subtítulo",
+                "fr": "Sous-titre",
+                "id": "Subjudul",
+                "mn": "Дэд гарчиг",
+                "ru": "Подзаголовок",
+                "tr": "Alt başlık",
+                "vi": "Phụ đề"
+            },
+            "description": {
+                "ko": "제목 아래 표시되는 부제목. 비워두면 표시되지 않습니다.",
+                "en": "Subtitle shown below the title. Leave empty to hide.",
+                "ja": "タイトルの下に表示されるサブタイトル。空欄なら非表示。",
+                "zh_CN": "显示在标题下方的副标题。留空则不显示。",
+                "zh_TW": "顯示在標題下方的副標題。留空則不顯示。",
+                "de": "Untertitel unter dem Titel. Leer = ausgeblendet.",
+                "es": "Subtítulo bajo el título. Vacío = oculto.",
+                "fr": "Sous-titre sous le titre. Vide = masqué.",
+                "id": "Subjudul di bawah judul. Kosong = tersembunyi.",
+                "mn": "Гарчгийн доор харуулах дэд гарчиг. Хоосон = далд.",
+                "ru": "Подзаголовок под заголовком. Пусто = скрыт.",
+                "tr": "Başlığın altında gösterilen alt başlık. Boş = gizli.",
+                "vi": "Phụ đề dưới tiêu đề. Trống = ẩn."
+            },
+            "default": ""
+        },
+        {
+            "section": {
+                "ko": "제목 배경",
+                "en": "Title Background",
+                "ja": "タイトル背景"
+            },
+            "name": "title_bg_type",
+            "depends_on": "show_title",
+            "type": "radio",
+            "title": {
+                "ko": "배경 타입",
+                "en": "Background type",
+                "ja": "背景タイプ"
+            },
+            "options": [
+                {
+                    "value": "none",
+                    "label": {
+                        "ko": "없음",
+                        "en": "None",
+                        "ja": "なし"
+                    }
+                },
+                {
+                    "value": "image",
+                    "label": {
+                        "ko": "이미지",
+                        "en": "Image",
+                        "ja": "画像"
+                    }
+                },
+                {
+                    "value": "video",
+                    "label": {
+                        "ko": "동영상",
+                        "en": "Video",
+                        "ja": "動画"
+                    }
+                }
+            ],
+            "default": "none"
+        },
+        {
+            "name": "title_bg_image",
+            "depends_on": "show_title",
+            "type": "image",
+            "title": {
+                "ko": "배경 이미지",
+                "en": "Background image",
+                "ja": "背景画像"
+            },
+            "description": {
+                "ko": "게시판 제목 영역의 배경 이미지를 업로드합니다. (JPG, PNG, WebP)",
+                "en": "Upload a background image for the board title area.",
+                "ja": "掲示板タイトル領域の背景画像をアップロードします。"
+            }
+        },
+        {
+            "name": "title_bg_video",
+            "depends_on": "show_title",
+            "type": "video",
+            "title": {
+                "ko": "배경 동영상",
+                "en": "Background video",
+                "ja": "背景動画"
+            },
+            "description": {
+                "ko": "MP4, WebM 형식의 동영상을 업로드하거나 URL을 입력합니다. 자동 재생, 반복, 음소거 처리됩니다.",
+                "en": "Upload MP4/WebM video or enter URL. Auto-play, loop, muted.",
+                "ja": "MP4、WebM形式の動画をアップロードまたはURLを入力。自動再生、ループ、ミュート。"
+            }
+        },
+        {
+            "name": "title_bg_height",
+            "depends_on": "show_title",
+            "type": "number",
+            "title": {
+                "ko": "배경 높이(px)",
+                "en": "Background height(px)",
+                "ja": "背景高さ(px)"
+            },
+            "description": {
+                "ko": "제목 배경 영역의 높이 (기본: 200)",
+                "en": "Height of the title background area (default: 200)",
+                "ja": "タイトル背景領域の高さ（デフォルト: 200）"
+            },
+            "default": 200,
+            "min": 100,
+            "max": 600
+        },
+        {
+            "name": "title_bg_overlay",
+            "depends_on": "show_title",
+            "type": "number",
+            "title": {
+                "ko": "오버레이 투명도(%)",
+                "en": "Overlay opacity(%)",
+                "ja": "オーバーレイ透明度(％)"
+            },
+            "description": {
+                "ko": "배경 위에 어두운 오버레이를 적용합니다. 0=투명, 100=완전 어둡게",
+                "en": "Apply dark overlay. 0=transparent, 100=fully dark",
+                "ja": "暗いオーバーレイを適用。0=透明、100=完全に暗く"
+            },
+            "default": 40,
+            "min": 0,
+            "max": 100
+        },
+        {
+            "name": "title_text_color",
+            "depends_on": "show_title",
+            "type": "radio",
+            "title": {
+                "ko": "제목 텍스트 색상",
+                "en": "Title text color",
+                "ja": "タイトルテキスト色"
+            },
+            "options": [
+                {
+                    "value": "auto",
+                    "label": {
+                        "ko": "자동(기본)",
+                        "en": "Auto (default)",
+                        "ja": "自動（デフォルト）"
+                    }
+                },
+                {
+                    "value": "white",
+                    "label": {
+                        "ko": "흰색",
+                        "en": "White",
+                        "ja": "白"
+                    }
+                },
+                {
+                    "value": "dark",
+                    "label": {
+                        "ko": "어두운색",
+                        "en": "Dark",
+                        "ja": "暗い色"
+                    }
+                }
+            ],
+            "default": "auto"
+        },
+        {
+            "name": "show_breadcrumb",
+            "type": "checkbox",
+            "title": {
+                "ko": "브레드크럼 표시",
+                "en": "Show breadcrumb",
+                "ja": "パンくずリスト表示",
+                "zh_CN": "显示面包屑",
+                "zh_TW": "顯示麵包屑",
+                "de": "Brotkrumen anzeigen",
+                "es": "Mostrar migas de pan",
+                "fr": "Afficher le fil d'Ariane",
+                "id": "Tampilkan breadcrumb",
+                "mn": "Навигаци харуулах",
+                "ru": "Показать хлебные крошки",
+                "tr": "İçerik haritası göster",
+                "vi": "Hiển thị breadcrumb"
+            },
+            "description": {
+                "ko": "페이지 상단에 경로 탐색을 표시합니다.",
+                "en": "Show path navigation at the top of the page.",
+                "ja": "ページ上部にパス案内を表示します。",
+                "zh_CN": "在页面顶部显示路径导航。",
+                "zh_TW": "在頁面頂部顯示路徑導航。",
+                "de": "Zeigt die Pfadnavigation oben auf der Seite an.",
+                "es": "Muestra la navegación de ruta en la parte superior de la página.",
+                "fr": "Affiche la navigation par chemin en haut de la page.",
+                "id": "Menampilkan navigasi jalur di bagian atas halaman.",
+                "mn": "Хуудасны дээд хэсэгт замын навигацийг харуулна.",
+                "ru": "Показывает навигацию по пути вверху страницы.",
+                "tr": "Sayfanın üstünde yol navigasyonunu gösterir.",
+                "vi": "Hiển thị điều hướng đường dẫn ở đầu trang."
+            },
+            "default": false
+        },
+        {
+            "section": {
+                "ko": "디자인",
+                "en": "Design",
+                "ja": "デザイン",
+                "zh_CN": "设计",
+                "zh_TW": "設計",
+                "de": "Design",
+                "es": "Diseño",
+                "fr": "Design",
+                "id": "Desain",
+                "mn": "Дизайн",
+                "ru": "Дизайн",
+                "tr": "Tasarım",
+                "vi": "Thiết kế"
+            },
+            "name": "primary_color",
+            "type": "color",
+            "title": {
+                "ko": "메인 색상",
+                "en": "Primary color",
+                "ja": "メインカラー",
+                "zh_CN": "主色调",
+                "zh_TW": "主色調",
+                "de": "Hauptfarbe",
+                "es": "Color principal",
+                "fr": "Couleur principale",
+                "id": "Warna utama",
+                "mn": "Үндсэн өнгө",
+                "ru": "Основной цвет",
+                "tr": "Ana renk",
+                "vi": "Màu chính"
+            },
+            "default": "#3B82F6"
+        },
+        {
+            "name": "content_bg",
+            "type": "radio",
+            "title": {
+                "ko": "콘텐츠 배경",
+                "en": "Content background",
+                "ja": "コンテンツ背景",
+                "zh_CN": "内容背景",
+                "zh_TW": "內容背景",
+                "de": "Inhaltshintergrund",
+                "es": "Fondo del contenido",
+                "fr": "Arrière-plan du contenu",
+                "id": "Latar belakang konten",
+                "mn": "Агуулгын дэвсгэр",
+                "ru": "Фон контента",
+                "tr": "İçerik arka planı",
+                "vi": "Nền nội dung"
+            },
+            "options": [
+                {
+                    "value": "transparent",
+                    "label": {
+                        "ko": "투명 (기본)",
+                        "en": "Transparent (default)",
+                        "ja": "透明（デフォルト）",
+                        "zh_CN": "透明（默认）",
+                        "zh_TW": "透明（預設）",
+                        "de": "Transparent (Standard)",
+                        "es": "Transparente (predeterminado)",
+                        "fr": "Transparent (par défaut)",
+                        "id": "Transparan (default)",
+                        "mn": "Тунгалаг (үндсэн)",
+                        "ru": "Прозрачный (по умолчанию)",
+                        "tr": "Şeffaf (varsayılan)",
+                        "vi": "Trong suốt (mặc định)"
+                    }
+                },
+                {
+                    "value": "white",
+                    "label": {
+                        "ko": "흰색 카드",
+                        "en": "White card",
+                        "ja": "白カード",
+                        "zh_CN": "白色卡片",
+                        "zh_TW": "白色卡片",
+                        "de": "Weiße Karte",
+                        "es": "Tarjeta blanca",
+                        "fr": "Carte blanche",
+                        "id": "Kartu putih",
+                        "mn": "Цагаан карт",
+                        "ru": "Белая карточка",
+                        "tr": "Beyaz kart",
+                        "vi": "Thẻ trắng"
+                    }
+                }
+            ],
+            "default": "transparent"
+        },
+        {
+            "section": {
+                "ko": "사용자 정의",
+                "en": "Custom",
+                "ja": "カスタム",
+                "zh_CN": "自定义",
+                "zh_TW": "自訂",
+                "de": "Benutzerdefiniert",
+                "es": "Personalizado",
+                "fr": "Personnalisé",
+                "id": "Kustom",
+                "mn": "Тохируулга",
+                "ru": "Пользовательский",
+                "tr": "Özel",
+                "vi": "Tùy chỉnh"
+            },
+            "name": "custom_css",
+            "type": "textarea",
+            "title": {
+                "ko": "커스텀 CSS",
+                "en": "Custom CSS",
+                "ja": "カスタムCSS",
+                "zh_CN": "自定义CSS",
+                "zh_TW": "自訂CSS",
+                "de": "Benutzerdefiniertes CSS",
+                "es": "CSS personalizado",
+                "fr": "CSS personnalisé",
+                "id": "CSS kustom",
+                "mn": "Тохируулсан CSS",
+                "ru": "Пользовательский CSS",
+                "tr": "Özel CSS",
+                "vi": "CSS tùy chỉnh"
+            }
+        },
+        {
+            "name": "custom_header_html",
+            "type": "textarea",
+            "multilang": true,
+            "title": {
+                "ko": "커스텀 헤더 HTML",
+                "en": "Custom header HTML",
+                "ja": "カスタムヘッダーHTML",
+                "zh_CN": "自定义页头HTML",
+                "zh_TW": "自訂頁首HTML",
+                "de": "Benutzerdefiniertes Header-HTML",
+                "es": "HTML de encabezado personalizado",
+                "fr": "HTML d'en-tête personnalisé",
+                "id": "HTML header kustom",
+                "mn": "Тохируулсан толгой HTML",
+                "ru": "Пользовательский HTML заголовка",
+                "tr": "Özel başlık HTML",
+                "vi": "HTML header tùy chỉnh"
+            }
+        },
+        {
+            "name": "custom_footer_html",
+            "type": "textarea",
+            "multilang": true,
+            "title": {
+                "ko": "커스텀 푸터 HTML",
+                "en": "Custom footer HTML",
+                "ja": "カスタムフッターHTML",
+                "zh_CN": "自定义页脚HTML",
+                "zh_TW": "自訂頁尾HTML",
+                "de": "Benutzerdefiniertes Footer-HTML",
+                "es": "HTML de pie de página personalizado",
+                "fr": "HTML de pied de page personnalisé",
+                "id": "HTML footer kustom",
+                "mn": "Тохируулсан хөл HTML",
+                "ru": "Пользовательский HTML подвала",
+                "tr": "Özel altbilgi HTML",
+                "vi": "HTML footer tùy chỉnh"
+            }
+        }
+    ]
 }

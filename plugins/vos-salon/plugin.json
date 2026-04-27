@@ -1,0 +1,90 @@
+{
+    "id": "vos-salon",
+    "name": {
+        "ko": "살롱 예약 관리",
+        "en": "Salon Booking",
+        "ja": "サロン予約管理",
+        "de": "Salonbuchung",
+        "es": "Reservas de Salón",
+        "fr": "Réservation de Salon",
+        "id": "Manajemen Reservasi Salon",
+        "mn": "Салон захиалга",
+        "ru": "Управление бронированием салона",
+        "tr": "Salon Rezervasyonu",
+        "vi": "Quản lý đặt chỗ Salon",
+        "zh_CN": "沙龙预约管理",
+        "zh_TW": "沙龍預約管理"
+    },
+    "description": {
+        "ko": "헤어샵·네일샵·미용실 등 살롱 비즈니스 특화 — 사업장 등록·예약·B&A 스타일 갤러리·1:1 상담",
+        "en": "Salon-specific (hair, nail, beauty): shop registration, bookings, before/after gallery, 1:1 consultations",
+        "ja": "ヘアサロン・ネイル・美容室向け — 店舗登録、予約、ビフォーアフター、1:1相談"
+    },
+    "version": "1.0.0",
+    "author": { "name": "VosCMS", "url": "https://voscms.com" },
+    "license": "proprietary",
+    "category": "business",
+    "tags": ["salon", "booking", "beauty", "hair", "nail"],
+    "requires": { "php": ">=8.1" },
+    "icon": "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+    "menus": {
+        "admin": [
+            {
+                "id": "salon",
+                "title": {
+                    "ko": "살롱 관리",
+                    "en": "Salon Management",
+                    "ja": "サロン管理",
+                    "de": "Salonverwaltung",
+                    "es": "Gestión de Salón",
+                    "fr": "Gestion de Salon",
+                    "id": "Manajemen Salon",
+                    "mn": "Салон удирдлага",
+                    "ru": "Управление салоном",
+                    "tr": "Salon Yönetimi",
+                    "vi": "Quản lý Salon",
+                    "zh_CN": "沙龙管理",
+                    "zh_TW": "沙龍管理"
+                },
+                "icon": "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+                "permission": "salon",
+                "position": 60,
+                "items": [
+                    {"title": {"ko": "사업장 목록", "en": "Shops", "ja": "店舗一覧"}, "route": "shops"},
+                    {"title": {"ko": "1:1 상담", "en": "Consultations", "ja": "相談"}, "route": "shops/consultations"}
+                ]
+            }
+        ],
+        "user_dropdown": [
+            {
+                "label": {
+                    "ko": "내 사업장","en": "My Shop","ja": "マイショップ",
+                    "de": "Mein Geschäft","es": "Mi Tienda","fr": "Ma Boutique",
+                    "id": "Toko Saya","mn": "Миний дэлгүүр","ru": "Мой магазин",
+                    "tr": "Mağazam","vi": "Cửa hàng của tôi",
+                    "zh_CN": "我的店铺","zh_TW": "我的店鋪"
+                },
+                "url": "/shop/my",
+                "icon": "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+                "position": 10
+            }
+        ]
+    },
+    "routes": {
+        "front": [
+            {"path": "shop/register", "view": "customer/shop/register.php", "method": "GET"},
+            {"path": "shops",          "view": "customer/shop/list.php",     "method": "GET"},
+            {"path": "shops/show",     "view": "customer/shop/detail.php",   "method": "GET"}
+        ],
+        "admin": [
+            {"path": "shops",                "view": "admin/shops.php",         "method": "GET"},
+            {"path": "shops/consultations",  "view": "admin/consultations.php", "method": "GET"}
+        ],
+        "api": []
+    },
+    "migrations": [
+        "database/006_shops.sql",
+        "database/007_shop_inquiries.sql",
+        "database/008_shop_inquiries_attachments.sql"
+    ]
+}

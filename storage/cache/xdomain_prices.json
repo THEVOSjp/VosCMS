@@ -6,35 +6,35 @@
     "prices": [
         {
             "tld": ".com",
-            "registration": 1,
+            "registration": 0,
             "renewal": 1721,
             "transfer": 1721,
             "currency": "JPY"
         },
         {
             "tld": ".net",
-            "registration": 1,
+            "registration": 0,
             "renewal": 1992,
             "transfer": 1992,
             "currency": "JPY"
         },
         {
             "tld": ".blog",
-            "registration": 1,
+            "registration": 0,
             "renewal": 3820,
             "transfer": 3820,
             "currency": "JPY"
         },
         {
             "tld": ".store",
-            "registration": 328,
+            "registration": 0,
             "renewal": 7381,
             "transfer": null,
             "currency": "JPY"
         },
         {
             "tld": ".xyz",
-            "registration": 1,
+            "registration": 0,
             "renewal": 2333,
             "transfer": 2333,
             "currency": "JPY"
@@ -55,21 +55,21 @@
         },
         {
             "tld": ".site",
-            "registration": 99,
+            "registration": 0,
             "renewal": 5239,
             "transfer": 5239,
             "currency": "JPY"
         },
         {
             "tld": ".org",
-            "registration": 946,
+            "registration": 0,
             "renewal": 1992,
             "transfer": 1992,
             "currency": "JPY"
         },
         {
             "tld": ".online",
-            "registration": 108,
+            "registration": 0,
             "renewal": 6189,
             "transfer": null,
             "currency": "JPY"
@@ -90,7 +90,7 @@
         },
         {
             "tld": ".monster",
-            "registration": 190,
+            "registration": 0,
             "renewal": 2847,
             "transfer": 2847,
             "currency": "JPY"
@@ -104,14 +104,14 @@
         },
         {
             "tld": ".website",
-            "registration": 108,
+            "registration": 0,
             "renewal": 4096,
             "transfer": 4096,
             "currency": "JPY"
         },
         {
             "tld": ".life",
-            "registration": 218,
+            "registration": 0,
             "renewal": 5432,
             "transfer": 5432,
             "currency": "JPY"
@@ -132,7 +132,7 @@
         },
         {
             "tld": ".email",
-            "registration": 275,
+            "registration": 0,
             "renewal": 4054,
             "transfer": 4054,
             "currency": "JPY"
@@ -146,7 +146,7 @@
         },
         {
             "tld": ".works",
-            "registration": 396,
+            "registration": 0,
             "renewal": 5432,
             "transfer": 5432,
             "currency": "JPY"
@@ -237,7 +237,7 @@
         },
         {
             "tld": ".me",
-            "registration": 768,
+            "registration": 0,
             "renewal": 3407,
             "transfer": 3407,
             "currency": "JPY"
@@ -265,7 +265,7 @@
         },
         {
             "tld": ".link",
-            "registration": 1628,
+            "registration": 0,
             "renewal": 2029,
             "transfer": 2029,
             "currency": "JPY"
@@ -468,7 +468,7 @@
         },
         {
             "tld": ".pro",
-            "registration": 3745,
+            "registration": 0,
             "renewal": 4306,
             "transfer": 4306,
             "currency": "JPY"
@@ -524,7 +524,7 @@
         },
         {
             "tld": ".support",
-            "registration": 3745,
+            "registration": 0,
             "renewal": 4306,
             "transfer": 4306,
             "currency": "JPY"
@@ -748,7 +748,7 @@
         },
         {
             "tld": ".rocks",
-            "registration": 2956,
+            "registration": 0,
             "renewal": 2956,
             "transfer": 2956,
             "currency": "JPY"
@@ -1818,6 +1818,6 @@
             "currency": "JPY"
         }
     ],
-    "fetched_at": 1776183493,
+    "fetched_at": 1777129201,
     "source": "crawl"
 }

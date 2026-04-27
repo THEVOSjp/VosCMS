@@ -6,12 +6,20 @@
 include __DIR__ . '/_head.php';
 
 $pageHeaderTitle = __('autoinstall.title');
-$pageSubTitle    = __('autoinstall.browse');
+$pageSubTitle    = __('autoinstall.easy_install');
+ob_start(); ?>
+<button type="button" id="mpCacheRefreshBtn" onclick="mpRefreshCache(this)"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
+    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+    <span><?= __('autoinstall.cache_refresh') ?></span>
+</button>
+<?php
+$pageTitleAction = ob_get_clean();
+include __DIR__ . '/_components/page-title.php';
 
 $_pm            = \RzxLib\Core\Plugin\PluginManager::getInstance();
 $marketApiBase  = rtrim($_pm ? $_pm->getSetting('vos-autoinstall', 'market_api_url', $_ENV['MARKET_API_URL'] ?? 'https://market.21ces.com/api/market') : ($_ENV['MARKET_API_URL'] ?? 'https://market.21ces.com/api/market'), '/');
 $cacheDir       = (defined('BASE_PATH') ? BASE_PATH : __DIR__ . '/../../../../..') . '/storage/cache';
-$payjpPublicKey = $_ENV['PAYJP_PUBLIC_KEY'] ?? '';
 $_apiUrl        = $adminUrl . '/autoinstall/api';
 $_cacheTtl      = (int)($_pm ? $_pm->getSetting('vos-autoinstall', 'cache_ttl', '300') : 300);
 
@@ -88,6 +96,11 @@ foreach (array_keys($typeCounts) as $t) {
     $typeCounts[$t] = $tData['meta']['total'] ?? 0;
 }
 
+// ── 마켓플레이스 결제 설정 (PAY.JP 공개키 등) ───────────
+$paymentConfig  = mpApiFetch($marketApiBase . '/payment/config', $cacheDir, $_cacheTtl) ?: [];
+$payjpPublicKey = ($paymentConfig['gateway'] ?? '') === 'payjp' ? ($paymentConfig['public_key'] ?? '') : '';
+$paymentEnabled = !empty($paymentConfig['enabled']);
+
 // ── 구매 완료 아이템 슬러그 셋 (유료 아이템 버튼 분기용) ─
 $purchasedSlugs = [];
 try {
@@ -97,32 +110,13 @@ try {
         $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'],
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
-    $_adminId = $_SESSION['admin_id'] ?? 0;
-    if ($_adminId) {
-        $_st = $_pdo->prepare(
-            "SELECT DISTINCT i.slug
-               FROM {$_pfx}mp_order_items oi
-               JOIN {$_pfx}mp_orders o ON o.id = oi.order_id
-               JOIN {$_pfx}mp_items  i ON i.id = oi.item_id
-              WHERE o.admin_id = ? AND o.status = 'paid'"
-        );
-        $_st->execute([$_adminId]);
-        $purchasedSlugs = array_flip($_st->fetchAll(PDO::FETCH_COLUMN));
-    }
+    $_st = $_pdo->query("SELECT DISTINCT item_slug FROM {$_pfx}mp_purchases");
+    $purchasedSlugs = array_flip($_st->fetchAll(PDO::FETCH_COLUMN));
 } catch (Throwable $e) { /* 무시 */ }
 
 ?>
 
 <div class="space-y-6">
-
-    <!-- 우상단 캐시 갱신 버튼 -->
-    <div class="flex justify-end">
-        <button type="button" id="mpCacheRefreshBtn" onclick="mpRefreshCache(this)"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            <span><?= __('autoinstall.cache_refresh') ?></span>
-        </button>
-    </div>
 
     <?php if ($apiError): ?>
     <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 flex items-center gap-3 text-sm text-amber-700 dark:text-amber-400">

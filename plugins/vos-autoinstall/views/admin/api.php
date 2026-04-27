@@ -210,6 +210,84 @@ switch ($action) {
         }
         break;
 
+    case 'submit_issue':
+    case 'submit_issue_reply':
+        // 이슈/Q&A 작성 또는 답변 작성을 마켓플레이스 API로 중계
+        $isReply = ($action === 'submit_issue_reply');
+        $cacheFile = (defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 4)) . '/storage/.license_cache';
+        $vosKey = '';
+        if (file_exists($cacheFile)) {
+            $cd = json_decode(file_get_contents($cacheFile), true);
+            $vosKey = $cd['license_key'] ?? '';
+        }
+        if (!$vosKey) { echo json_encode(['success'=>false,'message'=>'VosCMS 라이선스 키를 찾을 수 없습니다']); break; }
+
+        $siteUrl = '';
+        try {
+            $st = $pdo->prepare("SELECT value FROM {$prefix}settings WHERE `key` = 'site_url' LIMIT 1");
+            $st->execute();
+            $siteUrl = $st->fetchColumn() ?: '';
+        } catch (Throwable $e) {}
+        $domain = strtolower(preg_replace('#^https?://#', '', rtrim($siteUrl, '/')));
+        $domain = preg_replace('#^www\.#', '', $domain);
+        $domain = explode('/', $domain)[0];
+        if (!$domain) { echo json_encode(['success'=>false,'message'=>'사이트 URL 확인 불가']); break; }
+
+        $pm        = $pluginManager ?? \RzxLib\Core\Plugin\PluginManager::getInstance();
+        $marketUrl = rtrim($pm ? $pm->getSetting('vos-autoinstall', 'market_api_url', 'https://market.21ces.com/api/market') : 'https://market.21ces.com/api/market', '/');
+
+        if ($isReply) {
+            $issueId = (int)($_POST['issue_id'] ?? 0);
+            $bodyTxt = trim($_POST['body']     ?? '');
+            $rname   = trim($_POST['author_name'] ?? '');
+            if (!$issueId || $bodyTxt === '') {
+                echo json_encode(['success'=>false,'message'=>'issue_id, body 필수']); break;
+            }
+            $payload = json_encode([
+                'vos_key' => $vosKey, 'domain' => $domain,
+                'issue_id' => $issueId, 'body' => $bodyTxt, 'author_name' => $rname,
+            ]);
+            $endpoint = $marketUrl . '/item/issue/reply';
+        } else {
+            $slug    = trim($_POST['slug']    ?? '');
+            $type    = trim($_POST['type']    ?? 'issue');
+            $title   = trim($_POST['title']   ?? '');
+            $bodyTxt = trim($_POST['body']    ?? '');
+            $rname   = trim($_POST['author_name'] ?? '');
+            if (!$slug || !$title) {
+                echo json_encode(['success'=>false,'message'=>'slug, title 필수']); break;
+            }
+            $payload = json_encode([
+                'vos_key' => $vosKey, 'domain' => $domain,
+                'slug' => $slug, 'type' => $type, 'title' => $title,
+                'body' => $bodyTxt, 'author_name' => $rname,
+            ]);
+            $endpoint = $marketUrl . '/item/issue';
+        }
+
+        $ch = curl_init($endpoint);
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'Accept: application/json'],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 15,
+        ]);
+        $resp = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        $remote = json_decode($resp, true) ?: [];
+
+        if ($code === 200 && !empty($remote['ok'])) {
+            // 캐시 즉시 무효화
+            $cacheDir = (defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 4)) . '/storage/cache';
+            foreach (glob($cacheDir . '/mp_api_*.json') ?: [] as $f) { @unlink($f); }
+            echo json_encode(['success'=>true, 'id'=>$remote['id'] ?? 0, 'is_verified'=>!empty($remote['is_verified'])]);
+        } else {
+            echo json_encode(['success'=>false, 'message'=>$remote['msg'] ?? '등록 실패']);
+        }
+        break;
+
     case 'clear_cache':
         // 마켓 API 캐시 파일 모두 삭제
         $cacheDir = (defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 4)) . '/storage/cache';
@@ -446,9 +524,10 @@ switch ($action) {
 
     case 'purchase_item':
         // ── 유료 아이템 구매: PAY.JP 토큰 → market API → 라이선스 저장 ──
-        $itemSlug   = trim($_POST['item_slug']   ?? '');
-        $payjpToken = trim($_POST['payjp_token'] ?? '');
-        $buyerEmail = trim($_POST['buyer_email'] ?? '');
+        $itemSlug    = trim($_POST['item_slug']   ?? '');
+        $payjpToken  = trim($_POST['payjp_token'] ?? '');
+        $buyerEmail  = trim($_POST['buyer_email'] ?? '');
+        $installment = (int)($_POST['installment'] ?? 0);
 
         if (!$itemSlug || !$payjpToken) {
             echo json_encode(['success' => false, 'message' => 'item_slug, payjp_token 필수']);
@@ -492,6 +571,7 @@ switch ($action) {
             'item_slug'   => $itemSlug,
             'payjp_token' => $payjpToken,
             'buyer_email' => $buyerEmail,
+            'installment' => $installment,
             'cms_version' => $_ENV['APP_VERSION'] ?? null,
         ]);
 
@@ -504,18 +584,37 @@ switch ($action) {
             CURLOPT_TIMEOUT        => 30,
             CURLOPT_SSL_VERIFYPEER => true,
         ]);
-        $resp    = curl_exec($ch);
+        $resp     = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr  = curl_error($ch);
         curl_close($ch);
 
-        $result = $resp ? json_decode($resp, true) : null;
-        if (!$result || !($result['ok'] ?? false)) {
-            $msg = $result['message'] ?? '결제 처리 중 오류가 발생했습니다';
+        // 네트워크/SSL 오류
+        if ($curlErr) {
+            error_log("[autoinstall] purchase curl error: $curlErr");
+            echo json_encode(['success' => false, 'message' => '마켓 서버 연결 실패: ' . $curlErr], JSON_UNESCAPED_UNICODE);
+            break;
+        }
+        // HTTP 응답이 아예 없음
+        if (!$resp) {
+            echo json_encode(['success' => false, 'message' => "마켓 서버 응답 없음 (HTTP $httpCode)"], JSON_UNESCAPED_UNICODE);
+            break;
+        }
+
+        $result = json_decode($resp, true);
+        // 응답이 JSON이 아닌 경우 (HTML 에러 페이지 등)
+        if (!is_array($result)) {
+            error_log("[autoinstall] purchase non-json response (HTTP $httpCode): " . substr($resp, 0, 500));
+            echo json_encode(['success' => false, 'message' => "마켓 응답 형식 오류 (HTTP $httpCode)"], JSON_UNESCAPED_UNICODE);
+            break;
+        }
+        if (!($result['ok'] ?? false)) {
+            $msg = $result['message'] ?? "결제 처리 실패 (HTTP $httpCode)";
             echo json_encode(['success' => false, 'message' => $msg], JSON_UNESCAPED_UNICODE);
             break;
         }
 
-        // 라이선스 정보 로컬 저장
+        // 라이선스 정보 로컬 저장 (라이선스 검증용)
         $nsId = $itemSlug;
         $upsert = "INSERT INTO {$prefix}plugin_settings (plugin_id, setting_key, setting_value)
                         VALUES (?, ?, ?)
@@ -524,6 +623,40 @@ switch ($action) {
         $pdo->prepare($upsert)->execute([$nsId, 'market_product_key',    $result['product_key']  ?? '']);
         $pdo->prepare($upsert)->execute([$nsId, 'market_serial_key',     $result['serial_key']   ?? '']);
         $pdo->prepare($upsert)->execute([$nsId, 'market_order_number',   $result['order_number'] ?? '']);
+
+        // 구매 내역 저장 (mp_purchases — 상세 페이지 버튼 분기 + 구매 내역 페이지에서 사용)
+        try {
+            $orderNum = $result['order_number'] ?? '';
+            $itemName = $result['item_name']    ?? $itemSlug;
+            $itemType = $result['item_type']    ?? null;
+            $amount   = (float)($result['amount'] ?? 0);
+            $currency = $result['currency']     ?? 'JPY';
+            $pdo->prepare(
+                "INSERT INTO {$prefix}mp_purchases
+                    (item_slug, item_name, item_type, license_key, serial_key, product_key,
+                     order_number, amount, currency, installment, buyer_email, admin_id)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE
+                    license_key = VALUES(license_key),
+                    serial_key  = VALUES(serial_key),
+                    product_key = VALUES(product_key)"
+            )->execute([
+                $itemSlug,
+                $itemName,
+                $itemType,
+                $result['license_key'] ?? null,
+                $result['serial_key']  ?? null,
+                $result['product_key'] ?? null,
+                $orderNum ?: null,
+                $amount,
+                $currency,
+                $installment,
+                $buyerEmail ?: null,
+                $_SESSION['admin_id'] ?? null,
+            ]);
+        } catch (Throwable $e) {
+            error_log('[autoinstall] mp_purchases insert failed: ' . $e->getMessage());
+        }
         $pdo->prepare($upsert)->execute([$nsId, 'market_license_status', 'valid']);
 
         echo json_encode([

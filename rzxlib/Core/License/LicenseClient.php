@@ -18,8 +18,11 @@ class LicenseClient
     /** 캐시 파일 경로 */
     private string $cacheFile;
 
-    /** 라이선스 서버 URL */
+    /** 라이선스 서버 URL (라이선스 인증용) */
     private string $serverUrl;
+
+    /** 마켓 서버 URL (아이템 sync, resolve-keys용) */
+    private string $marketUrl;
 
     /** 라이선스 키 */
     private string $licenseKey;
@@ -37,6 +40,7 @@ class LicenseClient
     {
         $this->cacheFile = ($_ENV['BASE_PATH'] ?? (defined('BASE_PATH') ? BASE_PATH : __DIR__ . '/../../..')) . '/storage/.license_cache';
         $this->serverUrl = rtrim($_ENV['LICENSE_SERVER'] ?? 'https://vos.21ces.com/api', '/');
+        $this->marketUrl = rtrim($_ENV['MARKET_SERVER'] ?? 'https://market.21ces.com/api', '/');
         $this->licenseKey = $_ENV['LICENSE_KEY'] ?? '';
         $this->domain = $this->detectDomain();
     }
@@ -113,6 +117,9 @@ class LicenseClient
 
         if (!empty($response['valid'])) {
             $this->saveCache($response);
+            // sync 먼저: 마켓 서버에 라이선스 등록/캐시 → 그 후 resolve-keys 성공
+            $this->syncInstalledItems();
+            $this->resolveProductKeys();
             return LicenseStatus::active($response);
         }
 
@@ -311,6 +318,123 @@ class LicenseClient
         return $plugins;
     }
 
+    /**
+     * 설치된 모든 아이템 수집 (product_key 유무 관계없이)
+     * product_key 없는 구형 아이템은 slug만 전송 → 마켓이 조회 후 반환
+     * 반환 형식: [['slug'=>..., 'version'=>..., 'product_key'=>...(있을 때), 'manifest_path'=>...], ...]
+     */
+    private function collectInstalledItems(): array
+    {
+        $basePath = defined('BASE_PATH') ? BASE_PATH : __DIR__ . '/../../..';
+        $items = [];
+
+        // VosCMS 설치 범주: 플러그인, 위젯, 레이아웃(skins/layouts 하위)
+        // purchases.php와 동일한 스캔 기준
+        $scanTargets = [
+            ['glob' => $basePath . '/plugins/*/plugin.json',        'type' => 'plugin'],
+            ['glob' => $basePath . '/widgets/*/widget.json',        'type' => 'widget'],
+            ['glob' => $basePath . '/skins/layouts/*/layout.json',  'type' => 'layout'],
+        ];
+
+        foreach ($scanTargets as $t) {
+            foreach (glob($t['glob']) ?: [] as $jsonPath) {
+                $data = @json_decode(@file_get_contents($jsonPath), true);
+                if (!is_array($data)) continue;
+
+                // id / slug / 디렉토리명 순으로 식별자 결정
+                $slug = $data['id'] ?? $data['slug'] ?? basename(dirname($jsonPath));
+                if (!$slug) continue;
+
+                $item = [
+                    'slug'          => $slug,
+                    'type'          => $t['type'],
+                    'version'       => $data['version'] ?? null,
+                    'manifest_path' => $jsonPath,
+                ];
+                if (!empty($data['product_key'])) {
+                    $item['product_key'] = $data['product_key'];
+                }
+                $items[] = $item;
+            }
+        }
+        return $items;
+    }
+
+    /**
+     * 마켓 서버에 설치된 아이템 목록 비동기 보고 (fire-and-forget)
+     * 응답을 기다리지 않으므로 페이지 로딩에 영향 없음
+     */
+    public function syncInstalledItems(): void
+    {
+        if (empty($this->licenseKey)) return;
+
+        $items = $this->collectInstalledItems();
+        if (empty($items)) return;
+
+        $payload = array_map(function ($item) {
+            $entry = ['slug' => $item['slug']];
+            if (!empty($item['type']))        $entry['type']        = $item['type'];
+            if (!empty($item['product_key'])) $entry['product_key'] = $item['product_key'];
+            if (!empty($item['version']))     $entry['version']     = $item['version'];
+            return $entry;
+        }, $items);
+
+        // 비동기 전송 — 응답 대기 없음 (마켓 서버로)
+        $this->apiCallAsync($this->marketUrl . '/market/sync', [
+            'vos_key' => $this->licenseKey,
+            'domain'  => $this->domain,
+            'items'   => $payload,
+        ], true);
+    }
+
+    /**
+     * product_key 없는 플러그인의 키를 마켓에서 가져와 plugin.json에 저장
+     * verifyWithServer() 성공 후 호출
+     */
+    public function resolveProductKeys(): void
+    {
+        if (empty($this->licenseKey)) return;
+
+        $items   = $this->collectInstalledItems();
+        $missing = array_filter($items, fn($i) => empty($i['product_key']));
+
+        if (empty($missing)) return;
+
+        $slugs = array_column($missing, 'slug');
+
+        // 쿼리스트링으로 요청 (마켓 서버로)
+        $query    = http_build_query(['vos_key' => $this->licenseKey, 'slugs' => $slugs]);
+        $response = $this->apiCallGet($this->marketUrl . '/market/resolve-keys?' . $query, true);
+
+        if (empty($response['ok']) || empty($response['keys'])) return;
+
+        $keyMap = $response['keys']; // slug => product_key
+
+        foreach ($missing as $item) {
+            if (empty($keyMap[$item['slug']])) continue;
+            $this->saveProductKeyToManifest($item['manifest_path'], $keyMap[$item['slug']]);
+        }
+    }
+
+    /**
+     * plugin.json / theme.json 에 product_key 필드 저장
+     */
+    private function saveProductKeyToManifest(string $manifestPath, string $productKey): void
+    {
+        if (!is_writable($manifestPath)) return;
+
+        $raw  = @file_get_contents($manifestPath);
+        $data = @json_decode($raw, true);
+        if (!is_array($data)) return;
+
+        $data['product_key'] = $productKey;
+
+        $encoded = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if ($encoded === false) return;
+
+        @file_put_contents($manifestPath, $encoded, LOCK_EX);
+    }
+
     private function apiCall(string $endpoint, array $data): ?array
     {
         $url = $this->serverUrl . $endpoint;
@@ -337,6 +461,75 @@ class LicenseClient
 
         if (!$response || $httpCode === 0) {
             return null; // 네트워크 실패
+        }
+
+        return json_decode($response, true);
+    }
+
+    /**
+     * 비동기 POST — 응답 대기 없이 즉시 반환 (fire-and-forget)
+     * 응답 바디는 메모리에 캡처 후 폐기 (페이지 출력 오염 방지)
+     *
+     * @param string $endpoint /path 또는 절대 URL
+     * @param bool   $absolute true면 $endpoint를 그대로 사용, false면 $this->serverUrl 접두
+     */
+    private function apiCallAsync(string $endpoint, array $data, bool $absolute = false): void
+    {
+        $url     = $absolute ? $endpoint : $this->serverUrl . $endpoint;
+        $payload = json_encode($data);
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $url,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT_MS     => 500,
+            CURLOPT_CONNECTTIMEOUT => 2,
+            CURLOPT_NOSIGNAL       => 1,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Accept: application/json',
+                'User-Agent: VosCMS/' . ($_ENV['APP_VERSION'] ?? '2.0'),
+                'Content-Length: ' . strlen($payload),
+            ],
+            CURLOPT_SSL_VERIFYPEER => true,
+        ]);
+
+        @curl_exec($ch);
+        curl_close($ch);
+    }
+
+    /**
+     * GET 요청 — 동기적으로 응답 반환
+     *
+     * @param string $endpointWithQuery /path?query 또는 절대 URL
+     * @param bool   $absolute true면 $endpointWithQuery를 그대로 사용, false면 $this->serverUrl 접두
+     */
+    private function apiCallGet(string $endpointWithQuery, bool $absolute = false): ?array
+    {
+        $url = $absolute ? $endpointWithQuery : $this->serverUrl . $endpointWithQuery;
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $url,
+            CURLOPT_HTTPGET        => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_HTTPHEADER     => [
+                'Accept: application/json',
+                'User-Agent: VosCMS/' . ($_ENV['APP_VERSION'] ?? '2.0'),
+            ],
+            CURLOPT_SSL_VERIFYPEER => true,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if (!$response || $httpCode === 0) {
+            return null;
         }
 
         return json_decode($response, true);

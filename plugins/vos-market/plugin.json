@@ -1,0 +1,131 @@
+{
+    "id": "vos-market",
+    "name": {
+        "ko": "VosCMS 마켓플레이스",
+        "en": "VosCMS Marketplace",
+        "ja": "VosCMS マーケットプレイス"
+    },
+    "description": {
+        "ko": "플러그인·테마·위젯·스킨 배포 플랫폼 및 파트너 포털",
+        "en": "Plugin, theme, widget and skin distribution platform with partner portal",
+        "ja": "プラグイン・テーマ・ウィジェット・スキン配布プラットフォーム"
+    },
+    "version": "1.0.0",
+    "author": { "name": "VosCMS", "url": "https://market.21ces.com" },
+    "license": "proprietary",
+    "category": "system",
+    "requires": { "php": ">=8.1" },
+    "migrations": [
+        "migrations/001_create_core_tables.sql",
+        "migrations/002_create_license_tables.sql",
+        "migrations/003_create_partner_tables.sql",
+        "migrations/004_create_submission_tables.sql",
+        "migrations/006_create_cms_license_table.sql",
+        "migrations/007_create_vos_licenses_table.sql",
+        "migrations/008_add_product_key_to_items.sql",
+        "migrations/009_add_vos_fields_to_mkt_licenses.sql",
+        "migrations/010_create_sync_reports_table.sql",
+        "migrations/011_add_serial_key_to_orders.sql"
+    ],
+    "routes": {
+        "admin": [
+            { "path": "market",                    "view": "admin/items/index.php",          "method": "GET"  },
+            { "path": "market/items",              "view": "admin/items/index.php",          "method": "GET"  },
+            { "path": "market/items/create",       "view": "admin/items/edit.php",           "method": "GET"  },
+            { "path": "market/items/edit",         "view": "admin/items/edit.php",           "method": "GET"  },
+            { "path": "market/items/show",         "view": "admin/items/show.php",           "method": "GET"  },
+            { "path": "market/items/bulk-pack",    "view": "admin/items/bulk-pack.php",      "method": "GET"  },
+            { "path": "market/items/bulk-pack",    "view": "admin/items/bulk-pack.php",      "method": "POST" },
+            { "path": "market/items/api",          "view": "admin/items/api.php",            "method": "POST" },
+            { "path": "market/categories",         "view": "admin/categories/index.php",     "method": "GET"  },
+            { "path": "market/categories/edit",    "view": "admin/categories/edit.php",      "method": "GET"  },
+            { "path": "market/categories/api",     "view": "admin/categories/api.php",       "method": "POST" },
+            { "path": "market/submissions",        "view": "admin/submissions/index.php",    "method": "GET"  },
+            { "path": "market/submissions/show",   "view": "admin/submissions/show.php",     "method": "GET"  },
+            { "path": "market/submissions/api",    "view": "admin/submissions/api.php",      "method": "POST" },
+            { "path": "market/partners",             "view": "admin/partners/index.php",       "method": "GET"  },
+            { "path": "market/partners/show",      "view": "admin/partners/show.php",        "method": "GET"  },
+            { "path": "market/partners/api",       "view": "admin/partners/api.php",         "method": "POST" },
+            { "path": "market/partners/payouts",   "view": "admin/partners/payouts.php",     "method": "GET"  },
+            { "path": "market/partners/payouts-api","view": "admin/partners/payouts-api.php","method": "POST" },
+            { "path": "market/licenses",           "view": "admin/licenses/index.php",       "method": "GET"  },
+            { "path": "market/licenses/show",      "view": "admin/licenses/show.php",        "method": "GET"  },
+            { "path": "market/licenses/api",       "view": "admin/licenses/api.php",         "method": "POST" },
+            { "path": "market/licenses/cms",       "view": "admin/licenses/cms-index.php",   "method": "GET"  },
+            { "path": "market/licenses/cms-api",   "view": "admin/licenses/cms-api.php",     "method": "POST" },
+            { "path": "market/orders",             "view": "admin/orders/index.php",         "method": "GET"  },
+            { "path": "market/settings",           "view": "admin/settings.php",             "method": "GET"  },
+            { "path": "market/settings/api",       "view": "admin/settings/api.php",         "method": "POST" },
+            { "path": "market/sync",               "view": "admin/sync/index.php",           "method": "GET"  },
+            { "path": "market/sync/show",          "view": "admin/sync/show.php",            "method": "GET"  },
+            { "path": "market/sync/api",           "view": "admin/sync/api.php",             "method": "POST" }
+        ],
+        "front": [
+            { "type": "front", "path": "marketplace", "view": "front/marketplace.php" }
+        ],
+        "api": [
+            { "path": "api/market/catalog",              "view": "api/catalog.php",              "method": "GET"  },
+            { "path": "api/market/item",                 "view": "api/item.php",                 "method": "GET"  },
+            { "path": "api/market/item/versions",        "view": "api/item-versions.php",        "method": "GET"  },
+            { "path": "api/market/item/install",              "view": "api/item/install.php",              "method": "POST" },
+            { "path": "api/market/item/purchase",             "view": "api/item/purchase.php",             "method": "POST" },
+            { "path": "api/market/item/reviews",         "view": "api/item/reviews.php",         "method": "GET"  },
+            { "path": "api/market/item/review",          "view": "api/item/review.php",          "method": "POST" },
+            { "path": "api/market/item/issues",          "view": "api/item/issues.php",          "method": "GET"  },
+            { "path": "api/market/item/issue",           "view": "api/item/issue.php",           "method": "POST" },
+            { "path": "api/market/item/issue/reply",     "view": "api/item/issue-reply.php",     "method": "POST" },
+            { "path": "api/market/payment/config",       "view": "api/payment/config.php",       "method": "GET"  },
+            { "path": "api/market/sync",                       "view": "api/sync.php",                      "method": "POST" },
+            { "path": "api/market/resolve-keys",               "view": "api/resolve-keys.php",              "method": "GET"  },
+            { "path": "api/market/license/validate",         "view": "api/license-validate.php",          "method": "POST" },
+            { "path": "api/market/cms-license/register",  "view": "api/cms-license/register.php",      "method": "POST" },
+            { "path": "api/market/cms-license/validate",  "view": "api/cms-license/validate.php",      "method": "POST" },
+            { "path": "api/market/cms-license/info",      "view": "api/cms-license/info.php",          "method": "GET"  },
+            { "path": "api/market/cms-license/deactivate","view": "api/cms-license/deactivate.php",    "method": "POST" },
+            { "path": "api/market/download",             "view": "api/download.php",             "method": "GET"  },
+            { "path": "api/market/updates/check",        "view": "api/updates-check.php",        "method": "GET"  },
+            { "path": "api/partner/register",            "view": "api/partner/register.php",     "method": "POST" },
+            { "path": "api/partner/login",               "view": "api/partner/login.php",        "method": "POST" },
+            { "path": "api/partner/logout",              "view": "api/partner/logout.php",       "method": "GET"  },
+            { "path": "api/partner/submit",              "view": "api/partner/submit.php",       "method": "POST" },
+            { "path": "api/partner/update-version",      "view": "api/partner/update-version.php","method": "POST"},
+            { "path": "api/partner/items",               "view": "api/partner/items.php",        "method": "GET"  },
+            { "path": "api/partner/submissions",         "view": "api/partner/submissions.php",  "method": "GET"  },
+            { "path": "api/partner/earnings",            "view": "api/partner/earnings.php",     "method": "GET"  }
+        ]
+    },
+    "menus": {
+        "admin": [
+            {
+                "title": { "ko": "마켓플레이스", "en": "Marketplace", "ja": "マーケットプレイス" },
+                "icon": "M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z",
+                "items": [
+                    { "title": { "ko": "아이템 관리", "en": "Items",           "ja": "アイテム管理"    }, "route": "market/items"    },
+                    { "title": { "ko": "라이선스",    "en": "Licenses",        "ja": "ライセンス"      }, "route": "market/licenses" },
+                    { "title": { "ko": "설치 추적",   "en": "Install Tracking","ja": "インストール追跡" }, "route": "market/sync"     },
+                    { "title": { "ko": "주문",        "en": "Orders",          "ja": "注文"            }, "route": "market/orders"   },
+                    { "title": { "ko": "설정",        "en": "Settings",        "ja": "設定"            }, "route": "market/settings" }
+                ]
+            },
+            {
+                "title": { "ko": "파트너 포탈", "en": "Partner Portal", "ja": "パートナーポータル" },
+                "icon": "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z",
+                "items": [
+                    { "title": { "ko": "파트너 목록", "en": "Partners",    "ja": "パートナー一覧" }, "route": "market/partners"          },
+                    { "title": { "ko": "심사 대기",   "en": "Submissions", "ja": "審査待ち"       }, "route": "market/submissions"       },
+                    { "title": { "ko": "정산 관리",   "en": "Payouts",     "ja": "精算管理"       }, "route": "market/partners/payouts"  }
+                ]
+            }
+        ]
+    },
+    "hooks": {
+        "admin.dashboard.render": "hooks/dashboard-widget.php"
+    },
+    "settings": {
+        "defaults": {
+            "commission_rate": "20",
+            "currency": "JPY",
+            "partner_api_key_required": "1"
+        }
+    }
+}

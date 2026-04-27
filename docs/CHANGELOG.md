@@ -1,6 +1,75 @@
 # Changelog
 
-RezlyX 프로젝트 변경 이력입니다.
+**VosCMS** 프로젝트 변경 이력입니다.
+
+---
+
+## [VosCMS 2.3.9] - 2026-04-27 — 서비스 신청 다국어 + 3-영역 메뉴 시스템
+
+호스팅 사업자용 서비스 신청 시스템을 13개국어로 완성하고 결제 직전 확인 모달과 설치 지원 서비스를 추가했다. 어드민/마이페이지 사이드바를 3-영역(top/main/bottom) 자동 구분 구조로 재설계해 코어 메뉴와 플러그인 메뉴가 시각적으로 분리되도록 했다. 라이선스/개발자 API는 본사 전용 플러그인으로 분리해 배포판 노출을 차단했다.
+
+### Added — 서비스 신청 페이지 13개국어 (`/service/order`)
+
+도메인·호스팅·부가서비스·신청자·결제·요약 6개 영역과 결제 완료 페이지의 모든 텍스트를 13개국어로 번역. JS 측 alert/모달 텍스트는 `var I18N = {...}` + `t(key, replace)` 헬퍼 패턴으로 PHP에서 주입.
+
+- 위치: [plugins/vos-hosting/lang/{13 locales}/services.php](../plugins/vos-hosting/lang/) — `services.order.*` 200+ 키
+- 마이페이지 서비스 상세: `services.detail.*` 70+ 키, [service-detail.php](../plugins/vos-hosting/views/customer/mypage/service-detail.php)
+- 어드민 주문 관리: `services.admin_orders.*` 115+ 키, [admin/service-orders/](../plugins/vos-hosting/views/admin/service-orders/)
+- DB 저장된 한국어 라벨(호스팅 플랜·메인터넌스·애드온)은 `_localizeLabel($sub)` 클로저로 settings ID 매핑 후 `db_trans()` 적용 → 마이페이지/어드민 양쪽 동일 처리
+
+### Added — 결제 직전 확인 모달
+
+결제 버튼 클릭 시 신청 내역(도메인/플랜/부가서비스/신청자/약관) 검증 후 요약 모달 출력 → 사용자 확인 → 결제 진행. 빈 서브도메인 등록 같은 실수 방지.
+
+- [order.js](../plugins/vos-hosting/views/system/service/order.js) — `showOrderConfirmModal()`, `closeOrderConfirmModal()`, `confirmAndPay()`
+- 결제 완료 후 모달 잔여 레이어 제거 강화 (DOM 삭제 + body/documentElement overflow 리셋)
+
+### Added — 설치 지원 서비스 (관리자 정보 입력)
+
+부가서비스에서 "설치 지원"(`_id='install'`) 체크 시 관리자 ID/이메일/비밀번호/사이트명 입력 폼 표시. 비밀번호는 마스킹 + 눈 아이콘 토글 + "설치 후 변경" 안내. 입력값은 subscription metadata 의 `install_info` 로 저장되어 마이페이지/어드민 양쪽에서 표시.
+
+- 입력: [_addons.php](../plugins/vos-hosting/views/system/service/_addons.php)
+- 표시: 마이페이지/어드민 partials/addon.php (파란 배경 박스 + 비밀번호 토글)
+
+### Added — 어드민 메모 주문 단위 이동
+
+부가서비스 탭에 묶여 있던 메모를 주문(rzx_orders.admin_notes) 단위로 변경. 부가서비스 유무와 관계없이 우측 활동 로그 위에 항상 7줄 textarea 로 표시. AJAX `update_order_memo` 액션 추가.
+
+### Added — 3-영역 사이드바 메뉴 시스템
+
+코어 메뉴와 플러그인 메뉴 사이 시각적 구분을 위해 `section` 필드 도입 (`top`/`main`/`bottom`, 기본 `main`). 영역 사이에 자동 구분선이 들어가며, 영역에 표시 가능한 메뉴가 없으면 구분선 포함 통째로 스킵.
+
+**어드민 사이드바**:
+- top: 대시보드 / 회원 관리 / 사이트 관리 / 자동 설치(`vos-autoinstall`)
+- main: VosCMS 라이센스(`vos-license-manager`) / 호스팅 관리(`vos-hosting`)
+- bottom: 플러그인 / 설정
+- 변경: [config/admin-menu.php](../config/admin-menu.php), [admin-sidebar.php](../resources/views/admin/partials/admin-sidebar.php)
+
+**마이페이지 사이드바**:
+- top: 대시보드 / 프로필 / 메시지
+- main: 서비스(`vos-hosting` 자동 추가) — 다른 플러그인이 추가하면 자동 누적
+- bottom: 설정 / 비밀번호 / 회원탈퇴 / 로그아웃
+- 변경: [config/mypage-menu.php](../config/mypage-menu.php), [mypage-sidebar.php](../resources/views/components/mypage-sidebar.php)
+
+**플러그인 메뉴 등록**: `plugin.json` 의 `menus.admin` / `menus.mypage` 항목에 `section` + `position` 으로 영역 지정. `services` 메뉴는 코어 mypage-menu.php → `vos-hosting/plugin.json` 으로 이전 (자동 등록).
+
+### Added — HQ 전용 API 플러그인 분리 (보안)
+
+라이선스 검증 API와 개발자 포털 API가 코어에 있어 모든 voscms 사이트에 배포되면 외부 노출되는 문제 해결. 두 API를 신규 본사 전용 플러그인으로 분리.
+
+- **`vos-license-server`** (`scope: hq_only`): 7개 라이선스 엔드포인트 이전 (`check`, `register`, `verify`, `stats`, `updates`, `register-plugin`, `_init`)
+- **`vos-developer`** (`scope: hq_only`): 7개 개발자 포털 엔드포인트 이전 (`register`, `login`, `submit`, `my-items`, `earnings`, `update-version`, `_init`)
+- **`api/_plugin_dispatch.php`** — 코어 wrapper 가 `rzx_plugins.is_active` 체크 후 dispatch, 비활성 시 404
+- 코어 `/api/license/*.php`, `/api/developer/*.php` 는 wrapper 만 남김 (외부 호환 유지)
+- `/api/notices.php` 에 `HQ_HOSTS` env 화이트리스트 추가 (본사 voscms.com 도메인에서만 응답)
+- 빌드 스크립트(`build-voscms.sh`)는 `api/license`, `api/developer`, `api/notices.php`, `vos-license-manager` 를 이미 제외
+
+### Fixed
+
+- 호스팅 계약 만료일 +1일 버그 (`+12 months` → `+12 months -1 second`) — subscription/free/paid/bank 4곳 적용
+- 비즈니스 메일 2개 이상 추가 안 되는 버그 (selector 가 X 버튼을 잡던 문제)
+- 주문 요약에서 추가 용량 미취합 (storage select 의 name 속성 누락)
+- 호스팅 플랜 라벨 다국어 미적용 — `service_hosting_plans._id` 와 `db_trans()` 매칭으로 해결
 
 ---
 
