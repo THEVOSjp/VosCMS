@@ -2,7 +2,29 @@
 /**
  * 관리자 서비스 상세 — 도메인 탭
  * $subs: domain 타입 구독 배열
+ * $servicesByType: 전체 구독 그룹 (hosting subscription metadata 의 mail_provision 사용)
+ * $order: 주문 정보 (domain, domain_option)
  */
+if (empty($subs)) {
+    echo '<div class="px-5 py-12 text-center text-sm text-zinc-400">' . htmlspecialchars(__('services.admin_orders.empty_domain')) . '</div>';
+    return;
+}
+
+// hosting subscription 의 mail_provision 정보 추출 (자동 프로비저닝 상태)
+$_provisionInfo = null;
+foreach ($servicesByType['hosting'] ?? [] as $_hSub) {
+    $_hMeta = json_decode($_hSub['metadata'] ?? '{}', true) ?: [];
+    if (!empty($_hMeta['mail_provision'])) {
+        $_provisionInfo = $_hMeta['mail_provision'];
+        break;
+    }
+}
+$_provisionMode = $_provisionInfo['mode'] ?? null;
+$_provisionedAt = $_provisionInfo['provisioned_at'] ?? null;
+$_finalDomain = $_provisionInfo['final_domain'] ?? null;
+$_zoneStatus = $_provisionInfo['zone_status'] ?? null;
+$_nameServers = $_provisionInfo['name_servers'] ?? [];
+
 $allDomains = [];
 foreach ($subs as $sub) {
     $meta = json_decode($sub['metadata'] ?? '{}', true) ?: [];
@@ -28,6 +50,113 @@ $orderMeta = json_decode($firstSub['metadata'] ?? '{}', true) ?: [];
 $nameservers = $orderMeta['nameservers'] ?? [];
 $_pendingTitle = __('services.admin_orders.btn_pending');
 ?>
+
+<!-- 메일 도메인 자동 프로비저닝 상태 (mode 기반) -->
+<?php if ($_provisionMode): ?>
+<div class="px-5 py-4 border-b border-gray-100 dark:border-zinc-700">
+    <div class="flex items-center justify-between mb-3">
+        <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+            <?= htmlspecialchars(__('services.admin_orders.mail_provision_section')) ?>
+        </p>
+        <?php if ($_provisionedAt): ?>
+        <span class="text-[10px] text-zinc-400"><?= htmlspecialchars(date('Y-m-d H:i', strtotime($_provisionedAt))) ?></span>
+        <?php endif; ?>
+    </div>
+
+    <?php if ($_provisionMode === 'new_pending'): ?>
+    <!-- 신규 구매 대기 — NameSilo 구매 + NS Cloudflare 변경 + 「등록 완료」 클릭 -->
+    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg px-4 py-3">
+        <div class="flex items-start gap-3 mb-3">
+            <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-amber-900 dark:text-amber-300 mb-1"><?= htmlspecialchars(__('services.admin_orders.provision_new_temp_title')) ?></p>
+                <p class="text-xs text-amber-800 dark:text-amber-400 leading-relaxed"><?= htmlspecialchars(__('services.admin_orders.provision_new_temp_desc')) ?></p>
+            </div>
+        </div>
+        <div class="bg-white/50 dark:bg-zinc-800/50 rounded px-3 py-2 mb-3 text-[11px] font-mono">
+            <span class="text-zinc-400"><?= htmlspecialchars(__('services.admin_orders.provision_final_domain')) ?>:</span>
+            <span class="text-zinc-800 dark:text-zinc-200 font-bold ml-1"><?= htmlspecialchars($_provisionInfo['domain'] ?? '?') ?></span>
+        </div>
+        <ol class="text-[11px] text-amber-700 dark:text-amber-400 space-y-1 list-decimal pl-5 mb-3">
+            <li><?= htmlspecialchars(__('services.admin_orders.provision_step1', [':domain' => $_provisionInfo['domain'] ?? '?'])) ?></li>
+            <li><?= htmlspecialchars(__('services.admin_orders.provision_step2')) ?></li>
+            <li><?= htmlspecialchars(__('services.admin_orders.provision_step3')) ?></li>
+        </ol>
+        <button type="button" onclick="completeNewDomainAcquisition(<?= (int)$order['id'] ?>)"
+                class="px-4 py-2 text-xs font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition">
+            <?= htmlspecialchars(__('services.admin_orders.btn_complete_acquisition')) ?>
+        </button>
+    </div>
+
+    <?php elseif ($_provisionMode === 'existing_pending'): ?>
+    <!-- 보유 도메인 — Cloudflare zone 추가 + NS 변경 대기 -->
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-lg px-4 py-3">
+        <div class="flex items-start gap-3 mb-3">
+            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-blue-900 dark:text-blue-300 mb-1"><?= htmlspecialchars(__('services.admin_orders.provision_existing_pending_title')) ?></p>
+                <p class="text-xs text-blue-800 dark:text-blue-400 leading-relaxed"><?= htmlspecialchars(__('services.admin_orders.provision_existing_pending_desc')) ?></p>
+            </div>
+        </div>
+        <?php if (!empty($_nameServers)): ?>
+        <div class="bg-white dark:bg-zinc-800 rounded px-3 py-2 mb-3">
+            <p class="text-[11px] font-bold text-zinc-700 dark:text-zinc-200 mb-1"><?= htmlspecialchars(__('services.admin_orders.provision_ns_label')) ?></p>
+            <ul class="text-xs font-mono space-y-0.5">
+                <?php foreach ($_nameServers as $_ns): ?>
+                <li class="text-zinc-800 dark:text-zinc-200">• <?= htmlspecialchars($_ns) ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+        <?php endif; ?>
+        <button type="button" onclick="checkExistingDomainActivation(<?= (int)$order['id'] ?>)"
+                class="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+            <?= htmlspecialchars(__('services.admin_orders.btn_check_ns_active')) ?>
+        </button>
+    </div>
+
+    <?php elseif ($_provisionMode === 'active'): ?>
+    <!-- 셋업 완료 — 모든 케이스 (free/new/existing) 통합 -->
+    <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 rounded-lg px-4 py-3 flex items-start gap-3">
+        <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div class="flex-1 min-w-0">
+            <p class="text-xs font-bold text-emerald-900 dark:text-emerald-300 mb-0.5"><?= htmlspecialchars(__('services.admin_orders.provision_active_title')) ?></p>
+            <p class="text-xs text-emerald-700 dark:text-emerald-400 font-mono"><?= htmlspecialchars($order['domain'] ?? '') ?></p>
+        </div>
+    </div>
+
+    <?php else: ?>
+    <!-- pending 또는 알 수 없는 상태 -->
+    <div class="bg-zinc-50 dark:bg-zinc-700/30 border border-zinc-200 dark:border-zinc-700 rounded-lg px-4 py-3 flex items-start gap-3">
+        <svg class="w-5 h-5 text-zinc-500 flex-shrink-0 mt-0.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <p class="text-xs text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars(__('services.admin_orders.provision_pending_generic', [':mode' => $_provisionMode ?? 'pending'])) ?></p>
+    </div>
+    <?php endif; ?>
+</div>
+
+<script>
+function completeNewDomainAcquisition(orderId) {
+    if (!confirm(<?= json_encode(__('services.admin_orders.confirm_complete_acquisition'), JSON_UNESCAPED_UNICODE) ?>)) return;
+    fetch(<?= json_encode($baseUrl . '/plugins/vos-hosting/api/service-manage.php') ?>, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ action: 'admin_migrate_new_domain', order_id: orderId })
+    }).then(r => r.json()).then(d => {
+        if (d.success) { alert(<?= json_encode(__('services.admin_orders.alert_acquisition_done'), JSON_UNESCAPED_UNICODE) ?>); location.reload(); }
+        else alert(d.message || 'Failed');
+    });
+}
+function checkExistingDomainActivation(orderId) {
+    fetch(<?= json_encode($baseUrl . '/plugins/vos-hosting/api/service-manage.php') ?>, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ action: 'admin_activate_existing_domain', order_id: orderId })
+    }).then(r => r.json()).then(d => {
+        if (d.success) { alert(<?= json_encode(__('services.admin_orders.alert_ns_activated'), JSON_UNESCAPED_UNICODE) ?>); location.reload(); }
+        else alert(d.message || <?= json_encode(__('services.admin_orders.alert_ns_pending'), JSON_UNESCAPED_UNICODE) ?>);
+    });
+}
+</script>
+<?php endif; /* mail_provision 정보 있음 */ ?>
 
 <!-- 도메인 연결 정보 -->
 <div class="px-5 py-4 border-b border-gray-100 dark:border-zinc-700">

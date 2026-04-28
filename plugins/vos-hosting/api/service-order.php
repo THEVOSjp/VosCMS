@@ -95,6 +95,24 @@ $addons = json_decode($svcSettings['service_addons'] ?? '[]', true) ?: [];
 $maintenance = json_decode($svcSettings['service_maintenance'] ?? '[]', true) ?: [];
 $currency = $svcSettings['service_currency'] ?? 'JPY';
 
+// ===== Calendar 월말 마감 헬퍼 =====
+// 첫 달 일할 = 월단가/30 × 가입달 잔여일수
+function _proratedFirstAmount($monthlyPrice, $startDate) {
+    $ts = strtotime($startDate);
+    $daysInMonth = (int)date('t', $ts);
+    $dayOfMonth = (int)date('j', $ts);
+    $remainDays = max(1, $daysInMonth - $dayOfMonth + 1);
+    return (int)round($monthlyPrice * $remainDays / 30);
+}
+// 정상 청구 시작일 = 다음달 1일 00:00:00
+function _calendarBillingStart($startDate) {
+    return date('Y-m-01 00:00:00', strtotime('first day of next month', strtotime($startDate)));
+}
+// Calendar 만료일 = billing_start + offset - 1일, 23:59:59
+function _calendarExpires($billingStart, $offsetSpec) {
+    return date('Y-m-d 23:59:59', strtotime($offsetSpec . ' -1 day', strtotime($billingStart)));
+}
+
 // ===== 서버에서 금액 재계산 =====
 $items = [];
 $subtotal = 0;
@@ -185,6 +203,20 @@ if ($hostingInfo && (int)$hostingInfo['price'] > 0) {
             'amount' => -$hostingDiscount,
         ];
     }
+    // 첫 달 일할 (가입일~말일) — 정상 N개월 외 추가 청구
+    $_now = date('Y-m-d H:i:s');
+    $proratedHosting = _proratedFirstAmount($monthlyPrice, $_now);
+    if ($proratedHosting > 0) {
+        $_remainDays = max(1, (int)date('t', strtotime($_now)) - (int)date('j', strtotime($_now)) + 1);
+        $items[] = [
+            'type' => 'hosting_prorated',
+            'label' => '첫 달 일할 (' . $_remainDays . '일)',
+            'qty' => $_remainDays . '일',
+            'unit_price' => (int)round($monthlyPrice / 30),
+            'amount' => $proratedHosting,
+        ];
+        $subtotal += $proratedHosting;
+    }
     $subtotal += $hostingFinal;
 } elseif ($hostingInfo) {
     $items[] = [
@@ -262,14 +294,14 @@ $encBizmailAccounts = [];
 
 if (!empty($mailAccounts)) {
     $encMailAccounts = array_map(function($m) {
-        return ['address' => $m['address'] ?? '', 'password' => encrypt($m['password'] ?? '')];
+        return ['address' => $m['address'] ?? '', 'password' => mail_password_hash($m['password'] ?? '')];
     }, $mailAccounts);
     $items[] = ['type' => 'mail_basic', 'label' => '기본 메일', 'qty' => count($mailAccounts), 'accounts' => $encMailAccounts];
 }
 
 if (!empty($bizmailAccounts)) {
     $encBizmailAccounts = array_map(function($m) {
-        return ['address' => $m['address'] ?? '', 'password' => encrypt($m['password'] ?? '')];
+        return ['address' => $m['address'] ?? '', 'password' => mail_password_hash($m['password'] ?? '')];
     }, $bizmailAccounts);
     $items[] = ['type' => 'mail_business', 'label' => '비즈니스 메일', 'qty' => count($bizmailAccounts), 'accounts' => $encBizmailAccounts];
 }
@@ -292,7 +324,8 @@ if ($hostingInfo) {
         'billing_cycle' => $hPrice > 0 ? 'custom' : 'monthly',
         'billing_months' => $hPrice > 0 ? $contractMonths : 1,
         'expires_offset' => $hPrice > 0 ? "+{$contractMonths} months" : '+1 month',
-        'metadata' => ['capacity' => $hostingInfo['capacity'] ?? '', 'mail_accounts' => $encMailAccounts],
+        // mail_accounts 는 mail subscription 에만 저장 (single source of truth)
+        'metadata' => ['capacity' => $hostingInfo['capacity'] ?? ''],
     ];
 }
 
@@ -311,6 +344,24 @@ if (!empty($selectedDomains)) {
         'metadata' => ['domains' => array_keys($selectedDomains)],
     ];
 } elseif ($domainOption === 'free' && !empty($domainName)) {
+    // 서버 측 가용성 재검증 — DB(reserved_subdomains) 우선, Cloudflare API fallback
+    $_parts = explode('.', strtolower($domainName), 2);
+    $_sub = $_parts[0] ?? '';
+    $_zone = $_parts[1] ?? '';
+    if (!$_sub || !$_zone) {
+        echo json_encode(['success' => false, 'message' => '잘못된 서브도메인 형식입니다.']); exit;
+    }
+    try {
+        $_cf = new \RzxLib\Core\Dns\CloudflareDns($_ENV['CLOUDFLARE_API_TOKEN'] ?? '');
+        $_chk = $_cf->checkSubdomainAvailability($_zone, $_sub, $pdo);
+        if (!($_chk['available'] ?? false)) {
+            echo json_encode(['success' => false, 'message' => "{$domainName} 은(는) 이미 사용 중입니다."]); exit;
+        }
+    } catch (\Throwable $_e) {
+        error_log('[service-order] subdomain availability check failed: ' . $_e->getMessage());
+        echo json_encode(['success' => false, 'message' => '서브도메인 가용성 확인 중 오류가 발생했습니다.']); exit;
+    }
+
     $subscriptionData[] = [
         'type' => 'domain',
         'service_class' => 'free',
@@ -458,25 +509,69 @@ if ($bizmailCount > 0) {
 /**
  * 구독 레코드 일괄 INSERT (모든 결제 경로에서 공통 사용)
  */
+/**
+ * 결제 완료 후 메일 도메인 자동 프로비저닝.
+ * voscms.com 의 임시 서브도메인 (customer-XXXX.voscms.com) 자동 발급.
+ * 외부 IO (Cloudflare API + SSH to mx1) 라 transaction 외부에서 호출.
+ * 실패해도 주문 완료 자체는 영향 없음 (로그만 기록).
+ */
+function _autoProvisionMailDomain($pdo, $prefix, $orderId, $orderNumber) {
+    try {
+        $provisioner = new \RzxLib\Core\Mail\MailDomainProvisioner($pdo);
+        $result = $provisioner->provisionForOrder((int)$orderId);
+        $action = !empty($result['provisioned']) ? 'mail_provisioned' : 'mail_provision_skipped';
+        $detail = ['result' => $result];
+        $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type) VALUES (?, ?, ?, 'system')")
+            ->execute([$orderId, $action, json_encode($detail, JSON_UNESCAPED_UNICODE)]);
+
+        // 알림 발송 (mode 별)
+        $mode = $result['mode'] ?? null;
+        try {
+            $notifier = new \RzxLib\Core\Mail\MailNotifier($pdo);
+            if ($mode === 'new_pending' || $mode === 'existing_pending') {
+                $info = $provisioner->getProvisionInfo((int)$orderId) ?? [];
+                $notifier->notifyAdminProvisionRequired((int)$orderId, $mode, $info);
+            } elseif ($mode === 'active') {
+                // free 케이스는 즉시 active — 고객에게 사용 가능 알림
+                $notifier->notifyCustomerMailReady((int)$orderId);
+            }
+        } catch (\Throwable $ne) {
+            error_log("[mail notifier] order $orderNumber: " . $ne->getMessage());
+        }
+    } catch (\Throwable $e) {
+        error_log("[mail provisioner] order $orderNumber: " . $e->getMessage());
+        try {
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type) VALUES (?, 'mail_provision_failed', ?, 'system')")
+                ->execute([$orderId, json_encode(['error' => substr($e->getMessage(), 0, 500)], JSON_UNESCAPED_UNICODE)]);
+        } catch (\Throwable $e2) { /* silent */ }
+    }
+}
+
 function _insertSubscriptions($pdo, $prefix, $orderId, $userId, $currency, $subscriptionData, $status, $now, $customerId = null, $gwName = null) {
     $stmt = $pdo->prepare("INSERT INTO {$prefix}subscriptions
         (order_id, user_id, type, service_class, label, unit_price, quantity, billing_amount, billing_cycle, billing_months,
-         currency, started_at, expires_at, next_billing_at, auto_renew, payment_customer_id, payment_gateway, status, metadata)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+         currency, started_at, billing_start, expires_at, next_billing_at, auto_renew, payment_customer_id, payment_gateway, status, metadata)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    // 정상 청구 시작 = 다음달 1일 (일할 첫 달 이후)
+    $billingStart = _calendarBillingStart($now);
     foreach ($subscriptionData as $sub) {
         $serviceClass = $sub['service_class'] ?? 'recurring';
-        // recurring(유료)만 자동연장, free/one_time은 수동
         $autoRenew = ($serviceClass === 'recurring') ? 1 : 0;
-        // 만료일 = 시작일 + 기간 - 1초 (예: 2026-04-26 → 2027-04-25 23:59:59, 사용자 표시 시 마지막 사용일 정확)
-        $exp = date('Y-m-d H:i:s', strtotime($sub['expires_offset'] . ' -1 second', strtotime($now)));
+        // 도메인은 anniversary 유지 (1년 단위 등록), 그 외는 calendar 월말 마감
+        if ($sub['type'] === 'domain') {
+            $exp = date('Y-m-d H:i:s', strtotime($sub['expires_offset'] . ' -1 day', strtotime($now)));
+            $bStart = $now;
+        } else {
+            $exp = _calendarExpires($billingStart, $sub['expires_offset']);
+            $bStart = $billingStart;
+        }
         $nextBilling = ($serviceClass === 'one_time') ? null : $exp;
-        // 1회성은 항상 '접수(pending)'로 시작
         $subStatus = ($serviceClass === 'one_time') ? 'pending' : $status;
         $stmt->execute([
             $orderId, $userId, $sub['type'], $serviceClass, $sub['label'],
             $sub['unit_price'], $sub['quantity'], $sub['billing_amount'],
             $sub['billing_cycle'], $sub['billing_months'], $currency,
-            $now, $exp, $nextBilling, $autoRenew,
+            $now, $bStart, $exp, $nextBilling, $autoRenew,
             $customerId, $gwName, $subStatus,
             $sub['metadata'] ? json_encode($sub['metadata'], JSON_UNESCAPED_UNICODE) : null,
         ]);
@@ -528,7 +623,7 @@ try {
     // ===== 무료 주문 (총액 0원) — 결제 없이 바로 활성화 =====
     if ($total <= 0) {
         $now = date('Y-m-d H:i:s');
-        $expiresAt = date('Y-m-d H:i:s', strtotime("+{$contractMonths} months -1 second"));
+        $expiresAt = _calendarExpires(_calendarBillingStart($now), "+{$contractMonths} months");
         $pdo->prepare("UPDATE {$prefix}orders SET status='paid', payment_method='free', started_at=?, expires_at=? WHERE id=?")
             ->execute([$now, $expiresAt, $orderId]);
 
@@ -539,6 +634,9 @@ try {
             ->execute([$orderId]);
 
         $pdo->commit();
+
+        // 메일 도메인 자동 프로비저닝 (transaction 외부)
+        _autoProvisionMailDomain($pdo, $prefix, $orderId, $orderNumber);
 
         echo json_encode([
             'success' => true,
@@ -592,7 +690,7 @@ try {
 
             // 주문 상태 업데이트
             $now = date('Y-m-d H:i:s');
-            $expiresAt = date('Y-m-d H:i:s', strtotime("+{$contractMonths} months -1 second"));
+            $expiresAt = _calendarExpires(_calendarBillingStart($now), "+{$contractMonths} months");
             $pdo->prepare("UPDATE {$prefix}orders SET status='paid', payment_id=?, payment_gateway=?, started_at=?, expires_at=? WHERE id=?")
                 ->execute([$paymentId, $gwName, $now, $expiresAt, $orderId]);
 
@@ -604,6 +702,9 @@ try {
                 ->execute([$orderId, json_encode(['payment_id' => $paymentId, 'payment_key' => $result->paymentKey])]);
 
             $pdo->commit();
+
+            // 메일 도메인 자동 프로비저닝 (transaction 외부)
+            _autoProvisionMailDomain($pdo, $prefix, $orderId, $orderNumber);
 
             echo json_encode([
                 'success' => true,
@@ -639,7 +740,7 @@ try {
     } elseif ($paymentMethod === 'bank') {
         // 계좌이체: pending 상태로 구독 생성
         $now = date('Y-m-d H:i:s');
-        $expiresAt = date('Y-m-d H:i:s', strtotime("+{$contractMonths} months -1 second"));
+        $expiresAt = _calendarExpires(_calendarBillingStart($now), "+{$contractMonths} months");
 
         // 모든 구독 레코드 생성
         _insertSubscriptions($pdo, $prefix, $orderId, $userId, $currency, $subscriptionData, 'pending', $now);

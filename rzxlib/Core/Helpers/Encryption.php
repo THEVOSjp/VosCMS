@@ -183,6 +183,38 @@ class Encryption
     }
 
     /**
+     * 메일 계정용 비밀번호 해싱 (SHA512-CRYPT, Dovecot 호환).
+     * 양방향 encrypt() 와 달리 단방향 — 평문 복원 불가.
+     * 결과 형식: {SHA512-CRYPT}$6$salt$hash
+     */
+    public static function mailPasswordHash(string $plain): string
+    {
+        $salt = substr(bin2hex(random_bytes(8)), 0, 16);
+        $hash = crypt($plain, '$6$' . $salt . '$');
+        return '{SHA512-CRYPT}' . $hash;
+    }
+
+    /**
+     * 메일 비밀번호 해시 검증 (Dovecot 와 동일 알고리즘 사용 시 일치).
+     */
+    public static function mailPasswordVerify(string $plain, string $stored): bool
+    {
+        if (str_starts_with($stored, '{SHA512-CRYPT}')) {
+            $hash = substr($stored, strlen('{SHA512-CRYPT}'));
+            return hash_equals($hash, crypt($plain, $hash));
+        }
+        return false;
+    }
+
+    /**
+     * 메일 비밀번호인지 확인 (해시 형식 vs 옛 enc: 형식 구분용).
+     */
+    public static function isMailPasswordHash(?string $value): bool
+    {
+        return $value !== null && str_starts_with($value, '{SHA512-CRYPT}');
+    }
+
+    /**
      * 배열의 특정 필드들을 복호화
      *
      * @param array $data 데이터 배열

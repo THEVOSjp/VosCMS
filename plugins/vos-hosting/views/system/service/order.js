@@ -283,14 +283,33 @@ function checkSubdomain() {
         result.classList.remove('hidden');
         return;
     }
-    // TODO: 실제 구현 시 서버 API로 중복 확인
+
     var freeSuffix = getFreeDomainSuffix();
-    result.innerHTML = '<p class="text-xs text-green-600 flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>' + t('domain.subdomain_available', {fqdn: '<strong>' + val + '.' + freeSuffix + '</strong>'}) + '</p>';
+    var fqdn = val + '.' + freeSuffix;
+    // 확인 중 표시
+    result.innerHTML = '<p class="text-xs text-zinc-500"><svg class="inline w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2" stroke-opacity="0.3"></circle><path d="M12 2a10 10 0 0110 10" stroke-width="2"></path></svg> ' + t('domain.checking') + '</p>';
     result.classList.remove('hidden');
 
-    // 메일 도메인 업데이트
-    updateMailDomain(val + '.' + freeSuffix);
-    updateOrderSummary();
+    // 서버 API 호출 — DB(reserved_subdomains) → Cloudflare API
+    fetch('/plugins/vos-hosting/api/subdomain-check.php?subdomain=' + encodeURIComponent(val) + '&zone=' + encodeURIComponent(freeSuffix))
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (!d.success) {
+                result.innerHTML = '<p class="text-xs text-red-500">' + (d.message || '확인 실패') + '</p>';
+                return;
+            }
+            if (d.available) {
+                result.innerHTML = '<p class="text-xs text-green-600 flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>' + t('domain.subdomain_available', {fqdn: '<strong>' + fqdn + '</strong>'}) + '</p>';
+                // 메일 도메인 업데이트 + 결제 요약 업데이트
+                updateMailDomain(fqdn);
+                updateOrderSummary();
+            } else {
+                result.innerHTML = '<p class="text-xs text-red-500">' + t('domain.subdomain_unavailable', {fqdn: '<strong>' + fqdn + '</strong>'}) + '</p>';
+            }
+        })
+        .catch(function(e) {
+            result.innerHTML = '<p class="text-xs text-red-500">' + (e.message || '확인 실패') + '</p>';
+        });
 }
 
 // 메일 도메인 접미사 업데이트
@@ -444,7 +463,7 @@ function updateOrderSummary() {
             rows.push({ label: t('summary.hosting_label_prefix') + planLabel, unit_price: monthlyPrice, qty: months, unit: t('hosting.unit_month'), amount: hostingTotal, group: 'hosting' });
             if (discount > 0) {
                 var discountAmount = Math.floor(hostingTotal * discount / 100);
-                rows.push({ label: t('summary.discount_long', { pct: discount }), qty: '', unit: '', amount: -discountAmount, cls: 'text-green-400', group: 'hosting' });
+                rows.push({ label: t('summary.discount_long', { pct: discount }), qty: '', unit: '', amount: -discountAmount, cls: 'text-green-600 dark:text-green-400', group: 'hosting' });
                 total += hostingTotal - discountAmount;
             } else {
                 total += hostingTotal;
@@ -463,7 +482,7 @@ function updateOrderSummary() {
             var stDiscount = discount > 0 ? Math.floor(stTotal * discount / 100) : 0;
             rows.push({ label: t('summary.storage_label_prefix') + stLabel, unit_price: stPrice, qty: months, unit: t('hosting.unit_month'), amount: stTotal, group: 'hosting' });
             if (stDiscount > 0) {
-                rows.push({ label: t('summary.discount', { pct: discount }), qty: '', unit: '', amount: -stDiscount, cls: 'text-green-400', group: 'hosting' });
+                rows.push({ label: t('summary.discount', { pct: discount }), qty: '', unit: '', amount: -stDiscount, cls: 'text-green-600 dark:text-green-400', group: 'hosting' });
                 total += stTotal - stDiscount;
             } else {
                 total += stTotal;
@@ -498,7 +517,7 @@ function updateOrderSummary() {
                 var bizDiscount = discount > 0 ? Math.floor(bizTotal * discount / 100) : 0;
                 rows.push({ label: labelText, unit_price: price, qty: t('summary.bizmail_qty', { count: bizCount, months: months }), unit: '', amount: bizTotal, group: 'addon' });
                 if (bizDiscount > 0) {
-                    rows.push({ label: t('summary.discount', { pct: discount }), qty: '', unit: '', amount: -bizDiscount, cls: 'text-green-400', group: 'addon' });
+                    rows.push({ label: t('summary.discount', { pct: discount }), qty: '', unit: '', amount: -bizDiscount, cls: 'text-green-600 dark:text-green-400', group: 'addon' });
                     total += bizTotal - bizDiscount;
                 } else {
                     total += bizTotal;
@@ -509,7 +528,7 @@ function updateOrderSummary() {
                 var monthDiscount = discount > 0 ? Math.floor(monthTotal * discount / 100) : 0;
                 rows.push({ label: labelText, unit_price: price, qty: months, unit: t('hosting.unit_month'), amount: monthTotal, group: 'addon' });
                 if (monthDiscount > 0) {
-                    rows.push({ label: t('summary.discount', { pct: discount }), qty: '', unit: '', amount: -monthDiscount, cls: 'text-green-400', group: 'addon' });
+                    rows.push({ label: t('summary.discount', { pct: discount }), qty: '', unit: '', amount: -monthDiscount, cls: 'text-green-600 dark:text-green-400', group: 'addon' });
                     total += monthTotal - monthDiscount;
                 } else {
                     total += monthTotal;
@@ -541,7 +560,7 @@ function updateOrderSummary() {
                 var maintDiscount = discount > 0 ? Math.floor(maintTotal * discount / 100) : 0;
                 rows.push({ label: t('summary.maint_label_prefix') + svcMaintenance[i].label, unit_price: mp, qty: months, unit: t('hosting.unit_month'), amount: maintTotal, group: 'addon' });
                 if (maintDiscount > 0) {
-                    rows.push({ label: t('summary.discount', { pct: discount }), qty: '', unit: '', amount: -maintDiscount, cls: 'text-green-400', group: 'addon' });
+                    rows.push({ label: t('summary.discount', { pct: discount }), qty: '', unit: '', amount: -maintDiscount, cls: 'text-green-600 dark:text-green-400', group: 'addon' });
                     total += maintTotal - maintDiscount;
                 } else {
                     total += maintTotal;
@@ -596,11 +615,11 @@ function updateOrderSummary() {
         // 금액
         h += '<div class="col-span-4 text-right">';
         if (row.free) {
-            h += '<span class="text-green-400">' + t('summary.free') + '</span>';
+            h += '<span class="text-green-600 dark:text-green-400">' + t('summary.free') + '</span>';
         } else if (row.note) {
             h += '<span class="text-zinc-500">' + row.note + '</span>';
         } else if (row.amount < 0) {
-            h += '<span class="' + (row.cls || 'text-green-400') + '">' + displayPrice(row.amount) + '</span>';
+            h += '<span class="' + (row.cls || 'text-green-600 dark:text-green-400') + '">' + displayPrice(row.amount) + '</span>';
         } else if (row.amount > 0) {
             h += '<span class="text-white">' + displayPrice(row.amount) + '</span>';
         }

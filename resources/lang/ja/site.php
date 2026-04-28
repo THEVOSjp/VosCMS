@@ -174,6 +174,8 @@ return [
         ],
         'refund_policy' => 'キャンセル・返金規定',
         'tokushoho' => '特定商取引法に基づく表記', 'funds_settlement' => '資金決済法に基づく表示',
+        'hosting_terms' => 'ホスティング利用規約',
+        'hosting_terms_edit' => ['editor_title' => 'ホスティング利用規約', 'editor_desc' => 'ウェブホスティングサービス利用規約を編集します。'],
         'staff_intro' => 'スタッフ紹介', 'booking' => '予約する', 'lookup' => '予約照会',
         'service_order' => 'サービス申請',
         'contact' => 'お問い合わせ',

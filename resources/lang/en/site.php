@@ -176,6 +176,8 @@ return [
         ],
         'refund_policy' => 'Cancellation & Refund Policy',
         'tokushoho' => 'Commercial Transactions Act', 'funds_settlement' => 'Funds Settlement Act',
+        'hosting_terms' => 'Hosting Terms of Service',
+        'hosting_terms_edit' => ['editor_title' => 'Hosting Terms of Service', 'editor_desc' => 'Edit the web hosting service terms of use.'],
         'staff_intro' => 'Staff', 'booking' => 'Book Now', 'lookup' => 'Reservation Lookup',
         'service_order' => 'Service Order',
         'contact' => 'Contact',

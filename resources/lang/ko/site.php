@@ -142,6 +142,8 @@ return [
         'tab_module' => '모듈 정보',
         'data_policy' => '데이터 관리 정책', 'refund_policy' => '취소 환불 규정',
         'tokushoho' => '특정상거래법 표기', 'funds_settlement' => '자금결제법 표시',
+        'hosting_terms' => '호스팅 이용 규약',
+        'hosting_terms_edit' => ['editor_title' => '호스팅 이용 규약', 'editor_desc' => '웹 호스팅 서비스 이용 규약을 편집합니다.'],
         'staff_intro' => '스태프 소개', 'booking' => '예약하기', 'lookup' => '예약 조회',
         'service_order' => '서비스 신청',
         'contact' => '문의하기',

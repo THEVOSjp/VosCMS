@@ -4,6 +4,10 @@
  * $subs: hosting 타입 구독 배열
  * $order, $statusLabels, $fmtPrice, $adminUrl, $pdo, $prefix 사용
  */
+if (empty($subs)) {
+    echo '<div class="px-5 py-12 text-center text-sm text-zinc-400">' . htmlspecialchars(__('services.admin_orders.empty_hosting')) . '</div>';
+    return;
+}
 $sub = $subs[0];
 $sst = $statusLabels[$sub['status']] ?? [__('services.mypage.status_unknown'), 'bg-gray-100 text-gray-500'];
 $_pendingTitle = __('services.admin_orders.btn_pending');

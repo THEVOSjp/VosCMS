@@ -446,6 +446,26 @@ if (!function_exists('decrypt_fields')) {
     }
 }
 
+if (!function_exists('mail_password_hash')) {
+    /**
+     * 메일 계정 비밀번호를 Dovecot 호환 SHA512-CRYPT 해시로 변환 (단방향).
+     */
+    function mail_password_hash(string $plain): string
+    {
+        return \RzxLib\Core\Helpers\Encryption::mailPasswordHash($plain);
+    }
+}
+
+if (!function_exists('mail_password_verify')) {
+    /**
+     * 메일 비밀번호 검증.
+     */
+    function mail_password_verify(string $plain, string $stored): bool
+    {
+        return \RzxLib\Core\Helpers\Encryption::mailPasswordVerify($plain, $stored);
+    }
+}
+
 if (!function_exists('db_trans')) {
     /**
      * DB에서 다국어 번역 가져오기 (폴백 체인 내장)

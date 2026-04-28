@@ -111,6 +111,103 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                 ->execute([$oid, json_encode(['email' => $ord['applicant_email']]), $_SESSION['user_id'] ?? '']);
             echo json_encode(['success' => true, 'message' => __('services.admin_orders.alert_setup_email_sent')]);
             exit;
+
+        // 관리자 무료 용량 추가 — 호스팅 만료일까지 동기화, billing_amount=0
+        case 'admin_add_storage_addon':
+            $hostSubId = (int)($input['subscription_id'] ?? 0);
+            $capacity = trim($input['capacity'] ?? '');
+            $unitPrice = (int)($input['unit_price'] ?? 0);
+            if (!$hostSubId || $capacity === '') {
+                echo json_encode(['success' => false, 'message' => __('services.admin_orders.alert_invalid_input')]); exit;
+            }
+            $hSt = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE id = ? AND type = 'hosting'");
+            $hSt->execute([$hostSubId]);
+            $hSub = $hSt->fetch(PDO::FETCH_ASSOC);
+            if (!$hSub) { echo json_encode(['success' => false, 'message' => __('services.admin_orders.alert_sub_not_found')]); exit; }
+
+            $now = date('Y-m-d H:i:s');
+            $label = "추가 용량 +" . $capacity;
+            $addonMeta = [
+                'addon_type' => 'storage',
+                'capacity' => $capacity,
+                'unit_price' => $unitPrice,
+                'parent_hosting_sub_id' => $hostSubId,
+                'admin_granted' => true,
+                'granted_by' => $_SESSION['user_id'] ?? '',
+                'granted_at' => $now,
+            ];
+            try {
+                $pdo->beginTransaction();
+                $insSt = $pdo->prepare("INSERT INTO {$prefix}subscriptions
+                    (order_id, user_id, type, service_class, label, unit_price, quantity, billing_amount,
+                     billing_cycle, billing_months, currency, started_at, expires_at,
+                     auto_renew, status, metadata)
+                    VALUES (?, ?, 'addon', 'recurring', ?, ?, 1, 0, 'monthly', 1, ?, ?, ?, 1, 'active', ?)");
+                $insSt->execute([
+                    $hSub['order_id'], $hSub['user_id'], $label, $unitPrice,
+                    $hSub['currency'] ?? 'JPY', $now, $hSub['expires_at'],
+                    json_encode($addonMeta, JSON_UNESCAPED_UNICODE),
+                ]);
+                $newSubId = (int)$pdo->lastInsertId();
+
+                $hMeta = json_decode($hSub['metadata'] ?? '{}', true) ?: [];
+                $hMeta['extra_storage'] = $hMeta['extra_storage'] ?? [];
+                $hMeta['extra_storage'][] = [
+                    'capacity' => $capacity,
+                    'addon_sub_id' => $newSubId,
+                    'added_at' => $now,
+                    'admin_granted' => true,
+                ];
+                $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
+                    ->execute([json_encode($hMeta, JSON_UNESCAPED_UNICODE), $hostSubId]);
+
+                $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'admin_add_storage_addon', ?, 'admin', ?)")
+                    ->execute([$hSub['order_id'], json_encode(['capacity' => $capacity, 'addon_sub_id' => $newSubId], JSON_UNESCAPED_UNICODE), $_SESSION['user_id'] ?? '']);
+                $pdo->commit();
+            } catch (\Throwable $e) {
+                $pdo->rollBack();
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]); exit;
+            }
+            echo json_encode(['success' => true, 'subscription_id' => $newSubId, 'message' => __('services.admin_orders.alert_addon_added')]);
+            exit;
+
+        // 부가서비스 삭제 (소프트 — status=cancelled, hosting metadata.extra_storage 에서 제거)
+        case 'admin_delete_addon':
+            $aSt = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE id = ? AND type = 'addon'");
+            $aSt->execute([$subId]);
+            $aSub = $aSt->fetch(PDO::FETCH_ASSOC);
+            if (!$aSub) { echo json_encode(['success' => false, 'message' => __('services.admin_orders.alert_sub_not_found')]); exit; }
+
+            $aMeta = json_decode($aSub['metadata'] ?? '{}', true) ?: [];
+            $parentHostId = (int)($aMeta['parent_hosting_sub_id'] ?? 0);
+            try {
+                $pdo->beginTransaction();
+                $pdo->prepare("UPDATE {$prefix}subscriptions SET status = 'cancelled', auto_renew = 0 WHERE id = ?")
+                    ->execute([$subId]);
+                if ($parentHostId) {
+                    $pSt = $pdo->prepare("SELECT metadata FROM {$prefix}subscriptions WHERE id = ?");
+                    $pSt->execute([$parentHostId]);
+                    $pRow = $pSt->fetch(PDO::FETCH_ASSOC);
+                    if ($pRow) {
+                        $pMeta = json_decode($pRow['metadata'] ?? '{}', true) ?: [];
+                        if (!empty($pMeta['extra_storage'])) {
+                            $pMeta['extra_storage'] = array_values(array_filter($pMeta['extra_storage'], function($e) use ($subId) {
+                                return (int)($e['addon_sub_id'] ?? 0) !== $subId;
+                            }));
+                            $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
+                                ->execute([json_encode($pMeta, JSON_UNESCAPED_UNICODE), $parentHostId]);
+                        }
+                    }
+                }
+                $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'admin_delete_addon', ?, 'admin', ?)")
+                    ->execute([$aSub['order_id'], json_encode(['subscription_id' => $subId, 'label' => $aSub['label']], JSON_UNESCAPED_UNICODE), $_SESSION['user_id'] ?? '']);
+                $pdo->commit();
+            } catch (\Throwable $e) {
+                $pdo->rollBack();
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]); exit;
+            }
+            echo json_encode(['success' => true, 'message' => __('services.admin_orders.alert_addon_deleted')]);
+            exit;
     }
     echo json_encode(['success' => false, 'message' => __('services.admin_orders.alert_unknown_action')]);
     exit;
@@ -120,7 +217,7 @@ require_once BASE_PATH . '/rzxlib/Core/Helpers/Encryption.php';
 require_once BASE_PATH . '/rzxlib/Core/Helpers/functions.php';
 
 // 주문 로드
-$orderStmt = $pdo->prepare("SELECT o.*, u.name as user_name, u.email as user_email FROM {$prefix}orders o LEFT JOIN {$prefix}users u ON o.user_id = u.id WHERE o.order_number = ?");
+$orderStmt = $pdo->prepare("SELECT o.*, u.name as user_name, u.email as user_email, u.role as user_role FROM {$prefix}orders o LEFT JOIN {$prefix}users u ON o.user_id = u.id WHERE o.order_number = ?");
 $orderStmt->execute([$adminOrderNumber ?? '']);
 $order = $orderStmt->fetch(PDO::FETCH_ASSOC);
 
@@ -195,8 +292,10 @@ $servicesByType = [];
 foreach ($subscriptions as $sub) {
     $servicesByType[$sub['type']][] = $sub;
 }
-$tabTypes = array_keys($servicesByType);
-$firstTab = $tabTypes[0] ?? '';
+// 항상 4개 탭 표시 (hosting / domain / mail / addon) — 데이터 없어도 빈 상태로 노출
+$_allTabTypes = ['hosting', 'domain', 'mail', 'addon'];
+$tabTypes = $_allTabTypes;
+$firstTab = $tabTypes[0];
 
 $pageTitle = $order['order_number'] . ' - ' . __('services.admin_orders.page_title');
 $pageHeaderTitle = __('services.admin_orders.header_title');
@@ -253,7 +352,17 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
         </a>
         <div>
             <h1 class="text-lg font-bold text-zinc-900 dark:text-white"><?= htmlspecialchars($order['order_number']) ?></h1>
-            <p class="text-xs text-zinc-400"><?= htmlspecialchars($order['domain'] ?: '-') ?> · <?= htmlspecialchars(decrypt($order['applicant_name'] ?: '') ?: decrypt($order['user_name'] ?: '') ?: '-') ?></p>
+            <p class="text-xs text-zinc-400"><?= htmlspecialchars($order['domain'] ?: '-') ?> · <?php
+                $_isSysOrder = in_array($order['user_role'] ?? '', ['supervisor', 'admin'], true);
+                if ($_isSysOrder) {
+                    $_sysName = decrypt($order['user_name'] ?: '') ?: '-';
+                    $_sysRoleLbl = $order['user_role'] === 'supervisor' ? __('services.admin_orders.role_supervisor') : __('services.admin_orders.role_admin');
+                    $_sysEmail = decrypt($order['user_email'] ?: '') ?: '-';
+                    echo htmlspecialchars($_sysName . '(' . $_sysRoleLbl . ': ' . $_sysEmail . ')');
+                } else {
+                    echo htmlspecialchars(decrypt($order['applicant_name'] ?: '') ?: decrypt($order['user_name'] ?: '') ?: '-');
+                }
+            ?></p>
         </div>
     </div>
     <div class="flex items-center gap-2">
@@ -290,8 +399,13 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                     </div>
                     <div>
                         <p class="text-[10px] text-zinc-400 uppercase mb-0.5"><?= htmlspecialchars(__('services.admin_orders.f_applicant')) ?></p>
+                        <?php if ($_isSysOrder ?? false): ?>
+                        <p class="font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars(decrypt($order['user_name'] ?: '') ?: '-') ?></p>
+                        <p class="text-xs text-violet-500 dark:text-violet-400"><?= htmlspecialchars(($order['user_role'] === 'supervisor' ? __('services.admin_orders.role_supervisor') : __('services.admin_orders.role_admin')) . ': ' . (decrypt($order['user_email'] ?: '') ?: '-')) ?></p>
+                        <?php else: ?>
                         <p class="font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars(decrypt($order['applicant_name'] ?: '') ?: '-') ?></p>
                         <p class="text-xs text-zinc-400"><?= htmlspecialchars($order['applicant_email'] ?: '') ?></p>
+                        <?php endif; ?>
                     </div>
                     <div>
                         <p class="text-[10px] text-zinc-400 uppercase mb-0.5"><?= htmlspecialchars(__('services.order.applicant.phone_label')) ?></p>
@@ -307,36 +421,34 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
 
         <!-- 서비스 탭 -->
         <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 overflow-hidden">
-            <?php if (count($tabTypes) > 1): ?>
             <div class="border-b border-gray-200 dark:border-zinc-700">
                 <nav class="flex gap-1 px-4 -mb-px overflow-x-auto">
                     <?php foreach ($tabTypes as $i => $type): ?>
+                    <?php
+                        if ($type === 'mail') {
+                            $_cnt = 0;
+                            foreach ($servicesByType[$type] ?? [] as $_ms) {
+                                $_mm = json_decode($_ms['metadata'] ?? '{}', true) ?: [];
+                                $_cnt += count($_mm['mail_accounts'] ?? []);
+                            }
+                        } else {
+                            $_cnt = count($servicesByType[$type] ?? []);
+                        }
+                    ?>
                     <button onclick="showTab('<?= $type ?>')" id="atab_<?= $type ?>"
                             class="admin-tab flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition <?= $i === 0 ? 'border-blue-600 text-blue-600' : 'border-transparent text-zinc-400 hover:text-zinc-600' ?>">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><?= $typeIcons[$type] ?? $typeIcons['addon'] ?></svg>
                         <?= htmlspecialchars($typeLabels[$type] ?? $type) ?>
-                        <span class="text-[10px] px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-700 text-zinc-500 rounded-full"><?php
-                            if ($type === 'mail') {
-                                $mc = 0;
-                                foreach ($servicesByType[$type] as $_ms) {
-                                    $_mm = json_decode($_ms['metadata'] ?? '{}', true) ?: [];
-                                    $mc += count($_mm['mail_accounts'] ?? []);
-                                }
-                                echo $mc;
-                            } else {
-                                echo count($servicesByType[$type]);
-                            }
-                        ?></span>
+                        <span class="text-[10px] px-1.5 py-0.5 <?= $_cnt > 0 ? 'bg-zinc-100 dark:bg-zinc-700 text-zinc-500' : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-300' ?> rounded-full"><?= $_cnt ?></span>
                     </button>
                     <?php endforeach; ?>
                 </nav>
             </div>
-            <?php endif; ?>
 
-            <?php foreach ($servicesByType as $type => $typeSubs): ?>
+            <?php foreach ($tabTypes as $type): ?>
             <div id="apanel_<?= $type ?>" class="admin-panel <?= $type !== $firstTab ? 'hidden' : '' ?>">
                 <?php
-                $subs = $typeSubs;
+                $subs = $servicesByType[$type] ?? [];
                 $partialFile = __DIR__ . '/partials/' . $type . '.php';
                 if (file_exists($partialFile)) {
                     include $partialFile;

@@ -66,6 +66,15 @@ return [
         'edit' => '{admin}/site/pages/edit?slug=refund-policy',
     ],
     [
+        'slug' => 'hosting-terms',
+        'title' => 'site.pages.hosting_terms',
+        'icon' => 'M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01',
+        'emoji' => '🖥️',
+        'color' => 'indigo',
+        'type' => 'document',
+        'edit' => '{admin}/site/pages/edit?slug=hosting-terms',
+    ],
+    [
         'slug' => 'tokushoho',
         'title' => 'site.pages.tokushoho',
         'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',

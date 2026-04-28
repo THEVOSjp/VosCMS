@@ -114,7 +114,7 @@ $totalPages = max(1, ceil($totalCount / $perPage));
 $offset = ($page - 1) * $perPage;
 
 // 목록 — 서비스명(호스팅 플랜), 업체명, 만료일 포함
-$listStmt = $pdo->prepare("SELECT o.*, u.name as user_name, u.email as user_email,
+$listStmt = $pdo->prepare("SELECT o.*, u.name as user_name, u.email as user_email, u.role as user_role,
     (SELECT COUNT(*) FROM {$prefix}subscriptions s WHERE s.order_id = o.id) as sub_count,
     (SELECT s2.label FROM {$prefix}subscriptions s2 WHERE s2.order_id = o.id AND s2.type = 'hosting' LIMIT 1) as hosting_label
     FROM {$prefix}orders o
@@ -166,7 +166,14 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
 
 <!-- 서비스 신청 상태 필터 -->
 <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 p-4 mb-6">
-    <p class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3"><?= htmlspecialchars(__('services.admin_orders.filter_section')) ?></p>
+    <div class="flex items-center justify-between mb-3">
+        <p class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= htmlspecialchars(__('services.admin_orders.filter_section')) ?></p>
+        <button type="button" onclick="alert('<?= htmlspecialchars(__('services.admin_orders.btn_create_order_todo'), ENT_QUOTES) ?>')"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <?= htmlspecialchars(__('services.admin_orders.btn_create_order')) ?>
+        </button>
+    </div>
     <div class="flex flex-wrap gap-2">
         <a href="<?= $qp(['status'=>'','expiry'=>'','page'=>'']) ?>" class="px-3 py-1.5 text-xs rounded-lg border transition <?= !$filterStatus && !$filterExpiry ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 border-gray-200 dark:border-zinc-600 hover:border-blue-400' ?>">
             <?= htmlspecialchars(__('services.admin_orders.filter_all')) ?> <span class="ml-1 font-bold"><?= $totalOrders ?></span>
@@ -263,8 +270,18 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
             <?php endif; ?>
             <?php foreach ($orders as $o):
                 $ost = $statusLabels[$o['status']] ?? [__('services.mypage.status_unknown'), 'bg-gray-100 text-gray-500'];
-                $dispName = decrypt($o['applicant_name'] ?: '') ?: decrypt($o['user_name'] ?: '') ?: '-';
-                $company = $o['applicant_company'] ?? '';
+                // 시스템 관리자(supervisor/admin) 주문은 user 정보로 표시 (applicant_* 는 레거시 암호화 데이터)
+                $_isSysOrder = in_array($o['user_role'] ?? '', ['supervisor', 'admin'], true);
+                if ($_isSysOrder) {
+                    $dispName = decrypt($o['user_name'] ?: '') ?: '-';
+                    $sysRoleLabel = $o['user_role'] === 'supervisor' ? __('services.admin_orders.role_supervisor') : __('services.admin_orders.role_admin');
+                    $sysSubline = $sysRoleLabel . ': ' . (decrypt($o['user_email'] ?: '') ?: '-');
+                    $company = '';
+                } else {
+                    $dispName = decrypt($o['applicant_name'] ?: '') ?: decrypt($o['user_name'] ?: '') ?: '-';
+                    $sysSubline = '';
+                    $company = $o['applicant_company'] ?? '';
+                }
                 $startDate = $o['started_at'] ? date('Y-m-d', strtotime($o['started_at'])) : '-';
                 $expiresDate = $o['expires_at'] ? date('Y-m-d', strtotime($o['expires_at'])) : '-';
                 $daysLeft = $o['expires_at'] ? (int)ceil((strtotime($o['expires_at']) - time()) / 86400) : null;
@@ -275,7 +292,9 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                 <td class="py-3 px-3 text-center"><input type="checkbox" class="order-check rounded text-blue-600" value="<?= $o['id'] ?>" onchange="updateBulkBar()"></td>
                 <td class="py-3 px-3">
                     <a href="<?= $adminUrl ?>/service-orders/<?= htmlspecialchars($o['order_number']) ?>" class="font-medium text-zinc-900 dark:text-white hover:text-blue-600"><?= htmlspecialchars($dispName) ?></a>
-                    <?php if ($company): ?>
+                    <?php if ($_isSysOrder): ?>
+                    <p class="text-[10px] text-violet-500 dark:text-violet-400"><?= htmlspecialchars($sysSubline) ?></p>
+                    <?php elseif ($company): ?>
                     <p class="text-[10px] text-zinc-400"><?= htmlspecialchars($company) ?></p>
                     <?php endif; ?>
                 </td>

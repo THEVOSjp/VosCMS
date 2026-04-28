@@ -113,9 +113,11 @@ $statusLabels = [
                 return $typeLabels[$s['type']] ?? $s['type'];
             }, $subs));
             $primaryDomain = '';
+            $isSystemImported = false;
             foreach ($subs as $s) {
                 $m = json_decode($s['metadata'] ?? '{}', true) ?: [];
-                if ($s['type'] === 'domain' && !empty($m['domains'])) { $primaryDomain = $m['domains'][0]; break; }
+                if ($s['type'] === 'domain' && !empty($m['domains'])) { $primaryDomain = $m['domains'][0]; }
+                if ($s['type'] === 'hosting' && (($m['mail_provision']['origin'] ?? '') === 'system_imported')) { $isSystemImported = true; }
             }
         ?>
         <a href="<?= $baseUrl ?>/mypage/services/<?= htmlspecialchars($orderNum) ?>"
@@ -139,7 +141,11 @@ $statusLabels = [
                     </div>
                     <div class="flex items-center gap-3 mt-2 text-xs text-zinc-400">
                         <span><?= date('Y-m-d', strtotime($groupStart)) ?> ~ <?= date('Y-m-d', strtotime($groupEnd)) ?></span>
+                        <?php if ($isSystemImported): ?>
+                        <span class="font-medium text-violet-600 dark:text-violet-400"><?= htmlspecialchars(__('services.mypage.system_server')) ?></span>
+                        <?php else: ?>
                         <span class="font-medium <?= $groupTotal > 0 ? 'text-zinc-600 dark:text-zinc-300' : 'text-green-600 dark:text-green-400' ?>"><?= $groupTotal > 0 ? $fmtPrice($groupTotal, $groupCurrency) : __('services.order.summary.free') ?></span>
+                        <?php endif; ?>
                         <span class="text-zinc-300 dark:text-zinc-600"><?= __('services.mypage.count_services', [':count' => count($subs)]) ?></span>
                     </div>
                 </div>

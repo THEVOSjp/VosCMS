@@ -3,6 +3,10 @@
  * 관리자 서비스 상세 — 메일 탭
  * $subs: mail 타입 구독 배열
  */
+if (empty($subs)) {
+    echo '<div class="px-5 py-12 text-center text-sm text-zinc-400">' . htmlspecialchars(__('services.admin_orders.empty_mail')) . '</div>';
+    return;
+}
 // 모든 메일 계정 수집
 $allAccounts = [];
 foreach ($subs as $sub) {

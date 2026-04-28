@@ -98,6 +98,9 @@ if (file_exists($_svcLangFile)) {
 $pageTitle = __('site.pages.service_order') ?? 'VosCMS 서비스 신청';
 
 // ─── 페이지 스킨 설정 로드 (스킨 탭에서 입력한 hero 설정) ───
+//   page_config_service/order JSON 의 skin_config 키를 통해 customer/page.php 와
+//   동일한 키 셋을 처리한다 (title_bg_video, content_width, primary_color,
+//   custom_css, custom_header_html, custom_footer_html, show_breadcrumb 등).
 $_pageCfgRow = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = ?");
 $_pageCfgRow->execute(['page_config_service/order']);
 $_pageCfg = json_decode($_pageCfgRow->fetchColumn() ?: '{}', true) ?: [];
@@ -112,27 +115,72 @@ $_skinSubtitle = $_skin['page_subtitle'] ? db_trans('skin_config.page_subtitle',
 $_heroTitle = $_skinTitle ?: $pageTitle;
 $_heroSubtitle = $_skinSubtitle;
 
-// 배경
-$_bgImage = $_skin['title_bg_image'] ?? '';
-$_bgHeight = (int)($_skin['title_bg_height'] ?? 0);
+// 배경 — image / video / none 분기 (customer/page.php 패턴)
+$_bgType    = $_skin['title_bg_type']    ?? ($_skin['title_bg_image'] || $_skin['title_bg_video'] ? 'image' : 'none');
+$_bgImage   = $_skin['title_bg_image']   ?? '';
+$_bgVideo   = $_skin['title_bg_video']   ?? '';
+$_bgHeight  = (int)($_skin['title_bg_height']  ?? 0);
 $_bgOverlay = (int)($_skin['title_bg_overlay'] ?? 0);
-$_textColor = $_skin['title_text_color'] ?? 'white'; // 'white' | 'dark'
+$_textColor = $_skin['title_text_color'] ?? 'white';
 $_isDarkText = $_textColor === 'dark';
+$_hasBg = $_bgType === 'video' && $_bgVideo
+       || $_bgType === 'image' && $_bgImage;
+// 절대 URL 변환 (storage 경로용)
+$_bgSrc = function($path) use ($baseUrl) {
+    if (!$path) return '';
+    return str_starts_with($path, 'http') ? $path : $baseUrl . $path;
+};
+
+// 콘텐츠 너비 / 배경 / 색상 / 빵부스러기 / 커스텀 CSS · HTML
+$_contentWidth = $_skin['content_width'] ?? '';
+$_contentBg    = $_skin['content_bg']    ?? '';
+$_primaryColor = $_skin['primary_color'] ?? '';
+$_showBreadcrumb = ($_skin['show_breadcrumb'] ?? '0') === '1';
+$_customCss      = $_skin['custom_css'] ?? '';
+$_customHeader   = $_skin['custom_header_html'] ?? '';
+$_customFooter   = $_skin['custom_footer_html'] ?? '';
+
+// content_width 가 지정되면 hero 와 본문 모두 그것 사용 (없으면 기존 widthClass)
+if ($_contentWidth) {
+    $widthClass = $_contentWidth;
+}
 
 include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern') . '/header.php';
+
+// 커스텀 CSS / primary color / 커스텀 헤더 HTML 출력
+if ($_customCss) echo '<style>' . $_customCss . '</style>';
+if ($_primaryColor) echo '<style>:root { --page-primary: ' . htmlspecialchars($_primaryColor) . '; }</style>';
+if ($_customHeader) echo $_customHeader;
 ?>
 
 <?php if ($_showTitle): ?>
-<!-- 헤더 (hero) -->
-<div class="relative <?= $_bgImage ? 'bg-cover bg-center' : 'bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-900 dark:to-zinc-900' ?> <?= $_isDarkText ? 'text-zinc-900 dark:text-white' : 'text-white' ?>"
-     style="<?= $_bgImage ? 'background-image:url(\''.htmlspecialchars($_bgImage).'\');' : '' ?> <?= $_bgHeight > 0 ? 'min-height:'.(int)$_bgHeight.'px;' : 'padding:3rem 0;' ?> <?= $_bgHeight > 0 ? 'display:flex;align-items:center;justify-content:center;' : '' ?>">
-    <?php if ($_bgImage && $_bgOverlay > 0): ?>
+<!-- 헤더 (hero) — image / video / gradient 폴백 -->
+<div class="relative overflow-hidden <?= $_isDarkText ? 'text-zinc-900 dark:text-white' : 'text-white' ?> <?= $_hasBg ? '' : 'bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-900 dark:to-zinc-900' ?>"
+     style="<?= $_bgHeight > 0 ? 'min-height:'.(int)$_bgHeight.'px;' : 'padding:3rem 0;' ?> <?= $_bgHeight > 0 ? 'display:flex;align-items:center;justify-content:center;' : '' ?>">
+
+    <?php if ($_bgType === 'video' && $_bgVideo): ?>
+    <video class="absolute inset-0 w-full h-full object-cover" autoplay muted loop playsinline>
+        <source src="<?= htmlspecialchars($_bgSrc($_bgVideo)) ?>" type="video/mp4">
+    </video>
+    <?php elseif ($_bgType === 'image' && $_bgImage): ?>
+    <div class="absolute inset-0 bg-cover bg-center" style="background-image:url('<?= htmlspecialchars($_bgSrc($_bgImage)) ?>')"></div>
+    <?php endif; ?>
+
+    <?php if ($_hasBg && $_bgOverlay > 0): ?>
     <div class="absolute inset-0 <?= $_isDarkText ? 'bg-white' : 'bg-black' ?>" style="opacity:<?= $_bgOverlay / 100 ?>"></div>
     <?php endif; ?>
+
     <div class="<?= $widthClass ?> mx-auto px-4 text-center relative z-10">
         <h1 class="text-3xl font-bold mb-2"><?= htmlspecialchars($_heroTitle) ?></h1>
         <?php if ($_heroSubtitle): ?>
         <p class="<?= $_isDarkText ? 'text-zinc-600 dark:text-zinc-300' : 'text-blue-100 dark:text-blue-200' ?>"><?= htmlspecialchars($_heroSubtitle) ?></p>
+        <?php endif; ?>
+        <?php if ($_showBreadcrumb): ?>
+        <nav class="text-sm <?= $_isDarkText ? 'text-zinc-700' : 'text-white' ?> opacity-70 mt-3">
+            <a href="<?= htmlspecialchars($baseUrl) ?>/" class="hover:opacity-100"><?= __('common.home') ?? '홈' ?></a>
+            <span class="mx-1">/</span>
+            <span><?= htmlspecialchars($_heroTitle) ?></span>
+        </nav>
         <?php endif; ?>
     </div>
 </div>
@@ -388,6 +436,8 @@ $_i18nJs = [
     'domain.subdomain_min_2chars'=> __('services.order.domain.subdomain_min_2chars'),
     'domain.subdomain_blocked'   => __('services.order.domain.subdomain_blocked'),
     'domain.subdomain_available' => __('services.order.domain.subdomain_available'),
+    'domain.subdomain_unavailable'=> __('services.order.domain.subdomain_unavailable'),
+    'domain.checking'            => __('services.order.domain.checking'),
     'hosting.price_per_month'    => __('services.order.hosting.price_per_month'),
     'addons.pw_placeholder'      => __('services.order.addons.pw_placeholder'),
     'addons.alert_max_mail'      => __('services.order.addons.alert_max_mail'),
@@ -456,5 +506,7 @@ function t(key, replace) {
 <script src="<?= $baseUrl ?>/plugins/vos-hosting/views/system/service/order.js?v=<?= filemtime(BASE_PATH . '/plugins/vos-hosting/views/system/service/order.js') ?>"></script>
 
 <?php
+// 스킨 탭의 custom_footer_html (footer 직전에 출력)
+if (!empty($_customFooter)) echo $_customFooter;
 include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern') . '/footer.php';
 ?>

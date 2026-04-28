@@ -135,6 +135,9 @@ try {
             $stmt->execute([$sitemapId, $parentId, $title, $url, $target, $icon, $cssClass, $desc, $menuType, $maxOrder + 1, $isShortcut, $openWindow, $expand, $groupSrls]);
             $newMenuId = $pdo->lastInsertId();
 
+            // ID 재사용 방어 — 새 메뉴 ID 의 stale 번역(과거 같은 ID 메뉴의 잔재)을 무조건 정리
+            $pdo->prepare("DELETE FROM rzx_translations WHERE lang_key LIKE ?")->execute(["menu_item.{$newMenuId}.%"]);
+
             // 시스템 페이지 번역 자동 등록
             // system-pages.php에 정의된 페이지면 site.pages.{key} 번역을 메뉴 번역으로 복사
             $_sysPages = file_exists(BASE_PATH . '/config/system-pages.php') ? include BASE_PATH . '/config/system-pages.php' : [];
@@ -146,7 +149,8 @@ try {
                 // 번역 키에서 다국어 텍스트 가져와서 rzx_translations에 등록
                 $_transKey = $_sysPageMatch['title']; // 예: site.pages.downloads
                 $_locales = ['ko','en','ja','zh_CN','zh_TW','de','es','fr','id','mn','ru','tr','vi'];
-                $_insStmt = $pdo->prepare("INSERT IGNORE INTO rzx_translations (lang_key, locale, content) VALUES (?, ?, ?)");
+                // ON DUPLICATE KEY UPDATE 로 stale 잔재가 있어도 덮어쓰기 (방어층)
+                $_insStmt = $pdo->prepare("INSERT INTO rzx_translations (lang_key, locale, source_locale, content, created_at, updated_at) VALUES (?, ?, 'ko', ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE content=VALUES(content), updated_at=NOW()");
                 foreach ($_locales as $_loc) {
                     $_translated = function_exists('__') ? __($_transKey, [], $_loc) : '';
                     // 번역이 키 자체를 반환하면 스킵
@@ -223,10 +227,15 @@ try {
             $expand     = intval($input['expand'] ?? 0);
             $groupSrls  = trim($input['group_srls'] ?? '');
 
-            // shortcut 메뉴는 페이지 존재 검증
-            $curStmt = $pdo->prepare("SELECT menu_type FROM rzx_menu_items WHERE id = ? LIMIT 1");
+            // 현재 메뉴 정보 (변경 감지용)
+            $curStmt = $pdo->prepare("SELECT menu_type, title, url FROM rzx_menu_items WHERE id = ? LIMIT 1");
             $curStmt->execute([$id]);
-            $curType = (string)($curStmt->fetchColumn() ?: '');
+            $curRow = $curStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+            $curType = (string)($curRow['menu_type'] ?? '');
+            $oldTitle = (string)($curRow['title'] ?? '');
+            $oldUrl = (string)($curRow['url'] ?? '');
+
+            // shortcut 메뉴는 페이지 존재 검증
             if ($curType === 'shortcut') {
                 if (!$url) {
                     jsonError('링크 메뉴는 연결할 페이지(URL)를 반드시 지정해야 합니다.');
@@ -240,6 +249,30 @@ try {
                 "UPDATE rzx_menu_items SET title=?, url=?, target=?, icon=?, css_class=?, description=?, open_window=?, `expand`=?, group_srls=?, updated_at=NOW() WHERE id=?"
             );
             $stmt->execute([$title, $url, $target, $icon, $cssClass, $desc, $openWindow, $expand, $groupSrls, $id]);
+
+            // title 또는 url 이 바뀐 경우 → 옛 번역 정리 (clean slate)
+            if ($title !== $oldTitle || $url !== $oldUrl) {
+                $pdo->prepare("DELETE FROM rzx_translations WHERE lang_key LIKE ?")->execute(["menu_item.{$id}.%"]);
+
+                // 새 url 이 시스템 페이지면 → 시스템 페이지 번역 자동 재등록
+                $_sysPages = file_exists(BASE_PATH . '/config/system-pages.php') ? include BASE_PATH . '/config/system-pages.php' : [];
+                $_sysPageMatch = null;
+                foreach ($_sysPages as $_sp) {
+                    if (($_sp['slug'] ?? '') === $url) { $_sysPageMatch = $_sp; break; }
+                }
+                if ($_sysPageMatch && !empty($_sysPageMatch['title'])) {
+                    $_transKey = $_sysPageMatch['title'];
+                    $_locales = ['ko','en','ja','zh_CN','zh_TW','de','es','fr','id','mn','ru','tr','vi'];
+                    $_insStmt = $pdo->prepare("INSERT INTO rzx_translations (lang_key, locale, source_locale, content, created_at, updated_at) VALUES (?, ?, 'ko', ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE content=VALUES(content), updated_at=NOW()");
+                    foreach ($_locales as $_loc) {
+                        $_translated = function_exists('__') ? __($_transKey, [], $_loc) : '';
+                        if ($_translated && $_translated !== $_transKey) {
+                            $_insStmt->execute(["menu_item.{$id}.title", $_loc, $_translated]);
+                        }
+                    }
+                }
+            }
+
             echo json_encode(['success' => true]);
             break;
 
@@ -247,7 +280,12 @@ try {
             $id    = intval($input['id'] ?? 0);
             $title = trim($input['title'] ?? '');
             if (!$id || !$title) { jsonError('ID and title are required'); }
+            // 현재 title 비교 — 변경됐을 때만 번역 정리
+            $oldTitle = (string)$pdo->query("SELECT title FROM rzx_menu_items WHERE id = " . (int)$id)->fetchColumn();
             $pdo->prepare("UPDATE rzx_menu_items SET title=?, updated_at=NOW() WHERE id=?")->execute([$title, $id]);
+            if ($title !== $oldTitle) {
+                $pdo->prepare("DELETE FROM rzx_translations WHERE lang_key LIKE ?")->execute(["menu_item.{$id}.%"]);
+            }
             echo json_encode(['success' => true]);
             break;
 

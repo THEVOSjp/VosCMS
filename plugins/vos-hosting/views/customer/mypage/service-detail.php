@@ -42,6 +42,21 @@ $_hostingPlansData = json_decode($_svcSettings['service_hosting_plans'] ?? '[]',
 $_localizeLabel = function($sub) use ($_addonIdByLabel, $_maintIdByLabel, $_hostingPlansData, $order) {
     $label = $sub['label'] ?? '';
     $type = $sub['type'] ?? '';
+
+    // 시스템 자동등록 케이스 — 다국어 변환
+    if ($type === 'hosting' && in_array($label, ['시스템 자동등록', 'System Imported', 'システム自動登録'], true)) {
+        return __('services.mypage.label_system_hosting');
+    }
+    if ($type === 'domain' && in_array($label, ['도메인 (무료)', 'Domain (Free)', 'ドメイン (無料)'], true)) {
+        return __('services.mypage.label_free_domain');
+    }
+    // addon — storage 추가 패턴 (예: "추가 용량 +1GB")
+    if ($type === 'addon' && (strpos($label, '추가 용량') === 0 || strpos($label, 'Additional Storage') === 0)) {
+        $_meta = json_decode($sub['metadata'] ?? '{}', true) ?: [];
+        $cap = $_meta['capacity'] ?? '?';
+        return __('services.mypage.label_storage_addon', ['capacity' => $cap]);
+    }
+
     if ($type === 'hosting') {
         $meta = json_decode($sub['metadata'] ?? '{}', true) ?: [];
         $cap = $meta['capacity'] ?? $order['hosting_capacity'] ?? '';
@@ -141,7 +156,54 @@ $ost = $statusLabels[$order['status']] ?? [__('services.mypage.status_unknown'),
 
 // 주 도메인
 $primaryDomain = $order['domain'] ?? '';
-$tabTypes = array_keys($servicesByType);
+
+// 호스팅 구독의 metadata.mail_accounts 가 있으면 가상 mail 구독으로 변환해 메일 탭에 합치기
+// (옛 데이터 호환: 호스팅 metadata 에 직접 mail_accounts 저장된 케이스)
+// — 단, 진짜 mail subscription 이 이미 있으면 hosting metadata.mail_accounts 는 무시 (중복 방지)
+$_hasMailSub = !empty($servicesByType['mail']);
+foreach ($servicesByType['hosting'] ?? [] as $_hSub) {
+    if ($_hasMailSub) break; // 진짜 mail sub 가 있으면 hosting 변환 안 함
+    $_hMeta = json_decode($_hSub['metadata'] ?? '{}', true) ?: [];
+    if (empty($_hMeta['mail_accounts'])) continue;
+    $servicesByType['mail'] = $servicesByType['mail'] ?? [];
+    // 이미 같은 sub id 의 가상 항목이 있으면 skip
+    $_already = false;
+    foreach ($servicesByType['mail'] as $_existing) {
+        if ((int)$_existing['id'] === (int)$_hSub['id']) { $_already = true; break; }
+    }
+    if ($_already) continue;
+    array_unshift($servicesByType['mail'], [
+        'id' => $_hSub['id'],
+        'type' => 'mail',
+        'label' => __('services.detail.mail_type_default'),
+        'service_class' => $_hSub['service_class'] ?? 'free',
+        'status' => $_hSub['status'],
+        'auto_renew' => $_hSub['auto_renew'],
+        'metadata' => json_encode([
+            'mail_accounts' => $_hMeta['mail_accounts'],
+            'mail_server' => $_hMeta['mail_server'] ?? null,
+        ], JSON_UNESCAPED_UNICODE),
+    ]);
+}
+
+// 메일 탭은 호스팅 구독이 있는 한 항상 표시 (기본 메일 5개 무료 제공 정책)
+$_hasHosting = !empty($servicesByType['hosting']);
+if ($_hasHosting && !isset($servicesByType['mail'])) {
+    $servicesByType['mail'] = [];
+}
+// 부가서비스 탭은 호스팅 구독이 있으면 항상 표시 (빈 상태 + 추후 추가 가능)
+if ($_hasHosting && !isset($servicesByType['addon'])) {
+    $servicesByType['addon'] = [];
+}
+// 탭 순서 정렬: hosting → domain → mail → maintenance → addon → support
+$_tabOrder = ['hosting', 'domain', 'mail', 'maintenance', 'addon', 'support'];
+$tabTypes = [];
+foreach ($_tabOrder as $_tk) {
+    if (isset($servicesByType[$_tk])) $tabTypes[] = $_tk;
+}
+foreach (array_keys($servicesByType) as $_tk) {
+    if (!in_array($_tk, $tabTypes, true)) $tabTypes[] = $_tk;
+}
 $firstTab = $tabTypes[0] ?? '';
 ?>
 
@@ -208,7 +270,26 @@ $firstTab = $tabTypes[0] ?? '';
         </div>
     </div>
 
-    <!-- 탭 네비게이션 -->
+    <!-- 메일 셋업 진행 상태 (mode 추출) -->
+    <?php
+    $_provisionInfo = null;
+    foreach ($servicesByType['hosting'] ?? [] as $_hSub) {
+        $_hMeta = json_decode($_hSub['metadata'] ?? '{}', true) ?: [];
+        if (!empty($_hMeta['mail_provision'])) {
+            $_provisionInfo = $_hMeta['mail_provision'];
+            break;
+        }
+    }
+    $_provisionMode = $_provisionInfo['mode'] ?? null;
+    $_setupActive = ($_provisionMode === 'active');
+    ?>
+
+    <?php if (!$_setupActive): ?>
+    <!-- 셋업 진행 중 — 탭 대신 모니터링 박스 노출 -->
+    <?php include __DIR__ . '/service-partials/_setup-monitor.php'; ?>
+
+    <?php else: ?>
+    <!-- 셋업 완료 — 정상 탭 노출 -->
     <?php if (count($tabTypes) > 1): ?>
     <div class="border-b border-zinc-200 dark:border-zinc-700 mb-6">
         <nav class="flex gap-1 -mb-px overflow-x-auto">
@@ -249,6 +330,7 @@ $firstTab = $tabTypes[0] ?? '';
         ?>
     </div>
     <?php endforeach; ?>
+    <?php endif; /* setup active */ ?>
 
 
 </div>

@@ -12,6 +12,29 @@ $ftp = $server['ftp'] ?? [];
 $db = $server['db'] ?? [];
 $env = $server['env'] ?? [];
 $usage = $server['usage'] ?? [];
+
+// 시스템 등록 도메인 — 한도 없음, 사용량만 표시
+$_isSystemImported = (($meta['mail_provision']['origin'] ?? '') === 'system_imported');
+
+// extra_storage 합산 — 부가서비스 결제분
+$_capParseGB = function($s) {
+    if (!preg_match('/([\d.]+)\s*(GB|TB|MB)/i', (string)$s, $m)) return 0.0;
+    $n = (float)$m[1];
+    $u = strtoupper($m[2]);
+    return $u === 'TB' ? $n * 1024 : ($u === 'MB' ? $n / 1024 : $n);
+};
+$_capFormat = function($gb) {
+    if ($gb >= 1024) return rtrim(rtrim(number_format($gb / 1024, 2, '.', ''), '0'), '.') . 'TB';
+    return rtrim(rtrim(number_format($gb, 2, '.', ''), '0'), '.') . 'GB';
+};
+$_extraGB = 0.0;
+$_extraList = [];
+foreach (($meta['extra_storage'] ?? []) as $_es) {
+    $g = $_capParseGB($_es['capacity'] ?? '');
+    if ($g > 0) { $_extraGB += $g; $_extraList[] = $_es['capacity']; }
+}
+$_baseGB = $_capParseGB($capacity);
+$_totalGB = $_baseGB + $_extraGB;
 ?>
 
 <div class="space-y-4">
@@ -40,7 +63,14 @@ $usage = $server['usage'] ?? [];
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                 <div>
                     <p class="text-[10px] text-zinc-400 uppercase tracking-wider mb-0.5"><?= htmlspecialchars(__('services.detail.f_capacity')) ?></p>
+                    <?php if ($_isSystemImported): ?>
+                    <p class="font-semibold text-violet-600 dark:text-violet-400"><?= htmlspecialchars(__('services.mypage.system_unlimited')) ?></p>
+                    <?php elseif ($_extraGB > 0): ?>
+                    <p class="font-semibold text-zinc-900 dark:text-white"><?= htmlspecialchars($_capFormat($_totalGB)) ?></p>
+                    <p class="text-[10px] text-zinc-400 mt-0.5"><?= htmlspecialchars($capacity) ?> + <?= htmlspecialchars(implode(' + ', $_extraList)) ?></p>
+                    <?php else: ?>
                     <p class="font-semibold text-zinc-900 dark:text-white"><?= htmlspecialchars($capacity) ?></p>
+                    <?php endif; ?>
                 </div>
                 <div>
                     <p class="text-[10px] text-zinc-400 uppercase tracking-wider mb-0.5"><?= htmlspecialchars(__('services.detail.f_period')) ?></p>

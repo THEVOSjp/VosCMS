@@ -4,6 +4,119 @@
 
 ---
 
+## [VosCMS 2.4.0] - 2026-04-29 — 호스팅 자동화 인프라 + Calendar 청구 + 메일 시스템 완성
+
+호스팅 사업화를 위해 메일 인프라(mx1.voscms.com), Cloudflare DNS 자동화, 도메인 가용성 검증, calendar 월말 마감 + 첫 달 일할 청구 시스템, 마이페이지 메일 관리(웹메일·주소 변경·중복 제거), 부가서비스(웹 용량 추가) 즉시 결제 + 카드 등록·만료 카드 교체 흐름을 구축했다. 호스팅 이용 규약 페이지(13개국어)와 관리자 서비스 주문 관리(4탭 항상 노출 + 부가서비스 부여/삭제)도 정비. 메뉴 ID 재사용 시 옛 다국어 번역이 새 메뉴를 가리던 INSERT IGNORE 버그도 수정했다.
+
+### Added — Calendar 월말 마감 + 첫 달 일할 청구
+
+업계 anniversary 방식(가입일 ~ 1년 뒤 같은 날) 대신 calendar 월말 마감(다음 달 1일 ~ 만료월 말일)으로 변경. 같은 달 가입자는 만료일이 동일해 cron 일괄 처리·회계 마감이 단순해진다. 일본 호스팅 표준(月末締め翌月1日請求) 패턴.
+
+- DB: `rzx_subscriptions.billing_start DATETIME NULL` 컬럼 추가 (정상 청구 시작일)
+- 헬퍼: [`_proratedFirstAmount`](../plugins/vos-hosting/api/service-order.php) (월단가÷30 × 잔여일수), [`_calendarBillingStart`](../plugins/vos-hosting/api/service-order.php) (다음달 1일), [`_calendarExpires`](../plugins/vos-hosting/api/service-order.php) (말일 23:59:59)
+- 신청서: 호스팅 결제 항목에 `hosting_prorated` 자동 추가 (예: 4/2 가입 12개월 ¥1,000 → 첫 달 ¥967 + 정상 12개월 ¥12,000 = ¥12,967)
+- 도메인은 anniversary 유지(1년 단위 등록), 호스팅·메일·메인터넌스·애드온은 calendar
+- service-order.php 의 `-1 second` → `-1 day` 처리도 통일
+- 부가서비스 (웹 용량 추가) 도 동일 일할 + 정상 N개월 합산. 호스팅 만료일과 자동 동기화
+
+### Added — 메일 인프라 (mx1.voscms.com) + 자동 프로비저닝
+
+ConoHa VPS (133.117.72.149) 에 Postfix + Dovecot + Rspamd + Roundcube + OpenDKIM + Let's Encrypt 셋업. mail-tester 10/10, FCRDNS 검증. 신청 시 도메인 자동 셋업.
+
+- DNS 자동 등록 ([`CloudflareDns.php`](../rzxlib/Core/Dns/CloudflareDns.php)) — A / MX / SPF / DKIM / DMARC 5종 일괄
+- DKIM 키 생성 — mx1 SSH `rspamadm dkim_keygen` (전용 ed25519 키 `storage/keys/mailsync_ed25519`, www-data 소유 0700)
+- 3-mode 프로비저닝 ([`MailDomainProvisioner.php`](../rzxlib/Core/Mail/MailDomainProvisioner.php)): `free` (서브도메인 즉시) / `new` (도메인 구매 후 관리자 활성화) / `existing` (NS 변경 안내). `existing_pending` / `new_pending` / `active` mode 머신.
+- 비밀번호: SHA512-CRYPT (`{SHA512-CRYPT}$6$...`) — Dovecot 호환 단방향 해시. 옛 `enc:` (encrypt 함수) 비번 마이그레이션 스크립트 [`scripts/migrate-mail-passwords.php`](../scripts/migrate-mail-passwords.php)
+- mx1 동기화 cron ([`scripts/mail-sync-to-mx1.php`](../scripts/mail-sync-to-mx1.php)) — voscms_prod → mx1 mail_lookup virtual_users 5분 간격. 즉시 트리거(`triggerMailSyncToMx1()`)도 추가해 메일 액션 직후 백그라운드 sync
+- cron 자동 등록: `/etc/cron.d/voscms-mail-sync`
+- 알림: 관리자(프로비저닝 필요) / 고객(메일 사용 가능) HTML 메일 템플릿 ([`MailNotifier.php`](../rzxlib/Core/Mail/MailNotifier.php))
+
+### Added — 마이페이지 메일 관리 강화
+
+기본 메일 / 비즈니스 메일을 호스팅과 묶어 관리. 같은 주소가 mail subscription + hosting metadata 양쪽에 저장돼 UI 에 중복 표시되던 문제 수정 (single source of truth: mail subscription).
+
+- **웹메일 버튼** — Roundcube `?_user=주소` GET 파라미터로 username prefill, `target="_blank"`. URL 우선순위: `metadata.mail_server.webmail_url` → `WEBMAIL_URL` env → 기본 `https://mail.voscms.com/`
+- **이메일 변경 버튼** — 오타 수정용. 도메인은 고정, local part 만 변경. 같은 주문의 모든 mail+hosting metadata 동기화
+- **dedup 로직** ([`mail.php`](../plugins/vos-hosting/views/customer/mypage/service-partials/mail.php)) — `_seenAddresses` 로 중복 주소 한 번만 표시, mail subscription 우선
+- service-detail.php 가상 hosting → mail 변환은 진짜 mail subscription 이 없을 때만 동작 (옛 데이터 호환)
+- service-order.php 가 신규 가입 시 hosting metadata.mail_accounts 저장 안 함 (mail subscription single source)
+
+### Added — 부가서비스 (웹 용량 추가) 즉시 결제 플로우
+
+마이페이지 부가서비스 탭에 호스팅 용량 추가 결제. PAY.JP customer 등록 + chargeCustomer.
+
+- 모달: 용량 선택(1GB/3GB/5GB) + 카드 정보 입력 (payjp.js v2 Elements)
+- 카드 등록 / 다른 카드로 결제 / 등록 카드로 돌아가기 토글
+- 만료/거절 카드 자동 감지 (`expired_card`, `card_declined`, `invalid_*` 등 PAY.JP 에러 코드) → 카드 폼 자동 노출 + 안내 배너
+- 카드 명의 입력 필드 추가 (`addon-card-holder`) — 토큰에는 안 넣고 customer metadata 로 저장 (PAY.JP v2 Elements 는 `name` 옵션 미지원)
+- Portal 패턴: `document.body.appendChild()` 로 transform 걸린 컨테이너 벗어나 viewport 전체 덮음 (z-[9999])
+- 신규 customer 생성 후 charge 실패 시 자동 환불 + customer 삭제 (orphan 방지)
+- 호스팅 metadata.extra_storage[] 누적, hosting 탭 용량 게이지 합산 표시
+
+### Added — 호스팅 이용 규약 페이지 (`/hosting-terms`)
+
+[StarServer 등 일본 호스팅사 표준 약관](https://www.star.ne.jp/rule/rule.php) 참고하여 14개 조항(정의·신청·요금·자동 갱신·해지·서비스·백업·금지·정지·보수·개인정보·면책·변경·관할) 구성. Calendar 청구 방식 + 첫 달 일할 + 해지 시 미사용 개월 환불 정책 명시.
+
+- 시스템 페이지 등록: [`config/system-pages.php`](../config/system-pages.php) `hosting-terms` slug, 🖥️ 인디고
+- 페이지 에디터 매핑: [`pages-document.php`](../resources/views/admin/site/pages-document.php) — `pageMetaMap['hosting-terms']`
+- DB 시드: ja(메인) / ko / en 3개 언어 본문 (rzx_page_contents)
+- i18n: `site.pages.hosting_terms` + `hosting_terms_edit`(editor_title/desc)
+
+### Added — 관리자 서비스 주문 관리 강화
+
+- **4개 탭 항상 노출** ([detail.php](../plugins/vos-hosting/views/admin/service-orders/detail.php)) — hosting/domain/mail/addon. 데이터 없으면 빈 상태 메시지(empty_*)
+- **부가서비스 탭** — `+ 용량 추가` 버튼 (관리자 무료 부여 모달, 용량 선택 시 즉시 active addon subscription 생성, billing_amount=0, expires=호스팅 만료일) + 항목별 휴지통 삭제 버튼 (소프트 삭제 status=cancelled, hosting metadata.extra_storage[] 에서 제거)
+- **목록 — 신청자 표시 개선** ([index.php](../plugins/vos-hosting/views/admin/service-orders/index.php)) — `supervisor`/`admin` role 인 시스템 관리자 주문은 user.name + 보라색 부제 `슈퍼관리자: webmaster@thevos.jp` 형태로 표시 (옛 암호화 형식 `applicant_name` 의 `FKzGx9SE7xG/2` 복호화 실패 우회)
+- **신청서 작성 버튼** (`+ New Order`) — UI 만, 기능 추후
+- i18n 13개국어: `role_supervisor`, `role_admin`, `btn_create_order`, `empty_*`, `btn_add_storage_addon`, `btn_delete_addon`, `modal_add_storage_*`, `confirm_*`, `alert_*` 등 20+ 키
+
+### Added — 도메인 가용성 검증 API + 메뉴 ID 재사용 방지
+
+- [`subdomain-check.php`](../plugins/vos-hosting/api/subdomain-check.php) — DB(`reserved_subdomains`) 우선 + Cloudflare API fallback. JS `checkSubdomain()` 이 서버 호출 후 결과 반영
+- service-order.php 결제 직전 서버 측 재검증 — 클라이언트 우회 방지
+- `reserved_subdomains` 자동 import — Cloudflare zone 의 기존 레코드 11개 (vos/bestatech/bt/dev/ec430/ec431/salon/ssh/test/thevos/ai.21ces.com)
+- 메뉴 INSERT IGNORE 버그 수정 ([menus-api.php](../resources/views/admin/site/menus-api.php)):
+  - `add_menu_item`: INSERT 직후 stale 번역 정리 + `INSERT ... ON DUPLICATE KEY UPDATE` 로 덮어쓰기
+  - `update_menu_item`: title/url 변경 감지 시 옛 번역 13개 모두 삭제 + 시스템 페이지면 재등록
+  - `rename_menu_item`: title 변경 시 옛 번역 정리
+  - 옛 메뉴(id=38, "VosCMS 소개") 다국어 번역이 새 호스팅 이용 규약 메뉴를 가리던 회귀 수정
+
+### Added — Phase 7-3 자동 셋업 인프라
+
+서비스 신청 → 결제 완료 → 자동 메일 도메인 프로비저닝 → 고객 알림 흐름 구축.
+
+- service-order.php 에 `_autoProvisionMailDomain()` 호출 — 결제 transaction 외부에서 실행 (DB 무결성 격리)
+- DB: `rzx_reserved_subdomains` (zone, subdomain, record_type, reserved_by, reason) — 가용성 캐시
+- DKIM 키 자동 생성 후 metadata.mail_provision 에 mode/origin/domain/zone/subdomain/provisioned_at 저장
+- 프로비저닝 모드별 UI 분기 ([service-detail.php](../plugins/vos-hosting/views/customer/mypage/service-detail.php)): `pending` / `new_pending` / `existing_pending` 모드면 탭 숨기고 모니터링만 표시 ([_setup-monitor.php](../plugins/vos-hosting/views/customer/mypage/service-partials/_setup-monitor.php)), `active` 일 때만 탭 노출
+
+### Fixed — `??` + foreach reference 버그
+
+PHP 의 `$arr['key'] ?? []` 은 임시 값을 반환하므로 `&$ref` 가 원본 array 에 영향을 주지 않음. `change_mail_password` / `change_mail_address` 가 success 응답은 보냈지만 metadata UPDATE 가 무영향이라 비밀번호와 주소 변경이 모두 silent fail.
+
+- 인덱스 기반 직접 갱신 패턴으로 변경: `foreach ($arr as $i => $item) { $arr[$i]['k'] = ... }`
+- service-order.php 의 신규 메일 비밀번호 저장도 `encrypt()` (양방향) → `mail_password_hash()` (SHA512-CRYPT) 로 수정
+
+### Fixed — UI 정리
+
+- 결제 요약 녹색 형광색 → 선명한 색상: `text-green-400` → `text-green-600 dark:text-green-400` (7개 위치)
+- subdomain 가용성 응답 메시지 i18n 키 누락 (`order.php` 의 PHP→JS i18n 매핑 + `:fqdn` 플레이스홀더 통일)
+- 만료일 계산 정확화: `+N months -1 second` (같은 날짜) → `+N months -1 day` (정확히 1일 전) → calendar 방식으로 최종 통일
+
+### Database
+
+- `rzx_subscriptions.billing_start DATETIME NULL` 추가 (dev + prod)
+- `rzx_reserved_subdomains` 테이블 (Cloudflare zone 충돌 캐시)
+- `rzx_page_contents` 에 hosting-terms (ja/ko/en) 시드
+
+### Operations
+
+- `/etc/cron.d/voscms-mail-sync` 등록 — `*/5 * * * * www-data /usr/bin/php8.3 /var/www/voscms-com/scripts/mail-sync-to-mx1.php voscms_prod`
+- voscms-com `.env` 에 `MAIL_SERVER_HOST` / `MAIL_SERVER_USER` / `MAIL_SERVER_MAILSYNC_PASS` 추가 (chmod 640 + chgrp www-data)
+- `mailsync_ed25519` 전용 SSH 키 (mx1 root@ 인증)
+
+---
+
 ## [VosCMS 2.3.9] - 2026-04-27 — 서비스 신청 다국어 + 3-영역 메뉴 시스템
 
 호스팅 사업자용 서비스 신청 시스템을 13개국어로 완성하고 결제 직전 확인 모달과 설치 지원 서비스를 추가했다. 어드민/마이페이지 사이드바를 3-영역(top/main/bottom) 자동 구분 구조로 재설계해 코어 메뉴와 플러그인 메뉴가 시각적으로 분리되도록 했다. 라이선스/개발자 API는 본사 전용 플러그인으로 분리해 배포판 노출을 차단했다.
