@@ -4,6 +4,95 @@
 
 ---
 
+## [VosCMS 2.4.1] - 2026-04-29 — 호스팅 가상화 자동 프로비저닝 (Phase 1~3)
+
+호스팅 신청 → 결제 완료 → 사이트 / SSL / DB / VosCMS 까지 자동 셋업되는 인프라 구축. 1.9TB SSD 통합 (`/var/www`), Linux 사용자 격리, PHP-FPM pool 격리, Cloudflare DNS-01 SSL 자동 발급, MySQL DB 격리, VosCMS 파일 deploy + .env 자동 생성. CLI 도구 + 트랜잭션 롤백 완비. Phase 4 (결제 hook 연동) 진행 예정.
+
+### Added — Phase 1: 기본 셋업
+
+[`HostingProvisioner.php`](../rzxlib/Core/Hosting/HostingProvisioner.php) — 호스팅 신청 시 자동 셋업하는 메인 클래스. 9 단계 트랜잭션 (실패 시 역순 롤백):
+
+- Linux 사용자 생성 (`vos_<order_number>`, 32자 한계 내, 대소문자 보존)
+- 디렉토리 구조: `/var/www/customers/<order>/{public_html,logs,tmp}` (chmod 750/2775/750/1770)
+- 디스크 쿼터 (`setquota -u <user> <soft> <hard>`, hard = soft × 1.1)
+- 디렉토리 충돌 검증: 기존 nginx vhost / `reserved_subdomains` 와 충돌 시 거부
+- 1.9TB SSD `/var/www` 마운트 (ext4 + noatime + usrquota,grpquota)
+- 중앙 sudoers (`/etc/sudoers.d/voscms-hosting-provisioner`) — www-data 가 useradd/setquota/nginx 등 root 명령 NOPASSWD 실행
+- 명령별 인자 패턴 제한 (`vos_*`, `/var/www/customers/*`, `*.conf`) — visudo 검증 통과
+
+CLI 도구 [`scripts/provision-hosting.php`](../scripts/provision-hosting.php):
+```bash
+php provision-hosting.php SVC260428AE7476 hotel.com 1GB
+php provision-hosting.php --order SVC260428AE7476           # DB 자동 조회
+php provision-hosting.php --deprovision SVC260428AE7476 hotel.com
+php provision-hosting.php --install-voscms <order> <domain> <capacity>
+```
+
+템플릿 [`config/templates/`](../config/templates/):
+- `nginx-vhost.conf.tpl` — HTTP + ACME challenge 위치 + per-user FPM socket
+- `welcome.html.tpl` — 활성화 환영 페이지
+
+### Added — Phase 2: PHP-FPM 격리 + Cloudflare DNS-01 SSL
+
+각 호스팅이 자기 사용자 권한으로 PHP 실행 (사이트 간 침해 방지) + Cloudflare proxy 뒤에서도 SSL 자동 발급.
+
+[`config/templates/php-fpm-pool.conf.tpl`](../config/templates/php-fpm-pool.conf.tpl):
+- `user = vos_<order>` / `group = www-data` — uid 격리
+- `listen = /var/run/php/<order>.sock` — 사용자별 socket
+- `pm = ondemand` — 트래픽 적은 호스팅에 메모리 효율
+- `php_admin_value[open_basedir]` — 사이트 디렉토리 + /tmp + /usr/share/php 만 접근
+- `disable_functions` — exec, passthru, shell_exec, system, proc_open, popen, pcntl_exec
+- `session.save_path` / `upload_tmp_dir` — 사용자 디렉토리로 격리
+- env: HOSTING_ORDER / HOSTING_USER / HOSTING_DOMAIN
+
+Let's Encrypt SSL — Cloudflare DNS-01 challenge:
+- `python3-certbot-dns-cloudflare` 플러그인
+- `/etc/letsencrypt/cloudflare/credentials.ini` (root 0600, .env 의 `CLOUDFLARE_API_TOKEN`)
+- Cloudflare proxy 뒤 / 외부 도달성 무관하게 발급
+- HTTPS server 블록 자동 추가 (TLS 1.2/1.3, 강한 cipher, HSTS, X-Frame-Options, X-Content-Type-Options)
+- HTTP → HTTPS 301 자동 리다이렉트
+- `certbot.timer` 매일 2회 자동 갱신 (이미 활성화)
+
+### Added — Phase 3: MySQL DB 격리 + VosCMS 파일 deploy
+
+호스팅 신청 시 자기 DB + 자기 user 격리.
+
+- `hosting_admin` MySQL 계정 (1회 생성, ALL PRIVILEGES + GRANT OPTION) — DB 관리 전용
+- DB 명/user = `vos_<order>` (Linux 사용자명과 동일)
+- 비밀번호 32 hex 랜덤 (`bin2hex(random_bytes(16))`)
+- `GRANT ALL PRIVILEGES ON vos_<order>.* TO vos_<order>@localhost` — 자기 DB 만 접근
+- 격리 검증: 다른 호스팅 DB / voscms_prod 접근 시 Access denied 1044
+
+VosCMS 자동 설치 (`installVoscms()` — `--install-voscms` 또는 addon `install_info` 있을 때):
+- `voscms-dist/voscms-X.Y.Z.zip` 최신 패키지 압축 해제 → `public_html`
+- `.env` 자동 생성: `APP_KEY=base64:<32바이트>` / DB 정보 / `HOSTING_ORDER` 주입
+- 권한: vos_<order>:www-data, .env chmod 640
+- `install-core.php` headless 호출 (현재 301 redirect 이슈, Phase 4 와 함께 마무리 예정)
+
+### Operations
+
+- 1.9TB SSD ext4 마운트 → `/var/www` (UUID=58914a8f-..., LABEL=hosting)
+- usrquota,grpquota,noatime 마운트 옵션
+- `/var/www.bak.nvme` (마이그레이션 백업) → 검증 후 삭제 → NVMe 가용 86GB→25GB
+- /etc/sudoers.d/voscms-hosting-provisioner — visudo 검증 통과
+- /etc/letsencrypt/cloudflare/credentials.ini — root 0600
+- voscms-com .env 에 `HOSTING_DB_ADMIN_USER`, `HOSTING_DB_ADMIN_PASS` 추가
+
+### Verified — End-to-end 테스트
+
+`provision DEMO260429FULL demo07.21ces.com 1GB --install-voscms`:
+- ✅ 사용자 `vos_DEMO260429FULL` (uid 격리, www-data 그룹)
+- ✅ 디스크 쿼터 1GB soft / 1.05GB hard
+- ✅ PHP-FPM pool 자기 socket
+- ✅ nginx vhost (HTTP + HTTPS, HSTS)
+- ✅ Let's Encrypt SSL (`/etc/letsencrypt/live/demo07.21ces.com/`)
+- ✅ MySQL DB `vos_DEMO260429FULL` + user (격리 검증)
+- ✅ VosCMS 2.3.9 파일 + .env 배포
+
+`deprovision`: 모든 자원 깨끗 정리 (사용자/홈/DB/FPM pool/nginx/SSL).
+
+---
+
 ## [VosCMS 2.4.0] - 2026-04-29 — 호스팅 자동화 인프라 + Calendar 청구 + 메일 시스템 완성
 
 호스팅 사업화를 위해 메일 인프라(mx1.voscms.com), Cloudflare DNS 자동화, 도메인 가용성 검증, calendar 월말 마감 + 첫 달 일할 청구 시스템, 마이페이지 메일 관리(웹메일·주소 변경·중복 제거), 부가서비스(웹 용량 추가) 즉시 결제 + 카드 등록·만료 카드 교체 흐름을 구축했다. 호스팅 이용 규약 페이지(13개국어)와 관리자 서비스 주문 관리(4탭 항상 노출 + 부가서비스 부여/삭제)도 정비. 메뉴 ID 재사용 시 옛 다국어 번역이 새 메뉴를 가리던 INSERT IGNORE 버그도 수정했다.
