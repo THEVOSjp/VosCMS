@@ -132,6 +132,7 @@ return [
         'required_alert' => '필수 약관에 모두 동의해 주세요.',
         'notice' => '위 약관에 동의하지 않으시면 서비스 이용이 제한될 수 있습니다.',
         'view_content' => '내용 보기',
+        'view_full' => '전문 보기',
         'hide_content' => '내용 접기',
         'translation_pending' => '번역 준비 중',
     ],

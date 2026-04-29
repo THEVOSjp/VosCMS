@@ -1,8 +1,8 @@
 {
-    "version": "2.3.9",
+    "version": "2.4.3",
     "name": "VosCMS",
-    "codename": "Service Order i18n & 3-Section Menu",
-    "release_date": "2026-04-27",
+    "codename": "VosCMS Auto-Install + Hosting Mypage Backup/PMA",
+    "release_date": "2026-04-29",
     "commit": null,
     "channel": "stable",
     "github": {

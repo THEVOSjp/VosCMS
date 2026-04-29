@@ -70,7 +70,7 @@ return [
         ],
         'terms' => [
             'title' => '條款設定',
-            'description' => '設定註冊時需要同意的條款。最多可註冊5個條款。',
+            'description' => '將頁尾註冊的系統頁面用作註冊同意條款。頁面內容和多語言翻譯在頁面管理中編輯。',
             'term_section' => '會員條款',
             'term_title' => '條款標題',
             'term_title_placeholder' => '例如：服務條款、隱私權政策',

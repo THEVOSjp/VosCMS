@@ -15,6 +15,20 @@
  *   7. 설치 완료(appinstalled) → 베너+모달 둘 다 자동 숨김
  */
 
+// ── 결제·중요 흐름 페이지에서는 PWA 모달 HTML 출력 자체를 skip ──
+// (UX 결정: 결제 도중 install prompt 띄우면 흐름 방해. body state 정리는
+//  components/body-state-reset.php 가 모든 페이지에서 처리하므로 별도 cleanup
+//  스크립트 emit 불필요)
+$_skipPwaPaths = [
+    '/service/order',     // 호스팅 신청 + /service/order/complete
+    '/payment/',          // 결제 콜백/완료 흐름
+    '/install',           // 설치 마법사
+];
+$_currentReqPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+foreach ($_skipPwaPaths as $_skipPath) {
+    if (str_starts_with($_currentReqPath, $_skipPath)) return;
+}
+
 // 어떤 PWA 컨텍스트인지 자동 감지 — admin 영역이면 admin 아이콘/이름, 아니면 front
 $_pwaIsAdmin = isset($_SERVER['REQUEST_URI']) && str_contains($_SERVER['REQUEST_URI'], '/' . ($config['admin_path'] ?? 'admin'));
 $_pwaIcon = $_pwaIsAdmin
@@ -173,6 +187,17 @@ $_pwaIconUrl = $_pwaIcon ? rtrim($baseUrl ?? '', '/') . $_pwaIcon : '';
     const DISMISS_DAYS = 365;
     const SHOW_DELAY_MS = 3000;
 
+    // ── 결제·중요 흐름에서는 모달/베너 자동 노출 차단 ──
+    // (결제 직후 갑자기 모달이 뜨면 잔여 레이어처럼 보여 사용자 흐름을 방해)
+    const SKIP_PATHS = [
+        /^\/service\/order/,           // 호스팅 서비스 신청 + 완료 페이지
+        /^\/payment\//,                // 결제 콜백/완료
+        /^\/install/,                  // 설치 마법사 (혹시 모를 케이스)
+    ];
+    function isSkippedPath() {
+        return SKIP_PATHS.some(re => re.test(location.pathname));
+    }
+
     let _deferredPrompt = null;
     let _modal = null;
     let _banner = null;
@@ -315,6 +340,9 @@ $_pwaIconUrl = $_pwaIcon ? rtrim($baseUrl ?? '', '/') . $_pwaIcon : '';
 
         if (isStandalone()) return;
 
+        // 결제·서비스 신청 흐름 — 모달/베너 모두 차단 (사용자 결제 흐름 방해 방지)
+        if (isSkippedPath()) return;
+
         // 베너 깃발이 켜져있으면 베너만 띄움 (이전에 "나중에" 했던 경우)
         if (isBannerFlagged()) {
             showBanner();
@@ -348,6 +376,7 @@ $_pwaIconUrl = $_pwaIcon ? rtrim($baseUrl ?? '', '/') . $_pwaIcon : '';
     // (beforeinstallprompt 가 이번 세션엔 안 올 수도 있어서 — 깃발만으로 베너 표시)
     document.addEventListener('DOMContentLoaded', () => {
         if (isStandalone()) return;
+        if (isSkippedPath()) return;  // 결제·서비스 신청 흐름 차단
         if (isBannerFlagged()) {
             showBanner();
         }

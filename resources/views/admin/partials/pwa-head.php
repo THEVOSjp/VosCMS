@@ -24,3 +24,5 @@ $_faviconPath = $_pwaSettings['favicon'] ?? '';
 <?php if ($iconHref): ?>
 <link rel="apple-touch-icon" href="<?php echo htmlspecialchars($iconHref); ?>">
 <?php endif; ?>
+<?php /* 코어 안전망 — 모달/오버레이 cleanup 실패 시 페이지 진입 시점에 강제 정상화 */ ?>
+<?php include BASE_PATH . '/resources/views/components/body-state-reset.php'; ?>

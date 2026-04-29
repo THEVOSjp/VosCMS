@@ -134,6 +134,7 @@ return [
         'required_alert' => '必須の利用規約に同意してください。',
         'notice' => '利用規約に同意されない場合、サービスをご利用いただけない場合があります。',
         'view_content' => '内容を見る',
+        'view_full' => '全文を見る',
         'hide_content' => '内容を閉じる',
         'translation_pending' => '翻訳準備中',
     ],

@@ -70,7 +70,7 @@ return [
         ],
         'terms' => [
             'title' => 'Terms Settings',
-            'description' => 'Set up terms to be agreed to during registration. Up to 5 terms can be registered.',
+            'description' => 'Use system pages registered in the footer as registration consent terms. Page content and translations are edited in Page Management.',
             'term_section' => 'Membership Terms',
             'term_title' => 'Terms Title',
             'term_title_placeholder' => 'e.g., Terms of Service, Privacy Policy',

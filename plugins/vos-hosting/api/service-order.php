@@ -556,13 +556,21 @@ function _autoProvisionHosting($pdo, $prefix, $orderId, $orderNumber) {
 
         // 'install' addon 의 install_info 가 있으면 voscms 자동 설치
         if ($result['success'] && !empty($result['db']['success'])) {
-            $aSt = $pdo->prepare("SELECT metadata FROM {$prefix}subscriptions WHERE order_id = ? AND type = 'addon'");
+            $aSt = $pdo->prepare("SELECT id, metadata FROM {$prefix}subscriptions WHERE order_id = ? AND type = 'addon'");
             $aSt->execute([$orderId]);
             while ($aRow = $aSt->fetch(\PDO::FETCH_ASSOC)) {
                 $aMeta = json_decode($aRow['metadata'] ?? '{}', true) ?: [];
                 if (!empty($aMeta['install_info'])) {
                     $installResult = $provisioner->installVoscms($orderNumber, $domain, $result['db'], $aMeta['install_info']);
                     $result['install'] = $installResult;
+
+                    // 설치 성공 시 addon metadata 에 완료 시점 기록 (탭 노출 트리거)
+                    if (!empty($installResult['success'])) {
+                        $aMeta['install_completed_at'] = $installResult['installed_at'] ?? date('c');
+                        $aMeta['install_admin_url'] = $installResult['admin_url'] ?? null;
+                        $upd = $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?");
+                        $upd->execute([json_encode($aMeta, JSON_UNESCAPED_UNICODE), $aRow['id']]);
+                    }
                     break;
                 }
             }
@@ -581,7 +589,8 @@ function _autoProvisionHosting($pdo, $prefix, $orderId, $orderNumber) {
                 $hMeta['hosting_provisioned'] = true;
                 $hMeta['hosting_provisioned_at'] = date('c');
                 $hMeta['server'] = array_merge($hMeta['server'] ?? [], [
-                    'ftp' => ['host' => $domain, 'user' => $result['username'], 'port' => 21],
+                    'ftp' => ['host' => $domain, 'user' => $result['username'], 'port' => 21,
+                              'sftp_host' => 'ftp.voscms.com', 'sftp_port' => 2222],
                     'db' => $result['db'],
                     'env' => ['php' => '8.3'],
                 ]);
@@ -787,7 +796,8 @@ try {
 
             $pdo->commit();
 
-            // 메일 도메인 자동 프로비저닝 (transaction 외부)
+            // 자동 프로비저닝 (transaction 외부) — 호스팅 → 메일 순서
+            _autoProvisionHosting($pdo, $prefix, $orderId, $orderNumber);
             _autoProvisionMailDomain($pdo, $prefix, $orderId, $orderNumber);
 
             echo json_encode([

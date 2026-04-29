@@ -70,7 +70,7 @@ return [
         ],
         'terms' => [
             'title' => 'Configuracion de terminos',
-            'description' => 'Configure los terminos que deben aceptarse durante el registro. Se pueden registrar hasta 5 terminos.',
+            'description' => 'Utilice las páginas del sistema registradas en el pie de página como términos de consentimiento de registro. El contenido y las traducciones se editan en la gestión de páginas.',
             'term_section' => 'Terminos de membresia',
             'term_title' => 'Titulo del termino',
             'term_title_placeholder' => 'ej: Terminos de servicio, Politica de privacidad',

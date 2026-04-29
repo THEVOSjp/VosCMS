@@ -70,7 +70,7 @@ return [
         ],
         'terms' => [
             'title' => 'Cài đặt điều khoản',
-            'description' => 'Thiết lập điều khoản cần đồng ý khi đăng ký. Có thể đăng ký tối đa 5 điều khoản.',
+            'description' => 'Sử dụng các trang hệ thống đã đăng ký ở chân trang làm điều khoản đồng ý đăng ký. Nội dung trang và bản dịch được chỉnh sửa trong Quản lý trang.',
             'term_section' => 'Điều khoản thành viên',
             'term_title' => 'Tiêu đề điều khoản',
             'term_title_placeholder' => 'ví dụ: Điều khoản dịch vụ, Chính sách bảo mật',

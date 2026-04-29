@@ -132,6 +132,7 @@ return [
         'required_alert' => 'Silakan setujui semua syarat wajib.',
         'notice' => 'Anda mungkin tidak dapat menggunakan layanan jika tidak menyetujui syarat.',
         'view_content' => 'Lihat konten',
+        'view_full' => 'Lihat selengkapnya',
         'hide_content' => 'Sembunyikan konten',
         'translation_pending' => 'Terjemahan sedang berlangsung',
     ],

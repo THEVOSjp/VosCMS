@@ -4,7 +4,7 @@ server {
     server_name {{DOMAIN}};
 
     root {{DOCROOT}};
-    index index.php index.html;
+    index index.html index.php;
 
     # 호스팅 식별 (관리자 추적용)
     # X-Hosting-Order: {{ORDER}}
@@ -35,7 +35,7 @@ server {
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         fastcgi_param HOSTING_ORDER {{ORDER}};
         fastcgi_param HOSTING_USER {{USER}};
-        fastcgi_read_timeout 60s;
+        fastcgi_read_timeout 300s;
     }
 
     location / {

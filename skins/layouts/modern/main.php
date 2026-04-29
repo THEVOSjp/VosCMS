@@ -126,6 +126,7 @@ $baseUrl = $baseUrl ?? $config['app_url'] ?? '';
     <?php if (isset($headScripts)): ?>
         <?php echo $headScripts; ?>
     <?php endif; ?>
+    <?php include BASE_PATH . '/resources/views/components/body-state-reset.php'; ?>
 </head>
 <body class="bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white min-h-screen flex flex-col transition-colors duration-200 <?php echo htmlspecialchars($bodyClass); ?>">
     <!-- Skip to main content (접근성) -->

@@ -184,6 +184,7 @@ elseif ($_darkMode === 'light') $_htmlDarkClass = '';
         <?= $_customCss ?>
     </style>
     <?php endif; ?>
+    <?php include BASE_PATH . '/resources/views/components/body-state-reset.php'; ?>
 </head>
 <body class="bg-gray-50 dark:bg-zinc-900 min-h-screen flex flex-col transition-colors duration-200">
     <!-- Header (Modern: 2단 구조) -->

@@ -122,6 +122,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
     <script src="<?= $baseUrl ?>/resources/js/board-autolink.js" defer></script>
 <?= $_seo['meta_tags'] ?>    <?php include BASE_PATH . '/resources/views/partials/seo-analytics.php'; ?>
     <?php if (isset($headExtra)) echo $headExtra; ?>
+    <?php include BASE_PATH . '/resources/views/components/body-state-reset.php'; ?>
 </head>
 <body class="bg-gray-50 dark:bg-zinc-900 min-h-screen flex flex-col transition-colors duration-200">
     <!-- Header -->

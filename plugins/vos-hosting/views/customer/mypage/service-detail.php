@@ -270,18 +270,45 @@ $firstTab = $tabTypes[0] ?? '';
         </div>
     </div>
 
-    <!-- 메일 셋업 진행 상태 (mode 추출) -->
+    <!-- 셋업 진행 상태
+         - 호스팅 프로비저닝 완료 필수
+         - 설치 지원 신청한 경우: 자동 설치 완료까지 대기 (install_completed_at)
+         - 미신청한 경우: 호스팅 프로비저닝만으로 탭 노출
+         - system_imported (이미 운영중 사이트로 시스템이 자동 등록한 주문): 항상 활성으로 처리 -->
     <?php
     $_provisionInfo = null;
+    $_hostingProvisioned = false;
+    $_isSystemImported = false;
     foreach ($servicesByType['hosting'] ?? [] as $_hSub) {
         $_hMeta = json_decode($_hSub['metadata'] ?? '{}', true) ?: [];
-        if (!empty($_hMeta['mail_provision'])) {
+        if (!empty($_hMeta['mail_provision']) && !$_provisionInfo) {
             $_provisionInfo = $_hMeta['mail_provision'];
-            break;
+        }
+        if (!empty($_hMeta['hosting_provisioned'])) {
+            $_hostingProvisioned = true;
+        }
+        if (($_hMeta['mail_provision']['origin'] ?? '') === 'system_imported') {
+            $_isSystemImported = true;
         }
     }
+
+    // 설치 지원 addon 여부 + 완료 상태
+    $_hasInstallAddon = false;
+    $_installCompleted = false;
+    foreach ($servicesByType['addon'] ?? [] as $_aSub) {
+        $_aMeta = json_decode($_aSub['metadata'] ?? '{}', true) ?: [];
+        if (!empty($_aMeta['install_info'])) {
+            $_hasInstallAddon = true;
+            if (!empty($_aMeta['install_completed_at'])) {
+                $_installCompleted = true;
+            }
+        }
+    }
+
     $_provisionMode = $_provisionInfo['mode'] ?? null;
-    $_setupActive = ($_provisionMode === 'active');
+    $_mailActive = ($_provisionMode === 'active');
+    $_setupActive = $_isSystemImported
+                    || ($_hostingProvisioned && (!$_hasInstallAddon || $_installCompleted));
     ?>
 
     <?php if (!$_setupActive): ?>

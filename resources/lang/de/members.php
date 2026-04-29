@@ -70,7 +70,7 @@ return [
         ],
         'terms' => [
             'title' => 'Bedingungseinstellungen',
-            'description' => 'Richten Sie Bedingungen ein, denen bei der Registrierung zugestimmt werden muss. Bis zu 5 Bedingungen koennen registriert werden.',
+            'description' => 'Verwenden Sie im Footer registrierte Systemseiten als Einverständniserklärungen für die Registrierung. Seiteninhalte und Übersetzungen werden in der Seitenverwaltung bearbeitet.',
             'term_section' => 'Mitgliedschaftsbedingungen',
             'term_title' => 'Bedingungstitel',
             'term_title_placeholder' => 'z.B. Nutzungsbedingungen, Datenschutzerklaerung',

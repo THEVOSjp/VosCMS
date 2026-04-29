@@ -33,7 +33,7 @@
     <dt>활성화일</dt><dd>{{DATE}}</dd>
   </div>
 
-  <p>FTP / SSH 접속 정보 및 사용 안내는 마이페이지에서 확인하실 수 있습니다. 이 페이지는 첫 파일 업로드 시 자동으로 사용자의 콘텐츠로 교체됩니다.</p>
+  <p>FTP 접속 정보 및 사용 안내는 마이페이지에서 확인하실 수 있습니다. 이 페이지는 첫 파일 업로드 시 자동으로 사용자의 콘텐츠로 교체됩니다.</p>
 
   <div class="footer">
     Powered by <a href="https://voscms.com" target="_blank">VosCMS</a>

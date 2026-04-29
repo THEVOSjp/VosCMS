@@ -132,6 +132,7 @@ return [
         'required_alert' => 'Please agree to all required terms.',
         'notice' => 'You may not be able to use the service if you do not agree to the terms.',
         'view_content' => 'View content',
+        'view_full' => 'View full text',
         'hide_content' => 'Hide content',
         'translation_pending' => 'Translation in progress',
     ],

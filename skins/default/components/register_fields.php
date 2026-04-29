@@ -580,33 +580,42 @@ function removeProfilePhoto() {
 
 <?php if (in_array('password', $registerFields)): ?>
 <script>
-// 비밀번호 표시/숨기기 토글
-document.addEventListener('DOMContentLoaded', function() {
-    var togglePassword = document.getElementById('togglePassword');
-    var passwordInput = document.getElementById('password');
-    var eyeIcon = document.getElementById('eyeIcon');
-    var eyeOffIcon = document.getElementById('eyeOffIcon');
+// 비밀번호 표시/숨기기 토글 — DOMContentLoaded 이미 fire 됐을 수 있어 즉시 + 지연 둘 다 처리
+(function() {
+    function bindPasswordToggle() {
+        var togglePassword = document.getElementById('togglePassword');
+        var passwordInput = document.getElementById('password');
+        var eyeIcon = document.getElementById('eyeIcon');
+        var eyeOffIcon = document.getElementById('eyeOffIcon');
 
-    if (togglePassword && passwordInput) {
-        togglePassword.addEventListener('click', function() {
-            var type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            eyeIcon.classList.toggle('hidden');
-            eyeOffIcon.classList.toggle('hidden');
-        });
-    }
+        if (togglePassword && passwordInput && !togglePassword.dataset.bound) {
+            togglePassword.dataset.bound = '1';
+            togglePassword.addEventListener('click', function() {
+                var type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                if (eyeIcon) eyeIcon.classList.toggle('hidden');
+                if (eyeOffIcon) eyeOffIcon.classList.toggle('hidden');
+            });
+        }
 
-    // 비밀번호 확인 유효성 검사
-    var passwordConfirm = document.getElementById('password_confirm');
-    if (passwordConfirm && passwordInput) {
-        passwordConfirm.addEventListener('input', function() {
-            if (this.value !== passwordInput.value) {
-                this.setCustomValidity('<?= $_t('password_mismatch') ?>');
-            } else {
-                this.setCustomValidity('');
-            }
-        });
+        // 비밀번호 확인 유효성 검사
+        var passwordConfirm = document.getElementById('password_confirm');
+        if (passwordConfirm && passwordInput && !passwordConfirm.dataset.bound) {
+            passwordConfirm.dataset.bound = '1';
+            passwordConfirm.addEventListener('input', function() {
+                if (this.value !== passwordInput.value) {
+                    this.setCustomValidity('<?= $_t('password_mismatch') ?>');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+        }
     }
-});
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindPasswordToggle);
+    } else {
+        bindPasswordToggle();
+    }
+})();
 </script>
 <?php endif; ?>

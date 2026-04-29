@@ -493,11 +493,21 @@ class Auth
             $encryptedPhone = isset($data['phone']) ? Encryption::encrypt($data['phone']) : null;
             $encryptedFurigana = isset($data['furigana']) ? Encryption::encrypt($data['furigana']) : null;
 
-            // 사용자 생성
-            $insertStmt = $pdo->prepare("
-                INSERT INTO {$table} (id, name, email, password, phone, furigana, status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, 'active', NOW(), NOW())
-            ");
+            // 사용자 생성 — status / is_active 컬럼 호환 (auto-detect)
+            $hasStatus = false;
+            try { $cols = $pdo->query("SHOW COLUMNS FROM {$table} LIKE 'status'")->fetchAll(); $hasStatus = count($cols) > 0; } catch (\PDOException $e) {}
+
+            if ($hasStatus) {
+                $insertStmt = $pdo->prepare("
+                    INSERT INTO {$table} (id, name, email, password, phone, furigana, status, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, 'active', NOW(), NOW())
+                ");
+            } else {
+                $insertStmt = $pdo->prepare("
+                    INSERT INTO {$table} (id, name, email, password, phone, furigana, is_active, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
+                ");
+            }
             $insertStmt->execute([
                 $userId,
                 $encryptedName,

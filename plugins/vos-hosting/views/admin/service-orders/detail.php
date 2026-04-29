@@ -172,6 +172,88 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             exit;
 
         // 부가서비스 삭제 (소프트 — status=cancelled, hosting metadata.extra_storage 에서 제거)
+        case 'admin_run_voscms_install':
+            // install_info 를 가진 addon 에 대해 HostingProvisioner.installVoscms() 직접 호출
+            $aSt = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE id = ? AND type = 'addon'");
+            $aSt->execute([$subId]);
+            $aSub = $aSt->fetch(PDO::FETCH_ASSOC);
+            if (!$aSub) { echo json_encode(['success' => false, 'message' => __('services.admin_orders.alert_sub_not_found')]); exit; }
+            $aMeta = json_decode($aSub['metadata'] ?? '{}', true) ?: [];
+            if (empty($aMeta['install_info'])) {
+                echo json_encode(['success' => false, 'message' => 'install_info 없음 (설치 지원 addon 만 가능)']); exit;
+            }
+            if (!empty($aMeta['install_completed_at'])) {
+                echo json_encode(['success' => false, 'message' => '이미 설치 완료됨 (' . $aMeta['install_completed_at'] . ')']); exit;
+            }
+
+            // 주문 + 호스팅 subscription 로드
+            $oSt = $pdo->prepare("SELECT id, order_number, domain FROM {$prefix}orders WHERE id = ? LIMIT 1");
+            $oSt->execute([$aSub['order_id']]);
+            $ord = $oSt->fetch(PDO::FETCH_ASSOC);
+            if (!$ord) { echo json_encode(['success' => false, 'message' => '주문 없음']); exit; }
+
+            $hSt = $pdo->prepare("SELECT id, metadata FROM {$prefix}subscriptions WHERE order_id = ? AND type = 'hosting' LIMIT 1");
+            $hSt->execute([$aSub['order_id']]);
+            $hSub = $hSt->fetch(PDO::FETCH_ASSOC);
+            if (!$hSub) { echo json_encode(['success' => false, 'message' => '호스팅 subscription 없음']); exit; }
+            $hMeta = json_decode($hSub['metadata'] ?? '{}', true) ?: [];
+            $dbInfo = $hMeta['server']['db'] ?? null;
+
+            // DB 정보 폴백 — 고객 docroot 의 .env
+            if (!$dbInfo || empty($dbInfo['db_user']) || empty($dbInfo['db_pass'])) {
+                $custEnv = '/var/www/customers/' . $ord['order_number'] . '/public_html/.env';
+                if (file_exists($custEnv)) {
+                    $envVars = [];
+                    foreach (file($custEnv, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+                        $line = trim($line);
+                        if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) continue;
+                        [$k, $v] = explode('=', $line, 2);
+                        $envVars[trim($k)] = trim($v, " \t\n\r\0\x0B\"'");
+                    }
+                    $dbInfo = [
+                        'db_host' => $envVars['DB_HOST'] ?? '127.0.0.1',
+                        'db_port' => $envVars['DB_PORT'] ?? '3306',
+                        'db_name' => $envVars['DB_DATABASE'] ?? '',
+                        'db_user' => $envVars['DB_USERNAME'] ?? '',
+                        'db_pass' => $envVars['DB_PASSWORD'] ?? '',
+                        'db_prefix' => $envVars['DB_PREFIX'] ?? 'rzx_',
+                    ];
+                }
+            }
+            if (!$dbInfo || empty($dbInfo['db_user']) || empty($dbInfo['db_pass'])) {
+                echo json_encode(['success' => false, 'message' => '호스팅 DB 정보 없음 — 호스팅 프로비저닝 필요']); exit;
+            }
+
+            // 자동 설치 실행
+            try {
+                @set_time_limit(600);
+                $provisioner = new \RzxLib\Core\Hosting\HostingProvisioner($pdo);
+                $installResult = $provisioner->installVoscms($ord['order_number'], $ord['domain'], $dbInfo, $aMeta['install_info']);
+
+                if (!empty($installResult['success'])) {
+                    $aMeta['install_completed_at'] = $installResult['installed_at'] ?? date('c');
+                    $aMeta['install_admin_url'] = $installResult['admin_url'] ?? null;
+                    $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ?, completed_at = NOW() WHERE id = ?")
+                        ->execute([json_encode($aMeta, JSON_UNESCAPED_UNICODE), $subId]);
+                    $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'voscms_installed', ?, 'admin', ?)")
+                        ->execute([$ord['id'], json_encode($installResult, JSON_UNESCAPED_UNICODE), $_SESSION['user_id'] ?? '']);
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'VosCMS 자동 설치 완료',
+                        'admin_url' => $installResult['admin_url'] ?? null,
+                    ]);
+                } else {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => $installResult['error'] ?? '설치 실패',
+                        'detail' => $installResult,
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+            exit;
+
         case 'admin_delete_addon':
             $aSt = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE id = ? AND type = 'addon'");
             $aSt->execute([$subId]);

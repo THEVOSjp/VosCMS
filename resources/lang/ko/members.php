@@ -52,7 +52,7 @@ return [
             'auto_login_manage' => '자동 로그인 관리', 'auto_login_manage_desc' => '회원이 자동 로그인 기기를 관리할 수 있습니다.',
         ],
         'terms' => [
-            'title' => '약관 설정', 'description' => '회원가입 시 동의받을 약관을 설정합니다. 최대 5개의 약관을 등록할 수 있습니다.',
+            'title' => '약관 설정', 'description' => '푸터에 등록된 시스템 페이지를 회원가입 약관 동의로 활용합니다. 페이지 콘텐츠와 다국어 번역은 페이지 관리에서 편집합니다.',
             'term_section' => '회원 가입 약관', 'term_title' => '약관 제목',
             'term_title_placeholder' => '예: 이용약관, 개인정보처리방침', 'term_content' => '약관 내용',
             'consent_required' => '동의 필수 여부', 'consent_required_option' => '필수',

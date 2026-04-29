@@ -132,6 +132,7 @@ return [
         'required_alert' => 'Vui lòng đồng ý với tất cả các điều khoản bắt buộc.',
         'notice' => 'Bạn có thể không sử dụng được dịch vụ nếu không đồng ý với các điều khoản.',
         'view_content' => 'Xem nội dung',
+        'view_full' => 'Xem toàn văn',
         'hide_content' => 'Ẩn nội dung',
         'translation_pending' => 'Đang dịch',
     ],

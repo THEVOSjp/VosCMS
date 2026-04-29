@@ -425,7 +425,9 @@ class HostingProvisioner
     }
 
     /**
-     * 기존 vhost 에 443 HTTPS server 블록 추가 + HTTP→HTTPS 리다이렉트.
+     * 기존 vhost 에 SSL 적용 — Cloudflare Tunnel 호환 단일 server 블록.
+     * 80/443 모두 같은 컨텐츠 서빙 (HTTP→HTTPS 리다이렉트 없음).
+     * 터널은 origin 에 HTTP(80) 로 전달, 직접 접속은 HTTPS(443) 사용.
      */
     private function addHttpsToVhost(string $domain, string $orderNumber): void
     {
@@ -444,25 +446,10 @@ class HostingProvisioner
         $docroot = $this->hostingRoot . '/' . $orderNumber . '/public_html';
         $username = $this->makeUsername($orderNumber);
 
-        // HTTP server: ACME challenge 외 모두 HTTPS 로 리다이렉트
-        $httpBlock = <<<NGINX
+        $block = <<<NGINX
 server {
     listen 80;
     listen [::]:80;
-    server_name {$domain};
-
-    location /.well-known/acme-challenge/ {
-        root {$docroot};
-    }
-    location / {
-        return 301 https://\$host\$request_uri;
-    }
-}
-NGINX;
-
-        // HTTPS server (모든 PHP/static 처리)
-        $httpsBlock = <<<NGINX
-server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
     server_name {$domain};
@@ -478,12 +465,16 @@ server {
     add_header X-Frame-Options SAMEORIGIN;
 
     root {$docroot};
-    index index.php index.html;
+    index index.html index.php;
 
     access_log /var/www/customers/{$orderNumber}/logs/access.log;
     error_log  /var/www/customers/{$orderNumber}/logs/error.log warn;
 
     client_max_body_size 64M;
+
+    location /.well-known/acme-challenge/ {
+        root {$docroot};
+    }
 
     location ~ /\.(?!well-known) { deny all; }
 
@@ -496,7 +487,7 @@ server {
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         fastcgi_param HOSTING_ORDER {$orderNumber};
         fastcgi_param HOSTING_USER {$username};
-        fastcgi_read_timeout 60s;
+        fastcgi_read_timeout 300s;
     }
 
     location / {
@@ -508,7 +499,7 @@ server {
 }
 NGINX;
 
-        $this->writeRootFile($vhostPath, $httpBlock . "\n\n" . $httpsBlock . "\n");
+        $this->writeRootFile($vhostPath, $block . "\n");
     }
 
     /**
@@ -602,8 +593,10 @@ NGINX;
             $sub = $tmpDir . '/voscms-' . $version;
             if (is_dir($sub)) $srcDir = $sub;
 
-            // 3. public_html 으로 복사 (chown vos_<order>)
+            // 3. public_html 으로 복사 (chown vos_<order>) — 단 기존 index.html (welcome) 보존
             $this->run(sprintf('/usr/bin/cp -a %s/. %s/', escapeshellarg($srcDir), escapeshellarg($docroot)));
+            // welcome.html 을 index.html 로 보존 (사용자가 install 완료 시 자동 삭제됨)
+            // voscms 의 index.html 가 있으면 무시되고, 우리가 만든 welcome 이 nginx index 우선
             $this->run(sprintf('/usr/bin/chown -R %s:www-data %s', escapeshellarg($username), escapeshellarg($docroot)));
 
             // 4. 임시 디렉토리 정리
@@ -641,14 +634,41 @@ ENV;
             $this->run('/usr/bin/chmod 640 ' . escapeshellarg($envPath));
             @unlink($tmpEnv);
 
-            // 6. 사용자가 install.php 직접 접근하여 마법사 진행하도록 안내 URL 반환
-            // (install-core.php headless 자동화는 Phase 5 별도 진행)
+            // 6. install-core.php 자동 실행 (headless) — step 3 → step 4 순차 호출
+            $this->orderForCurrentInstall = $orderNumber;
+            $autoResult = $this->runInstallCoreSteps($domain, $dbInfo, $installInfo);
+
+            if (!$autoResult['success']) {
+                return [
+                    'success' => false,
+                    'version' => $version,
+                    'error' => 'auto-install failed: ' . ($autoResult['error'] ?? 'unknown'),
+                    'install_url_fallback' => "https://{$domain}/install.php",
+                    'auto_install' => $autoResult,
+                ];
+            }
+
+            // 7. .installed 마커 검증 + HOSTING_* 변수 .env 에 재주입 (install-core.php 가 .env 덮어씀)
+            $installedFlag = $docroot . '/storage/.installed';
+            $installedAt = file_exists($installedFlag) ? trim(@file_get_contents($installedFlag) ?: '') : null;
+            $this->appendHostingEnv($docroot, $orderNumber, $username);
+
+            // 8. welcome page (index.html) 제거 — VosCMS index.php 가 우선되도록
+            // docroot 가 mode 2775 (group www-data 쓰기 가능) 이므로 unlink 로 충분
+            $welcomePath = $docroot . '/index.html';
+            if (file_exists($welcomePath)) {
+                if (!@unlink($welcomePath)) {
+                    // 폴백: sudo (sudoers 에 rm 패턴이 있을 때만 동작)
+                    @$this->run('/usr/bin/rm -f ' . escapeshellarg($welcomePath), true);
+                }
+            }
+
             return [
                 'success' => true,
                 'version' => $version,
-                'install_url' => "https://{$domain}/install.php",
-                'admin_url_after_install' => "https://{$domain}/admin",
-                'note' => '사용자가 install.php 에서 마법사를 진행해주세요. DB 정보는 .env 에 미리 주입되어 있습니다.',
+                'admin_url' => "https://{$domain}/" . ($installInfo['admin_path'] ?? 'admin'),
+                'installed_at' => $installedAt ?: date('c'),
+                'auto_install' => $autoResult,
             ];
         } catch (\Throwable $e) {
             return ['success' => false, 'error' => $e->getMessage()];
@@ -656,52 +676,127 @@ ENV;
     }
 
     /**
-     * install-core.php 를 HTTP 로 호출 — DB 마이그레이션 + admin 계정 생성.
-     * Cloudflare proxy 우회 — CURLOPT_RESOLVE 로 127.0.0.1 직접 호출.
+     * install-core.php 를 HTTP 로 step 3 → step 4 순차 호출 (headless install).
+     * _db POST fallback 활용 — 세션 의존성 우회.
+     *
+     * @return array{success:bool, error?:string, http_codes?:array, response_excerpts?:array}
      */
-    private function runInstallCore(string $domain, array $installInfo): array
+    private function runInstallCoreSteps(string $domain, array $dbInfo, array $installInfo): array
     {
-        $payload = http_build_query([
-            'step' => 2,
-            'lang' => 'ko',
-            'admin_id' => $installInfo['admin_id'] ?? 'admin',
-            'admin_email' => $installInfo['admin_email'] ?? 'admin@' . $domain,
-            'admin_password' => $installInfo['admin_pw'] ?? '',
-            'site_title' => $installInfo['site_title'] ?? $domain,
-        ]);
+        $dbPayload = [
+            'dbHost' => $dbInfo['db_host'] ?? '127.0.0.1',
+            'dbPort' => $dbInfo['db_port'] ?? '3306',
+            'dbName' => $dbInfo['db_name'] ?? '',
+            'dbUser' => $dbInfo['db_user'] ?? '',
+            'dbPass' => $dbInfo['db_pass'] ?? '',
+            'dbPrefix' => $dbInfo['db_prefix'] ?? 'rzx_',
+        ];
+        $dbBlob = base64_encode(json_encode($dbPayload));
 
-        $url = "https://{$domain}/install-core.php?step=2&lang=ko";
-        $ch = curl_init($url);
+        $excerpts = [];
+        $codes = [];
+
+        // Step 3: 마이그레이션 SQL 실행
+        $r3 = $this->callInstallCore($domain, 3, ['_db' => $dbBlob]);
+        $codes[3] = $r3['http_code'];
+        $excerpts[3] = $r3['response_excerpt'];
+        if ($r3['http_code'] !== 200) {
+            return [
+                'success' => false,
+                'error' => 'step 3 failed (HTTP ' . $r3['http_code'] . ')',
+                'http_codes' => $codes,
+                'response_excerpts' => $excerpts,
+            ];
+        }
+
+        // Step 4: admin 계정 + 시드 + 라이선스 + .env 재생성 + .installed
+        $siteUrl = "https://{$domain}";
+        $r4 = $this->callInstallCore($domain, 4, [
+            '_db'         => $dbBlob,
+            'admin_email' => $installInfo['admin_email'] ?? 'admin@' . $domain,
+            'admin_pass'  => $installInfo['admin_pw'] ?? '',
+            'admin_name'  => $installInfo['admin_id'] ?? $installInfo['site_title'] ?? 'Administrator',
+            'site_name'   => $installInfo['site_title'] ?? $domain,
+            'site_url'    => $siteUrl,
+            'admin_path'  => $installInfo['admin_path'] ?? 'admin',
+            'locale'      => $installInfo['locale'] ?? 'ko',
+            'timezone'    => $installInfo['timezone'] ?? 'Asia/Seoul',
+        ]);
+        $codes[4] = $r4['http_code'];
+        $excerpts[4] = $r4['response_excerpt'];
+        if ($r4['http_code'] !== 200) {
+            return [
+                'success' => false,
+                'error' => 'step 4 failed (HTTP ' . $r4['http_code'] . ')',
+                'http_codes' => $codes,
+                'response_excerpts' => $excerpts,
+            ];
+        }
+
+        // .installed 마커 검증
+        $installedFlag = $this->hostingRoot . '/' . $this->orderForCurrentInstall . '/public_html/storage/.installed';
+        if (!file_exists($installedFlag)) {
+            return [
+                'success' => false,
+                'error' => 'step 4 응답 200 이지만 .installed 마커 없음',
+                'http_codes' => $codes,
+                'response_excerpts' => $excerpts,
+            ];
+        }
+
+        return ['success' => true, 'http_codes' => $codes];
+    }
+
+    /**
+     * install-core.php 단일 step 호출 (loopback HTTP).
+     * 호스팅 vhost 가 HTTP-only (Cloudflare edge SSL 사용) 이므로 port 80 직결.
+     * Tunnel 우회 — 127.0.0.1 직접 호출.
+     */
+    private function callInstallCore(string $domain, int $step, array $extra): array
+    {
+        $payload = http_build_query(array_merge(['step' => (string)$step], $extra));
+        $ch = curl_init("http://{$domain}/install-core.php?step={$step}");
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $payload,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 180,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_TIMEOUT => 300,
+            CURLOPT_CONNECTTIMEOUT => 15,
             CURLOPT_RESOLVE => [
-                $domain . ':443:127.0.0.1',
                 $domain . ':80:127.0.0.1',
             ],
-            CURLOPT_FOLLOWLOCATION => true,  // 혹시 install-core.php 안의 step redirect 따라가기
-            CURLOPT_MAXREDIRS => 5,
+            CURLOPT_FOLLOWLOCATION => false,
         ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $err = curl_error($ch);
         curl_close($ch);
-
-        // 200 + storage/.installed 파일 존재 = 성공
-        $installedFlag = $this->hostingRoot . '/' . $this->orderForCurrentInstall . '/public_html/storage/.installed';
-        $success = $httpCode === 200 || ($installedFlag && file_exists($installedFlag));
-
         return [
-            'success' => $success,
             'http_code' => $httpCode,
             'curl_error' => $err ?: null,
-            'response_excerpt' => $response ? substr($response, 0, 500) : null,
-            'installed_marker' => $installedFlag && file_exists($installedFlag),
+            'response_excerpt' => $response ? substr($response, 0, 800) : null,
         ];
+    }
+
+    /**
+     * install-core.php 가 .env 덮어쓴 후 호스팅 식별 정보 재주입.
+     */
+    private function appendHostingEnv(string $docroot, string $orderNumber, string $username): void
+    {
+        $envPath = $docroot . '/.env';
+        if (!file_exists($envPath)) return;
+        $current = @file_get_contents($envPath) ?: '';
+        if (str_contains($current, 'HOSTING_ORDER=')) return; // 이미 있음
+        $append = "\n# 호스팅 자동 셋업 — by VosCMS Hosting Provisioner\n"
+                . "HOSTING_ORDER={$orderNumber}\n"
+                . "HOSTING_USER={$username}\n"
+                . "HOSTING_PROVISIONED_AT=" . $this->isoNow() . "\n";
+        $tmpEnv = sys_get_temp_dir() . '/env_append_' . uniqid();
+        file_put_contents($tmpEnv, $current . $append);
+        $this->run(sprintf('/usr/bin/cp %s %s', escapeshellarg($tmpEnv), escapeshellarg($envPath)));
+        $this->run(sprintf('/usr/bin/chown %s:www-data %s', escapeshellarg($username), escapeshellarg($envPath)));
+        $this->run('/usr/bin/chmod 640 ' . escapeshellarg($envPath));
+        @unlink($tmpEnv);
     }
 
     private string $orderForCurrentInstall = '';

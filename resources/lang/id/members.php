@@ -70,7 +70,7 @@ return [
         ],
         'terms' => [
             'title' => 'Pengaturan Syarat',
-            'description' => 'Atur syarat yang harus disetujui saat pendaftaran. Hingga 5 syarat dapat didaftarkan.',
+            'description' => 'Gunakan halaman sistem yang terdaftar di footer sebagai syarat persetujuan pendaftaran. Konten halaman dan terjemahan diedit di Manajemen Halaman.',
             'term_section' => 'Syarat Keanggotaan',
             'term_title' => 'Judul Syarat',
             'term_title_placeholder' => 'contoh, Syarat Layanan, Kebijakan Privasi',

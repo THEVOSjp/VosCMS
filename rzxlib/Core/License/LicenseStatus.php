@@ -146,6 +146,20 @@ class LicenseStatus
     }
 
     /**
+     * self-master (라이선스 발급 본사 사이트)
+     * 모든 플러그인 허용, 경고 없음, 항상 active.
+     */
+    public static function selfMaster(): self
+    {
+        $s = new self();
+        $s->state = 'active';
+        $s->plan = 'master';
+        $s->allowedPlugins = ['*'];
+        $s->unauthorizedPlugins = [];
+        return $s;
+    }
+
+    /**
      * 정상 상태인지
      */
     public function isOk(): bool
@@ -162,6 +176,9 @@ class LicenseStatus
     public function canUsePlugin(string $pluginId): bool
     {
         if (in_array($pluginId, self::BUNDLE_PLUGINS)) return true;
+
+        // self-master — 와일드카드 '*' 면 모든 플러그인 허용
+        if (in_array('*', $this->allowedPlugins, true)) return true;
 
         // 라이선스 미확인 상태에서는 일단 허용 (경고만)
         if ($this->state === 'unregistered' || $this->state === 'cached') return true;

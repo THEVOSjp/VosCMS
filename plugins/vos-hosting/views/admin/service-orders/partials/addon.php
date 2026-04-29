@@ -55,6 +55,24 @@ try {
                 <?php endif; ?>
             </div>
             <div class="flex items-center gap-2 shrink-0">
+                <?php
+                // 설치 지원 addon 의 VosCMS 자동 설치 버튼
+                $_isInstallAddon = !empty($meta['install_info']);
+                $_installCompleted = !empty($meta['install_completed_at']);
+                if ($_isInstallAddon && !$_installCompleted):
+                ?>
+                <button type="button" onclick="adminRunVoscmsInstall(<?= (int)$sub['id'] ?>)"
+                        class="text-xs px-2.5 py-1 bg-violet-50 text-violet-700 dark:bg-violet-900/20 dark:text-violet-400 rounded-lg hover:ring-2 hover:ring-violet-300 transition cursor-pointer inline-flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <?= htmlspecialchars(__('services.admin_orders.btn_run_voscms_install')) ?>
+                </button>
+                <?php elseif ($_isInstallAddon && $_installCompleted): ?>
+                <a href="<?= htmlspecialchars($meta['install_admin_url'] ?? '#') ?>" target="_blank"
+                   class="text-xs px-2.5 py-1 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 rounded-lg hover:ring-2 hover:ring-green-300 transition inline-flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    <?= htmlspecialchars(__('services.admin_orders.btn_open_admin')) ?>
+                </a>
+                <?php endif; ?>
                 <?php if ($isOneTime): ?>
                 <?php
                     $otColors = ['pending'=>'blue','active'=>'amber','suspended'=>'zinc','cancelled'=>'red','completed'=>'green'];
@@ -181,6 +199,26 @@ function adminAddStorageAddon(capacity, unitPrice) {
             else { alert(d.message || <?= json_encode(__('services.detail.alert_failed'), JSON_UNESCAPED_UNICODE) ?>); }
         }).catch(function(e) { alert(e.message); });
 }
+function adminRunVoscmsInstall(subId) {
+    var msg = <?= json_encode(__('services.admin_orders.confirm_run_voscms_install'), JSON_UNESCAPED_UNICODE) ?>;
+    if (!confirm(msg)) return;
+    var btns = document.querySelectorAll('button[onclick^="adminRunVoscmsInstall"]');
+    btns.forEach(function(b){ b.disabled = true; b.textContent = <?= json_encode(__('services.admin_orders.installing'), JSON_UNESCAPED_UNICODE) ?>; });
+    ajaxPost({ action: 'admin_run_voscms_install', subscription_id: subId })
+        .then(function(d) {
+            if (d.success) {
+                alert(d.message + (d.admin_url ? '\n\n' + <?= json_encode(__('services.admin_orders.admin_url_label'), JSON_UNESCAPED_UNICODE) ?> + ': ' + d.admin_url : ''));
+                location.reload();
+            } else {
+                alert(d.message || <?= json_encode(__('services.detail.alert_failed'), JSON_UNESCAPED_UNICODE) ?>);
+                btns.forEach(function(b){ b.disabled = false; b.textContent = <?= json_encode(__('services.admin_orders.btn_run_voscms_install'), JSON_UNESCAPED_UNICODE) ?>; });
+            }
+        }).catch(function(e) {
+            alert(e.message);
+            btns.forEach(function(b){ b.disabled = false; b.textContent = <?= json_encode(__('services.admin_orders.btn_run_voscms_install'), JSON_UNESCAPED_UNICODE) ?>; });
+        });
+}
+
 function adminDeleteAddon(subId, label) {
     var msg = <?= json_encode(__('services.admin_orders.confirm_delete_addon'), JSON_UNESCAPED_UNICODE) ?>.replace(':label', label);
     if (!confirm(msg)) return;

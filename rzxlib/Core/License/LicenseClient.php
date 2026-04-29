@@ -15,6 +15,14 @@ class LicenseClient
     /** 도메인 해시 비밀키 (ionCube로 보호) */
     private const HASH_SECRET = 'VosCMS_2026_LicenseServer_!@#SecretKey';
 
+    /**
+     * self-master 인증용 비밀키 (ionCube로 보호).
+     * voscms.com 같은 라이선스 발급 본사 사이트가 자기 자신을 인증할 때 사용.
+     * .env 의 LICENSE_SELF_TOKEN = hash_hmac('sha256', domain, MASTER_SECRET) 형식.
+     * 토큰 모르면 우회 불가 + 코드는 ionCube 인코딩 대상이라 노출 없음.
+     */
+    private const MASTER_SECRET = 'VosCMS_2026_MasterAuth_$%^&*()_VosLicenseRoot';
+
     /** 캐시 파일 경로 */
     private string $cacheFile;
 
@@ -51,6 +59,11 @@ class LicenseClient
      */
     public function check(): LicenseStatus
     {
+        // self-master: 라이선스 발급 본사 사이트는 외부 verify 우회
+        if ($this->isSelfMaster()) {
+            return LicenseStatus::selfMaster();
+        }
+
         // 라이선스 키 미설정 → 자동 Free 라이선스 등록 시도
         if (empty($this->licenseKey)) {
             try {
@@ -292,6 +305,31 @@ class LicenseClient
         }
         // HTTP_HOST에서
         return self::normalizeDomain($_SERVER['HTTP_HOST'] ?? 'unknown');
+    }
+
+    /**
+     * self-master 모드 여부 확인.
+     * voscms.com 같은 라이선스 발급 본사 사이트가 자기 자신을 인증할 때 사용.
+     * .env 의 LICENSE_SELF_TOKEN 이 hmac(domain, MASTER_SECRET) 와 일치해야 통과.
+     * 일치 안 하면 일반 라이선스 검증 흐름으로 폴백.
+     */
+    private function isSelfMaster(): bool
+    {
+        $token = $_ENV['LICENSE_SELF_TOKEN'] ?? '';
+        if ($token === '') {
+            return false;
+        }
+        $expected = hash_hmac('sha256', $this->domain, self::MASTER_SECRET);
+        return hash_equals($expected, $token);
+    }
+
+    /**
+     * 도메인용 self-master 토큰 생성 (관리자가 .env 에 넣을 값).
+     * voscms.com 의 본사 환경에서만 호출 — CLI 도구 또는 admin UI 에서 활용.
+     */
+    public static function generateSelfMasterToken(string $domain): string
+    {
+        return hash_hmac('sha256', self::normalizeDomain($domain), self::MASTER_SECRET);
     }
 
     public static function normalizeDomain(string $domain): string

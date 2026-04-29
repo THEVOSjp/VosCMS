@@ -70,7 +70,7 @@ return [
         ],
         'terms' => [
             'title' => 'Parametres des conditions',
-            'description' => 'Configurez les conditions a accepter lors de l\'inscription. Jusqu\'a 5 conditions peuvent etre enregistrees.',
+            'description' => 'Utilisez les pages système enregistrées dans le pied de page comme termes de consentement à l\'inscription. Le contenu et les traductions sont édités dans la gestion des pages.',
             'term_section' => 'Conditions d\'adhesion',
             'term_title' => 'Titre des conditions',
             'term_title_placeholder' => 'ex: Conditions d\'utilisation, Politique de confidentialite',

@@ -14,6 +14,16 @@
 
 $sidebarActive = $sidebarActive ?? 'dashboard';
 
+// ── profileImgUrl 자동 fallback (페이지에서 미설정시 $user 로부터 계산) ──
+if (!isset($profileImgUrl)) {
+    $profileImgUrl = '';
+    if (!empty($user['profile_image'])) {
+        $profileImgUrl = str_starts_with($user['profile_image'], 'http')
+            ? $user['profile_image']
+            : ($baseUrl ?? '') . $user['profile_image'];
+    }
+}
+
 // ── 메뉴 로드 (load_menu 공통 헬퍼 사용) ──
 $_allMypageMenus = function_exists('load_menu') ? load_menu('mypage') : [];
 

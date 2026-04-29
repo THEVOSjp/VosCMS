@@ -70,7 +70,7 @@ return [
         ],
         'terms' => [
             'title' => '条款设置',
-            'description' => '设置注册时需要同意的条款。最多可注册5个条款。',
+            'description' => '将页脚注册的系统页面用作注册同意条款。页面内容和多语言翻译在页面管理中编辑。',
             'term_section' => '会员条款',
             'term_title' => '条款标题',
             'term_title_placeholder' => '例如：服务条款、隐私政策',

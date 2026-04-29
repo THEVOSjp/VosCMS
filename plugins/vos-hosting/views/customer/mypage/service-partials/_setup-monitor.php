@@ -2,17 +2,24 @@
 /**
  * 셋업 진행 중 모니터링 박스 (탭 영역 대체).
  *
- * 호스팅 결제 후 메일 도메인 자동 셋업이 완료되기 전까지 고객에게 노출.
- * mode === 'active' 가 되면 service-detail.php 에서 본 partial 대신 탭 노출.
+ * 외부 변수: $_provisionMode, $_provisionInfo, $_hostingProvisioned,
+ *           $_hasInstallAddon, $_installCompleted
  *
- * 외부 변수: $_provisionMode, $_provisionInfo
+ * 흐름:
+ *   결제 → 호스팅 셋업 → (설치 지원 신청 시) VosCMS 자동 설치 → 완료
  */
-$_stepLabel = __('services.detail.setup_step_payment');
-if ($_provisionMode === 'new_pending') {
-    $_stepLabel = __('services.detail.setup_step_domain_acquiring');
-} elseif ($_provisionMode === 'existing_pending') {
-    $_stepLabel = __('services.detail.setup_step_ns_propagation');
-} elseif ($_provisionMode === 'pending' || $_provisionMode === null) {
+if (!$_hostingProvisioned) {
+    // 호스팅 자동 셋업 진행 중
+    $_stepLabel = __('services.detail.setup_step_initializing');
+    if ($_provisionMode === 'new_pending') {
+        $_stepLabel = __('services.detail.setup_step_domain_acquiring');
+    } elseif ($_provisionMode === 'existing_pending') {
+        $_stepLabel = __('services.detail.setup_step_ns_propagation');
+    }
+} elseif ($_hasInstallAddon && !$_installCompleted) {
+    // VosCMS 자동 설치 진행 중
+    $_stepLabel = __('services.detail.setup_step_voscms_install');
+} else {
     $_stepLabel = __('services.detail.setup_step_initializing');
 }
 ?>
@@ -38,14 +45,14 @@ if ($_provisionMode === 'new_pending') {
     <!-- 단계 진행 바 (시각적 표시) -->
     <div class="flex items-center gap-1 mb-3">
         <?php
-        $_steps = ['payment', 'domain', 'dns', 'mail', 'done'];
-        $_currentStepIdx = 0;
-        if ($_provisionMode === 'new_pending') $_currentStepIdx = 1;
-        elseif ($_provisionMode === 'existing_pending') $_currentStepIdx = 2;
-        elseif ($_provisionMode === 'active') $_currentStepIdx = 4;
-        else $_currentStepIdx = 0;
+        // 단계: 결제 → 호스팅 셋업 → (설치 지원 시) VosCMS 자동 설치 → 완료
+        $_totalSteps = $_hasInstallAddon ? 4 : 3;
+        $_currentStepIdx = 0;  // 결제 완료
+        if ($_hostingProvisioned) $_currentStepIdx = 1;  // 호스팅 셋업 완료
+        if ($_hasInstallAddon && $_installCompleted) $_currentStepIdx = 2;  // 설치 완료
+        if ($_setupActive ?? false) $_currentStepIdx = $_totalSteps - 1;  // 모두 완료
         ?>
-        <?php for ($i = 0; $i < count($_steps); $i++): ?>
+        <?php for ($i = 0; $i < $_totalSteps; $i++): ?>
         <div class="flex-1 h-2 rounded-full <?= $i <= $_currentStepIdx ? 'bg-blue-500 dark:bg-blue-400' : 'bg-zinc-200 dark:bg-zinc-700' ?>"></div>
         <?php endfor; ?>
     </div>

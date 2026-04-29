@@ -144,9 +144,18 @@ foreach ($terms as $term) {
                             <?php endif; ?>
                         </label>
                     </div>
-                    <?php if (!empty($term['content'])): ?>
+                    <?php if (!empty($term['page_slug'])): ?>
+                    <!-- 시스템 페이지: 새 탭 링크로 전문 보기 -->
+                    <a href="/<?= htmlspecialchars($term['page_slug']) ?>" target="_blank" rel="noopener"
+                       class="ml-2 inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap">
+                        <?= __('auth.terms.view_full') ?>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                    </a>
+                    <?php elseif (!empty($term['content'])): ?>
                     <button type="button"
-                            onclick="toggleTermContent(<?= $term['id'] ?>)"
+                            onclick="toggleTermContent('<?= $term['id'] ?>')"
                             class="ml-2 p-1 text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors">
                         <svg id="termIcon_<?= $term['id'] ?>" class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -156,8 +165,8 @@ foreach ($terms as $term) {
                 </div>
             </div>
 
-            <!-- 약관 내용 (접힌 상태로 시작) -->
-            <?php if (!empty($term['content'])): ?>
+            <!-- 약관 내용 (page_slug 없는 커스텀 약관만 인라인 표시) -->
+            <?php if (empty($term['page_slug']) && !empty($term['content'])): ?>
             <div id="termContent_<?= $term['id'] ?>" class="hidden border-t border-gray-200 dark:border-zinc-700">
                 <div class="p-4 bg-gray-50 dark:bg-zinc-900/50 max-h-48 overflow-y-auto text-sm text-gray-700 dark:text-zinc-300 terms-content">
                     <?= $term['content'] ?>

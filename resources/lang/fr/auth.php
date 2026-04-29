@@ -132,6 +132,7 @@ return [
         'required_alert' => 'Veuillez accepter toutes les conditions requises.',
         'notice' => 'Vous ne pourrez peut-etre pas utiliser le service si vous n\'acceptez pas les conditions.',
         'view_content' => 'Voir le contenu',
+        'view_full' => 'Voir le texte intégral',
         'hide_content' => 'Masquer le contenu',
         'translation_pending' => 'Traduction en cours',
     ],

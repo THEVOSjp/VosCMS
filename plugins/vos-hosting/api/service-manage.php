@@ -83,6 +83,113 @@ function getOwnedSubscription($pdo, $prefix, $subId, $userId) {
 
 switch ($action) {
 
+    // ===== 사이트 백업 (web 파일 + .env + DB 덤프 zip) =====
+    case 'request_backup':
+        $sub = getOwnedSubscription($pdo, $prefix, $subId, $userId);
+        if (!$sub || $sub['type'] !== 'hosting') {
+            echo json_encode(['success' => false, 'message' => '호스팅 구독을 찾을 수 없습니다.']);
+            exit;
+        }
+        $oSt = $pdo->prepare("SELECT order_number FROM {$prefix}orders WHERE id = ?");
+        $oSt->execute([$sub['order_id']]);
+        $orderNumber = $oSt->fetchColumn();
+        if (!$orderNumber) {
+            echo json_encode(['success' => false, 'message' => '주문을 찾을 수 없습니다.']);
+            exit;
+        }
+        $docroot = '/var/www/customers/' . $orderNumber . '/public_html';
+        if (!is_dir($docroot)) {
+            echo json_encode(['success' => false, 'message' => '호스팅 디렉토리가 없습니다.']);
+            exit;
+        }
+
+        // metadata.server.db 에서 DB 정보 (또는 docroot 의 .env)
+        $hMeta = json_decode($sub['metadata'] ?? '{}', true) ?: [];
+        $dbInfo = $hMeta['server']['db'] ?? [];
+        if (empty($dbInfo['db_pass']) && file_exists($docroot . '/.env')) {
+            $envVars = [];
+            foreach (file($docroot . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+                $line = trim($line);
+                if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) continue;
+                [$k, $v] = explode('=', $line, 2);
+                $envVars[trim($k)] = trim($v, " \t\n\r\0\x0B\"'");
+            }
+            $dbInfo = [
+                'db_host' => $envVars['DB_HOST'] ?? '127.0.0.1',
+                'db_name' => $envVars['DB_DATABASE'] ?? '',
+                'db_user' => $envVars['DB_USERNAME'] ?? '',
+                'db_pass' => $envVars['DB_PASSWORD'] ?? '',
+            ];
+        }
+
+        // 백업 디렉토리 (호스팅 디렉토리 외부 — root:www-data 만 접근 가능)
+        $backupDir = '/var/www/customers/' . $orderNumber . '/backups';
+        if (!is_dir($backupDir)) {
+            @mkdir($backupDir, 0750, true);
+        }
+        // 7일 넘은 기존 백업 정리
+        foreach (glob($backupDir . '/backup-*.zip') ?: [] as $oldFile) {
+            if (filemtime($oldFile) < time() - 7 * 86400) {
+                @unlink($oldFile);
+            }
+        }
+
+        // DB 덤프
+        $ts = date('Ymd-His');
+        $sqlFile = $backupDir . "/db-{$ts}.sql";
+        if (!empty($dbInfo['db_pass'])) {
+            $cmd = sprintf(
+                '/usr/bin/mysqldump --single-transaction --quick --no-tablespaces --routines --triggers -h%s -u%s -p%s %s > %s 2>&1',
+                escapeshellarg($dbInfo['db_host'] ?? 'localhost'),
+                escapeshellarg($dbInfo['db_user']),
+                escapeshellarg($dbInfo['db_pass']),
+                escapeshellarg($dbInfo['db_name']),
+                escapeshellarg($sqlFile)
+            );
+            exec($cmd, $output, $exit);
+            if ($exit !== 0) {
+                echo json_encode(['success' => false, 'message' => 'DB 덤프 실패: ' . implode("\n", $output)]);
+                exit;
+            }
+        }
+
+        // zip 패키징 (public_html 전체 + sql)
+        $zipFile = $backupDir . "/backup-{$orderNumber}-{$ts}.zip";
+        $cmd = sprintf(
+            'cd %s && /usr/bin/zip -rq %s public_html backups/db-%s.sql 2>&1',
+            escapeshellarg('/var/www/customers/' . $orderNumber),
+            escapeshellarg($zipFile),
+            escapeshellarg($ts)
+        );
+        exec($cmd, $zout, $zexit);
+        @unlink($sqlFile);
+
+        if (!file_exists($zipFile) || filesize($zipFile) === 0) {
+            echo json_encode(['success' => false, 'message' => '백업 파일 생성 실패: ' . implode("\n", $zout)]);
+            exit;
+        }
+
+        // 서명된 다운로드 URL (HMAC, 10분 만료)
+        $secret = $_ENV['APP_KEY'] ?? 'voscms-default-secret';
+        $expires = time() + 600;
+        $filename = basename($zipFile);
+        $sig = hash_hmac('sha256', "{$orderNumber}|{$filename}|{$expires}|{$userId}", $secret);
+        $downloadUrl = sprintf(
+            '/plugins/vos-hosting/api/backup-download.php?o=%s&f=%s&e=%d&u=%d&s=%s',
+            urlencode($orderNumber), urlencode($filename), $expires, (int)$userId, $sig
+        );
+
+        $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'site_backup_created', ?, 'customer', ?)")
+            ->execute([$sub['order_id'], json_encode(['filename' => $filename, 'size_bytes' => filesize($zipFile)], JSON_UNESCAPED_UNICODE), (string)$userId]);
+
+        echo json_encode([
+            'success' => true,
+            'download_url' => $downloadUrl,
+            'filename' => $filename,
+            'size_bytes' => filesize($zipFile),
+        ]);
+        exit;
+
     // ===== 자동연장 토글 (recurring만) =====
     case 'toggle_auto_renew':
         $sub = getOwnedSubscription($pdo, $prefix, $subId, $userId);

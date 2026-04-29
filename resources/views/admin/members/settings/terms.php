@@ -59,49 +59,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $stmt = $pdo->prepare("INSERT INTO {$prefix}settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
 
-            // 디버깅: POST 데이터 확인
-            $debugLog = [];
-
-            // 5개 약관 저장
-            for ($i = 1; $i <= 5; $i++) {
-                $title = trim($_POST["member_term_{$i}_title"] ?? '');
-                $rawContent = $_POST["member_term_{$i}_content"] ?? '';
-                $content = cleanEditorHtml($rawContent);
-                $consent = $_POST["member_term_{$i}_consent"] ?? 'disabled';
-
-                // 디버깅 로그
-                $debugLog["term_{$i}"] = [
-                    'raw_length' => strlen($rawContent),
-                    'clean_length' => strlen($content),
-                    'raw_preview' => substr($rawContent, 0, 200),
-                ];
-
-                $stmt->execute(["member_term_{$i}_title", $title]);
-                $stmt->execute(["member_term_{$i}_content", $content]);
-                $stmt->execute(["member_term_{$i}_consent", $consent]);
-
-                $memberSettings["member_term_{$i}_title"] = $title;
-                $memberSettings["member_term_{$i}_content"] = $content;
-                $memberSettings["member_term_{$i}_consent"] = $consent;
+            // 시스템 페이지 동의 설정 저장 (config/system-pages.php 의 document 타입)
+            $savedCount = 0;
+            $sysPagesPosted = $_POST['member_page_consent'] ?? [];
+            if (is_array($sysPagesPosted)) {
+                foreach ($sysPagesPosted as $slug => $val) {
+                    $val = in_array($val, ['required', 'optional', 'disabled'], true) ? $val : 'disabled';
+                    $key = 'member_page_consent_' . preg_replace('/[^a-z0-9_-]/', '', strtolower($slug));
+                    $stmt->execute([$key, $val]);
+                    $memberSettings[$key] = $val;
+                    $savedCount++;
+                }
             }
 
-            // 디버깅: 저장 후 DB에서 다시 읽어서 길이 확인
-            $checkStmt = $pdo->prepare("SELECT `key`, LENGTH(`value`) as len FROM {$prefix}settings WHERE `key` LIKE 'member_term_%_content'");
-            $checkStmt->execute();
-            $dbLengths = [];
-            while ($row = $checkStmt->fetch(PDO::FETCH_ASSOC)) {
-                $dbLengths[$row['key']] = $row['len'];
-            }
-
-            // 디버깅 메시지 생성
-            $debugInfo = "DEBUG:\n";
-            foreach ($debugLog as $key => $info) {
-                $dbKey = 'member_' . $key . '_content';
-                $dbLen = $dbLengths[$dbKey] ?? 'N/A';
-                $debugInfo .= "{$key}: POST={$info['raw_length']}bytes, Clean={$info['clean_length']}bytes, DB={$dbLen}bytes\n";
-            }
-
-            $message = __('settings.success') . "\n\n" . $debugInfo;
+            $message = __('settings.success');
             $messageType = 'success';
         } catch (PDOException $e) {
             $message = __('settings.error_save') . ': ' . $e->getMessage();
@@ -125,71 +96,56 @@ ob_start();
         include __DIR__ . '/../../components/settings-header.php';
         ?>
 
-        <?php for ($i = 1; $i <= 5; $i++): ?>
-        <!-- 회원 가입 약관 <?= $i ?> -->
-        <div class="<?= $i > 1 ? 'mt-8 pt-8 border-t dark:border-zinc-700' : '' ?>">
-            <h3 class="text-base font-semibold text-zinc-900 dark:text-white mb-4">
-                <?= __('members.settings.terms.term_section') ?> <?= $i ?>
-            </h3>
-
-            <!-- 약관 제목 -->
-            <div class="mb-4">
-                <div class="flex items-center gap-2 mb-2">
-                    <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                        <?= __('members.settings.terms.term_title') ?>
-                    </label>
-                    <?= rzx_multilang_btn("openMultilangModal('term.{$i}.title', 'term_{$i}_title', 'text')") ?>
+        <!-- 시스템 페이지 동의 설정 (config/system-pages.php 의 document 타입 자동 추출) -->
+        <?php
+        $_sysPages = file_exists(BASE_PATH . '/config/system-pages.php') ? include BASE_PATH . '/config/system-pages.php' : [];
+        $_documentPages = array_filter($_sysPages, fn($p) => ($p['type'] ?? '') === 'document');
+        ?>
+        <?php if (!empty($_documentPages)): ?>
+        <div class="mt-6">
+            <div class="space-y-3">
+                <?php foreach ($_documentPages as $_sp):
+                    $_slug = $_sp['slug'] ?? '';
+                    if (!$_slug) continue;
+                    $_titleKey = $_sp['title'] ?? '';
+                    $_pageTitle = $_titleKey ? __($_titleKey) : $_slug;
+                    $_emoji = $_sp['emoji'] ?? '📄';
+                    $_consentKey = 'member_page_consent_' . preg_replace('/[^a-z0-9_-]/', '', strtolower($_slug));
+                    $_currentConsent = $memberSettings[$_consentKey] ?? 'disabled';
+                ?>
+                <div class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-700/30 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <span class="text-2xl"><?= $_emoji ?></span>
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-zinc-900 dark:text-white truncate"><?= htmlspecialchars($_pageTitle) ?></p>
+                            <p class="text-[11px] text-zinc-400 font-mono">/<?= htmlspecialchars($_slug) ?></p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 shrink-0">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="member_page_consent[<?= htmlspecialchars($_slug) ?>]" value="required"
+                                   <?= $_currentConsent === 'required' ? 'checked' : '' ?>
+                                   class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
+                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= __('members.settings.terms.consent_required_option') ?></span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="member_page_consent[<?= htmlspecialchars($_slug) ?>]" value="optional"
+                                   <?= $_currentConsent === 'optional' ? 'checked' : '' ?>
+                                   class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
+                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= __('members.settings.terms.consent_optional_option') ?></span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="member_page_consent[<?= htmlspecialchars($_slug) ?>]" value="disabled"
+                                   <?= $_currentConsent === 'disabled' ? 'checked' : '' ?>
+                                   class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
+                            <span class="ml-1.5 text-sm text-zinc-700 dark:text-zinc-300"><?= __('members.settings.terms.consent_disabled_option') ?></span>
+                        </label>
+                    </div>
                 </div>
-                <?php $termTitleValue = getTranslatedValue("term.{$i}.title", "member_term_{$i}_title", $translations, $memberSettings); ?>
-                <input type="text"
-                       id="term_<?= $i ?>_title"
-                       name="member_term_<?= $i ?>_title"
-                       value="<?= htmlspecialchars($termTitleValue) ?>"
-                       placeholder="<?= __('members.settings.terms.term_title_placeholder') ?>"
-                       class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            </div>
-
-            <!-- 약관 내용 -->
-            <div class="mb-4">
-                <div class="flex items-center gap-2 mb-2">
-                    <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                        <?= __('members.settings.terms.term_content') ?>
-                    </label>
-                    <?= rzx_multilang_btn("openMultilangModal('term.{$i}.content', 'term_{$i}_content', 'editor')") ?>
-                </div>
-                <?php $termContentValue = getTranslatedValue("term.{$i}.content", "member_term_{$i}_content", $translations, $memberSettings); ?>
-                <textarea id="term_<?= $i ?>_content"
-                          name="member_term_<?= $i ?>_content"
-                          class="summernote-editor"><?= $termContentValue ?></textarea>
-            </div>
-
-            <!-- 동의 필수 여부 -->
-            <div class="flex items-center space-x-6">
-                <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    <?= __('members.settings.terms.consent_required') ?>
-                </span>
-                <?php $currentConsent = $memberSettings["member_term_{$i}_consent"] ?? 'disabled'; ?>
-                <label class="inline-flex items-center cursor-pointer">
-                    <input type="radio" name="member_term_<?= $i ?>_consent" value="required"
-                           <?= $currentConsent === 'required' ? 'checked' : '' ?>
-                           class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('members.settings.terms.consent_required_option') ?></span>
-                </label>
-                <label class="inline-flex items-center cursor-pointer">
-                    <input type="radio" name="member_term_<?= $i ?>_consent" value="optional"
-                           <?= $currentConsent === 'optional' ? 'checked' : '' ?>
-                           class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('members.settings.terms.consent_optional_option') ?></span>
-                </label>
-                <label class="inline-flex items-center cursor-pointer">
-                    <input type="radio" name="member_term_<?= $i ?>_consent" value="disabled"
-                           <?= $currentConsent === 'disabled' ? 'checked' : '' ?>
-                           class="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-zinc-700 dark:text-zinc-300"><?= __('members.settings.terms.consent_disabled_option') ?></span>
-                </label>
+                <?php endforeach; ?>
             </div>
         </div>
-        <?php endfor; ?>
+        <?php endif; ?>
 
         <div class="flex justify-end pt-6 mt-8 border-t dark:border-zinc-700">
             <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">

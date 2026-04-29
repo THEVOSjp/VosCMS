@@ -132,6 +132,7 @@ return [
         'required_alert' => 'Por favor, acepte todos los terminos obligatorios.',
         'notice' => 'Es posible que no pueda usar el servicio si no acepta los terminos.',
         'view_content' => 'Ver contenido',
+        'view_full' => 'Ver texto completo',
         'hide_content' => 'Ocultar contenido',
         'translation_pending' => 'Traduccion en progreso',
     ],

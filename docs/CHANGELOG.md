@@ -4,6 +4,109 @@
 
 ---
 
+## [VosCMS 2.4.3] - 2026-04-29 — VosCMS 자동 설치 완성 + 호스팅 마이페이지 백업/phpMyAdmin
+
+### Added — 자동 설치 흐름 완성 (이전 세션 Phase 5 마무리)
+
+[HostingProvisioner.php](../rzxlib/Core/Hosting/HostingProvisioner.php) `installVoscms()` 가 zip deploy 후 install-core.php 를 step 3 → step 4 시퀀셜 호출 (이전엔 step 2 만):
+
+- 신규 `runInstallCoreSteps()` — `_db` POST fallback 활용한 세션 우회 + .installed 마커 검증
+- 신규 `callInstallCore()` — HTTP loopback (port 80, Cloudflare edge SSL 활용; rate limit 시 origin 인증서 부재 대응)
+- 신규 `appendHostingEnv()` — install-core.php 가 .env 덮어쓴 후 HOSTING_* 변수 재주입
+- 자동 설치 완료 시 welcome.html 자동 제거 (VosCMS index.php 우선되도록)
+- 결제 흐름 [service-order.php:567-576](../plugins/vos-hosting/api/service-order.php) — install 성공 시 addon metadata 의 `install_completed_at`, `install_admin_url` 자동 기록 (마이페이지 탭 노출 트리거)
+
+### Added — 관리자 "VosCMS 설치" 버튼
+
+[admin/service-orders/detail.php:175-260](../plugins/vos-hosting/views/admin/service-orders/detail.php) + [partials/addon.php](../plugins/vos-hosting/views/admin/service-orders/partials/addon.php):
+
+- 부가서비스 탭의 "설치 지원" addon 에 두 가지 버튼:
+  - **VosCMS 설치** (보라색) — `install_info` 있고 `install_completed_at` 없을 때
+  - **관리자 페이지** (녹색) — 설치 완료 후 새 창으로 admin URL
+- API 액션 `admin_run_voscms_install` — HostingProvisioner.installVoscms() 직접 호출, DB 자격증명 metadata.server.db 또는 customer .env 폴백
+- 설치 성공 시 addon metadata + `voscms_installed` order_log 기록
+
+### Added — 마이페이지 호스팅 탭: 백업 + phpMyAdmin
+
+[customer/mypage/service-partials/hosting.php](../plugins/vos-hosting/views/customer/mypage/service-partials/hosting.php):
+
+- 🟢 **사이트 백업** 버튼 — `service-manage.php?action=request_backup` (신규)
+  - mysqldump → DB 덤프 + zip(public_html, .env, sql) 패키징
+  - 서명 다운로드 URL (HMAC, 10분 만료) — [api/backup-download.php](../plugins/vos-hosting/api/backup-download.php) 신규
+  - 7일 넘은 백업 자동 정리
+- 🟣 **phpMyAdmin 열기** — `https://pma.voscms.com/?lang=<user_locale>` 새 창
+  - nginx vhost: [pma.voscms.com.conf](/etc/nginx/sites-available/pma.voscms.com.conf) 신규 (Cloudflare Tunnel `*.voscms.com` 와일드카드로 자동 라우팅)
+  - 사용자 본인 DB 자격증명으로 로그인
+- DB 접속정보 표시 (host / DB명 / user / password 토글)
+- 13개 언어 i18n: `btn_site_backup`, `btn_open_phpmyadmin`, `confirm_site_backup`, `backup_in_progress`, `backup_ready`, `f_password`, `password_notice`, `f_protocol`
+
+### Added — 모니터링 박스 단계 표시
+
+[customer/mypage/service-partials/_setup-monitor.php](../plugins/vos-hosting/views/customer/mypage/service-partials/_setup-monitor.php):
+
+- 호스팅 셋업 → VosCMS 자동 설치 단계 분리
+- `system_imported` 주문 (사장님 본인이 가진 vos.21ces.com 등 시스템 등록 호스팅) 은 즉시 활성 처리 — 모니터링 박스 미표시
+- 13개 언어 신규 i18n: `setup_step_voscms_install`
+
+### Changed — 호스팅 dist 빌드 정책 강화 ([build-voscms.sh](../../voscms-dist/build-voscms.sh))
+
+**rsync exclude 추가**:
+- 5개 내부 플러그인 (호스팅 고객 사이트에 안 들어가야 함):
+  - `vos-developer`, `vos-hosting`, `vos-license-server`, `vos-market`, `vos-salon`
+- 7개 reservation 마이그레이션 SQL (호스팅 고객은 예약 시스템 미설치):
+  - `001_create_reservation_tables.sql`, `011_seed_service_translations.sql`, `012_seed_service_translations_p2.sql`, `013_add_source_to_reservations.sql`, `014_add_payment_status_to_reservations.sql`, `015_create_reservation_core.sql` (신규), `016_alter_reservation_services.sql`, `024_reservations_bundle_columns.sql`
+
+**dev files 제거 추가**:
+- `admin/` 디렉토리 (offline.html 잉여물) — 빈 디렉토리라 nginx 디렉토리 인덱싱으로 403 발생, root `/offline.html` 만 sw.js 가 참조하므로 admin/ 잉여
+- 기본 인코딩 → `obfuscate.php` (이전 ionCube EVAL 은 런타임 hang 발생, USE_IONCUBE=1 시에만 ionCube)
+
+### Changed — 마이그레이션 SQL 분리: 핵심 vs 예약
+
+[001_create_base_tables.sql](../database/migrations/migrations/001_create_base_tables.sql) 가 base + reservation 을 한 파일에서 같이 만들던 구조 분리:
+
+- **수정**: `001_create_base_tables.sql` — 핵심 5개 테이블만 (`rzx_admins`, `rzx_users`, `rzx_member_grades`, `rzx_settings`, `rzx_migrations`) + 핵심 시드 (member_grades 기본, settings 기본)
+- **신규**: [`015_create_reservation_core.sql`](../database/migrations/migrations/015_create_reservation_core.sql) — 예약 9개 테이블 (`rzx_categories`, `rzx_services`, `rzx_service_options`, `rzx_reservations`, `rzx_payments`, `rzx_point_transactions`, `rzx_business_hours`, `rzx_holidays`, `rzx_staff_positions`, `rzx_staff`) + 예약 시드 (business_hours, point_*)
+
+호스팅 dist 빌드 시 015 exclude → `rzx_reservations` 테이블 미생성 → [admin/dashboard.php:25-27](../resources/views/admin/dashboard.php) 의 `$hasReservations = false` → **카렌다 자동 미표시**.
+
+본사 사이트 (voscms.com) 와 RezlyX 본진 등 예약 시스템 사용처는 두 SQL 파일 모두 적용됨 → 변화 없음.
+
+### Changed — nginx vhost 단일 server 블록
+
+[config/templates/nginx-vhost.conf.tpl](../config/templates/nginx-vhost.conf.tpl) + HostingProvisioner `addHttpsToVhost()`:
+
+- 기존: port 80 (HTTPS 리다이렉트) + port 443 (실 컨텐츠) → Cloudflare Tunnel + 80→443 리다이렉트로 무한 루프 발생
+- 변경: 80/443 통합 단일 server 블록, 컨텐츠 동일 서빙, 리다이렉트 없음
+- `fastcgi_read_timeout` 60s → 300s (대량 INSERT 시 nginx 타임아웃 방지)
+
+### Changed — 신규 호스팅 시 잉여 데이터 정리
+
+- `provision-hosting.php` (CLI 백필 도구): hosting subscription metadata 자동 갱신 (`hosting_provisioned`, `server.{ftp,db,env}`) — 이전엔 service-order.php 의 `_autoProvisionHosting` 만 수행
+- 5개 내부 플러그인 + admin/ 디렉토리 자동 제거
+
+### Added — install-cli.php (백필/디버깅 도구)
+
+[scripts/install-cli.php](../scripts/install-cli.php) 신규:
+
+- 호스팅 프로비저닝 후 install-core.php 자동 호출 백필
+- DB 자격증명: subscription metadata 우선, 없으면 customer docroot 의 `.env` 폴백
+- 사용: `sudo -u www-data php scripts/install-cli.php --order=<ORDER>`
+- 성공 시 addon metadata 의 `install_completed_at` 자동 기록 + order_logs 의 `voscms_installed` 액션
+
+### Fixed — voscms.com 호스팅 자동화 결제 흐름
+
+- 카드 결제 분기에 `_autoProvisionHosting()` 호출 누락 — 추가
+- 결제 metadata 의 `install_info.admin_pw` 가 평문 노출되던 표시 → 마이페이지 / 관리자 양쪽 토글 (👁) 패턴 통일
+
+### Migration Notes
+
+- **외부 호스팅 고객**: 별도 작업 불필요. `voscms-2.4.3.zip` 빌드 후 자동 설치 흐름이 깨끗한 zip 사용.
+- **본사 (voscms.com)**: 변경 없음 (reservation SQL 두 파일 모두 적용됨).
+- **기존 호스팅 고객 (dwhahn 등)**: deprovision + reprovision 로 깨끗하게 재설치 권장 (분리 후 새 zip 적용).
+- **manual cleanup**: `/etc/nginx/sites-available/pma.voscms.com.conf` 신규 추가됨 — 본사 시스템에 직접 배포 (rsync 외).
+
+---
+
 ## [VosCMS 2.4.2] - 2026-04-29 — 호스팅 자동화 결제 hook + 활동 로그 i18n
 
 ### Added — Phase 4: 결제 완료 hook → HostingProvisioner 자동 호출

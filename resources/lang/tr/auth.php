@@ -132,6 +132,7 @@ return [
         'required_alert' => 'Lütfen tüm zorunlu şartları kabul edin.',
         'notice' => 'Şartları kabul etmezseniz hizmeti kullanamayabilirsiniz.',
         'view_content' => 'İçeriği görüntüle',
+        'view_full' => 'Tüm metni gör',
         'hide_content' => 'İçeriği gizle',
         'translation_pending' => 'Çeviri devam ediyor',
     ],

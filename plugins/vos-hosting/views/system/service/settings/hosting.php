@@ -65,6 +65,7 @@ foreach ($_features as $i => $f) {
                             <th class="pb-2 pr-2 w-32"><?= __('services.admin.hosting.col_plan_name') ?></th>
                             <th class="pb-2 pr-2 w-20"><?= __('services.admin.hosting.col_capacity') ?></th>
                             <th class="pb-2 pr-2 w-28"><?= __('services.admin.hosting.col_monthly_price') ?> (<?= $_dispCur ?>)</th>
+                            <th class="pb-2 pr-2 w-20"><?= __('services.admin.hosting.col_free_mail') ?></th>
                             <th class="pb-2 pr-2"><?= __('services.admin.hosting.col_features') ?></th>
                             <th class="pb-2 w-10"></th>
                         </tr>
@@ -75,6 +76,7 @@ foreach ($_features as $i => $f) {
                             <td class="py-2 pr-2"><?php rzx_multilang_input("plan_label_{$sid}", $p['label'] ?? '', "service.hosting.plan.{$sid}.label", ['class'=>'plan-label text-xs']); ?></td>
                             <td class="py-2 pr-2"><input type="text" value="<?= htmlspecialchars($p['capacity']) ?>" class="plan-cap <?= $_inp ?> text-xs"></td>
                             <td class="py-2 pr-2"><input type="number" value="<?= (int)$p['price'] ?>" class="plan-price <?= $_inp ?> text-xs" min="0"></td>
+                            <td class="py-2 pr-2"><input type="number" value="<?= isset($p['free_mail_count']) ? (int)$p['free_mail_count'] : 5 ?>" class="plan-mail <?= $_inp ?> text-xs" min="0" max="50"></td>
                             <td class="py-2 pr-2"><?php rzx_multilang_input("plan_feat_{$sid}", $p['features'] ?? '', "service.hosting.plan.{$sid}.features", ['class'=>'plan-feat text-xs', 'placeholder'=>__('services.admin.hosting.placeholder_features')]); ?></td>
                             <td class="py-2 text-center"><?php if (!$locked): ?><button type="button" onclick="this.closest('tr').remove()" class="text-red-400 hover:text-red-600 p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button><?php else: ?><span class="text-zinc-300 dark:text-zinc-600 text-[10px]"><?= __('services.admin.hosting.locked_label') ?></span><?php endif; ?></td>
                         </tr>

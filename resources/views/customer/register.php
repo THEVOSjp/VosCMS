@@ -54,14 +54,9 @@ if ($useSkin) {
     $registerFieldsSetting = $siteSettings['member_register_fields'] ?? 'name,email,password,phone';
     $registerFields = array_filter(array_map('trim', explode(',', $registerFieldsSetting)));
 
-    // 필수 필드가 반드시 포함되도록 보장
+    // 필수 필드가 항상 먼저 오도록 정렬 + 중복 제거
     $requiredFields = ['name', 'email', 'password'];
-    foreach ($requiredFields as $required) {
-        if (!in_array($required, $registerFields)) {
-            array_unshift($registerFields, $required);
-        }
-    }
-    $registerFields = array_unique($registerFields);
+    $registerFields = array_values(array_unique(array_merge($requiredFields, $registerFields)));
 
     $errors = [];
     $oldInput = [
@@ -77,6 +72,20 @@ if ($useSkin) {
     ];
     $success = false;
 
+    // 필수 약관 ID 목록 (POST 검증용)
+    $_requiredTermIds = [];
+    $_sysPagesForCheck = file_exists(BASE_PATH . '/config/system-pages.php') ? include BASE_PATH . '/config/system-pages.php' : [];
+    foreach ($_sysPagesForCheck as $_sp) {
+        if (($_sp['type'] ?? '') !== 'document') continue;
+        $_slug = $_sp['slug'] ?? '';
+        if (!$_slug) continue;
+        $_consentKey = 'member_page_consent_' . preg_replace('/[^a-z0-9_-]/', '', strtolower($_slug));
+        if (($siteSettings[$_consentKey] ?? 'disabled') === 'required') {
+            $_requiredTermIds[] = 'page_' . $_slug;
+        }
+    }
+    $_termsRequired = !empty($_requiredTermIds);
+
     // Handle registration form submission
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = trim($_POST['name'] ?? '');
@@ -84,7 +93,15 @@ if ($useSkin) {
         $phone = trim($_POST['phone'] ?? '');
         $password = $_POST['password'] ?? '';
         $passwordConfirm = $_POST['password_confirm'] ?? '';
-        $agreeTerms = isset($_POST['agree_terms']);
+        // 약관 동의 검증 — agree_all 체크 또는 모든 필수 약관 (terms[<id>]) 체크됐는지
+        $_agreedAll = !empty($_POST['agree_all']);
+        $_agreedTerms = $_POST['terms'] ?? [];
+        $_termsOK = true;
+        if ($_termsRequired && !$_agreedAll) {
+            foreach ($_requiredTermIds as $_rid) {
+                if (empty($_agreedTerms[$_rid])) { $_termsOK = false; break; }
+            }
+        }
 
         $oldInput = ['name' => $name, 'email' => $email, 'phone' => $phone];
 
@@ -100,8 +117,8 @@ if ($useSkin) {
             $errors[] = __('validation.min.string', ['attribute' => __('auth.register.password'), 'min' => 8]);
         } elseif ($password !== $passwordConfirm) {
             $errors[] = __('validation.confirmed', ['attribute' => __('auth.register.password')]);
-        } elseif (!$agreeTerms) {
-            $errors[] = __('validation.accepted', ['attribute' => __('common.terms')]);
+        } elseif (!$_termsOK) {
+            $errors[] = __('auth.terms.required_alert');
         } else {
             $result = Auth::register([
                 'name' => $name,
@@ -113,41 +130,53 @@ if ($useSkin) {
             if ($result['success']) {
                 $success = true;
             } else {
-                $errors[] = $result['error'] ?? __('auth.register.error');
+                // error 코드를 i18n 키로 변환 (예: 'email_exists' → auth.register.email_exists)
+                $_errCode = $result['error'] ?? 'error';
+                $_errKey = "auth.register.{$_errCode}";
+                $_errMsg = __($_errKey);
+                if ($_errMsg === $_errKey) $_errMsg = __('auth.register.error');
+                $errors[] = $_errMsg;
             }
         }
     }
 
-    // 약관 정보 로드 (다국어 지원)
+    // 약관 정보 로드 — 시스템 페이지 (config/system-pages.php document 타입 + member_page_consent_<slug>)
     $terms = [];
     $currentLocale = current_locale();
-    for ($i = 1; $i <= 5; $i++) {
-        $consent = $siteSettings["member_term_{$i}_consent"] ?? 'disabled';
+    $_dbPrefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+    $_sysPages = file_exists(BASE_PATH . '/config/system-pages.php') ? include BASE_PATH . '/config/system-pages.php' : [];
+    foreach ($_sysPages as $_sp) {
+        if (($_sp['type'] ?? '') !== 'document') continue;
+        $_slug = $_sp['slug'] ?? '';
+        if (!$_slug) continue;
 
-        // 비활성화된 약관은 건너뛰기
-        if ($consent === 'disabled') {
-            continue;
-        }
+        $_consentKey = 'member_page_consent_' . preg_replace('/[^a-z0-9_-]/', '', strtolower($_slug));
+        $_consent = $siteSettings[$_consentKey] ?? 'disabled';
+        if ($_consent === 'disabled') continue;
 
-        // db_trans()를 사용하여 번역 조회, 없으면 기본 설정값 사용
-        $defaultTitle = $siteSettings["member_term_{$i}_title"] ?? '';
-        $defaultContent = $siteSettings["member_term_{$i}_content"] ?? '';
-
-        $title = db_trans("term.{$i}.title", $currentLocale, $defaultTitle);
-        $content = db_trans("term.{$i}.content", $currentLocale, $defaultContent);
-
-        // 번역이 fallback(기본 언어)을 사용하는지 확인
-        $isFallback = is_translation_fallback("term.{$i}.content", $currentLocale);
-
-        if (!empty($title)) {
+        // rzx_page_contents 에서 현재 로케일의 title/content 조회
+        try {
+            $_pcStmt = $pdo->prepare("SELECT title, content FROM {$_dbPrefix}page_contents WHERE page_slug = ? AND locale = ? LIMIT 1");
+            $_pcStmt->execute([$_slug, $currentLocale]);
+            $_pcRow = $_pcStmt->fetch(\PDO::FETCH_ASSOC);
+            // 현재 로케일에 없으면 ko fallback
+            if (!$_pcRow) {
+                $_pcStmt->execute([$_slug, 'ko']);
+                $_pcRow = $_pcStmt->fetch(\PDO::FETCH_ASSOC);
+            }
+            // 그래도 없으면 system-pages title 키
+            if (!$_pcRow) {
+                $_pcRow = ['title' => $_sp['title'] ? __($_sp['title']) : $_slug, 'content' => ''];
+            }
             $terms[] = [
-                'id' => $i,
-                'title' => $title,
-                'content' => $content,
-                'required' => $consent === 'required',
-                'isFallback' => $isFallback,
+                'id' => 'page_' . $_slug,
+                'title' => $_pcRow['title'] ?: ($_sp['title'] ? __($_sp['title']) : $_slug),
+                'content' => $_pcRow['content'] ?: '',
+                'required' => $_consent === 'required',
+                'isFallback' => false,
+                'page_slug' => $_slug,
             ];
-        }
+        } catch (\PDOException $_e) { /* table 없으면 skip */ }
     }
 
     // 스킨 렌더링 (로고, 언어, 소셜 로그인은 모듈이 자동 처리)
@@ -166,7 +195,8 @@ if ($useSkin) {
     if (isset($__layout) && $__layout !== false) {
         $__bodyContent = '';
         if (preg_match('/<main[^>]*>(.*)<\/main>/is', $skinHtml, $__mm)) {
-            $__bodyContent .= '<div class="py-12 px-4">' . $__mm[1] . '</div>';
+            // 가운데 정렬 + max-width 적용
+            $__bodyContent .= '<div class="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"><div class="max-w-lg w-full space-y-8">' . $__mm[1] . '</div></div>';
         }
         if (preg_match_all('/<script\b[^>]*>.*?<\/script>/is', $skinHtml, $__scripts)) {
             $__bodyContent .= implode("\n", $__scripts[0]);

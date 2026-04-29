@@ -132,6 +132,7 @@ return [
         'required_alert' => '请同意所有必需条款。',
         'notice' => '如果您不同意条款，可能无法使用服务。',
         'view_content' => '查看内容',
+        'view_full' => '查看全文',
         'hide_content' => '隐藏内容',
         'translation_pending' => '翻译进行中',
     ],
