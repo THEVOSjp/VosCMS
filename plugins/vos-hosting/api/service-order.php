@@ -515,6 +515,89 @@ if ($bizmailCount > 0) {
  * 외부 IO (Cloudflare API + SSH to mx1) 라 transaction 외부에서 호출.
  * 실패해도 주문 완료 자체는 영향 없음 (로그만 기록).
  */
+/**
+ * 호스팅 자동 프로비저닝 (결제 완료 후 호출).
+ * - free subdomain: 즉시 셋업 (Cloudflare DNS 가 이미 등록되어 있어 SSL 발급 가능)
+ * - new/existing 도메인: NS 변경 후 관리자 활성화 시점에 별도 호출
+ *
+ * 'install' addon 이 신청에 포함되어 있으면 metadata.install_info 로 voscms 자동 설치.
+ *
+ * 실패해도 주문 자체는 영향 없음 (로그만 기록, 관리자 후속 조치 가능).
+ */
+function _autoProvisionHosting($pdo, $prefix, $orderId, $orderNumber) {
+    try {
+        // 주문 + 호스팅 정보 로드
+        $orderStmt = $pdo->prepare("SELECT * FROM {$prefix}orders WHERE id = ?");
+        $orderStmt->execute([$orderId]);
+        $order = $orderStmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$order) return;
+
+        $domain = $order['domain'] ?? '';
+        $capacity = $order['hosting_capacity'] ?? '';
+        $domainOption = $order['domain_option'] ?? 'free';
+
+        // 호스팅 신청이 없거나 도메인 미정인 경우 skip
+        if (empty($domain) || empty($capacity)) {
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type) VALUES (?, 'hosting_provision_skipped', ?, 'system')")
+                ->execute([$orderId, json_encode(['reason' => 'no domain or capacity'])]);
+            return;
+        }
+
+        // free 만 즉시 셋업 (new/existing 은 도메인 등록/NS 변경 후 별도)
+        if ($domainOption !== 'free') {
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type) VALUES (?, 'hosting_provision_deferred', ?, 'system')")
+                ->execute([$orderId, json_encode(['domain_option' => $domainOption, 'note' => '도메인 활성화 후 관리자가 수동 트리거'])]);
+            return;
+        }
+
+        // HostingProvisioner 호출
+        $provisioner = new \RzxLib\Core\Hosting\HostingProvisioner($pdo);
+        $result = $provisioner->provision($orderNumber, $domain, $capacity);
+
+        // 'install' addon 의 install_info 가 있으면 voscms 자동 설치
+        if ($result['success'] && !empty($result['db']['success'])) {
+            $aSt = $pdo->prepare("SELECT metadata FROM {$prefix}subscriptions WHERE order_id = ? AND type = 'addon'");
+            $aSt->execute([$orderId]);
+            while ($aRow = $aSt->fetch(\PDO::FETCH_ASSOC)) {
+                $aMeta = json_decode($aRow['metadata'] ?? '{}', true) ?: [];
+                if (!empty($aMeta['install_info'])) {
+                    $installResult = $provisioner->installVoscms($orderNumber, $domain, $result['db'], $aMeta['install_info']);
+                    $result['install'] = $installResult;
+                    break;
+                }
+            }
+        }
+
+        $action = $result['success'] ? 'hosting_provisioned' : 'hosting_provision_failed';
+        $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type) VALUES (?, ?, ?, 'system')")
+            ->execute([$orderId, $action, json_encode($result, JSON_UNESCAPED_UNICODE)]);
+
+        // 호스팅 subscription 의 metadata 에 server 정보 저장
+        if ($result['success']) {
+            $hostStmt = $pdo->prepare("SELECT id, metadata FROM {$prefix}subscriptions WHERE order_id = ? AND type = 'hosting' LIMIT 1");
+            $hostStmt->execute([$orderId]);
+            if ($hSub = $hostStmt->fetch(\PDO::FETCH_ASSOC)) {
+                $hMeta = json_decode($hSub['metadata'] ?? '{}', true) ?: [];
+                $hMeta['hosting_provisioned'] = true;
+                $hMeta['hosting_provisioned_at'] = date('c');
+                $hMeta['server'] = array_merge($hMeta['server'] ?? [], [
+                    'ftp' => ['host' => $domain, 'user' => $result['username'], 'port' => 21],
+                    'db' => $result['db'],
+                    'env' => ['php' => '8.3'],
+                ]);
+                $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
+                    ->execute([json_encode($hMeta, JSON_UNESCAPED_UNICODE), $hSub['id']]);
+            }
+        }
+    } catch (\Throwable $e) {
+        error_log("[hosting provisioner] order $orderNumber: " . $e->getMessage());
+        try {
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type) VALUES (?, 'hosting_provision_failed', ?, 'system')")
+                ->execute([$orderId, json_encode(['error' => substr($e->getMessage(), 0, 500)], JSON_UNESCAPED_UNICODE)]);
+        } catch (\Throwable $e2) { /* silent */ }
+    }
+}
+
 function _autoProvisionMailDomain($pdo, $prefix, $orderId, $orderNumber) {
     try {
         $provisioner = new \RzxLib\Core\Mail\MailDomainProvisioner($pdo);
@@ -635,7 +718,8 @@ try {
 
         $pdo->commit();
 
-        // 메일 도메인 자동 프로비저닝 (transaction 외부)
+        // 자동 프로비저닝 (transaction 외부) — 호스팅 → 메일 순서
+        _autoProvisionHosting($pdo, $prefix, $orderId, $orderNumber);
         _autoProvisionMailDomain($pdo, $prefix, $orderId, $orderNumber);
 
         echo json_encode([

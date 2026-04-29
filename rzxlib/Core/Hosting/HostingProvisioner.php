@@ -641,14 +641,14 @@ ENV;
             $this->run('/usr/bin/chmod 640 ' . escapeshellarg($envPath));
             @unlink($tmpEnv);
 
-            // 6. install-core.php headless 호출 (HTTP 로 자기 자신에게)
-            $installResult = $this->runInstallCore($domain, $installInfo);
-
+            // 6. 사용자가 install.php 직접 접근하여 마법사 진행하도록 안내 URL 반환
+            // (install-core.php headless 자동화는 Phase 5 별도 진행)
             return [
-                'success' => $installResult['success'],
+                'success' => true,
                 'version' => $version,
-                'admin_url' => 'https://' . $domain . '/admin',
-                'install_response' => $installResult,
+                'install_url' => "https://{$domain}/install.php",
+                'admin_url_after_install' => "https://{$domain}/admin",
+                'note' => '사용자가 install.php 에서 마법사를 진행해주세요. DB 정보는 .env 에 미리 주입되어 있습니다.',
             ];
         } catch (\Throwable $e) {
             return ['success' => false, 'error' => $e->getMessage()];
@@ -657,10 +657,10 @@ ENV;
 
     /**
      * install-core.php 를 HTTP 로 호출 — DB 마이그레이션 + admin 계정 생성.
+     * Cloudflare proxy 우회 — CURLOPT_RESOLVE 로 127.0.0.1 직접 호출.
      */
     private function runInstallCore(string $domain, array $installInfo): array
     {
-        // POST 데이터 — install-core.php 의 step 2 (마이그레이션 + admin)
         $payload = http_build_query([
             'step' => 2,
             'lang' => 'ko',
@@ -678,19 +678,33 @@ ENV;
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 180,
             CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_RESOLVE => [
+                $domain . ':443:127.0.0.1',
+                $domain . ':80:127.0.0.1',
+            ],
+            CURLOPT_FOLLOWLOCATION => true,  // 혹시 install-core.php 안의 step redirect 따라가기
+            CURLOPT_MAXREDIRS => 5,
         ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $err = curl_error($ch);
         curl_close($ch);
 
+        // 200 + storage/.installed 파일 존재 = 성공
+        $installedFlag = $this->hostingRoot . '/' . $this->orderForCurrentInstall . '/public_html/storage/.installed';
+        $success = $httpCode === 200 || ($installedFlag && file_exists($installedFlag));
+
         return [
-            'success' => $httpCode === 200,
+            'success' => $success,
             'http_code' => $httpCode,
             'curl_error' => $err ?: null,
             'response_excerpt' => $response ? substr($response, 0, 500) : null,
+            'installed_marker' => $installedFlag && file_exists($installedFlag),
         ];
     }
+
+    private string $orderForCurrentInstall = '';
 
     private function isoNow(): string { return date('c'); }
 

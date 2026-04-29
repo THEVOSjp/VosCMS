@@ -4,6 +4,43 @@
 
 ---
 
+## [VosCMS 2.4.2] - 2026-04-29 — 호스팅 자동화 결제 hook + 활동 로그 i18n
+
+### Added — Phase 4: 결제 완료 hook → HostingProvisioner 자동 호출
+
+[service-order.php](../plugins/vos-hosting/api/service-order.php) 의 결제 완료 직후 호출:
+
+- 신규 함수 `_autoProvisionHosting($pdo, $prefix, $orderId, $orderNumber)` — 결제 transaction 외부 실행 (DB 무결성 격리, 실패해도 주문 자체 영향 없음)
+- `domain_option = 'free'` 만 즉시 셋업 (Cloudflare 서브도메인 — DNS 자동 등록 끝났으므로 바로 가능)
+- `new` (도메인 구매 후 NS 변경 대기) / `existing` (보유 도메인 NS 변경 대기) 은 **deferred** — 관리자가 도메인 활성화 시점에 별도 트리거
+- 'install' addon 의 `install_info` 있으면 voscms 파일 deploy + .env 자동 생성 (install-core.php 사용자 마법사 진행 시 DB 정보 미리 주입됨)
+- 호스팅 subscription metadata.server 에 ftp/db/env 정보 자동 저장 → 마이페이지 호스팅 탭에서 자동 표시 (UI 변경 불필요)
+- order_logs 액션: `hosting_provisioned` / `hosting_provision_skipped` / `hosting_provision_deferred` / `hosting_provision_failed`
+
+호출 순서: 결제 commit → `_autoProvisionHosting()` → `_autoProvisionMailDomain()`
+
+### Added — 활동 로그 i18n 23개 액션 매핑
+
+관리자 서비스 주문 상세 페이지 ([detail.php:498-528](../plugins/vos-hosting/views/admin/service-orders/detail.php)) 의 `$actionLabels` 가 8개 → 31개로 확장. 활동 로그에서 코드(`mail_account_added` 등) 그대로 보이던 문제 수정.
+
+매핑 추가된 액션:
+- 메일: `mail_account_added/deleted`, `mail_address_changed`, `mail_provisioned/_skipped/_failed`, `mail_domain_migrated/activated`, `bizmail_upgrade_request`
+- 호스팅: `hosting_provisioned`, `hosting_provision_skipped/deferred/failed`, `hosting_deprovisioned`
+- 부가서비스: `admin_add_storage_addon`, `admin_delete_addon`, `storage_addon_paid/requested`
+- 시스템: `customer_notified`, `setup_email_sent`, `server_info_updated`, `bulk_extended`, `manual_capacity_period_fix`
+
+각 액션별 색상 의미: green(완료/긍정), amber(보류/경고), red(실패/삭제), blue(정보/알림), violet(관리자/특수), zinc(중립).
+
+i18n 키 23개 — services.admin_orders.act_* — ko/ja/en 3개 언어 추가 (운영자 페이지). 다른 10개 언어는 fallback (영어).
+
+### Changed — install-core.php headless 자동화 분리
+
+호스팅 자동 프로비저닝 시 voscms 자동 설치는 파일 deploy + `.env` 자동 생성까지만 수행. install-core.php 의 step-by-step 세션 흐름 (step 2~5) 자동화는 voscms 의 install 파이프라인 자체를 재설계해야 하는 큰 작업이라 Phase 5 별도 진행. 사용자가 결제 완료 후 `https://<도메인>/install.php` 접근 → 마법사 진행 (DB 정보는 .env 에 미리 주입됨).
+
+`installVoscms()` 반환값 변경 — `install_url` + `note` 안내 메시지.
+
+---
+
 ## [VosCMS 2.4.1] - 2026-04-29 — 호스팅 가상화 자동 프로비저닝 (Phase 1~3)
 
 호스팅 신청 → 결제 완료 → 사이트 / SSL / DB / VosCMS 까지 자동 셋업되는 인프라 구축. 1.9TB SSD 통합 (`/var/www`), Linux 사용자 격리, PHP-FPM pool 격리, Cloudflare DNS-01 SSL 자동 발급, MySQL DB 격리, VosCMS 파일 deploy + .env 자동 생성. CLI 도구 + 트랜잭션 롤백 완비. Phase 4 (결제 hook 연동) 진행 예정.
