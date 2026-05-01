@@ -279,12 +279,12 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                     <p class="text-sm text-zinc-400 text-center py-6"><?= htmlspecialchars(__('services.admin_custom.quotes_empty')) ?></p>
                     <?php else: foreach ($quotes as $q):
                         $qBg = match ($q['status']) {
-                            'draft' => 'bg-gray-50 dark:bg-zinc-700/20 border-gray-300 dark:border-zinc-600',
-                            'sent' => 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800',
-                            'accepted' => 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-300 dark:border-emerald-700',
-                            'rejected' => 'bg-red-50 dark:bg-red-900/10 border-red-300 dark:border-red-700',
-                            'superseded' => 'bg-gray-50 dark:bg-zinc-700/20 border-gray-200 dark:border-zinc-600 opacity-60',
-                            default => 'bg-gray-50 border-gray-200',
+                            'draft' => 'border-gray-300 dark:border-zinc-600',
+                            'sent' => 'border-emerald-200 dark:border-emerald-800',
+                            'accepted' => 'border-emerald-300 dark:border-emerald-700',
+                            'rejected' => 'border-red-300 dark:border-red-700',
+                            'superseded' => 'border-gray-200 dark:border-zinc-600 opacity-60',
+                            default => 'border-gray-200',
                         };
                         $qStatusLabel = match ($q['status']) {
                             'draft' => __('services.admin_custom.q_draft'),
@@ -347,9 +347,9 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
                             <?php foreach ($_qPays as $_p):
                                 $_pCls = match ($_p['status']) {
-                                    'paid' => 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200',
-                                    'cancelled' => 'bg-gray-50 dark:bg-zinc-700/30 text-zinc-400 line-through',
-                                    default => 'bg-emerald-50 dark:bg-emerald-900/10 text-emerald-700 dark:text-emerald-300',
+                                    'paid' => 'border border-emerald-400 dark:border-emerald-600 text-emerald-800 dark:text-emerald-200',
+                                    'cancelled' => 'border border-gray-200 dark:border-zinc-600 text-zinc-400 line-through',
+                                    default => 'border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300',
                                 };
                             ?>
                                 <div class="flex items-center justify-between gap-2 text-[11px] px-2 py-1 rounded <?= $_pCls ?>">
@@ -393,12 +393,12 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                     <p class="text-sm text-zinc-400 text-center py-6"><?= htmlspecialchars(__('services.admin_custom.milestones_empty')) ?></p>
                     <?php else: foreach ($_milestones as $_ms):
                         $_msCls = match ($_ms['status']) {
-                            'pending' => 'bg-gray-50 dark:bg-zinc-700/30 border-gray-200 dark:border-zinc-600',
-                            'in_progress' => 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800',
-                            'submitted' => 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800',
-                            'approved' => 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800',
-                            'revision_requested' => 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800',
-                            'cancelled' => 'bg-gray-50 dark:bg-zinc-700/20 border-gray-200 opacity-60',
+                            'pending' => 'border-gray-200 dark:border-zinc-600',
+                            'in_progress' => 'border-blue-200 dark:border-blue-800',
+                            'submitted' => 'border-amber-200 dark:border-amber-800',
+                            'approved' => 'border-emerald-200 dark:border-emerald-800',
+                            'revision_requested' => 'border-red-200 dark:border-red-800',
+                            'cancelled' => 'border-gray-200 opacity-60',
                             default => 'bg-gray-50 border-gray-200',
                         };
                         $_msStatusLabel = match ($_ms['status']) {
@@ -458,7 +458,7 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                         </div>
                         <?php endif; ?>
                         <?php if ($_ms['status'] === 'revision_requested' && $_ms['revision_note']): ?>
-                        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-2 mb-2">
+                        <div class="border border-red-200 dark:border-red-800 rounded p-2 mb-2">
                             <p class="text-[10px] text-red-700 dark:text-red-300 font-bold mb-1">📝 <?= htmlspecialchars(__('services.admin_custom.ms_revision_note')) ?></p>
                             <p class="text-xs text-red-700 dark:text-red-200 whitespace-pre-wrap"><?= htmlspecialchars($_ms['revision_note']) ?></p>
                         </div>
@@ -518,7 +518,7 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
             </div>
 
             <!-- 내부 메모 -->
-            <div class="bg-emerald-50 dark:bg-emerald-900/10 rounded-xl border border-emerald-200 dark:border-emerald-800 p-4">
+            <div class="rounded-xl border border-emerald-200 dark:border-emerald-800 p-4">
                 <p class="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-2">📝 <?= htmlspecialchars(__('services.admin_custom.section_admin_note')) ?></p>
                 <textarea id="adminNote" rows="6" class="w-full px-2 py-1.5 text-xs border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded" placeholder="<?= htmlspecialchars(__('services.admin_custom.admin_note_ph')) ?>"><?= htmlspecialchars($project['admin_note'] ?? '') ?></textarea>
                 <button onclick="saveAdminNote()" class="mt-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded">
