@@ -171,7 +171,7 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                     <?php else: foreach ($quotes as $q):
                         $qBg = match ($q['status']) {
                             'draft' => 'bg-gray-50 dark:bg-zinc-700/20 border-gray-300 dark:border-zinc-600',
-                            'sent' => 'bg-lime-50 dark:bg-lime-900/10 border-lime-300 dark:border-lime-700',
+                            'sent' => 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800',
                             'accepted' => 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-300 dark:border-emerald-700',
                             'rejected' => 'bg-red-50 dark:bg-red-900/10 border-red-300 dark:border-red-700',
                             'superseded' => 'bg-gray-50 dark:bg-zinc-700/20 border-gray-200 dark:border-zinc-600 opacity-60',
@@ -237,7 +237,7 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                                 $_pCls = match ($_p['status']) {
                                     'paid' => 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200',
                                     'cancelled' => 'bg-gray-50 dark:bg-zinc-700/30 text-zinc-400 line-through',
-                                    default => 'bg-lime-50 dark:bg-lime-900/10 text-lime-800 dark:text-lime-300',
+                                    default => 'bg-emerald-50 dark:bg-emerald-900/10 text-emerald-700 dark:text-emerald-300',
                                 };
                             ?>
                                 <div class="flex items-center justify-between gap-2 text-[11px] px-2 py-1 rounded <?= $_pCls ?>">
