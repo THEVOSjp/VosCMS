@@ -162,8 +162,8 @@ $budgetLabel = match ($project['budget_range']) {
             <?php else: foreach ($quotes as $q): ?>
             <?php
             $qBg = match ($q['status']) {
-                'sent' => ['bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-700', __('services.custom.q_sent')],
-                'accepted' => ['bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-700', __('services.custom.q_accepted')],
+                'sent' => ['bg-lime-50 dark:bg-lime-900/10 border-lime-300 dark:border-lime-700', __('services.custom.q_sent')],
+                'accepted' => ['bg-emerald-100 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700', __('services.custom.q_accepted')],
                 'rejected' => ['bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-700', __('services.custom.q_rejected')],
                 'superseded' => ['bg-gray-50 dark:bg-zinc-700/30 border-gray-200 dark:border-zinc-600 opacity-60', __('services.custom.q_superseded')],
                 default => ['bg-gray-50 border-gray-200', $q['status']],
@@ -235,9 +235,9 @@ $budgetLabel = match ($project['budget_range']) {
                     <div class="space-y-1">
                     <?php foreach ($q['payments'] as $_pay):
                         $_pCls = match ($_pay['status']) {
-                            'paid' => 'bg-emerald-50 dark:bg-emerald-900/10 text-emerald-700 dark:text-emerald-300',
+                            'paid' => 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200',
                             'cancelled' => 'bg-gray-50 dark:bg-zinc-700/30 text-zinc-400 line-through',
-                            default => 'bg-amber-50 dark:bg-amber-900/10 text-amber-800 dark:text-amber-300',
+                            default => 'bg-lime-50 dark:bg-lime-900/10 text-lime-800 dark:text-lime-300',
                         };
                         $_canPay = ($q['status'] === 'accepted' && $_pay['status'] === 'pending'
                                     && in_array($project['status'], ['contracted','in_progress','review','delivered','maintenance'], true));
