@@ -502,6 +502,19 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                         <span class="text-zinc-700 dark:text-zinc-200"><?= $project['delivered_at'] ? htmlspecialchars(date('Y-m-d', strtotime($project['delivered_at']))) : '-' ?></span>
                     </div>
                 </div>
+                <?php if (in_array($project['status'], ['in_progress','review'], true)): ?>
+                <div class="px-4 pb-4">
+                    <button onclick="openDeliverModal()" class="w-full px-3 py-2 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-lg">
+                        🎉 <?= htmlspecialchars(__('services.admin_custom.btn_deliver')) ?>
+                    </button>
+                </div>
+                <?php elseif ($project['status'] === 'delivered' || $project['status'] === 'maintenance'): ?>
+                <div class="px-4 pb-4">
+                    <button onclick="openDeliverModal()" class="w-full px-3 py-2 text-xs font-medium text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/40 rounded-lg">
+                        📋 <?= htmlspecialchars(__('services.admin_custom.btn_edit_delivery')) ?>
+                    </button>
+                </div>
+                <?php endif; ?>
             </div>
 
             <!-- 내부 메모 -->
@@ -989,6 +1002,46 @@ function channelSubmit() {
 document.addEventListener('DOMContentLoaded', channelLoad);
 <?php endif; ?>
 
+// ==== 납품 처리 ====
+var deliveryInfo = <?= json_encode(json_decode($project['delivery_info'] ?? '{}', true) ?: new stdClass(), JSON_UNESCAPED_UNICODE | JSON_FORCE_OBJECT) ?>;
+function openDeliverModal() {
+    var info = deliveryInfo || {};
+    document.getElementById('dv_site_url').value = info.site_url || '';
+    document.getElementById('dv_admin_url').value = info.admin_url || '';
+    document.getElementById('dv_admin_username').value = info.admin_username || '';
+    document.getElementById('dv_admin_password').value = info.admin_password || '';
+    document.getElementById('dv_notes').value = info.notes || '';
+    var m = document.getElementById('deliverModal');
+    if (m.parentElement !== document.body) document.body.appendChild(m);
+    m.classList.remove('hidden'); m.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+function closeDeliverModal() {
+    var m = document.getElementById('deliverModal');
+    m.classList.add('hidden'); m.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+function saveDelivery() {
+    var siteUrl = document.getElementById('dv_site_url').value.trim();
+    if (!siteUrl) { alert(<?= json_encode(__('services.admin_custom.dv_site_url_required'), JSON_UNESCAPED_UNICODE) ?>); return; }
+    var btn = document.getElementById('dv_save_btn');
+    btn.disabled = true;
+    api('project_deliver', {
+        project_id: projectId,
+        delivery_info: {
+            site_url: siteUrl,
+            admin_url: document.getElementById('dv_admin_url').value.trim(),
+            admin_username: document.getElementById('dv_admin_username').value.trim(),
+            admin_password: document.getElementById('dv_admin_password').value,
+            notes: document.getElementById('dv_notes').value,
+        },
+    }).then(function(d) {
+        btn.disabled = false;
+        if (d.success) location.reload();
+        else alert(d.message || 'error');
+    }).catch(function(e) { btn.disabled = false; alert(e && e.message || 'error'); });
+}
+
 // ==== 마일스톤 ====
 function openMilestoneNew() {
     document.getElementById('milestoneModalTitle').textContent = <?= json_encode(__('services.admin_custom.milestone_new'), JSON_UNESCAPED_UNICODE) ?>;
@@ -1190,6 +1243,50 @@ function closeQuoteView() {
     document.body.style.overflow = '';
 }
 </script>
+
+<!-- 납품 처리 모달 -->
+<div id="deliverModal" class="hidden fixed inset-0 z-[100] items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50" onclick="closeDeliverModal()"></div>
+    <div class="relative bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-zinc-700 flex items-center justify-between">
+            <h3 class="text-base font-bold text-zinc-900 dark:text-white">🎉 <?= htmlspecialchars(__('services.admin_custom.deliver_modal_title')) ?></h3>
+            <button type="button" onclick="closeDeliverModal()" class="text-zinc-400 hover:text-zinc-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="p-6 space-y-3">
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2"><?= htmlspecialchars(__('services.admin_custom.deliver_modal_hint')) ?></p>
+            <div>
+                <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_custom.dv_site_url')) ?> <span class="text-red-500">*</span></label>
+                <input type="url" id="dv_site_url" maxlength="500" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg" placeholder="https://example.com">
+            </div>
+            <div>
+                <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_custom.dv_admin_url')) ?></label>
+                <input type="url" id="dv_admin_url" maxlength="500" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg" placeholder="https://example.com/admin">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_custom.dv_admin_username')) ?></label>
+                    <input type="text" id="dv_admin_username" maxlength="100" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg" placeholder="admin">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_custom.dv_admin_password')) ?></label>
+                    <input type="text" id="dv_admin_password" maxlength="200" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg font-mono" placeholder="********">
+                </div>
+            </div>
+            <div>
+                <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_custom.dv_notes')) ?></label>
+                <textarea id="dv_notes" rows="5" class="w-full px-3 py-2 text-xs border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg" placeholder="<?= htmlspecialchars(__('services.admin_custom.dv_notes_ph')) ?>"></textarea>
+            </div>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-zinc-700 flex items-center justify-end gap-2">
+            <button type="button" onclick="closeDeliverModal()" class="px-4 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-700 rounded-lg"><?= htmlspecialchars(__('services.order.checkout.btn_cancel')) ?></button>
+            <button type="button" id="dv_save_btn" onclick="saveDelivery()" class="px-5 py-2 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-lg disabled:opacity-50">
+                🎉 <?= htmlspecialchars(__('services.admin_custom.btn_deliver_now')) ?>
+            </button>
+        </div>
+    </div>
+</div>
 
 <!-- 마일스톤 편집/추가 모달 -->
 <div id="milestoneModal" class="hidden fixed inset-0 z-[100] items-center justify-center p-4">

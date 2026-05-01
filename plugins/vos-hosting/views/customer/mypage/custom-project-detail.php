@@ -51,6 +51,10 @@ try {
 $_msTotal = count($_milestones);
 $_msApproved = count(array_filter($_milestones, fn($m) => $m['status'] === 'approved'));
 $_msProgress = $_msTotal > 0 ? round($_msApproved / $_msTotal * 100) : 0;
+
+// 납품 인수인계 정보
+$_deliveryInfo = json_decode($project['delivery_info'] ?? '{}', true) ?: [];
+$_isDelivered = in_array($project['status'], ['delivered','maintenance'], true) && !empty($_deliveryInfo);
 foreach ($quotes as &$_q) {
     $_q['items'] = json_decode($_q['items'] ?? '[]', true) ?: [];
     $_qpSt = $pdo->prepare("SELECT id, sequence_no, label, amount, currency, due_date, status, paid_at, note FROM {$prefix}custom_project_payments WHERE quote_id = ? ORDER BY sequence_no ASC, id ASC");
@@ -137,6 +141,63 @@ $domainOptionLabel = match ($project['domain_option']) {
             <h1 class="text-lg font-bold text-zinc-900 dark:text-white truncate"><?= htmlspecialchars($project['title']) ?></h1>
         </div>
     </div>
+
+    <!-- 🎉 납품 완료 — 인수인계 정보 -->
+    <?php if ($_isDelivered): ?>
+    <div class="bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-900/20 dark:to-emerald-900/20 border-2 border-teal-300 dark:border-teal-700 rounded-2xl mb-4 overflow-hidden">
+        <div class="px-5 py-4 border-b border-teal-200 dark:border-teal-800">
+            <p class="text-base font-bold text-teal-900 dark:text-teal-100">🎉 <?= htmlspecialchars(__('services.custom.delivery_title')) ?></p>
+            <p class="text-xs text-teal-700 dark:text-teal-300 mt-0.5">
+                <?= htmlspecialchars(__('services.custom.delivery_desc', ['date' => htmlspecialchars(date('Y-m-d', strtotime($project['delivered_at'])))])) ?>
+            </p>
+        </div>
+        <div class="p-5 space-y-3">
+            <?php if (!empty($_deliveryInfo['site_url'])): ?>
+            <div>
+                <p class="text-[10px] text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1"><?= htmlspecialchars(__('services.custom.delivery_site')) ?></p>
+                <a href="<?= htmlspecialchars($_deliveryInfo['site_url']) ?>" target="_blank" class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
+                    🌐 <?= htmlspecialchars($_deliveryInfo['site_url']) ?>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+            </div>
+            <?php endif; ?>
+            <?php if (!empty($_deliveryInfo['admin_url'])): ?>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-teal-200 dark:border-teal-800">
+                <div>
+                    <p class="text-[10px] text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1"><?= htmlspecialchars(__('services.custom.delivery_admin_url')) ?></p>
+                    <a href="<?= htmlspecialchars($_deliveryInfo['admin_url']) ?>" target="_blank" class="text-sm text-blue-600 dark:text-blue-400 hover:underline break-all">
+                        🔐 <?= htmlspecialchars($_deliveryInfo['admin_url']) ?>
+                    </a>
+                </div>
+                <?php if (!empty($_deliveryInfo['admin_username'])): ?>
+                <div>
+                    <p class="text-[10px] text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1"><?= htmlspecialchars(__('services.custom.delivery_admin_account')) ?></p>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="text-zinc-500"><?= htmlspecialchars(__('services.custom.delivery_username')) ?>:</span>
+                        <span class="font-mono text-zinc-900 dark:text-white" id="dv_user"><?= htmlspecialchars($_deliveryInfo['admin_username']) ?></span>
+                        <button onclick="copyDelivery('dv_user')" class="text-blue-500 hover:underline text-[10px]">📋</button>
+                    </div>
+                    <?php if (!empty($_deliveryInfo['admin_password'])): ?>
+                    <div class="flex items-center gap-2 text-xs mt-1">
+                        <span class="text-zinc-500"><?= htmlspecialchars(__('services.custom.delivery_password')) ?>:</span>
+                        <span class="font-mono text-zinc-900 dark:text-white" id="dv_pwd"><?= htmlspecialchars($_deliveryInfo['admin_password']) ?></span>
+                        <button onclick="copyDelivery('dv_pwd')" class="text-blue-500 hover:underline text-[10px]">📋</button>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+            <?php if (!empty($_deliveryInfo['notes'])): ?>
+            <div class="pt-3 border-t border-teal-200 dark:border-teal-800">
+                <p class="text-[10px] text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1"><?= htmlspecialchars(__('services.custom.delivery_notes')) ?></p>
+                <div class="bg-white dark:bg-zinc-800/50 rounded-lg p-3 text-xs whitespace-pre-wrap text-zinc-700 dark:text-zinc-200 border border-gray-200 dark:border-zinc-700"><?= htmlspecialchars($_deliveryInfo['notes']) ?></div>
+            </div>
+            <?php endif; ?>
+            <p class="text-[10px] text-amber-700 dark:text-amber-400 pt-2 border-t border-teal-200 dark:border-teal-800">⚠ <?= htmlspecialchars(__('services.custom.delivery_security_hint')) ?></p>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <!-- 의뢰 내용 -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 mb-4">
@@ -504,6 +565,13 @@ function acceptQuote(quoteId) {
         if (d.success) location.reload();
         else alert(d.message || 'error');
     });
+}
+
+function copyDelivery(elId) {
+    var t = document.getElementById(elId).textContent;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(t).then(function() { alert('<?= htmlspecialchars(__('services.custom.copied')) ?>'); });
+    }
 }
 
 function msApprove(id) {

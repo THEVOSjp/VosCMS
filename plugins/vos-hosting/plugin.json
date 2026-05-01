@@ -193,7 +193,8 @@
         "migrations/005_custom_project_payments.sql",
         "migrations/006_custom_projects_domain.sql",
         "migrations/007_support_tickets_project_id.sql",
-        "migrations/008_custom_project_milestones.sql"
+        "migrations/008_custom_project_milestones.sql",
+        "migrations/009_custom_projects_delivery.sql"
     ],
     "settings": {
         "defaults": {

@@ -1028,6 +1028,52 @@ switch ($action) {
         exit;
     }
 
+    // ============================================================
+    // project_deliver — 관리자: 납품 처리 + 인수인계 정보 저장
+    // ============================================================
+    case 'project_deliver': {
+        if (!$isAdmin) { echo json_encode(['success' => false, 'message' => '관리자 권한 필요']); exit; }
+        $projectId = (int)($input['project_id'] ?? 0);
+        if (!$projectId) { echo json_encode(['success' => false, 'message' => 'project_id required']); exit; }
+
+        $info = is_array($input['delivery_info'] ?? null) ? $input['delivery_info'] : [];
+        $clean = [
+            'site_url' => mb_substr(trim((string)($info['site_url'] ?? '')), 0, 500),
+            'admin_url' => mb_substr(trim((string)($info['admin_url'] ?? '')), 0, 500),
+            'admin_username' => mb_substr(trim((string)($info['admin_username'] ?? '')), 0, 100),
+            'admin_password' => mb_substr((string)($info['admin_password'] ?? ''), 0, 200),
+            'notes' => mb_substr(trim((string)($info['notes'] ?? '')), 0, 5000),
+        ];
+        if ($clean['site_url'] === '') {
+            echo json_encode(['success' => false, 'message' => '사이트 URL은 필수입니다.']); exit;
+        }
+
+        $pSt = $pdo->prepare("SELECT user_id, project_number, title FROM {$prefix}custom_projects WHERE id = ?");
+        $pSt->execute([$projectId]);
+        $project = $pSt->fetch(PDO::FETCH_ASSOC);
+        if (!$project) { echo json_encode(['success' => false, 'message' => 'project not found']); exit; }
+
+        $pdo->prepare("UPDATE {$prefix}custom_projects
+            SET delivery_info = ?, status = 'delivered', delivered_at = NOW()
+            WHERE id = ?")
+            ->execute([json_encode($clean, JSON_UNESCAPED_UNICODE), $projectId]);
+
+        // 고객 푸시
+        try {
+            require_once BASE_PATH . '/vendor/autoload.php';
+            $notifier = new \RzxLib\Core\Notification\WebPushNotifier($pdo, $prefix);
+            $notifier->notifyUser(
+                (string)$project['user_id'],
+                '🎉 납품 완료',
+                $project['project_number'] . ' — ' . $project['title'],
+                '/mypage/custom-projects/' . $projectId
+            );
+        } catch (\Throwable $ne) { error_log('[project_deliver] notify: ' . $ne->getMessage()); }
+
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
     default:
         echo json_encode(['success' => false, 'message' => 'unknown action: ' . $action]); exit;
 }
