@@ -283,10 +283,10 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
             </div>
 
             <!-- 내부 메모 -->
-            <div class="bg-yellow-50 dark:bg-yellow-900/10 rounded-xl border border-yellow-200 dark:border-yellow-800 p-4">
-                <p class="text-xs font-bold text-yellow-700 dark:text-yellow-400 mb-2">📝 <?= htmlspecialchars(__('services.admin_custom.section_admin_note')) ?></p>
-                <textarea id="adminNote" rows="6" class="w-full px-2 py-1.5 text-xs border border-yellow-300 dark:border-yellow-700 dark:bg-zinc-700 dark:text-white rounded" placeholder="<?= htmlspecialchars(__('services.admin_custom.admin_note_ph')) ?>"><?= htmlspecialchars($project['admin_note'] ?? '') ?></textarea>
-                <button onclick="saveAdminNote()" class="mt-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-yellow-600 hover:bg-yellow-700 rounded">
+            <div class="bg-emerald-50 dark:bg-emerald-900/10 rounded-xl border border-emerald-200 dark:border-emerald-800 p-4">
+                <p class="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-2">📝 <?= htmlspecialchars(__('services.admin_custom.section_admin_note')) ?></p>
+                <textarea id="adminNote" rows="6" class="w-full px-2 py-1.5 text-xs border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-emerald-300 placeholder-zinc-400 dark:placeholder-emerald-700/60 rounded" placeholder="<?= htmlspecialchars(__('services.admin_custom.admin_note_ph')) ?>"><?= htmlspecialchars($project['admin_note'] ?? '') ?></textarea>
+                <button onclick="saveAdminNote()" class="mt-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded">
                     <?= htmlspecialchars(__('services.admin_custom.btn_save_note')) ?>
                 </button>
             </div>
