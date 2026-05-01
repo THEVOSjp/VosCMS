@@ -788,6 +788,10 @@ return array (
     'support_body_placeholder' => '請詳細描述您的諮詢...',
     'support_btn_submit' => '提交',
     'support_title_body_required' => '標題和內容均為必填。',
+    'support_attachments' => '附件',
+    'support_attach_hint' => '最多 30MB × 3 個檔案',
+    'support_attach_too_many' => '最多可附加 :max 個檔案。',
+    'support_attach_too_large' => '過大（最大 :max）。',
   ),
   'admin_orders' =>
   array (

@@ -788,6 +788,10 @@ return array (
     'support_body_placeholder' => '相談内容を詳しくご記入ください...',
     'support_btn_submit' => '登録',
     'support_title_body_required' => '件名と本文の両方を入力してください。',
+    'support_attachments' => '添付ファイル',
+    'support_attach_hint' => '最大30MB × 3ファイル',
+    'support_attach_too_many' => '最大:max個までファイルを添付できます。',
+    'support_attach_too_large' => 'は大きすぎます（最大:max）。',
   ),
   'admin_orders' =>
   array (

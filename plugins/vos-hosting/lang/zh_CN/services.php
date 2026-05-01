@@ -788,6 +788,10 @@ return array (
     'support_body_placeholder' => '请详细描述您的咨询...',
     'support_btn_submit' => '提交',
     'support_title_body_required' => '标题和内容均为必填。',
+    'support_attachments' => '附件',
+    'support_attach_hint' => '最多 30MB × 3 个文件',
+    'support_attach_too_many' => '最多可附加 :max 个文件。',
+    'support_attach_too_large' => '过大（最大 :max）。',
   ),
   'admin_orders' =>
   array (

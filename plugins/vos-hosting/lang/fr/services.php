@@ -788,6 +788,10 @@ return array (
     'support_body_placeholder' => 'Décrivez votre demande en détail...',
     'support_btn_submit' => 'Envoyer',
     'support_title_body_required' => 'L\'objet et le message sont obligatoires.',
+    'support_attachments' => 'Pièces jointes',
+    'support_attach_hint' => 'Jusqu\'à 30MB × 3 fichiers',
+    'support_attach_too_many' => 'Vous pouvez joindre jusqu\'à :max fichiers.',
+    'support_attach_too_large' => 'est trop volumineux (max :max).',
   ),
   'admin_orders' =>
   array (

@@ -760,6 +760,10 @@ return array (
     'support_body_placeholder' => 'Jelaskan pertanyaan Anda secara detail...',
     'support_btn_submit' => 'Kirim',
     'support_title_body_required' => 'Judul dan pesan keduanya wajib diisi.',
+    'support_attachments' => 'Lampiran',
+    'support_attach_hint' => 'Maksimal 30MB × 3 file',
+    'support_attach_too_many' => 'Maksimal :max file dapat dilampirkan.',
+    'support_attach_too_large' => 'terlalu besar (maks :max).',
   ),
   'admin_orders' =>
   array (

@@ -771,6 +771,10 @@ return array (
     'support_body_placeholder' => 'Sorunuzu ayrıntılı açıklayın...',
     'support_btn_submit' => 'Gönder',
     'support_title_body_required' => 'Konu ve mesaj zorunludur.',
+    'support_attachments' => 'Ekler',
+    'support_attach_hint' => 'Maks 30MB × 3 dosya',
+    'support_attach_too_many' => 'En fazla :max dosya eklenebilir.',
+    'support_attach_too_large' => 'çok büyük (maks :max).',
   ),
   'admin_orders' =>
   array (

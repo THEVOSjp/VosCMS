@@ -788,6 +788,10 @@ return array (
     'support_body_placeholder' => 'Опишите ваш запрос подробно...',
     'support_btn_submit' => 'Отправить',
     'support_title_body_required' => 'Тема и сообщение обязательны.',
+    'support_attachments' => 'Вложения',
+    'support_attach_hint' => 'До 30MB × 3 файлов',
+    'support_attach_too_many' => 'Можно прикрепить до :max файлов.',
+    'support_attach_too_large' => 'слишком большой (макс :max).',
   ),
   'admin_orders' =>
   array (

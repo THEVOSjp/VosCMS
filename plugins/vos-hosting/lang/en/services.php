@@ -791,6 +791,10 @@ return array (
     'support_body_placeholder' => 'Describe your inquiry in detail...',
     'support_btn_submit' => 'Submit',
     'support_title_body_required' => 'Subject and message are both required.',
+    'support_attachments' => 'Attachments',
+    'support_attach_hint' => 'Up to 30MB × 3 files',
+    'support_attach_too_many' => 'Up to :max files can be attached.',
+    'support_attach_too_large' => 'is too large (max :max).',
   ),
   'admin_orders' =>
   array (

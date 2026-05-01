@@ -788,6 +788,10 @@ return array (
     'support_body_placeholder' => 'Mô tả chi tiết yêu cầu của bạn...',
     'support_btn_submit' => 'Gửi',
     'support_title_body_required' => 'Tiêu đề và nội dung đều bắt buộc.',
+    'support_attachments' => 'Tệp đính kèm',
+    'support_attach_hint' => 'Tối đa 30MB × 3 tệp',
+    'support_attach_too_many' => 'Có thể đính kèm tối đa :max tệp.',
+    'support_attach_too_large' => 'quá lớn (tối đa :max).',
   ),
   'admin_orders' =>
   array (

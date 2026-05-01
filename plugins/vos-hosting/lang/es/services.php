@@ -788,6 +788,10 @@ return array (
     'support_body_placeholder' => 'Describe tu consulta en detalle...',
     'support_btn_submit' => 'Enviar',
     'support_title_body_required' => 'El asunto y el mensaje son obligatorios.',
+    'support_attachments' => 'Adjuntos',
+    'support_attach_hint' => 'Hasta 30MB × 3 archivos',
+    'support_attach_too_many' => 'Se pueden adjuntar hasta :max archivos.',
+    'support_attach_too_large' => 'es demasiado grande (máx :max).',
   ),
   'admin_orders' =>
   array (

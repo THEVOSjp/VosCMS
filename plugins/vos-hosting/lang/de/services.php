@@ -788,6 +788,10 @@ return array (
     'support_body_placeholder' => 'Beschreiben Sie Ihre Anfrage im Detail...',
     'support_btn_submit' => 'Absenden',
     'support_title_body_required' => 'Betreff und Nachricht sind beide erforderlich.',
+    'support_attachments' => 'Anhänge',
+    'support_attach_hint' => 'Bis zu 30MB × 3 Dateien',
+    'support_attach_too_many' => 'Maximal :max Dateien können angehängt werden.',
+    'support_attach_too_large' => 'ist zu groß (max :max).',
   ),
   'admin_orders' =>
   array (

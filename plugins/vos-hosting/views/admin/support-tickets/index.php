@@ -161,6 +161,10 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
         <div id="adminThreadMessages" class="p-6 space-y-3 max-h-[55vh] overflow-y-auto"></div>
         <div id="adminReplyArea" class="border-t border-gray-200 dark:border-zinc-700 p-4 bg-gray-50 dark:bg-zinc-700/30 sticky bottom-0">
             <textarea id="adminReplyBody" rows="3" class="w-full px-3 py-2 text-xs border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg" placeholder="<?= htmlspecialchars(__('services.admin_support.reply_placeholder')) ?>"></textarea>
+            <div class="mt-2">
+                <input type="file" id="adminReplyFiles" multiple class="block w-full text-[11px] text-zinc-600 dark:text-zinc-300 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300">
+                <div id="adminReplyFilesList" class="mt-1 space-y-1"></div>
+            </div>
             <div class="flex items-center justify-between mt-2 gap-2">
                 <button type="button" onclick="adminCloseTicket()" id="adminCloseTicketBtn" class="text-[11px] text-zinc-500 hover:text-red-600 underline"><?= htmlspecialchars(__('services.admin_support.btn_close_ticket')) ?></button>
                 <button type="button" onclick="adminSubmitReply()" id="adminReplySubmit" class="px-4 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50"><?= htmlspecialchars(__('services.admin_support.btn_reply')) ?></button>
@@ -184,7 +188,58 @@ function adminApi(action, payload) {
 }
 
 function fmtDate(s) { try { return new Date(s).toLocaleString(); } catch(e) { return s||''; } }
+function fmtSize(b) {
+    b = parseInt(b, 10) || 0;
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+    return (b / 1048576).toFixed(1) + ' MB';
+}
 function esc(s) { return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+var adminMaxFileSize = 31457280;  // 30 MB
+var adminMaxFiles = 3;
+
+function bindAdminFilePreview() {
+    var inp = document.getElementById('adminReplyFiles');
+    if (!inp || inp.dataset.bound) return;
+    inp.dataset.bound = '1';
+    inp.addEventListener('change', function() {
+        var list = document.getElementById('adminReplyFilesList');
+        list.innerHTML = '';
+        var files = Array.from(this.files);
+        if (files.length > adminMaxFiles) {
+            alert(<?= json_encode(__('services.detail.support_attach_too_many', ['max' => 3]), JSON_UNESCAPED_UNICODE) ?>);
+            this.value = ''; return;
+        }
+        for (var i = 0; i < files.length; i++) {
+            var f = files[i];
+            if (f.size > adminMaxFileSize) {
+                alert('"' + f.name + '" ' + <?= json_encode(__('services.detail.support_attach_too_large', ['max' => '30MB']), JSON_UNESCAPED_UNICODE) ?>);
+                this.value = ''; list.innerHTML = ''; return;
+            }
+            var div = document.createElement('div');
+            div.className = 'flex items-center gap-2 text-[11px] bg-gray-50 dark:bg-zinc-700/30 px-2 py-1 rounded';
+            div.innerHTML = '<svg class="w-3 h-3 text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>'
+                          + '<span class="truncate flex-1">' + esc(f.name) + '</span>'
+                          + '<span class="text-zinc-400">' + fmtSize(f.size) + '</span>';
+            list.appendChild(div);
+        }
+    });
+}
+bindAdminFilePreview();
+
+function adminUploadAttachments(fileInput) {
+    var files = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
+    if (files.length === 0) return Promise.resolve([]);
+    var fd = new FormData();
+    files.forEach(function(f){ fd.append('files[]', f); });
+    return fetch(siteBaseUrl + '/plugins/vos-hosting/api/support-attachment.php?action=upload_pending', {
+        method: 'POST', body: fd, credentials: 'same-origin'
+    }).then(function(r){ return r.json(); }).then(function(d){
+        if (!d.success) throw new Error(d.message || 'upload failed');
+        return d.attachments || [];
+    });
+}
 
 function adminOpenThread(ticketId) {
     var m = document.getElementById('adminThreadModal');
@@ -216,8 +271,30 @@ function adminOpenThread(ticketId) {
             var sender = isAdmin ? <?= json_encode(__('services.admin_support.admin_label'), JSON_UNESCAPED_UNICODE) ?> : (m.sender_name || m.sender_email || 'user');
             msgHtml += '<div class="border ' + bgClass + ' rounded-lg p-3">'
                     + '<div class="flex items-center justify-between mb-2 text-[10px] text-zinc-500"><span class="font-medium">' + esc(sender) + '</span><span>' + fmtDate(m.created_at) + '</span></div>'
-                    + '<p class="text-sm text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">' + esc(m.body) + '</p>'
-                    + '</div>';
+                    + '<p class="text-sm text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">' + esc(m.body) + '</p>';
+            var atts = m.attachments || [];
+            if (atts.length > 0) {
+                msgHtml += '<div class="mt-2 pt-2 border-t border-gray-200 dark:border-zinc-700 space-y-1">';
+                atts.forEach(function(a, idx) {
+                    var isImg = /^(jpg|jpeg|png|gif|webp|svg)$/i.test(a.ext || '');
+                    var dlUrl = siteBaseUrl + '/plugins/vos-hosting/api/support-attachment.php?action=download&msg=' + m.id + '&idx=' + idx;
+                    var inUrl = siteBaseUrl + '/plugins/vos-hosting/api/support-attachment.php?action=inline&msg=' + m.id + '&idx=' + idx;
+                    if (isImg) {
+                        msgHtml += '<a href="' + dlUrl + '" target="_blank" class="block">'
+                                + '<img src="' + inUrl + '" alt="' + esc(a.name) + '" class="max-h-48 rounded border border-gray-200 dark:border-zinc-600 hover:opacity-80 transition" />'
+                                + '<span class="text-[10px] text-zinc-400 mt-0.5 block">' + esc(a.name) + ' (' + fmtSize(a.size) + ')</span>'
+                                + '</a>';
+                    } else {
+                        msgHtml += '<a href="' + dlUrl + '" class="flex items-center gap-2 text-[11px] bg-white dark:bg-zinc-700 hover:bg-blue-50 dark:hover:bg-zinc-600 px-2 py-1.5 rounded border border-gray-200 dark:border-zinc-600 transition">'
+                                + '<svg class="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>'
+                                + '<span class="truncate flex-1 text-zinc-700 dark:text-zinc-200">' + esc(a.name) + '</span>'
+                                + '<span class="text-zinc-400">' + fmtSize(a.size) + '</span>'
+                                + '</a>';
+                    }
+                });
+                msgHtml += '</div>';
+            }
+            msgHtml += '</div>';
         });
         document.getElementById('adminThreadMessages').innerHTML = msgHtml || '<div class="text-zinc-400 text-xs text-center">no messages</div>';
 
@@ -226,6 +303,8 @@ function adminOpenThread(ticketId) {
         } else {
             document.getElementById('adminReplyArea').classList.remove('hidden');
             document.getElementById('adminReplyBody').value = '';
+            document.getElementById('adminReplyFiles').value = '';
+            document.getElementById('adminReplyFilesList').innerHTML = '';
         }
     }).catch(function(e) { document.getElementById('adminThreadMessages').innerHTML = '<div class="text-red-500 text-xs p-6">' + (e&&e.message) + '</div>'; });
 }
@@ -243,11 +322,13 @@ function adminSubmitReply() {
     if (!body) return;
     var btn = document.getElementById('adminReplySubmit');
     btn.disabled = true;
-    adminApi('support_post_message', { ticket_id: adminCurrentTicket.id, body: body }).then(function(d) {
+    adminUploadAttachments(document.getElementById('adminReplyFiles')).then(function(atts) {
+        return adminApi('support_post_message', { ticket_id: adminCurrentTicket.id, body: body, attachments: atts });
+    }).then(function(d) {
         btn.disabled = false;
         if (d.success) { adminOpenThread(adminCurrentTicket.id); }
         else alert(d.message || 'error');
-    }).catch(function(e) { btn.disabled = false; alert(e.message); });
+    }).catch(function(e) { btn.disabled = false; alert(e && e.message || 'error'); });
 }
 
 function adminCloseTicket() {

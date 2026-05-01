@@ -771,6 +771,10 @@ return array (
     'support_body_placeholder' => 'Асуултаа дэлгэрэнгүй бичнэ үү...',
     'support_btn_submit' => 'Илгээх',
     'support_title_body_required' => 'Гарчиг болон агуулга хоёулаа шаардлагатай.',
+    'support_attachments' => 'Хавсралт',
+    'support_attach_hint' => 'Хамгийн ихдээ 30MB × 3 файл',
+    'support_attach_too_many' => 'Хамгийн ихдээ :max файл хавсаргах боломжтой.',
+    'support_attach_too_large' => 'хэт том (хамгийн ихдээ :max).',
   ),
   'admin_orders' =>
   array (

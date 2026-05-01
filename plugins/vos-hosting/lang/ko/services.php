@@ -790,6 +790,10 @@ return array (
     'support_body_placeholder' => '상담 내용을 자세히 적어주세요...',
     'support_btn_submit' => '등록',
     'support_title_body_required' => '제목과 내용을 모두 입력해주세요.',
+    'support_attachments' => '첨부파일',
+    'support_attach_hint' => '최대 30MB × 3개',
+    'support_attach_too_many' => '파일은 최대 :max 개까지 첨부할 수 있습니다.',
+    'support_attach_too_large' => '파일은 :max 이하만 첨부 가능합니다.',
   ),
   'admin_orders' =>
   array (

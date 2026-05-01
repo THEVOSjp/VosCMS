@@ -74,6 +74,48 @@ function triggerMailSyncToMx1() {
     @exec($cmd);
 }
 
+// 1:1 상담 첨부파일 — pending → 티켓 폴더 이동 + 메타 클리닝
+// $attachments: [{uuid, name, size, mime, ext}, ...] (프론트가 upload_pending 결과 그대로 전달)
+// 반환: 검증·정리된 메타 배열 (사용자 user_id prefix 제거 후 ticket 폴더에 저장됨)
+function processSupportAttachments(array $attachments, int $ticketId, string $userId): array {
+    if (empty($attachments)) return [];
+    if (count($attachments) > 3) throw new \RuntimeException('too many attachments (max 3)');
+
+    $base = (defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 3));
+    $pendingDir = $base . '/uploads/support/_pending';
+    $ticketDir = $base . '/uploads/support/' . $ticketId;
+    if (!is_dir($ticketDir)) @mkdir($ticketDir, 0775, true);
+
+    $allowedExts = ['jpg','jpeg','png','gif','webp','svg','pdf','doc','docx','xls','xlsx','ppt','pptx','csv','txt','md','zip','rar','tar','gz','7z','log','json','xml','sql'];
+    $clean = [];
+    foreach ($attachments as $a) {
+        $uuid = (string)($a['uuid'] ?? '');
+        $ext = strtolower((string)($a['ext'] ?? ''));
+        $name = (string)($a['name'] ?? 'file');
+        $size = (int)($a['size'] ?? 0);
+        $mime = (string)($a['mime'] ?? 'application/octet-stream');
+
+        if ($uuid === '' || !preg_match('/^[a-f0-9]{32}$/', $uuid)) throw new \RuntimeException('invalid uuid');
+        if (!in_array($ext, $allowedExts, true)) throw new \RuntimeException('disallowed ext: ' . $ext);
+        if ($size > 31457280) throw new \RuntimeException('file too large');
+
+        $src = $pendingDir . '/' . $userId . '_' . $uuid . '.' . $ext;
+        if (!is_file($src)) throw new \RuntimeException('pending file missing: ' . $uuid);
+        $dst = $ticketDir . '/' . $uuid . '.' . $ext;
+        if (!@rename($src, $dst)) throw new \RuntimeException('move failed');
+        @chmod($dst, 0644);
+
+        $clean[] = [
+            'uuid' => $uuid,
+            'name' => mb_substr($name, 0, 255),
+            'size' => $size,
+            'mime' => mb_substr($mime, 0, 100),
+            'ext' => $ext,
+        ];
+    }
+    return $clean;
+}
+
 // 구독 소유자 확인 헬퍼
 function getOwnedSubscription($pdo, $prefix, $subId, $userId) {
     $stmt = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE id = ? AND user_id = ?");
@@ -661,6 +703,11 @@ switch ($action) {
         $mSt = $pdo->prepare("SELECT m.*, u.email AS sender_email, u.name AS sender_name FROM {$prefix}support_messages m LEFT JOIN {$prefix}users u ON m.sender_user_id = u.id WHERE m.ticket_id = ? ORDER BY m.created_at ASC, m.id ASC");
         $mSt->execute([$ticketId]);
         $messages = $mSt->fetchAll(PDO::FETCH_ASSOC);
+        // attachments JSON 디코딩
+        foreach ($messages as &$_m) {
+            $_m['attachments'] = json_decode($_m['attachments'] ?? '[]', true) ?: [];
+        }
+        unset($_m);
 
         // 본인이 읽으면 unread 플래그 끔
         if ($isAdmin && $ticket['unread_by_admin']) {
@@ -700,6 +747,8 @@ switch ($action) {
             if (!$aSub) { echo json_encode(['success' => false, 'message' => 'addon sub access denied']); exit; }
         }
 
+        $rawAttachments = is_array($input['attachments'] ?? null) ? $input['attachments'] : [];
+
         try {
             $pdo->beginTransaction();
             $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
@@ -720,14 +769,18 @@ switch ($action) {
             ]);
             $ticketId = (int)$pdo->lastInsertId();
 
-            $pdo->prepare("INSERT INTO {$prefix}support_messages (ticket_id, sender_user_id, is_admin, body) VALUES (?, ?, 0, ?)")
-                ->execute([$ticketId, $userId, $body]);
+            // 첨부파일 처리 (pending → 티켓 폴더 이동)
+            $cleanAtts = processSupportAttachments($rawAttachments, $ticketId, $userId);
+            $attsJson = empty($cleanAtts) ? null : json_encode($cleanAtts, JSON_UNESCAPED_UNICODE);
+
+            $pdo->prepare("INSERT INTO {$prefix}support_messages (ticket_id, sender_user_id, is_admin, body, attachments) VALUES (?, ?, 0, ?, ?)")
+                ->execute([$ticketId, $userId, $body, $attsJson]);
 
             $pdo->commit();
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();
             error_log('[support_create_ticket] ' . $e->getMessage());
-            echo json_encode(['success' => false, 'message' => 'DB error']);
+            echo json_encode(['success' => false, 'message' => 'DB error: ' . $e->getMessage()]);
             exit;
         }
 
@@ -779,10 +832,15 @@ switch ($action) {
             exit;
         }
 
+        $rawAttachments = is_array($input['attachments'] ?? null) ? $input['attachments'] : [];
+
         try {
             $pdo->beginTransaction();
-            $pdo->prepare("INSERT INTO {$prefix}support_messages (ticket_id, sender_user_id, is_admin, body) VALUES (?, ?, ?, ?)")
-                ->execute([$ticketId, $userId, $isAdmin ? 1 : 0, $body]);
+            $cleanAtts = processSupportAttachments($rawAttachments, $ticketId, $userId);
+            $attsJson = empty($cleanAtts) ? null : json_encode($cleanAtts, JSON_UNESCAPED_UNICODE);
+
+            $pdo->prepare("INSERT INTO {$prefix}support_messages (ticket_id, sender_user_id, is_admin, body, attachments) VALUES (?, ?, ?, ?, ?)")
+                ->execute([$ticketId, $userId, $isAdmin ? 1 : 0, $body, $attsJson]);
             // ticket 상태 갱신
             if ($isAdmin) {
                 $pdo->prepare("UPDATE {$prefix}support_tickets SET status = 'answered', last_message_at = NOW(), last_message_by = 'admin', unread_by_user = 1, unread_by_admin = 0 WHERE id = ?")
@@ -795,7 +853,7 @@ switch ($action) {
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();
             error_log('[support_post_message] ' . $e->getMessage());
-            echo json_encode(['success' => false, 'message' => 'DB error']);
+            echo json_encode(['success' => false, 'message' => 'DB error: ' . $e->getMessage()]);
             exit;
         }
 
