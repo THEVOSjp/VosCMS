@@ -253,7 +253,7 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                                     📤 <?= htmlspecialchars(__('services.admin_custom.btn_send')) ?>
                                 </button>
                                 <?php endif; ?>
-                                <button onclick='openQuotePrint(<?= json_encode($q) ?>)' class="px-2 py-1 text-[11px] text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded">
+                                <button onclick='openQuotePrint(<?= json_encode($q) ?>)' class="px-3 py-1 text-[11px] font-medium bg-gray-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-gray-200 dark:hover:bg-zinc-600 rounded">
                                     🖨 <?= htmlspecialchars(__('services.admin_custom.btn_print')) ?>
                                 </button>
                             </div>
