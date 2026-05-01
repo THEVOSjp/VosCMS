@@ -895,19 +895,19 @@ document.addEventListener('DOMContentLoaded', channelLoad);
             <div id="payModalError" class="hidden p-2 bg-red-50 border border-red-200 text-red-700 text-[11px] rounded"></div>
 
             <?php if ($_hasSavedCard): ?>
-            <!-- 저장 카드 박스 -->
-            <div id="savedCardBox" class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-300 dark:border-emerald-700 rounded-lg p-3 flex items-center justify-between">
-                <div class="flex items-center gap-2">
+            <!-- 저장 카드 (배경/테두리 없음) -->
+            <div id="savedCardBox" class="flex items-center justify-between gap-3 py-1">
+                <div class="flex items-center gap-2 flex-1 min-w-0">
                     <span class="text-base">💳</span>
-                    <div>
-                        <p class="text-xs font-bold text-emerald-800 dark:text-emerald-200"><?= htmlspecialchars(__('services.custom.saved_card_title')) ?></p>
+                    <div class="min-w-0">
+                        <p class="text-xs font-medium text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars(__('services.custom.saved_card_title')) ?></p>
                         <?php if ($_savedCardBrand || $_savedCardLast4): ?>
-                        <p class="text-[10px] text-emerald-700 dark:text-emerald-300 font-mono">
+                        <p class="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">
                             <?= htmlspecialchars(strtoupper($_savedCardBrand ?: 'CARD')) ?>
                             <?php if ($_savedCardLast4): ?> · •••• <?= htmlspecialchars($_savedCardLast4) ?><?php endif; ?>
                         </p>
                         <?php else: ?>
-                        <p class="text-[10px] text-emerald-700 dark:text-emerald-300"><?= htmlspecialchars(__('services.custom.saved_card_desc')) ?></p>
+                        <p class="text-[10px] text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars(__('services.custom.saved_card_desc')) ?></p>
                         <?php endif; ?>
                     </div>
                 </div>
