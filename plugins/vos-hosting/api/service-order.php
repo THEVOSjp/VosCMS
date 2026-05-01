@@ -362,6 +362,19 @@ if (!empty($selectedDomains)) {
         echo json_encode(['success' => false, 'message' => '서브도메인 가용성 확인 중 오류가 발생했습니다.']); exit;
     }
 
+    // 같은 도메인으로 진행 중/활성 주문 차단 (중복 방지)
+    $_dupSt = $pdo->prepare("SELECT id, order_number, status FROM {$prefix}orders
+                              WHERE domain = ? AND status IN ('pending', 'paid', 'active')
+                              ORDER BY id DESC LIMIT 1");
+    $_dupSt->execute([$domainName]);
+    if ($_dup = $_dupSt->fetch(PDO::FETCH_ASSOC)) {
+        echo json_encode([
+            'success' => false,
+            'message' => "{$domainName} 은(는) 이미 신청 처리 중입니다 (#{$_dup['order_number']}, status={$_dup['status']}). 중복 신청 차단."
+        ]);
+        exit;
+    }
+
     $subscriptionData[] = [
         'type' => 'domain',
         'service_class' => 'free',
@@ -592,7 +605,8 @@ function _autoProvisionHosting($pdo, $prefix, $orderId, $orderNumber) {
                     'ftp' => ['host' => $domain, 'user' => $result['username'], 'port' => 21,
                               'sftp_host' => 'ftp.voscms.com', 'sftp_port' => 2222],
                     'db' => $result['db'],
-                    'env' => ['php' => '8.3'],
+                    'env' => ['php' => '8.3', 'mysql' => '10.11'],
+                    'host' => ['name' => 'host.voscms.com', 'ip' => '27.81.39.11'],
                 ]);
                 $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
                     ->execute([json_encode($hMeta, JSON_UNESCAPED_UNICODE), $hSub['id']]);
@@ -727,10 +741,7 @@ try {
 
         $pdo->commit();
 
-        // 자동 프로비저닝 (transaction 외부) — 호스팅 → 메일 순서
-        _autoProvisionHosting($pdo, $prefix, $orderId, $orderNumber);
-        _autoProvisionMailDomain($pdo, $prefix, $orderId, $orderNumber);
-
+        // 클라이언트 응답만 전송 — 자동 프로비저닝은 별도 트리거(완료 페이지 / 마이페이지 진입 시)
         echo json_encode([
             'success' => true,
             'order_number' => $orderNumber,
@@ -796,10 +807,26 @@ try {
 
             $pdo->commit();
 
-            // 자동 프로비저닝 (transaction 외부) — 호스팅 → 메일 순서
-            _autoProvisionHosting($pdo, $prefix, $orderId, $orderNumber);
-            _autoProvisionMailDomain($pdo, $prefix, $orderId, $orderNumber);
+            // 관리자 알림 — 도메인 신규 등록 / 보유 도메인 연결 시
+            if (in_array($domainOption, ['new', 'existing'], true) && !empty($domainName)) {
+                try {
+                    $notifier = new \RzxLib\Core\Notification\WebPushNotifier($pdo, $prefix);
+                    $adminPath = 'admin';
+                    try {
+                        $cfgSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'admin_path' LIMIT 1");
+                        $cfgSt->execute();
+                        $adminPath = trim((string)($cfgSt->fetchColumn() ?: 'admin'));
+                    } catch (\Throwable $e) {}
+                    $notifier->notifyAdminDomainAction((int)$orderId, 'service_order_with_domain', [
+                        'domain' => $domainName,
+                        'option' => $domainOption,
+                    ], $adminPath);
+                } catch (\Throwable $ne) {
+                    error_log('[service-order] notify: ' . $ne->getMessage());
+                }
+            }
 
+            // 클라이언트 응답만 전송 — 자동 프로비저닝은 별도 트리거(완료 페이지 / 마이페이지 진입 시)
             echo json_encode([
                 'success' => true,
                 'order_number' => $orderNumber,

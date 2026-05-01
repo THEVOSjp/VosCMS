@@ -112,6 +112,29 @@ foreach ($subscriptions as $sub) {
     $servicesByType[$sub['type']][] = $sub;
 }
 
+// 폴백 트리거 — paid 상태인데 hosting_provisioned 마커가 없으면 백그라운드 프로비저닝 시작
+// (complete 페이지에서 못 받았거나 실패한 케이스 catch-up. run-order-provision.php 의 lock 으로 중복 차단)
+if (in_array($order['status'] ?? '', ['paid', 'active'], true) && ($order['domain_option'] ?? 'free') === 'free') {
+    $_hostingSub = $servicesByType['hosting'][0] ?? null;
+    if ($_hostingSub) {
+        $_hMeta = json_decode($_hostingSub['metadata'] ?? '{}', true) ?: [];
+        $_isSystemImported = (($_hMeta['mail_provision']['origin'] ?? '') === 'system_imported');
+        if (!$_isSystemImported && empty($_hMeta['hosting_provisioned'])) {
+            $_runScript = BASE_PATH . '/scripts/run-order-provision.php';
+            if (is_file($_runScript)) {
+                $_logFile = '/tmp/voscms-provision-' . preg_replace('/[^A-Za-z0-9_-]/', '', $order['order_number']) . '.log';
+                $_cmd = sprintf(
+                    '/usr/bin/php8.3 %s --order=%s > %s 2>&1 &',
+                    escapeshellarg($_runScript),
+                    escapeshellarg($order['order_number']),
+                    escapeshellarg($_logFile)
+                );
+                @exec($_cmd);
+            }
+        }
+    }
+}
+
 // 자동연장 대상 (recurring) 구독이 있는지, 전체 ON인지 판단
 $renewableSubs = array_filter($subscriptions, fn($s) => ($s['service_class'] ?? '') === 'recurring' && $s['status'] === 'active');
 $hasRenewable = !empty($renewableSubs);

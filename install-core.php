@@ -336,6 +336,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $pdo->prepare("INSERT IGNORE INTO {$pfx}page_contents (page_slug, page_type, locale, title, content, is_system, is_active) VALUES ('contact', 'widget', ?, ?, '', 1, 1)")
                         ->execute([$locale, $_contactTitle]);
 
+                    // Widgets 자동 동기화 — widgets/<slug>/widget.json 스캔 → rzx_widgets INSERT
+                    // (config_schema, name, description, category 포함) — 사용자 admin 진입 전이라도 동작
+                    try {
+                        require_once BASE_PATH . '/rzxlib/Core/Modules/WidgetLoader.php';
+                        $_widgetLoader = new \RzxLib\Core\Modules\WidgetLoader($pdo, BASE_PATH . '/widgets');
+                        $_widgetLoader->syncToDatabase();
+                    } catch (\Throwable $_e) {
+                        error_log('install-core: WidgetLoader sync failed: ' . $_e->getMessage());
+                    }
+
+                    // Contact 페이지 기본 위젯 시드 (location-map + contact-form)
+                    $_contactWidgetSeed = BASE_PATH . '/database/seeds/contact_widgets.php';
+                    if (file_exists($_contactWidgetSeed)) {
+                        $_widgetRows = include $_contactWidgetSeed;
+                        // widget slug → id 매핑 (WidgetLoader 가 채워둔 widgets 테이블에서 조회)
+                        $_widgetIdBySlug = [];
+                        $_wIdStmt = $pdo->query("SELECT id, slug FROM {$pfx}widgets WHERE slug IN ('location-map', 'contact-form')");
+                        while ($_wRow = $_wIdStmt->fetch(PDO::FETCH_ASSOC)) {
+                            $_widgetIdBySlug[$_wRow['slug']] = (int)$_wRow['id'];
+                        }
+                        // 기존 contact 위젯 비우고 시드 적용 (멱등성)
+                        // 시드 파일의 config 를 그대로 사용 (vos.21ces.com 의 본사 데이터)
+                        // 호스팅 고객은 admin 에서 본인 회사 주소 / 이메일 등으로 수정
+                        $pdo->exec("DELETE FROM {$pfx}page_widgets WHERE page_slug = 'contact'");
+                        $_pwInsStmt = $pdo->prepare("INSERT INTO {$pfx}page_widgets (page_slug, widget_id, sort_order, config) VALUES ('contact', ?, ?, ?)");
+                        foreach ($_widgetRows as $_wr) {
+                            $_wid = $_widgetIdBySlug[$_wr['widget_slug']] ?? null;
+                            if (!$_wid) continue;
+                            $_pwInsStmt->execute([$_wid, $_wr['sort_order'], json_encode($_wr['config'], JSON_UNESCAPED_UNICODE)]);
+                        }
+                    }
+
                     // 법적 페이지 13개국어 (시드 파일에서 로드)
                     $_seedFile = BASE_PATH . '/database/seeds/legal_pages.php';
                     if (file_exists($_seedFile)) {
@@ -464,13 +496,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
 
-                    // 기본 게시판 4개 (공지, Q&A, FAQ, 자유게시판)
-                    $boardStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}boards (id, slug, title, category, perm_write, perm_read, list_columns, skin, per_page, is_active) VALUES (?, ?, ?, ?, ?, 'all', ?, ?, ?, 1)");
-                    $listCols = json_encode(['no', 'title', 'nick_name', 'created_at', 'view_count']);
-                    $boardStmt->execute([1, 'notice', 'Notice', 'notice', 'admin', $listCols, 'default', 20]);
-                    $boardStmt->execute([2, 'qna', 'Q&A', 'qna', 'member', $listCols, 'default', 20]);
-                    $boardStmt->execute([3, 'faq', 'FAQ', 'faq', 'admin', $listCols, 'faq', 10]);
-                    $boardStmt->execute([4, 'free', 'Free Board', 'board', 'member', $listCols, 'default', 20]);
+                    // 기본 게시판 4개 — vos.21ces.com 의 정확한 설정값 (skin_config 포함) 시드 기반
+                    // 시드 파일이 사장님 dev 환경의 게시판 = 다국어 사용자가 스킨 활용법 익히는 매뉴얼 역할
+                    $_boardsConfigFile = BASE_PATH . '/database/seeds/boards_config.php';
+                    if (file_exists($_boardsConfigFile)) {
+                        $_boardsConfig = include $_boardsConfigFile;
+                        // slug → ID 강제 (1=notice, 2=qna, 3=faq, 4=free) — 게시글/댓글/카테고리가 board_id 사용
+                        $_boardSlugToId = ['notice'=>1, 'qna'=>2, 'faq'=>3, 'free'=>4];
+                        foreach ($_boardsConfig as $_b) {
+                            $_id = $_boardSlugToId[$_b['slug']] ?? null;
+                            if (!$_id) continue;
+                            $_b['id'] = $_id;
+                            $_b['is_active'] = 1;
+                            $_cols = array_keys($_b);
+                            $_placeholders = implode(', ', array_fill(0, count($_cols), '?'));
+                            $_colsList = implode(', ', array_map(fn($c) => "`{$c}`", $_cols));
+                            $_sql = "INSERT IGNORE INTO {$pfx}boards ({$_colsList}, created_at, updated_at) VALUES ({$_placeholders}, NOW(), NOW())";
+                            $pdo->prepare($_sql)->execute(array_values($_b));
+                        }
+                    } else {
+                        // 시드 파일 없을 때 폴백 — 최소 설정
+                        $boardStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}boards (id, slug, title, category, perm_write, perm_read, list_columns, skin, per_page, is_active) VALUES (?, ?, ?, ?, ?, 'all', ?, ?, ?, 1)");
+                        $listCols = json_encode(['no', 'title', 'nick_name', 'created_at', 'view_count']);
+                        $boardStmt->execute([1, 'notice', 'Notice', 'notice', 'admin', $listCols, 'default', 20]);
+                        $boardStmt->execute([2, 'qna', 'Q&A', 'qna', 'member', $listCols, 'qna', 20]);
+                        $boardStmt->execute([3, 'faq', 'FAQ', 'faq', 'admin', $listCols, 'faq', 10]);
+                        $boardStmt->execute([4, 'free', 'Free Board', 'board', 'member', $listCols, 'default', 20]);
+                    }
 
                     // 게시판 시드 데이터 (카테고리 + 게시글 + 다국어 번역)
                     $_boardSeedFile = BASE_PATH . '/database/seeds/board_data.php';
@@ -499,7 +551,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             }
                         }
 
-                        // 게시글 생성
+                        // 게시글 생성 + orig_id → new_id 매핑 (댓글 연결용)
+                        $_postIdMap = [];
                         if (!empty($_boardSeed['posts'])) {
                             $_postStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}board_posts (board_id, title, content, nick_name, view_count, is_notice, category_id, original_locale, source_locale, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
                             $_postTrStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}translations (lang_key, locale, content) VALUES (?, ?, ?)");
@@ -510,11 +563,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $_postStmt->execute([$_boardId, $_post['title'], $_post['content'], $_post['nick_name'], rand(5,30), $_post['is_notice'], $_catId, $_post['original_locale'], $_post['original_locale']]);
                                 $_postId = (int)$pdo->lastInsertId();
                                 if ($_postId > 0) {
+                                    if (!empty($_post['orig_id'])) $_postIdMap[$_post['orig_id']] = $_postId;
                                     foreach ($_post['title_translations'] ?? [] as $_tLocale => $_tContent) {
                                         $_postTrStmt->execute(["board_post.{$_postId}.title", $_tLocale, $_tContent]);
                                     }
                                     foreach ($_post['content_translations'] ?? [] as $_tLocale => $_tContent) {
                                         $_postTrStmt->execute(["board_post.{$_postId}.content", $_tLocale, $_tContent]);
+                                    }
+                                }
+                            }
+                        }
+
+                        // 댓글 생성 (post 의 orig_id 로 연결, parent_id 도 댓글 orig_id 로 매핑)
+                        if (!empty($_boardSeed['comments'])) {
+                            $_commentStmt = $pdo->prepare("INSERT INTO {$pfx}board_comments (post_id, board_id, parent_id, depth, content, nick_name, is_anonymous, is_secret, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'published', NOW())");
+                            $_commentTrStmt = $pdo->prepare("INSERT IGNORE INTO {$pfx}translations (lang_key, locale, content) VALUES (?, ?, ?)");
+                            $_commentCountStmt = $pdo->prepare("UPDATE {$pfx}board_posts SET comment_count = comment_count + 1 WHERE id = ?");
+                            $_commentIdMap = [];
+                            foreach ($_boardSeed['comments'] as $_cmt) {
+                                $_boardId = $_boardMap[$_cmt['board_slug']] ?? null;
+                                if (!$_boardId) continue;
+                                $_newPostId = $_postIdMap[$_cmt['orig_post_id']] ?? null;
+                                if (!$_newPostId) continue;
+                                $_newParentId = !empty($_cmt['orig_parent_id']) ? ($_commentIdMap[$_cmt['orig_parent_id']] ?? null) : null;
+                                $_commentStmt->execute([
+                                    $_newPostId, $_boardId, $_newParentId, $_cmt['depth'] ?? 0,
+                                    $_cmt['content'], $_cmt['nick_name'] ?? '', (int)($_cmt['is_anonymous'] ?? 0), (int)($_cmt['is_secret'] ?? 0),
+                                ]);
+                                $_newCommentId = (int)$pdo->lastInsertId();
+                                if ($_newCommentId > 0) {
+                                    if (!empty($_cmt['orig_id'])) $_commentIdMap[$_cmt['orig_id']] = $_newCommentId;
+                                    $_commentCountStmt->execute([$_newPostId]);
+                                    foreach ($_cmt['content_translations'] ?? [] as $_tLocale => $_tContent) {
+                                        $_commentTrStmt->execute(["board_comment.{$_newCommentId}.content", $_tLocale, $_tContent]);
                                     }
                                 }
                             }

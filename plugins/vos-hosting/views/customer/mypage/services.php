@@ -146,7 +146,7 @@ $statusLabels = [
                         <?php else: ?>
                         <span class="font-medium <?= $groupTotal > 0 ? 'text-zinc-600 dark:text-zinc-300' : 'text-green-600 dark:text-green-400' ?>"><?= $groupTotal > 0 ? $fmtPrice($groupTotal, $groupCurrency) : __('services.order.summary.free') ?></span>
                         <?php endif; ?>
-                        <span class="text-zinc-300 dark:text-zinc-600"><?= __('services.mypage.count_services', [':count' => count($subs)]) ?></span>
+                        <span class="text-zinc-300 dark:text-zinc-600"><?= __('services.mypage.count_services', ['count' => count($subs)]) ?></span>
                     </div>
                 </div>
                 <svg class="w-5 h-5 text-zinc-300 dark:text-zinc-600 group-hover:text-blue-500 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>

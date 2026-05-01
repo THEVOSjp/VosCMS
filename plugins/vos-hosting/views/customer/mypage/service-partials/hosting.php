@@ -40,10 +40,11 @@ $_totalGB = $_baseGB + $_extraGB;
 <div class="space-y-4">
     <!-- 호스팅 요약 -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 overflow-hidden">
-        <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700 flex items-center justify-between">
-            <div class="flex items-center gap-2">
+        <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700 flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-2 flex-wrap">
                 <h3 class="text-sm font-bold text-zinc-900 dark:text-white"><?= htmlspecialchars($_localizeLabel($sub)) ?></h3>
                 <span class="text-[10px] px-2 py-0.5 rounded-full font-medium <?= $st[1] ?>"><?= $st[0] ?></span>
+                <span class="text-[11px] text-red-600 dark:text-red-400"><?= htmlspecialchars(__('services.detail.no_ftp_ssh_notice')) ?></span>
             </div>
             <div class="flex items-center gap-2">
                 <?php if ($sc === 'recurring' && $sub['status'] === 'active'): ?>
@@ -71,6 +72,9 @@ $_totalGB = $_baseGB + $_extraGB;
                     <?php else: ?>
                     <p class="font-semibold text-zinc-900 dark:text-white"><?= htmlspecialchars($capacity) ?></p>
                     <?php endif; ?>
+                    <?php if (!$_isSystemImported): ?>
+                    <p class="text-[10px] text-zinc-400 mt-1"><?= htmlspecialchars(__('services.mypage.addon_storage_inline_notice')) ?></p>
+                    <?php endif; ?>
                 </div>
                 <div>
                     <p class="text-[10px] text-zinc-400 uppercase tracking-wider mb-0.5"><?= htmlspecialchars(__('services.detail.f_period')) ?></p>
@@ -82,50 +86,109 @@ $_totalGB = $_baseGB + $_extraGB;
                 </div>
                 <div>
                     <p class="text-[10px] text-zinc-400 uppercase tracking-wider mb-0.5"><?= htmlspecialchars(__('services.detail.f_server_env')) ?></p>
-                    <p class="font-medium text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars(($env['php'] ?? '-') . ' / ' . ($env['mysql'] ?? '-')) ?></p>
+                    <?php $_phpVer = $env['php'] ?? '8.3'; $_dbVer = $env['mysql'] ?? '10.11'; ?>
+                    <p class="font-medium text-zinc-700 dark:text-zinc-300">PHP <?= htmlspecialchars($_phpVer) ?></p>
+                    <p class="text-[10px] text-zinc-400 mt-0.5">MariaDB <?= htmlspecialchars($_dbVer) ?></p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 사용량 (관리자가 설정한 경우에만 표시) -->
-    <?php if (!empty($usage['hdd_total']) || !empty($usage['traffic_total'])): ?>
-    <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 p-5">
-        <p class="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3"><?= htmlspecialchars(__('services.detail.usage_section')) ?></p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <?php if (!empty($usage['hdd_total'])):
-                $hddPct = round(((float)($usage['hdd_used'] ?? 0) / (float)$usage['hdd_total']) * 100, 1);
-                $hddColor = $hddPct > 80 ? 'red' : ($hddPct > 60 ? 'amber' : 'blue');
-            ?>
-            <div>
-                <div class="flex items-center justify-between text-xs mb-1.5">
-                    <span class="text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars(__('services.detail.f_hdd_capacity')) ?></span>
-                    <span class="font-medium text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars($usage['hdd_used'] ?? '0') ?> / <?= htmlspecialchars($usage['hdd_total']) ?></span>
+    <!-- 대시보드: 디스크 사용량 / 서버 정보 / 계정 데이터 -->
+    <?php
+    $_usedRaw = $usage['hdd_used'] ?? null;
+    $_usedGB = $_usedRaw !== null ? $_capParseGB($_usedRaw) : 0.0;
+    $_diskPct = $_totalGB > 0 ? min(100, round(($_usedGB / $_totalGB) * 100, 1)) : 0;
+    $_diskColor = $_diskPct > 80 ? '#ef4444' : ($_diskPct > 60 ? '#f59e0b' : '#3b82f6');
+    $_hostName = $meta['server']['host']['name'] ?? 'host.voscms.com';
+    $_hostIp = $meta['server']['host']['ip'] ?? '';
+    $_mailDomain = $meta['mail_provision']['domain'] ?? null;
+    $_emailCount = $_mailDomain ? 1 : 0;
+    $_dbCount = !empty($db['db_name'] ?? $db['name'] ?? '') ? 1 : 0;
+    ?>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <!-- 디스크 사용량 -->
+        <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 p-5">
+            <p class="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3"><?= htmlspecialchars(__('services.detail.f_disk_usage')) ?></p>
+            <div class="flex flex-col items-center">
+                <div class="relative w-32 h-32">
+                    <svg class="w-32 h-32 -rotate-90" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="15.915" fill="none" stroke="#e5e7eb" stroke-width="3" class="dark:stroke-zinc-700"/>
+                        <circle id="diskDonutFg-<?= (int)$sub['id'] ?>" cx="18" cy="18" r="15.915" fill="none" stroke="#3b82f6" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" class="transition-all duration-500"/>
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <p id="diskUsedLabel-<?= (int)$sub['id'] ?>" class="text-xl font-bold text-blue-600 dark:text-blue-400">
+                            <span class="inline-block w-12 h-5 bg-zinc-100 dark:bg-zinc-700 rounded animate-pulse"></span>
+                        </p>
+                        <p class="text-[10px] text-zinc-400 mt-0.5"><?= htmlspecialchars($_totalGB > 0 ? $_capFormat($_totalGB) : '-') ?></p>
+                    </div>
                 </div>
-                <div class="w-full bg-gray-100 dark:bg-zinc-700 rounded-full h-2.5">
-                    <div class="bg-<?= $hddColor ?>-500 h-2.5 rounded-full transition-all" style="width: <?= min(100, $hddPct) ?>%"></div>
-                </div>
-                <p class="text-[10px] text-zinc-400 mt-1 text-right"><?= $hddPct ?>%</p>
             </div>
-            <?php endif; ?>
-            <?php if (!empty($usage['traffic_total'])):
-                $trafPct = round(((float)($usage['traffic_used'] ?? 0) / (float)$usage['traffic_total']) * 100, 1);
-                $trafColor = $trafPct > 80 ? 'red' : ($trafPct > 60 ? 'amber' : 'green');
-            ?>
-            <div>
-                <div class="flex items-center justify-between text-xs mb-1.5">
-                    <span class="text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars(__('services.detail.f_traffic')) ?></span>
-                    <span class="font-medium text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars($usage['traffic_used'] ?? '0') ?> / <?= htmlspecialchars($usage['traffic_total']) ?></span>
+        </div>
+        <!-- 서버 정보 -->
+        <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 p-5">
+            <p class="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3"><?= htmlspecialchars(__('services.detail.f_server_info')) ?></p>
+            <div class="space-y-2 text-xs">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars(__('services.detail.f_hostname')) ?></span>
+                    <span class="font-mono text-zinc-800 dark:text-zinc-200 truncate" title="<?= htmlspecialchars($_hostName) ?>"><?= htmlspecialchars($_hostName) ?></span>
                 </div>
-                <div class="w-full bg-gray-100 dark:bg-zinc-700 rounded-full h-2.5">
-                    <div class="bg-<?= $trafColor ?>-500 h-2.5 rounded-full transition-all" style="width: <?= min(100, $trafPct) ?>%"></div>
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars(__('services.detail.f_ip_address')) ?></span>
+                    <span class="font-mono text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($_hostIp ?: '-') ?></span>
                 </div>
-                <p class="text-[10px] text-zinc-400 mt-1 text-right"><?= $trafPct ?>%</p>
+                <div class="pt-2 mt-2 border-t border-gray-100 dark:border-zinc-700 flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-[11px]">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                    <?= htmlspecialchars(__('services.detail.f_latest_env_notice')) ?>
+                </div>
             </div>
-            <?php endif; ?>
+        </div>
+        <!-- 계정 데이터 -->
+        <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 p-5">
+            <p class="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3"><?= htmlspecialchars(__('services.detail.f_account_data')) ?></p>
+            <div class="grid grid-cols-3 gap-2">
+                <div class="text-center">
+                    <p class="text-[10px] text-zinc-500 dark:text-zinc-400 mb-1"><?= htmlspecialchars(__('services.detail.f_domain_count')) ?></p>
+                    <p class="text-2xl font-bold text-zinc-900 dark:text-white">1</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-[10px] text-zinc-500 dark:text-zinc-400 mb-1"><?= htmlspecialchars(__('services.detail.f_email_count')) ?></p>
+                    <p class="text-2xl font-bold text-zinc-900 dark:text-white"><?= (int)$_emailCount ?></p>
+                </div>
+                <div class="text-center">
+                    <p class="text-[10px] text-zinc-500 dark:text-zinc-400 mb-1"><?= htmlspecialchars(__('services.detail.f_database_count')) ?></p>
+                    <p class="text-2xl font-bold text-zinc-900 dark:text-white"><?= (int)$_dbCount ?></p>
+                </div>
+            </div>
         </div>
     </div>
-    <?php endif; ?>
+
+    <script>
+    (function(subId, totalKb) {
+        function run() {
+            if (typeof serviceAction !== 'function') { setTimeout(run, 50); return; }
+            serviceAction('get_disk_usage', { subscription_id: subId })
+                .then(function(d) {
+                    if (!d || !d.success) return;
+                    var fg = document.getElementById('diskDonutFg-' + subId);
+                    var lbl = document.getElementById('diskUsedLabel-' + subId);
+                    var denom = d.hard_kb > 0 ? d.hard_kb : (totalKb > 0 ? totalKb : 0);
+                    var pct = denom > 0 ? Math.min(100, Math.round((d.used_kb / denom) * 1000) / 10) : 0;
+                    if (fg) {
+                        fg.setAttribute('stroke-dasharray', pct + ', 100');
+                        var color = pct > 80 ? '#ef4444' : (pct > 60 ? '#f59e0b' : '#3b82f6');
+                        fg.setAttribute('stroke', color);
+                    }
+                    if (lbl) lbl.textContent = d.used_label || '0';
+                }).catch(function() {});
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', run);
+        } else {
+            run();
+        }
+    })(<?= (int)$sub['id'] ?>, <?= (int)round($_totalGB * 1024 * 1024) ?>);
+    </script>
 
     <!-- DB 접속정보 + 백업 + phpMyAdmin -->
     <?php

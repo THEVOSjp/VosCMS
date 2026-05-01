@@ -83,6 +83,1200 @@ function getOwnedSubscription($pdo, $prefix, $subId, $userId) {
 
 switch ($action) {
 
+    // ===== admin: 도메인 등록 취소 처리 — PAY.JP 환불 + 데이터 정리 =====
+    case 'admin_domain_cancel':
+        $userStmt = $pdo->prepare("SELECT role FROM {$prefix}users WHERE id = ?");
+        $userStmt->execute([$userId]);
+        if (!in_array($userStmt->fetchColumn(), ['admin','supervisor'], true)) {
+            echo json_encode(['success' => false, 'message' => '관리자 권한 필요']);
+            exit;
+        }
+        $source = (string)($input['source'] ?? '');
+        $domain = strtolower(trim((string)($input['domain'] ?? '')));
+        if (!$domain) { echo json_encode(['success' => false, 'message' => 'domain required']); exit; }
+
+        require_once BASE_PATH . '/rzxlib/Modules/Payment/PaymentManager.php';
+        $payMgr = null;
+        try {
+            $payMgr = new \RzxLib\Modules\Payment\PaymentManager($pdo, $prefix);
+        } catch (\Throwable $e) {
+            error_log('[admin_domain_cancel] payment init: ' . $e->getMessage());
+        }
+        // gateway 결정은 환불 시점에 — 결제 row 의 gateway 컬럼 기준 (PG 변경 후에도 안전)
+        $gateway = null;
+
+        try {
+            $pdo->beginTransaction();
+            $refundResult = null;
+            $refundedAmount = 0;
+            $chargeId = '';
+            $orderIdLog = 0;
+
+            if ($source === 'mypage') {
+                $hostSubId = (int)($input['host_sub_id'] ?? 0);
+                if (!$hostSubId) throw new Exception('host_sub_id required');
+                $hSt = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE id = ? FOR UPDATE");
+                $hSt->execute([$hostSubId]);
+                $hSub = $hSt->fetch(PDO::FETCH_ASSOC);
+                if (!$hSub) throw new Exception('host sub not found');
+                $hMeta = json_decode($hSub['metadata'] ?? '{}', true) ?: [];
+
+                $matched = null;
+                $newAdded = [];
+                foreach (($hMeta['added_domains'] ?? []) as $ad) {
+                    if (($ad['domain'] ?? '') === $domain && $matched === null) {
+                        $matched = $ad;
+                        continue;
+                    }
+                    $newAdded[] = $ad;
+                }
+                if (!$matched) throw new Exception('domain not found in added_domains');
+                $orderIdLog = (int)$hSub['order_id'];
+                $chargeId = (string)($matched['payment_transaction_id'] ?? '');
+                $refundedAmount = (int)($matched['total'] ?? 0);
+
+                // payments 테이블 fallback — payment_row_id 가 있으면 거기서 charge_id 보완
+                if (!$chargeId && !empty($matched['payment_row_id'])) {
+                    $pSt = $pdo->prepare("SELECT payment_key FROM {$prefix}payments WHERE id = ?");
+                    $pSt->execute([(int)$matched['payment_row_id']]);
+                    $chargeId = (string)($pSt->fetchColumn() ?: '');
+                }
+
+                // 환불 의무: 유료 결제는 charge_id 필수
+                if ($refundedAmount > 0) {
+                    if (!$chargeId) {
+                        throw new Exception('환불 불가: 결제 transaction id 없음 (payment_transaction_id 누락). PG 대시보드에서 직접 환불 후 다시 시도하거나 운영자에게 문의.');
+                    }
+                    // 결제 row 의 gateway 기준으로 분기 (PG 변경 후에도 원 PG 로 환불)
+                    $payGw = $matched['payment_gateway'] ?? '';
+                    if (!$payGw && !empty($matched['payment_row_id'])) {
+                        $gwSt = $pdo->prepare("SELECT gateway FROM {$prefix}payments WHERE id = ?");
+                        $gwSt->execute([(int)$matched['payment_row_id']]);
+                        $payGw = (string)($gwSt->fetchColumn() ?: '');
+                    }
+                    try {
+                        $gateway = $payMgr ? $payMgr->gateway($payGw ?: null) : null;
+                    } catch (\Throwable $e) {
+                        error_log('[admin_domain_cancel] gateway init: ' . $e->getMessage());
+                    }
+                    if (!$gateway || !method_exists($gateway, 'refund')) {
+                        throw new Exception('환불 불가: 게이트웨이 초기화 실패 (gateway=' . ($payGw ?: '?') . ')');
+                    }
+                    try {
+                        $refundResult = $gateway->refund($chargeId, $refundedAmount, 'admin domain cancel: ' . $domain);
+                    } catch (\Throwable $re) {
+                        throw new Exception('PAY.JP refund 호출 실패: ' . $re->getMessage());
+                    }
+                    if (!($refundResult->success ?? false)) {
+                        $detail = $refundResult->failureReason ?? '';
+                        if (!$detail && !empty($refundResult->raw)) {
+                            $detail = json_encode($refundResult->raw, JSON_UNESCAPED_UNICODE);
+                        }
+                        // 이미 환불된 charge — PAY.JP 정상, 우리 DB 만 정리하면 됨
+                        $alreadyRefunded = stripos($detail, 'already been refunded') !== false
+                            || stripos($detail, 'already_refunded') !== false;
+                        if ($alreadyRefunded) {
+                            error_log("[admin_domain_cancel] charge {$chargeId} already refunded on PAY.JP — proceeding with DB cleanup");
+                            // refundResult 를 success 로 처리 (refund_id 없음)
+                            $refundResult = new \RzxLib\Modules\Payment\DTO\RefundResult([
+                                'success' => true,
+                                'refund_id' => null,
+                                'amount' => $refundedAmount,
+                                'status' => 'refunded',
+                                'raw' => ['note' => 'already_refunded_on_payjp'],
+                            ]);
+                        } else {
+                            error_log('[admin_domain_cancel] PAY.JP refund fail: ' . substr($detail, 0, 500));
+                            throw new Exception('PAY.JP 환불 응답 실패: ' . ($detail ?: 'unknown'));
+                        }
+                    }
+                    // 회계 전표 발생 — 환불 row INSERT (paid row 는 그대로 유지)
+                    $hostOrderNumberSt = $pdo->prepare("SELECT order_number FROM {$prefix}orders WHERE id = ?");
+                    $hostOrderNumberSt->execute([(int)$hSub['order_id']]);
+                    $hostOrderNumberCancel = (string)($hostOrderNumberSt->fetchColumn() ?: '');
+                    $refundRowKey = $refundResult->refundId ?: ('re_local_' . bin2hex(random_bytes(8)));
+                    $refundUuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                        mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+                        mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000,
+                        mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+                    );
+                    $pdo->prepare("INSERT INTO {$prefix}payments
+                        (uuid, user_id, order_id, payment_key, gateway, method, amount, status, paid_at, cancelled_at, cancel_reason, metadata, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, 'card', ?, 'refund', NULL, NOW(), ?, ?, NOW(), NOW())")
+                        ->execute([
+                            $refundUuid, $hSub['user_id'], $hostOrderNumberCancel,
+                            $refundRowKey, ($payGw ?: ($payMgr ? $payMgr->getGatewayName() : 'unknown')), $refundedAmount,
+                            'admin domain cancel: ' . $domain,
+                            json_encode([
+                                'source' => 'admin_domain_cancel',
+                                'refund_for_charge' => $chargeId,
+                                'original_payment_row_id' => $matched['payment_row_id'] ?? null,
+                                'domain' => $domain,
+                                'host_sub_id' => $hostSubId,
+                            ], JSON_UNESCAPED_UNICODE),
+                        ]);
+                }
+
+                // metadata 갱신
+                $hMeta['added_domains'] = $newAdded;
+                if (!empty($hMeta['domains'])) {
+                    $hMeta['domains'] = array_values(array_filter($hMeta['domains'], fn($d) => $d !== $domain));
+                }
+                $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
+                    ->execute([json_encode($hMeta, JSON_UNESCAPED_UNICODE), $hostSubId]);
+
+                $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'domain_admin_cancelled', ?, 'admin', ?)")
+                    ->execute([
+                        $orderIdLog,
+                        json_encode([
+                            'domain' => $domain,
+                            'host_sub_id' => $hostSubId,
+                            'refund_amount' => $refundedAmount,
+                            'charge_id' => $chargeId,
+                            'refund_id' => $refundResult ? ($refundResult->refundId ?? null) : null,
+                        ], JSON_UNESCAPED_UNICODE),
+                        $userId,
+                    ]);
+            } else {
+                $domainSubId = (int)($input['domain_sub_id'] ?? 0);
+                if (!$domainSubId) throw new Exception('domain_sub_id required');
+                $dSt = $pdo->prepare("SELECT s.*, o.payment_id FROM {$prefix}subscriptions s LEFT JOIN {$prefix}orders o ON s.order_id = o.id WHERE s.id = ? AND s.type = 'domain' FOR UPDATE");
+                $dSt->execute([$domainSubId]);
+                $dSub = $dSt->fetch(PDO::FETCH_ASSOC);
+                if (!$dSub) throw new Exception('domain sub not found');
+                $orderIdLog = (int)$dSub['order_id'];
+                $refundedAmount = (int)$dSub['billing_amount'];
+
+                // 도메인 sub status 변경
+                $dMeta = json_decode($dSub['metadata'] ?? '{}', true) ?: [];
+                $dMeta['cancelled_at'] = date('c');
+                $dMeta['cancelled_by'] = $userId;
+                $pdo->prepare("UPDATE {$prefix}subscriptions SET status = 'cancelled', cancelled_at = NOW(), cancel_reason = 'admin: domain cancel', metadata = ? WHERE id = ?")
+                    ->execute([json_encode($dMeta, JSON_UNESCAPED_UNICODE), $domainSubId]);
+
+                // 결제 charge id 추정 — payments 테이블 또는 metadata 조회
+                $chargeId = (string)($dMeta['payment_transaction_id'] ?? '');
+                if (!$chargeId && !empty($dSub['payment_id'])) {
+                    try {
+                        $pSt = $pdo->prepare("SELECT gateway_payment_id FROM {$prefix}payments WHERE id = ?");
+                        $pSt->execute([$dSub['payment_id']]);
+                        $chargeId = (string)($pSt->fetchColumn() ?: '');
+                    } catch (\Throwable $pe) {}
+                }
+
+                if ($chargeId && $refundedAmount > 0 && $gateway && method_exists($gateway, 'refund')) {
+                    try {
+                        $refundResult = $gateway->refund($chargeId, $refundedAmount, 'admin domain cancel: ' . $domain);
+                        if (!($refundResult->success ?? false)) {
+                            throw new Exception('refund failed: ' . ($refundResult->message ?? 'unknown'));
+                        }
+                    } catch (\Throwable $re) {
+                        throw new Exception('PAY.JP refund error: ' . $re->getMessage());
+                    }
+                }
+
+                $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'domain_admin_cancelled', ?, 'admin', ?)")
+                    ->execute([
+                        $orderIdLog,
+                        json_encode([
+                            'domain' => $domain,
+                            'domain_sub_id' => $domainSubId,
+                            'refund_amount' => $refundedAmount,
+                            'charge_id' => $chargeId,
+                            'refund_id' => $refundResult ? ($refundResult->refundId ?? null) : null,
+                        ], JSON_UNESCAPED_UNICODE),
+                        $userId,
+                    ]);
+            }
+
+            $pdo->commit();
+            echo json_encode([
+                'success' => true,
+                'refunded' => $refundedAmount,
+                'refund_id' => $refundResult ? ($refundResult->refundId ?? null) : null,
+                'charge_id' => $chargeId,
+            ]);
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            error_log('[admin_domain_cancel] ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit;
+
+    // ===== admin: 도메인 작업 완료 처리 (registrar_pending / manual_attach_pending → false) =====
+    case 'admin_domain_complete':
+        $userStmt = $pdo->prepare("SELECT role FROM {$prefix}users WHERE id = ?");
+        $userStmt->execute([$userId]);
+        if (!in_array($userStmt->fetchColumn(), ['admin','supervisor'], true)) {
+            echo json_encode(['success' => false, 'message' => '관리자 권한 필요']);
+            exit;
+        }
+        $source = (string)($input['source'] ?? '');
+        $domain = strtolower(trim((string)($input['domain'] ?? '')));
+        if (!$domain) { echo json_encode(['success' => false, 'message' => 'domain required']); exit; }
+
+        try {
+            if ($source === 'mypage') {
+                $hostSubId = (int)($input['host_sub_id'] ?? 0);
+                if (!$hostSubId) { echo json_encode(['success' => false, 'message' => 'host_sub_id required']); exit; }
+                $hSt = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE id = ?");
+                $hSt->execute([$hostSubId]);
+                $hSub = $hSt->fetch(PDO::FETCH_ASSOC);
+                if (!$hSub) { echo json_encode(['success' => false, 'message' => 'host sub not found']); exit; }
+                $hMeta = json_decode($hSub['metadata'] ?? '{}', true) ?: [];
+                $changed = false;
+                foreach (($hMeta['added_domains'] ?? []) as $i => $ad) {
+                    if (($ad['domain'] ?? '') === $domain) {
+                        $hMeta['added_domains'][$i]['registrar_pending'] = false;
+                        $hMeta['added_domains'][$i]['manual_attach_pending'] = false;
+                        $hMeta['added_domains'][$i]['completed_at'] = date('c');
+                        $hMeta['added_domains'][$i]['completed_by'] = $userId;
+                        $changed = true;
+                    }
+                }
+                if (!$changed) { echo json_encode(['success' => false, 'message' => 'domain not found in added_domains']); exit; }
+                $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
+                    ->execute([json_encode($hMeta, JSON_UNESCAPED_UNICODE), $hostSubId]);
+                $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'domain_admin_completed', ?, 'admin', ?)")
+                    ->execute([(int)$hSub['order_id'], json_encode(['domain' => $domain, 'host_sub_id' => $hostSubId], JSON_UNESCAPED_UNICODE), $userId]);
+            } else {
+                $domainSubId = (int)($input['domain_sub_id'] ?? 0);
+                if (!$domainSubId) { echo json_encode(['success' => false, 'message' => 'domain_sub_id required']); exit; }
+                $dSt = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE id = ? AND type = 'domain'");
+                $dSt->execute([$domainSubId]);
+                $dSub = $dSt->fetch(PDO::FETCH_ASSOC);
+                if (!$dSub) { echo json_encode(['success' => false, 'message' => 'domain sub not found']); exit; }
+                $dMeta = json_decode($dSub['metadata'] ?? '{}', true) ?: [];
+                $dMeta['registrar_pending'] = false;
+                $dMeta['manual_attach_pending'] = false;
+                $dMeta['completed_at'] = date('c');
+                $dMeta['completed_by'] = $userId;
+                $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
+                    ->execute([json_encode($dMeta, JSON_UNESCAPED_UNICODE), $domainSubId]);
+                $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'domain_admin_completed', ?, 'admin', ?)")
+                    ->execute([(int)$dSub['order_id'], json_encode(['domain' => $domain, 'domain_sub_id' => $domainSubId], JSON_UNESCAPED_UNICODE), $userId]);
+            }
+            echo json_encode(['success' => true]);
+        } catch (\Throwable $e) {
+            error_log('[admin_domain_complete] ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit;
+
+    // ===== admin: 도메인 sub 를 호스팅 sub 의 added_domains 로 병합 + sub 삭제 =====
+    case 'admin_merge_domain_sub':
+        $userStmt = $pdo->prepare("SELECT role FROM {$prefix}users WHERE id = ?");
+        $userStmt->execute([$userId]);
+        if (!in_array($userStmt->fetchColumn(), ['admin','supervisor'], true)) {
+            echo json_encode(['success' => false, 'message' => '관리자 권한 필요']);
+            exit;
+        }
+        $domainSubId = (int)($input['domain_sub_id'] ?? 0);
+        $targetHostSubId = (int)($input['target_host_sub_id'] ?? 0);
+        if (!$domainSubId || !$targetHostSubId) {
+            echo json_encode(['success' => false, 'message' => 'domain_sub_id + target_host_sub_id 필요']);
+            exit;
+        }
+
+        $dSt = $pdo->prepare("SELECT s.*, o.order_number, o.subtotal, o.tax, o.total FROM {$prefix}subscriptions s JOIN {$prefix}orders o ON s.order_id = o.id WHERE s.id = ? AND s.type = 'domain'");
+        $dSt->execute([$domainSubId]);
+        $domainSub = $dSt->fetch(PDO::FETCH_ASSOC);
+        if (!$domainSub) {
+            echo json_encode(['success' => false, 'message' => '도메인 subscription 을 찾을 수 없습니다.']);
+            exit;
+        }
+        $hSt = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE id = ? AND type = 'hosting'");
+        $hSt->execute([$targetHostSubId]);
+        $hostSub = $hSt->fetch(PDO::FETCH_ASSOC);
+        if (!$hostSub) {
+            echo json_encode(['success' => false, 'message' => '호스팅 subscription 을 찾을 수 없습니다.']);
+            exit;
+        }
+        if ($domainSub['user_id'] !== $hostSub['user_id']) {
+            echo json_encode(['success' => false, 'message' => '두 subscription 의 사용자가 다릅니다.']);
+            exit;
+        }
+
+        $dMeta = json_decode($domainSub['metadata'] ?? '{}', true) ?: [];
+        $hMeta = json_decode($hostSub['metadata'] ?? '{}', true) ?: [];
+        $hMeta['added_domains'] = $hMeta['added_domains'] ?? [];
+
+        try {
+            $pdo->beginTransaction();
+            $movedDomains = [];
+            foreach ($dMeta['domains'] ?? [] as $dm) {
+                // 중복 체크
+                $exists = false;
+                foreach ($hMeta['added_domains'] as $ad) {
+                    if (($ad['domain'] ?? '') === $dm) { $exists = true; break; }
+                }
+                if ($exists) continue;
+                $isFree = !empty($dMeta['free_subdomain']);
+                $isExisting = !empty($dMeta['existing']);
+                $opt = $isFree ? 'free' : ($isExisting ? 'existing' : 'new');
+                $hMeta['added_domains'][] = [
+                    'domain' => $dm,
+                    'option' => $opt,
+                    'started_at' => $domainSub['started_at'],
+                    'expires_at' => $domainSub['expires_at'],
+                    'subtotal' => (int)$domainSub['subtotal'],
+                    'tax' => (int)$domainSub['tax'],
+                    'total' => (int)$domainSub['total'],
+                    'currency' => $domainSub['currency'],
+                    'order_id' => (int)$domainSub['order_id'],
+                    'paid_at' => $domainSub['started_at'],
+                    'auto_renew' => !empty($domainSub['auto_renew']),
+                    'registrar_pending' => !empty($dMeta['registrar_pending']),
+                    'manual_attach_pending' => !empty($dMeta['manual_attach_pending']),
+                    'migrated_from_sub' => (int)$domainSub['id'],
+                ];
+                $movedDomains[] = $dm;
+            }
+            $hMeta['domains'] = array_values(array_unique(array_merge($hMeta['domains'] ?? [], $movedDomains)));
+
+            $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
+                ->execute([json_encode($hMeta, JSON_UNESCAPED_UNICODE), $hostSub['id']]);
+            $pdo->prepare("DELETE FROM {$prefix}subscriptions WHERE id = ?")->execute([$domainSub['id']]);
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'sub_migrated_to_added_domain', ?, 'admin', ?)")
+                ->execute([
+                    $domainSub['order_id'],
+                    json_encode([
+                        'from_sub' => (int)$domainSub['id'],
+                        'to_host_sub' => (int)$hostSub['id'],
+                        'domains' => $movedDomains,
+                    ], JSON_UNESCAPED_UNICODE),
+                    $userId,
+                ]);
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            error_log('[admin_merge_domain_sub] ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'DB 오류: ' . $e->getMessage()]);
+            exit;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'moved_domains' => $movedDomains,
+            'host_sub_id' => (int)$hostSub['id'],
+            'deleted_sub' => (int)$domainSub['id'],
+        ]);
+        exit;
+
+    // ===== admin: 부가서비스 취소 — sub status='cancelled' + PAY.JP 환불 + 환불 row 전표 =====
+    case 'admin_cancel_addon':
+        $userStmt = $pdo->prepare("SELECT role FROM {$prefix}users WHERE id = ?");
+        $userStmt->execute([$userId]);
+        if (!in_array($userStmt->fetchColumn(), ['admin','supervisor'], true)) {
+            echo json_encode(['success' => false, 'message' => '관리자 권한 필요']);
+            exit;
+        }
+        $aSubId = (int)($input['subscription_id'] ?? 0);
+        if (!$aSubId) { echo json_encode(['success' => false, 'message' => 'subscription_id required']); exit; }
+        $aSt = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE id = ? AND type = 'addon'");
+        $aSt->execute([$aSubId]);
+        $aSub = $aSt->fetch(PDO::FETCH_ASSOC);
+        if (!$aSub) { echo json_encode(['success' => false, 'message' => 'addon sub not found']); exit; }
+        if ($aSub['status'] === 'cancelled') {
+            echo json_encode(['success' => false, 'message' => '이미 취소된 sub 입니다.']);
+            exit;
+        }
+
+        $aMeta = json_decode($aSub['metadata'] ?? '{}', true) ?: [];
+        $chargeId = (string)($aMeta['payment_transaction_id'] ?? '');
+        $paymentRowId = (int)($aMeta['payment_row_id'] ?? 0);
+        if (!$chargeId && $paymentRowId) {
+            $pkSt = $pdo->prepare("SELECT payment_key, gateway FROM {$prefix}payments WHERE id = ?");
+            $pkSt->execute([$paymentRowId]);
+            $row = $pkSt->fetch(PDO::FETCH_ASSOC) ?: [];
+            $chargeId = (string)($row['payment_key'] ?? '');
+            $payGw = (string)($row['gateway'] ?? '');
+        } else {
+            $payGw = (string)($aSub['payment_gateway'] ?? '');
+        }
+
+        $refundAmount = (int)$aSub['billing_amount'];
+
+        require_once BASE_PATH . '/rzxlib/Modules/Payment/PaymentManager.php';
+        $payMgr = null; $gateway = null;
+        try {
+            $payMgr = new \RzxLib\Modules\Payment\PaymentManager($pdo, $prefix);
+            $gateway = $payMgr->gateway($payGw ?: null);
+        } catch (\Throwable $e) { error_log('[admin_cancel_addon] gw init: ' . $e->getMessage()); }
+
+        try {
+            $pdo->beginTransaction();
+            $refundResult = null;
+
+            if ($refundAmount > 0 && $chargeId) {
+                if (!$gateway || !method_exists($gateway, 'refund')) {
+                    throw new Exception('환불 불가: 게이트웨이 초기화 실패 (gateway=' . ($payGw ?: '?') . ')');
+                }
+                $refundResult = $gateway->refund($chargeId, $refundAmount, 'admin addon cancel: ' . $aSub['label']);
+                if (!($refundResult->success ?? false)) {
+                    $detail = $refundResult->failureReason ?? '';
+                    if (!$detail && !empty($refundResult->raw)) {
+                        $detail = json_encode($refundResult->raw, JSON_UNESCAPED_UNICODE);
+                    }
+                    $alreadyRefunded = stripos($detail, 'already been refunded') !== false || stripos($detail, 'already_refunded') !== false;
+                    if ($alreadyRefunded) {
+                        error_log("[admin_cancel_addon] charge {$chargeId} already refunded — proceed");
+                        $refundResult = new \RzxLib\Modules\Payment\DTO\RefundResult([
+                            'success' => true, 'refund_id' => null, 'amount' => $refundAmount,
+                            'status' => 'refunded', 'raw' => ['note' => 'already_refunded_on_pg'],
+                        ]);
+                    } else {
+                        throw new Exception('PG 환불 응답 실패: ' . ($detail ?: 'unknown'));
+                    }
+                }
+
+                // 환불 row INSERT (전표 발생)
+                $hostOrderNumberSt = $pdo->prepare("SELECT order_number FROM {$prefix}orders WHERE id = ?");
+                $hostOrderNumberSt->execute([(int)$aSub['order_id']]);
+                $hostOrderNumber = (string)($hostOrderNumberSt->fetchColumn() ?: '');
+                $refundRowKey = $refundResult->refundId ?: ('re_local_' . bin2hex(random_bytes(8)));
+                $refundUuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+                    mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000,
+                    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+                );
+                $pdo->prepare("INSERT INTO {$prefix}payments
+                    (uuid, user_id, order_id, payment_key, gateway, method, amount, status, paid_at, cancelled_at, cancel_reason, metadata, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, 'card', ?, 'refund', NULL, NOW(), ?, ?, NOW(), NOW())")
+                    ->execute([
+                        $refundUuid, $aSub['user_id'], $hostOrderNumber,
+                        $refundRowKey, ($payGw ?: ($payMgr ? $payMgr->getGatewayName() : 'unknown')),
+                        $refundAmount, 'admin addon cancel: ' . $aSub['label'],
+                        json_encode([
+                            'source' => 'admin_cancel_addon',
+                            'refund_for_charge' => $chargeId,
+                            'original_payment_row_id' => $paymentRowId,
+                            'addon_sub_id' => $aSubId,
+                            'label' => $aSub['label'],
+                        ], JSON_UNESCAPED_UNICODE),
+                    ]);
+            }
+
+            // sub 취소
+            $aMeta['cancelled_at'] = date('c');
+            $aMeta['cancelled_by'] = $userId;
+            $pdo->prepare("UPDATE {$prefix}subscriptions SET status = 'cancelled', cancelled_at = NOW(), cancel_reason = 'admin: addon cancel', metadata = ? WHERE id = ?")
+                ->execute([json_encode($aMeta, JSON_UNESCAPED_UNICODE), $aSubId]);
+
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'addon_admin_cancelled', ?, 'admin', ?)")
+                ->execute([
+                    (int)$aSub['order_id'],
+                    json_encode([
+                        'sub_id' => $aSubId,
+                        'label' => $aSub['label'],
+                        'refund_amount' => $refundAmount,
+                        'charge_id' => $chargeId,
+                        'refund_id' => $refundResult ? ($refundResult->refundId ?? null) : null,
+                    ], JSON_UNESCAPED_UNICODE),
+                    $userId,
+                ]);
+
+            $pdo->commit();
+            echo json_encode([
+                'success' => true,
+                'refunded' => $refundAmount,
+                'refund_id' => $refundResult ? ($refundResult->refundId ?? null) : null,
+            ]);
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            error_log('[admin_cancel_addon] ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit;
+
+    // ===== 부가서비스 결제 (recurring 유료 — 기술 지원 등) =====
+    case 'pay_addon_recurring':
+        $hostSubId = (int)($input['host_subscription_id'] ?? 0);
+        $addonId = trim((string)($input['addon_id'] ?? ''));
+        $label = trim((string)($input['label'] ?? ''));
+        $unitPrice = (int)($input['unit_price'] ?? 0);
+        if (!$hostSubId || $addonId === '' || $unitPrice <= 0) {
+            echo json_encode(['success' => false, 'message' => 'invalid input']);
+            exit;
+        }
+        $hostSub = getOwnedSubscription($pdo, $prefix, $hostSubId, $userId);
+        if (!$hostSub || $hostSub['type'] !== 'hosting' || $hostSub['status'] !== 'active') {
+            echo json_encode(['success' => false, 'message' => '활성 호스팅 구독이 필요합니다.']);
+            exit;
+        }
+        // settings 에서 가격 검증
+        $aSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'service_addons' LIMIT 1");
+        $aSt->execute();
+        $addons = json_decode($aSt->fetchColumn() ?: '[]', true) ?: [];
+        $addonDef = null;
+        foreach ($addons as $a) {
+            if (($a['_id'] ?? '') === $addonId || trim((string)($a['label'] ?? '')) === $label) { $addonDef = $a; break; }
+        }
+        if (!$addonDef || (int)($addonDef['price'] ?? 0) !== $unitPrice) {
+            echo json_encode(['success' => false, 'message' => '부가서비스 가격 검증 실패']);
+            exit;
+        }
+
+        // 중복 활성 sub 체크
+        $dupSt = $pdo->prepare("SELECT id FROM {$prefix}subscriptions WHERE order_id = ? AND type = 'addon' AND label = ? AND status IN ('pending','paid','active') LIMIT 1");
+        $dupSt->execute([$hostSub['order_id'], $label]);
+        if ($dupSt->fetchColumn()) {
+            echo json_encode(['success' => false, 'message' => '이미 신청된 부가서비스입니다.']);
+            exit;
+        }
+
+        // 부가세 계산
+        $taxRate = 10;
+        $taxAmount = (int)round($unitPrice * $taxRate / 100);
+        $grandTotal = $unitPrice + $taxAmount;
+        $currency = $hostSub['currency'] ?? 'JPY';
+
+        // PAY.JP 결제
+        $customerId = $hostSub['payment_customer_id'] ?? '';
+        $cardToken = trim($input['card_token'] ?? '');
+        if (!$customerId && !$cardToken) {
+            echo json_encode(['success' => false, 'message' => '카드 정보가 필요합니다.']);
+            exit;
+        }
+
+        require_once BASE_PATH . '/rzxlib/Modules/Payment/PaymentManager.php';
+        $paymentId = null; $gwName = null; $gateway = null;
+        try {
+            $payMgr = new \RzxLib\Modules\Payment\PaymentManager($pdo, $prefix);
+            $gateway = $payMgr->gateway();
+            $gwName = $payMgr->getGatewayName();
+            if (!method_exists($gateway, 'chargeCustomer')) {
+                echo json_encode(['success' => false, 'message' => '저장 카드 결제 미지원']);
+                exit;
+            }
+            $newCustomer = false;
+            if ($cardToken) {
+                if (!method_exists($gateway, 'createCustomer')) {
+                    echo json_encode(['success' => false, 'message' => '카드 등록 미지원']);
+                    exit;
+                }
+                $emSt = $pdo->prepare("SELECT email FROM {$prefix}users WHERE id = ?");
+                $emSt->execute([$userId]);
+                $userEmail = $emSt->fetchColumn() ?: '';
+                $cardHolder = trim($input['card_holder'] ?? '');
+                $custMeta = ['add_addon' => $addonId];
+                if ($cardHolder !== '') $custMeta['card_holder'] = $cardHolder;
+                $cr = $gateway->createCustomer($cardToken, $userEmail, $custMeta);
+                if (!($cr['success'] ?? false)) {
+                    echo json_encode(['success' => false, 'message' => '카드 등록 실패: ' . ($cr['message'] ?? ''), 'card_error' => true]);
+                    exit;
+                }
+                $customerId = $cr['customer_id'];
+                $newCustomer = true;
+            }
+            $desc = "VosCMS Addon {$addonId} ({$label}) order#{$hostSub['order_id']}";
+            $payResult = $gateway->chargeCustomer($customerId, $grandTotal, strtolower($currency), $desc);
+        } catch (\Throwable $e) {
+            error_log("[pay_addon_recurring] gateway: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => '결제 처리 중 오류가 발생했습니다.']);
+            exit;
+        }
+        if (!$payResult->isSuccessful()) {
+            $code = (string)($payResult->failureCode ?? '');
+            $cardErrCodes = ['card_declined','expired_card','incorrect_card_data','invalid_card_data','invalid_expiry_month','invalid_expiry_year','invalid_cvc','invalid_number','processing_error','unacceptable_brand','invalid_card','card_flagged'];
+            if (!empty($newCustomer) && $customerId) { try { $gateway->deleteCustomer($customerId); } catch (\Throwable $de) {} }
+            echo json_encode(['success' => false, 'message' => $payResult->failureMessage ?? '결제 실패', 'card_error' => in_array($code, $cardErrCodes, true)]);
+            exit;
+        }
+        $paymentId = $payResult->transactionId;
+
+        // host order_number
+        $oNumSt = $pdo->prepare("SELECT order_number FROM {$prefix}orders WHERE id = ?");
+        $oNumSt->execute([$hostSub['order_id']]);
+        $hostOrderNumber = (string)($oNumSt->fetchColumn() ?: '');
+
+        // 트랜잭션 — payments + addon sub
+        try {
+            $pdo->beginTransaction();
+            $now = date('Y-m-d H:i:s');
+            $expires = date('Y-m-d H:i:s', strtotime('+1 year'));
+
+            // payments INSERT (전표)
+            $paymentRowId = null;
+            $payUuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+                mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000,
+                mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+            );
+            try {
+                $pIns = $pdo->prepare("INSERT INTO {$prefix}payments
+                    (uuid, user_id, order_id, payment_key, gateway, method, amount, status, paid_at, metadata, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, 'card', ?, 'paid', NOW(), ?, NOW(), NOW())");
+                $pIns->execute([
+                    $payUuid, $userId, $hostOrderNumber, $paymentId, $gwName, $grandTotal,
+                    json_encode([
+                        'source' => 'mypage_pay_addon_recurring',
+                        'addon_id' => $addonId,
+                        'label' => $label,
+                        'subtotal' => $unitPrice,
+                        'tax' => $taxAmount,
+                        'currency' => $currency,
+                        'host_sub_id' => $hostSubId,
+                    ], JSON_UNESCAPED_UNICODE),
+                ]);
+                $paymentRowId = (int)$pdo->lastInsertId();
+            } catch (\PDOException $pe) {
+                if (($pe->errorInfo[1] ?? 0) === 1062) {
+                    $existSt = $pdo->prepare("SELECT id FROM {$prefix}payments WHERE payment_key = ? LIMIT 1");
+                    $existSt->execute([$paymentId]);
+                    $paymentRowId = (int)$existSt->fetchColumn();
+                } else { throw $pe; }
+            }
+
+            // addon sub INSERT (recurring, 1년)
+            $sIns = $pdo->prepare("INSERT INTO {$prefix}subscriptions
+                (order_id, user_id, type, service_class, label, unit_price, quantity, billing_amount, billing_cycle, billing_months,
+                 currency, started_at, billing_start, expires_at, next_billing_at, auto_renew, payment_customer_id, payment_gateway, status, metadata)
+                VALUES (?, ?, 'addon', 'recurring', ?, ?, 1, ?, 'yearly', 12, ?, ?, ?, ?, ?, 1, ?, ?, 'active', ?)");
+            $sIns->execute([
+                $hostSub['order_id'], $userId, $label,
+                $unitPrice, $grandTotal, $currency,
+                $now, $now, $expires, $expires,
+                $customerId, $gwName,
+                json_encode([
+                    'addon_id' => $addonId,
+                    'subtotal' => $unitPrice,
+                    'tax' => $taxAmount,
+                    'total' => $grandTotal,
+                    'payment_transaction_id' => $paymentId,
+                    'payment_row_id' => $paymentRowId,
+                ], JSON_UNESCAPED_UNICODE),
+            ]);
+            $newSubId = (int)$pdo->lastInsertId();
+
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'addon_paid_added', ?, 'user', ?)")
+                ->execute([
+                    (int)$hostSub['order_id'],
+                    json_encode([
+                        'addon_id' => $addonId,
+                        'label' => $label,
+                        'sub_id' => $newSubId,
+                        'subtotal' => $unitPrice,
+                        'tax' => $taxAmount,
+                        'total' => $grandTotal,
+                        'payment_transaction_id' => $paymentId,
+                    ], JSON_UNESCAPED_UNICODE),
+                    $userId,
+                ]);
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            error_log("[pay_addon_recurring] db error: " . $e->getMessage());
+            // 안전망: 자동 환불
+            if ($paymentId && $grandTotal > 0 && $gateway && method_exists($gateway, 'refund')) {
+                try { $gateway->refund($paymentId, $grandTotal, 'auto-rollback: db error'); } catch (\Throwable $re) {}
+            }
+            echo json_encode(['success' => false, 'message' => 'DB 처리 오류: ' . $e->getMessage()]);
+            exit;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'sub_id' => $newSubId,
+            'addon_id' => $addonId,
+            'subtotal' => $unitPrice,
+            'tax' => $taxAmount,
+            'total' => $grandTotal,
+        ]);
+        exit;
+
+    // ===== 부가서비스 신청 요청 (관리자 후속 처리) =====
+    case 'request_addon':
+        $hostSubId = (int)($input['host_subscription_id'] ?? 0);
+        $addonId = trim((string)($input['addon_id'] ?? ''));
+        $label = trim((string)($input['label'] ?? ''));
+        if (!$hostSubId || $addonId === '') {
+            echo json_encode(['success' => false, 'message' => 'invalid input']);
+            exit;
+        }
+        $hostSub = getOwnedSubscription($pdo, $prefix, $hostSubId, $userId);
+        if (!$hostSub || $hostSub['type'] !== 'hosting') {
+            echo json_encode(['success' => false, 'message' => '호스팅 구독을 찾을 수 없습니다.']);
+            exit;
+        }
+        try {
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'addon_request_pending', ?, 'user', ?)")
+                ->execute([
+                    (int)$hostSub['order_id'],
+                    json_encode([
+                        'addon_id' => $addonId,
+                        'label' => $label,
+                        'host_sub_id' => $hostSubId,
+                        'requested_at' => date('c'),
+                    ], JSON_UNESCAPED_UNICODE),
+                    $userId,
+                ]);
+            // 관리자 푸시 알림
+            try {
+                $autoload = BASE_PATH . '/vendor/autoload.php';
+                if (file_exists($autoload)) require_once $autoload;
+                $notifier = new \RzxLib\Core\Notification\WebPushNotifier($pdo, $prefix);
+                $adminPath = 'admin';
+                try {
+                    $cfgSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'admin_path' LIMIT 1");
+                    $cfgSt->execute();
+                    $adminPath = trim((string)($cfgSt->fetchColumn() ?: 'admin'));
+                } catch (\Throwable $e) {}
+                $notifier->notifyAdmins(
+                    '🛠️ 부가서비스 신청',
+                    $label . ' (host_sub#' . $hostSubId . ')',
+                    '/' . trim($adminPath, '/') . '/service-orders/' . $hostSub['order_id']
+                );
+            } catch (\Throwable $ne) {
+                error_log('[request_addon] notify: ' . $ne->getMessage());
+            }
+            echo json_encode(['success' => true]);
+        } catch (\Throwable $e) {
+            error_log('[request_addon] ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit;
+
+    // ===== 도메인 추가 (구매/연결) — 결제 + 새 order/subscription 생성 =====
+    case 'pay_domain':
+        $hostSubId = (int)($input['hosting_subscription_id'] ?? 0);
+        $opt = (string)($input['domain_option'] ?? '');
+        $domain = strtolower(trim((string)($input['domain'] ?? '')));
+        $unitPrice = (int)($input['unit_price'] ?? 0);
+        if (!$hostSubId || !in_array($opt, ['free', 'new', 'existing'], true) || $domain === '') {
+            echo json_encode(['success' => false, 'message' => 'invalid input']);
+            exit;
+        }
+        if (!preg_match('/^[a-z0-9]([a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/i', $domain)) {
+            echo json_encode(['success' => false, 'message' => 'invalid domain format']);
+            exit;
+        }
+        $hostSub = getOwnedSubscription($pdo, $prefix, $hostSubId, $userId);
+        if (!$hostSub || $hostSub['type'] !== 'hosting' || $hostSub['status'] !== 'active') {
+            echo json_encode(['success' => false, 'message' => '활성 호스팅 구독이 필요합니다.']);
+            exit;
+        }
+
+        // 중복 도메인 체크 (도메인 sub + 호스팅 sub의 added_domains)
+        $dupSt = $pdo->prepare("SELECT id FROM {$prefix}subscriptions WHERE status IN ('pending','paid','active') AND user_id=? AND (JSON_CONTAINS(metadata, JSON_QUOTE(?), '$.domains') OR JSON_SEARCH(metadata, 'one', ?, NULL, '$.added_domains[*].domain') IS NOT NULL) LIMIT 1");
+        $dupSt->execute([$userId, $domain, $domain]);
+        if ($dupSt->fetchColumn()) {
+            echo json_encode(['success' => false, 'message' => '이미 등록된 도메인입니다.']);
+            exit;
+        }
+
+        // settings 조회 (서버측 가격/zone 검증)
+        $sSt = $pdo->prepare("SELECT `key`,`value` FROM {$prefix}settings WHERE `key` IN ('service_domain_pricing','service_free_domains','service_blocked_subdomains','service_currency')");
+        $sSt->execute();
+        $sx = [];
+        while ($r = $sSt->fetch(PDO::FETCH_ASSOC)) $sx[$r['key']] = $r['value'];
+        $pricing = json_decode($sx['service_domain_pricing'] ?? '[]', true) ?: [];
+        $freeZones = json_decode($sx['service_free_domains'] ?? '[]', true) ?: [];
+        $blocked = json_decode($sx['service_blocked_subdomains'] ?? '[]', true) ?: [];
+        $currency = $sx['service_currency'] ?? 'JPY';
+
+        $serverPrice = 0;
+        $domainMeta = ['domains' => [$domain]];
+        if ($opt === 'free') {
+            // 마지막 두 라벨 이상이 무료 zone 과 일치해야 함
+            $matched = false;
+            foreach ($freeZones as $z) {
+                if (str_ends_with($domain, '.' . $z) && substr_count($domain, '.') === substr_count($z, '.') + 1) {
+                    $matched = true;
+                    $sub = substr($domain, 0, -strlen('.' . $z));
+                    foreach ($blocked as $b) {
+                        if (strtolower(str_replace('*', '', $b)) === $sub) {
+                            echo json_encode(['success' => false, 'message' => '사용할 수 없는 서브도메인입니다.']);
+                            exit;
+                        }
+                    }
+                    break;
+                }
+            }
+            if (!$matched) {
+                echo json_encode(['success' => false, 'message' => '무료 도메인 zone이 아닙니다.']);
+                exit;
+            }
+            $serverPrice = 0;
+            $domainMeta['free_subdomain'] = true;
+        } elseif ($opt === 'new') {
+            $tld = '.' . implode('.', array_slice(explode('.', $domain), 1));
+            $found = null;
+            foreach ($pricing as $p) {
+                if (($p['tld'] ?? '') === $tld && !empty($p['active'])) { $found = $p; break; }
+            }
+            if (!$found) {
+                echo json_encode(['success' => false, 'message' => '지원하지 않는 TLD 입니다.']);
+                exit;
+            }
+            $serverPrice = (int)(!empty($found['vip_price']) ? $found['vip_price'] : ($found['price'] ?? 0));
+            if ($serverPrice <= 0 || $serverPrice !== $unitPrice) {
+                echo json_encode(['success' => false, 'message' => '가격 검증 실패']);
+                exit;
+            }
+            $domainMeta['registrar_pending'] = true;
+        } else {
+            // existing — 결제 없음, 관리자 수동 attach 대기
+            $serverPrice = 0;
+            $domainMeta['existing'] = true;
+            $domainMeta['manual_attach_pending'] = true;
+        }
+        $domainMeta['primary_domain'] = $domain;
+
+        // 부가세 (10%) — 결제 금액 = 단가 + 부가세
+        $taxRate = 10;
+        $taxAmount = (int)round($serverPrice * $taxRate / 100);
+        $grandTotal = $serverPrice + $taxAmount;
+
+        // 결제 (paid 시)
+        $paymentId = null; $gwName = null;
+        if ($grandTotal > 0) {
+            $customerId = $hostSub['payment_customer_id'] ?? '';
+            $cardToken = trim($input['card_token'] ?? '');
+            if (!$customerId && !$cardToken) {
+                echo json_encode(['success' => false, 'message' => '카드 정보가 필요합니다.']);
+                exit;
+            }
+            require_once BASE_PATH . '/rzxlib/Modules/Payment/PaymentManager.php';
+            try {
+                $payMgr = new \RzxLib\Modules\Payment\PaymentManager($pdo, $prefix);
+                $gateway = $payMgr->gateway();
+                $gwName = $payMgr->getGatewayName();
+                if (!method_exists($gateway, 'chargeCustomer')) {
+                    echo json_encode(['success' => false, 'message' => '저장 카드 결제 미지원']);
+                    exit;
+                }
+                $newCustomer = false;
+                if ($cardToken) {
+                    if (!method_exists($gateway, 'createCustomer')) {
+                        echo json_encode(['success' => false, 'message' => '카드 등록 미지원']);
+                        exit;
+                    }
+                    $emSt = $pdo->prepare("SELECT email FROM {$prefix}users WHERE id = ?");
+                    $emSt->execute([$userId]);
+                    $userEmail = $emSt->fetchColumn() ?: '';
+                    $cardHolder = trim($input['card_holder'] ?? '');
+                    $custMeta = ['add_domain' => $domain];
+                    if ($cardHolder !== '') $custMeta['card_holder'] = $cardHolder;
+                    $cr = $gateway->createCustomer($cardToken, $userEmail, $custMeta);
+                    if (!($cr['success'] ?? false)) {
+                        echo json_encode(['success' => false, 'message' => '카드 등록 실패: ' . ($cr['message'] ?? ''), 'card_error' => true]);
+                        exit;
+                    }
+                    $customerId = $cr['customer_id'];
+                    $newCustomer = true;
+                }
+                $desc = "VosCMS Domain {$domain} (1y, incl. VAT)";
+                $payResult = $gateway->chargeCustomer($customerId, $grandTotal, strtolower($currency), $desc);
+            } catch (\Throwable $e) {
+                error_log("[pay_domain] gateway error: " . $e->getMessage());
+                echo json_encode(['success' => false, 'message' => '결제 처리 중 오류가 발생했습니다.']);
+                exit;
+            }
+            if (!$payResult->isSuccessful()) {
+                $code = (string)($payResult->failureCode ?? '');
+                $cardErrCodes = ['card_declined','expired_card','incorrect_card_data','invalid_card_data','invalid_expiry_month','invalid_expiry_year','invalid_cvc','invalid_number','processing_error','unacceptable_brand','invalid_card','card_flagged'];
+                $isCardError = in_array($code, $cardErrCodes, true);
+                if ($newCustomer && $customerId) { try { $gateway->deleteCustomer($customerId); } catch (\Throwable $de) {} }
+                echo json_encode(['success' => false, 'message' => $payResult->failureMessage ?? '결제 실패', 'card_error' => $isCardError]);
+                exit;
+            }
+            $paymentId = $payResult->transactionId;
+        }
+
+        // host order_number 조회 (payments.order_id 컬럼에 사용)
+        $hostOrderNumberSt = $pdo->prepare("SELECT order_number FROM {$prefix}orders WHERE id = ?");
+        $hostOrderNumberSt->execute([$hostSub['order_id']]);
+        $hostOrderNumber = (string)($hostOrderNumberSt->fetchColumn() ?: '');
+
+        // 호스팅 sub metadata.added_domains 에 append + payments 테이블에 회계 전표 INSERT
+        try {
+            $pdo->beginTransaction();
+            $now = date('Y-m-d H:i:s');
+            $expires = date('Y-m-d H:i:s', strtotime('+1 year'));
+
+            // 회계 전표 — rzx_payments INSERT (payment_key UNIQUE — 중복 시 기존 row 재사용)
+            $paymentRowId = null;
+            if ($grandTotal > 0 && $paymentId) {
+                $payUuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+                    mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000,
+                    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+                );
+                try {
+                    $pIns = $pdo->prepare("INSERT INTO {$prefix}payments
+                        (uuid, user_id, order_id, payment_key, gateway, method, amount, status, paid_at, metadata, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, 'card', ?, 'paid', NOW(), ?, NOW(), NOW())");
+                    $pIns->execute([
+                        $payUuid, $userId, $hostOrderNumber, $paymentId, $gwName, $grandTotal,
+                        json_encode([
+                            'source' => 'mypage_add_domain',
+                            'domain' => $domain,
+                            'option' => $opt,
+                            'subtotal' => $serverPrice,
+                            'tax' => $taxAmount,
+                            'currency' => $currency,
+                            'host_sub_id' => (int)$hostSub['id'],
+                        ], JSON_UNESCAPED_UNICODE),
+                    ]);
+                    $paymentRowId = (int)$pdo->lastInsertId();
+                } catch (\PDOException $pe) {
+                    // 중복 charge_id (idempotent 재시도 또는 같은 PAY.JP charge 두 번 처리)
+                    if ($pe->errorInfo[1] ?? 0 === 1062) {
+                        $existSt = $pdo->prepare("SELECT id FROM {$prefix}payments WHERE payment_key = ? LIMIT 1");
+                        $existSt->execute([$paymentId]);
+                        $paymentRowId = (int)($existSt->fetchColumn() ?: 0);
+                        error_log("[pay_domain] duplicate payment_key {$paymentId} — reusing row#{$paymentRowId}");
+                    } else {
+                        throw $pe;
+                    }
+                }
+            }
+
+            $hostMeta = json_decode($hostSub['metadata'] ?? '{}', true) ?: [];
+            $hostMeta['added_domains'] = $hostMeta['added_domains'] ?? [];
+            $hostMeta['added_domains'][] = [
+                'domain' => $domain,
+                'option' => $opt,
+                'started_at' => $now,
+                'expires_at' => $expires,
+                'subtotal' => $serverPrice,
+                'tax' => $taxAmount,
+                'total' => $grandTotal,
+                'currency' => $currency,
+                'order_id' => (int)$hostSub['order_id'],
+                'paid_at' => $grandTotal > 0 ? $now : null,
+                'payment_method' => $grandTotal > 0 ? 'card' : 'free',
+                'payment_gateway' => $gwName,
+                'payment_transaction_id' => $paymentId,    // PAY.JP charge id (ch_xxx)
+                'payment_row_id' => $paymentRowId,          // rzx_payments.id FK
+                'auto_renew' => ($opt === 'free' ? false : true),
+                'registrar_pending' => $opt === 'new',
+                'manual_attach_pending' => $opt === 'existing',
+            ];
+            $hostMeta['domains'] = array_values(array_unique(array_merge($hostMeta['domains'] ?? [], [$domain])));
+
+            $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
+                ->execute([json_encode($hostMeta, JSON_UNESCAPED_UNICODE), $hostSub['id']]);
+
+            // host order_logs 에 결제 기록 통합
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'domain_added', ?, 'user', ?)")
+                ->execute([
+                    (int)$hostSub['order_id'],
+                    json_encode([
+                        'domain' => $domain,
+                        'option' => $opt,
+                        'subtotal' => $serverPrice,
+                        'tax' => $taxAmount,
+                        'total' => $grandTotal,
+                        'currency' => $currency,
+                        'host_sub_id' => (int)$hostSub['id'],
+                        'payment_transaction_id' => $paymentId,
+                        'payment_gateway' => $gwName,
+                        'payment_row_id' => $paymentRowId,
+                    ], JSON_UNESCAPED_UNICODE),
+                    $userId,
+                ]);
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            error_log("[pay_domain] db error: " . $e->getMessage());
+
+            // 안전망 — 이미 발생한 PAY.JP charge 자동 환불 (사용자 손해 방지)
+            $autoRefunded = false;
+            if ($paymentId && $grandTotal > 0 && isset($gateway) && method_exists($gateway, 'refund')) {
+                try {
+                    $gateway->refund($paymentId, $grandTotal, 'auto-rollback: db error');
+                    $autoRefunded = true;
+                } catch (\Throwable $re) {
+                    error_log('[pay_domain] auto-refund failed: ' . $re->getMessage());
+                }
+            }
+            echo json_encode([
+                'success' => false,
+                'message' => 'DB 처리 오류: ' . $e->getMessage() . ($autoRefunded ? ' (결제는 자동 환불되었습니다)' : ''),
+                'auto_refunded' => $autoRefunded,
+            ]);
+            exit;
+        }
+
+        // 관리자 알림 — 신규 등록 / 보유 도메인 연결 시 (free 는 자동이라 알림 불필요)
+        if ($opt !== 'free') {
+            try {
+                $autoload = BASE_PATH . '/vendor/autoload.php';
+                if (file_exists($autoload)) require_once $autoload;
+                $notifier = new \RzxLib\Core\Notification\WebPushNotifier($pdo, $prefix);
+                $adminPath = 'admin';
+                try {
+                    $cfgSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'admin_path' LIMIT 1");
+                    $cfgSt->execute();
+                    $adminPath = trim((string)($cfgSt->fetchColumn() ?: 'admin'));
+                } catch (\Throwable $e) {}
+                $notifier->notifyAdminDomainAction((int)$hostSub['order_id'], 'pay_domain', [
+                    'domain' => $domain,
+                    'option' => $opt,
+                    'host_sub_id' => (int)$hostSub['id'],
+                ], $adminPath);
+            } catch (\Throwable $ne) {
+                error_log('[pay_domain] notify: ' . $ne->getMessage());
+            }
+        }
+
+        echo json_encode([
+            'success' => true,
+            'host_sub_id' => (int)$hostSub['id'],
+            'host_order_id' => (int)$hostSub['order_id'],
+            'domain' => $domain,
+            'option' => $opt,
+            'subtotal' => $serverPrice,
+            'tax' => $taxAmount,
+            'total' => $grandTotal,
+            'pending_admin' => ($opt !== 'free'),
+        ]);
+        exit;
+
+    // ===== 도메인 DNS 검사 — 우리 호스팅으로 향하는지 확인 =====
+    case 'check_domain_dns':
+        $domain = strtolower(trim((string)($input['domain'] ?? '')));
+        if (!preg_match('/^[a-z0-9]([a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/i', $domain)) {
+            echo json_encode(['success' => false, 'message' => 'invalid domain']);
+            exit;
+        }
+        $ourIp = '27.81.39.11';
+        $ourZones = ['21ces.com', '21ces.net', '21ces.kr', 'voscms.com'];
+        // Cloudflare IPv4 대역 (https://www.cloudflare.com/ips-v4)
+        $cfRanges = [
+            '173.245.48.0/20','103.21.244.0/22','103.22.200.0/22','103.31.4.0/22',
+            '141.101.64.0/18','108.162.192.0/18','190.93.240.0/20','188.114.96.0/20',
+            '197.234.240.0/22','198.41.128.0/17','162.158.0.0/15','104.16.0.0/13',
+            '104.24.0.0/14','172.64.0.0/13','131.0.72.0/22',
+        ];
+        $ipInCf = function($ip) use ($cfRanges) {
+            $ipL = ip2long($ip);
+            if ($ipL === false) return false;
+            foreach ($cfRanges as $range) {
+                [$net, $bits] = explode('/', $range);
+                $netL = ip2long($net);
+                $mask = -1 << (32 - (int)$bits);
+                if (($ipL & $mask) === ($netL & $mask)) return true;
+            }
+            return false;
+        };
+
+        $records = [];
+        $matched = '';
+        $pointsToUs = false;
+
+        // 1. 우리 zone 의 서브도메인이면 자동 매칭 (wildcard CNAME → Cloudflare 터널)
+        foreach ($ourZones as $z) {
+            if ($domain === $z || str_ends_with($domain, '.' . $z)) {
+                $pointsToUs = true;
+                $matched = $z;
+                $records[] = 'ZONE ' . $z;
+                break;
+            }
+        }
+
+        $aRecs = @dns_get_record($domain, DNS_A) ?: [];
+        $cnameRecs = @dns_get_record($domain, DNS_CNAME) ?: [];
+
+        foreach ($aRecs as $r) {
+            $ip = $r['ip'] ?? '';
+            if (!$ip) continue;
+            $records[] = 'A ' . $ip;
+            if ($pointsToUs) continue;
+            if ($ip === $ourIp) { $pointsToUs = true; $matched = $ip; continue; }
+            if ($ipInCf($ip)) { $pointsToUs = true; $matched = $ip . ' (Cloudflare)'; }
+        }
+        foreach ($cnameRecs as $r) {
+            $target = rtrim((string)($r['target'] ?? ''), '.');
+            if ($target === '') continue;
+            $records[] = 'CNAME ' . $target;
+            if ($pointsToUs) continue;
+            foreach ($ourZones as $z) {
+                if ($target === $z || str_ends_with($target, '.' . $z)) {
+                    $pointsToUs = true;
+                    $matched = $target;
+                    break;
+                }
+            }
+        }
+        echo json_encode([
+            'success' => true,
+            'domain' => $domain,
+            'points_to_us' => $pointsToUs,
+            'matched' => $matched,
+            'records' => $records,
+        ]);
+        exit;
+
+    // ===== 디스크 사용량 조회 (5분 캐시 + quota 명령) =====
+    case 'get_disk_usage':
+        $sub = getOwnedSubscription($pdo, $prefix, $subId, $userId);
+        if (!$sub || $sub['type'] !== 'hosting') {
+            echo json_encode(['success' => false, 'message' => 'subscription not found']);
+            exit;
+        }
+        $meta = json_decode($sub['metadata'] ?? '{}', true) ?: [];
+        $cache = $meta['server']['usage'] ?? [];
+        $cachedAt = isset($cache['measured_at']) ? strtotime($cache['measured_at']) : 0;
+        if ($cachedAt && (time() - $cachedAt) < 300 && isset($cache['hdd_used_kb'])) {
+            echo json_encode([
+                'success' => true,
+                'used_kb' => (int)$cache['hdd_used_kb'],
+                'used_label' => $cache['hdd_used'] ?? '',
+                'soft_kb' => (int)($cache['hdd_soft_kb'] ?? 0),
+                'hard_kb' => (int)($cache['hdd_hard_kb'] ?? 0),
+                'measured_at' => $cache['measured_at'],
+                'cached' => true,
+            ]);
+            exit;
+        }
+        $oSt = $pdo->prepare("SELECT order_number FROM {$prefix}orders WHERE id = ?");
+        $oSt->execute([$sub['order_id']]);
+        $orderNumber = $oSt->fetchColumn();
+        if (!$orderNumber) {
+            echo json_encode(['success' => false, 'message' => 'order not found']);
+            exit;
+        }
+        $username = 'vos_' . preg_replace('/[^A-Za-z0-9_-]/', '', $orderNumber);
+        $cmd = '/usr/bin/sudo /usr/bin/quota -u ' . escapeshellarg($username) . ' 2>/dev/null';
+        $output = @shell_exec($cmd);
+        $usedKb = 0; $softKb = 0; $hardKb = 0;
+        if ($output && preg_match('/\/dev\/\S+\s+(\d+)\*?\s+(\d+)\s+(\d+)/', $output, $m)) {
+            $usedKb = (int)$m[1];
+            $softKb = (int)$m[2];
+            $hardKb = (int)$m[3];
+        }
+        $formatBytes = function($kb) {
+            if ($kb >= 1024 * 1024) return number_format($kb / 1024 / 1024, 2) . 'GB';
+            if ($kb >= 1024) return number_format($kb / 1024, 2) . 'MB';
+            return $kb . 'KB';
+        };
+        $usedLabel = $formatBytes($usedKb);
+        $meta['server'] = $meta['server'] ?? [];
+        $meta['server']['usage'] = [
+            'hdd_used_kb' => $usedKb,
+            'hdd_used' => $usedLabel,
+            'hdd_soft_kb' => $softKb,
+            'hdd_hard_kb' => $hardKb,
+            'measured_at' => date('c'),
+        ];
+        $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
+            ->execute([json_encode($meta, JSON_UNESCAPED_UNICODE), $sub['id']]);
+        echo json_encode([
+            'success' => true,
+            'used_kb' => $usedKb,
+            'used_label' => $usedLabel,
+            'soft_kb' => $softKb,
+            'hard_kb' => $hardKb,
+            'measured_at' => date('c'),
+            'cached' => false,
+        ]);
+        exit;
+
     // ===== 사이트 백업 (web 파일 + .env + DB 덤프 zip) =====
     case 'request_backup':
         $sub = getOwnedSubscription($pdo, $prefix, $subId, $userId);
@@ -639,7 +1833,7 @@ switch ($action) {
         // 관리자 권한 체크
         $userStmt = $pdo->prepare("SELECT role FROM {$prefix}users WHERE id = ?");
         $userStmt->execute([$userId]);
-        if ($userStmt->fetchColumn() !== 'admin') {
+        if (!in_array($userStmt->fetchColumn(), ['admin','supervisor'], true)) {
             echo json_encode(['success' => false, 'message' => '관리자 권한 필요']);
             exit;
         }
@@ -668,7 +1862,7 @@ switch ($action) {
     case 'admin_activate_existing_domain':
         $userStmt = $pdo->prepare("SELECT role FROM {$prefix}users WHERE id = ?");
         $userStmt->execute([$userId]);
-        if ($userStmt->fetchColumn() !== 'admin') {
+        if (!in_array($userStmt->fetchColumn(), ['admin','supervisor'], true)) {
             echo json_encode(['success' => false, 'message' => '관리자 권한 필요']);
             exit;
         }

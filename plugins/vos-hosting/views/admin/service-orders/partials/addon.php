@@ -95,9 +95,10 @@ try {
                 <?php endif; ?>
                 <?php endif; ?>
                 <?php if ($sub['status'] !== 'cancelled'): ?>
-                <button type="button" onclick="adminDeleteAddon(<?= (int)$sub['id'] ?>, '<?= htmlspecialchars($_localizeLabel($sub), ENT_QUOTES) ?>')"
-                        class="ml-1 p-1 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition" title="<?= htmlspecialchars(__('services.admin_orders.btn_delete_addon')) ?>">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/></svg>
+                <button type="button" onclick="adminCancelAddon(<?= (int)$sub['id'] ?>, '<?= htmlspecialchars($_localizeLabel($sub), ENT_QUOTES) ?>')"
+                        class="ml-1 px-2 py-1 text-[11px] font-medium text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition"
+                        title="<?= htmlspecialchars(__('services.admin_orders.btn_cancel_addon_title')) ?>">
+                    <?= htmlspecialchars(__('services.admin_orders.btn_cancel_addon')) ?>
                 </button>
                 <?php endif; ?>
             </div>
@@ -219,13 +220,17 @@ function adminRunVoscmsInstall(subId) {
         });
 }
 
-function adminDeleteAddon(subId, label) {
-    var msg = <?= json_encode(__('services.admin_orders.confirm_delete_addon'), JSON_UNESCAPED_UNICODE) ?>.replace(':label', label);
+function adminCancelAddon(subId, label) {
+    var msg = <?= json_encode(__('services.admin_orders.confirm_cancel_addon'), JSON_UNESCAPED_UNICODE) ?>.replace(':label', label);
     if (!confirm(msg)) return;
-    ajaxPost({ action: 'admin_delete_addon', subscription_id: subId })
+    ajaxPost({ action: 'admin_cancel_addon', subscription_id: subId })
         .then(function(d) {
-            if (d.success) { alert(d.message || <?= json_encode(__('services.admin_orders.alert_addon_deleted'), JSON_UNESCAPED_UNICODE) ?>); location.reload(); }
-            else { alert(d.message || <?= json_encode(__('services.detail.alert_failed'), JSON_UNESCAPED_UNICODE) ?>); }
+            if (d.success) {
+                var done = <?= json_encode(__('services.admin_orders.alert_addon_cancelled'), JSON_UNESCAPED_UNICODE) ?>;
+                if (d.refunded) done += ' (¥' + Number(d.refunded).toLocaleString() + ')';
+                alert(d.message || done);
+                location.reload();
+            } else { alert(d.message || <?= json_encode(__('services.detail.alert_failed'), JSON_UNESCAPED_UNICODE) ?>); }
         }).catch(function(e) { alert(e.message); });
 }
 </script>

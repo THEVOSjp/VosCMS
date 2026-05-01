@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                 ->execute([$oid, json_encode(['months' => $months]), $_SESSION['user_id'] ?? '']);
             $cnt++;
         }
-        echo json_encode(['success' => true, 'message' => __('services.admin_orders.alert_extend_complete', [':cnt' => $cnt, ':months' => $months])]);
+        echo json_encode(['success' => true, 'message' => __('services.admin_orders.alert_extend_complete', ['cnt' => $cnt, 'months' => $months])]);
         exit;
     }
     echo json_encode(['success' => false, 'message' => __('services.admin_orders.alert_unknown_action')]);
@@ -114,9 +114,14 @@ $totalPages = max(1, ceil($totalCount / $perPage));
 $offset = ($page - 1) * $perPage;
 
 // 목록 — 서비스명(호스팅 플랜), 업체명, 만료일 포함
+// total_paid: payments.order_id (varchar=order_number) 와 매칭 — 호스팅 결제 + 도메인 추가 결제 등 누적
 $listStmt = $pdo->prepare("SELECT o.*, u.name as user_name, u.email as user_email, u.role as user_role,
     (SELECT COUNT(*) FROM {$prefix}subscriptions s WHERE s.order_id = o.id) as sub_count,
-    (SELECT s2.label FROM {$prefix}subscriptions s2 WHERE s2.order_id = o.id AND s2.type = 'hosting' LIMIT 1) as hosting_label
+    (SELECT s2.label FROM {$prefix}subscriptions s2 WHERE s2.order_id = o.id AND s2.type = 'hosting' LIMIT 1) as hosting_label,
+    (SELECT COALESCE(SUM(CASE WHEN p.status = 'paid' THEN p.amount ELSE 0 END), 0)
+        FROM {$prefix}payments p WHERE p.order_id = o.order_number) AS sum_paid,
+    (SELECT COALESCE(SUM(CASE WHEN p.status IN ('refund','refunded') THEN p.amount ELSE 0 END), 0)
+        FROM {$prefix}payments p WHERE p.order_id = o.order_number) AS sum_refunded
     FROM {$prefix}orders o
     LEFT JOIN {$prefix}users u ON o.user_id = u.id
     {$whereSQL}
@@ -307,7 +312,17 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                 <td class="py-3 px-3 text-center text-xs text-zinc-500"><?= $expiresDate ?></td>
                 <td class="py-3 px-3 text-center text-xs <?= $daysClass ?>"><?= $daysLeft !== null ? ($daysLeft > 0 ? $daysLeft : ($daysLeft === 0 ? __('services.admin_orders.d_day') : abs($daysLeft) . __('services.admin_orders.days_overdue_suffix'))) : '-' ?></td>
                 <td class="py-3 px-3 text-center"><span class="text-[10px] px-2 py-0.5 rounded-full font-medium <?= $ost[1] ?>"><?= htmlspecialchars($ost[0]) ?></span></td>
-                <td class="py-3 px-3 text-right text-xs font-medium"><?= (int)$o['total'] > 0 ? $fmtPrice($o['total'], $o['currency']) : '<span class="text-green-500">' . htmlspecialchars(__('services.order.summary.free')) . '</span>' ?></td>
+                <?php
+                    $sumPaid = (int)($o['sum_paid'] ?? 0);
+                    $sumRefunded = (int)($o['sum_refunded'] ?? 0);
+                    // 누적 매출 = paid - refunded. payments 기록 없으면 (무료/구버전) order.total fallback
+                    $displayAmount = $sumPaid > 0 ? ($sumPaid - $sumRefunded) : (int)$o['total'];
+                ?>
+                <td class="py-3 px-3 text-right text-xs font-medium text-zinc-900 dark:text-emerald-400">
+                    <?= $displayAmount > 0
+                        ? $fmtPrice($displayAmount, $o['currency'])
+                        : '<span class="text-green-500 dark:text-emerald-400">' . htmlspecialchars(__('services.order.summary.free')) . '</span>' ?>
+                </td>
                 <td class="py-3 px-3 text-center">
                     <a href="<?= $adminUrl ?>/service-orders/<?= htmlspecialchars($o['order_number']) ?>" class="text-xs text-blue-600 hover:underline"><?= htmlspecialchars(__('services.admin_orders.btn_manage')) ?></a>
                 </td>

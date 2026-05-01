@@ -254,42 +254,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             }
             exit;
 
-        case 'admin_delete_addon':
-            $aSt = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE id = ? AND type = 'addon'");
-            $aSt->execute([$subId]);
-            $aSub = $aSt->fetch(PDO::FETCH_ASSOC);
-            if (!$aSub) { echo json_encode(['success' => false, 'message' => __('services.admin_orders.alert_sub_not_found')]); exit; }
-
-            $aMeta = json_decode($aSub['metadata'] ?? '{}', true) ?: [];
-            $parentHostId = (int)($aMeta['parent_hosting_sub_id'] ?? 0);
-            try {
-                $pdo->beginTransaction();
-                $pdo->prepare("UPDATE {$prefix}subscriptions SET status = 'cancelled', auto_renew = 0 WHERE id = ?")
-                    ->execute([$subId]);
-                if ($parentHostId) {
-                    $pSt = $pdo->prepare("SELECT metadata FROM {$prefix}subscriptions WHERE id = ?");
-                    $pSt->execute([$parentHostId]);
-                    $pRow = $pSt->fetch(PDO::FETCH_ASSOC);
-                    if ($pRow) {
-                        $pMeta = json_decode($pRow['metadata'] ?? '{}', true) ?: [];
-                        if (!empty($pMeta['extra_storage'])) {
-                            $pMeta['extra_storage'] = array_values(array_filter($pMeta['extra_storage'], function($e) use ($subId) {
-                                return (int)($e['addon_sub_id'] ?? 0) !== $subId;
-                            }));
-                            $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
-                                ->execute([json_encode($pMeta, JSON_UNESCAPED_UNICODE), $parentHostId]);
-                        }
-                    }
-                }
-                $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'admin_delete_addon', ?, 'admin', ?)")
-                    ->execute([$aSub['order_id'], json_encode(['subscription_id' => $subId, 'label' => $aSub['label']], JSON_UNESCAPED_UNICODE), $_SESSION['user_id'] ?? '']);
-                $pdo->commit();
-            } catch (\Throwable $e) {
-                $pdo->rollBack();
-                echo json_encode(['success' => false, 'message' => $e->getMessage()]); exit;
-            }
-            echo json_encode(['success' => true, 'message' => __('services.admin_orders.alert_addon_deleted')]);
-            exit;
     }
     echo json_encode(['success' => false, 'message' => __('services.admin_orders.alert_unknown_action')]);
     exit;
@@ -587,7 +551,6 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                         'bizmail_upgrade_request' => [__('services.admin_orders.act_bizmail_upgrade_request'), 'amber'],
                         'customer_notified' => [__('services.admin_orders.act_customer_notified'), 'blue'],
                         'admin_add_storage_addon' => [__('services.admin_orders.act_admin_add_storage_addon'), 'violet'],
-                        'admin_delete_addon' => [__('services.admin_orders.act_admin_delete_addon'), 'red'],
                         'storage_addon_paid' => [__('services.admin_orders.act_storage_addon_paid'), 'green'],
                         'storage_addon_requested' => [__('services.admin_orders.act_storage_addon_requested'), 'blue'],
                         'setup_email_sent' => [__('services.admin_orders.act_setup_email_sent'), 'blue'],
@@ -599,6 +562,14 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                         'hosting_provision_failed' => [__('services.admin_orders.act_hosting_provision_failed'), 'red'],
                         'hosting_deprovisioned' => [__('services.admin_orders.act_hosting_deprovisioned'), 'red'],
                         'manual_capacity_period_fix' => [__('services.admin_orders.act_manual_capacity_period_fix'), 'violet'],
+                        'domain_added' => [__('services.admin_orders.act_domain_added'), 'green'],
+                        'domain_added_payment' => [__('services.admin_orders.act_domain_added_payment'), 'green'],
+                        'domain_admin_completed' => [__('services.admin_orders.act_domain_admin_completed'), 'green'],
+                        'domain_admin_cancelled' => [__('services.admin_orders.act_domain_admin_cancelled'), 'red'],
+                        'sub_migrated_to_added_domain' => [__('services.admin_orders.act_sub_migrated_to_added_domain'), 'violet'],
+                        'addon_admin_cancelled' => [__('services.admin_orders.act_addon_admin_cancelled'), 'red'],
+                        'addon_paid_added' => [__('services.admin_orders.act_addon_paid_added'), 'green'],
+                        'addon_request_pending' => [__('services.admin_orders.act_addon_request_pending'), 'amber'],
                     ];
                     $al = $actionLabels[$log['action']] ?? [$log['action'], 'zinc'];
                     $detail = json_decode($log['detail'] ?? '{}', true) ?: [];

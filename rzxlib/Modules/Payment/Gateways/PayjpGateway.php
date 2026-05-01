@@ -144,9 +144,10 @@ class PayjpGateway implements PaymentGatewayInterface
      */
     public function refund(string $chargeId, int $amount, string $reason = ''): RefundResult
     {
+        // PAY.JP refund API 는 amount + refund_reason 만 지원 (metadata 미지원)
         $params = ['amount' => $amount];
         if ($reason) {
-            $params['metadata[refund_reason]'] = $reason;
+            $params['refund_reason'] = mb_substr($reason, 0, 255);
         }
 
         $response = $this->apiCall('POST', "/charges/{$chargeId}/refund", $params);

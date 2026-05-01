@@ -267,6 +267,39 @@ usort($results, function($a, $b) {
     return $order($a['available']) - $order($b['available']);
 });
 
+// 로그인 사용자 본인 소유 도메인 차단 (이미 등록한 도메인은 신규 검색 결과에서 available=false 처리)
+try {
+    if (session_status() === PHP_SESSION_NONE) {
+        $_sessDir = BASE_PATH . '/storage/sessions';
+        if (is_dir($_sessDir)) ini_set('session.save_path', $_sessDir);
+        @session_start();
+    }
+    $_uid = $_SESSION['user_id'] ?? null;
+    if ($_uid) {
+        $_prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+        $_pdo = new PDO("mysql:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_DATABASE']};charset=utf8mb4", $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        $_st = $_pdo->prepare("SELECT metadata FROM {$_prefix}subscriptions WHERE user_id = ? AND status IN ('active','paid','pending')");
+        $_st->execute([$_uid]);
+        $_owned = [];
+        while ($_r = $_st->fetch(PDO::FETCH_ASSOC)) {
+            $_m = json_decode($_r['metadata'] ?? '{}', true) ?: [];
+            foreach ($_m['domains'] ?? [] as $_d) $_owned[strtolower($_d)] = true;
+            foreach ($_m['added_domains'] ?? [] as $_ad) {
+                if (!empty($_ad['domain'])) $_owned[strtolower($_ad['domain'])] = true;
+            }
+        }
+        if ($_owned) {
+            foreach ($results as &$_r2) {
+                if (isset($_owned[strtolower($_r2['fqdn'])])) {
+                    $_r2['available'] = false;
+                    $_r2['user_owned'] = true;
+                }
+            }
+            unset($_r2);
+        }
+    }
+} catch (\Throwable $_e) {}
+
 echo json_encode([
     'success' => true,
     'domain' => $domainName,

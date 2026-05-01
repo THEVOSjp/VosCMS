@@ -13,14 +13,15 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.0",
-        "ext-pdo": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "vlucas/phpdotenv": "^5.5",
-        "monolog/monolog": "^3.0",
+        "ext-pdo": "*",
         "firebase/php-jwt": "^6.0",
         "guzzlehttp/guzzle": "^7.0",
-        "respect/validation": "^2.0"
+        "minishlink/web-push": "^10.0",
+        "monolog/monolog": "^3.0",
+        "respect/validation": "^2.0",
+        "vlucas/phpdotenv": "^5.5"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0",

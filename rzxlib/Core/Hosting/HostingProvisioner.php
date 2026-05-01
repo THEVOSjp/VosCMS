@@ -654,12 +654,13 @@ ENV;
             $this->appendHostingEnv($docroot, $orderNumber, $username);
 
             // 8. welcome page (index.html) 제거 — VosCMS index.php 가 우선되도록
-            // docroot 가 mode 2775 (group www-data 쓰기 가능) 이므로 unlink 로 충분
+            // index.html 은 root 소유 0644 라 unlink 실패 → sudo rm -rf 패턴 사용
+            // sudoers 의 '/usr/bin/rm -rf /var/www/customers/*' 패턴이 단일 파일도 커버
             $welcomePath = $docroot . '/index.html';
             if (file_exists($welcomePath)) {
-                if (!@unlink($welcomePath)) {
-                    // 폴백: sudo (sudoers 에 rm 패턴이 있을 때만 동작)
-                    @$this->run('/usr/bin/rm -f ' . escapeshellarg($welcomePath), true);
+                @$this->run('/usr/bin/rm -rf ' . escapeshellarg($welcomePath), true);
+                if (file_exists($welcomePath)) {
+                    @unlink($welcomePath);
                 }
             }
 

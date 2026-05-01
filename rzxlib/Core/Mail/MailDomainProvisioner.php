@@ -21,7 +21,7 @@ class MailDomainProvisioner
     private const MAIL_HOST = 'mail.voscms.com';
 
     /** 무료 서브도메인으로 허용된 zone */
-    private const FREE_SUBDOMAIN_ZONES = ['21ces.com', '21ces.net'];
+    private const FREE_SUBDOMAIN_ZONES = ['21ces.com', '21ces.net', 'voscms.com'];
 
     private CloudflareDns $cf;
     private PDO $pdo;
@@ -94,11 +94,25 @@ class MailDomainProvisioner
         // 1. mx1 에 DKIM 키 생성 (도메인별 전용 키)
         $dkimPubkey = $this->generateDkimKey($domain);
 
-        // 2. Cloudflare DNS: A + 메일 레코드 (DKIM 포함)
-        $cfResult = $this->cf->setupSubdomain($zone, $subdomain, $this->mx1Ip, [
+        // 2. Cloudflare DNS:
+        //   (a) 호스팅 도메인 → Tunnel CNAME (proxied) — mail records 추가 시 RFC 1034 로
+        //       와일드카드가 무력화되므로 명시적 CNAME 필수
+        //   (b) Mail records — MX / SPF / DKIM / DMARC
+        //   메일 IP(mx1) 로 A 박지 않음 — 호스팅 사이트가 mail server 로 라우팅되는 것 방지
+        $tunnelTarget = $_ENV['CLOUDFLARE_TUNNEL_HOSTNAME']
+                        ?? '36b4d521-61c7-4f54-9e6c-eee5f48896b0.cfargotunnel.com';
+        try {
+            $this->cf->upsertCname($zone, $domain, $tunnelTarget, true);
+        } catch (\Throwable $e) {
+            // CNAME upsert 실패해도 mail records 는 진행 (와일드카드가 동작하는 경우 대비)
+            error_log('[MailDomainProvisioner] CNAME upsert failed: ' . $e->getMessage());
+        }
+        $mailRecords = $this->cf->setupMailRecords($zone, [
             'mail_host' => self::MAIL_HOST,
             'dkim_pubkey' => $dkimPubkey,
+            'subdomain' => $subdomain,
         ]);
+        $cfResult = ['cname_target' => $tunnelTarget, 'mail_records' => $mailRecords];
         $this->registerDomainOnMx1($domain);
         $this->saveProvisionInfo((int)$order['id'], [
             'mode' => 'active',

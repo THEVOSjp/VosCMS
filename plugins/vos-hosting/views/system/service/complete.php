@@ -123,3 +123,26 @@ include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern
 </div>
 
 <?php include BASE_PATH . '/skins/layouts/' . ($siteSettings['site_layout'] ?? 'modern') . '/footer.php'; ?>
+
+<?php
+// 페이지 렌더링 완료 후 백그라운드 자동 프로비저닝 트리거 (FPM 격리)
+// run-order-provision.php 의 lock 으로 중복 실행 차단됨 (idempotent)
+if (!empty($order) && ($order['status'] ?? '') === 'paid') {
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    }
+    @ignore_user_abort(true);
+
+    $_runScript = BASE_PATH . '/scripts/run-order-provision.php';
+    if (is_file($_runScript)) {
+        $_logFile = '/tmp/voscms-provision-' . preg_replace('/[^A-Za-z0-9_-]/', '', $order['order_number']) . '.log';
+        $_cmd = sprintf(
+            '/usr/bin/php8.3 %s --order=%s > %s 2>&1 &',
+            escapeshellarg($_runScript),
+            escapeshellarg($order['order_number']),
+            escapeshellarg($_logFile)
+        );
+        @exec($_cmd);
+    }
+}
+?>

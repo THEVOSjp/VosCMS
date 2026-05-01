@@ -212,6 +212,36 @@ class CloudflareDns
     }
 
     /**
+     * CNAME 레코드 업서트 (없으면 생성, 있으면 갱신, 다른 type 충돌 시 삭제 후 생성).
+     * 호스팅 도메인을 Cloudflare Tunnel 로 라우팅 — RFC 1034 의 와일드카드 우회용.
+     */
+    public function upsertCname(string $zoneDomain, string $name, string $target, bool $proxied = true): array
+    {
+        $zoneId = $this->getZoneId($zoneDomain);
+        if (!$zoneId) {
+            throw new \RuntimeException("Cloudflare zone 없음: $zoneDomain");
+        }
+        $existing = $this->listRecords($zoneId);
+        $rec = [
+            'type' => 'CNAME',
+            'name' => $name,
+            'content' => $target,
+            'ttl' => 1,
+            'proxied' => $proxied,
+        ];
+        // 같은 name 의 A/AAAA/CNAME 레코드가 있으면 (RFC 1034 충돌) 삭제 후 새 CNAME 생성
+        foreach ($existing as $ex) {
+            if (strcasecmp($ex['name'], $name) === 0 && in_array($ex['type'], ['A', 'AAAA', 'CNAME'], true)) {
+                if ($ex['type'] === 'CNAME') {
+                    return ['action' => 'update', 'record' => $this->updateRecord($zoneId, $ex['id'], $rec)];
+                }
+                $this->deleteRecord($zoneId, $ex['id']);
+            }
+        }
+        return ['action' => 'create', 'record' => $this->addRecord($zoneId, $rec)];
+    }
+
+    /**
      * 도메인의 메일 레코드 일괄 셋업 (MX, SPF, DKIM, DMARC).
      * 같은 type+name 의 기존 레코드는 업데이트, 없으면 추가 (멱등성).
      *

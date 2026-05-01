@@ -72,6 +72,44 @@
                     },
                     {
                         "title": {
+                            "ko": "도메인 관리",
+                            "en": "Domain Management",
+                            "ja": "ドメイン管理",
+                            "de": "Domain-Verwaltung",
+                            "es": "Gestión de dominios",
+                            "fr": "Gestion des domaines",
+                            "id": "Manajemen Domain",
+                            "mn": "Домэйн удирдлага",
+                            "ru": "Управление доменами",
+                            "tr": "Alan Adı Yönetimi",
+                            "vi": "Quản lý tên miền",
+                            "zh_CN": "域名管理",
+                            "zh_TW": "網域管理"
+                        },
+                        "route": "domain-management",
+                        "icon": "M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 004 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    },
+                    {
+                        "title": {
+                            "ko": "회계 관리",
+                            "en": "Accounting",
+                            "ja": "会計管理",
+                            "de": "Buchhaltung",
+                            "es": "Contabilidad",
+                            "fr": "Comptabilité",
+                            "id": "Akuntansi",
+                            "mn": "Нягтлан бодох",
+                            "ru": "Бухгалтерия",
+                            "tr": "Muhasebe",
+                            "vi": "Kế toán",
+                            "zh_CN": "会计管理",
+                            "zh_TW": "會計管理"
+                        },
+                        "route": "accounting",
+                        "icon": "M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                    },
+                    {
+                        "title": {
                             "ko": "문의 관리",
                             "en": "Contact Messages",
                             "ja": "お問い合わせ管理",
@@ -106,6 +144,8 @@
     "routes": {
         "admin": [
             { "path": "service-orders",         "view": "admin/service-orders/index.php",     "method": "GET"  },
+            { "path": "domain-management",      "view": "admin/domain-management/index.php",  "method": "GET"  },
+            { "path": "accounting",             "view": "admin/accounting/index.php",         "method": "GET"  },
             { "path": "contact-messages",       "view": "admin/contact-messages.php",         "method": "GET"  }
         ],
         "front": [

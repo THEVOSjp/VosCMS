@@ -31,6 +31,12 @@ if ($_hostSub) {
 $_curr = $_hostSub['currency'] ?? 'JPY';
 $_curSym = ['KRW'=>'₩','USD'=>'$','JPY'=>'¥','CNY'=>'¥','EUR'=>'€'][$_curr] ?? $_curr;
 
+// 호스팅 사이트 URL 추출 (관리자/홈 링크용)
+$_hostMeta = $_hostSub ? (json_decode($_hostSub['metadata'] ?? '{}', true) ?: []) : [];
+$_primaryDomain = $_hostMeta['primary_domain'] ?? ($_hostMeta['domains'][0] ?? '');
+if (!$_primaryDomain && !empty($order['domain'])) $_primaryDomain = $order['domain'];
+$_siteUrl = $_primaryDomain ? ('https://' . $_primaryDomain) : '';
+
 // Calendar 일할 계산: 첫 달 일할 + 정상 N개월 (호스팅 만료일까지)
 $_nowTs = time();
 $_daysInMonth = (int)date('t', $_nowTs);
@@ -417,16 +423,32 @@ $_needCard = !$_paymentCustomerId && $_payEnabled && $_payGateway === 'payjp';
                 <?php endif; ?>
             </div>
         </div>
-        <div class="px-5 pb-3 flex items-center gap-3 text-xs text-zinc-400">
-            <?php if ($sc !== 'one_time'): ?>
-            <span><?= date('Y-m-d', strtotime($sub['started_at'])) ?> ~ <?= date('Y-m-d', strtotime($sub['expires_at'])) ?></span>
-            <?php endif; ?>
-            <span><?= (int)$sub['billing_amount'] > 0 ? $fmtPrice($sub['billing_amount'], $sub['currency']) : __('services.order.summary.free') ?></span>
-            <?php if (!empty($meta['quote_required'])): ?>
-            <span class="text-amber-500"><?= htmlspecialchars(__('services.detail.quote_required')) ?></span>
-            <?php endif; ?>
-            <?php if (!empty($sub['completed_at'])): ?>
-            <span class="text-green-600"><?= htmlspecialchars(__('services.detail.f_completed')) ?>: <?= date('Y-m-d', strtotime($sub['completed_at'])) ?></span>
+        <div class="px-5 pb-3 flex items-center justify-between gap-3 text-xs text-zinc-400 flex-wrap">
+            <div class="flex items-center gap-3 flex-wrap">
+                <?php if ($sc !== 'one_time'): ?>
+                <span><?= date('Y-m-d', strtotime($sub['started_at'])) ?> ~ <?= date('Y-m-d', strtotime($sub['expires_at'])) ?></span>
+                <?php endif; ?>
+                <span><?= (int)$sub['billing_amount'] > 0 ? $fmtPrice($sub['billing_amount'], $sub['currency']) : __('services.order.summary.free') ?></span>
+                <?php if (!empty($meta['quote_required'])): ?>
+                <span class="text-amber-500"><?= htmlspecialchars(__('services.detail.quote_required')) ?></span>
+                <?php endif; ?>
+                <?php if (!empty($sub['completed_at'])): ?>
+                <span class="text-green-600"><?= htmlspecialchars(__('services.detail.f_completed')) ?>: <?= date('Y-m-d', strtotime($sub['completed_at'])) ?></span>
+                <?php endif; ?>
+            </div>
+            <?php if (!empty($meta['install_info']) && $_siteUrl): ?>
+            <div class="flex items-center gap-2">
+                <a href="<?= htmlspecialchars($_siteUrl) ?>/admin" target="_blank"
+                   class="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-medium text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded hover:bg-violet-100 dark:hover:bg-violet-900/40 transition">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    <?= htmlspecialchars(__('services.detail.btn_open_admin')) ?>
+                </a>
+                <a href="<?= htmlspecialchars($_siteUrl) ?>/" target="_blank"
+                   class="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40 transition">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    <?= htmlspecialchars(__('services.detail.btn_open_site')) ?>
+                </a>
+            </div>
             <?php endif; ?>
         </div>
         <?php if (!empty($meta['install_info'])):
@@ -452,4 +474,116 @@ $_needCard = !$_paymentCustomerId && $_payEnabled && $_payGateway === 'payjp';
         <?php endif; ?>
     </div>
     <?php endforeach; ?>
+
+    <?php
+    // 추가 신청 가능 부가서비스 — 비즈니스 메일 제외
+    $_addonsAll = json_decode($_pdo_settings['service_addons'] ?? '[]', true) ?: [];
+    if (empty($_addonsAll)) {
+        try {
+            $_pfx = $_ENV['DB_PREFIX'] ?? 'rzx_';
+            $_aSt = $pdo->prepare("SELECT `value` FROM {$_pfx}settings WHERE `key` = 'service_addons' LIMIT 1");
+            $_aSt->execute();
+            $_addonsAll = json_decode($_aSt->fetchColumn() ?: '[]', true) ?: [];
+        } catch (\Throwable $e) { $_addonsAll = []; }
+    }
+    // bizmail 제외 (label 또는 _id 기준)
+    $_addonsAvail = array_filter($_addonsAll, function($a) {
+        $id = strtolower($a['_id'] ?? '');
+        $lbl = $a['label'] ?? '';
+        if ($id === 'bizmail') return false;
+        if (stripos($lbl, '비즈니스 메일') !== false || stripos($lbl, 'business mail') !== false || stripos($lbl, 'ビジネスメール') !== false) return false;
+        return true;
+    });
+    // 이미 활성 sub 의 라벨 모음 (중복 신청 방지)
+    $_activeAddonLabels = [];
+    foreach ($subs as $_s) {
+        $_activeAddonLabels[] = trim((string)($_s['label'] ?? ''));
+    }
+    ?>
+    <?php if (!empty($_addonsAvail) && $_hostSub): ?>
+    <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 overflow-hidden">
+        <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700">
+            <p class="text-xs font-bold text-zinc-700 dark:text-zinc-200"><?= htmlspecialchars(__('services.detail.addon_request_section')) ?></p>
+            <p class="text-[10px] text-zinc-400 mt-0.5"><?= htmlspecialchars(__('services.detail.addon_request_section_desc')) ?></p>
+        </div>
+        <div class="divide-y divide-gray-100 dark:divide-zinc-700/50">
+            <?php foreach ($_addonsAvail as $_a):
+                $_aId = $_a['_id'] ?? '';
+                $_aLabel = $_a['label'] ?? '';
+                $_aPrice = (int)($_a['price'] ?? 0);
+                $_aUnit = $_a['unit'] ?? '';
+                $_aOneTime = !empty($_a['one_time']);
+                $_aIsQuote = ($_aPrice <= 0 && stripos($_aUnit, '견적') !== false) || stripos($_aUnit, 'quote') !== false || stripos($_aUnit, '見積') !== false;
+                $_aIsFree = $_aPrice <= 0 && !$_aIsQuote;
+                // 이미 활성 sub 에 같은 label 이 있으면 비활성
+                $_aAlreadyActive = in_array(trim($_aLabel), $_activeAddonLabels, true);
+            ?>
+            <div class="px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <p class="text-sm font-medium text-zinc-900 dark:text-white"><?= htmlspecialchars($_aLabel) ?></p>
+                        <?php if ($_aOneTime): ?>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 rounded"><?= htmlspecialchars(__('services.detail.b_one_time')) ?></span>
+                        <?php endif; ?>
+                        <?php if ($_aAlreadyActive): ?>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-zinc-100 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400 rounded"><?= htmlspecialchars(__('services.detail.addon_already_requested')) ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                        <?php if ($_aIsFree): ?>
+                        <span class="text-green-600 dark:text-green-400"><?= htmlspecialchars(__('services.order.summary.free')) ?></span>
+                        <?php elseif ($_aIsQuote): ?>
+                        <span class="text-amber-600 dark:text-amber-400"><?= htmlspecialchars(__('services.detail.quote_required')) ?></span>
+                        <?php else: ?>
+                        <?= $fmtPrice($_aPrice, $_curr) ?><?= htmlspecialchars($_aUnit) ?>
+                        <?php endif; ?>
+                    </p>
+                </div>
+                <?php if ($_aAlreadyActive): ?>
+                <button type="button" disabled
+                    class="px-4 py-1.5 text-xs font-medium text-zinc-400 bg-zinc-100 dark:bg-zinc-700 dark:text-zinc-500 rounded-lg cursor-not-allowed whitespace-nowrap">
+                    <?= htmlspecialchars(__('services.detail.btn_addon_already')) ?>
+                </button>
+                <?php else: ?>
+                <button type="button"
+                    onclick="addonRequest(<?= (int)$_hostSub['id'] ?>, '<?= htmlspecialchars($_aId) ?>', '<?= htmlspecialchars(addslashes($_aLabel)) ?>', <?= (int)$_aPrice ?>, '<?= htmlspecialchars(addslashes($_aUnit)) ?>')"
+                    class="px-4 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition whitespace-nowrap">
+                    <?= htmlspecialchars($_aIsQuote ? __('services.detail.btn_addon_request_quote') : __('services.detail.btn_addon_request')) ?>
+                </button>
+                <?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <script>
+    function addonRequest(hostSubId, addonId, label, unitPrice, unitText) {
+        // 가격 있는 부가서비스 → 결제 모달이 확인 역할 (confirm 생략)
+        if (parseInt(unitPrice, 10) > 0 && typeof openAddonPayModal === 'function') {
+            openAddonPayModal(addonId, label, unitPrice, unitText);
+            return;
+        }
+        // install 도 confirm 생략 (기존 정책 유지)
+        if (addonId !== 'install') {
+            var msg = <?= json_encode(__('services.detail.confirm_addon_request'), JSON_UNESCAPED_UNICODE) ?>.replace(':label', label);
+            if (!confirm(msg)) return;
+        }
+        serviceAction('request_addon', { host_subscription_id: hostSubId, addon_id: addonId, label: label })
+            .then(function(d) {
+                if (d.success) {
+                    alert(<?= json_encode(__('services.detail.alert_addon_requested'), JSON_UNESCAPED_UNICODE) ?>);
+                    location.reload();
+                } else {
+                    alert(d.message || <?= json_encode(__('services.detail.alert_failed'), JSON_UNESCAPED_UNICODE) ?>);
+                }
+            }).catch(function(e) {
+                alert(e.message);
+            });
+    }
+    </script>
+    <?php endif; ?>
 </div>
+
+<?php if ($_payPubKey && $_hostSub): ?>
+<script src="https://js.pay.jp/v2/pay.js"></script>
+<?php include __DIR__ . '/_addon-pay-modal.php'; ?>
+<?php endif; ?>

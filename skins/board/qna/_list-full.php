@@ -87,6 +87,47 @@ $_qnaTr = function (int $postId, string $field, string $original) use ($pdo, $pr
     } catch (\PDOException $e) {}
     return $original;
 };
+
+// 댓글 번역 일괄 로딩 (N+1 방지) — 현재 locale + en 폴백
+$_cmtTrans = []; // [comment_id => translated_content]
+if (!empty($commentsByPost) && !empty($currentLocale) && $currentLocale !== 'ko') {
+    $allCmtIds = [];
+    foreach ($commentsByPost as $list) {
+        foreach ($list as $c) $allCmtIds[] = (int)$c['id'];
+    }
+    if ($allCmtIds) {
+        $cmtKeys = array_map(fn($id) => "board_comment.{$id}.content", $allCmtIds);
+        $cmtPlaceholders = implode(',', array_fill(0, count($cmtKeys), '?'));
+        try {
+            // 1. 현재 locale 우선
+            $s = $pdo->prepare("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN ({$cmtPlaceholders}) AND locale = ?");
+            $s->execute(array_merge($cmtKeys, [$currentLocale]));
+            while ($row = $s->fetch(PDO::FETCH_ASSOC)) {
+                if (preg_match('/board_comment\.(\d+)\.content/', $row['lang_key'], $m)) {
+                    $_cmtTrans[(int)$m[1]] = $row['content'];
+                }
+            }
+            // 2. en 폴백 — locale 에 번역 없는 것들만
+            if ($currentLocale !== 'en') {
+                $missingIds = array_diff($allCmtIds, array_keys($_cmtTrans));
+                if ($missingIds) {
+                    $missKeys = array_map(fn($id) => "board_comment.{$id}.content", $missingIds);
+                    $missPh = implode(',', array_fill(0, count($missKeys), '?'));
+                    $s = $pdo->prepare("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN ({$missPh}) AND locale = 'en'");
+                    $s->execute($missKeys);
+                    while ($row = $s->fetch(PDO::FETCH_ASSOC)) {
+                        if (preg_match('/board_comment\.(\d+)\.content/', $row['lang_key'], $m)) {
+                            $_cmtTrans[(int)$m[1]] = $row['content'];
+                        }
+                    }
+                }
+            }
+        } catch (\PDOException $e) {}
+    }
+}
+$_qnaCmtTr = function ($cmt) use ($_cmtTrans) {
+    return $_cmtTrans[(int)$cmt['id']] ?? ($cmt['content'] ?? '');
+};
 ?>
 
 <style>
@@ -258,7 +299,7 @@ $_qnaTr = function (int $postId, string $field, string $original) use ($pdo, $pr
                                         <?php endif; ?>
                                     </span>
                                 </div>
-                                <div class="qna-cmt-body text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-line"><?= nl2br(htmlspecialchars($a['content'] ?? '')) ?></div>
+                                <div class="qna-cmt-body text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-line"><?= nl2br(htmlspecialchars($_qnaCmtTr($a))) ?></div>
 
                                 <?php if ($canEditCmt): ?>
                                 <div class="qna-edit-form hidden mt-2">

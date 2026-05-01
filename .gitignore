@@ -34,3 +34,6 @@ storage/sessions/
 /database/*.sql.gz
 !/database/migrate_*.sql
 
+
+# Local IDE/agent settings
+.claude/

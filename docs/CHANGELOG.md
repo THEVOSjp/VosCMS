@@ -4,6 +4,107 @@
 
 ---
 
+## [VosCMS 2.5.0] - 2026-05-01 — 도메인 추가 모달 + 회계 전표 + 부가서비스 결제 + 1:1 상담 인프라
+
+### Added — 마이페이지 도메인 추가 모달 (`_domain-add-modal.php`)
+
+- 호스팅 상세 → 도메인 탭 → `+ 도메인 추가` 버튼 → 모달
+- 옵션: 무료 서브도메인 / 신규 등록 / 보유 도메인 연결
+- WHOIS 검색 (`/api/domain-check.php` 재사용) + TLD별 가격 표시
+- 결제: 저장 카드 (호스팅 PAY.JP customer 재활용) 또는 새 카드 (PAY.JP Elements)
+- 부가세 10% 자동 분리 (소계 / 부가세 / 합계)
+- 결제 완료 시 호스팅 sub `metadata.added_domains[]` 에 append (별도 sub 생성 안 함)
+- 자동 환불 안전망 — DB 처리 실패 시 PAY.JP charge 자동 환불
+
+### Added — 도메인 탭 표시 강화
+
+- 시작일~만료일 + 검사 버튼 (DNS A/CNAME → 우리 zone 또는 Cloudflare IP 대역 매칭)
+- 자동연장 토글 + 연장 신청 버튼 (도메인 단위)
+- registrar_pending / manual_attach_pending 시 검사 버튼 → "준비중" 배지
+- "추가 도메인" 보라색 배지
+
+### Added — 관리자 "도메인 관리" 페이지
+
+- 호스팅 관리 사이드바 2번째 항목 신규
+- 통합 일람: type='domain' sub + 호스팅 sub.added_domains[] 모두 시간순 표시
+- 통계 카드 (전체/처리 대기/완료) + 필터 (상태·옵션·검색)
+- 액션: [등록 완료] / [취소 처리] (취소 시 PAY.JP 환불 + 환불 row INSERT)
+- 사용자 이름 자동 복호화
+
+### Added — 관리자 "회계 관리" 페이지 (전표 시스템)
+
+- 호스팅 관리 사이드바 3번째 항목 신규
+- `rzx_payments` 기반 거래 원장 — 매출/환불/순매출/부가세 통계 카드
+- 일본 부가세 신고용 본체분 자동 계산 (총액 표기 → 본체 = total × 100/110, 부가세 = total × 10/110)
+- 최근 12개월 추이 표 + 거래 원장 테이블 + 필터/페이지네이션
+
+### Added — 부가서비스 추가 신청
+
+- 마이페이지 부가서비스 탭에 "추가 신청 가능" 섹션 (비즈니스 메일 자동 제외)
+- 가격별 액션:
+  - 무료 (설치 지원): admin 알림 + order_logs
+  - 견적 (커스터마이징): "견적 요청"
+  - 정가 recurring (기술 지원 1년): **카드 결제 모달** (`_addon-pay-modal.php`)
+- 결제 완료 시 addon sub 자동 생성 + payments 전표
+- 이미 활성 sub 라벨 일치 시 신청 버튼 자동 비활성
+- install_info 행 우측 [관리자 가기 / 홈페이지 가기] 버튼
+
+### Added — `rzx_payments` 회계 전표 시스템
+
+- DB 스키마: `uk_payment_order` UNIQUE 제거 → `uk_payment_key` (charge_id) UNIQUE 로 교체
+- 한 order 에 여러 결제 row 허용 (호스팅 + 도메인 + 부가서비스 누적)
+- 환불 시 paid row 변경 X, **별도 refund row INSERT** (status='refund', 회계 정합성)
+- 일본 7년 보존 의무 + PAY.JP 가맹점 분쟁 대응 표준 충족
+
+### Added — 웹푸시 알림 인프라 (`rzxlib/Core/Notification/WebPushNotifier.php`)
+
+- composer require minishlink/web-push
+- VAPID 기반 admin/supervisor 푸시 송신 헬퍼
+- 만료 endpoint 자동 정리 + rzx_push_messages 자동 기록
+- 호출 지점: pay_domain (도메인 결제 완료), service-order (도메인 등록 신청), request_addon
+
+### Added — 도메인 DNS 검사
+
+- 우리 zone 의 서브도메인 자동 매칭 (wildcard CNAME 인식)
+- Cloudflare IPv4 15개 CIDR 대역 매칭 (proxy 응답 시)
+- "already_refunded" 응답을 success 로 정상 처리 (PAY.JP 이미 환불 시)
+
+### Added — 서비스 주문 목록 누적 금액 표시
+
+- 서브쿼리로 `rzx_payments` 합계 조회 (paid − refunded)
+- 호스팅 기본 결제 + 도메인 추가 + 부가서비스 결제 누적 표시
+
+### Added — 부가서비스 admin "취소" 버튼 + API
+
+- `admin_cancel_addon` — sub status='cancelled' + PG 환불 + 환불 row INSERT
+- PG 라우팅: payment row 의 gateway 컬럼 기준 (PG 변경 후에도 안전)
+
+### Removed — 관리자 "삭제" 버튼 영구 제거
+
+- 일본 7년 보존 의무 + PAY.JP 분쟁 대응 정책에 따라 admin UI 의 "삭제" 모두 제거
+- 휴지통 아이콘 + adminDeleteAddon JS + admin_delete_addon API + 13개국어 라벨 4개 모두 제거
+- "취소(Cancel)" 만 사용 — 데이터 row 절대 DELETE 안 함
+
+### Fixed
+
+- Translator placeholder colon prefix 충돌 — `[':count' => N]` → `['count' => N]` 일괄 수정
+- PayjpGateway::refund() 의 `metadata[refund_reason]` PAY.JP 거부 → `refund_reason` 으로 변경
+- service-manage.php 관리자 권한 검사 — `role === 'admin'` → `role IN ('admin','supervisor')` 5개 액션 일괄
+- 서비스 주문 도메인 탭 환불 후 회계 카드 음수 표기 → SQL 로직 정합성 정정 (status='paid' / 'refund' 분리 합산)
+
+### Added — SSH 외부 접속 (Cloudflare Tunnel)
+
+- ssh.21ces.com Cloudflare Tunnel 등록 (Public Hostname: SSH → localhost:22)
+- 외부 PC: `cloudflared access ssh --hostname ssh.21ces.com` 또는 ~/.ssh/config ProxyCommand
+- 서버측: PermitRootLogin no, thevos 키 등록 완료
+
+### Memory updates
+
+- `feedback_payment_design.md` — PG 추상화·payment_key UNIQUE·환불 신규 row·rzx_payments=전표·일본 7년 보존 명시
+- `feedback_admin_delete_policy.md` — admin "삭제" 영구 미사용 정책 (4-tier: UI는 취소만, 보관함, 익명화, DB 수동)
+
+---
+
 ## [VosCMS 2.4.3] - 2026-04-29 — VosCMS 자동 설치 완성 + 호스팅 마이페이지 백업/phpMyAdmin
 
 ### Added — 자동 설치 흐름 완성 (이전 세션 Phase 5 마무리)
