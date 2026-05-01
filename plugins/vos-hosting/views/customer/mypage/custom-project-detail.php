@@ -173,7 +173,7 @@ $budgetLabel = match ($project['budget_range']) {
                 <div class="flex items-center justify-between mb-3">
                     <div class="flex items-center gap-2">
                         <span class="text-xs font-bold text-zinc-900 dark:text-white">v<?= $q['version'] ?></span>
-                        <span class="text-[10px] px-2 py-0.5 rounded-full font-medium bg-white dark:bg-zinc-800 border border-current"><?= htmlspecialchars($qBg[1]) ?></span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full font-medium bg-white dark:bg-zinc-700 text-zinc-800 dark:text-emerald-200 border border-current"><?= htmlspecialchars($qBg[1]) ?></span>
                         <?php if ($q['valid_until']): ?>
                         <span class="text-[10px] text-zinc-400"><?= htmlspecialchars(__('services.custom.q_valid_until', ['date' => $q['valid_until']])) ?></span>
                         <?php endif; ?>

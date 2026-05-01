@@ -190,7 +190,7 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">
                                 <span class="text-xs font-bold text-zinc-900 dark:text-white">v<?= $q['version'] ?></span>
-                                <span class="text-[10px] px-2 py-0.5 rounded-full font-medium bg-white dark:bg-zinc-800 border border-current"><?= htmlspecialchars($qStatusLabel) ?></span>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full font-medium bg-white dark:bg-zinc-700 text-zinc-800 dark:text-emerald-200 border border-current"><?= htmlspecialchars($qStatusLabel) ?></span>
                                 <span class="text-[10px] text-zinc-400"><?= htmlspecialchars(date('Y-m-d', strtotime($q['created_at']))) ?></span>
                             </div>
                             <div class="flex items-center gap-1">
