@@ -409,6 +409,7 @@ return array (
       'method_bank' => '银行转账',
       'card_number' => '卡号',
       'card_expiry' => '有效期',
+      'card_cvc' => '安全码 (CVC)',
       'card_holder' => '持卡人',
       'card_holder_required' => '请输入持卡人姓名。',
       'card_info' => '卡片信息',

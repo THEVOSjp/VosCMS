@@ -409,6 +409,7 @@ return array (
       'method_bank' => 'Банковский перевод',
       'card_number' => 'Номер карты',
       'card_expiry' => 'Срок действия',
+      'card_cvc' => 'Код безопасности (CVC)',
       'card_holder' => 'Владелец карты',
       'card_holder_required' => 'Введите имя владельца карты.',
       'card_info' => 'Данные карты',

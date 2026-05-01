@@ -412,6 +412,7 @@ return array (
       'method_bank' => '계좌이체',
       'card_number' => '카드 번호',
       'card_expiry' => '유효기간',
+      'card_cvc' => '보안코드 (CVC)',
       'card_holder' => '카드 명의',
       'card_holder_required' => '카드 소유자 이름을 입력해주세요.',
       'card_info' => '카드 정보',

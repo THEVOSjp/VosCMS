@@ -412,6 +412,7 @@ return array (
       'method_bank' => 'Bank Transfer',
       'card_number' => 'Card Number',
       'card_expiry' => 'Expiry',
+      'card_cvc' => 'Security Code (CVC)',
       'card_holder' => 'Cardholder Name',
       'card_holder_required' => 'Please enter the cardholder name.',
       'card_info' => 'Card Information',

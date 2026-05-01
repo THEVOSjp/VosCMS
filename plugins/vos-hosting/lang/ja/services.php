@@ -409,6 +409,7 @@ return array (
       'method_bank' => '銀行振込',
       'card_number' => 'カード番号',
       'card_expiry' => '有効期限',
+      'card_cvc' => 'セキュリティコード (CVC)',
       'card_holder' => 'カード名義',
       'card_holder_required' => 'カード名義を入力してください。',
       'card_info' => 'カード情報',

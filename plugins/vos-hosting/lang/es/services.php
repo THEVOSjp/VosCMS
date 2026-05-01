@@ -409,6 +409,7 @@ return array (
       'method_bank' => 'Transferencia bancaria',
       'card_number' => 'Número de tarjeta',
       'card_expiry' => 'Vencimiento',
+      'card_cvc' => 'Código de seguridad (CVC)',
       'card_holder' => 'Titular',
       'card_holder_required' => 'Por favor, introduzca el nombre del titular.',
       'card_info' => 'Información de tarjeta',

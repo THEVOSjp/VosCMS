@@ -409,6 +409,7 @@ return array (
       'method_bank' => 'Chuyển khoản ngân hàng',
       'card_number' => 'Số thẻ',
       'card_expiry' => 'Ngày hết hạn',
+      'card_cvc' => 'Mã bảo mật (CVC)',
       'card_holder' => 'Chủ thẻ',
       'card_holder_required' => 'Vui lòng nhập tên chủ thẻ.',
       'card_info' => 'Thông tin thẻ',

@@ -392,6 +392,7 @@ return array (
       'method_bank' => 'Banka Havalesi',
       'card_number' => 'Kart Numarası',
       'card_expiry' => 'Son Kullanma',
+      'card_cvc' => 'Güvenlik kodu (CVC)',
       'card_holder' => 'Kart Sahibi',
       'card_holder_required' => 'Lütfen kart sahibinin adını girin.',
       'card_info' => 'Kart Bilgileri',

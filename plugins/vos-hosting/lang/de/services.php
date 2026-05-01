@@ -409,6 +409,7 @@ return array (
       'method_bank' => 'Banküberweisung',
       'card_number' => 'Kartennummer',
       'card_expiry' => 'Ablaufdatum',
+      'card_cvc' => 'Sicherheitscode (CVC)',
       'card_holder' => 'Karteninhaber',
       'card_holder_required' => 'Bitte den Karteninhabernamen eingeben.',
       'card_info' => 'Karteninformationen',

@@ -392,6 +392,7 @@ return array (
       'method_bank' => 'Банкны шилжүүлэг',
       'card_number' => 'Картын дугаар',
       'card_expiry' => 'Хүчинтэй хугацаа',
+      'card_cvc' => 'Аюулгүйн код (CVC)',
       'card_holder' => 'Картын эзэмшигч',
       'card_holder_required' => 'Картын эзний нэрийг оруулна уу.',
       'card_info' => 'Картын мэдээлэл',

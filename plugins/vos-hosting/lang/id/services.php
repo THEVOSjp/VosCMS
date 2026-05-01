@@ -381,6 +381,7 @@ return array (
       'method_bank' => 'Transfer Bank',
       'card_number' => 'Nomor Kartu',
       'card_expiry' => 'Berlaku hingga',
+      'card_cvc' => 'Kode Keamanan (CVC)',
       'card_holder' => 'Nama Pemilik Kartu',
       'card_holder_required' => 'Silakan masukkan nama pemegang kartu.',
       'card_info' => 'Informasi Kartu',

@@ -53,11 +53,14 @@ foreach ($quotes as $_q) {
 }
 
 // PAY.JP public key (있을 때만 결제 모달 활성화)
+//   payment_config JSON 에서 활성 gateway 의 public_key 추출
 $_payPubKey = '';
 try {
-    $_pkSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'payjp_public_key' LIMIT 1");
+    $_pkSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'payment_config' LIMIT 1");
     $_pkSt->execute();
-    $_payPubKey = (string)$_pkSt->fetchColumn();
+    $_payCfg = json_decode((string)$_pkSt->fetchColumn() ?: '{}', true) ?: [];
+    $_gw = $_payCfg['gateway'] ?? 'payjp';
+    $_payPubKey = (string)($_payCfg['gateways'][$_gw]['public_key'] ?? '');
 } catch (\Throwable $e) {}
 
 $statusLabel = function(string $s): array {

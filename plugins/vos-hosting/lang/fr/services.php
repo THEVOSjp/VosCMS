@@ -409,6 +409,7 @@ return array (
       'method_bank' => 'Virement bancaire',
       'card_number' => 'Numéro de carte',
       'card_expiry' => 'Expiration',
+      'card_cvc' => 'Code de sécurité (CVC)',
       'card_holder' => 'Titulaire',
       'card_holder_required' => 'Veuillez saisir le nom du titulaire de la carte.',
       'card_info' => 'Informations de carte',
