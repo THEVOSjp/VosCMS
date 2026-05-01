@@ -181,13 +181,24 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                     <?php if (!empty($project['attachments'])): ?>
                     <div>
                         <p class="text-[10px] text-zinc-400 uppercase tracking-wider mb-1">📎 <?= htmlspecialchars(__('services.custom.f_attachments')) ?></p>
-                        <div class="space-y-1">
-                        <?php foreach ($project['attachments'] as $idx => $a): ?>
-                            <div class="flex items-center gap-2 text-[11px] bg-white dark:bg-zinc-700 px-2 py-1.5 rounded border border-gray-200 dark:border-zinc-600">
+                        <div class="space-y-1.5">
+                        <?php foreach ($project['attachments'] as $idx => $a):
+                            $_isImg = preg_match('/^(jpg|jpeg|png|gif|webp|svg)$/i', $a['ext']);
+                            $_dlUrl = $baseUrl . '/plugins/vos-hosting/api/support-attachment.php?action=download&type=project&project=' . $projectId . '&idx=' . $idx;
+                            $_inUrl = $baseUrl . '/plugins/vos-hosting/api/support-attachment.php?action=inline&type=project&project=' . $projectId . '&idx=' . $idx;
+                        ?>
+                            <?php if ($_isImg): ?>
+                            <a href="<?= htmlspecialchars($_dlUrl) ?>" target="_blank" class="block">
+                                <img src="<?= htmlspecialchars($_inUrl) ?>" alt="<?= htmlspecialchars($a['name']) ?>" class="max-h-40 rounded border border-gray-200 dark:border-zinc-600 hover:opacity-80 transition" />
+                                <span class="text-[10px] text-zinc-400 mt-0.5 block"><?= htmlspecialchars($a['name']) ?></span>
+                            </a>
+                            <?php else: ?>
+                            <a href="<?= htmlspecialchars($_dlUrl) ?>" class="flex items-center gap-2 text-[11px] bg-white dark:bg-zinc-700 hover:bg-blue-50 dark:hover:bg-zinc-600 px-2 py-1.5 rounded border border-gray-200 dark:border-zinc-600 transition">
                                 <svg class="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
                                 <span class="truncate flex-1 text-zinc-700 dark:text-zinc-200"><?= htmlspecialchars($a['name']) ?></span>
                                 <span class="text-zinc-400"><?= number_format($a['size']/1024, 1) ?> KB</span>
-                            </div>
+                            </a>
+                            <?php endif; ?>
                         <?php endforeach; ?>
                         </div>
                     </div>
@@ -418,16 +429,25 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                         <p class="text-xs text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap mb-2"><?= htmlspecialchars($_ms['description']) ?></p>
                         <?php endif; ?>
                         <?php if (!empty($_ms['attachments'])): ?>
-                        <div class="mb-2 space-y-1">
+                        <div class="mb-2 space-y-1.5">
                             <p class="text-[10px] text-zinc-400 uppercase">📎 <?= htmlspecialchars(__('services.admin_custom.ms_attachments')) ?></p>
                             <?php foreach ($_ms['attachments'] as $_idx => $_a):
                                 $_isImg = preg_match('/^(jpg|jpeg|png|gif|webp|svg)$/i', $_a['ext']);
+                                $_dlUrl = $baseUrl . '/plugins/vos-hosting/api/support-attachment.php?action=download&type=milestone&ms=' . (int)$_ms['id'] . '&idx=' . $_idx;
+                                $_inUrl = $baseUrl . '/plugins/vos-hosting/api/support-attachment.php?action=inline&type=milestone&ms=' . (int)$_ms['id'] . '&idx=' . $_idx;
                             ?>
-                            <div class="flex items-center gap-2 text-[11px] bg-white dark:bg-zinc-700/50 px-2 py-1.5 rounded border border-gray-200 dark:border-zinc-600">
+                            <?php if ($_isImg): ?>
+                            <a href="<?= htmlspecialchars($_dlUrl) ?>" target="_blank" class="block">
+                                <img src="<?= htmlspecialchars($_inUrl) ?>" alt="<?= htmlspecialchars($_a['name']) ?>" class="max-h-48 rounded border border-gray-200 dark:border-zinc-600 hover:opacity-80 transition" />
+                                <span class="text-[10px] text-zinc-400 mt-0.5 block"><?= htmlspecialchars($_a['name']) ?> (<?= number_format($_a['size']/1024, 1) ?> KB)</span>
+                            </a>
+                            <?php else: ?>
+                            <a href="<?= htmlspecialchars($_dlUrl) ?>" class="flex items-center gap-2 text-[11px] bg-white dark:bg-zinc-700/50 hover:bg-blue-50 dark:hover:bg-zinc-600 px-2 py-1.5 rounded border border-gray-200 dark:border-zinc-600 transition">
                                 <svg class="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
                                 <span class="truncate flex-1 text-zinc-700 dark:text-zinc-200"><?= htmlspecialchars($_a['name']) ?></span>
                                 <span class="text-zinc-400"><?= number_format($_a['size']/1024, 1) ?> KB</span>
-                            </div>
+                            </a>
+                            <?php endif; ?>
                             <?php endforeach; ?>
                         </div>
                         <?php endif; ?>

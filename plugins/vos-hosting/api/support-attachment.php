@@ -148,36 +148,64 @@ if ($action === 'upload_pending') {
 }
 
 // ============================================================
-// download / inline — 메시지 첨부 파일 스트리밍
+// download / inline — 첨부 파일 스트리밍 (3 타입: support / project / milestone)
 // ============================================================
 if ($action === 'download' || $action === 'inline') {
-    $msgId = (int)($_GET['msg'] ?? 0);
+    $type = (string)($_GET['type'] ?? 'support');
     $idx = (int)($_GET['idx'] ?? 0);
-    if (!$msgId) { http_response_code(400); echo 'msg required'; exit; }
 
-    // 메시지 + 티켓 조회
-    $st = $pdo->prepare("SELECT m.id, m.ticket_id, m.attachments, t.user_id AS ticket_user_id
-                         FROM {$prefix}support_messages m
-                         JOIN {$prefix}support_tickets t ON m.ticket_id = t.id
-                         WHERE m.id = ?");
-    $st->execute([$msgId]);
-    $msg = $st->fetch(PDO::FETCH_ASSOC);
-    if (!$msg) { http_response_code(404); echo 'message not found'; exit; }
-
-    // 권한: 티켓 소유자 또는 관리자
+    // 권한 체크용 admin 여부
     $rSt = $pdo->prepare("SELECT role FROM {$prefix}users WHERE id = ?");
     $rSt->execute([$userId]);
     $isAdmin = in_array($rSt->fetchColumn(), ['admin','supervisor'], true);
-    if (!$isAdmin && $msg['ticket_user_id'] !== $userId) {
-        http_response_code(403); echo 'forbidden'; exit;
+
+    $att = null;
+    $path = null;
+
+    if ($type === 'milestone') {
+        $msId = (int)($_GET['ms'] ?? 0);
+        if (!$msId) { http_response_code(400); echo 'ms required'; exit; }
+        $st = $pdo->prepare("SELECT m.id, m.project_id, m.attachments, p.user_id FROM {$prefix}custom_milestones m JOIN {$prefix}custom_projects p ON m.project_id = p.id WHERE m.id = ?");
+        $st->execute([$msId]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        if (!$row) { http_response_code(404); echo 'milestone not found'; exit; }
+        if (!$isAdmin && $row['user_id'] !== $userId) { http_response_code(403); echo 'forbidden'; exit; }
+        $atts = json_decode($row['attachments'] ?? '[]', true) ?: [];
+        if (!isset($atts[$idx])) { http_response_code(404); echo 'attachment index not found'; exit; }
+        $att = $atts[$idx];
+        $path = BASE_PATH . '/uploads/custom-projects/' . (int)$row['project_id'] . '/milestones/' . $msId . '/' . $att['uuid'] . '.' . $att['ext'];
+
+    } elseif ($type === 'project') {
+        $projectId = (int)($_GET['project'] ?? 0);
+        if (!$projectId) { http_response_code(400); echo 'project required'; exit; }
+        $st = $pdo->prepare("SELECT id, user_id, attachments FROM {$prefix}custom_projects WHERE id = ?");
+        $st->execute([$projectId]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        if (!$row) { http_response_code(404); echo 'project not found'; exit; }
+        if (!$isAdmin && $row['user_id'] !== $userId) { http_response_code(403); echo 'forbidden'; exit; }
+        $atts = json_decode($row['attachments'] ?? '[]', true) ?: [];
+        if (!isset($atts[$idx])) { http_response_code(404); echo 'attachment index not found'; exit; }
+        $att = $atts[$idx];
+        $path = BASE_PATH . '/uploads/custom-projects/' . $projectId . '/' . $att['uuid'] . '.' . $att['ext'];
+
+    } else {
+        // 기존 support 메시지 첨부
+        $msgId = (int)($_GET['msg'] ?? 0);
+        if (!$msgId) { http_response_code(400); echo 'msg required'; exit; }
+        $st = $pdo->prepare("SELECT m.id, m.ticket_id, m.attachments, t.user_id AS ticket_user_id
+                             FROM {$prefix}support_messages m
+                             JOIN {$prefix}support_tickets t ON m.ticket_id = t.id
+                             WHERE m.id = ?");
+        $st->execute([$msgId]);
+        $msg = $st->fetch(PDO::FETCH_ASSOC);
+        if (!$msg) { http_response_code(404); echo 'message not found'; exit; }
+        if (!$isAdmin && $msg['ticket_user_id'] !== $userId) { http_response_code(403); echo 'forbidden'; exit; }
+        $atts = json_decode($msg['attachments'] ?? '[]', true) ?: [];
+        if (!isset($atts[$idx])) { http_response_code(404); echo 'attachment index not found'; exit; }
+        $att = $atts[$idx];
+        $path = BASE_PATH . '/uploads/support/' . (int)$msg['ticket_id'] . '/' . $att['uuid'] . '.' . $att['ext'];
     }
 
-    $atts = json_decode($msg['attachments'] ?? '[]', true) ?: [];
-    if (!isset($atts[$idx])) { http_response_code(404); echo 'attachment index not found'; exit; }
-    $att = $atts[$idx];
-
-    $ticketId = (int)$msg['ticket_id'];
-    $path = BASE_PATH . '/uploads/support/' . $ticketId . '/' . $att['uuid'] . '.' . $att['ext'];
     if (!is_file($path)) { http_response_code(410); echo 'file gone'; exit; }
 
     $disposition = ($action === 'inline') ? 'inline' : 'attachment';
