@@ -35,7 +35,31 @@ $_payPubKey = (string)($_payCfg['gateways'][$_payCfg['gateway'] ?? 'payjp']['pub
 include BASE_PATH . '/resources/views/admin/reservations/_head.php';
 ?>
 
-<div class="px-4 sm:px-6 lg:px-8 py-6 max-w-4xl mx-auto">
+<style>
+/* 다크모드 input/select/textarea 강제 색상 (user-agent stylesheet 우회) */
+.dark #adminNewOrderPage input:not([type="radio"]):not([type="checkbox"]):not([type="file"]),
+.dark #adminNewOrderPage select,
+.dark #adminNewOrderPage textarea {
+    color: #ffffff !important;
+    background-color: #3f3f46 !important;
+    color-scheme: dark;
+}
+.dark #adminNewOrderPage input::placeholder,
+.dark #adminNewOrderPage textarea::placeholder {
+    color: #a1a1aa !important;
+    opacity: 1 !important;
+}
+.dark #adminNewOrderPage select option {
+    color: #ffffff !important;
+    background-color: #3f3f46 !important;
+}
+/* 페이지 fallback — 색상 미지정 텍스트도 다크모드 흰색 톤 */
+.dark #adminNewOrderPage {
+    color: #f4f4f5;
+}
+</style>
+
+<div id="adminNewOrderPage" class="px-4 sm:px-6 lg:px-8 py-6 max-w-4xl mx-auto">
     <div class="mb-4">
         <a href="<?= $adminUrl ?>/service-orders" class="text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">
             ← <?= htmlspecialchars(__('services.admin_neworder.back_to_list')) ?>
@@ -50,9 +74,9 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
         <div class="p-5 space-y-3">
             <div>
                 <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_neworder.cust_mode')) ?></label>
-                <div class="flex items-center gap-4 text-sm">
-                    <label class="flex items-center gap-1.5"><input type="radio" name="cust_mode" value="existing" checked onchange="onCustomerModeChange()"> <?= htmlspecialchars(__('services.admin_neworder.cust_existing')) ?></label>
-                    <label class="flex items-center gap-1.5"><input type="radio" name="cust_mode" value="new" onchange="onCustomerModeChange()"> <?= htmlspecialchars(__('services.admin_neworder.cust_new')) ?></label>
+                <div class="flex items-center gap-4 text-sm text-zinc-900 dark:text-white">
+                    <label class="flex items-center gap-1.5 cursor-pointer"><input type="radio" name="cust_mode" value="existing" checked onchange="onCustomerModeChange()"> <?= htmlspecialchars(__('services.admin_neworder.cust_existing')) ?></label>
+                    <label class="flex items-center gap-1.5 cursor-pointer"><input type="radio" name="cust_mode" value="new" onchange="onCustomerModeChange()"> <?= htmlspecialchars(__('services.admin_neworder.cust_new')) ?></label>
                 </div>
             </div>
 
