@@ -30,7 +30,12 @@ $project['user_name_decrypted'] = $project['user_name'] ? (decrypt($project['use
 $qSt = $pdo->prepare("SELECT * FROM {$prefix}custom_quotes WHERE project_id = ? ORDER BY version DESC, id DESC");
 $qSt->execute([$projectId]);
 $quotes = $qSt->fetchAll(PDO::FETCH_ASSOC);
-foreach ($quotes as &$_q) { $_q['items'] = json_decode($_q['items'] ?? '[]', true) ?: []; }
+foreach ($quotes as &$_q) {
+    $_q['items'] = json_decode($_q['items'] ?? '[]', true) ?: [];
+    $_qpSt = $pdo->prepare("SELECT id, sequence_no, label, amount, currency, due_date, status, paid_at, note FROM {$prefix}custom_project_payments WHERE quote_id = ? ORDER BY sequence_no ASC, id ASC");
+    $_qpSt->execute([$_q['id']]);
+    $_q['payments'] = $_qpSt->fetchAll(PDO::FETCH_ASSOC);
+}
 unset($_q);
 
 $pageTitle = $project['project_number'] . ' — ' . $project['title'];
@@ -209,6 +214,40 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                             · <?= htmlspecialchars(__('services.custom.q_valid_until', ['date' => $q['valid_until']])) ?>
                             <?php endif; ?>
                         </div>
+                        <?php
+                        $_qPays = $q['payments'] ?? [];
+                        if (!empty($_qPays)):
+                            $_paidSum = 0; $_totalSum = 0;
+                            foreach ($_qPays as $_p) {
+                                $_totalSum += (float)$_p['amount'];
+                                if ($_p['status'] === 'paid') $_paidSum += (float)$_p['amount'];
+                            }
+                            $_progress = $_totalSum > 0 ? round($_paidSum / $_totalSum * 100) : 0;
+                        ?>
+                        <div class="mt-3 pt-3 border-t border-gray-200 dark:border-zinc-600">
+                            <div class="flex items-center justify-between text-[11px] mb-1">
+                                <span class="text-zinc-500"><?= htmlspecialchars(__('services.admin_custom.q_payments_label')) ?> (<?= count($_qPays) ?>)</span>
+                                <span class="font-medium"><?= htmlspecialchars(__('services.admin_custom.q_payments_paid', ['paid' => '¥' . number_format($_paidSum), 'total' => '¥' . number_format($_totalSum)])) ?></span>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-zinc-700 rounded-full h-1.5 mb-2">
+                                <div class="bg-emerald-500 h-1.5 rounded-full transition-all" style="width: <?= $_progress ?>%"></div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                            <?php foreach ($_qPays as $_p):
+                                $_pCls = match ($_p['status']) {
+                                    'paid' => 'bg-emerald-50 dark:bg-emerald-900/10 text-emerald-700 dark:text-emerald-300',
+                                    'cancelled' => 'bg-gray-50 dark:bg-zinc-700/30 text-zinc-400 line-through',
+                                    default => 'bg-amber-50 dark:bg-amber-900/10 text-amber-700 dark:text-amber-300',
+                                };
+                            ?>
+                                <div class="flex items-center justify-between gap-2 text-[11px] px-2 py-1 rounded <?= $_pCls ?>">
+                                    <span class="truncate"><?= htmlspecialchars($_p['label']) ?><?php if ($_p['due_date']): ?> <span class="text-[10px] opacity-60">(<?= htmlspecialchars($_p['due_date']) ?>)</span><?php endif; ?></span>
+                                    <span class="tabular-nums whitespace-nowrap">¥<?= number_format($_p['amount']) ?></span>
+                                </div>
+                            <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                         <?php if ($q['status'] === 'rejected' && $q['reject_reason']): ?>
                         <p class="mt-2 text-[11px] text-red-600"><?= htmlspecialchars(__('services.custom.q_rejected_reason', ['reason' => $q['reject_reason']])) ?></p>
                         <?php endif; ?>
@@ -295,6 +334,30 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                 <textarea id="qe_notes" rows="3" class="w-full px-3 py-2 text-xs border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg" placeholder="<?= htmlspecialchars(__('services.admin_custom.qe_notes_ph')) ?>"></textarea>
             </div>
 
+            <!-- 결제 일정 -->
+            <div class="border-t border-gray-200 dark:border-zinc-700 pt-4">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-xs font-bold text-zinc-700 dark:text-zinc-200">💰 <?= htmlspecialchars(__('services.admin_custom.qe_payments_title')) ?></label>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="setPaymentPreset('lump')" class="text-[11px] px-2 py-1 bg-gray-100 dark:bg-zinc-700 hover:bg-gray-200 rounded"><?= htmlspecialchars(__('services.admin_custom.qe_preset_lump')) ?></button>
+                        <button type="button" onclick="setPaymentPreset('split2')" class="text-[11px] px-2 py-1 bg-gray-100 dark:bg-zinc-700 hover:bg-gray-200 rounded"><?= htmlspecialchars(__('services.admin_custom.qe_preset_split2')) ?></button>
+                        <button type="button" onclick="setPaymentPreset('split3')" class="text-[11px] px-2 py-1 bg-gray-100 dark:bg-zinc-700 hover:bg-gray-200 rounded"><?= htmlspecialchars(__('services.admin_custom.qe_preset_split3')) ?></button>
+                    </div>
+                </div>
+                <p class="text-[10px] text-zinc-400 mb-2"><?= htmlspecialchars(__('services.admin_custom.qe_payments_hint')) ?></p>
+                <div id="qe_payments" class="space-y-2"></div>
+                <div class="flex items-center justify-between mt-2 text-[11px]">
+                    <button type="button" onclick="addPayment()" class="text-blue-600 hover:underline">+ <?= htmlspecialchars(__('services.admin_custom.qe_add_payment')) ?></button>
+                    <div>
+                        <span class="text-zinc-500"><?= htmlspecialchars(__('services.admin_custom.qe_payments_sum')) ?>:</span>
+                        <span id="qe_payments_sum" class="tabular-nums ml-1">¥0</span>
+                        <span class="text-zinc-400">/</span>
+                        <span id="qe_payments_target" class="tabular-nums">¥0</span>
+                        <span id="qe_payments_match" class="ml-1"></span>
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-gray-50 dark:bg-zinc-700/30 rounded-lg p-3 text-xs">
                 <div class="flex justify-between"><span class="text-zinc-500"><?= htmlspecialchars(__('services.custom.q_subtotal')) ?></span><span id="qe_subtotal" class="tabular-nums">¥0</span></div>
                 <div class="flex justify-between mt-1"><span class="text-zinc-500"><?= htmlspecialchars(__('services.admin_custom.qe_tax_amount')) ?></span><span id="qe_tax_amt" class="tabular-nums">¥0</span></div>
@@ -348,8 +411,11 @@ function saveAdminNote() {
 // 견적 편집기
 var qeItems = [];
 
+var qePayments = [];
+
 function openQuoteEditor(quoteOrZero) {
     qeItems = [];
+    qePayments = [];
     document.getElementById('qe_tax_rate').value = 10;
     document.getElementById('qe_valid_until').value = '';
     document.getElementById('qe_notes').value = '';
@@ -363,9 +429,13 @@ function openQuoteEditor(quoteOrZero) {
         document.getElementById('qe_valid_until').value = quoteOrZero.valid_until || '';
         document.getElementById('qe_notes').value = quoteOrZero.notes || '';
         document.getElementById('qe_currency').value = quoteOrZero.currency || 'JPY';
+        qePayments = (quoteOrZero.payments || []).map(function(p){
+            return {label:p.label||'', amount:parseFloat(p.amount)||0, due_date:p.due_date||'', note:p.note||'', status:p.status||'pending'};
+        });
     }
     if (qeItems.length === 0) qeItems.push({label:'', qty:1, unit_price:0, note:''});
     renderQuoteItems();
+    renderPayments();
 
     var m = document.getElementById('quoteModal');
     if (m.parentElement !== document.body) document.body.appendChild(m);
@@ -407,9 +477,89 @@ function recalcQuote() {
     qeItems.forEach(function(it) { subtotal += (parseFloat(it.qty)||0) * (parseFloat(it.unit_price)||0); });
     var rate = parseFloat(document.getElementById('qe_tax_rate').value) || 0;
     var taxAmt = Math.round(subtotal * (rate/100));
+    var total = Math.round(subtotal) + taxAmt;
     document.getElementById('qe_subtotal').textContent = '¥' + Math.round(subtotal).toLocaleString();
     document.getElementById('qe_tax_amt').textContent = '¥' + taxAmt.toLocaleString();
-    document.getElementById('qe_total').textContent = '¥' + (Math.round(subtotal) + taxAmt).toLocaleString();
+    document.getElementById('qe_total').textContent = '¥' + total.toLocaleString();
+    recalcPayments(total);
+}
+
+// ==== 결제 일정 ====
+function renderPayments() {
+    var html = '';
+    qePayments.forEach(function(p, idx) {
+        var locked = p.status === 'paid';
+        var lockMark = locked ? '<span class="text-[10px] px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded ml-1">PAID</span>' : '';
+        html += '<div class="grid grid-cols-12 gap-2 items-start">'
+              + '<div class="col-span-4">'
+              + '<input type="text" ' + (locked?'disabled':'') + ' class="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded disabled:bg-gray-100" placeholder="<?= htmlspecialchars(__('services.admin_custom.qe_payment_label_ph')) ?>" value="' + escAttr(p.label) + '" oninput="qePayments[' + idx + '].label=this.value">'
+              + (lockMark ? '<div class="mt-0.5">' + lockMark + '</div>' : '')
+              + '</div>'
+              + '<input type="number" min="0" step="1" ' + (locked?'disabled':'') + ' class="col-span-3 px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded disabled:bg-gray-100" placeholder="<?= htmlspecialchars(__('services.custom.q_col_amount')) ?>" value="' + (parseFloat(p.amount)||0) + '" oninput="qePayments[' + idx + '].amount=parseFloat(this.value)||0; recalcPaymentSum()">'
+              + '<input type="date" ' + (locked?'disabled':'') + ' class="col-span-3 px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded disabled:bg-gray-100" value="' + escAttr(p.due_date) + '" oninput="qePayments[' + idx + '].due_date=this.value">'
+              + (locked
+                 ? '<div class="col-span-2"></div>'
+                 : '<button type="button" onclick="removePayment(' + idx + ')" class="col-span-2 text-red-500 hover:bg-red-50 rounded text-xs py-1.5">×</button>')
+              + '</div>';
+    });
+    document.getElementById('qe_payments').innerHTML = html;
+    recalcPaymentSum();
+}
+function addPayment() {
+    qePayments.push({label:'', amount:0, due_date:'', note:'', status:'pending'});
+    renderPayments();
+}
+function removePayment(idx) {
+    if (qePayments[idx] && qePayments[idx].status === 'paid') return;
+    qePayments.splice(idx, 1);
+    renderPayments();
+}
+function setPaymentPreset(kind) {
+    // 결제된 항목 보존
+    var paid = qePayments.filter(function(p){ return p.status === 'paid'; });
+    var totalEl = document.getElementById('qe_total').textContent || '¥0';
+    var total = parseInt(totalEl.replace(/[^0-9]/g, ''), 10) || 0;
+    var paidSum = paid.reduce(function(s,p){ return s + (parseFloat(p.amount)||0); }, 0);
+    var remaining = Math.max(0, total - paidSum);
+    var preset = [];
+    if (kind === 'lump') {
+        preset = [{label: <?= json_encode(__('services.admin_custom.qe_preset_lump_label'), JSON_UNESCAPED_UNICODE) ?>, amount: remaining, due_date: '', note: '', status: 'pending'}];
+    } else if (kind === 'split2') {
+        var half = Math.round(remaining / 2);
+        preset = [
+            {label: <?= json_encode(__('services.admin_custom.qe_preset_deposit'), JSON_UNESCAPED_UNICODE) ?>, amount: half, due_date: '', note: '', status: 'pending'},
+            {label: <?= json_encode(__('services.admin_custom.qe_preset_balance'), JSON_UNESCAPED_UNICODE) ?>, amount: remaining - half, due_date: '', note: '', status: 'pending'},
+        ];
+    } else if (kind === 'split3') {
+        var a = Math.round(remaining * 0.3);
+        var b = Math.round(remaining * 0.4);
+        preset = [
+            {label: <?= json_encode(__('services.admin_custom.qe_preset_deposit'), JSON_UNESCAPED_UNICODE) ?>, amount: a, due_date: '', note: '', status: 'pending'},
+            {label: <?= json_encode(__('services.admin_custom.qe_preset_interim'), JSON_UNESCAPED_UNICODE) ?>, amount: b, due_date: '', note: '', status: 'pending'},
+            {label: <?= json_encode(__('services.admin_custom.qe_preset_balance'), JSON_UNESCAPED_UNICODE) ?>, amount: remaining - a - b, due_date: '', note: '', status: 'pending'},
+        ];
+    }
+    qePayments = paid.concat(preset);
+    renderPayments();
+}
+function recalcPaymentSum() {
+    var sum = qePayments.reduce(function(s,p){ return s + (parseFloat(p.amount)||0); }, 0);
+    var totalEl = document.getElementById('qe_total').textContent || '¥0';
+    var total = parseInt(totalEl.replace(/[^0-9]/g, ''), 10) || 0;
+    document.getElementById('qe_payments_sum').textContent = '¥' + Math.round(sum).toLocaleString();
+    document.getElementById('qe_payments_target').textContent = '¥' + total.toLocaleString();
+    var match = document.getElementById('qe_payments_match');
+    if (qePayments.length === 0) {
+        match.textContent = ''; match.className = 'ml-1';
+    } else if (Math.abs(sum - total) <= 1) {
+        match.textContent = '✓'; match.className = 'ml-1 text-emerald-600 font-bold';
+    } else {
+        match.textContent = '✗'; match.className = 'ml-1 text-red-500 font-bold';
+    }
+}
+function recalcPayments(total) {
+    document.getElementById('qe_payments_target').textContent = '¥' + total.toLocaleString();
+    recalcPaymentSum();
 }
 document.addEventListener('input', function(e) {
     if (e.target && e.target.id === 'qe_tax_rate') recalcQuote();
@@ -421,6 +571,9 @@ function saveQuote() {
         alert(<?= json_encode(__('services.admin_custom.no_valid_items'), JSON_UNESCAPED_UNICODE) ?>);
         return;
     }
+    var validPayments = qePayments
+        .filter(function(p){ return p.label.trim() !== '' && parseFloat(p.amount) > 0; })
+        .map(function(p){ return {label: p.label, amount: p.amount, due_date: p.due_date, note: p.note}; });
     var btn = document.getElementById('qe_save');
     btn.disabled = true;
     api('project_save_quote', {
@@ -431,6 +584,7 @@ function saveQuote() {
         valid_until: document.getElementById('qe_valid_until').value,
         notes: document.getElementById('qe_notes').value,
         currency: document.getElementById('qe_currency').value,
+        payments: validPayments,
     }).then(function(d) {
         btn.disabled = false;
         if (d.success) location.reload();

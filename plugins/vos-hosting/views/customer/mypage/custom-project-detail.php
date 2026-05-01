@@ -30,8 +30,27 @@ $project['attachments'] = json_decode($project['attachments'] ?? '[]', true) ?: 
 $qSt = $pdo->prepare("SELECT * FROM {$prefix}custom_quotes WHERE project_id = ? AND status IN ('sent','accepted','rejected','superseded') ORDER BY version DESC, id DESC");
 $qSt->execute([$projectId]);
 $quotes = $qSt->fetchAll(PDO::FETCH_ASSOC);
-foreach ($quotes as &$_q) { $_q['items'] = json_decode($_q['items'] ?? '[]', true) ?: []; }
+foreach ($quotes as &$_q) {
+    $_q['items'] = json_decode($_q['items'] ?? '[]', true) ?: [];
+    $_qpSt = $pdo->prepare("SELECT id, sequence_no, label, amount, currency, due_date, status, paid_at, note FROM {$prefix}custom_project_payments WHERE quote_id = ? ORDER BY sequence_no ASC, id ASC");
+    $_qpSt->execute([$_q['id']]);
+    $_q['payments'] = $_qpSt->fetchAll(PDO::FETCH_ASSOC);
+}
 unset($_q);
+
+// 수락된 견적의 결제 일정 (활성)
+$_acceptedQuote = null;
+foreach ($quotes as $_q) {
+    if ($_q['status'] === 'accepted') { $_acceptedQuote = $_q; break; }
+}
+
+// PAY.JP public key (있을 때만 결제 모달 활성화)
+$_payPubKey = '';
+try {
+    $_pkSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'payjp_public_key' LIMIT 1");
+    $_pkSt->execute();
+    $_payPubKey = (string)$_pkSt->fetchColumn();
+} catch (\Throwable $e) {}
 
 $statusLabel = function(string $s): array {
     return match ($s) {
@@ -210,6 +229,38 @@ $budgetLabel = match ($project['budget_range']) {
                 </div>
                 <?php endif; ?>
 
+                <?php if (!empty($q['payments']) && in_array($q['status'], ['sent','accepted'], true)): ?>
+                <div class="mt-3 pt-3 border-t border-gray-200 dark:border-zinc-600">
+                    <p class="text-[10px] text-zinc-400 mb-1.5"><?= htmlspecialchars(__('services.custom.q_payment_schedule')) ?></p>
+                    <div class="space-y-1">
+                    <?php foreach ($q['payments'] as $_pay):
+                        $_pCls = match ($_pay['status']) {
+                            'paid' => 'bg-emerald-50 dark:bg-emerald-900/10 text-emerald-700 dark:text-emerald-300',
+                            'cancelled' => 'bg-gray-50 dark:bg-zinc-700/30 text-zinc-400 line-through',
+                            default => 'bg-amber-50 dark:bg-amber-900/10 text-amber-800 dark:text-amber-300',
+                        };
+                        $_canPay = ($q['status'] === 'accepted' && $_pay['status'] === 'pending'
+                                    && in_array($project['status'], ['contracted','in_progress','review','delivered','maintenance'], true));
+                    ?>
+                        <div class="flex items-center justify-between gap-2 text-xs px-2.5 py-1.5 rounded <?= $_pCls ?>">
+                            <span class="flex items-center gap-1.5 flex-1 min-w-0">
+                                <span class="font-medium truncate"><?= htmlspecialchars($_pay['label']) ?></span>
+                                <?php if ($_pay['due_date']): ?><span class="text-[10px] opacity-60 whitespace-nowrap">(<?= htmlspecialchars($_pay['due_date']) ?>)</span><?php endif; ?>
+                                <?php if ($_pay['status'] === 'paid'): ?><span class="text-[10px] px-1 py-0.5 bg-emerald-200 dark:bg-emerald-800 rounded whitespace-nowrap">✓ <?= htmlspecialchars(date('Y-m-d', strtotime($_pay['paid_at']))) ?></span><?php endif; ?>
+                            </span>
+                            <span class="tabular-nums whitespace-nowrap font-medium">¥<?= number_format($_pay['amount']) ?></span>
+                            <?php if ($_canPay): ?>
+                            <button type="button" onclick="openPayModal(<?= (int)$_pay['id'] ?>, <?= (int)$_pay['amount'] ?>, '<?= htmlspecialchars(addslashes($_pay['label'])) ?>')"
+                                class="ml-1 px-2.5 py-1 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded whitespace-nowrap">
+                                💳 <?= htmlspecialchars(__('services.custom.btn_pay')) ?>
+                            </button>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <?php if ($q['status'] === 'sent'): ?>
                 <div class="mt-4 pt-3 border-t border-gray-200 dark:border-zinc-600 flex items-center justify-end gap-2">
                     <button onclick="rejectQuote(<?= (int)$q['id'] ?>)" class="px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
@@ -258,4 +309,130 @@ function rejectQuote(quoteId) {
         else alert(d.message || 'error');
     });
 }
+
+// ==== PAY.JP 결제 모달 ====
+var payjpInstance = null;
+var payjpElements = null;
+var pjNumberEl = null, pjExpiryEl = null, pjCvcEl = null;
+var currentPaymentId = 0;
+
+function openPayModal(paymentId, amount, label) {
+    currentPaymentId = paymentId;
+    document.getElementById('payModalLabel').textContent = label;
+    document.getElementById('payModalAmount').textContent = '¥' + amount.toLocaleString();
+    document.getElementById('payModalError').classList.add('hidden');
+    document.getElementById('payModalError').textContent = '';
+
+    var m = document.getElementById('payModal');
+    if (m.parentElement !== document.body) document.body.appendChild(m);
+    m.classList.remove('hidden'); m.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+
+    // PAY.JP 인스턴스 lazy 초기화
+    var pubKey = <?= json_encode($_payPubKey) ?>;
+    if (!pubKey) {
+        document.getElementById('payModalError').textContent = 'PAY.JP not configured';
+        document.getElementById('payModalError').classList.remove('hidden');
+        return;
+    }
+    if (!payjpInstance) {
+        if (typeof Payjp !== 'function') {
+            document.getElementById('payModalError').textContent = 'Payment library not loaded';
+            document.getElementById('payModalError').classList.remove('hidden');
+            return;
+        }
+        payjpInstance = Payjp(pubKey);
+        payjpElements = payjpInstance.elements();
+        pjNumberEl = payjpElements.create('cardNumber');
+        pjExpiryEl = payjpElements.create('cardExpiry');
+        pjCvcEl = payjpElements.create('cardCvc');
+        pjNumberEl.mount('#pj_number');
+        pjExpiryEl.mount('#pj_expiry');
+        pjCvcEl.mount('#pj_cvc');
+    }
+}
+function closePayModal() {
+    var m = document.getElementById('payModal');
+    m.classList.add('hidden'); m.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+function submitPayment() {
+    if (!payjpInstance || !pjNumberEl) return;
+    var btn = document.getElementById('payModalSubmit');
+    btn.disabled = true;
+    document.getElementById('payModalError').classList.add('hidden');
+
+    payjpInstance.createToken(pjNumberEl).then(function(r) {
+        if (r.error) {
+            btn.disabled = false;
+            document.getElementById('payModalError').textContent = r.error.message || 'Card error';
+            document.getElementById('payModalError').classList.remove('hidden');
+            return;
+        }
+        return api('project_pay_installment', {
+            project_id: projectId,
+            payment_id: currentPaymentId,
+            card_token: r.id,
+        }).then(function(d) {
+            btn.disabled = false;
+            if (d.success) {
+                alert('<?= htmlspecialchars(__('services.custom.pay_done')) ?>');
+                location.reload();
+            } else {
+                document.getElementById('payModalError').textContent = d.message || 'error';
+                document.getElementById('payModalError').classList.remove('hidden');
+            }
+        });
+    }).catch(function(e) {
+        btn.disabled = false;
+        document.getElementById('payModalError').textContent = (e && e.message) || 'error';
+        document.getElementById('payModalError').classList.remove('hidden');
+    });
+}
 </script>
+
+<?php if ($_payPubKey): ?>
+<script src="https://js.pay.jp/v2/pay.js"></script>
+<?php endif; ?>
+
+<!-- 결제 모달 -->
+<div id="payModal" class="hidden fixed inset-0 z-[100] items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50" onclick="closePayModal()"></div>
+    <div class="relative bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-zinc-700 flex items-center justify-between">
+            <h3 class="text-base font-bold text-zinc-900 dark:text-white">💳 <?= htmlspecialchars(__('services.custom.pay_title')) ?></h3>
+            <button type="button" onclick="closePayModal()" class="text-zinc-400 hover:text-zinc-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <p class="text-[10px] text-zinc-500 uppercase mb-1"><?= htmlspecialchars(__('services.custom.pay_summary')) ?></p>
+                <p id="payModalLabel" class="text-sm font-bold text-zinc-900 dark:text-white"></p>
+                <p id="payModalAmount" class="text-2xl font-bold text-blue-700 dark:text-blue-300 mt-1 tabular-nums"></p>
+            </div>
+            <div id="payModalError" class="hidden p-2 bg-red-50 border border-red-200 text-red-700 text-[11px] rounded"></div>
+            <div>
+                <label class="block text-[11px] text-zinc-500 mb-1"><?= htmlspecialchars(__('services.order.payment.card_number')) ?></label>
+                <div id="pj_number" class="px-3 py-2 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 rounded-lg"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-[11px] text-zinc-500 mb-1"><?= htmlspecialchars(__('services.order.payment.card_expiry')) ?></label>
+                    <div id="pj_expiry" class="px-3 py-2 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 rounded-lg"></div>
+                </div>
+                <div>
+                    <label class="block text-[11px] text-zinc-500 mb-1"><?= htmlspecialchars(__('services.order.payment.card_cvc')) ?></label>
+                    <div id="pj_cvc" class="px-3 py-2 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 rounded-lg"></div>
+                </div>
+            </div>
+            <p class="text-[10px] text-zinc-400 text-center"><?= htmlspecialchars(__('services.custom.pay_secure_hint')) ?></p>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-zinc-700 flex items-center justify-end gap-2">
+            <button type="button" onclick="closePayModal()" class="px-4 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-700 rounded-lg"><?= htmlspecialchars(__('services.order.checkout.btn_cancel')) ?></button>
+            <button type="button" id="payModalSubmit" onclick="submitPayment()" class="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50">
+                <?= htmlspecialchars(__('services.custom.btn_pay_now')) ?>
+            </button>
+        </div>
+    </div>
+</div>
