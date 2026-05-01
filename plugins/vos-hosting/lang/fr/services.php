@@ -1100,6 +1100,7 @@ return array (
     'btn_request_revision' => 'Demander révision',
     'ms_approve_prompt' => 'Commentaire facultatif.',
     'ms_revision_prompt' => 'Décrivez la révision.',
+    'btn_download' => 'Télécharger',
   ),
   'admin_custom' =>
   array (

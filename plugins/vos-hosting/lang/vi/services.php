@@ -1103,6 +1103,7 @@ return array (
     'btn_request_revision' => 'Yêu cầu sửa',
     'ms_approve_prompt' => 'Bình luận tùy chọn.',
     'ms_revision_prompt' => 'Mô tả yêu cầu sửa.',
+    'btn_download' => 'Tải xuống',
   ),
   'admin_custom' =>
   array (

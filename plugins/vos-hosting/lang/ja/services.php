@@ -1238,6 +1238,7 @@ return array (
     'btn_request_revision' => '修正依頼',
     'ms_approve_prompt' => '承認時の一言（任意）。空欄でもOK。',
     'ms_revision_prompt' => '修正理由を入力してください（必須）。',
+    'btn_download' => 'ダウンロード',
   ),
   'admin_custom' =>
   array (

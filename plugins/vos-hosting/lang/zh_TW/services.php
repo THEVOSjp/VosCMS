@@ -1103,6 +1103,7 @@ return array (
     'btn_request_revision' => '請求修改',
     'ms_approve_prompt' => '可選評語。',
     'ms_revision_prompt' => '請描述需要的修改。',
+    'btn_download' => '下載',
   ),
   'admin_custom' =>
   array (

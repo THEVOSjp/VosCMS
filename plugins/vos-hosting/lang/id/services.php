@@ -1075,6 +1075,7 @@ return array (
     'btn_request_revision' => 'Minta revisi',
     'ms_approve_prompt' => 'Komentar opsional.',
     'ms_revision_prompt' => 'Jelaskan revisi yang diperlukan.',
+    'btn_download' => 'Unduh',
   ),
   'admin_custom' =>
   array (

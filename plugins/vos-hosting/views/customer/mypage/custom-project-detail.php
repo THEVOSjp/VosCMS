@@ -187,11 +187,14 @@ $domainOptionLabel = match ($project['domain_option']) {
                         <span class="text-[10px] text-zinc-400 mt-0.5 block"><?= htmlspecialchars($a['name']) ?></span>
                     </a>
                     <?php else: ?>
-                    <a href="<?= htmlspecialchars($_dlUrl) ?>" class="flex items-center gap-2 text-[11px] bg-white dark:bg-zinc-700 hover:bg-blue-50 dark:hover:bg-zinc-600 px-2 py-1.5 rounded border border-gray-200 dark:border-zinc-600 transition">
-                        <svg class="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                        <span class="truncate flex-1 text-zinc-700 dark:text-zinc-200"><?= htmlspecialchars($a['name']) ?></span>
-                        <span class="text-zinc-400"><?= number_format($a['size']/1024, 1) ?> KB</span>
-                    </a>
+                    <div class="flex items-center gap-1.5">
+                        <a href="<?= htmlspecialchars($_inUrl) ?>" target="_blank" class="flex-1 flex items-center gap-2 text-[11px] bg-white dark:bg-zinc-700 hover:bg-blue-50 dark:hover:bg-zinc-600 px-2 py-1.5 rounded border border-gray-200 dark:border-zinc-600 transition">
+                            <svg class="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                            <span class="truncate flex-1 text-zinc-700 dark:text-zinc-200"><?= htmlspecialchars($a['name']) ?></span>
+                            <span class="text-zinc-400"><?= number_format($a['size']/1024, 1) ?> KB</span>
+                        </a>
+                        <a href="<?= htmlspecialchars($_dlUrl) ?>" class="px-2 py-1.5 text-[10px] text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded" title="<?= htmlspecialchars(__('services.custom.btn_download')) ?>">⬇</a>
+                    </div>
                     <?php endif; ?>
                 <?php endforeach; ?>
                 </div>
@@ -316,11 +319,14 @@ $domainOptionLabel = match ($project['domain_option']) {
                         <span class="text-[10px] text-zinc-400 mt-0.5 block"><?= htmlspecialchars($_a['name']) ?> (<?= number_format($_a['size']/1024, 1) ?> KB)</span>
                     </a>
                     <?php else: ?>
-                    <a href="<?= htmlspecialchars($_dlUrl) ?>" class="flex items-center gap-2 text-[11px] bg-white dark:bg-zinc-700/50 hover:bg-blue-50 dark:hover:bg-zinc-600 px-2 py-1.5 rounded border border-gray-200 dark:border-zinc-600 transition">
-                        <svg class="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                        <span class="truncate flex-1 text-zinc-700 dark:text-zinc-200"><?= htmlspecialchars($_a['name']) ?></span>
-                        <span class="text-zinc-400"><?= number_format($_a['size']/1024, 1) ?> KB</span>
-                    </a>
+                    <div class="flex items-center gap-1.5">
+                        <a href="<?= htmlspecialchars($_inUrl) ?>" target="_blank" class="flex-1 flex items-center gap-2 text-[11px] bg-white dark:bg-zinc-700/50 hover:bg-blue-50 dark:hover:bg-zinc-600 px-2 py-1.5 rounded border border-gray-200 dark:border-zinc-600 transition">
+                            <svg class="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                            <span class="truncate flex-1 text-zinc-700 dark:text-zinc-200"><?= htmlspecialchars($_a['name']) ?></span>
+                            <span class="text-zinc-400"><?= number_format($_a['size']/1024, 1) ?> KB</span>
+                        </a>
+                        <a href="<?= htmlspecialchars($_dlUrl) ?>" class="px-2 py-1.5 text-[10px] text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded" title="<?= htmlspecialchars(__('services.custom.btn_download')) ?>">⬇</a>
+                    </div>
                     <?php endif; ?>
                     <?php endforeach; ?>
                 </div>

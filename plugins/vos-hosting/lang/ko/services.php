@@ -1238,6 +1238,7 @@ return array (
     'btn_request_revision' => '수정 요청',
     'ms_approve_prompt' => '승인 시 한마디 (선택). 비워도 OK.',
     'ms_revision_prompt' => '수정 요청 사유를 입력해주세요 (필수).',
+    'btn_download' => '다운로드',
   ),
   'admin_custom' =>
   array (

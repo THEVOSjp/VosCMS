@@ -1086,6 +1086,7 @@ return array (
     'btn_request_revision' => 'Revizyon iste',
     'ms_approve_prompt' => 'İsteğe bağlı yorum.',
     'ms_revision_prompt' => 'İstenen revizyonu açıklayın.',
+    'btn_download' => 'İndir',
   ),
   'admin_custom' =>
   array (

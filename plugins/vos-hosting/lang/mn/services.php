@@ -1086,6 +1086,7 @@ return array (
     'btn_request_revision' => 'Засвар хүсэх',
     'ms_approve_prompt' => 'Тайлбар сонголттой.',
     'ms_revision_prompt' => 'Засварын тайлбар оруулна уу.',
+    'btn_download' => 'Татах',
   ),
   'admin_custom' =>
   array (

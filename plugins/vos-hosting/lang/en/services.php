@@ -1241,6 +1241,7 @@ return array (
     'btn_request_revision' => 'Request Revision',
     'ms_approve_prompt' => 'Optional approval comment.',
     'ms_revision_prompt' => 'Please describe the revision needed (required).',
+    'btn_download' => 'Download',
   ),
   'admin_custom' =>
   array (

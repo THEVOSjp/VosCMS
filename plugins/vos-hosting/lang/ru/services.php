@@ -1103,6 +1103,7 @@ return array (
     'btn_request_revision' => 'Запросить правки',
     'ms_approve_prompt' => 'Комментарий необязателен.',
     'ms_revision_prompt' => 'Опишите необходимые правки.',
+    'btn_download' => 'Скачать',
   ),
   'admin_custom' =>
   array (

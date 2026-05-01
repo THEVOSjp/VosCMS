@@ -1103,6 +1103,7 @@ return array (
     'btn_request_revision' => 'Solicitar revisión',
     'ms_approve_prompt' => 'Comentario opcional.',
     'ms_revision_prompt' => 'Describa la revisión necesaria.',
+    'btn_download' => 'Descargar',
   ),
   'admin_custom' =>
   array (
