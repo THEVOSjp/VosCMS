@@ -433,6 +433,11 @@ if ($path === 'sitemap.xml') {
         $_pf = BASE_PATH . '/plugins/vos-hosting/views/customer/mypage/custom-project-detail.php';
         if (file_exists($_pf)) { $__pageFile = $_pf; }
         else { header('Location: ' . $basePath . '/mypage'); exit; }
+    // /service-request — 비회원도 접근 가능한 마케팅 랜딩 (호스팅 사업자용)
+    } elseif ($path === 'service-request') {
+        $_pf = BASE_PATH . '/plugins/vos-hosting/views/front/service-request.php';
+        if (file_exists($_pf)) { $__pageFile = $_pf; }
+        else { http_response_code(404); }
     } elseif ($path === 'mypage/password') {
         $__pageFile = BASE_PATH . '/resources/views/customer/mypage/password.php';
     } elseif ($path === 'mypage/settings') {

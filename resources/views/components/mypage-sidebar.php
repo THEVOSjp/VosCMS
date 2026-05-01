@@ -31,7 +31,23 @@ $_allMypageMenus = function_exists('load_menu') ? load_menu('mypage') : [];
 $topItems = [];
 $menuItems = [];   // 'main' 영역 — 플러그인 자동 추가
 $bottomItems = [];
+
+// 조건부 메뉴 — 의뢰 0건이면 '제작 프로젝트' 메뉴 숨김 (vos-hosting)
+$_hasCustomProject = false;
+if (!empty($user['id'])) {
+    try {
+        $_pdoMP = \RzxLib\Core\Database\Connection::getInstance()->getPdo();
+        $_pfx = $_ENV['DB_PREFIX'] ?? 'rzx_';
+        $_chk = $_pdoMP->prepare("SELECT 1 FROM {$_pfx}custom_projects WHERE user_id = ? LIMIT 1");
+        $_chk->execute([$user['id']]);
+        $_hasCustomProject = (bool)$_chk->fetchColumn();
+    } catch (\Throwable $e) { /* 테이블 없으면 무시 */ }
+}
+
 foreach ($_allMypageMenus as $_mi) {
+    // 의뢰 없으면 제작 프로젝트 메뉴 노출 안 함
+    if (($_mi['key'] ?? '') === 'custom-projects' && !$_hasCustomProject) continue;
+
     $_sec = $_mi['section'] ?? 'main';
     if ($_sec === 'top') {
         $topItems[] = $_mi;
