@@ -147,6 +147,7 @@ return [
             'reservations' => '預約',
             'profile' => '個人資料',
             'services' => '服務管理',
+            'custom_projects' => '客製專案',
             'messages' => '訊息',
             'settings' => '設定',
             'password' => '變更密碼',

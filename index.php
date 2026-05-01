@@ -422,6 +422,17 @@ if ($path === 'sitemap.xml') {
         } else {
             header('Location: ' . $basePath . '/mypage'); exit;
         }
+    // mypage/custom-projects/new — 의뢰 폼
+    } elseif ($path === 'mypage/custom-projects/new') {
+        $_pf = BASE_PATH . '/plugins/vos-hosting/views/customer/mypage/custom-project-new.php';
+        if (file_exists($_pf)) { $__pageFile = $_pf; }
+        else { header('Location: ' . $basePath . '/mypage'); exit; }
+    // mypage/custom-projects/{id} — 프로젝트 상세 + 견적 확인/승인
+    } elseif (preg_match('#^mypage/custom-projects/(\d+)$#', $path, $m)) {
+        $customProjectId = (int)$m[1];
+        $_pf = BASE_PATH . '/plugins/vos-hosting/views/customer/mypage/custom-project-detail.php';
+        if (file_exists($_pf)) { $__pageFile = $_pf; }
+        else { header('Location: ' . $basePath . '/mypage'); exit; }
     } elseif ($path === 'mypage/password') {
         $__pageFile = BASE_PATH . '/resources/views/customer/mypage/password.php';
     } elseif ($path === 'mypage/settings') {

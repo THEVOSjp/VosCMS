@@ -149,6 +149,7 @@ return [
             'reservations' => '予約履歴',
             'profile' => 'プロフィール',
             'services' => 'サービス管理',
+            'custom_projects' => '制作プロジェクト',
             'messages' => 'メッセージ',
             'settings' => '設定',
             'password' => 'パスワード変更',

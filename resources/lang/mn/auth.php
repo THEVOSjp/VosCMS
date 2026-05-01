@@ -147,6 +147,7 @@ return [
             'reservations' => 'Захиалгууд',
             'profile' => 'Профайл',
             'services' => 'Үйлчилгээний удирдлага',
+            'custom_projects' => 'Захиалгат төсөл',
             'messages' => 'Зурвас',
             'settings' => 'Тохиргоо',
             'password' => 'Нууц үг солих',

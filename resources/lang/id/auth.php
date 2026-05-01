@@ -147,6 +147,7 @@ return [
             'reservations' => 'Reservasi',
             'profile' => 'Profil',
             'services' => 'Manajemen Layanan',
+            'custom_projects' => 'Proyek Kustom',
             'messages' => 'Pesan',
             'settings' => 'Pengaturan',
             'password' => 'Ubah Kata Sandi',

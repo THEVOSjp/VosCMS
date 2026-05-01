@@ -147,6 +147,7 @@ return [
             'reservations' => '预约',
             'profile' => '个人资料',
             'services' => '服务管理',
+            'custom_projects' => '定制项目',
             'messages' => '消息',
             'settings' => '设置',
             'password' => '修改密码',

@@ -126,6 +126,25 @@
                         },
                         "route": "support-tickets",
                         "icon": "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    },
+                    {
+                        "title": {
+                            "ko": "제작 프로젝트",
+                            "en": "Custom Projects",
+                            "ja": "制作プロジェクト",
+                            "de": "Auftragsprojekte",
+                            "es": "Proyectos a medida",
+                            "fr": "Projets sur mesure",
+                            "id": "Proyek Kustom",
+                            "mn": "Захиалгат төсөл",
+                            "ru": "Проекты на заказ",
+                            "tr": "Özel Projeler",
+                            "vi": "Dự án thiết kế",
+                            "zh_CN": "定制项目",
+                            "zh_TW": "客製專案"
+                        },
+                        "route": "custom-projects",
+                        "icon": "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
                     }
                 ]
             }
@@ -138,6 +157,14 @@
                 "icon": "<path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4\"/>",
                 "position": 25,
                 "section": "main"
+            },
+            {
+                "key": "custom-projects",
+                "url": "/mypage/custom-projects",
+                "label": "auth.mypage.menu.custom_projects",
+                "icon": "<path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4\"/>",
+                "position": 26,
+                "section": "main"
             }
         ]
     },
@@ -147,19 +174,22 @@
             { "path": "domain-management",      "view": "admin/domain-management/index.php",  "method": "GET"  },
             { "path": "accounting",             "view": "admin/accounting/index.php",         "method": "GET"  },
             { "path": "support-tickets",        "view": "admin/support-tickets/index.php",    "method": "GET"  },
+            { "path": "custom-projects",        "view": "admin/custom-projects/index.php",    "method": "GET"  },
             { "path": "contact-messages",       "view": "admin/contact-messages.php",         "method": "GET"  }
         ],
         "front": [
             { "path": "service/complete",       "view": "system/service/complete.php",        "method": "GET"  },
-            { "path": "mypage/services",        "view": "customer/mypage/services.php",       "method": "GET"  }
+            { "path": "mypage/services",        "view": "customer/mypage/services.php",       "method": "GET"  },
+            { "path": "mypage/custom-projects", "view": "customer/mypage/custom-projects.php","method": "GET"  }
         ],
         "api": []
     },
-    "_routes_note": "service-orders/{id}, mypage/services/{order}, /api/* 는 PluginManager 단순 매칭으로는 처리 불가 — 코어 라우트가 plugin view 를 우선 include (file_exists fallback). API 는 코어 /api/ 위치 유지 (nginx 직접 호출).",
+    "_routes_note": "service-orders/{id}, mypage/services/{order}, custom-projects/{id}, /api/* 는 PluginManager 단순 매칭으로는 처리 불가 — 코어 라우트가 plugin view 를 우선 include (file_exists fallback). API 는 코어 /api/ 위치 유지 (nginx 직접 호출).",
     "migrations": [
         "migrations/001_create_orders_tables.sql",
         "migrations/002_service_management_expansion.sql",
-        "migrations/003_support_tickets.sql"
+        "migrations/003_support_tickets.sql",
+        "migrations/004_custom_projects.sql"
     ],
     "settings": {
         "defaults": {

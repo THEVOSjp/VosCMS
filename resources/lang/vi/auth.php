@@ -147,6 +147,7 @@ return [
             'reservations' => 'Đặt chỗ',
             'profile' => 'Hồ sơ',
             'services' => 'Quản lý dịch vụ',
+            'custom_projects' => 'Dự án thiết kế',
             'messages' => 'Tin nhắn',
             'settings' => 'Cài đặt',
             'password' => 'Đổi mật khẩu',

@@ -119,6 +119,12 @@ $adminRoute = trim($adminRoute, '/') ?: 'dashboard';
         $_pf = BASE_PATH . '/plugins/vos-hosting/views/admin/service-orders/detail.php';
         if (file_exists($_pf)) { include $_pf; }
         else { http_response_code(404); include BASE_PATH . '/resources/views/admin/dashboard.php'; }
+    // 제작 프로젝트 상세 (vos-hosting 플러그인 — 정규식 라우트)
+    } elseif (preg_match('#^custom-projects/(\d+)$#', $adminRoute, $m)) {
+        $adminCustomProjectId = (int)$m[1];
+        $_pf = BASE_PATH . '/plugins/vos-hosting/views/admin/custom-projects/detail.php';
+        if (file_exists($_pf)) { include $_pf; }
+        else { http_response_code(404); include BASE_PATH . '/resources/views/admin/dashboard.php'; }
     // 서비스 설정 (정규식 라우트 — 플러그인에서 직접 처리)
     } elseif (preg_match('#^services/settings(?:/(\w+))?$#', $adminRoute, $m)) {
         $settingsTab = $m[1] ?? 'general';

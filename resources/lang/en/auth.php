@@ -147,6 +147,7 @@ return [
             'reservations' => 'Reservations',
             'profile' => 'Profile',
             'services' => 'Service Management',
+            'custom_projects' => 'Custom Projects',
             'messages' => 'Messages',
             'settings' => 'Settings',
             'password' => 'Change Password',

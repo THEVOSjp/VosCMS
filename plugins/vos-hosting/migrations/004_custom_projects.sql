@@ -1,0 +1,62 @@
+-- VosCMS 호스팅 — 제작 프로젝트 (커스터마이징 납품)
+-- 고객의 제작 의뢰 → 견적 → 계약 → 제작 → 납품 파이프라인 관리.
+-- Phase 1: projects + quotes 만 사용. milestones / payments 는 Phase 2/3 에서 추가.
+
+CREATE TABLE IF NOT EXISTS rzx_custom_projects (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    project_number VARCHAR(20) NOT NULL COMMENT '인보이스 번호 (예: P-2026-001)',
+    user_id CHAR(36) NOT NULL COMMENT '의뢰 고객 user_id',
+    title VARCHAR(200) NOT NULL,
+    site_type VARCHAR(40) NOT NULL DEFAULT 'homepage' COMMENT 'homepage / shop / reservation / other',
+    requirements TEXT NULL COMMENT '요구사항 본문',
+    reference_urls TEXT NULL COMMENT '참고 사이트 URL (개행 구분)',
+    budget_range VARCHAR(40) NULL COMMENT 'lt100k / 100k_300k / 300k_1m / gt1m / discuss',
+    desired_due_date DATE NULL,
+    contact_hours VARCHAR(100) NULL COMMENT '연락 가능 시간대 (자유)',
+    attachments LONGTEXT NULL COMMENT '의뢰서 첨부 — JSON [{uuid,name,size,mime,ext},...]',
+    status VARCHAR(20) NOT NULL DEFAULT 'lead' COMMENT 'lead / quoted / contracted / in_progress / review / delivered / maintenance / cancelled',
+    estimated_amount DECIMAL(12,2) NULL COMMENT '관리자 예상 견적 (보드 표시용)',
+    contract_amount DECIMAL(12,2) NULL COMMENT '확정 계약 금액 (수락된 견적의 total)',
+    contract_currency CHAR(3) NOT NULL DEFAULT 'JPY',
+    accepted_quote_id INT UNSIGNED NULL COMMENT '고객이 수락한 견적 id',
+    host_subscription_id INT UNSIGNED NULL COMMENT '납품 후 연결된 호스팅 sub',
+    assigned_admin_id CHAR(36) NULL COMMENT '담당자 admin user_id',
+    started_at DATETIME NULL COMMENT 'in_progress 진입 시각',
+    delivered_at DATETIME NULL,
+    cancelled_at DATETIME NULL,
+    cancel_reason VARCHAR(255) NULL,
+    admin_note TEXT NULL COMMENT '내부 메모 (고객 비공개)',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_project_number (project_number),
+    KEY idx_user (user_id, status),
+    KEY idx_status (status, created_at),
+    KEY idx_assigned (assigned_admin_id, status),
+    KEY idx_host_sub (host_subscription_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS rzx_custom_quotes (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    project_id INT UNSIGNED NOT NULL,
+    version INT UNSIGNED NOT NULL DEFAULT 1 COMMENT '프로젝트당 견적 버전 (수정 시 +1)',
+    items LONGTEXT NULL COMMENT 'JSON [{label, qty, unit_price, amount, note}, ...]',
+    subtotal DECIMAL(12,2) NOT NULL DEFAULT 0,
+    tax_rate DECIMAL(5,2) NOT NULL DEFAULT 10.00 COMMENT '부가세율 (일본 기본 10%)',
+    tax_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+    total DECIMAL(12,2) NOT NULL DEFAULT 0,
+    currency CHAR(3) NOT NULL DEFAULT 'JPY',
+    valid_until DATE NULL COMMENT '견적 유효기간',
+    notes TEXT NULL COMMENT '견적서 비고/특기사항',
+    status VARCHAR(20) NOT NULL DEFAULT 'draft' COMMENT 'draft / sent / accepted / rejected / superseded',
+    created_by_admin_id CHAR(36) NULL,
+    sent_at DATETIME NULL,
+    accepted_at DATETIME NULL,
+    rejected_at DATETIME NULL,
+    reject_reason VARCHAR(255) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_project_version (project_id, version),
+    KEY idx_status (status, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

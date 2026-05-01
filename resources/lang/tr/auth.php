@@ -147,6 +147,7 @@ return [
             'reservations' => 'Rezervasyonlar',
             'profile' => 'Profil',
             'services' => 'Hizmet Yönetimi',
+            'custom_projects' => 'Özel Projeler',
             'messages' => 'Mesajlar',
             'settings' => 'Ayarlar',
             'password' => 'Şifre Değiştir',

@@ -147,6 +147,7 @@ return [
             'reservations' => 'Бронирования',
             'profile' => 'Профиль',
             'services' => 'Управление услугами',
+            'custom_projects' => 'Проекты на заказ',
             'messages' => 'Сообщения',
             'settings' => 'Настройки',
             'password' => 'Изменить пароль',
