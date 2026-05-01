@@ -1417,5 +1417,6 @@ return array (
     'kind_hosting' => 'ホスティング',
     'kind_project' => '制作',
     'monthly_revenue' => '月別売上推移 (12ヶ月)',
+    'chart_max' => '最大',
   ),
 );

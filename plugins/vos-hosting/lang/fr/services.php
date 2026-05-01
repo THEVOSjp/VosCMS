@@ -1280,5 +1280,6 @@ return array (
     'kind_hosting' => 'Hébergement',
     'kind_project' => 'Projet',
     'monthly_revenue' => 'Revenus mensuels (12 mois)',
+    'chart_max' => 'Max',
   ),
 );

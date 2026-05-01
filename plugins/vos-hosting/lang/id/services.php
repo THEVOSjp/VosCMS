@@ -1255,5 +1255,6 @@ return array (
     'kind_hosting' => 'Hosting',
     'kind_project' => 'Proyek',
     'monthly_revenue' => 'Pendapatan Bulanan (12 bulan)',
+    'chart_max' => 'Maks',
   ),
 );

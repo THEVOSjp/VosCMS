@@ -1266,5 +1266,6 @@ return array (
     'kind_hosting' => 'Хостинг',
     'kind_project' => 'Төсөл',
     'monthly_revenue' => 'Сарын орлого (12 сар)',
+    'chart_max' => 'Дээд',
   ),
 );

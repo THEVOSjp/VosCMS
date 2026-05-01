@@ -1283,5 +1283,6 @@ return array (
     'kind_hosting' => 'Hosting',
     'kind_project' => 'Dự án',
     'monthly_revenue' => 'Doanh thu hàng tháng (12 tháng)',
+    'chart_max' => 'Tối đa',
   ),
 );

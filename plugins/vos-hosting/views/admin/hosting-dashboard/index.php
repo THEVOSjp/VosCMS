@@ -307,19 +307,46 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
 
     <!-- 월별 매출 추이 -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 overflow-hidden mb-6">
-        <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700">
+        <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700 flex items-center justify-between">
             <p class="text-sm font-bold text-zinc-900 dark:text-white">📊 <?= htmlspecialchars(__('services.admin_dashboard.monthly_revenue')) ?></p>
+            <p class="text-[10px] text-zinc-500 dark:text-zinc-400">
+                <?= htmlspecialchars(__('services.admin_dashboard.chart_max')) ?>: ¥<?= number_format($maxMonthRevenue) ?>
+            </p>
         </div>
         <div class="p-5">
-            <div class="flex items-end gap-2 h-40">
-                <?php foreach ($monthlyRevenue as $month):
-                    $heightPct = $maxMonthRevenue > 0 ? round($month['amount'] / $maxMonthRevenue * 100) : 0;
-                ?>
-                <div class="flex-1 flex flex-col items-center gap-1">
-                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400 tabular-nums">¥<?= number_format($month['amount']/1000, 0) ?>k</span>
-                    <div class="w-full bg-emerald-500 dark:bg-emerald-400 rounded-t hover:opacity-80 transition" style="height: <?= max($heightPct, 1) ?>%; min-height: 2px;" title="<?= htmlspecialchars($month['label']) ?>: ¥<?= number_format($month['amount']) ?>"></div>
-                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars($month['label']) ?></span>
+            <!-- 차트 영역: 가이드 라인 + 막대 -->
+            <div class="relative h-64">
+                <!-- 가로 가이드 라인 (25%, 50%, 75%, 100%) -->
+                <div class="absolute inset-0 flex flex-col-reverse pointer-events-none">
+                    <?php for ($i = 0; $i <= 4; $i++):
+                        $val = round($maxMonthRevenue * $i / 4);
+                    ?>
+                    <div class="flex-1 border-t border-dashed border-gray-200 dark:border-zinc-700 relative">
+                        <span class="absolute -top-2 left-0 text-[9px] text-zinc-400 tabular-nums bg-white dark:bg-zinc-800 px-1">¥<?= $val >= 1000 ? number_format($val/1000, 0) . 'k' : number_format($val) ?></span>
+                    </div>
+                    <?php endfor; ?>
                 </div>
+                <!-- 막대 -->
+                <div class="absolute inset-0 flex items-end gap-2 pl-10">
+                    <?php foreach ($monthlyRevenue as $month):
+                        $heightPct = $maxMonthRevenue > 0 ? round($month['amount'] / $maxMonthRevenue * 100, 1) : 0;
+                        $hasRevenue = $month['amount'] > 0;
+                    ?>
+                    <div class="flex-1 flex flex-col items-center justify-end h-full group relative">
+                        <?php if ($hasRevenue): ?>
+                        <span class="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 tabular-nums mb-1">¥<?= number_format($month['amount']/1000, 0) ?>k</span>
+                        <?php endif; ?>
+                        <div class="w-full <?= $hasRevenue ? 'bg-gradient-to-t from-emerald-600 to-emerald-400 dark:from-emerald-500 dark:to-emerald-300' : 'bg-gray-200 dark:bg-zinc-700' ?> rounded-t-md hover:opacity-80 transition shadow-sm"
+                             style="height: <?= $hasRevenue ? max($heightPct, 4) : 4 ?>%;"
+                             title="<?= htmlspecialchars($month['label']) ?>: ¥<?= number_format($month['amount']) ?>"></div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <!-- X축 월 라벨 -->
+            <div class="flex gap-2 mt-2 pl-10">
+                <?php foreach ($monthlyRevenue as $month): ?>
+                <div class="flex-1 text-center text-[10px] text-zinc-500 dark:text-zinc-400 font-medium tabular-nums"><?= htmlspecialchars($month['label']) ?></div>
                 <?php endforeach; ?>
             </div>
         </div>

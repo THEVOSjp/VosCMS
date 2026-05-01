@@ -1420,5 +1420,6 @@ return array (
     'kind_hosting' => '호스팅',
     'kind_project' => '제작',
     'monthly_revenue' => '월별 매출 추이 (12개월)',
+    'chart_max' => '최대',
   ),
 );

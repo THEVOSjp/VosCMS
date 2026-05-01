@@ -1283,5 +1283,6 @@ return array (
     'kind_hosting' => '托管',
     'kind_project' => '项目',
     'monthly_revenue' => '月度收入趋势 (12个月)',
+    'chart_max' => '最大',
   ),
 );

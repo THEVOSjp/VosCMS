@@ -1283,5 +1283,6 @@ return array (
     'kind_hosting' => 'Hosting',
     'kind_project' => 'Projekt',
     'monthly_revenue' => 'Monatlicher Umsatz (12 Monate)',
+    'chart_max' => 'Max',
   ),
 );
