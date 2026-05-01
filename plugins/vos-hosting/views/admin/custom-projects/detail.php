@@ -364,6 +364,10 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
     color: #ffffff !important;
     background-color: #3f3f46 !important;
 }
+/* 모달 내 텍스트 기본값을 흰색으로 (zinc-400/500 같이 명시된 회색 색상은 그대로 유지) */
+.dark #quoteModal {
+    color: #f4f4f5;
+}
 </style>
 <div id="quoteModal" class="hidden fixed inset-0 z-[100] items-center justify-center p-4">
     <div class="absolute inset-0 bg-black/50" onclick="closeQuoteEditor()"></div>
@@ -433,9 +437,9 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                     <button type="button" onclick="addPayment()" class="text-blue-600 hover:underline">+ <?= htmlspecialchars(__('services.admin_custom.qe_add_payment')) ?></button>
                     <div>
                         <span class="text-zinc-500"><?= htmlspecialchars(__('services.admin_custom.qe_payments_sum')) ?>:</span>
-                        <span id="qe_payments_sum" class="tabular-nums ml-1">¥0</span>
+                        <span id="qe_payments_sum" class="tabular-nums ml-1 text-zinc-700 dark:text-zinc-100">¥0</span>
                         <span class="text-zinc-400">/</span>
-                        <span id="qe_payments_target" class="tabular-nums">¥0</span>
+                        <span id="qe_payments_target" class="tabular-nums text-zinc-700 dark:text-zinc-100">¥0</span>
                         <span id="qe_payments_match" class="ml-1"></span>
                     </div>
                 </div>
@@ -546,7 +550,7 @@ function renderQuoteItems() {
               + '<input type="text" class="col-span-5 px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded" placeholder="<?= htmlspecialchars(__('services.admin_custom.qe_item_label')) ?>" value="' + escAttr(it.label) + '" oninput="qeItems[' + idx + '].label=this.value">'
               + '<input type="number" min="0" step="0.01" class="col-span-2 px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded" placeholder="<?= htmlspecialchars(__('services.custom.q_col_qty')) ?>" value="' + (parseFloat(it.qty)||0) + '" oninput="qeItems[' + idx + '].qty=parseFloat(this.value)||0; recalcQuote()">'
               + '<input type="number" min="0" step="1" class="col-span-3 px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded" placeholder="<?= htmlspecialchars(__('services.custom.q_col_unit')) ?>" value="' + (parseFloat(it.unit_price)||0) + '" oninput="qeItems[' + idx + '].unit_price=parseFloat(this.value)||0; recalcQuote()">'
-              + '<div class="col-span-1 text-xs text-right tabular-nums pt-1.5">¥' + Math.round(((it.qty||0)*(it.unit_price||0))).toLocaleString() + '</div>'
+              + '<div class="col-span-1 text-xs text-right tabular-nums pt-1.5 text-zinc-700 dark:text-zinc-100">¥' + Math.round(((it.qty||0)*(it.unit_price||0))).toLocaleString() + '</div>'
               + '<button type="button" onclick="removeQuoteItem(' + idx + ')" class="col-span-1 text-red-500 hover:bg-red-50 rounded text-xs py-1.5">×</button>'
               + '<input type="text" class="col-span-12 px-2 py-1 text-[11px] border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded" placeholder="<?= htmlspecialchars(__('services.admin_custom.qe_item_note_ph')) ?>" value="' + escAttr(it.note) + '" oninput="qeItems[' + idx + '].note=this.value">'
               + '</div>';
