@@ -1022,6 +1022,7 @@ return array (
     'q_col_unit' => 'Unit',
     'q_col_amount' => 'Amount',
     'q_rejected_reason' => 'Reason: :reason',
+    'from_addon_notice' => 'Anda berasal dari permintaan penawaran add-on. Berikan kebutuhan rinci untuk menerima penawaran.',
   ),
   'admin_custom' =>
   array (

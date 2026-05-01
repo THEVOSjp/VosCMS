@@ -1184,6 +1184,7 @@ return array (
     'q_col_unit' => '단가',
     'q_col_amount' => '금액',
     'q_rejected_reason' => '거절 사유: :reason',
+    'from_addon_notice' => '부가서비스 견적 요청으로 진입하셨습니다. 요구사항을 자세히 적어주시면 견적서를 보내드립니다.',
   ),
   'admin_custom' =>
   array (

@@ -544,11 +544,17 @@ $_needCard = !$_paymentCustomerId && $_payEnabled && $_payGateway === 'payjp';
                     class="px-4 py-1.5 text-xs font-medium text-zinc-400 bg-zinc-100 dark:bg-zinc-700 dark:text-zinc-500 rounded-lg cursor-not-allowed whitespace-nowrap">
                     <?= htmlspecialchars(__('services.detail.btn_addon_already')) ?>
                 </button>
+                <?php elseif ($_aIsQuote): ?>
+                <a href="<?= $baseUrl ?>/mypage/custom-projects/new?title=<?= rawurlencode($_aLabel) ?>&from=addon&host_sub=<?= (int)$_hostSub['id'] ?>"
+                    class="inline-flex items-center gap-1 px-4 py-1.5 text-xs font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition whitespace-nowrap">
+                    <?= htmlspecialchars(__('services.detail.btn_addon_request_quote')) ?>
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </a>
                 <?php else: ?>
                 <button type="button"
                     onclick="addonRequest(<?= (int)$_hostSub['id'] ?>, '<?= htmlspecialchars($_aId) ?>', '<?= htmlspecialchars(addslashes($_aLabel)) ?>', <?= (int)$_aPrice ?>, '<?= htmlspecialchars(addslashes($_aUnit)) ?>')"
                     class="px-4 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition whitespace-nowrap">
-                    <?= htmlspecialchars($_aIsQuote ? __('services.detail.btn_addon_request_quote') : __('services.detail.btn_addon_request')) ?>
+                    <?= htmlspecialchars(__('services.detail.btn_addon_request')) ?>
                 </button>
                 <?php endif; ?>
             </div>

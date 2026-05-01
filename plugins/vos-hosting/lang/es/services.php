@@ -1050,6 +1050,7 @@ return array (
     'q_col_unit' => 'Unit',
     'q_col_amount' => 'Amount',
     'q_rejected_reason' => 'Reason: :reason',
+    'from_addon_notice' => 'Ha llegado desde una solicitud de cotización de complemento. Detalle los requisitos y enviaremos un presupuesto.',
   ),
   'admin_custom' =>
   array (

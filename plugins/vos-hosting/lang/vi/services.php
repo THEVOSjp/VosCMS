@@ -1050,6 +1050,7 @@ return array (
     'q_col_unit' => 'Unit',
     'q_col_amount' => 'Amount',
     'q_rejected_reason' => 'Reason: :reason',
+    'from_addon_notice' => 'Bạn đến từ yêu cầu báo giá dịch vụ bổ sung. Nêu chi tiết yêu cầu để nhận báo giá.',
   ),
   'admin_custom' =>
   array (

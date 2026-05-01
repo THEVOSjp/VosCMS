@@ -1050,6 +1050,7 @@ return array (
     'q_col_unit' => 'Unit',
     'q_col_amount' => 'Amount',
     'q_rejected_reason' => 'Reason: :reason',
+    'from_addon_notice' => 'Вы пришли от запроса сметы доп. услуги. Опишите требования подробно — отправим смету.',
   ),
   'admin_custom' =>
   array (

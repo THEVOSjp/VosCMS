@@ -1188,6 +1188,7 @@ return array (
     'q_col_unit' => 'Unit',
     'q_col_amount' => 'Amount',
     'q_rejected_reason' => 'Reason: :reason',
+    'from_addon_notice' => 'You arrived from an add-on quote request. Provide detailed requirements and we\'ll send a quote.',
   ),
   'admin_custom' =>
   array (

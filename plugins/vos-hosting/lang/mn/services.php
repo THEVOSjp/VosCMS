@@ -1033,6 +1033,7 @@ return array (
     'q_col_unit' => 'Unit',
     'q_col_amount' => 'Amount',
     'q_rejected_reason' => 'Reason: :reason',
+    'from_addon_notice' => 'Нэмэлт үйлчилгээний үнийн саналаас орсон байна. Шаардлагаа дэлгэрэнгүй бичээрэй.',
   ),
   'admin_custom' =>
   array (

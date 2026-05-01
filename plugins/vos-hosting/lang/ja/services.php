@@ -1185,6 +1185,7 @@ return array (
     'q_col_unit' => '単価',
     'q_col_amount' => '金額',
     'q_rejected_reason' => '拒否理由: :reason',
+    'from_addon_notice' => 'オプションサービスの見積依頼から入られました。要件を詳しくご記入ください。見積書をお送りします。',
   ),
   'admin_custom' =>
   array (

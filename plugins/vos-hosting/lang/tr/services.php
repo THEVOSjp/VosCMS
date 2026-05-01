@@ -1033,6 +1033,7 @@ return array (
     'q_col_unit' => 'Unit',
     'q_col_amount' => 'Amount',
     'q_rejected_reason' => 'Reason: :reason',
+    'from_addon_notice' => 'Ek hizmet teklif talebinden geldiniz. Detaylı gereksinimler sunun, teklif gönderelim.',
   ),
   'admin_custom' =>
   array (

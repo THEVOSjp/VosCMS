@@ -1050,6 +1050,7 @@ return array (
     'q_col_unit' => 'Unit',
     'q_col_amount' => 'Amount',
     'q_rejected_reason' => 'Reason: :reason',
+    'from_addon_notice' => '您從附加服務報價請求進入。請詳細描述需求,我們將提供報價。',
   ),
   'admin_custom' =>
   array (

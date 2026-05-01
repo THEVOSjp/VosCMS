@@ -9,6 +9,11 @@ if (!$isLoggedIn) { header("Location: {$baseUrl}/login"); exit; }
 $_svcLangFile = BASE_PATH . '/plugins/vos-hosting/lang/' . \RzxLib\Core\I18n\Translator::getLocale() . '/services.php';
 if (!file_exists($_svcLangFile)) $_svcLangFile = BASE_PATH . '/plugins/vos-hosting/lang/en/services.php';
 if (file_exists($_svcLangFile)) \RzxLib\Core\I18n\Translator::merge('services', require $_svcLangFile);
+
+// Prefill — 부가서비스 견적요청 등에서 넘어온 경우
+$_prefillTitle = trim((string)($_GET['title'] ?? ''));
+$_prefillFrom = (string)($_GET['from'] ?? '');
+$_prefillHostSub = (int)($_GET['host_sub'] ?? 0);
 ?>
 <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex items-center gap-3 mb-6">
@@ -21,12 +26,18 @@ if (file_exists($_svcLangFile)) \RzxLib\Core\I18n\Translator::merge('services', 
         </div>
     </div>
 
+    <?php if ($_prefillFrom === 'addon'): ?>
+    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 mb-4 text-sm text-amber-800 dark:text-amber-200">
+        💬 <?= htmlspecialchars(__('services.custom.from_addon_notice')) ?>
+    </div>
+    <?php endif; ?>
+
     <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 p-6 space-y-4">
         <div>
             <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                 <?= htmlspecialchars(__('services.custom.f_title')) ?> <span class="text-red-500">*</span>
             </label>
-            <input type="text" id="f_title" maxlength="200" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg" placeholder="<?= htmlspecialchars(__('services.custom.f_title_ph')) ?>">
+            <input type="text" id="f_title" maxlength="200" value="<?= htmlspecialchars($_prefillTitle) ?>" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg" placeholder="<?= htmlspecialchars(__('services.custom.f_title_ph')) ?>">
         </div>
 
         <div>

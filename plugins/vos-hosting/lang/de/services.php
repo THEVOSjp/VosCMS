@@ -1050,6 +1050,7 @@ return array (
     'q_col_unit' => 'Unit',
     'q_col_amount' => 'Amount',
     'q_rejected_reason' => 'Reason: :reason',
+    'from_addon_notice' => 'Sie kommen von einer Add-on-Anfrage. Bitte detaillierte Anforderungen — wir senden ein Angebot.',
   ),
   'admin_custom' =>
   array (

@@ -1047,6 +1047,7 @@ return array (
     'q_col_unit' => 'Unit',
     'q_col_amount' => 'Amount',
     'q_rejected_reason' => 'Reason: :reason',
+    'from_addon_notice' => 'Vous arrivez d\'une demande de devis de service additionnel. Détaillez vos exigences pour recevoir un devis.',
   ),
   'admin_custom' =>
   array (
