@@ -1249,6 +1249,11 @@ return array (
     'delivery_notes' => '안내 사항',
     'delivery_security_hint' => '보안을 위해 첫 로그인 후 비밀번호를 즉시 변경해주세요.',
     'copied' => '복사되었습니다.',
+    'saved_card_title' => '저장된 카드로 결제',
+    'saved_card_desc' => '이전에 등록하신 카드',
+    'use_new_card' => '다른 카드 사용',
+    'use_saved_card' => '저장된 카드 사용',
+    'new_card_title' => '새 카드 정보',
   ),
   'admin_custom' =>
   array (

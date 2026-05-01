@@ -1114,6 +1114,11 @@ return array (
     'delivery_notes' => 'Ghi chú',
     'delivery_security_hint' => 'Đổi mật khẩu ngay sau lần đăng nhập đầu tiên.',
     'copied' => 'Đã sao chép.',
+    'saved_card_title' => 'Thanh toán bằng thẻ đã lưu',
+    'saved_card_desc' => 'Thẻ đã đăng ký trước',
+    'use_new_card' => 'Dùng thẻ khác',
+    'use_saved_card' => 'Dùng thẻ đã lưu',
+    'new_card_title' => 'Thẻ mới',
   ),
   'admin_custom' =>
   array (

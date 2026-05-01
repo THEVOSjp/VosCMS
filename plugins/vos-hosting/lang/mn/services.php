@@ -1097,6 +1097,11 @@ return array (
     'delivery_notes' => 'Тэмдэглэл',
     'delivery_security_hint' => 'Анхны нэвтрэлтийн дараа нууц үгээ солино уу.',
     'copied' => 'Хуулсан.',
+    'saved_card_title' => 'Хадгалсан картаар төлөх',
+    'saved_card_desc' => 'Өмнө бүртгэсэн карт',
+    'use_new_card' => 'Өөр карт ашиглах',
+    'use_saved_card' => 'Хадгалсан карт',
+    'new_card_title' => 'Шинэ карт',
   ),
   'admin_custom' =>
   array (

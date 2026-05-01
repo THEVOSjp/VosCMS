@@ -1114,6 +1114,11 @@ return array (
     'delivery_notes' => 'Notas',
     'delivery_security_hint' => 'Cambie la contraseña tras el primer inicio de sesión.',
     'copied' => 'Copiado.',
+    'saved_card_title' => 'Pagar con tarjeta guardada',
+    'saved_card_desc' => 'Tarjeta registrada',
+    'use_new_card' => 'Usar otra tarjeta',
+    'use_saved_card' => 'Usar tarjeta guardada',
+    'new_card_title' => 'Nueva tarjeta',
   ),
   'admin_custom' =>
   array (

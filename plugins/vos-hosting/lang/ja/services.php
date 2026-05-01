@@ -1249,6 +1249,11 @@ return array (
     'delivery_notes' => '案内事項',
     'delivery_security_hint' => 'セキュリティのため、初回ログイン後にパスワードを必ず変更してください。',
     'copied' => 'コピーしました。',
+    'saved_card_title' => '登録済みカードで決済',
+    'saved_card_desc' => '以前に登録したカード',
+    'use_new_card' => '別のカードを使用',
+    'use_saved_card' => '登録済みカードを使用',
+    'new_card_title' => '新しいカード',
   ),
   'admin_custom' =>
   array (

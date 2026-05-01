@@ -55,6 +55,23 @@ $_msProgress = $_msTotal > 0 ? round($_msApproved / $_msTotal * 100) : 0;
 // 납품 인수인계 정보
 $_deliveryInfo = json_decode($project['delivery_info'] ?? '{}', true) ?: [];
 $_isDelivered = in_array($project['status'], ['delivered','maintenance'], true) && !empty($_deliveryInfo);
+
+// 저장된 카드 정보 (이 프로젝트 또는 사용자의 호스팅 sub fallback)
+$_hasSavedCard = false;
+$_savedCardBrand = '';
+$_savedCardLast4 = '';
+if (!empty($project['payment_customer_id'])) {
+    $_hasSavedCard = true;
+    $_savedCardBrand = (string)($project['payment_card_brand'] ?? '');
+    $_savedCardLast4 = (string)($project['payment_card_last4'] ?? '');
+} else {
+    // 호스팅 sub 에 카드 등록되어 있으면 fallback 가능
+    try {
+        $_csSt = $pdo->prepare("SELECT payment_customer_id FROM {$prefix}subscriptions WHERE user_id = ? AND payment_customer_id IS NOT NULL AND payment_customer_id != '' ORDER BY id DESC LIMIT 1");
+        $_csSt->execute([$user['id']]);
+        if ($_csSt->fetchColumn()) $_hasSavedCard = true;
+    } catch (\Throwable $e) {}
+}
 foreach ($quotes as &$_q) {
     $_q['items'] = json_decode($_q['items'] ?? '[]', true) ?: [];
     $_qpSt = $pdo->prepare("SELECT id, sequence_no, label, amount, currency, due_date, status, paid_at, note FROM {$prefix}custom_project_payments WHERE quote_id = ? ORDER BY sequence_no ASC, id ASC");
@@ -605,40 +622,93 @@ var payjpInstance = null;
 var payjpElements = null;
 var pjNumberEl = null, pjExpiryEl = null, pjCvcEl = null;
 var currentPaymentId = 0;
+var hasSavedCard = <?= $_hasSavedCard ? 'true' : 'false' ?>;
+var useSavedCard = hasSavedCard;  // 저장 카드 있으면 기본값 true
+
+function toggleNewCard(showNew) {
+    var savedBox = document.getElementById('savedCardBox');
+    var newForm = document.getElementById('newCardForm');
+    if (showNew) {
+        useSavedCard = false;
+        if (savedBox) savedBox.classList.add('hidden');
+        if (newForm) newForm.classList.remove('hidden');
+        // PAY.JP Elements 가 아직 mount 안 됐으면 mount
+        ensurePayjpMounted();
+    } else {
+        useSavedCard = true;
+        if (savedBox) savedBox.classList.remove('hidden');
+        if (newForm) newForm.classList.add('hidden');
+    }
+}
+
+function ensurePayjpMounted() {
+    var pubKey = <?= json_encode($_payPubKey) ?>;
+    if (!pubKey) return;
+    if (typeof Payjp !== 'function') return;
+    if (payjpInstance && pjNumberEl) return;
+
+    var isDark = document.documentElement.classList.contains('dark');
+    var elementStyle = {
+        base: {
+            color: isDark ? '#ffffff' : '#18181b',
+            fontSize: '14px',
+            fontFamily: 'inherit',
+            '::placeholder': { color: isDark ? '#71717a' : '#a1a1aa' },
+        },
+        invalid: { color: '#ef4444' },
+    };
+
+    if (!payjpInstance) {
+        payjpInstance = Payjp(pubKey);
+        payjpElements = payjpInstance.elements();
+    }
+    if (!pjNumberEl) {
+        pjNumberEl = payjpElements.create('cardNumber', { style: elementStyle });
+        pjExpiryEl = payjpElements.create('cardExpiry', { style: elementStyle });
+        pjCvcEl = payjpElements.create('cardCvc', { style: elementStyle });
+        pjNumberEl.mount('#pj_number');
+        pjExpiryEl.mount('#pj_expiry');
+        pjCvcEl.mount('#pj_cvc');
+    }
+}
 
 function openPayModal(paymentId, amount, label) {
     currentPaymentId = paymentId;
+    useSavedCard = hasSavedCard;  // 모달 열 때 저장 카드 기본
     document.getElementById('payModalLabel').textContent = label;
     document.getElementById('payModalAmount').textContent = '¥' + amount.toLocaleString();
     document.getElementById('payModalError').classList.add('hidden');
     document.getElementById('payModalError').textContent = '';
+
+    // 토글 상태 초기화
+    var savedBox = document.getElementById('savedCardBox');
+    var newForm = document.getElementById('newCardForm');
+    if (hasSavedCard) {
+        if (savedBox) savedBox.classList.remove('hidden');
+        if (newForm) newForm.classList.add('hidden');
+    } else {
+        if (newForm) newForm.classList.remove('hidden');
+    }
 
     var m = document.getElementById('payModal');
     if (m.parentElement !== document.body) document.body.appendChild(m);
     m.classList.remove('hidden'); m.classList.add('flex');
     document.body.style.overflow = 'hidden';
 
-    // PAY.JP 인스턴스 lazy 초기화
-    var pubKey = <?= json_encode($_payPubKey) ?>;
-    if (!pubKey) {
-        document.getElementById('payModalError').textContent = 'PAY.JP not configured';
-        document.getElementById('payModalError').classList.remove('hidden');
-        return;
-    }
-    if (!payjpInstance) {
+    // 저장 카드 없으면 즉시 PAY.JP mount
+    if (!hasSavedCard) {
+        var pubKey = <?= json_encode($_payPubKey) ?>;
+        if (!pubKey) {
+            document.getElementById('payModalError').textContent = 'PAY.JP not configured';
+            document.getElementById('payModalError').classList.remove('hidden');
+            return;
+        }
         if (typeof Payjp !== 'function') {
             document.getElementById('payModalError').textContent = 'Payment library not loaded';
             document.getElementById('payModalError').classList.remove('hidden');
             return;
         }
-        payjpInstance = Payjp(pubKey);
-        payjpElements = payjpInstance.elements();
-        pjNumberEl = payjpElements.create('cardNumber');
-        pjExpiryEl = payjpElements.create('cardExpiry');
-        pjCvcEl = payjpElements.create('cardCvc');
-        pjNumberEl.mount('#pj_number');
-        pjExpiryEl.mount('#pj_expiry');
-        pjCvcEl.mount('#pj_cvc');
+        ensurePayjpMounted();
     }
 }
 function closePayModal() {
@@ -647,11 +717,40 @@ function closePayModal() {
     document.body.style.overflow = '';
 }
 function submitPayment() {
-    if (!payjpInstance || !pjNumberEl) return;
     var btn = document.getElementById('payModalSubmit');
     btn.disabled = true;
     document.getElementById('payModalError').classList.add('hidden');
 
+    if (useSavedCard) {
+        // 저장 카드 사용 — token 없이 그대로 결제
+        api('project_pay_installment', {
+            project_id: projectId,
+            payment_id: currentPaymentId,
+            use_saved_card: true,
+        }).then(function(d) {
+            btn.disabled = false;
+            if (d.success) {
+                alert('<?= htmlspecialchars(__('services.custom.pay_done')) ?>');
+                location.reload();
+            } else {
+                document.getElementById('payModalError').textContent = d.message || 'error';
+                document.getElementById('payModalError').classList.remove('hidden');
+            }
+        }).catch(function(e) {
+            btn.disabled = false;
+            document.getElementById('payModalError').textContent = (e && e.message) || 'error';
+            document.getElementById('payModalError').classList.remove('hidden');
+        });
+        return;
+    }
+
+    // 새 카드 — token 생성
+    if (!payjpInstance || !pjNumberEl) {
+        btn.disabled = false;
+        document.getElementById('payModalError').textContent = 'Payment library not ready';
+        document.getElementById('payModalError').classList.remove('hidden');
+        return;
+    }
     payjpInstance.createToken(pjNumberEl).then(function(r) {
         if (r.error) {
             btn.disabled = false;
@@ -794,21 +893,52 @@ document.addEventListener('DOMContentLoaded', channelLoad);
                 <p id="payModalAmount" class="text-2xl font-bold text-blue-700 dark:text-blue-300 mt-1 tabular-nums"></p>
             </div>
             <div id="payModalError" class="hidden p-2 bg-red-50 border border-red-200 text-red-700 text-[11px] rounded"></div>
-            <div>
-                <label class="block text-[11px] text-zinc-500 mb-1"><?= htmlspecialchars(__('services.order.payment.card_number')) ?></label>
-                <div id="pj_number" class="px-3 py-2 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 rounded-lg"></div>
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="block text-[11px] text-zinc-500 mb-1"><?= htmlspecialchars(__('services.order.payment.card_expiry')) ?></label>
-                    <div id="pj_expiry" class="px-3 py-2 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 rounded-lg"></div>
+
+            <?php if ($_hasSavedCard): ?>
+            <!-- 저장 카드 박스 -->
+            <div id="savedCardBox" class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-300 dark:border-emerald-700 rounded-lg p-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-base">💳</span>
+                    <div>
+                        <p class="text-xs font-bold text-emerald-800 dark:text-emerald-200"><?= htmlspecialchars(__('services.custom.saved_card_title')) ?></p>
+                        <?php if ($_savedCardBrand || $_savedCardLast4): ?>
+                        <p class="text-[10px] text-emerald-700 dark:text-emerald-300 font-mono">
+                            <?= htmlspecialchars(strtoupper($_savedCardBrand ?: 'CARD')) ?>
+                            <?php if ($_savedCardLast4): ?> · •••• <?= htmlspecialchars($_savedCardLast4) ?><?php endif; ?>
+                        </p>
+                        <?php else: ?>
+                        <p class="text-[10px] text-emerald-700 dark:text-emerald-300"><?= htmlspecialchars(__('services.custom.saved_card_desc')) ?></p>
+                        <?php endif; ?>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-[11px] text-zinc-500 mb-1"><?= htmlspecialchars(__('services.order.payment.card_cvc')) ?></label>
-                    <div id="pj_cvc" class="px-3 py-2 border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 rounded-lg"></div>
-                </div>
+                <button type="button" onclick="toggleNewCard(true)" class="text-[11px] text-blue-600 hover:underline whitespace-nowrap"><?= htmlspecialchars(__('services.custom.use_new_card')) ?></button>
             </div>
-            <p class="text-[10px] text-zinc-400 text-center"><?= htmlspecialchars(__('services.custom.pay_secure_hint')) ?></p>
+            <?php endif; ?>
+
+            <!-- 새 카드 입력 폼 -->
+            <div id="newCardForm" class="<?= $_hasSavedCard ? 'hidden' : '' ?> space-y-3">
+                <?php if ($_hasSavedCard): ?>
+                <div class="flex items-center justify-between">
+                    <p class="text-[11px] text-zinc-500"><?= htmlspecialchars(__('services.custom.new_card_title')) ?></p>
+                    <button type="button" onclick="toggleNewCard(false)" class="text-[10px] text-zinc-500 underline hover:text-zinc-700"><?= htmlspecialchars(__('services.custom.use_saved_card')) ?></button>
+                </div>
+                <?php endif; ?>
+                <div>
+                    <label class="block text-[11px] text-zinc-500 mb-1"><?= htmlspecialchars(__('services.order.payment.card_number')) ?></label>
+                    <div id="pj_number" class="px-3 py-2 border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 rounded-lg"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] text-zinc-500 mb-1"><?= htmlspecialchars(__('services.order.payment.card_expiry')) ?></label>
+                        <div id="pj_expiry" class="px-3 py-2 border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 rounded-lg"></div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-zinc-500 mb-1"><?= htmlspecialchars(__('services.order.payment.card_cvc')) ?></label>
+                        <div id="pj_cvc" class="px-3 py-2 border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 rounded-lg"></div>
+                    </div>
+                </div>
+                <p class="text-[10px] text-zinc-400 text-center"><?= htmlspecialchars(__('services.custom.pay_secure_hint')) ?></p>
+            </div>
         </div>
         <div class="px-6 py-4 border-t border-gray-200 dark:border-zinc-700 flex items-center justify-end gap-2">
             <button type="button" onclick="closePayModal()" class="px-4 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-700 rounded-lg"><?= htmlspecialchars(__('services.order.checkout.btn_cancel')) ?></button>

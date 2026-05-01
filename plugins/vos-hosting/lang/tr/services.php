@@ -1097,6 +1097,11 @@ return array (
     'delivery_notes' => 'Notlar',
     'delivery_security_hint' => 'İlk girişten sonra şifreyi hemen değiştirin.',
     'copied' => 'Kopyalandı.',
+    'saved_card_title' => 'Kayıtlı kartla öde',
+    'saved_card_desc' => 'Daha önce kayıtlı kart',
+    'use_new_card' => 'Başka kart kullan',
+    'use_saved_card' => 'Kayıtlı kartı kullan',
+    'new_card_title' => 'Yeni kart',
   ),
   'admin_custom' =>
   array (

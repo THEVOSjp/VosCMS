@@ -1252,6 +1252,11 @@ return array (
     'delivery_notes' => 'Notes',
     'delivery_security_hint' => 'Please change the password immediately after first login for security.',
     'copied' => 'Copied.',
+    'saved_card_title' => 'Pay with saved card',
+    'saved_card_desc' => 'Previously registered card',
+    'use_new_card' => 'Use a different card',
+    'use_saved_card' => 'Use saved card',
+    'new_card_title' => 'New card',
   ),
   'admin_custom' =>
   array (

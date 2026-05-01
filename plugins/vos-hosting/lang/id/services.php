@@ -1086,6 +1086,11 @@ return array (
     'delivery_notes' => 'Catatan',
     'delivery_security_hint' => 'Segera ubah kata sandi setelah login pertama.',
     'copied' => 'Disalin.',
+    'saved_card_title' => 'Bayar dengan kartu tersimpan',
+    'saved_card_desc' => 'Kartu yang telah didaftarkan',
+    'use_new_card' => 'Gunakan kartu lain',
+    'use_saved_card' => 'Gunakan kartu tersimpan',
+    'new_card_title' => 'Kartu baru',
   ),
   'admin_custom' =>
   array (

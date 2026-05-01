@@ -1114,6 +1114,11 @@ return array (
     'delivery_notes' => 'Hinweise',
     'delivery_security_hint' => 'Bitte Passwort nach erstem Login sofort ändern.',
     'copied' => 'Kopiert.',
+    'saved_card_title' => 'Mit gespeicherter Karte zahlen',
+    'saved_card_desc' => 'Zuvor registrierte Karte',
+    'use_new_card' => 'Andere Karte verwenden',
+    'use_saved_card' => 'Gespeicherte Karte',
+    'new_card_title' => 'Neue Karte',
   ),
   'admin_custom' =>
   array (

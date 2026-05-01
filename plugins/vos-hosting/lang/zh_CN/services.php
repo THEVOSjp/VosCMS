@@ -1114,6 +1114,11 @@ return array (
     'delivery_notes' => '说明',
     'delivery_security_hint' => '为安全起见,首次登录后请立即更改密码。',
     'copied' => '已复制。',
+    'saved_card_title' => '使用已保存的卡支付',
+    'saved_card_desc' => '之前注册的卡',
+    'use_new_card' => '使用其他卡',
+    'use_saved_card' => '使用已保存的卡',
+    'new_card_title' => '新卡',
   ),
   'admin_custom' =>
   array (

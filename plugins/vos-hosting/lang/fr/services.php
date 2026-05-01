@@ -1111,6 +1111,11 @@ return array (
     'delivery_notes' => 'Notes',
     'delivery_security_hint' => 'Changez le mot de passe après la première connexion.',
     'copied' => 'Copié.',
+    'saved_card_title' => 'Payer avec carte enregistrée',
+    'saved_card_desc' => 'Carte précédemment enregistrée',
+    'use_new_card' => 'Utiliser autre carte',
+    'use_saved_card' => 'Carte enregistrée',
+    'new_card_title' => 'Nouvelle carte',
   ),
   'admin_custom' =>
   array (

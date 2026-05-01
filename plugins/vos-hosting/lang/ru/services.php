@@ -1114,6 +1114,11 @@ return array (
     'delivery_notes' => 'Примечания',
     'delivery_security_hint' => 'Смените пароль после первого входа.',
     'copied' => 'Скопировано.',
+    'saved_card_title' => 'Оплатить сохранённой картой',
+    'saved_card_desc' => 'Ранее зарегистрированная карта',
+    'use_new_card' => 'Другая карта',
+    'use_saved_card' => 'Сохранённая карта',
+    'new_card_title' => 'Новая карта',
   ),
   'admin_custom' =>
   array (

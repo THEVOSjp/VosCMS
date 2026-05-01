@@ -280,10 +280,13 @@ switch ($action) {
         }
         unset($_q);
 
+        // 저장 카드 여부 플래그 (PAY.JP 내부 ID 노출 안 하고 boolean 만)
+        $project['has_saved_card'] = !empty($project['payment_customer_id']) ? true : false;
         // admin 만 노출되는 필드 마스킹
         if (!$isAdmin) {
             unset($project['admin_note']);
             unset($project['assigned_admin_id']);
+            unset($project['payment_customer_id']);
         }
 
         echo json_encode(['success' => true, 'project' => $project, 'quotes' => $quotes, 'is_admin' => $isAdmin], JSON_UNESCAPED_UNICODE);
@@ -651,6 +654,7 @@ switch ($action) {
         $projectId = (int)($input['project_id'] ?? 0);
         $paymentScheduleId = (int)($input['payment_id'] ?? 0);
         $cardToken = trim((string)($input['card_token'] ?? ''));
+        $useSavedCard = !empty($input['use_saved_card']);
         if (!$projectId || !$paymentScheduleId) {
             echo json_encode(['success' => false, 'message' => 'invalid params']); exit;
         }
@@ -684,30 +688,51 @@ switch ($action) {
         $amount = (int)round((float)$sched['amount']);
         $currency = $sched['currency'] ?: 'JPY';
 
+        // 저장된 customer_id 조회 — 프로젝트에 이미 있거나, 사용자의 호스팅 sub 에서 fallback
+        $savedCustomerId = trim((string)($project['payment_customer_id'] ?? ''));
+        if ($savedCustomerId === '') {
+            $hSt = $pdo->prepare("SELECT payment_customer_id FROM {$prefix}subscriptions WHERE user_id = ? AND payment_customer_id IS NOT NULL AND payment_customer_id != '' ORDER BY id DESC LIMIT 1");
+            $hSt->execute([$project['user_id']]);
+            $savedCustomerId = (string)$hSt->fetchColumn();
+        }
+
         // PAY.JP 결제
-        if ($cardToken === '') {
+        if ($cardToken === '' && (!$useSavedCard || $savedCustomerId === '')) {
             echo json_encode(['success' => false, 'message' => '카드 정보가 필요합니다.']); exit;
         }
+
         require_once BASE_PATH . '/rzxlib/Modules/Payment/PaymentManager.php';
-        $chargeId = null; $gwName = null;
+        $chargeId = null; $gwName = null; $usedCustomerId = null; $newCustomer = false;
+        $cardBrand = null; $cardLast4 = null;
         try {
             $payMgr = new \RzxLib\Modules\Payment\PaymentManager($pdo, $prefix);
             $gateway = $payMgr->gateway();
             $gwName = $payMgr->getGatewayName();
-            $emSt = $pdo->prepare("SELECT email FROM {$prefix}users WHERE id = ?");
-            $emSt->execute([$project['user_id']]);
-            $userEmail = $emSt->fetchColumn() ?: '';
-            $custMeta = ['custom_project' => $project['project_number']];
-            $cr = $gateway->createCustomer($cardToken, $userEmail, $custMeta);
-            if (!($cr['success'] ?? false)) {
-                echo json_encode(['success' => false, 'message' => '카드 등록 실패: ' . ($cr['message'] ?? ''), 'card_error' => true]); exit;
+
+            if ($useSavedCard && $savedCustomerId !== '') {
+                // 저장 카드 사용 — token 없이 그대로 charge
+                $usedCustomerId = $savedCustomerId;
+            } else {
+                // 새 카드 token → customer 등록
+                $emSt = $pdo->prepare("SELECT email FROM {$prefix}users WHERE id = ?");
+                $emSt->execute([$project['user_id']]);
+                $userEmail = $emSt->fetchColumn() ?: '';
+                $custMeta = ['custom_project' => $project['project_number']];
+                $cr = $gateway->createCustomer($cardToken, $userEmail, $custMeta);
+                if (!($cr['success'] ?? false)) {
+                    echo json_encode(['success' => false, 'message' => '카드 등록 실패: ' . ($cr['message'] ?? ''), 'card_error' => true]); exit;
+                }
+                $usedCustomerId = $cr['customer_id'];
+                $newCustomer = true;
+                $cardBrand = $cr['card']['brand'] ?? null;
+                $cardLast4 = $cr['card']['last4'] ?? null;
             }
-            $customerId = $cr['customer_id'];
+
             $desc = "VosCMS Custom Project {$project['project_number']} — {$sched['label']}";
-            $payResult = $gateway->chargeCustomer($customerId, $amount, strtolower($currency), $desc);
+            $payResult = $gateway->chargeCustomer($usedCustomerId, $amount, strtolower($currency), $desc);
             if (!$payResult->isSuccessful()) {
                 $code = (string)($payResult->failureCode ?? '');
-                try { $gateway->deleteCustomer($customerId); } catch (\Throwable $de) {}
+                if ($newCustomer && $usedCustomerId) { try { $gateway->deleteCustomer($usedCustomerId); } catch (\Throwable $de) {} }
                 echo json_encode(['success' => false, 'message' => '결제 실패: ' . $code, 'card_error' => true]); exit;
             }
             $chargeId = $payResult->transactionId;
@@ -742,6 +767,16 @@ switch ($action) {
             $paymentRowId = (int)$pdo->lastInsertId();
             $pdo->prepare("UPDATE {$prefix}custom_project_payments SET status = 'paid', paid_at = NOW(), payment_id = ?, payment_key = ? WHERE id = ?")
                 ->execute([$paymentRowId, $chargeId, $paymentScheduleId]);
+
+            // 신규 customer 인 경우 프로젝트에 저장 (다음 결제 시 재사용)
+            if ($newCustomer && $usedCustomerId) {
+                $pdo->prepare("UPDATE {$prefix}custom_projects SET payment_customer_id = ?, payment_card_brand = ?, payment_card_last4 = ? WHERE id = ?")
+                    ->execute([$usedCustomerId, $cardBrand, $cardLast4, $projectId]);
+            } elseif (!$project['payment_customer_id'] && $usedCustomerId) {
+                // 호스팅 sub fallback 으로 사용한 경우에도 프로젝트에 기록 (다음 결제는 이걸로)
+                $pdo->prepare("UPDATE {$prefix}custom_projects SET payment_customer_id = ? WHERE id = ?")
+                    ->execute([$usedCustomerId, $projectId]);
+            }
             $pdo->commit();
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();
