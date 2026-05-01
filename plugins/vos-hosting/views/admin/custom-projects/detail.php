@@ -92,7 +92,7 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                 </p>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
-                <select id="statusSelect" class="px-3 py-1.5 text-xs font-medium border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg">
+                <select id="statusSelect" class="px-3 py-1.5 text-xs font-medium border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg">
                     <?php foreach ($statusOpts as $sk => $sv): ?>
                     <option value="<?= $sk ?>" <?= $project['status'] === $sk ? 'selected' : '' ?>><?= htmlspecialchars($sv) ?></option>
                     <?php endforeach; ?>
@@ -314,15 +314,15 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-gray-200 dark:border-zinc-700">
                 <div>
                     <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_custom.qe_tax_rate')) ?></label>
-                    <input type="number" id="qe_tax_rate" value="10" min="0" max="100" step="0.1" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg">
+                    <input type="number" id="qe_tax_rate" value="10" min="0" max="100" step="0.1" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg">
                 </div>
                 <div>
                     <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_custom.qe_valid_until')) ?></label>
-                    <input type="date" id="qe_valid_until" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg">
+                    <input type="date" id="qe_valid_until" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg">
                 </div>
                 <div>
                     <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_custom.qe_currency')) ?></label>
-                    <select id="qe_currency" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg">
+                    <select id="qe_currency" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg">
                         <option value="JPY">JPY (¥)</option>
                         <option value="USD">USD ($)</option>
                         <option value="KRW">KRW (₩)</option>
@@ -331,7 +331,7 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
             </div>
             <div>
                 <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_custom.qe_notes')) ?></label>
-                <textarea id="qe_notes" rows="3" class="w-full px-3 py-2 text-xs border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg" placeholder="<?= htmlspecialchars(__('services.admin_custom.qe_notes_ph')) ?>"></textarea>
+                <textarea id="qe_notes" rows="3" class="w-full px-3 py-2 text-xs border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg" placeholder="<?= htmlspecialchars(__('services.admin_custom.qe_notes_ph')) ?>"></textarea>
             </div>
 
             <!-- 결제 일정 -->
@@ -460,12 +460,12 @@ function renderQuoteItems() {
     var html = '';
     qeItems.forEach(function(it, idx) {
         html += '<div class="grid grid-cols-12 gap-2 items-start">'
-              + '<input type="text" class="col-span-5 px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded" placeholder="<?= htmlspecialchars(__('services.admin_custom.qe_item_label')) ?>" value="' + escAttr(it.label) + '" oninput="qeItems[' + idx + '].label=this.value">'
-              + '<input type="number" min="0" step="0.01" class="col-span-2 px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded" placeholder="<?= htmlspecialchars(__('services.custom.q_col_qty')) ?>" value="' + (parseFloat(it.qty)||0) + '" oninput="qeItems[' + idx + '].qty=parseFloat(this.value)||0; recalcQuote()">'
-              + '<input type="number" min="0" step="1" class="col-span-3 px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded" placeholder="<?= htmlspecialchars(__('services.custom.q_col_unit')) ?>" value="' + (parseFloat(it.unit_price)||0) + '" oninput="qeItems[' + idx + '].unit_price=parseFloat(this.value)||0; recalcQuote()">'
+              + '<input type="text" class="col-span-5 px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded" placeholder="<?= htmlspecialchars(__('services.admin_custom.qe_item_label')) ?>" value="' + escAttr(it.label) + '" oninput="qeItems[' + idx + '].label=this.value">'
+              + '<input type="number" min="0" step="0.01" class="col-span-2 px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded" placeholder="<?= htmlspecialchars(__('services.custom.q_col_qty')) ?>" value="' + (parseFloat(it.qty)||0) + '" oninput="qeItems[' + idx + '].qty=parseFloat(this.value)||0; recalcQuote()">'
+              + '<input type="number" min="0" step="1" class="col-span-3 px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded" placeholder="<?= htmlspecialchars(__('services.custom.q_col_unit')) ?>" value="' + (parseFloat(it.unit_price)||0) + '" oninput="qeItems[' + idx + '].unit_price=parseFloat(this.value)||0; recalcQuote()">'
               + '<div class="col-span-1 text-xs text-right tabular-nums pt-1.5">¥' + Math.round(((it.qty||0)*(it.unit_price||0))).toLocaleString() + '</div>'
               + '<button type="button" onclick="removeQuoteItem(' + idx + ')" class="col-span-1 text-red-500 hover:bg-red-50 rounded text-xs py-1.5">×</button>'
-              + '<input type="text" class="col-span-12 px-2 py-1 text-[11px] border border-gray-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white rounded" placeholder="<?= htmlspecialchars(__('services.admin_custom.qe_item_note_ph')) ?>" value="' + escAttr(it.note) + '" oninput="qeItems[' + idx + '].note=this.value">'
+              + '<input type="text" class="col-span-12 px-2 py-1 text-[11px] border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded" placeholder="<?= htmlspecialchars(__('services.admin_custom.qe_item_note_ph')) ?>" value="' + escAttr(it.note) + '" oninput="qeItems[' + idx + '].note=this.value">'
               + '</div>';
     });
     document.getElementById('qe_items').innerHTML = html;
@@ -492,11 +492,11 @@ function renderPayments() {
         var lockMark = locked ? '<span class="text-[10px] px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded ml-1">PAID</span>' : '';
         html += '<div class="grid grid-cols-12 gap-2 items-start">'
               + '<div class="col-span-4">'
-              + '<input type="text" ' + (locked?'disabled':'') + ' class="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded disabled:bg-gray-100" placeholder="<?= htmlspecialchars(__('services.admin_custom.qe_payment_label_ph')) ?>" value="' + escAttr(p.label) + '" oninput="qePayments[' + idx + '].label=this.value">'
+              + '<input type="text" ' + (locked?'disabled':'') + ' class="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded disabled:bg-gray-100" placeholder="<?= htmlspecialchars(__('services.admin_custom.qe_payment_label_ph')) ?>" value="' + escAttr(p.label) + '" oninput="qePayments[' + idx + '].label=this.value">'
               + (lockMark ? '<div class="mt-0.5">' + lockMark + '</div>' : '')
               + '</div>'
-              + '<input type="number" min="0" step="1" ' + (locked?'disabled':'') + ' class="col-span-3 px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded disabled:bg-gray-100" placeholder="<?= htmlspecialchars(__('services.custom.q_col_amount')) ?>" value="' + (parseFloat(p.amount)||0) + '" oninput="qePayments[' + idx + '].amount=parseFloat(this.value)||0; recalcPaymentSum()">'
-              + '<input type="date" ' + (locked?'disabled':'') + ' class="col-span-3 px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded disabled:bg-gray-100" value="' + escAttr(p.due_date) + '" oninput="qePayments[' + idx + '].due_date=this.value">'
+              + '<input type="number" min="0" step="1" ' + (locked?'disabled':'') + ' class="col-span-3 px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded disabled:bg-gray-100" placeholder="<?= htmlspecialchars(__('services.custom.q_col_amount')) ?>" value="' + (parseFloat(p.amount)||0) + '" oninput="qePayments[' + idx + '].amount=parseFloat(this.value)||0; recalcPaymentSum()">'
+              + '<input type="date" ' + (locked?'disabled':'') + ' class="col-span-3 px-2 py-1.5 text-xs border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded disabled:bg-gray-100" value="' + escAttr(p.due_date) + '" oninput="qePayments[' + idx + '].due_date=this.value">'
               + (locked
                  ? '<div class="col-span-2"></div>'
                  : '<button type="button" onclick="removePayment(' + idx + ')" class="col-span-2 text-red-500 hover:bg-red-50 rounded text-xs py-1.5">×</button>')
