@@ -2449,6 +2449,266 @@ switch ($action) {
         echo json_encode(['success' => false, 'message' => '준비 중인 기능입니다.']);
         break;
 
+    // ============================================================
+    // admin_search_user — 관리자: 이메일로 사용자 검색
+    // ============================================================
+    case 'admin_search_user': {
+        $rSt = $pdo->prepare("SELECT role FROM {$prefix}users WHERE id = ?");
+        $rSt->execute([$userId]);
+        if (!in_array($rSt->fetchColumn(), ['admin','supervisor'], true)) {
+            echo json_encode(['success' => false, 'message' => '관리자 권한 필요']); exit;
+        }
+        $email = trim((string)($input['email'] ?? ''));
+        if ($email === '') { echo json_encode(['success' => false, 'message' => 'email required']); exit; }
+        $st = $pdo->prepare("SELECT id, email, name FROM {$prefix}users WHERE email LIKE ? ORDER BY id DESC LIMIT 10");
+        $st->execute(['%' . $email . '%']);
+        $users = $st->fetchAll(PDO::FETCH_ASSOC);
+        // name 복호화
+        require_once BASE_PATH . '/rzxlib/Core/Helpers/Encryption.php';
+        foreach ($users as &$u) {
+            if ($u['name']) $u['name'] = decrypt($u['name']) ?: $u['name'];
+        }
+        unset($u);
+        echo json_encode(['success' => true, 'users' => $users], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // ============================================================
+    // admin_create_order — 관리자: 호스팅 신청서 대리 등록
+    //   결제 방식: cash / card / free
+    // ============================================================
+    case 'admin_create_order': {
+        $rSt = $pdo->prepare("SELECT role FROM {$prefix}users WHERE id = ?");
+        $rSt->execute([$userId]);
+        if (!in_array($rSt->fetchColumn(), ['admin','supervisor'], true)) {
+            echo json_encode(['success' => false, 'message' => '관리자 권한 필요']); exit;
+        }
+
+        $cust = is_array($input['customer'] ?? null) ? $input['customer'] : [];
+        $planId = trim((string)($input['hosting_plan'] ?? ''));
+        $months = max(1, min(36, (int)($input['contract_months'] ?? 12)));
+        $domainOption = (string)($input['domain_option'] ?? 'free');
+        $domainName = trim((string)($input['domain_name'] ?? ''));
+        $addonsInput = is_array($input['addons'] ?? null) ? $input['addons'] : [];
+        $amountOverride = isset($input['amount_override']) ? (int)$input['amount_override'] : null;
+        $pay = is_array($input['payment'] ?? null) ? $input['payment'] : [];
+
+        if ($planId === '') { echo json_encode(['success' => false, 'message' => '호스팅 플랜을 선택해주세요.']); exit; }
+        if (!in_array($domainOption, ['free','new','existing'], true)) $domainOption = 'free';
+        if (($domainOption === 'new' || $domainOption === 'existing') && $domainName === '') {
+            echo json_encode(['success' => false, 'message' => '도메인명을 입력해주세요.']); exit;
+        }
+        $payMethod = (string)($pay['method'] ?? '');
+        if (!in_array($payMethod, ['cash','card','free'], true)) {
+            echo json_encode(['success' => false, 'message' => '결제 방식을 선택해주세요.']); exit;
+        }
+
+        require_once BASE_PATH . '/rzxlib/Core/Helpers/Encryption.php';
+
+        // 1. 사용자 처리 — 기존 또는 신규
+        $custUserId = null;
+        if (($cust['mode'] ?? '') === 'existing') {
+            $custUserId = (string)($cust['user_id'] ?? '');
+            if ($custUserId === '') { echo json_encode(['success' => false, 'message' => '고객을 선택해주세요.']); exit; }
+            $vSt = $pdo->prepare("SELECT id FROM {$prefix}users WHERE id = ?");
+            $vSt->execute([$custUserId]);
+            if (!$vSt->fetchColumn()) { echo json_encode(['success' => false, 'message' => '고객을 찾을 수 없습니다.']); exit; }
+        } else {
+            $newEmail = trim((string)($cust['email'] ?? ''));
+            $newName = trim((string)($cust['name'] ?? ''));
+            if ($newEmail === '' || $newName === '') {
+                echo json_encode(['success' => false, 'message' => '이메일과 이름은 필수입니다.']); exit;
+            }
+            // 이메일 중복 체크
+            $eSt = $pdo->prepare("SELECT id FROM {$prefix}users WHERE email = ?");
+            $eSt->execute([$newEmail]);
+            $existId = $eSt->fetchColumn();
+            if ($existId) {
+                $custUserId = (string)$existId;
+            } else {
+                // 신규 사용자 생성
+                $custUserId = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+                    mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000,
+                    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+                );
+                $tempPwd = bin2hex(random_bytes(8));
+                $pwdHash = password_hash($tempPwd, PASSWORD_BCRYPT);
+                $encName = function_exists('encrypt') ? encrypt($newName) : $newName;
+                $encPhone = function_exists('encrypt') && !empty($cust['phone']) ? encrypt($cust['phone']) : (string)($cust['phone'] ?? '');
+                $pdo->prepare("INSERT INTO {$prefix}users (id, email, name, phone, password, role, created_at) VALUES (?, ?, ?, ?, ?, 'user', NOW())")
+                    ->execute([$custUserId, $newEmail, $encName, $encPhone, $pwdHash]);
+            }
+        }
+
+        // 2. 가격 계산
+        $sSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'service_hosting_plans' LIMIT 1");
+        $sSt->execute();
+        $plans = json_decode($sSt->fetchColumn() ?: '[]', true) ?: [];
+        $plan = null;
+        foreach ($plans as $p) { if (($p['_id'] ?? '') === $planId) { $plan = $p; break; } }
+        if (!$plan) { echo json_encode(['success' => false, 'message' => '플랜을 찾을 수 없습니다.']); exit; }
+        $planPrice = (int)($plan['price'] ?? 0);
+
+        $subtotal = $planPrice * $months;
+        foreach ($addonsInput as $a) {
+            $ap = (int)($a['price'] ?? 0);
+            $subtotal += !empty($a['one_time']) ? $ap : ($ap * $months);
+        }
+        if ($amountOverride !== null && $amountOverride >= 0) $subtotal = $amountOverride;
+        $taxAmt = (int)round($subtotal * 0.10);
+        $totalAmt = $subtotal + $taxAmt;
+
+        // 무료 결제는 ¥0 강제
+        if ($payMethod === 'free') {
+            $subtotal = 0; $taxAmt = 0; $totalAmt = 0;
+        }
+
+        // 3. 결제 처리 (카드만 외부 호출)
+        $chargeId = null; $gwName = null; $payCustomerId = null;
+        if ($payMethod === 'card' && $totalAmt > 0) {
+            $cardToken = trim((string)($pay['card_token'] ?? ''));
+            if ($cardToken === '') { echo json_encode(['success' => false, 'message' => 'card token required']); exit; }
+            require_once BASE_PATH . '/rzxlib/Modules/Payment/PaymentManager.php';
+            try {
+                $payMgr = new \RzxLib\Modules\Payment\PaymentManager($pdo, $prefix);
+                $gateway = $payMgr->gateway();
+                $gwName = $payMgr->getGatewayName();
+                $emSt = $pdo->prepare("SELECT email FROM {$prefix}users WHERE id = ?");
+                $emSt->execute([$custUserId]);
+                $userEmail = $emSt->fetchColumn() ?: '';
+                $cr = $gateway->createCustomer($cardToken, $userEmail, ['admin_create_order' => 1]);
+                if (!($cr['success'] ?? false)) {
+                    echo json_encode(['success' => false, 'message' => '카드 등록 실패: ' . ($cr['message'] ?? '')]); exit;
+                }
+                $payCustomerId = $cr['customer_id'];
+                $payResult = $gateway->chargeCustomer($payCustomerId, $totalAmt, 'jpy', "VosCMS Hosting (admin) — plan {$planId}");
+                if (!$payResult->isSuccessful()) {
+                    try { $gateway->deleteCustomer($payCustomerId); } catch (\Throwable $e) {}
+                    echo json_encode(['success' => false, 'message' => '결제 실패: ' . ($payResult->failureCode ?? '')]); exit;
+                }
+                $chargeId = $payResult->transactionId;
+            } catch (\Throwable $e) {
+                error_log('[admin_create_order] gateway: ' . $e->getMessage());
+                echo json_encode(['success' => false, 'message' => '결제 처리 오류: ' . $e->getMessage()]); exit;
+            }
+        }
+
+        // 4. DB INSERT — orders + subscriptions + payments + order_logs
+        try {
+            $pdo->beginTransaction();
+
+            // order_number 생성
+            $year = date('Y');
+            $oNumSt = $pdo->prepare("SELECT order_number FROM {$prefix}orders WHERE order_number LIKE ? ORDER BY id DESC LIMIT 1");
+            $oNumSt->execute(['ORD-' . $year . '-%']);
+            $lastNum = (string)$oNumSt->fetchColumn();
+            $nextN = 1;
+            if ($lastNum && preg_match('/^ORD-\d{4}-(\d+)$/', $lastNum, $m)) $nextN = (int)$m[1] + 1;
+            $orderNumber = sprintf('ORD-%s-%04d', $year, $nextN);
+
+            $startedAt = date('Y-m-d H:i:s');
+            $expiresAt = date('Y-m-d H:i:s', strtotime("+{$months} months"));
+
+            $methodLabel = $payMethod === 'card' ? 'card' : ($payMethod === 'cash' ? 'cash' : 'free');
+            $orderStatus = 'paid';  // 관리자 등록은 즉시 paid 처리
+            if ($payMethod === 'free') $orderStatus = 'free';
+
+            $pdo->prepare("INSERT INTO {$prefix}orders
+                (order_number, user_id, status, hosting_capacity, domain, domain_option, contract_months, total, currency, payment_method, started_at, expires_at, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'JPY', ?, ?, ?, NOW())")
+                ->execute([
+                    $orderNumber, $custUserId, $orderStatus,
+                    $plan['capacity'] ?? '',
+                    $domainName ?: ($domainOption === 'free' ? '' : ''),
+                    $domainOption, $months, $totalAmt,
+                    $methodLabel, $startedAt, $expiresAt,
+                ]);
+            $orderId = (int)$pdo->lastInsertId();
+
+            // 호스팅 subscription
+            $subMeta = ['capacity' => $plan['capacity'] ?? '', 'admin_created' => 1];
+            $pdo->prepare("INSERT INTO {$prefix}subscriptions
+                (order_id, user_id, type, service_class, label, unit_price, quantity, billing_amount, billing_cycle, billing_months,
+                 currency, started_at, billing_start, expires_at, status, payment_customer_id, payment_gateway, metadata)
+                VALUES (?, ?, 'hosting', 'recurring', ?, ?, 1, ?, 'monthly', ?, 'JPY', ?, ?, ?, 'active', ?, ?, ?)")
+                ->execute([
+                    $orderId, $custUserId,
+                    ($plan['label'] ?? '') . ' ' . ($plan['capacity'] ?? ''),
+                    $planPrice, $planPrice * $months, $months,
+                    $startedAt, $startedAt, $expiresAt,
+                    $payCustomerId, $gwName,
+                    json_encode($subMeta, JSON_UNESCAPED_UNICODE),
+                ]);
+
+            // 부가서비스 subscription
+            foreach ($addonsInput as $a) {
+                $aPrice = (int)($a['price'] ?? 0);
+                $aOneTime = !empty($a['one_time']);
+                $billing = $aOneTime ? $aPrice : ($aPrice * $months);
+                $pdo->prepare("INSERT INTO {$prefix}subscriptions
+                    (order_id, user_id, type, service_class, label, unit_price, quantity, billing_amount, billing_cycle, billing_months,
+                     currency, started_at, expires_at, status, metadata)
+                    VALUES (?, ?, 'addon', ?, ?, ?, 1, ?, ?, ?, 'JPY', ?, ?, 'active', ?)")
+                    ->execute([
+                        $orderId, $custUserId,
+                        $aOneTime ? 'one_time' : 'recurring',
+                        (string)($a['label'] ?? ''),
+                        $aPrice, $billing,
+                        $aOneTime ? 'one_time' : 'monthly', $aOneTime ? null : $months,
+                        $startedAt, $expiresAt,
+                        json_encode(['admin_created' => 1, 'addon_id' => $a['id'] ?? ''], JSON_UNESCAPED_UNICODE),
+                    ]);
+            }
+
+            // payment 전표 (free 가 아닐 때만)
+            if ($payMethod !== 'free' && $totalAmt > 0) {
+                $payUuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+                    mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000,
+                    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+                );
+                $payKey = $chargeId ?: ('manual_' . $payUuid);
+                $pdo->prepare("INSERT INTO {$prefix}payments
+                    (uuid, user_id, order_id, payment_key, gateway, method, amount, status, paid_at, metadata, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 'paid', NOW(), ?, NOW(), NOW())")
+                    ->execute([
+                        $payUuid, $custUserId, $orderNumber, $payKey,
+                        $gwName ?: 'manual', $methodLabel, $totalAmt,
+                        json_encode([
+                            'source' => 'admin_create_order',
+                            'plan' => $planId,
+                            'months' => $months,
+                            'cash_received' => $payMethod === 'cash' ? ($pay['received'] ?? null) : null,
+                            'admin_id' => $userId,
+                        ], JSON_UNESCAPED_UNICODE),
+                    ]);
+            }
+
+            // order_logs
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'admin_created', ?, 'admin', ?)")
+                ->execute([
+                    $orderId,
+                    json_encode([
+                        'method' => $payMethod,
+                        'amount' => $totalAmt,
+                        'reason' => $pay['reason'] ?? null,
+                        'cash_received' => $pay['received'] ?? null,
+                    ], JSON_UNESCAPED_UNICODE),
+                    $userId,
+                ]);
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            error_log('[admin_create_order] DB: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'DB error: ' . $e->getMessage()]); exit;
+        }
+
+        echo json_encode(['success' => true, 'order_id' => $orderId, 'order_number' => $orderNumber]);
+        exit;
+    }
+
     default:
         echo json_encode(['success' => false, 'message' => '알 수 없는 액션입니다.']);
         break;

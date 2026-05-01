@@ -114,7 +114,12 @@ $adminRoute = trim($adminRoute, '/') ?: 'dashboard';
 
     // 서비스 주문 상세 (vos-hosting 플러그인 — 정규식 라우트만 코어가 처리)
     //   service-orders 단순 라우트는 PluginManager (plugin.json routes.admin) 가 자동 매칭
-    if (preg_match('#^service-orders/([a-zA-Z0-9_-]+)$#', $adminRoute, $m)) {
+    // 신청서 작성 (관리자 대리 등록) — service-orders/{order_number} 보다 먼저 매칭
+    if ($adminRoute === 'service-orders/new') {
+        $_pf = BASE_PATH . '/plugins/vos-hosting/views/admin/service-orders/new.php';
+        if (file_exists($_pf)) { include $_pf; }
+        else { http_response_code(404); include BASE_PATH . '/resources/views/admin/dashboard.php'; }
+    } elseif (preg_match('#^service-orders/([a-zA-Z0-9_-]+)$#', $adminRoute, $m)) {
         $adminOrderNumber = $m[1];
         $_pf = BASE_PATH . '/plugins/vos-hosting/views/admin/service-orders/detail.php';
         if (file_exists($_pf)) { include $_pf; }

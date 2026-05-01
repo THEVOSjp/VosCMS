@@ -173,11 +173,11 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
 <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 p-4 mb-6">
     <div class="flex items-center justify-between mb-3">
         <p class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"><?= htmlspecialchars(__('services.admin_orders.filter_section')) ?></p>
-        <button type="button" onclick="alert('<?= htmlspecialchars(__('services.admin_orders.btn_create_order_todo'), ENT_QUOTES) ?>')"
+        <a href="<?= $adminUrl ?>/service-orders/new"
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             <?= htmlspecialchars(__('services.admin_orders.btn_create_order')) ?>
-        </button>
+        </a>
     </div>
     <div class="flex flex-wrap gap-2">
         <a href="<?= $qp(['status'=>'','expiry'=>'','page'=>'']) ?>" class="px-3 py-1.5 text-xs rounded-lg border transition <?= !$filterStatus && !$filterExpiry ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 border-gray-200 dark:border-zinc-600 hover:border-blue-400' ?>">
