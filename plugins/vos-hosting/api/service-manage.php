@@ -589,6 +589,286 @@ switch ($action) {
         }
         exit;
 
+    // ===== 1:1 상담 — 티켓 목록 조회 (사용자: 본인 / 관리자: 모두 또는 특정 유저) =====
+    case 'support_list_tickets':
+        $isAdmin = false;
+        $rSt = $pdo->prepare("SELECT role FROM {$prefix}users WHERE id = ?");
+        $rSt->execute([$userId]);
+        $isAdmin = in_array($rSt->fetchColumn(), ['admin','supervisor'], true);
+
+        $page = max(1, (int)($input['page'] ?? 1));
+        $perPage = max(1, min(50, (int)($input['per_page'] ?? 5)));
+        $offset = ($page - 1) * $perPage;
+        $hostSubId = (int)($input['host_subscription_id'] ?? 0);
+        $statusFilter = (string)($input['status'] ?? '');
+
+        $where = [];
+        $params = [];
+        if (!$isAdmin) {
+            $where[] = 't.user_id = ?';
+            $params[] = $userId;
+        }
+        if ($hostSubId) {
+            $where[] = 't.host_subscription_id = ?';
+            $params[] = $hostSubId;
+        }
+        if (in_array($statusFilter, ['open','answered','closed'], true)) {
+            $where[] = 't.status = ?';
+            $params[] = $statusFilter;
+        }
+        $whereSQL = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+
+        $cntSt = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}support_tickets t $whereSQL");
+        $cntSt->execute($params);
+        $total = (int)$cntSt->fetchColumn();
+
+        $listSt = $pdo->prepare("SELECT t.*, u.email AS user_email, u.name AS user_name
+            FROM {$prefix}support_tickets t
+            LEFT JOIN {$prefix}users u ON t.user_id = u.id
+            $whereSQL
+            ORDER BY t.last_message_at DESC, t.id DESC LIMIT $perPage OFFSET $offset");
+        $listSt->execute($params);
+        $tickets = $listSt->fetchAll(PDO::FETCH_ASSOC);
+
+        echo json_encode([
+            'success' => true,
+            'tickets' => $tickets,
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+            'is_admin' => $isAdmin,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+
+    // ===== 1:1 상담 — 티켓 + 메시지 thread 조회 =====
+    case 'support_get_ticket':
+        $ticketId = (int)($input['ticket_id'] ?? 0);
+        if (!$ticketId) { echo json_encode(['success' => false, 'message' => 'ticket_id required']); exit; }
+
+        $rSt = $pdo->prepare("SELECT role FROM {$prefix}users WHERE id = ?");
+        $rSt->execute([$userId]);
+        $isAdmin = in_array($rSt->fetchColumn(), ['admin','supervisor'], true);
+
+        $tSt = $pdo->prepare("SELECT t.*, u.email AS user_email, u.name AS user_name FROM {$prefix}support_tickets t LEFT JOIN {$prefix}users u ON t.user_id = u.id WHERE t.id = ?");
+        $tSt->execute([$ticketId]);
+        $ticket = $tSt->fetch(PDO::FETCH_ASSOC);
+        if (!$ticket) { echo json_encode(['success' => false, 'message' => 'ticket not found']); exit; }
+        if (!$isAdmin && $ticket['user_id'] !== $userId) {
+            echo json_encode(['success' => false, 'message' => 'permission denied']);
+            exit;
+        }
+
+        $mSt = $pdo->prepare("SELECT m.*, u.email AS sender_email, u.name AS sender_name FROM {$prefix}support_messages m LEFT JOIN {$prefix}users u ON m.sender_user_id = u.id WHERE m.ticket_id = ? ORDER BY m.created_at ASC, m.id ASC");
+        $mSt->execute([$ticketId]);
+        $messages = $mSt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 본인이 읽으면 unread 플래그 끔
+        if ($isAdmin && $ticket['unread_by_admin']) {
+            $pdo->prepare("UPDATE {$prefix}support_tickets SET unread_by_admin = 0 WHERE id = ?")->execute([$ticketId]);
+        } elseif (!$isAdmin && $ticket['unread_by_user']) {
+            $pdo->prepare("UPDATE {$prefix}support_tickets SET unread_by_user = 0 WHERE id = ?")->execute([$ticketId]);
+        }
+
+        echo json_encode([
+            'success' => true,
+            'ticket' => $ticket,
+            'messages' => $messages,
+            'is_admin' => $isAdmin,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+
+    // ===== 1:1 상담 — 새 티켓 생성 (사용자) =====
+    case 'support_create_ticket':
+        $hostSubId = (int)($input['host_subscription_id'] ?? 0);
+        $addonSubId = (int)($input['addon_subscription_id'] ?? 0);
+        $title = trim((string)($input['title'] ?? ''));
+        $body = trim((string)($input['body'] ?? ''));
+        if ($title === '' || $body === '') {
+            echo json_encode(['success' => false, 'message' => 'title + body required']);
+            exit;
+        }
+        if (mb_strlen($title) > 200) $title = mb_substr($title, 0, 200);
+
+        // 호스팅 sub 권한 검증 (있을 때)
+        if ($hostSubId) {
+            $hSub = getOwnedSubscription($pdo, $prefix, $hostSubId, $userId);
+            if (!$hSub) { echo json_encode(['success' => false, 'message' => 'hosting sub access denied']); exit; }
+        }
+        // 부가서비스 sub 권한 (있을 때)
+        if ($addonSubId) {
+            $aSub = getOwnedSubscription($pdo, $prefix, $addonSubId, $userId);
+            if (!$aSub) { echo json_encode(['success' => false, 'message' => 'addon sub access denied']); exit; }
+        }
+
+        try {
+            $pdo->beginTransaction();
+            $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+                mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000,
+                mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+            );
+            $now = date('Y-m-d H:i:s');
+            $tIns = $pdo->prepare("INSERT INTO {$prefix}support_tickets
+                (uuid, user_id, host_subscription_id, addon_subscription_id, title, status, last_message_at, last_message_by, unread_by_admin)
+                VALUES (?, ?, ?, ?, ?, 'open', ?, 'user', 1)");
+            $tIns->execute([
+                $uuid, $userId,
+                $hostSubId ?: null,
+                $addonSubId ?: null,
+                $title,
+                $now,
+            ]);
+            $ticketId = (int)$pdo->lastInsertId();
+
+            $pdo->prepare("INSERT INTO {$prefix}support_messages (ticket_id, sender_user_id, is_admin, body) VALUES (?, ?, 0, ?)")
+                ->execute([$ticketId, $userId, $body]);
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            error_log('[support_create_ticket] ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'DB error']);
+            exit;
+        }
+
+        // 관리자 푸시 알림
+        try {
+            require_once BASE_PATH . '/vendor/autoload.php';
+            $notifier = new \RzxLib\Core\Notification\WebPushNotifier($pdo, $prefix);
+            $adminPath = 'admin';
+            try {
+                $cfgSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'admin_path' LIMIT 1");
+                $cfgSt->execute();
+                $adminPath = trim((string)($cfgSt->fetchColumn() ?: 'admin'));
+            } catch (\Throwable $e) {}
+            $notifier->notifyAdmins(
+                '💬 1:1 상담 신규 문의',
+                $title,
+                '/' . trim($adminPath, '/') . '/support-tickets?ticket=' . $ticketId
+            );
+        } catch (\Throwable $ne) {
+            error_log('[support_create_ticket] notify: ' . $ne->getMessage());
+        }
+
+        echo json_encode(['success' => true, 'ticket_id' => $ticketId, 'uuid' => $uuid]);
+        exit;
+
+    // ===== 1:1 상담 — 메시지 추가 (사용자 또는 관리자 답변) =====
+    case 'support_post_message':
+        $ticketId = (int)($input['ticket_id'] ?? 0);
+        $body = trim((string)($input['body'] ?? ''));
+        if (!$ticketId || $body === '') {
+            echo json_encode(['success' => false, 'message' => 'ticket_id + body required']);
+            exit;
+        }
+
+        $rSt = $pdo->prepare("SELECT role FROM {$prefix}users WHERE id = ?");
+        $rSt->execute([$userId]);
+        $isAdmin = in_array($rSt->fetchColumn(), ['admin','supervisor'], true);
+
+        $tSt = $pdo->prepare("SELECT * FROM {$prefix}support_tickets WHERE id = ?");
+        $tSt->execute([$ticketId]);
+        $ticket = $tSt->fetch(PDO::FETCH_ASSOC);
+        if (!$ticket) { echo json_encode(['success' => false, 'message' => 'ticket not found']); exit; }
+        if (!$isAdmin && $ticket['user_id'] !== $userId) {
+            echo json_encode(['success' => false, 'message' => 'permission denied']);
+            exit;
+        }
+        if ($ticket['status'] === 'closed') {
+            echo json_encode(['success' => false, 'message' => '이미 종료된 상담입니다.']);
+            exit;
+        }
+
+        try {
+            $pdo->beginTransaction();
+            $pdo->prepare("INSERT INTO {$prefix}support_messages (ticket_id, sender_user_id, is_admin, body) VALUES (?, ?, ?, ?)")
+                ->execute([$ticketId, $userId, $isAdmin ? 1 : 0, $body]);
+            // ticket 상태 갱신
+            if ($isAdmin) {
+                $pdo->prepare("UPDATE {$prefix}support_tickets SET status = 'answered', last_message_at = NOW(), last_message_by = 'admin', unread_by_user = 1, unread_by_admin = 0 WHERE id = ?")
+                    ->execute([$ticketId]);
+            } else {
+                $pdo->prepare("UPDATE {$prefix}support_tickets SET status = 'open', last_message_at = NOW(), last_message_by = 'user', unread_by_admin = 1, unread_by_user = 0 WHERE id = ?")
+                    ->execute([$ticketId]);
+            }
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            error_log('[support_post_message] ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'DB error']);
+            exit;
+        }
+
+        // 푸시 알림
+        try {
+            require_once BASE_PATH . '/vendor/autoload.php';
+            $notifier = new \RzxLib\Core\Notification\WebPushNotifier($pdo, $prefix);
+            $adminPath = 'admin';
+            try {
+                $cfgSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'admin_path' LIMIT 1");
+                $cfgSt->execute();
+                $adminPath = trim((string)($cfgSt->fetchColumn() ?: 'admin'));
+            } catch (\Throwable $e) {}
+
+            if ($isAdmin) {
+                $notifier->notifyUser(
+                    (string)$ticket['user_id'],
+                    '💬 1:1 상담 답변 도착',
+                    $ticket['title'],
+                    '/mypage/services#support-' . $ticketId
+                );
+            } else {
+                $notifier->notifyAdmins(
+                    '💬 1:1 상담 답변 대기',
+                    $ticket['title'],
+                    '/' . trim($adminPath, '/') . '/support-tickets?ticket=' . $ticketId
+                );
+            }
+        } catch (\Throwable $ne) {
+            error_log('[support_post_message] notify: ' . $ne->getMessage());
+        }
+
+        echo json_encode(['success' => true]);
+        exit;
+
+    // ===== 1:1 상담 — 종료 (사용자 또는 관리자) =====
+    case 'support_close_ticket':
+        $ticketId = (int)($input['ticket_id'] ?? 0);
+        if (!$ticketId) { echo json_encode(['success' => false, 'message' => 'ticket_id required']); exit; }
+
+        $rSt = $pdo->prepare("SELECT role FROM {$prefix}users WHERE id = ?");
+        $rSt->execute([$userId]);
+        $isAdmin = in_array($rSt->fetchColumn(), ['admin','supervisor'], true);
+
+        $tSt = $pdo->prepare("SELECT user_id FROM {$prefix}support_tickets WHERE id = ?");
+        $tSt->execute([$ticketId]);
+        $ownerId = $tSt->fetchColumn();
+        if (!$ownerId) { echo json_encode(['success' => false, 'message' => 'ticket not found']); exit; }
+        if (!$isAdmin && $ownerId !== $userId) {
+            echo json_encode(['success' => false, 'message' => 'permission denied']);
+            exit;
+        }
+
+        $pdo->prepare("UPDATE {$prefix}support_tickets SET status = 'closed', closed_at = NOW(), closed_by = ? WHERE id = ?")
+            ->execute([$userId, $ticketId]);
+        echo json_encode(['success' => true]);
+        exit;
+
+    // ===== 1:1 상담 — unread 플래그 수동 갱신 (목록 진입 시 자동 호출) =====
+    case 'support_mark_read':
+        $ticketId = (int)($input['ticket_id'] ?? 0);
+        if (!$ticketId) { echo json_encode(['success' => false, 'message' => 'ticket_id required']); exit; }
+        $rSt = $pdo->prepare("SELECT role FROM {$prefix}users WHERE id = ?");
+        $rSt->execute([$userId]);
+        $isAdmin = in_array($rSt->fetchColumn(), ['admin','supervisor'], true);
+        if ($isAdmin) {
+            $pdo->prepare("UPDATE {$prefix}support_tickets SET unread_by_admin = 0 WHERE id = ?")->execute([$ticketId]);
+        } else {
+            $pdo->prepare("UPDATE {$prefix}support_tickets SET unread_by_user = 0 WHERE id = ? AND user_id = ?")->execute([$ticketId, $userId]);
+        }
+        echo json_encode(['success' => true]);
+        exit;
+
     // ===== 부가서비스 결제 (recurring 유료 — 기술 지원 등) =====
     case 'pay_addon_recurring':
         $hostSubId = (int)($input['host_subscription_id'] ?? 0);

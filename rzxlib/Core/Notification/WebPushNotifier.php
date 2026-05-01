@@ -10,6 +10,7 @@ use Minishlink\WebPush\Subscription;
  * 사용 예:
  *   $notifier = new WebPushNotifier($pdo);
  *   $notifier->notifyAdmins('도메인 신청', 'restaurant.or.kr 등록 요청', '/admin/domain-management');
+ *   $notifier->notifyUser($userId, '답변 도착', '1:1 상담 답변이 등록되었습니다', '/mypage/services');
  */
 class WebPushNotifier
 {
@@ -23,12 +24,38 @@ class WebPushNotifier
     }
 
     /**
-     * 관리자(admin / supervisor) 전체에게 푸시 송신 + DB 기록.
-     *
-     * @return array{sent:int, failed:int, expired_removed:int, message_id:?int}
+     * 특정 사용자에게 푸시 송신.
+     */
+    public function notifyUser(string $userId, string $title, string $body, ?string $url = null): array
+    {
+        return $this->sendToUsers([$userId], $title, $body, $url);
+    }
+
+    /**
+     * 관리자(admin / supervisor) 전체에게 푸시 송신.
      */
     public function notifyAdmins(string $title, string $body, ?string $url = null): array
     {
+        $st = $this->pdo->query("SELECT id FROM {$this->prefix}users WHERE role IN ('admin','supervisor')");
+        $adminIds = $st->fetchAll(\PDO::FETCH_COLUMN);
+        if (empty($adminIds)) {
+            return ['sent' => 0, 'failed' => 0, 'expired_removed' => 0, 'message_id' => null, 'skipped' => 'no admin users'];
+        }
+        return $this->sendToUsers($adminIds, $title, $body, $url);
+    }
+
+    /**
+     * 지정한 user_id 리스트에게 푸시 송신 + DB 기록.
+     *
+     * @param array<int, string> $userIds
+     * @return array{sent:int, failed:int, expired_removed:int, message_id:?int}
+     */
+    private function sendToUsers(array $userIds, string $title, string $body, ?string $url = null): array
+    {
+        if (empty($userIds)) {
+            return ['sent' => 0, 'failed' => 0, 'expired_removed' => 0, 'message_id' => null, 'skipped' => 'no users'];
+        }
+
         // VAPID
         $sSt = $this->pdo->prepare("SELECT `key`,`value` FROM {$this->prefix}settings WHERE `key` IN ('webpush_enabled','vapid_public_key','vapid_private_key','vapid_subject','notif_default_icon','notif_default_badge')");
         $sSt->execute();
@@ -44,15 +71,15 @@ class WebPushNotifier
         $msgIns->execute([$title, $body, $url ?? '']);
         $messageId = (int)$this->pdo->lastInsertId();
 
-        // 관리자 구독자 조회
-        $sql = "SELECT ps.id, ps.endpoint, ps.p256dh, ps.auth FROM {$this->prefix}push_subscribers ps
-                JOIN {$this->prefix}users u ON ps.user_id = u.id
-                WHERE u.role IN ('admin','supervisor')";
-        $st = $this->pdo->query($sql);
+        // 구독자 조회
+        $place = implode(',', array_fill(0, count($userIds), '?'));
+        $sql = "SELECT id, endpoint, p256dh, auth FROM {$this->prefix}push_subscribers WHERE user_id IN ($place)";
+        $st = $this->pdo->prepare($sql);
+        $st->execute(array_values($userIds));
         $subs = $st->fetchAll(\PDO::FETCH_ASSOC);
 
         if (empty($subs)) {
-            return ['sent' => 0, 'failed' => 0, 'expired_removed' => 0, 'message_id' => $messageId, 'skipped' => 'no admin subscribers'];
+            return ['sent' => 0, 'failed' => 0, 'expired_removed' => 0, 'message_id' => $messageId, 'skipped' => 'no subscribers'];
         }
 
         $autoload = dirname(__DIR__, 3) . '/vendor/autoload.php';
@@ -117,8 +144,8 @@ class WebPushNotifier
             }
         }
         if (!empty($delIds)) {
-            $place = implode(',', array_fill(0, count($delIds), '?'));
-            $this->pdo->prepare("DELETE FROM {$this->prefix}push_subscribers WHERE id IN ($place)")->execute($delIds);
+            $delPlace = implode(',', array_fill(0, count($delIds), '?'));
+            $this->pdo->prepare("DELETE FROM {$this->prefix}push_subscribers WHERE id IN ($delPlace)")->execute($delIds);
             $expiredRemoved = count($delIds);
         }
 
