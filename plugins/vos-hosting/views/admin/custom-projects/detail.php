@@ -346,6 +346,32 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
 </div>
 
 <!-- 견적서 편집 모달 -->
+<style>
+/* 견적 모달 입력 요소 — Tailwind dark: 가 일부 브라우저 user-agent stylesheet 에 밀리는 문제 강제 override */
+#quoteModal input,
+#quoteModal select,
+#quoteModal textarea {
+    color: #18181b;
+    background-color: #ffffff;
+    color-scheme: light;
+}
+.dark #quoteModal input,
+.dark #quoteModal select,
+.dark #quoteModal textarea {
+    color: #ffffff;
+    background-color: #3f3f46;
+    color-scheme: dark;
+}
+.dark #quoteModal input::placeholder,
+.dark #quoteModal textarea::placeholder {
+    color: #a1a1aa;
+    opacity: 1;
+}
+.dark #quoteModal select option {
+    color: #ffffff;
+    background-color: #3f3f46;
+}
+</style>
 <div id="quoteModal" class="hidden fixed inset-0 z-[100] items-center justify-center p-4">
     <div class="absolute inset-0 bg-black/50" onclick="closeQuoteEditor()"></div>
     <div class="relative bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
