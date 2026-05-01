@@ -5,7 +5,7 @@
 
 // Auto-detect base path from SW file location
 const BASE_PATH = self.location.pathname.replace('/admin-sw.js', '');
-const CACHE_NAME = 'rezlyx-admin-v2';
+const CACHE_NAME = 'rezlyx-admin-v3';
 const OFFLINE_URL = BASE_PATH + '/admin/offline.html';
 
 // Admin assets to cache
@@ -87,24 +87,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navigation requests - network first
+  // Navigation requests (admin HTML pages) - network only.
+  // 관리자 페이지는 자주 갱신되므로 캐시 금지 — 항상 최신 코드 보장.
+  // 오프라인 시에만 offline.html fallback.
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME)
-              .then((cache) => cache.put(request, responseClone));
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match(request)
-            .then((cachedResponse) => {
-              return cachedResponse || caches.match(OFFLINE_URL);
-            });
-        })
+      fetch(request).catch(() => caches.match(OFFLINE_URL))
     );
     return;
   }

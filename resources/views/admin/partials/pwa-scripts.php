@@ -15,7 +15,9 @@ if (!$pwaAdminEnabled) return;
             try {
                 const basePath = '<?php echo rtrim($baseUrl, "/"); ?>';
                 const adminPath = '<?php echo $config["admin_path"] ?? "admin"; ?>';
-                const registration = await navigator.serviceWorker.register(basePath + '/admin-sw.js', { scope: basePath + '/' + adminPath });
+                // SW 파일에 mtime 버전 — admin-sw.js 변경 시 새 URL 생성되어 CF/브라우저 캐시 자동 무효화
+                const swVersion = '<?php $_swPath = BASE_PATH . "/admin-sw.js"; echo file_exists($_swPath) ? filemtime($_swPath) : time(); ?>';
+                const registration = await navigator.serviceWorker.register(basePath + '/admin-sw.js?v=' + swVersion, { scope: basePath + '/' + adminPath });
                 console.log('[Admin PWA] Service Worker registered:', registration.scope);
 
                 registration.addEventListener('updatefound', () => {

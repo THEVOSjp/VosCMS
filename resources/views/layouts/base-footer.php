@@ -57,7 +57,9 @@
         window.addEventListener('load', async () => {
             try {
                 const bp = '<?= rtrim($baseUrl, "/") ?>';
-                await navigator.serviceWorker.register(bp + '/sw.js', { scope: bp + '/' });
+                // SW 파일에 mtime 버전 — sw.js 변경 시 새 URL 생성되어 CF/브라우저 캐시 자동 무효화
+                const swV = '<?php $_pSwPath = BASE_PATH . "/sw.js"; echo file_exists($_pSwPath) ? filemtime($_pSwPath) : time(); ?>';
+                await navigator.serviceWorker.register(bp + '/sw.js?v=' + swV, { scope: bp + '/' });
             } catch (e) { console.error('[PWA] SW failed:', e); }
         });
     }
