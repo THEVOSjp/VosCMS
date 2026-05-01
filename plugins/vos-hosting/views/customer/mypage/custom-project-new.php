@@ -17,7 +17,9 @@ $_prefillHostSub = (int)($_GET['host_sub'] ?? 0);
 ?>
 <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex items-center gap-3 mb-6">
-        <a href="<?= $baseUrl ?>/mypage/custom-projects" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+        <a href="<?= $baseUrl ?>/mypage/custom-projects"
+           onclick="if(window.history.length > 1){ history.back(); return false; }"
+           class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         </a>
         <div>
@@ -106,7 +108,9 @@ $_prefillHostSub = (int)($_GET['host_sub'] ?? 0);
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-4 border-t border-gray-200 dark:border-zinc-700">
-            <a href="<?= $baseUrl ?>/mypage/custom-projects" class="px-4 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-700 rounded-lg"><?= htmlspecialchars(__('services.order.checkout.btn_cancel')) ?></a>
+            <a href="<?= $baseUrl ?>/mypage/custom-projects"
+               onclick="if(window.history.length > 1){ history.back(); return false; }"
+               class="px-4 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-700 rounded-lg"><?= htmlspecialchars(__('services.order.checkout.btn_cancel')) ?></a>
             <button type="button" id="submitBtn" onclick="submitProject()" class="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50">
                 <?= htmlspecialchars(__('services.custom.btn_submit')) ?>
             </button>
