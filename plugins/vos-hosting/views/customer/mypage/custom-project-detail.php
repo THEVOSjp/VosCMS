@@ -82,6 +82,23 @@ $budgetLabel = match ($project['budget_range']) {
     'discuss' => __('services.custom.budget_discuss'),
     default => '-',
 };
+
+// 연결 호스팅 정보 fetch
+$_linkedHost = null;
+if (!empty($project['linked_host_subscription_id'])) {
+    $_lhSt = $pdo->prepare("SELECT s.id, s.label, o.domain, o.order_number FROM {$prefix}subscriptions s LEFT JOIN {$prefix}orders o ON s.order_id = o.id WHERE s.id = ?");
+    $_lhSt->execute([$project['linked_host_subscription_id']]);
+    $_linkedHost = $_lhSt->fetch(PDO::FETCH_ASSOC) ?: null;
+}
+
+$domainOptionLabel = match ($project['domain_option']) {
+    'addon' => __('services.custom.dom_addon'),
+    'new' => __('services.custom.dom_new'),
+    'existing' => __('services.custom.dom_existing'),
+    'free' => __('services.custom.dom_free'),
+    'discuss' => __('services.custom.dom_discuss'),
+    default => '-',
+};
 ?>
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex items-center gap-3 mb-6">
@@ -150,6 +167,41 @@ $budgetLabel = match ($project['budget_range']) {
             <?php endif; ?>
         </div>
     </div>
+
+    <!-- 도메인/호스팅 정보 -->
+    <?php if ($project['domain_option'] || $_linkedHost || $project['need_new_hosting']): ?>
+    <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 mb-4">
+        <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700">
+            <p class="text-sm font-bold text-zinc-900 dark:text-white">🌐 <?= htmlspecialchars(__('services.custom.section_domain')) ?></p>
+        </div>
+        <div class="p-5 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+            <div>
+                <p class="text-[10px] text-zinc-400 uppercase tracking-wider"><?= htmlspecialchars(__('services.custom.f_domain_option')) ?></p>
+                <p class="text-zinc-900 dark:text-white font-medium"><?= htmlspecialchars($domainOptionLabel) ?></p>
+            </div>
+            <?php if ($project['domain_name']): ?>
+            <div>
+                <p class="text-[10px] text-zinc-400 uppercase tracking-wider"><?= htmlspecialchars(__('services.custom.f_domain_name')) ?></p>
+                <p class="text-zinc-900 dark:text-white font-mono"><?= htmlspecialchars($project['domain_name']) ?></p>
+            </div>
+            <?php endif; ?>
+            <div>
+                <p class="text-[10px] text-zinc-400 uppercase tracking-wider"><?= htmlspecialchars(__('services.custom.f_hosting_target')) ?></p>
+                <?php if ($_linkedHost): ?>
+                <p class="text-zinc-900 dark:text-white">
+                    <a href="<?= $baseUrl ?>/mypage/services/<?= htmlspecialchars($_linkedHost['order_number']) ?>" class="text-blue-600 hover:underline">
+                        <?= htmlspecialchars($_linkedHost['domain'] ?: $_linkedHost['order_number']) ?>
+                    </a>
+                </p>
+                <?php elseif ($project['need_new_hosting']): ?>
+                <p class="text-amber-600 dark:text-amber-400 font-medium">🆕 <?= htmlspecialchars(__('services.custom.host_target_new')) ?></p>
+                <?php else: ?>
+                <p class="text-zinc-400">-</p>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <!-- 견적서 -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700">

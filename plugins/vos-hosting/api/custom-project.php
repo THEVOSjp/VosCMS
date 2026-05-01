@@ -129,6 +129,11 @@ switch ($action) {
         $desiredDueDate = trim((string)($input['desired_due_date'] ?? ''));
         $contactHours = trim((string)($input['contact_hours'] ?? ''));
         $rawAtts = is_array($input['attachments'] ?? null) ? $input['attachments'] : [];
+        // 도메인/호스팅 매칭
+        $domainOption = (string)($input['domain_option'] ?? '');
+        $domainName = trim((string)($input['domain_name'] ?? ''));
+        $linkedHostSubId = (int)($input['linked_host_subscription_id'] ?? 0);
+        $needNewHosting = !empty($input['need_new_hosting']) ? 1 : 0;
 
         if ($title === '' || $requirements === '') {
             echo json_encode(['success' => false, 'message' => '제목과 요구사항은 필수입니다.']); exit;
@@ -137,17 +142,32 @@ switch ($action) {
         if (!in_array($siteType, ['homepage','shop','reservation','other'], true)) $siteType = 'homepage';
         if (!in_array($budgetRange, ['lt100k','100k_300k','300k_1m','gt1m','discuss',''], true)) $budgetRange = '';
         $desiredDueDate = ($desiredDueDate !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $desiredDueDate)) ? $desiredDueDate : null;
+        if (!in_array($domainOption, ['addon','new','existing','free','discuss',''], true)) $domainOption = '';
+        if ($domainName !== '' && mb_strlen($domainName) > 255) $domainName = mb_substr($domainName, 0, 255);
+
+        // linked_host_subscription_id 권한 검증 (소유자인지)
+        if ($linkedHostSubId > 0) {
+            $vSt = $pdo->prepare("SELECT id FROM {$prefix}subscriptions WHERE id = ? AND user_id = ? AND type = 'hosting'");
+            $vSt->execute([$linkedHostSubId, $userId]);
+            if (!$vSt->fetchColumn()) $linkedHostSubId = 0;
+        }
 
         try {
             $pdo->beginTransaction();
             $projectNumber = generateProjectNumber($pdo, $prefix);
 
             $ins = $pdo->prepare("INSERT INTO {$prefix}custom_projects
-                (project_number, user_id, title, site_type, requirements, reference_urls, budget_range, desired_due_date, contact_hours, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'lead')");
+                (project_number, user_id, title, site_type, requirements, reference_urls,
+                 domain_option, domain_name, linked_host_subscription_id, need_new_hosting,
+                 budget_range, desired_due_date, contact_hours, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'lead')");
             $ins->execute([
                 $projectNumber, $userId, $title, $siteType, $requirements,
                 $referenceUrls !== '' ? $referenceUrls : null,
+                $domainOption !== '' ? $domainOption : null,
+                $domainName !== '' ? $domainName : null,
+                $linkedHostSubId ?: null,
+                $needNewHosting,
                 $budgetRange !== '' ? $budgetRange : null,
                 $desiredDueDate, $contactHours !== '' ? $contactHours : null,
             ]);

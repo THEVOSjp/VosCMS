@@ -14,6 +14,45 @@ if (file_exists($_svcLangFile)) \RzxLib\Core\I18n\Translator::merge('services', 
 $_prefillTitle = trim((string)($_GET['title'] ?? ''));
 $_prefillFrom = (string)($_GET['from'] ?? '');
 $_prefillHostSub = (int)($_GET['host_sub'] ?? 0);
+
+$user = \RzxLib\Core\Auth\Auth::user();
+$prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+
+// 사용자의 호스팅 구독 목록 조회
+$_myHostSubs = [];
+try {
+    $_hsSt = $pdo->prepare("SELECT s.id, s.label, s.metadata, o.domain, o.order_number
+        FROM {$prefix}subscriptions s
+        LEFT JOIN {$prefix}orders o ON s.order_id = o.id
+        WHERE s.user_id = ? AND s.type = 'hosting' AND s.status = 'active'
+        ORDER BY s.id DESC");
+    $_hsSt->execute([$user['id']]);
+    $_myHostSubs = $_hsSt->fetchAll(PDO::FETCH_ASSOC);
+} catch (\Throwable $e) {}
+
+// 부가서비스 진입 (?from=addon&host_sub=N): 자동 매칭
+$_addonHostSub = null;
+$_addonDomain = '';
+if ($_prefillFrom === 'addon' && $_prefillHostSub > 0) {
+    foreach ($_myHostSubs as $_hs) {
+        if ((int)$_hs['id'] === $_prefillHostSub) {
+            $_addonHostSub = $_hs;
+            $_addonDomain = (string)($_hs['domain'] ?? '');
+            // metadata 의 added_domains 도 우선 후보 (있으면 첫번째 사용)
+            $_meta = json_decode($_hs['metadata'] ?? '{}', true) ?: [];
+            if (empty($_addonDomain) && !empty($_meta['added_domains'][0]['domain'])) {
+                $_addonDomain = $_meta['added_domains'][0]['domain'];
+            }
+            break;
+        }
+    }
+}
+
+// 진입 경로 분기:
+//   A: addon  — 자동 매칭됨, 도메인 결정 영역 숨김
+//   B: 호스팅 미보유 — 안내 + 도메인 옵션 + 호스팅 신청 체크박스
+//   C: 호스팅 보유 — 호스팅 셀렉트 + 도메인 옵션
+$_pathMode = $_addonHostSub ? 'A' : (empty($_myHostSubs) ? 'B' : 'C');
 ?>
 <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex items-center gap-3 mb-6">
@@ -28,9 +67,22 @@ $_prefillHostSub = (int)($_GET['host_sub'] ?? 0);
         </div>
     </div>
 
-    <?php if ($_prefillFrom === 'addon'): ?>
-    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 mb-4 text-sm text-amber-800 dark:text-amber-200">
-        💬 <?= htmlspecialchars(__('services.custom.from_addon_notice')) ?>
+    <?php if ($_pathMode === 'A'): /* 부가서비스 진입 — 자동 매칭 */ ?>
+    <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl px-4 py-3 mb-4 text-sm">
+        <p class="font-bold text-emerald-800 dark:text-emerald-200 mb-1">✅ <?= htmlspecialchars(__('services.custom.from_addon_notice_title')) ?></p>
+        <p class="text-emerald-700 dark:text-emerald-300 text-xs">
+            <?= htmlspecialchars(__('services.custom.from_addon_notice_body', ['domain' => $_addonDomain ?: ($_addonHostSub['order_number'] ?? '')])) ?>
+        </p>
+    </div>
+    <?php elseif ($_pathMode === 'B'): /* 호스팅 미보유 — 안내 */ ?>
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-3 mb-4 text-sm">
+        <p class="font-bold text-blue-800 dark:text-blue-200 mb-1">💡 <?= htmlspecialchars(__('services.custom.no_host_notice_title')) ?></p>
+        <p class="text-blue-700 dark:text-blue-300 text-xs whitespace-pre-line"><?= htmlspecialchars(__('services.custom.no_host_notice_body')) ?></p>
+    </div>
+    <?php else: /* C — 호스팅 보유, 셀렉트 안내 */ ?>
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-3 mb-4 text-sm">
+        <p class="font-bold text-blue-800 dark:text-blue-200 mb-1">💡 <?= htmlspecialchars(__('services.custom.has_host_notice_title')) ?></p>
+        <p class="text-blue-700 dark:text-blue-300 text-xs"><?= htmlspecialchars(__('services.custom.has_host_notice_body')) ?></p>
     </div>
     <?php endif; ?>
 
@@ -98,6 +150,70 @@ $_prefillHostSub = (int)($_GET['host_sub'] ?? 0);
             <input type="text" id="f_contact_hours" maxlength="100" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg" placeholder="<?= htmlspecialchars(__('services.custom.f_contact_hours_ph')) ?>">
         </div>
 
+        <!-- 도메인/호스팅 매칭 -->
+        <div class="border-t border-gray-200 dark:border-zinc-700 pt-4 space-y-3">
+            <p class="text-xs font-bold text-zinc-700 dark:text-zinc-200">🌐 <?= htmlspecialchars(__('services.custom.f_domain_section')) ?></p>
+
+            <?php if ($_pathMode === 'A'): /* 부가서비스 — 자동 매칭, 숨겨진 입력 */ ?>
+            <input type="hidden" id="f_domain_option" value="addon">
+            <input type="hidden" id="f_domain_name" value="<?= htmlspecialchars($_addonDomain) ?>">
+            <input type="hidden" id="f_linked_host_sub" value="<?= (int)$_addonHostSub['id'] ?>">
+            <input type="hidden" id="f_need_new_hosting" value="0">
+            <div class="bg-gray-50 dark:bg-zinc-700/50 rounded-lg p-3 text-xs">
+                <p class="text-zinc-700 dark:text-zinc-200">
+                    <?= htmlspecialchars(__('services.custom.f_domain_addon_text', ['domain' => $_addonDomain ?: '-'])) ?>
+                </p>
+            </div>
+
+            <?php elseif ($_pathMode === 'C'): /* 호스팅 보유 — 셀렉트 + 도메인 옵션 */ ?>
+            <div>
+                <label class="block text-[11px] text-zinc-600 dark:text-zinc-400 mb-1"><?= htmlspecialchars(__('services.custom.f_existing_host')) ?></label>
+                <select id="f_linked_host_sub" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg" onchange="onHostSelect()">
+                    <option value=""><?= htmlspecialchars(__('services.custom.f_existing_host_choose')) ?></option>
+                    <?php foreach ($_myHostSubs as $_hs):
+                        $_dom = $_hs['domain'] ?? '';
+                    ?>
+                    <option value="<?= (int)$_hs['id'] ?>" data-domain="<?= htmlspecialchars($_dom) ?>"><?= htmlspecialchars($_hs['order_number']) ?> · <?= htmlspecialchars($_dom ?: $_hs['label']) ?></option>
+                    <?php endforeach; ?>
+                    <option value="0"><?= htmlspecialchars(__('services.custom.f_new_host_instead')) ?></option>
+                </select>
+            </div>
+            <input type="hidden" id="f_need_new_hosting" value="0">
+
+            <div id="domain_block">
+                <label class="block text-[11px] text-zinc-600 dark:text-zinc-400 mb-1"><?= htmlspecialchars(__('services.custom.f_domain_option')) ?></label>
+                <select id="f_domain_option" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg" onchange="onDomainOptionChange()">
+                    <option value=""><?= htmlspecialchars(__('services.custom.f_domain_choose')) ?></option>
+                    <option value="new"><?= htmlspecialchars(__('services.custom.dom_new')) ?></option>
+                    <option value="existing"><?= htmlspecialchars(__('services.custom.dom_existing')) ?></option>
+                    <option value="free"><?= htmlspecialchars(__('services.custom.dom_free')) ?></option>
+                    <option value="discuss"><?= htmlspecialchars(__('services.custom.dom_discuss')) ?></option>
+                </select>
+                <input type="text" id="f_domain_name" maxlength="255" class="hidden w-full mt-2 px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg" placeholder="<?= htmlspecialchars(__('services.custom.f_domain_name_ph')) ?>">
+            </div>
+
+            <?php else: /* B — 호스팅 미보유 */ ?>
+            <input type="hidden" id="f_linked_host_sub" value="0">
+            <div>
+                <label class="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300">
+                    <input type="checkbox" id="f_need_new_hosting" checked class="rounded">
+                    <span><?= htmlspecialchars(__('services.custom.f_need_new_hosting')) ?></span>
+                </label>
+            </div>
+            <div>
+                <label class="block text-[11px] text-zinc-600 dark:text-zinc-400 mb-1"><?= htmlspecialchars(__('services.custom.f_domain_option')) ?></label>
+                <select id="f_domain_option" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg" onchange="onDomainOptionChange()">
+                    <option value=""><?= htmlspecialchars(__('services.custom.f_domain_choose')) ?></option>
+                    <option value="new"><?= htmlspecialchars(__('services.custom.dom_new')) ?></option>
+                    <option value="existing"><?= htmlspecialchars(__('services.custom.dom_existing')) ?></option>
+                    <option value="free"><?= htmlspecialchars(__('services.custom.dom_free')) ?></option>
+                    <option value="discuss"><?= htmlspecialchars(__('services.custom.dom_discuss')) ?></option>
+                </select>
+                <input type="text" id="f_domain_name" maxlength="255" class="hidden w-full mt-2 px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg" placeholder="<?= htmlspecialchars(__('services.custom.f_domain_name_ph')) ?>">
+            </div>
+            <?php endif; ?>
+        </div>
+
         <div>
             <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                 📎 <?= htmlspecialchars(__('services.custom.f_attachments')) ?>
@@ -163,6 +279,43 @@ function uploadAttachments() {
     });
 }
 
+function onDomainOptionChange() {
+    var sel = document.getElementById('f_domain_option');
+    var nameEl = document.getElementById('f_domain_name');
+    if (!sel || !nameEl) return;
+    if (sel.value === 'new' || sel.value === 'existing') {
+        nameEl.classList.remove('hidden');
+    } else {
+        nameEl.classList.add('hidden');
+        nameEl.value = '';
+    }
+}
+function onHostSelect() {
+    // 호스팅 셀렉트 → "새 호스팅" 선택 시 도메인 옵션이 의미있어짐. 기존 선택 시는 호스팅 도메인 자동 사용 가정 → 도메인 옵션을 "free" 로 자동 선택
+    var sel = document.getElementById('f_linked_host_sub');
+    var newHostEl = document.getElementById('f_need_new_hosting');
+    var domSel = document.getElementById('f_domain_option');
+    var nameEl = document.getElementById('f_domain_name');
+    if (!sel) return;
+    var v = sel.value;
+    if (v === '' || v === '0') {
+        // 새 호스팅 또는 미선택
+        if (newHostEl) newHostEl.value = (v === '0' ? '1' : '0');
+    } else {
+        // 기존 호스팅 선택 → 도메인은 그 호스팅 도메인 사용
+        if (newHostEl) newHostEl.value = '0';
+        var opt = sel.options[sel.selectedIndex];
+        var hd = opt && opt.getAttribute('data-domain') || '';
+        if (domSel) {
+            // 호스팅 도메인이 있으면 'existing' (이미 보유), 없으면 'discuss' 자동 설정 가능 — 일단 사용자 결정 유지
+        }
+        if (nameEl && hd) {
+            nameEl.value = hd;
+            // 호스팅 자체에 도메인이 이미 있으니 도메인 결정 박스 숨김 (사용자 추가 결정 불필요)
+        }
+    }
+}
+
 function submitProject() {
     var title = document.getElementById('f_title').value.trim();
     var requirements = document.getElementById('f_requirements').value.trim();
@@ -172,6 +325,19 @@ function submitProject() {
     }
     var btn = document.getElementById('submitBtn');
     btn.disabled = true;
+
+    var optEl = document.getElementById('f_domain_option');
+    var nameEl = document.getElementById('f_domain_name');
+    var hostEl = document.getElementById('f_linked_host_sub');
+    var newHostEl = document.getElementById('f_need_new_hosting');
+    var domainOption = optEl ? optEl.value : '';
+    var domainName = nameEl ? nameEl.value.trim() : '';
+    var linkedHostSub = hostEl ? parseInt(hostEl.value, 10) || 0 : 0;
+    var needNewHosting = 0;
+    if (newHostEl) {
+        if (newHostEl.type === 'checkbox') needNewHosting = newHostEl.checked ? 1 : 0;
+        else needNewHosting = parseInt(newHostEl.value, 10) || 0;
+    }
 
     uploadAttachments().then(function(atts) {
         return fetch(siteBaseUrl + '/plugins/vos-hosting/api/custom-project.php', {
@@ -187,6 +353,10 @@ function submitProject() {
                 budget_range: document.getElementById('f_budget').value,
                 desired_due_date: document.getElementById('f_due_date').value,
                 contact_hours: document.getElementById('f_contact_hours').value.trim(),
+                domain_option: domainOption,
+                domain_name: domainName,
+                linked_host_subscription_id: linkedHostSub,
+                need_new_hosting: needNewHosting,
                 attachments: atts,
             })
         }).then(function(r){ return r.json(); });
