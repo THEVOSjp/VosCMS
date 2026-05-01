@@ -1064,6 +1064,14 @@ return array (
     'dom_new' => 'Yeni domain kaydet',
     'dom_free' => 'Ücretsiz alt domain',
     'dom_discuss' => 'Görüşelim / Karar verilmedi',
+    'section_channel' => 'Proje Kanalı',
+    'channel_desc' => 'Proje yöneticinizle doğrudan',
+    'channel_desc_admin' => 'Müşteri ile doğrudan',
+    'channel_loading' => 'Yükleniyor...',
+    'channel_empty' => 'Henüz mesaj yok.',
+    'channel_reply_ph' => 'Yöneticiye mesaj...',
+    'channel_reply_ph_admin' => 'Müşteriye mesaj...',
+    'channel_btn_send' => 'Gönder',
   ),
   'admin_custom' =>
   array (

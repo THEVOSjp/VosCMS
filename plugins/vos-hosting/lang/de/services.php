@@ -1081,6 +1081,14 @@ return array (
     'dom_new' => 'Neue Domain registrieren',
     'dom_free' => 'Kostenlose Subdomain',
     'dom_discuss' => 'Besprechen / Unentschieden',
+    'section_channel' => 'Projekt-Kanal',
+    'channel_desc' => 'Direkter Draht zum Projektmanager',
+    'channel_desc_admin' => 'Direkter Draht zum Kunden',
+    'channel_loading' => 'Wird geladen...',
+    'channel_empty' => 'Noch keine Nachrichten.',
+    'channel_reply_ph' => 'Nachricht an Ihren Manager...',
+    'channel_reply_ph_admin' => 'Nachricht an den Kunden...',
+    'channel_btn_send' => 'Senden',
   ),
   'admin_custom' =>
   array (

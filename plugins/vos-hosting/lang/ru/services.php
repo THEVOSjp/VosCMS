@@ -1081,6 +1081,14 @@ return array (
     'dom_new' => 'Зарегистрировать новый домен',
     'dom_free' => 'Бесплатный поддомен',
     'dom_discuss' => 'Обсудить / Не решено',
+    'section_channel' => 'Канал проекта',
+    'channel_desc' => 'Прямая связь с менеджером',
+    'channel_desc_admin' => 'Прямая связь с клиентом',
+    'channel_loading' => 'Загрузка...',
+    'channel_empty' => 'Сообщений пока нет.',
+    'channel_reply_ph' => 'Сообщение менеджеру...',
+    'channel_reply_ph_admin' => 'Сообщение клиенту...',
+    'channel_btn_send' => 'Отправить',
   ),
   'admin_custom' =>
   array (

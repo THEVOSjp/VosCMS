@@ -191,7 +191,8 @@
         "migrations/003_support_tickets.sql",
         "migrations/004_custom_projects.sql",
         "migrations/005_custom_project_payments.sql",
-        "migrations/006_custom_projects_domain.sql"
+        "migrations/006_custom_projects_domain.sql",
+        "migrations/007_support_tickets_project_id.sql"
     ],
     "settings": {
         "defaults": {

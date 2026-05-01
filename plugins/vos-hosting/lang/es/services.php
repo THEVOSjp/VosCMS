@@ -1081,6 +1081,14 @@ return array (
     'dom_new' => 'Registrar nuevo dominio',
     'dom_free' => 'Subdominio gratis',
     'dom_discuss' => 'Discutir / Sin decidir',
+    'section_channel' => 'Canal del proyecto',
+    'channel_desc' => 'Línea directa con su gestor',
+    'channel_desc_admin' => 'Línea directa con el cliente',
+    'channel_loading' => 'Cargando...',
+    'channel_empty' => 'Aún no hay mensajes.',
+    'channel_reply_ph' => 'Mensaje al gestor...',
+    'channel_reply_ph_admin' => 'Mensaje al cliente...',
+    'channel_btn_send' => 'Enviar',
   ),
   'admin_custom' =>
   array (

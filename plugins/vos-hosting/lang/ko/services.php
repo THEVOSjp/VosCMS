@@ -1216,6 +1216,14 @@ return array (
     'dom_existing' => '보유 도메인 사용',
     'dom_free' => '무료 서브도메인 (.21ces.net 등)',
     'dom_discuss' => '협의 / 미정',
+    'section_channel' => '프로젝트 채널',
+    'channel_desc' => '담당자와 직접 소통',
+    'channel_desc_admin' => '고객과 직접 소통',
+    'channel_loading' => '불러오는 중...',
+    'channel_empty' => '아직 메시지가 없습니다.',
+    'channel_reply_ph' => '담당자에게 메시지를 입력하세요...',
+    'channel_reply_ph_admin' => '고객에게 메시지를 입력하세요...',
+    'channel_btn_send' => '보내기',
   ),
   'admin_custom' =>
   array (

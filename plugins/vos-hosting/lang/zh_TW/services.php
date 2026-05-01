@@ -1081,6 +1081,14 @@ return array (
     'dom_new' => '註冊新網域',
     'dom_free' => '免費子網域 (.21ces.net 等)',
     'dom_discuss' => '協商 / 未定',
+    'section_channel' => '專案頻道',
+    'channel_desc' => '直接與負責人溝通',
+    'channel_desc_admin' => '直接與客戶溝通',
+    'channel_loading' => '載入中...',
+    'channel_empty' => '暫無訊息。',
+    'channel_reply_ph' => '向負責人發送訊息...',
+    'channel_reply_ph_admin' => '向客戶發送訊息...',
+    'channel_btn_send' => '傳送',
   ),
   'admin_custom' =>
   array (

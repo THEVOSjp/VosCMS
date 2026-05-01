@@ -529,6 +529,32 @@ switch ($action) {
                 SET status = 'contracted', accepted_quote_id = ?, contract_amount = ?, contract_currency = ?
                 WHERE id = ?")
                 ->execute([$quoteId, $quote['total'], $quote['currency'], $projectId]);
+
+            // 프로젝트 채널 자동 생성 (이미 있으면 skip)
+            $existSt = $pdo->prepare("SELECT id FROM {$prefix}support_tickets WHERE custom_project_id = ? LIMIT 1");
+            $existSt->execute([$projectId]);
+            if (!$existSt->fetchColumn()) {
+                $tUuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+                    mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000,
+                    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+                );
+                $tNow = date('Y-m-d H:i:s');
+                $tIns = $pdo->prepare("INSERT INTO {$prefix}support_tickets
+                    (uuid, user_id, host_subscription_id, custom_project_id, title, status, last_message_at, last_message_by, unread_by_admin)
+                    VALUES (?, ?, ?, ?, ?, 'open', ?, 'user', 1)");
+                $tIns->execute([
+                    $tUuid, $project['user_id'],
+                    $project['linked_host_subscription_id'] ?: null,
+                    $projectId,
+                    '[' . $project['project_number'] . '] ' . $project['title'],
+                    $tNow,
+                ]);
+                $newTicketId = (int)$pdo->lastInsertId();
+                $pdo->prepare("INSERT INTO {$prefix}support_messages (ticket_id, sender_user_id, is_admin, body) VALUES (?, ?, 0, ?)")
+                    ->execute([$newTicketId, $project['user_id'], '✅ 계약이 체결되었습니다. 이 채널에서 진행 사항을 공유드립니다.']);
+            }
+
             $pdo->commit();
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();

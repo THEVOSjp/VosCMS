@@ -30,6 +30,14 @@ $project['attachments'] = json_decode($project['attachments'] ?? '[]', true) ?: 
 $qSt = $pdo->prepare("SELECT * FROM {$prefix}custom_quotes WHERE project_id = ? AND status IN ('sent','accepted','rejected','superseded') ORDER BY version DESC, id DESC");
 $qSt->execute([$projectId]);
 $quotes = $qSt->fetchAll(PDO::FETCH_ASSOC);
+
+// 프로젝트 채널 (계약 후 자동 생성된 ticket)
+$_channelTicket = null;
+try {
+    $_chSt = $pdo->prepare("SELECT id, status, last_message_at FROM {$prefix}support_tickets WHERE custom_project_id = ? LIMIT 1");
+    $_chSt->execute([$projectId]);
+    $_channelTicket = $_chSt->fetch(PDO::FETCH_ASSOC) ?: null;
+} catch (\Throwable $e) {}
 foreach ($quotes as &$_q) {
     $_q['items'] = json_decode($_q['items'] ?? '[]', true) ?: [];
     $_qpSt = $pdo->prepare("SELECT id, sequence_no, label, amount, currency, due_date, status, paid_at, note FROM {$prefix}custom_project_payments WHERE quote_id = ? ORDER BY sequence_no ASC, id ASC");
@@ -198,6 +206,28 @@ $domainOptionLabel = match ($project['domain_option']) {
                 <?php else: ?>
                 <p class="text-zinc-400">-</p>
                 <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- 프로젝트 채널 (계약 후) -->
+    <?php if ($_channelTicket): ?>
+    <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 mb-4" id="projectChannel">
+        <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700 flex items-center justify-between">
+            <p class="text-sm font-bold text-zinc-900 dark:text-white">💬 <?= htmlspecialchars(__('services.custom.section_channel')) ?></p>
+            <span class="text-[10px] text-zinc-400"><?= htmlspecialchars(__('services.custom.channel_desc')) ?></span>
+        </div>
+        <div id="channelMessages" class="p-5 space-y-3 max-h-[400px] overflow-y-auto">
+            <p class="text-xs text-zinc-400 text-center"><?= htmlspecialchars(__('services.custom.channel_loading')) ?></p>
+        </div>
+        <div class="px-5 py-4 border-t border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-700/30 rounded-b-xl">
+            <textarea id="channelReplyBody" rows="3" class="w-full px-3 py-2 text-xs border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg" placeholder="<?= htmlspecialchars(__('services.custom.channel_reply_ph')) ?>"></textarea>
+            <div class="mt-2 flex items-center justify-between gap-2">
+                <input type="file" id="channelReplyFiles" multiple class="text-[11px] text-zinc-600 dark:text-zinc-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300">
+                <button type="button" id="channelReplyBtn" onclick="channelSubmit()" class="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50">
+                    <?= htmlspecialchars(__('services.custom.channel_btn_send')) ?>
+                </button>
             </div>
         </div>
     </div>
@@ -441,6 +471,98 @@ function submitPayment() {
         document.getElementById('payModalError').classList.remove('hidden');
     });
 }
+
+// ==== 프로젝트 채널 ====
+<?php if ($_channelTicket): ?>
+var channelTicketId = <?= (int)$_channelTicket['id'] ?>;
+
+function channelEsc(s) { return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function channelFmtDate(s) { try { return new Date(s).toLocaleString(); } catch(e) { return s||''; } }
+function channelFmtSize(b) { b = parseInt(b,10)||0; if (b<1024) return b+' B'; if (b<1048576) return (b/1024).toFixed(1)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
+
+function channelLoad() {
+    fetch(siteBaseUrl + '/plugins/vos-hosting/api/service-manage.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ action: 'support_get_ticket', ticket_id: channelTicketId }),
+    }).then(function(r){ return r.json(); }).then(function(d) {
+        if (!d.success) { document.getElementById('channelMessages').innerHTML = '<p class="text-xs text-red-500 text-center">' + (d.message || 'error') + '</p>'; return; }
+        var html = '';
+        (d.messages || []).forEach(function(m) {
+            var isAdmin = parseInt(m.is_admin, 10) === 1;
+            var bgClass = isAdmin
+                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                : 'bg-gray-50 dark:bg-zinc-700/30 border-gray-200 dark:border-zinc-700';
+            var sender = isAdmin ? <?= json_encode(__('services.detail.support_admin'), JSON_UNESCAPED_UNICODE) ?> : (m.sender_name || m.sender_email || 'me');
+            html += '<div class="border ' + bgClass + ' rounded-lg p-3">'
+                  + '<div class="flex items-center justify-between mb-1.5 text-[10px] text-zinc-500 dark:text-zinc-400"><span class="font-medium">' + channelEsc(sender) + '</span><span>' + channelFmtDate(m.created_at) + '</span></div>'
+                  + '<p class="text-sm text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">' + channelEsc(m.body) + '</p>';
+            var atts = m.attachments || [];
+            if (atts.length > 0) {
+                html += '<div class="mt-2 pt-2 border-t border-gray-200 dark:border-zinc-700 space-y-1">';
+                atts.forEach(function(a, idx) {
+                    var isImg = /^(jpg|jpeg|png|gif|webp|svg)$/i.test(a.ext || '');
+                    var dlUrl = siteBaseUrl + '/plugins/vos-hosting/api/support-attachment.php?action=download&msg=' + m.id + '&idx=' + idx;
+                    var inUrl = siteBaseUrl + '/plugins/vos-hosting/api/support-attachment.php?action=inline&msg=' + m.id + '&idx=' + idx;
+                    if (isImg) {
+                        html += '<a href="' + dlUrl + '" target="_blank" class="block"><img src="' + inUrl + '" alt="" class="max-h-40 rounded border border-gray-200 dark:border-zinc-600" /></a>';
+                    } else {
+                        html += '<a href="' + dlUrl + '" class="flex items-center gap-2 text-[11px] bg-white dark:bg-zinc-700 hover:bg-blue-50 dark:hover:bg-zinc-600 px-2 py-1.5 rounded border border-gray-200 dark:border-zinc-600 transition">'
+                             + '<svg class="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>'
+                             + '<span class="truncate flex-1 text-zinc-700 dark:text-zinc-200">' + channelEsc(a.name) + '</span>'
+                             + '<span class="text-zinc-400">' + channelFmtSize(a.size) + '</span></a>';
+                    }
+                });
+                html += '</div>';
+            }
+            html += '</div>';
+        });
+        var box = document.getElementById('channelMessages');
+        box.innerHTML = html || '<p class="text-xs text-zinc-400 text-center"><?= htmlspecialchars(__('services.custom.channel_empty')) ?></p>';
+        box.scrollTop = box.scrollHeight;
+    });
+}
+
+function channelUpload(fileInput) {
+    var files = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
+    if (files.length === 0) return Promise.resolve([]);
+    var fd = new FormData();
+    files.forEach(function(f){ fd.append('files[]', f); });
+    return fetch(siteBaseUrl + '/plugins/vos-hosting/api/support-attachment.php?action=upload_pending', {
+        method: 'POST', body: fd, credentials: 'same-origin'
+    }).then(function(r){ return r.json(); }).then(function(d){
+        if (!d.success) throw new Error(d.message || 'upload failed');
+        return d.attachments || [];
+    });
+}
+
+function channelSubmit() {
+    var body = document.getElementById('channelReplyBody').value.trim();
+    if (!body) return;
+    var btn = document.getElementById('channelReplyBtn');
+    btn.disabled = true;
+    channelUpload(document.getElementById('channelReplyFiles')).then(function(atts) {
+        return fetch(siteBaseUrl + '/plugins/vos-hosting/api/service-manage.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ action: 'support_post_message', ticket_id: channelTicketId, body: body, attachments: atts }),
+        }).then(function(r){ return r.json(); });
+    }).then(function(d) {
+        btn.disabled = false;
+        if (d.success) {
+            document.getElementById('channelReplyBody').value = '';
+            document.getElementById('channelReplyFiles').value = '';
+            channelLoad();
+        } else {
+            alert(d.message || 'error');
+        }
+    }).catch(function(e) { btn.disabled = false; alert(e && e.message || 'error'); });
+}
+
+document.addEventListener('DOMContentLoaded', channelLoad);
+<?php endif; ?>
 </script>
 
 <?php if ($_payPubKey): ?>

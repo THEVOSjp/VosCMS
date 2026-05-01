@@ -1064,6 +1064,14 @@ return array (
     'dom_new' => 'Шинэ домэйн бүртгэх',
     'dom_free' => 'Үнэгүй дэд домэйн',
     'dom_discuss' => 'Зөвлөлдөх / Шийдээгүй',
+    'section_channel' => 'Төслийн суваг',
+    'channel_desc' => 'Менежертэй шууд харилцах',
+    'channel_desc_admin' => 'Үйлчлүүлэгчтэй шууд',
+    'channel_loading' => 'Уншиж байна...',
+    'channel_empty' => 'Мессеж алга.',
+    'channel_reply_ph' => 'Менежерт мессеж...',
+    'channel_reply_ph_admin' => 'Үйлчлүүлэгчид мессеж...',
+    'channel_btn_send' => 'Илгээх',
   ),
   'admin_custom' =>
   array (

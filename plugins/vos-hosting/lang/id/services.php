@@ -1053,6 +1053,14 @@ return array (
     'dom_new' => 'Daftarkan domain baru',
     'dom_free' => 'Subdomain gratis',
     'dom_discuss' => 'Diskusikan / Belum pasti',
+    'section_channel' => 'Saluran Proyek',
+    'channel_desc' => 'Komunikasi langsung dengan PM',
+    'channel_desc_admin' => 'Komunikasi langsung dengan pelanggan',
+    'channel_loading' => 'Memuat...',
+    'channel_empty' => 'Belum ada pesan.',
+    'channel_reply_ph' => 'Pesan ke PM Anda...',
+    'channel_reply_ph_admin' => 'Pesan ke pelanggan...',
+    'channel_btn_send' => 'Kirim',
   ),
   'admin_custom' =>
   array (

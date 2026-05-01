@@ -1078,6 +1078,14 @@ return array (
     'dom_new' => 'Enregistrer nouveau domaine',
     'dom_free' => 'Sous-domaine gratuit',
     'dom_discuss' => 'Discuter / À décider',
+    'section_channel' => 'Canal du projet',
+    'channel_desc' => 'Ligne directe avec votre responsable',
+    'channel_desc_admin' => 'Ligne directe avec le client',
+    'channel_loading' => 'Chargement...',
+    'channel_empty' => 'Pas encore de messages.',
+    'channel_reply_ph' => 'Message à votre responsable...',
+    'channel_reply_ph_admin' => 'Message au client...',
+    'channel_btn_send' => 'Envoyer',
   ),
   'admin_custom' =>
   array (

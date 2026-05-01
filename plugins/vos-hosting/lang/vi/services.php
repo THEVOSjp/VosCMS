@@ -1081,6 +1081,14 @@ return array (
     'dom_new' => 'Đăng ký tên miền mới',
     'dom_free' => 'Tên miền phụ miễn phí',
     'dom_discuss' => 'Thảo luận / Chưa quyết',
+    'section_channel' => 'Kênh dự án',
+    'channel_desc' => 'Trao đổi trực tiếp với PM',
+    'channel_desc_admin' => 'Trao đổi trực tiếp với khách',
+    'channel_loading' => 'Đang tải...',
+    'channel_empty' => 'Chưa có tin nhắn.',
+    'channel_reply_ph' => 'Nhắn tin cho PM...',
+    'channel_reply_ph_admin' => 'Nhắn tin cho khách...',
+    'channel_btn_send' => 'Gửi',
   ),
   'admin_custom' =>
   array (

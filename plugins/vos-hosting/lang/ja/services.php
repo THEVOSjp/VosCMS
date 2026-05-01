@@ -1216,6 +1216,14 @@ return array (
     'dom_new' => '新規ドメイン登録',
     'dom_free' => '無料サブドメイン (.21ces.net 等)',
     'dom_discuss' => '相談 / 未定',
+    'section_channel' => 'プロジェクトチャンネル',
+    'channel_desc' => '担当者と直接やり取り',
+    'channel_desc_admin' => '顧客と直接やり取り',
+    'channel_loading' => '読み込み中...',
+    'channel_empty' => 'メッセージはまだありません。',
+    'channel_reply_ph' => '担当者へメッセージを入力...',
+    'channel_reply_ph_admin' => '顧客へメッセージを入力...',
+    'channel_btn_send' => '送信',
   ),
   'admin_custom' =>
   array (

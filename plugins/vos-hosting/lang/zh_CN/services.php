@@ -1081,6 +1081,14 @@ return array (
     'dom_new' => '注册新域名',
     'dom_free' => '免费子域名 (.21ces.net 等)',
     'dom_discuss' => '协商 / 未定',
+    'section_channel' => '项目频道',
+    'channel_desc' => '直接与负责人沟通',
+    'channel_desc_admin' => '直接与客户沟通',
+    'channel_loading' => '加载中...',
+    'channel_empty' => '暂无消息。',
+    'channel_reply_ph' => '向负责人发送消息...',
+    'channel_reply_ph_admin' => '向客户发送消息...',
+    'channel_btn_send' => '发送',
   ),
   'admin_custom' =>
   array (

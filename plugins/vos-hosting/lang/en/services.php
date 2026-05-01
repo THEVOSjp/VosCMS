@@ -1219,6 +1219,14 @@ return array (
     'dom_new' => 'Register new domain',
     'dom_free' => 'Free subdomain (.21ces.net etc)',
     'dom_discuss' => 'Discuss / Undecided',
+    'section_channel' => 'Project Channel',
+    'channel_desc' => 'Direct line with your project manager',
+    'channel_desc_admin' => 'Direct line with the customer',
+    'channel_loading' => 'Loading...',
+    'channel_empty' => 'No messages yet.',
+    'channel_reply_ph' => 'Type a message to your manager...',
+    'channel_reply_ph_admin' => 'Type a message to the customer...',
+    'channel_btn_send' => 'Send',
   ),
   'admin_custom' =>
   array (
