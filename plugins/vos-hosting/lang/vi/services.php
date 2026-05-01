@@ -1161,6 +1161,8 @@ return array (
     'q_payments_label' => 'Lịch thanh toán',
     'q_payments_paid' => ':paid / :total đã thanh toán',
     'qe_domain_hint' => 'Thông tin tên miền/hosting — phản ánh vào báo giá',
+    'btn_view' => 'Chi tiết',
+    'view_modal_title' => 'Chi tiết báo giá',
   ),
   'lp' =>
   array (

@@ -1158,6 +1158,8 @@ return array (
     'q_payments_label' => 'Calendrier',
     'q_payments_paid' => ':paid / :total payé',
     'qe_domain_hint' => 'Info domaine/hébergement — refléter dans les items du devis',
+    'btn_view' => 'Détail',
+    'view_modal_title' => 'Détail du devis',
   ),
   'lp' =>
   array (

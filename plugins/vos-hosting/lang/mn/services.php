@@ -1144,6 +1144,8 @@ return array (
     'q_payments_label' => 'Төлбөрийн хуваарь',
     'q_payments_paid' => ':paid / :total төлсөн',
     'qe_domain_hint' => 'Домэйн/хостингийн мэдээлэл — үнийн саналд тусгана уу',
+    'btn_view' => 'Дэлгэрэнгүй',
+    'view_modal_title' => 'Үнэлгээний дэлгэрэнгүй',
   ),
   'lp' =>
   array (

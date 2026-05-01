@@ -1144,6 +1144,8 @@ return array (
     'q_payments_label' => 'Ödeme Programı',
     'q_payments_paid' => ':paid / :total ödendi',
     'qe_domain_hint' => 'Domain/hosting bilgisi — teklif kalemlerine yansıtın',
+    'btn_view' => 'Detay',
+    'view_modal_title' => 'Teklif Detayı',
   ),
   'lp' =>
   array (

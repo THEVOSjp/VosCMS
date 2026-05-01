@@ -1296,6 +1296,8 @@ return array (
     'q_payments_label' => '결제 일정',
     'q_payments_paid' => ':paid / :total 결제 완료',
     'qe_domain_hint' => '도메인/호스팅 정보 — 견적 항목에 반영하세요',
+    'btn_view' => '상세',
+    'view_modal_title' => '견적서 상세',
   ),
   'lp' =>
   array (

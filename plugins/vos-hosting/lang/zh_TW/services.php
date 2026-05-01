@@ -1161,6 +1161,8 @@ return array (
     'q_payments_label' => '付款計劃',
     'q_payments_paid' => ':paid / :total 已付款',
     'qe_domain_hint' => '網域/託管資訊 — 反映在報價項目中',
+    'btn_view' => '詳情',
+    'view_modal_title' => '報價詳情',
   ),
   'lp' =>
   array (

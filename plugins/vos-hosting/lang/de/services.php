@@ -1161,6 +1161,8 @@ return array (
     'q_payments_label' => 'Zahlungsplan',
     'q_payments_paid' => ':paid / :total bezahlt',
     'qe_domain_hint' => 'Domain/Hosting-Info — in Angebotspositionen einbeziehen',
+    'btn_view' => 'Details',
+    'view_modal_title' => 'Angebotsdetails',
   ),
   'lp' =>
   array (

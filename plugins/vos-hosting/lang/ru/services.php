@@ -1161,6 +1161,8 @@ return array (
     'q_payments_label' => 'График платежей',
     'q_payments_paid' => ':paid / :total оплачено',
     'qe_domain_hint' => 'Инфо домена/хостинга — отразить в позициях сметы',
+    'btn_view' => 'Детали',
+    'view_modal_title' => 'Детали сметы',
   ),
   'lp' =>
   array (

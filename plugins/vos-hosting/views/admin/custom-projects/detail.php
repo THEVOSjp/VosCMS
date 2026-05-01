@@ -284,6 +284,9 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                                     📤 <?= htmlspecialchars(__('services.admin_custom.btn_send')) ?>
                                 </button>
                                 <?php endif; ?>
+                                <button onclick='openQuoteView(<?= json_encode($q) ?>)' class="px-3 py-1 text-[11px] font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded">
+                                    👁 <?= htmlspecialchars(__('services.admin_custom.btn_view')) ?>
+                                </button>
                                 <button onclick='openQuotePrint(<?= json_encode($q) ?>)' class="px-3 py-1 text-[11px] font-medium bg-gray-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-gray-200 dark:hover:bg-zinc-600 rounded">
                                     🖨 <?= htmlspecialchars(__('services.admin_custom.btn_print')) ?>
                                 </button>
@@ -848,6 +851,119 @@ function channelSubmit() {
 
 document.addEventListener('DOMContentLoaded', channelLoad);
 <?php endif; ?>
+
+// ==== 견적 상세 보기 모달 ====
+function openQuoteView(quote) {
+    var statusLabel = {
+        'draft': <?= json_encode(__('services.admin_custom.q_draft'), JSON_UNESCAPED_UNICODE) ?>,
+        'sent': <?= json_encode(__('services.custom.q_sent'), JSON_UNESCAPED_UNICODE) ?>,
+        'accepted': <?= json_encode(__('services.custom.q_accepted'), JSON_UNESCAPED_UNICODE) ?>,
+        'rejected': <?= json_encode(__('services.custom.q_rejected'), JSON_UNESCAPED_UNICODE) ?>,
+        'superseded': <?= json_encode(__('services.custom.q_superseded'), JSON_UNESCAPED_UNICODE) ?>,
+    }[quote.status] || quote.status;
+    var statusClass = {
+        'draft': 'bg-gray-100 text-gray-700 dark:bg-zinc-700 dark:text-zinc-200',
+        'sent': 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+        'accepted': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200',
+        'rejected': 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+        'superseded': 'bg-gray-50 text-gray-500 dark:bg-zinc-700/30 dark:text-zinc-400',
+    }[quote.status] || 'bg-gray-100 text-gray-700';
+
+    var itemsHtml = '';
+    (quote.items || []).forEach(function(it) {
+        itemsHtml += '<tr class="border-b border-gray-100 dark:border-zinc-700/50">'
+            + '<td class="py-2 text-zinc-900 dark:text-white">' + escHtml(it.label)
+            + (it.note ? '<div class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">' + escHtml(it.note) + '</div>' : '')
+            + '</td>'
+            + '<td class="py-2 text-right tabular-nums text-zinc-700 dark:text-zinc-200">' + (parseFloat(it.qty)||0) + '</td>'
+            + '<td class="py-2 text-right tabular-nums text-zinc-700 dark:text-zinc-200">¥' + Math.round(it.unit_price||0).toLocaleString() + '</td>'
+            + '<td class="py-2 text-right tabular-nums font-medium text-zinc-900 dark:text-white">¥' + Math.round(it.amount||0).toLocaleString() + '</td>'
+            + '</tr>';
+    });
+
+    var paymentsHtml = '';
+    var pays = quote.payments || [];
+    if (pays.length > 0) {
+        pays.forEach(function(p) {
+            var pCls = {
+                'paid': 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200',
+                'cancelled': 'bg-gray-50 dark:bg-zinc-700/30 text-zinc-400 line-through',
+            }[p.status] || 'bg-emerald-50 dark:bg-emerald-900/10 text-emerald-700 dark:text-emerald-300';
+            paymentsHtml += '<div class="flex items-center justify-between gap-2 text-xs px-3 py-2 rounded ' + pCls + '">'
+                + '<span class="flex items-center gap-2"><span class="font-medium">' + escHtml(p.label) + '</span>'
+                + (p.due_date ? '<span class="text-[10px] opacity-60">(' + escHtml(p.due_date) + ')</span>' : '')
+                + (p.status === 'paid' ? '<span class="text-[10px] px-1.5 py-0.5 bg-emerald-200 dark:bg-emerald-800 rounded">✓ PAID</span>' : '')
+                + '</span>'
+                + '<span class="tabular-nums whitespace-nowrap font-bold">¥' + Math.round(p.amount).toLocaleString() + '</span>'
+                + '</div>';
+        });
+    }
+
+    var html = '<div class="space-y-4">'
+        + '<div class="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-gray-200 dark:border-zinc-700">'
+        + '<div class="flex items-center gap-2">'
+        + '<h4 class="text-base font-bold text-zinc-900 dark:text-white">v' + quote.version + '</h4>'
+        + '<span class="text-[11px] px-2 py-0.5 rounded-full font-medium ' + statusClass + '">' + escHtml(statusLabel) + '</span>'
+        + '</div>'
+        + '<div class="text-[11px] text-zinc-500 dark:text-zinc-400">'
+        + <?= json_encode(__('services.admin_custom.print_date'), JSON_UNESCAPED_UNICODE) ?> + ': ' + (quote.sent_at || quote.created_at).substring(0, 10)
+        + (quote.valid_until ? ' · ' + <?= json_encode(__('services.admin_custom.print_valid_until'), JSON_UNESCAPED_UNICODE) ?> + ': ' + quote.valid_until : '')
+        + '</div>'
+        + '</div>'
+        + '<table class="w-full text-sm">'
+        + '<thead><tr class="border-b-2 border-gray-300 dark:border-zinc-600 text-[10px] text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">'
+        + '<th class="text-left py-2 font-medium"><?= htmlspecialchars(__('services.custom.q_col_label')) ?></th>'
+        + '<th class="text-right py-2 font-medium w-16"><?= htmlspecialchars(__('services.custom.q_col_qty')) ?></th>'
+        + '<th class="text-right py-2 font-medium w-28"><?= htmlspecialchars(__('services.custom.q_col_unit')) ?></th>'
+        + '<th class="text-right py-2 font-medium w-28"><?= htmlspecialchars(__('services.custom.q_col_amount')) ?></th>'
+        + '</tr></thead><tbody>' + itemsHtml + '</tbody></table>'
+        + '<div class="flex justify-end">'
+        + '<div class="w-72 text-sm space-y-1.5">'
+        + '<div class="flex justify-between"><span class="text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars(__('services.custom.q_subtotal')) ?></span><span class="tabular-nums text-zinc-700 dark:text-zinc-200">¥' + Math.round(quote.subtotal||0).toLocaleString() + '</span></div>'
+        + '<div class="flex justify-between"><span class="text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars(__('services.admin_custom.qe_tax_amount')) ?> (' + (parseFloat(quote.tax_rate)||0) + '%)</span><span class="tabular-nums text-zinc-700 dark:text-zinc-200">¥' + Math.round(quote.tax_amount||0).toLocaleString() + '</span></div>'
+        + '<div class="flex justify-between pt-2 border-t-2 border-gray-300 dark:border-zinc-600 font-bold text-zinc-900 dark:text-white">'
+        + '<span><?= htmlspecialchars(__('services.custom.q_total')) ?></span>'
+        + '<span class="tabular-nums text-lg">¥' + Math.round(quote.total||0).toLocaleString() + '</span>'
+        + '</div>'
+        + '</div></div>'
+        + (paymentsHtml ? '<div class="pt-3 border-t border-gray-200 dark:border-zinc-700"><p class="text-[11px] text-zinc-500 dark:text-zinc-400 mb-2 font-medium"><?= htmlspecialchars(__('services.admin_custom.q_payments_label')) ?> (' + pays.length + ')</p><div class="space-y-1.5">' + paymentsHtml + '</div></div>' : '')
+        + (quote.notes ? '<div class="pt-3 border-t border-gray-200 dark:border-zinc-700"><p class="text-[11px] text-zinc-500 dark:text-zinc-400 mb-1 font-medium"><?= htmlspecialchars(__('services.custom.q_notes')) ?></p><p class="text-xs whitespace-pre-wrap text-zinc-700 dark:text-zinc-200 bg-gray-50 dark:bg-zinc-700/30 rounded p-3">' + escHtml(quote.notes) + '</p></div>' : '')
+        + (quote.status === 'rejected' && quote.reject_reason ? '<p class="text-xs text-red-600 dark:text-red-300"><?= htmlspecialchars(__('services.custom.q_rejected_reason', ['reason' => '\' + escHtml(quote.reject_reason) + \''])) ?></p>' : '')
+        + '</div>';
+
+    document.getElementById('viewModalContent').innerHTML = html;
+    var m = document.getElementById('viewModal');
+    if (m.parentElement !== document.body) document.body.appendChild(m);
+    m.classList.remove('hidden'); m.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    // 인쇄 버튼이 현재 quote 데이터를 알 수 있도록
+    document.getElementById('viewModalPrint').onclick = function() { openQuotePrint(quote); };
+}
+function closeQuoteView() {
+    var m = document.getElementById('viewModal');
+    m.classList.add('hidden'); m.classList.remove('flex');
+    document.body.style.overflow = '';
+}
 </script>
+
+<!-- 견적 상세 보기 모달 -->
+<div id="viewModal" class="hidden fixed inset-0 z-[100] items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50" onclick="closeQuoteView()"></div>
+    <div class="relative bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-zinc-700 flex items-center justify-between sticky top-0 bg-white dark:bg-zinc-800 z-10">
+            <h3 class="text-base font-bold text-zinc-900 dark:text-white">📋 <?= htmlspecialchars(__('services.admin_custom.view_modal_title')) ?></h3>
+            <button type="button" onclick="closeQuoteView()" class="text-zinc-400 hover:text-zinc-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div id="viewModalContent" class="p-6"></div>
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-zinc-700 flex items-center justify-end gap-2 sticky bottom-0 bg-white dark:bg-zinc-800">
+            <button type="button" onclick="closeQuoteView()" class="px-4 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-700 rounded-lg"><?= htmlspecialchars(__('services.order.checkout.btn_cancel')) ?></button>
+            <button type="button" id="viewModalPrint" class="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg">
+                🖨 <?= htmlspecialchars(__('services.admin_custom.btn_print')) ?>
+            </button>
+        </div>
+    </div>
+</div>
 
 <?php include BASE_PATH . '/resources/views/admin/reservations/_foot.php'; ?>

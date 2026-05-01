@@ -1133,6 +1133,8 @@ return array (
     'q_payments_label' => 'Jadwal Pembayaran',
     'q_payments_paid' => ':paid / :total dibayar',
     'qe_domain_hint' => 'Info domain/hosting — masukkan dalam item penawaran',
+    'btn_view' => 'Detail',
+    'view_modal_title' => 'Detail Penawaran',
   ),
   'lp' =>
   array (

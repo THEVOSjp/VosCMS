@@ -1299,6 +1299,8 @@ return array (
     'q_payments_label' => 'Payment Schedule',
     'q_payments_paid' => ':paid / :total paid',
     'qe_domain_hint' => 'Domain/Hosting info — reflect in quote items',
+    'btn_view' => 'Detail',
+    'view_modal_title' => 'Quote Detail',
   ),
   'lp' =>
   array (

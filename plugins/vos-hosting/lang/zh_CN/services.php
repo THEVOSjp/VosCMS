@@ -1161,6 +1161,8 @@ return array (
     'q_payments_label' => '付款计划',
     'q_payments_paid' => ':paid / :total 已支付',
     'qe_domain_hint' => '域名/托管信息 — 反映在报价项目中',
+    'btn_view' => '详情',
+    'view_modal_title' => '报价详情',
   ),
   'lp' =>
   array (

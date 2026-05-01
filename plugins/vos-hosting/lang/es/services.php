@@ -1161,6 +1161,8 @@ return array (
     'q_payments_label' => 'Calendario',
     'q_payments_paid' => ':paid / :total pagado',
     'qe_domain_hint' => 'Info dominio/hosting — refleje en items de cotización',
+    'btn_view' => 'Detalle',
+    'view_modal_title' => 'Detalle de cotización',
   ),
   'lp' =>
   array (

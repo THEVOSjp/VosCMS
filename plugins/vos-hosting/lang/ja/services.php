@@ -1296,6 +1296,8 @@ return array (
     'q_payments_label' => '支払いスケジュール',
     'q_payments_paid' => ':paid / :total 支払済',
     'qe_domain_hint' => 'ドメイン/ホスティング情報 — 見積項目に反映してください',
+    'btn_view' => '詳細',
+    'view_modal_title' => '見積書詳細',
   ),
   'lp' =>
   array (
