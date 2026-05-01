@@ -38,6 +38,19 @@ try {
     $_chSt->execute([$projectId]);
     $_channelTicket = $_chSt->fetch(PDO::FETCH_ASSOC) ?: null;
 } catch (\Throwable $e) {}
+
+// 마일스톤
+$_milestones = [];
+try {
+    $_msSt = $pdo->prepare("SELECT * FROM {$prefix}custom_milestones WHERE project_id = ? AND status != 'cancelled' ORDER BY sequence_no ASC, id ASC");
+    $_msSt->execute([$projectId]);
+    $_milestones = $_msSt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($_milestones as &$_m) { $_m['attachments'] = json_decode($_m['attachments'] ?? '[]', true) ?: []; }
+    unset($_m);
+} catch (\Throwable $e) {}
+$_msTotal = count($_milestones);
+$_msApproved = count(array_filter($_milestones, fn($m) => $m['status'] === 'approved'));
+$_msProgress = $_msTotal > 0 ? round($_msApproved / $_msTotal * 100) : 0;
 foreach ($quotes as &$_q) {
     $_q['items'] = json_decode($_q['items'] ?? '[]', true) ?: [];
     $_qpSt = $pdo->prepare("SELECT id, sequence_no, label, amount, currency, due_date, status, paid_at, note FROM {$prefix}custom_project_payments WHERE quote_id = ? ORDER BY sequence_no ASC, id ASC");
@@ -236,6 +249,90 @@ $domainOptionLabel = match ($project['domain_option']) {
     </div>
     <?php endif; ?>
 
+    <!-- 마일스톤 / 시안 검수 -->
+    <?php if ($_msTotal > 0): ?>
+    <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 mb-4">
+        <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700 flex items-center justify-between">
+            <p class="text-sm font-bold text-zinc-900 dark:text-white">📋 <?= htmlspecialchars(__('services.custom.section_milestones')) ?></p>
+            <span class="text-[11px] text-zinc-500 dark:text-zinc-400"><?= $_msApproved ?>/<?= $_msTotal ?> · <?= $_msProgress ?>%</span>
+        </div>
+        <div class="px-5 pt-3">
+            <div class="w-full bg-gray-200 dark:bg-zinc-700 rounded-full h-2">
+                <div class="bg-emerald-500 h-2 rounded-full transition-all" style="width: <?= $_msProgress ?>%"></div>
+            </div>
+        </div>
+        <div class="p-5 space-y-3">
+            <?php foreach ($_milestones as $_ms):
+                $_msCls = match ($_ms['status']) {
+                    'pending' => 'bg-gray-50 dark:bg-zinc-700/30 border-gray-200 dark:border-zinc-600',
+                    'in_progress' => 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800',
+                    'submitted' => 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800',
+                    'approved' => 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800',
+                    'revision_requested' => 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800',
+                    default => 'bg-gray-50 border-gray-200',
+                };
+                $_msStatusLabel = match ($_ms['status']) {
+                    'pending' => __('services.custom.ms_pending'),
+                    'in_progress' => __('services.custom.ms_in_progress'),
+                    'submitted' => __('services.custom.ms_submitted'),
+                    'approved' => __('services.custom.ms_approved'),
+                    'revision_requested' => __('services.custom.ms_revision'),
+                    default => $_ms['status'],
+                };
+            ?>
+            <div class="border <?= $_msCls ?> rounded-lg p-4" id="milestone-<?= (int)$_ms['id'] ?>">
+                <div class="flex items-start justify-between gap-2 mb-2 flex-wrap">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-[11px] font-mono text-zinc-400">#<?= (int)$_ms['sequence_no'] ?></span>
+                        <p class="text-sm font-bold text-zinc-900 dark:text-white"><?= htmlspecialchars($_ms['title']) ?></p>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full font-medium bg-white dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-current"><?= htmlspecialchars($_msStatusLabel) ?></span>
+                        <?php if ($_ms['due_date']): ?>
+                        <span class="text-[10px] text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars($_ms['due_date']) ?></span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php if ($_ms['description']): ?>
+                <p class="text-xs text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap mb-2"><?= htmlspecialchars($_ms['description']) ?></p>
+                <?php endif; ?>
+                <?php if (!empty($_ms['attachments'])): ?>
+                <div class="mb-2 space-y-1">
+                    <p class="text-[10px] text-zinc-400 uppercase">📎 <?= htmlspecialchars(__('services.custom.ms_attachments')) ?></p>
+                    <?php foreach ($_ms['attachments'] as $_idx => $_a):
+                        $_isImg = preg_match('/^(jpg|jpeg|png|gif|webp|svg)$/i', $_a['ext']);
+                    ?>
+                    <div class="flex items-center gap-2 text-[11px] bg-white dark:bg-zinc-700/50 px-2 py-1.5 rounded border border-gray-200 dark:border-zinc-600">
+                        <svg class="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                        <span class="truncate flex-1 text-zinc-700 dark:text-zinc-200"><?= htmlspecialchars($_a['name']) ?></span>
+                        <span class="text-zinc-400"><?= number_format($_a['size']/1024, 1) ?> KB</span>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+                <?php if ($_ms['status'] === 'revision_requested' && $_ms['revision_note']): ?>
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-2 mb-2">
+                    <p class="text-[10px] text-red-700 dark:text-red-300 font-bold mb-1">📝 <?= htmlspecialchars(__('services.custom.ms_revision_note_label')) ?></p>
+                    <p class="text-xs text-red-700 dark:text-red-200 whitespace-pre-wrap"><?= htmlspecialchars($_ms['revision_note']) ?></p>
+                </div>
+                <?php endif; ?>
+                <?php if ($_ms['status'] === 'approved' && $_ms['approval_note']): ?>
+                <p class="text-[11px] text-emerald-700 dark:text-emerald-300">✓ <?= htmlspecialchars($_ms['approval_note']) ?></p>
+                <?php endif; ?>
+                <?php if ($_ms['status'] === 'submitted'): ?>
+                <div class="mt-3 pt-3 border-t border-gray-200 dark:border-zinc-600 flex items-center justify-end gap-2">
+                    <button onclick="msRequestRevision(<?= (int)$_ms['id'] ?>)" class="px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+                        📝 <?= htmlspecialchars(__('services.custom.btn_request_revision')) ?>
+                    </button>
+                    <button onclick="msApprove(<?= (int)$_ms['id'] ?>)" class="px-4 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+                        ✓ <?= htmlspecialchars(__('services.custom.btn_approve')) ?>
+                    </button>
+                </div>
+                <?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- 견적서 -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700">
         <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700">
@@ -381,6 +478,23 @@ function api(action, payload) {
 function acceptQuote(quoteId) {
     if (!confirm('<?= htmlspecialchars(__('services.custom.confirm_accept')) ?>')) return;
     api('project_accept_quote', { project_id: projectId, quote_id: quoteId }).then(function(d){
+        if (d.success) location.reload();
+        else alert(d.message || 'error');
+    });
+}
+
+function msApprove(id) {
+    var note = prompt('<?= htmlspecialchars(__('services.custom.ms_approve_prompt')) ?>') || '';
+    if (note === null) return;
+    api('milestone_approve', { milestone_id: id, note: note }).then(function(d) {
+        if (d.success) location.reload();
+        else alert(d.message || 'error');
+    });
+}
+function msRequestRevision(id) {
+    var note = prompt('<?= htmlspecialchars(__('services.custom.ms_revision_prompt')) ?>');
+    if (!note) return;
+    api('milestone_request_revision', { milestone_id: id, note: note }).then(function(d) {
         if (d.success) location.reload();
         else alert(d.message || 'error');
     });

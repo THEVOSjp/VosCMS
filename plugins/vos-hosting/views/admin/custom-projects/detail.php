@@ -46,6 +46,19 @@ try {
     $_channelTicket = $_chSt->fetch(PDO::FETCH_ASSOC) ?: null;
 } catch (\Throwable $e) {}
 
+// 마일스톤
+$_milestones = [];
+try {
+    $_msSt = $pdo->prepare("SELECT * FROM {$prefix}custom_milestones WHERE project_id = ? ORDER BY sequence_no ASC, id ASC");
+    $_msSt->execute([$projectId]);
+    $_milestones = $_msSt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($_milestones as &$_m) { $_m['attachments'] = json_decode($_m['attachments'] ?? '[]', true) ?: []; }
+    unset($_m);
+} catch (\Throwable $e) {}
+$_msTotal = count($_milestones);
+$_msApproved = count(array_filter($_milestones, fn($m) => $m['status'] === 'approved'));
+$_msProgress = $_msTotal > 0 ? round($_msApproved / $_msTotal * 100) : 0;
+
 
 $pageTitle = $project['project_number'] . ' — ' . $project['title'];
 $pageHeaderTitle = __('services.admin_custom.detail_header');
@@ -335,6 +348,104 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                         <?php endif; ?>
                         <?php if ($q['status'] === 'rejected' && $q['reject_reason']): ?>
                         <p class="mt-2 text-[11px] text-red-600"><?= htmlspecialchars(__('services.custom.q_rejected_reason', ['reason' => $q['reject_reason']])) ?></p>
+                        <?php endif; ?>
+                    </div>
+                    <?php endforeach; endif; ?>
+                </div>
+            </div>
+
+            <!-- 마일스톤 / 시안 검수 -->
+            <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700">
+                <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <p class="text-sm font-bold text-zinc-900 dark:text-white">📋 <?= htmlspecialchars(__('services.admin_custom.section_milestones')) ?></p>
+                        <?php if ($_msTotal > 0): ?>
+                        <span class="text-[11px] text-zinc-500 dark:text-zinc-400"><?= $_msApproved ?>/<?= $_msTotal ?> · <?= $_msProgress ?>%</span>
+                        <?php endif; ?>
+                    </div>
+                    <button onclick="openMilestoneNew()" class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">
+                        + <?= htmlspecialchars(__('services.admin_custom.btn_new_milestone')) ?>
+                    </button>
+                </div>
+                <?php if ($_msTotal > 0): ?>
+                <div class="px-5 pt-3">
+                    <div class="w-full bg-gray-200 dark:bg-zinc-700 rounded-full h-2">
+                        <div class="bg-emerald-500 h-2 rounded-full transition-all" style="width: <?= $_msProgress ?>%"></div>
+                    </div>
+                </div>
+                <?php endif; ?>
+                <div class="p-5 space-y-3">
+                    <?php if (empty($_milestones)): ?>
+                    <p class="text-sm text-zinc-400 text-center py-6"><?= htmlspecialchars(__('services.admin_custom.milestones_empty')) ?></p>
+                    <?php else: foreach ($_milestones as $_ms):
+                        $_msCls = match ($_ms['status']) {
+                            'pending' => 'bg-gray-50 dark:bg-zinc-700/30 border-gray-200 dark:border-zinc-600',
+                            'in_progress' => 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800',
+                            'submitted' => 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800',
+                            'approved' => 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800',
+                            'revision_requested' => 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800',
+                            'cancelled' => 'bg-gray-50 dark:bg-zinc-700/20 border-gray-200 opacity-60',
+                            default => 'bg-gray-50 border-gray-200',
+                        };
+                        $_msStatusLabel = match ($_ms['status']) {
+                            'pending' => __('services.custom.ms_pending'),
+                            'in_progress' => __('services.custom.ms_in_progress'),
+                            'submitted' => __('services.custom.ms_submitted'),
+                            'approved' => __('services.custom.ms_approved'),
+                            'revision_requested' => __('services.custom.ms_revision'),
+                            'cancelled' => __('services.custom.ms_cancelled'),
+                            default => $_ms['status'],
+                        };
+                    ?>
+                    <div class="border <?= $_msCls ?> rounded-lg p-4" id="milestone-<?= (int)$_ms['id'] ?>">
+                        <div class="flex items-start justify-between gap-2 mb-2 flex-wrap">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-[11px] font-mono text-zinc-400">#<?= (int)$_ms['sequence_no'] ?></span>
+                                <p class="text-sm font-bold text-zinc-900 dark:text-white"><?= htmlspecialchars($_ms['title']) ?></p>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full font-medium bg-white dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-current"><?= htmlspecialchars($_msStatusLabel) ?></span>
+                                <?php if ($_ms['due_date']): ?>
+                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars($_ms['due_date']) ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button onclick='openMilestoneEdit(<?= json_encode($_ms) ?>)' class="text-[11px] px-2 py-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"><?= htmlspecialchars(__('services.admin_custom.btn_edit')) ?></button>
+                                <?php if (in_array($_ms['status'], ['pending','cancelled'], true)): ?>
+                                <button onclick="deleteMilestone(<?= (int)$_ms['id'] ?>)" class="text-[11px] px-2 py-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded">×</button>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php if ($_ms['description']): ?>
+                        <p class="text-xs text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap mb-2"><?= htmlspecialchars($_ms['description']) ?></p>
+                        <?php endif; ?>
+                        <?php if (!empty($_ms['attachments'])): ?>
+                        <div class="mb-2 space-y-1">
+                            <p class="text-[10px] text-zinc-400 uppercase">📎 <?= htmlspecialchars(__('services.admin_custom.ms_attachments')) ?></p>
+                            <?php foreach ($_ms['attachments'] as $_idx => $_a):
+                                $_isImg = preg_match('/^(jpg|jpeg|png|gif|webp|svg)$/i', $_a['ext']);
+                            ?>
+                            <div class="flex items-center gap-2 text-[11px] bg-white dark:bg-zinc-700/50 px-2 py-1.5 rounded border border-gray-200 dark:border-zinc-600">
+                                <svg class="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                <span class="truncate flex-1 text-zinc-700 dark:text-zinc-200"><?= htmlspecialchars($_a['name']) ?></span>
+                                <span class="text-zinc-400"><?= number_format($_a['size']/1024, 1) ?> KB</span>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ($_ms['status'] === 'revision_requested' && $_ms['revision_note']): ?>
+                        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-2 mb-2">
+                            <p class="text-[10px] text-red-700 dark:text-red-300 font-bold mb-1">📝 <?= htmlspecialchars(__('services.admin_custom.ms_revision_note')) ?></p>
+                            <p class="text-xs text-red-700 dark:text-red-200 whitespace-pre-wrap"><?= htmlspecialchars($_ms['revision_note']) ?></p>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ($_ms['status'] === 'approved' && $_ms['approval_note']): ?>
+                        <p class="text-[11px] text-emerald-700 dark:text-emerald-300">✓ <?= htmlspecialchars($_ms['approval_note']) ?></p>
+                        <?php endif; ?>
+                        <?php if (in_array($_ms['status'], ['pending','in_progress','revision_requested'], true)): ?>
+                        <div class="mt-3 pt-3 border-t border-gray-200 dark:border-zinc-600">
+                            <button onclick='openMilestoneSubmit(<?= json_encode($_ms) ?>)' class="px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+                                📤 <?= htmlspecialchars(__('services.admin_custom.btn_submit_milestone')) ?>
+                            </button>
+                        </div>
                         <?php endif; ?>
                     </div>
                     <?php endforeach; endif; ?>
@@ -852,6 +963,114 @@ function channelSubmit() {
 document.addEventListener('DOMContentLoaded', channelLoad);
 <?php endif; ?>
 
+// ==== 마일스톤 ====
+function openMilestoneNew() {
+    document.getElementById('milestoneModalTitle').textContent = <?= json_encode(__('services.admin_custom.milestone_new'), JSON_UNESCAPED_UNICODE) ?>;
+    document.getElementById('ms_id').value = 0;
+    document.getElementById('ms_title').value = '';
+    document.getElementById('ms_description').value = '';
+    document.getElementById('ms_due_date').value = '';
+    document.getElementById('ms_sequence_no').value = '';
+    var m = document.getElementById('milestoneModal');
+    if (m.parentElement !== document.body) document.body.appendChild(m);
+    m.classList.remove('hidden'); m.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+function openMilestoneEdit(ms) {
+    document.getElementById('milestoneModalTitle').textContent = <?= json_encode(__('services.admin_custom.milestone_edit'), JSON_UNESCAPED_UNICODE) ?>;
+    document.getElementById('ms_id').value = ms.id;
+    document.getElementById('ms_title').value = ms.title || '';
+    document.getElementById('ms_description').value = ms.description || '';
+    document.getElementById('ms_due_date').value = ms.due_date || '';
+    document.getElementById('ms_sequence_no').value = ms.sequence_no || '';
+    var m = document.getElementById('milestoneModal');
+    if (m.parentElement !== document.body) document.body.appendChild(m);
+    m.classList.remove('hidden'); m.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+function closeMilestoneModal() {
+    var m = document.getElementById('milestoneModal');
+    m.classList.add('hidden'); m.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+function saveMilestone() {
+    var id = parseInt(document.getElementById('ms_id').value, 10) || 0;
+    var title = document.getElementById('ms_title').value.trim();
+    if (!title) { alert(<?= json_encode(__('services.admin_custom.ms_title_required'), JSON_UNESCAPED_UNICODE) ?>); return; }
+    var btn = document.getElementById('ms_save_btn');
+    btn.disabled = true;
+    var payload = {
+        title: title,
+        description: document.getElementById('ms_description').value,
+        due_date: document.getElementById('ms_due_date').value,
+    };
+    var seq = document.getElementById('ms_sequence_no').value;
+    if (seq !== '') payload.sequence_no = parseInt(seq, 10);
+    if (id > 0) {
+        payload.milestone_id = id;
+        api('milestone_update', payload).then(function(d) {
+            btn.disabled = false;
+            if (d.success) location.reload();
+            else alert(d.message || 'error');
+        });
+    } else {
+        payload.project_id = projectId;
+        api('milestone_create', payload).then(function(d) {
+            btn.disabled = false;
+            if (d.success) location.reload();
+            else alert(d.message || 'error');
+        });
+    }
+}
+function deleteMilestone(id) {
+    if (!confirm(<?= json_encode(__('services.admin_custom.confirm_delete_ms'), JSON_UNESCAPED_UNICODE) ?>)) return;
+    api('milestone_delete', { milestone_id: id }).then(function(d) {
+        if (d.success) location.reload();
+        else alert(d.message || 'error');
+    });
+}
+function openMilestoneSubmit(ms) {
+    document.getElementById('sub_ms_id').value = ms.id;
+    document.getElementById('sub_ms_title').textContent = ms.title;
+    document.getElementById('sub_files').value = '';
+    var m = document.getElementById('submitModal');
+    if (m.parentElement !== document.body) document.body.appendChild(m);
+    m.classList.remove('hidden'); m.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+function closeSubmitModal() {
+    var m = document.getElementById('submitModal');
+    m.classList.add('hidden'); m.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+function submitMilestone() {
+    var id = parseInt(document.getElementById('sub_ms_id').value, 10);
+    var btn = document.getElementById('sub_btn');
+    btn.disabled = true;
+    var fileInput = document.getElementById('sub_files');
+    var files = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
+    var uploadPromise;
+    if (files.length === 0) {
+        uploadPromise = Promise.resolve([]);
+    } else {
+        var fd = new FormData();
+        files.forEach(function(f){ fd.append('files[]', f); });
+        uploadPromise = fetch(siteBaseUrl + '/plugins/vos-hosting/api/support-attachment.php?action=upload_pending', {
+            method: 'POST', body: fd, credentials: 'same-origin'
+        }).then(function(r){ return r.json(); }).then(function(d){
+            if (!d.success) throw new Error(d.message || 'upload failed');
+            return d.attachments || [];
+        });
+    }
+    uploadPromise.then(function(atts) {
+        return api('milestone_submit', { milestone_id: id, attachments: atts });
+    }).then(function(d) {
+        btn.disabled = false;
+        if (d.success) location.reload();
+        else alert(d.message || 'error');
+    }).catch(function(e) { btn.disabled = false; alert(e && e.message || 'error'); });
+}
+
 // ==== 견적 상세 보기 모달 ====
 function openQuoteView(quote) {
     var statusLabel = {
@@ -945,6 +1164,74 @@ function closeQuoteView() {
     document.body.style.overflow = '';
 }
 </script>
+
+<!-- 마일스톤 편집/추가 모달 -->
+<div id="milestoneModal" class="hidden fixed inset-0 z-[100] items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50" onclick="closeMilestoneModal()"></div>
+    <div class="relative bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-zinc-700 flex items-center justify-between">
+            <h3 id="milestoneModalTitle" class="text-base font-bold text-zinc-900 dark:text-white"></h3>
+            <button type="button" onclick="closeMilestoneModal()" class="text-zinc-400 hover:text-zinc-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="p-6 space-y-3">
+            <input type="hidden" id="ms_id" value="0">
+            <div>
+                <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_custom.ms_field_title')) ?> <span class="text-red-500">*</span></label>
+                <input type="text" id="ms_title" maxlength="200" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg" placeholder="<?= htmlspecialchars(__('services.admin_custom.ms_title_ph')) ?>">
+            </div>
+            <div>
+                <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_custom.ms_field_desc')) ?></label>
+                <textarea id="ms_description" rows="3" class="w-full px-3 py-2 text-xs border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg" placeholder="<?= htmlspecialchars(__('services.admin_custom.ms_desc_ph')) ?>"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_custom.ms_field_due')) ?></label>
+                    <input type="date" id="ms_due_date" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_custom.ms_field_seq')) ?></label>
+                    <input type="number" id="ms_sequence_no" min="0" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg">
+                </div>
+            </div>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-zinc-700 flex items-center justify-end gap-2">
+            <button type="button" onclick="closeMilestoneModal()" class="px-4 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-700 rounded-lg"><?= htmlspecialchars(__('services.order.checkout.btn_cancel')) ?></button>
+            <button type="button" id="ms_save_btn" onclick="saveMilestone()" class="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50">
+                <?= htmlspecialchars(__('services.admin_custom.btn_save')) ?>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 시안 제출 모달 -->
+<div id="submitModal" class="hidden fixed inset-0 z-[100] items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50" onclick="closeSubmitModal()"></div>
+    <div class="relative bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-zinc-700 flex items-center justify-between">
+            <h3 class="text-base font-bold text-zinc-900 dark:text-white">📤 <?= htmlspecialchars(__('services.admin_custom.btn_submit_milestone')) ?></h3>
+            <button type="button" onclick="closeSubmitModal()" class="text-zinc-400 hover:text-zinc-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="p-6 space-y-3">
+            <input type="hidden" id="sub_ms_id" value="0">
+            <p id="sub_ms_title" class="text-sm font-bold text-zinc-900 dark:text-white"></p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars(__('services.admin_custom.submit_modal_hint')) ?></p>
+            <div>
+                <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1">📎 <?= htmlspecialchars(__('services.admin_custom.ms_attachments')) ?></label>
+                <input type="file" id="sub_files" multiple class="block w-full text-xs text-zinc-600 dark:text-zinc-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300">
+            </div>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-zinc-700 flex items-center justify-end gap-2">
+            <button type="button" onclick="closeSubmitModal()" class="px-4 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-700 rounded-lg"><?= htmlspecialchars(__('services.order.checkout.btn_cancel')) ?></button>
+            <button type="button" id="sub_btn" onclick="submitMilestone()" class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg disabled:opacity-50">
+                📤 <?= htmlspecialchars(__('services.admin_custom.btn_submit_milestone')) ?>
+            </button>
+        </div>
+    </div>
+</div>
 
 <!-- 견적 상세 보기 모달 -->
 <div id="viewModal" class="hidden fixed inset-0 z-[100] items-center justify-center p-4">

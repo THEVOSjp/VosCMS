@@ -770,6 +770,264 @@ switch ($action) {
         exit;
     }
 
+    // ============================================================
+    // milestone_list — 프로젝트의 마일스톤 리스트 조회 (admin/user 모두)
+    // ============================================================
+    case 'milestone_list': {
+        $projectId = (int)($input['project_id'] ?? 0);
+        if (!$projectId) { echo json_encode(['success' => false, 'message' => 'project_id required']); exit; }
+
+        $pSt = $pdo->prepare("SELECT user_id FROM {$prefix}custom_projects WHERE id = ?");
+        $pSt->execute([$projectId]);
+        $ownerId = $pSt->fetchColumn();
+        if (!$ownerId) { echo json_encode(['success' => false, 'message' => 'project not found']); exit; }
+        if (!$isAdmin && $ownerId !== $userId) { echo json_encode(['success' => false, 'message' => 'permission denied']); exit; }
+
+        $mSt = $pdo->prepare("SELECT * FROM {$prefix}custom_milestones WHERE project_id = ? ORDER BY sequence_no ASC, id ASC");
+        $mSt->execute([$projectId]);
+        $milestones = $mSt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($milestones as &$_m) {
+            $_m['attachments'] = json_decode($_m['attachments'] ?? '[]', true) ?: [];
+        }
+        unset($_m);
+
+        echo json_encode(['success' => true, 'milestones' => $milestones, 'is_admin' => $isAdmin], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // ============================================================
+    // milestone_create — 관리자: 마일스톤 추가
+    // ============================================================
+    case 'milestone_create': {
+        if (!$isAdmin) { echo json_encode(['success' => false, 'message' => '관리자 권한 필요']); exit; }
+        $projectId = (int)($input['project_id'] ?? 0);
+        $title = trim((string)($input['title'] ?? ''));
+        $description = trim((string)($input['description'] ?? ''));
+        $dueDate = trim((string)($input['due_date'] ?? ''));
+        if (!$projectId || $title === '') { echo json_encode(['success' => false, 'message' => 'project_id + title required']); exit; }
+        $title = mb_substr($title, 0, 200);
+        $dueDate = ($dueDate !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dueDate)) ? $dueDate : null;
+
+        // 다음 sequence_no 계산
+        $sSt = $pdo->prepare("SELECT COALESCE(MAX(sequence_no), 0) + 1 FROM {$prefix}custom_milestones WHERE project_id = ?");
+        $sSt->execute([$projectId]);
+        $seq = (int)$sSt->fetchColumn();
+
+        $pdo->prepare("INSERT INTO {$prefix}custom_milestones
+            (project_id, sequence_no, title, description, due_date, status)
+            VALUES (?, ?, ?, ?, ?, 'pending')")
+            ->execute([$projectId, $seq, $title, $description !== '' ? $description : null, $dueDate]);
+
+        echo json_encode(['success' => true, 'milestone_id' => (int)$pdo->lastInsertId()]);
+        exit;
+    }
+
+    // ============================================================
+    // milestone_update — 관리자: 마일스톤 정보·순서 수정
+    // ============================================================
+    case 'milestone_update': {
+        if (!$isAdmin) { echo json_encode(['success' => false, 'message' => '관리자 권한 필요']); exit; }
+        $milestoneId = (int)($input['milestone_id'] ?? 0);
+        if (!$milestoneId) { echo json_encode(['success' => false, 'message' => 'milestone_id required']); exit; }
+
+        $sets = [];
+        $params = [];
+        if (isset($input['title'])) {
+            $t = trim((string)$input['title']);
+            if ($t === '') { echo json_encode(['success' => false, 'message' => 'title cannot be empty']); exit; }
+            $sets[] = 'title = ?'; $params[] = mb_substr($t, 0, 200);
+        }
+        if (isset($input['description'])) {
+            $sets[] = 'description = ?'; $params[] = trim((string)$input['description']) ?: null;
+        }
+        if (isset($input['due_date'])) {
+            $d = trim((string)$input['due_date']);
+            $sets[] = 'due_date = ?'; $params[] = ($d !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)) ? $d : null;
+        }
+        if (isset($input['sequence_no'])) {
+            $sets[] = 'sequence_no = ?'; $params[] = max(0, (int)$input['sequence_no']);
+        }
+        if (isset($input['status']) && in_array($input['status'], ['pending','in_progress','cancelled'], true)) {
+            $sets[] = 'status = ?'; $params[] = $input['status'];
+            if ($input['status'] === 'in_progress') {
+                $sets[] = 'started_at = COALESCE(started_at, NOW())';
+            }
+        }
+        if (empty($sets)) { echo json_encode(['success' => false, 'message' => 'no changes']); exit; }
+        $params[] = $milestoneId;
+        $pdo->prepare("UPDATE {$prefix}custom_milestones SET " . implode(', ', $sets) . " WHERE id = ?")->execute($params);
+
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
+    // ============================================================
+    // milestone_delete — 관리자: 마일스톤 삭제 (pending 만)
+    // ============================================================
+    case 'milestone_delete': {
+        if (!$isAdmin) { echo json_encode(['success' => false, 'message' => '관리자 권한 필요']); exit; }
+        $milestoneId = (int)($input['milestone_id'] ?? 0);
+        if (!$milestoneId) { echo json_encode(['success' => false, 'message' => 'milestone_id required']); exit; }
+
+        $cSt = $pdo->prepare("SELECT status FROM {$prefix}custom_milestones WHERE id = ?");
+        $cSt->execute([$milestoneId]);
+        $st = $cSt->fetchColumn();
+        if (!$st) { echo json_encode(['success' => false, 'message' => 'not found']); exit; }
+        if (!in_array($st, ['pending','cancelled'], true)) {
+            echo json_encode(['success' => false, 'message' => '진행 중이거나 완료된 마일스톤은 삭제할 수 없습니다. cancelled 로 변경하세요.']); exit;
+        }
+        $pdo->prepare("DELETE FROM {$prefix}custom_milestones WHERE id = ?")->execute([$milestoneId]);
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
+    // ============================================================
+    // milestone_submit — 관리자: 시안 제출 (status → submitted)
+    //   첨부파일은 support _pending → custom-projects/{id}/milestones/{milestone_id}/ 로 이동
+    // ============================================================
+    case 'milestone_submit': {
+        if (!$isAdmin) { echo json_encode(['success' => false, 'message' => '관리자 권한 필요']); exit; }
+        $milestoneId = (int)($input['milestone_id'] ?? 0);
+        $rawAtts = is_array($input['attachments'] ?? null) ? $input['attachments'] : [];
+        if (!$milestoneId) { echo json_encode(['success' => false, 'message' => 'milestone_id required']); exit; }
+
+        $mSt = $pdo->prepare("SELECT m.*, p.user_id, p.project_number, p.title AS project_title FROM {$prefix}custom_milestones m JOIN {$prefix}custom_projects p ON m.project_id = p.id WHERE m.id = ?");
+        $mSt->execute([$milestoneId]);
+        $ms = $mSt->fetch(PDO::FETCH_ASSOC);
+        if (!$ms) { echo json_encode(['success' => false, 'message' => 'not found']); exit; }
+        if ($ms['status'] === 'approved') { echo json_encode(['success' => false, 'message' => '이미 승인된 마일스톤입니다.']); exit; }
+
+        // 첨부 처리: support _pending → custom-projects/{project_id}/milestones/{milestone_id}/
+        $cleanAtts = [];
+        if (!empty($rawAtts)) {
+            $base = BASE_PATH;
+            $pendingDir = $base . '/uploads/support/_pending';
+            $targetDir = $base . '/uploads/custom-projects/' . (int)$ms['project_id'] . '/milestones/' . $milestoneId;
+            if (!is_dir($targetDir)) @mkdir($targetDir, 0775, true);
+            $allowedExts = ['jpg','jpeg','png','gif','webp','svg','pdf','doc','docx','xls','xlsx','ppt','pptx','csv','txt','md','zip','rar','tar','gz','7z','log','json','xml','sql'];
+            foreach ($rawAtts as $a) {
+                $uuid = (string)($a['uuid'] ?? '');
+                $ext = strtolower((string)($a['ext'] ?? ''));
+                $name = (string)($a['name'] ?? 'file');
+                $size = (int)($a['size'] ?? 0);
+                $mime = (string)($a['mime'] ?? 'application/octet-stream');
+                if ($uuid === '' || !preg_match('/^[a-f0-9]{32}$/', $uuid)) continue;
+                if (!in_array($ext, $allowedExts, true)) continue;
+                $src = $pendingDir . '/' . $userId . '_' . $uuid . '.' . $ext;
+                if (!is_file($src)) continue;
+                $dst = $targetDir . '/' . $uuid . '.' . $ext;
+                if (!@rename($src, $dst)) continue;
+                @chmod($dst, 0644);
+                $cleanAtts[] = ['uuid'=>$uuid, 'name'=>mb_substr($name,0,255), 'size'=>$size, 'mime'=>mb_substr($mime,0,100), 'ext'=>$ext];
+            }
+        }
+        // 기존 첨부와 합치기
+        $existing = json_decode($ms['attachments'] ?? '[]', true) ?: [];
+        $allAtts = array_merge($existing, $cleanAtts);
+        $attsJson = empty($allAtts) ? null : json_encode($allAtts, JSON_UNESCAPED_UNICODE);
+
+        $pdo->prepare("UPDATE {$prefix}custom_milestones SET status = 'submitted', submitted_at = NOW(), attachments = ?, started_at = COALESCE(started_at, NOW()) WHERE id = ?")
+            ->execute([$attsJson, $milestoneId]);
+
+        // 고객 푸시
+        try {
+            require_once BASE_PATH . '/vendor/autoload.php';
+            $notifier = new \RzxLib\Core\Notification\WebPushNotifier($pdo, $prefix);
+            $notifier->notifyUser(
+                (string)$ms['user_id'],
+                '✏️ 시안 검토 요청',
+                $ms['project_number'] . ' — ' . $ms['title'],
+                '/mypage/custom-projects/' . $ms['project_id'] . '#milestone-' . $milestoneId
+            );
+        } catch (\Throwable $ne) { error_log('[milestone_submit] notify: ' . $ne->getMessage()); }
+
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
+    // ============================================================
+    // milestone_approve — 고객: 시안 승인
+    // ============================================================
+    case 'milestone_approve': {
+        $milestoneId = (int)($input['milestone_id'] ?? 0);
+        $note = mb_substr(trim((string)($input['note'] ?? '')), 0, 500);
+        if (!$milestoneId) { echo json_encode(['success' => false, 'message' => 'milestone_id required']); exit; }
+
+        $mSt = $pdo->prepare("SELECT m.*, p.user_id, p.project_number, p.title AS project_title FROM {$prefix}custom_milestones m JOIN {$prefix}custom_projects p ON m.project_id = p.id WHERE m.id = ?");
+        $mSt->execute([$milestoneId]);
+        $ms = $mSt->fetch(PDO::FETCH_ASSOC);
+        if (!$ms) { echo json_encode(['success' => false, 'message' => 'not found']); exit; }
+        if (!$isAdmin && $ms['user_id'] !== $userId) { echo json_encode(['success' => false, 'message' => 'permission denied']); exit; }
+        if ($ms['status'] !== 'submitted') { echo json_encode(['success' => false, 'message' => '제출된 시안만 승인할 수 있습니다.']); exit; }
+
+        $pdo->prepare("UPDATE {$prefix}custom_milestones SET status = 'approved', approved_at = NOW(), completed_at = NOW(), approval_note = ? WHERE id = ?")
+            ->execute([$note !== '' ? $note : null, $milestoneId]);
+
+        // 다음 마일스톤 자동 in_progress
+        $pdo->prepare("UPDATE {$prefix}custom_milestones SET status = 'in_progress', started_at = COALESCE(started_at, NOW()) WHERE project_id = ? AND status = 'pending' ORDER BY sequence_no ASC, id ASC LIMIT 1")
+            ->execute([$ms['project_id']]);
+
+        // 관리자 푸시
+        try {
+            require_once BASE_PATH . '/vendor/autoload.php';
+            $notifier = new \RzxLib\Core\Notification\WebPushNotifier($pdo, $prefix);
+            $adminPath = 'admin';
+            try {
+                $cfgSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'admin_path' LIMIT 1");
+                $cfgSt->execute();
+                $adminPath = trim((string)($cfgSt->fetchColumn() ?: 'admin'));
+            } catch (\Throwable $e) {}
+            $notifier->notifyAdmins(
+                '✅ 시안 승인',
+                $ms['project_number'] . ' — ' . $ms['title'],
+                '/' . trim($adminPath, '/') . '/custom-projects/' . $ms['project_id']
+            );
+        } catch (\Throwable $ne) { error_log('[milestone_approve] notify: ' . $ne->getMessage()); }
+
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
+    // ============================================================
+    // milestone_request_revision — 고객: 수정 요청
+    // ============================================================
+    case 'milestone_request_revision': {
+        $milestoneId = (int)($input['milestone_id'] ?? 0);
+        $note = trim((string)($input['note'] ?? ''));
+        if (!$milestoneId || $note === '') { echo json_encode(['success' => false, 'message' => '수정 사유를 입력해주세요.']); exit; }
+        $note = mb_substr($note, 0, 1000);
+
+        $mSt = $pdo->prepare("SELECT m.*, p.user_id, p.project_number, p.title AS project_title FROM {$prefix}custom_milestones m JOIN {$prefix}custom_projects p ON m.project_id = p.id WHERE m.id = ?");
+        $mSt->execute([$milestoneId]);
+        $ms = $mSt->fetch(PDO::FETCH_ASSOC);
+        if (!$ms) { echo json_encode(['success' => false, 'message' => 'not found']); exit; }
+        if (!$isAdmin && $ms['user_id'] !== $userId) { echo json_encode(['success' => false, 'message' => 'permission denied']); exit; }
+        if ($ms['status'] !== 'submitted') { echo json_encode(['success' => false, 'message' => '제출된 시안에만 수정 요청할 수 있습니다.']); exit; }
+
+        $pdo->prepare("UPDATE {$prefix}custom_milestones SET status = 'revision_requested', revision_at = NOW(), revision_note = ? WHERE id = ?")
+            ->execute([$note, $milestoneId]);
+
+        // 관리자 푸시
+        try {
+            require_once BASE_PATH . '/vendor/autoload.php';
+            $notifier = new \RzxLib\Core\Notification\WebPushNotifier($pdo, $prefix);
+            $adminPath = 'admin';
+            try {
+                $cfgSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'admin_path' LIMIT 1");
+                $cfgSt->execute();
+                $adminPath = trim((string)($cfgSt->fetchColumn() ?: 'admin'));
+            } catch (\Throwable $e) {}
+            $notifier->notifyAdmins(
+                '📝 수정 요청',
+                $ms['project_number'] . ' — ' . $ms['title'],
+                '/' . trim($adminPath, '/') . '/custom-projects/' . $ms['project_id']
+            );
+        } catch (\Throwable $ne) { error_log('[milestone_request_revision] notify: ' . $ne->getMessage()); }
+
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
     default:
         echo json_encode(['success' => false, 'message' => 'unknown action: ' . $action]); exit;
 }
