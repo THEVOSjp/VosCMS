@@ -161,7 +161,7 @@ $domainOptionLabel = match ($project['domain_option']) {
 
     <!-- 🎉 납품 완료 — 인수인계 정보 -->
     <?php if ($_isDelivered): ?>
-    <div class="bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-900/20 dark:to-emerald-900/20 border-2 border-teal-300 dark:border-teal-700 rounded-2xl mb-4 overflow-hidden">
+    <div class="border-2 border-teal-300 dark:border-teal-700 rounded-2xl mb-4 overflow-hidden">
         <div class="px-5 py-4 border-b border-teal-200 dark:border-teal-800">
             <p class="text-base font-bold text-teal-900 dark:text-teal-100">🎉 <?= htmlspecialchars(__('services.custom.delivery_title')) ?></p>
             <p class="text-xs text-teal-700 dark:text-teal-300 mt-0.5">
@@ -353,12 +353,12 @@ $domainOptionLabel = match ($project['domain_option']) {
         <div class="p-5 space-y-3">
             <?php foreach ($_milestones as $_ms):
                 $_msCls = match ($_ms['status']) {
-                    'pending' => 'bg-gray-50 dark:bg-zinc-700/30 border-gray-200 dark:border-zinc-600',
-                    'in_progress' => 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800',
-                    'submitted' => 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800',
-                    'approved' => 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800',
-                    'revision_requested' => 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800',
-                    default => 'bg-gray-50 border-gray-200',
+                    'pending' => 'border-gray-200 dark:border-zinc-600',
+                    'in_progress' => 'border-blue-200 dark:border-blue-800',
+                    'submitted' => 'border-amber-200 dark:border-amber-800',
+                    'approved' => 'border-emerald-200 dark:border-emerald-800',
+                    'revision_requested' => 'border-red-200 dark:border-red-800',
+                    default => 'border-gray-200',
                 };
                 $_msStatusLabel = match ($_ms['status']) {
                     'pending' => __('services.custom.ms_pending'),
@@ -410,7 +410,7 @@ $domainOptionLabel = match ($project['domain_option']) {
                 </div>
                 <?php endif; ?>
                 <?php if ($_ms['status'] === 'revision_requested' && $_ms['revision_note']): ?>
-                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-2 mb-2">
+                <div class="border border-red-200 dark:border-red-800 rounded p-2 mb-2">
                     <p class="text-[10px] text-red-700 dark:text-red-300 font-bold mb-1">📝 <?= htmlspecialchars(__('services.custom.ms_revision_note_label')) ?></p>
                     <p class="text-xs text-red-700 dark:text-red-200 whitespace-pre-wrap"><?= htmlspecialchars($_ms['revision_note']) ?></p>
                 </div>
@@ -445,11 +445,11 @@ $domainOptionLabel = match ($project['domain_option']) {
             <?php else: foreach ($quotes as $q): ?>
             <?php
             $qBg = match ($q['status']) {
-                'sent' => ['bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800', __('services.custom.q_sent')],
-                'accepted' => ['bg-emerald-100 dark:bg-emerald-900/30 border-emerald-400 dark:border-emerald-600', __('services.custom.q_accepted')],
-                'rejected' => ['bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-700', __('services.custom.q_rejected')],
-                'superseded' => ['bg-gray-50 dark:bg-zinc-700/30 border-gray-200 dark:border-zinc-600 opacity-60', __('services.custom.q_superseded')],
-                default => ['bg-gray-50 border-gray-200', $q['status']],
+                'sent' => ['border-emerald-200 dark:border-emerald-800', __('services.custom.q_sent')],
+                'accepted' => ['border-emerald-400 dark:border-emerald-600', __('services.custom.q_accepted')],
+                'rejected' => ['border-red-200 dark:border-red-700', __('services.custom.q_rejected')],
+                'superseded' => ['border-gray-200 dark:border-zinc-600 opacity-60', __('services.custom.q_superseded')],
+                default => ['border-gray-200', $q['status']],
             };
             ?>
             <div class="border <?= $qBg[0] ?> rounded-lg p-4 mb-3 last:mb-0">
@@ -518,9 +518,9 @@ $domainOptionLabel = match ($project['domain_option']) {
                     <div class="space-y-1">
                     <?php foreach ($q['payments'] as $_pay):
                         $_pCls = match ($_pay['status']) {
-                            'paid' => 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200',
-                            'cancelled' => 'bg-gray-50 dark:bg-zinc-700/30 text-zinc-400 line-through',
-                            default => 'bg-emerald-50 dark:bg-emerald-900/10 text-emerald-700 dark:text-emerald-300',
+                            'paid' => 'border border-emerald-400 dark:border-emerald-600 text-emerald-800 dark:text-emerald-200',
+                            'cancelled' => 'border border-gray-200 dark:border-zinc-600 text-zinc-400 line-through',
+                            default => 'border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300',
                         };
                         $_canPay = ($q['status'] === 'accepted' && $_pay['status'] === 'pending'
                                     && in_array($project['status'], ['contracted','in_progress','review','delivered','maintenance'], true));
