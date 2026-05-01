@@ -207,7 +207,7 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                                 </button>
                             </div>
                         </div>
-                        <div class="text-xs text-zinc-700 dark:text-zinc-300">
+                        <div class="text-xs text-zinc-700 dark:text-emerald-100">
                             <?= count($q['items']) ?> <?= htmlspecialchars(__('services.admin_custom.items_unit')) ?>
                             · ¥<?= number_format($q['total']) ?>
                             <?php if ($q['valid_until']): ?>
@@ -226,8 +226,8 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                         ?>
                         <div class="mt-3 pt-3 border-t border-gray-200 dark:border-zinc-600">
                             <div class="flex items-center justify-between text-[11px] mb-1">
-                                <span class="text-zinc-500"><?= htmlspecialchars(__('services.admin_custom.q_payments_label')) ?> (<?= count($_qPays) ?>)</span>
-                                <span class="font-medium"><?= htmlspecialchars(__('services.admin_custom.q_payments_paid', ['paid' => '¥' . number_format($_paidSum), 'total' => '¥' . number_format($_totalSum)])) ?></span>
+                                <span class="text-zinc-500 dark:text-emerald-300/70"><?= htmlspecialchars(__('services.admin_custom.q_payments_label')) ?> (<?= count($_qPays) ?>)</span>
+                                <span class="font-medium text-zinc-700 dark:text-emerald-100"><?= htmlspecialchars(__('services.admin_custom.q_payments_paid', ['paid' => '¥' . number_format($_paidSum), 'total' => '¥' . number_format($_totalSum)])) ?></span>
                             </div>
                             <div class="w-full bg-gray-200 dark:bg-zinc-700 rounded-full h-1.5 mb-2">
                                 <div class="bg-emerald-500 h-1.5 rounded-full transition-all" style="width: <?= $_progress ?>%"></div>

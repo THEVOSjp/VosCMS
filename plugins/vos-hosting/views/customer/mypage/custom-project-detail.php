@@ -193,13 +193,13 @@ $budgetLabel = match ($project['budget_range']) {
                     <tbody>
                     <?php foreach ($q['items'] as $it): ?>
                         <tr class="border-b border-gray-100 dark:border-zinc-700/50">
-                            <td class="py-1.5 text-zinc-800 dark:text-zinc-200">
+                            <td class="py-1.5 text-zinc-800 dark:text-emerald-100">
                                 <?= htmlspecialchars($it['label']) ?>
-                                <?php if (!empty($it['note'])): ?><div class="text-[10px] text-zinc-400 mt-0.5"><?= htmlspecialchars($it['note']) ?></div><?php endif; ?>
+                                <?php if (!empty($it['note'])): ?><div class="text-[10px] text-zinc-400 dark:text-emerald-300/70 mt-0.5"><?= htmlspecialchars($it['note']) ?></div><?php endif; ?>
                             </td>
-                            <td class="py-1.5 text-right tabular-nums"><?= rtrim(rtrim(number_format($it['qty'], 2), '0'), '.') ?></td>
-                            <td class="py-1.5 text-right tabular-nums">¥<?= number_format($it['unit_price']) ?></td>
-                            <td class="py-1.5 text-right tabular-nums font-medium">¥<?= number_format($it['amount']) ?></td>
+                            <td class="py-1.5 text-right tabular-nums text-zinc-700 dark:text-emerald-200"><?= rtrim(rtrim(number_format($it['qty'], 2), '0'), '.') ?></td>
+                            <td class="py-1.5 text-right tabular-nums text-zinc-700 dark:text-emerald-200">¥<?= number_format($it['unit_price']) ?></td>
+                            <td class="py-1.5 text-right tabular-nums font-medium text-zinc-800 dark:text-emerald-100">¥<?= number_format($it['amount']) ?></td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
@@ -208,14 +208,14 @@ $budgetLabel = match ($project['budget_range']) {
                 <div class="flex justify-end">
                     <div class="w-64 text-xs space-y-1">
                         <div class="flex justify-between">
-                            <span class="text-zinc-500"><?= htmlspecialchars(__('services.custom.q_subtotal')) ?></span>
-                            <span class="tabular-nums">¥<?= number_format($q['subtotal']) ?></span>
+                            <span class="text-zinc-500 dark:text-emerald-300/70"><?= htmlspecialchars(__('services.custom.q_subtotal')) ?></span>
+                            <span class="tabular-nums text-zinc-700 dark:text-emerald-200">¥<?= number_format($q['subtotal']) ?></span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-zinc-500"><?= htmlspecialchars(__('services.custom.q_tax', ['rate' => rtrim(rtrim(number_format((float)$q['tax_rate'], 2), '0'), '.')])) ?></span>
-                            <span class="tabular-nums">¥<?= number_format($q['tax_amount']) ?></span>
+                            <span class="text-zinc-500 dark:text-emerald-300/70"><?= htmlspecialchars(__('services.custom.q_tax', ['rate' => rtrim(rtrim(number_format((float)$q['tax_rate'], 2), '0'), '.')])) ?></span>
+                            <span class="tabular-nums text-zinc-700 dark:text-emerald-200">¥<?= number_format($q['tax_amount']) ?></span>
                         </div>
-                        <div class="flex justify-between pt-1 border-t border-gray-300 dark:border-zinc-600 font-bold text-zinc-900 dark:text-white">
+                        <div class="flex justify-between pt-1 border-t border-gray-300 dark:border-zinc-600 font-bold text-zinc-900 dark:text-emerald-50">
                             <span><?= htmlspecialchars(__('services.custom.q_total')) ?></span>
                             <span class="tabular-nums text-base">¥<?= number_format($q['total']) ?></span>
                         </div>
@@ -224,8 +224,8 @@ $budgetLabel = match ($project['budget_range']) {
 
                 <?php if ($q['notes']): ?>
                 <div class="mt-3 pt-3 border-t border-gray-200 dark:border-zinc-600">
-                    <p class="text-[10px] text-zinc-400 mb-1"><?= htmlspecialchars(__('services.custom.q_notes')) ?></p>
-                    <p class="text-xs text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap"><?= htmlspecialchars($q['notes']) ?></p>
+                    <p class="text-[10px] text-zinc-400 dark:text-emerald-300/70 mb-1"><?= htmlspecialchars(__('services.custom.q_notes')) ?></p>
+                    <p class="text-xs text-zinc-700 dark:text-emerald-100 whitespace-pre-wrap"><?= htmlspecialchars($q['notes']) ?></p>
                 </div>
                 <?php endif; ?>
 
