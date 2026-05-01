@@ -123,12 +123,12 @@ $budgetLabel = match ($project['budget_range']) {
             </div>
             <div>
                 <p class="text-[10px] text-zinc-400 uppercase tracking-wider mb-1"><?= htmlspecialchars(__('services.custom.f_requirements')) ?></p>
-                <div class="bg-gray-50 dark:bg-zinc-700/30 rounded-lg p-3 text-xs whitespace-pre-wrap"><?= htmlspecialchars($project['requirements']) ?></div>
+                <div class="bg-gray-50 dark:bg-zinc-700/30 rounded-lg p-3 text-xs whitespace-pre-wrap text-zinc-800 dark:text-zinc-100"><?= htmlspecialchars($project['requirements']) ?></div>
             </div>
             <?php if ($project['reference_urls']): ?>
             <div>
                 <p class="text-[10px] text-zinc-400 uppercase tracking-wider mb-1"><?= htmlspecialchars(__('services.custom.f_reference_urls')) ?></p>
-                <div class="bg-gray-50 dark:bg-zinc-700/30 rounded-lg p-3 text-xs whitespace-pre-wrap font-mono"><?= htmlspecialchars($project['reference_urls']) ?></div>
+                <div class="bg-gray-50 dark:bg-zinc-700/30 rounded-lg p-3 text-xs whitespace-pre-wrap font-mono text-zinc-800 dark:text-zinc-100"><?= htmlspecialchars($project['reference_urls']) ?></div>
             </div>
             <?php endif; ?>
             <?php if (!empty($project['attachments'])): ?>

@@ -132,12 +132,12 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                     </div>
                     <div>
                         <p class="text-[10px] text-zinc-400 uppercase tracking-wider mb-1"><?= htmlspecialchars(__('services.custom.f_requirements')) ?></p>
-                        <div class="bg-gray-50 dark:bg-zinc-700/30 rounded-lg p-3 text-xs whitespace-pre-wrap"><?= htmlspecialchars($project['requirements']) ?></div>
+                        <div class="bg-gray-50 dark:bg-zinc-700/30 rounded-lg p-3 text-xs whitespace-pre-wrap text-zinc-800 dark:text-zinc-100"><?= htmlspecialchars($project['requirements']) ?></div>
                     </div>
                     <?php if ($project['reference_urls']): ?>
                     <div>
                         <p class="text-[10px] text-zinc-400 uppercase tracking-wider mb-1"><?= htmlspecialchars(__('services.custom.f_reference_urls')) ?></p>
-                        <div class="bg-gray-50 dark:bg-zinc-700/30 rounded-lg p-3 text-xs whitespace-pre-wrap font-mono"><?= htmlspecialchars($project['reference_urls']) ?></div>
+                        <div class="bg-gray-50 dark:bg-zinc-700/30 rounded-lg p-3 text-xs whitespace-pre-wrap font-mono text-zinc-800 dark:text-zinc-100"><?= htmlspecialchars($project['reference_urls']) ?></div>
                     </div>
                     <?php endif; ?>
                     <?php if (!empty($project['attachments'])): ?>
@@ -269,15 +269,15 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                     </div>
                     <div class="flex justify-between">
                         <span class="text-zinc-400"><?= htmlspecialchars(__('services.admin_custom.estimated_amount')) ?></span>
-                        <span><?= $project['estimated_amount'] ? '¥' . number_format($project['estimated_amount']) : '-' ?></span>
+                        <span class="text-zinc-700 dark:text-zinc-200"><?= $project['estimated_amount'] ? '¥' . number_format($project['estimated_amount']) : '-' ?></span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-zinc-400"><?= htmlspecialchars(__('services.admin_custom.started_at')) ?></span>
-                        <span><?= $project['started_at'] ? htmlspecialchars(date('Y-m-d', strtotime($project['started_at']))) : '-' ?></span>
+                        <span class="text-zinc-700 dark:text-zinc-200"><?= $project['started_at'] ? htmlspecialchars(date('Y-m-d', strtotime($project['started_at']))) : '-' ?></span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-zinc-400"><?= htmlspecialchars(__('services.admin_custom.delivered_at')) ?></span>
-                        <span><?= $project['delivered_at'] ? htmlspecialchars(date('Y-m-d', strtotime($project['delivered_at']))) : '-' ?></span>
+                        <span class="text-zinc-700 dark:text-zinc-200"><?= $project['delivered_at'] ? htmlspecialchars(date('Y-m-d', strtotime($project['delivered_at']))) : '-' ?></span>
                     </div>
                 </div>
             </div>
@@ -359,9 +359,9 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
             </div>
 
             <div class="bg-gray-50 dark:bg-zinc-700/30 rounded-lg p-3 text-xs">
-                <div class="flex justify-between"><span class="text-zinc-500"><?= htmlspecialchars(__('services.custom.q_subtotal')) ?></span><span id="qe_subtotal" class="tabular-nums">¥0</span></div>
-                <div class="flex justify-between mt-1"><span class="text-zinc-500"><?= htmlspecialchars(__('services.admin_custom.qe_tax_amount')) ?></span><span id="qe_tax_amt" class="tabular-nums">¥0</span></div>
-                <div class="flex justify-between mt-1 pt-2 border-t border-gray-300 dark:border-zinc-600 font-bold"><span><?= htmlspecialchars(__('services.custom.q_total')) ?></span><span id="qe_total" class="tabular-nums text-base">¥0</span></div>
+                <div class="flex justify-between"><span class="text-zinc-500"><?= htmlspecialchars(__('services.custom.q_subtotal')) ?></span><span id="qe_subtotal" class="tabular-nums text-zinc-700 dark:text-zinc-200">¥0</span></div>
+                <div class="flex justify-between mt-1"><span class="text-zinc-500"><?= htmlspecialchars(__('services.admin_custom.qe_tax_amount')) ?></span><span id="qe_tax_amt" class="tabular-nums text-zinc-700 dark:text-zinc-200">¥0</span></div>
+                <div class="flex justify-between mt-1 pt-2 border-t border-gray-300 dark:border-zinc-600 font-bold text-zinc-900 dark:text-white"><span><?= htmlspecialchars(__('services.custom.q_total')) ?></span><span id="qe_total" class="tabular-nums text-base">¥0</span></div>
             </div>
         </div>
         <div class="px-6 py-4 border-t border-gray-200 dark:border-zinc-700 flex items-center justify-end gap-2">
