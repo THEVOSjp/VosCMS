@@ -2671,10 +2671,35 @@ switch ($action) {
                 ]);
 
             // 부가서비스 subscription
+            // install addon 자동 채움용: 고객 이메일 + 임시 비밀번호 생성
+            $custEmailForInstall = '';
+            $custNameForInstall = '';
+            if ($custUserId) {
+                $_uSt = $pdo->prepare("SELECT email, name FROM {$prefix}users WHERE id = ?");
+                $_uSt->execute([$custUserId]);
+                if ($_uRow = $_uSt->fetch(PDO::FETCH_ASSOC)) {
+                    $custEmailForInstall = $_uRow['email'] ?? '';
+                    $custNameForInstall = function_exists('decrypt') ? @decrypt($_uRow['name']) : ($_uRow['name'] ?? '');
+                }
+            }
+
             foreach ($addonsInput as $a) {
                 $aPrice = (int)($a['price'] ?? 0);
                 $aOneTime = !empty($a['one_time']);
                 $billing = $aOneTime ? $aPrice : ($aPrice * $months);
+                $aMetaArr = ['admin_created' => 1, 'addon_id' => $a['id'] ?? ''];
+
+                // install addon 자동 채움 — 관리자 대리 등록은 별도 입력 폼이 없으므로
+                // 고객 이메일 + 도메인 + 자동 임시 비밀번호로 install_info 구성
+                if (($a['id'] ?? '') === 'install') {
+                    $aMetaArr['install_info'] = [
+                        'admin_id' => $custEmailForInstall ?: 'admin',
+                        'admin_email' => $custEmailForInstall,
+                        'admin_pw' => bin2hex(random_bytes(6)), // 12 hex chars 임시
+                        'site_title' => $custNameForInstall ?: $domainName,
+                    ];
+                }
+
                 $pdo->prepare("INSERT INTO {$prefix}subscriptions
                     (order_id, user_id, type, service_class, label, unit_price, quantity, billing_amount, billing_cycle, billing_months,
                      currency, started_at, expires_at, status, metadata)
@@ -2687,7 +2712,7 @@ switch ($action) {
                         $aOneTime ? 'one_time' : 'monthly', $aOneTime ? null : $months,
                         $currency,
                         $startedAt, $expiresAt,
-                        json_encode(['admin_created' => 1, 'addon_id' => $a['id'] ?? ''], JSON_UNESCAPED_UNICODE),
+                        json_encode($aMetaArr, JSON_UNESCAPED_UNICODE),
                     ]);
             }
 
