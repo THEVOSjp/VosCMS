@@ -2735,7 +2735,23 @@ switch ($action) {
             echo json_encode(['success' => false, 'message' => 'DB error: ' . $e->getMessage()]); exit;
         }
 
+        // 응답 먼저 보내고, 백그라운드에서 호스팅/메일 프로비저닝 트리거
+        // (free 도메인은 즉시 셋업, new/existing 은 NS 변경 후 별도)
         echo json_encode(['success' => true, 'order_id' => $orderId, 'order_number' => $orderNumber]);
+        if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
+        @ignore_user_abort(true);
+
+        $_runScript = BASE_PATH . '/scripts/run-order-provision.php';
+        if (is_file($_runScript)) {
+            $_logFile = '/tmp/voscms-provision-' . preg_replace('/[^A-Za-z0-9_-]/', '', $orderNumber) . '.log';
+            $_cmd = sprintf(
+                '/usr/bin/php8.3 %s --order=%s > %s 2>&1 &',
+                escapeshellarg($_runScript),
+                escapeshellarg($orderNumber),
+                escapeshellarg($_logFile)
+            );
+            @exec($_cmd);
+        }
         exit;
     }
 
