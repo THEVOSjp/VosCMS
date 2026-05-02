@@ -88,6 +88,25 @@ $listStmt = $pdo->prepare("SELECT * FROM {$prefix}board_posts WHERE {$where} ORD
 $listStmt->execute($params);
 $posts = $listStmt->fetchAll(PDO::FETCH_ASSOC);
 
+// 통합 정책: title/content 를 rzx_translations 에서 일괄 채워 모든 뷰(목록/카드/갤러리/웹진)에 동일 적용
+if (function_exists('board_post_text_bulk_load')) {
+    $_allIds = array_merge(array_column($notices, 'id'), array_column($posts, 'id'));
+    if (!empty($_allIds)) {
+        $_cl = $currentLocale ?? 'ko';
+        $_trMap = board_post_text_bulk_load($pdo, $prefix, $_allIds, $_cl);
+        foreach ($notices as &$_n) {
+            $_n['title']   = $_trMap[(int)$_n['id']]['title']   ?? '';
+            $_n['content'] = $_trMap[(int)$_n['id']]['content'] ?? '';
+        }
+        unset($_n);
+        foreach ($posts as &$_p) {
+            $_p['title']   = $_trMap[(int)$_p['id']]['title']   ?? '';
+            $_p['content'] = $_trMap[(int)$_p['id']]['content'] ?? '';
+        }
+        unset($_p);
+    }
+}
+
 // 대표 이미지 (is_primary=1, 없으면 첫 이미지) — 카드/갤러리/웹진 뷰에서 사용
 if ($posts) {
     $_postIds = array_column($posts, 'id');
@@ -273,22 +292,13 @@ $startNo = $totalCount - $offset;
                 </thead>
                 <tbody>
                     <?php
-                    // 목록 게시글 제목/본문 다국어 일괄 로드 (helper 사용 — 폴백 체인 내장)
-                    $_cl = $currentLocale ?? 'ko';
-                    $_trMap = function_exists('board_post_text_bulk_load')
-                        ? board_post_text_bulk_load($pdo, $prefix, array_merge(array_column($notices, 'id'), array_column($posts, 'id')), $_cl)
-                        : [];
-
-                    // 공지사항 먼저
+                    // title/content 는 위에서 이미 bulk_load 로 적용됨 — 여기선 표시만
                     foreach ($notices as $post) {
                         $post['_is_notice_row'] = true;
-                        if (isset($_trMap[$post['id']]['title'])) $post['title'] = $_trMap[$post['id']]['title'];
                         include __DIR__ . '/_list-row.php';
                     }
-                    // 일반 글
                     $rowNo = $startNo;
                     foreach ($posts as $post) {
-                        if (isset($_trMap[$post['id']]['title'])) $post['title'] = $_trMap[$post['id']]['title'];
                         $post['_row_no'] = $rowNo--;
                         include __DIR__ . '/_list-row.php';
                     }
