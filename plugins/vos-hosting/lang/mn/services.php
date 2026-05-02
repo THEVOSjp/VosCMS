@@ -1318,6 +1318,8 @@ return array (
     'err_cash_amount' => 'Please enter received amount.',
     'err_free_reason' => 'Free reason required.',
     'btn_domain_search' => 'Хайх',
+    'dom_subdomain_min' => '2 тэмдэгтээс багагүй.',
+    'dom_subdomain_blocked' => 'Зөвшөөрөгдөөгүй дэд домэйн',
     'dom_searching' => 'Хайж байна...',
     'dom_invalid' => 'Зөв домэйн.',
     'dom_search_invalid' => 'Зөв домэйн.',

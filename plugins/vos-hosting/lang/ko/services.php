@@ -1472,6 +1472,8 @@ return array (
     'err_cash_amount' => '받은 금액을 입력해주세요.',
     'err_free_reason' => '무료 처리 사유를 입력해주세요.',
     'btn_domain_search' => '검색',
+    'dom_subdomain_min' => '2글자 이상 입력하세요.',
+    'dom_subdomain_blocked' => '사용할 수 없는 서브도메인',
     'dom_searching' => '도메인 검색 중...',
     'dom_invalid' => '올바른 도메인을 입력해주세요 (예: example.com).',
     'dom_search_invalid' => '올바른 도메인을 입력해주세요 (예: example.com).',

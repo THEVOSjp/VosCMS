@@ -1335,6 +1335,8 @@ return array (
     'err_cash_amount' => 'Please enter received amount.',
     'err_free_reason' => 'Free reason required.',
     'btn_domain_search' => 'Tìm',
+    'dom_subdomain_min' => 'Tối thiểu 2 ký tự.',
+    'dom_subdomain_blocked' => 'Tên miền phụ không được phép',
     'dom_searching' => 'Đang tìm...',
     'dom_invalid' => 'Tên miền hợp lệ.',
     'dom_search_invalid' => 'Tên miền hợp lệ.',

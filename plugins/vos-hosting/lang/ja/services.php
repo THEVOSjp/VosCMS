@@ -1469,6 +1469,8 @@ return array (
     'err_cash_amount' => '受領金額を入力してください。',
     'err_free_reason' => '無料処理理由を入力してください。',
     'btn_domain_search' => '検索',
+    'dom_subdomain_min' => '2文字以上入力してください。',
+    'dom_subdomain_blocked' => '使用できないサブドメイン',
     'dom_searching' => '検索中...',
     'dom_invalid' => '正しいドメインを入力してください（例: example.com）。',
     'dom_search_invalid' => '正しいドメインを入力してください（例: example.com）。',

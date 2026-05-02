@@ -1335,6 +1335,8 @@ return array (
     'err_cash_amount' => 'Please enter received amount.',
     'err_free_reason' => 'Free reason required.',
     'btn_domain_search' => '搜尋',
+    'dom_subdomain_min' => '至少輸入2個字元。',
+    'dom_subdomain_blocked' => '不可用的子網域',
     'dom_searching' => '搜尋中...',
     'dom_invalid' => '請輸入有效網域 (如 example.com)。',
     'dom_search_invalid' => '請輸入有效網域 (如 example.com)。',

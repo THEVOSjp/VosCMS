@@ -22,7 +22,7 @@ $pdo = \RzxLib\Core\Database\Connection::getInstance()->getPdo();
 
 // 서비스 settings 로드
 $_settings = [];
-$sSt = $pdo->prepare("SELECT `key`, `value` FROM {$prefix}settings WHERE `key` IN ('service_hosting_plans','service_addons','service_maintenance','payment_config')");
+$sSt = $pdo->prepare("SELECT `key`, `value` FROM {$prefix}settings WHERE `key` IN ('service_hosting_plans','service_addons','service_maintenance','payment_config','service_free_domains','service_blocked_subdomains')");
 $sSt->execute();
 while ($r = $sSt->fetch(PDO::FETCH_ASSOC)) $_settings[$r['key']] = $r['value'];
 
@@ -31,6 +31,8 @@ $addons = json_decode($_settings['service_addons'] ?? '[]', true) ?: [];
 $maintenances = json_decode($_settings['service_maintenance'] ?? '[]', true) ?: [];
 $_payCfg = json_decode($_settings['payment_config'] ?? '{}', true) ?: [];
 $_payPubKey = (string)($_payCfg['gateways'][$_payCfg['gateway'] ?? 'payjp']['public_key'] ?? '');
+$_freeDomains = json_decode($_settings['service_free_domains'] ?? '', true) ?: ['21ces.net'];
+$_blockedSubs = json_decode($_settings['service_blocked_subdomains'] ?? '[]', true) ?: [];
 
 include BASE_PATH . '/resources/views/admin/reservations/_head.php';
 ?>
@@ -66,10 +68,70 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
         </a>
     </div>
 
-    <!-- ① 고객 정보 -->
+    <!-- ① 도메인 (호스팅 서비스 키) -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 mb-4">
         <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700">
-            <p class="text-sm font-bold text-zinc-900 dark:text-white">① <?= htmlspecialchars(__('services.admin_neworder.section_customer')) ?></p>
+            <p class="text-sm font-bold text-zinc-900 dark:text-white">① <?= htmlspecialchars(__('services.order.domain.title')) ?></p>
+        </div>
+        <div class="p-5 space-y-3">
+            <div class="flex flex-wrap items-center gap-4">
+                <label class="flex items-center gap-1.5 cursor-pointer text-sm">
+                    <input type="radio" name="domain_option" value="free" checked onchange="onDomainOptChange()">
+                    <span class="text-emerald-600 dark:text-emerald-400 font-medium"><?= htmlspecialchars(__('services.order.domain.opt_free')) ?></span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-sm">
+                    <input type="radio" name="domain_option" value="new" onchange="onDomainOptChange()">
+                    <span class="text-zinc-700 dark:text-zinc-300 font-medium"><?= htmlspecialchars(__('services.order.domain.opt_buy')) ?></span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-sm">
+                    <input type="radio" name="domain_option" value="existing" onchange="onDomainOptChange()">
+                    <span class="text-zinc-700 dark:text-zinc-300 font-medium"><?= htmlspecialchars(__('services.order.domain.opt_existing')) ?></span>
+                </label>
+            </div>
+
+            <!-- 무료 서브도메인 -->
+            <div id="domainFree">
+                <div class="flex items-center gap-2">
+                    <div class="flex-1 flex items-center border border-gray-300 dark:border-zinc-600 rounded-lg overflow-hidden">
+                        <input type="text" id="freeSubdomain" placeholder="mysite" class="flex-1 px-3 py-2 text-sm bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white border-0 focus:ring-0">
+                        <select id="freeDomainSelect" class="px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 bg-gray-50 dark:bg-zinc-600 border-l border-gray-300 dark:border-zinc-600 focus:ring-0 border-0 font-medium">
+                            <?php foreach ($_freeDomains as $fd): ?>
+                            <option value="<?= htmlspecialchars($fd) ?>">.<?= htmlspecialchars($fd) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <button type="button" onclick="checkSubdomain()" class="px-4 py-2 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg whitespace-nowrap">
+                        <?= htmlspecialchars(__('services.order.domain.btn_check')) ?>
+                    </button>
+                </div>
+                <p class="text-[10px] text-zinc-400 mt-1.5"><?= htmlspecialchars(__('services.order.domain.help_subdomain')) ?></p>
+                <div id="subdomainResult" class="hidden mt-2"></div>
+            </div>
+
+            <!-- 신규 도메인 검색 -->
+            <div id="domainSearch" class="hidden">
+                <div class="flex items-center gap-2">
+                    <input type="text" id="domainInput" class="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg" placeholder="<?= htmlspecialchars(__('services.order.domain.search_placeholder')) ?>" onkeydown="if(event.key==='Enter')searchDomain()">
+                    <button type="button" onclick="searchDomain()" class="px-4 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg whitespace-nowrap">
+                        🔍 <?= htmlspecialchars(__('services.order.domain.btn_search')) ?>
+                    </button>
+                </div>
+                <p class="text-[10px] text-zinc-400 mt-1.5"><?= htmlspecialchars(__('services.order.domain.help_search')) ?></p>
+                <div id="domainSearchResult" class="mt-2"></div>
+            </div>
+
+            <!-- 기존 도메인 -->
+            <div id="domainExisting" class="hidden">
+                <input type="text" id="existingDomain" placeholder="<?= htmlspecialchars(__('services.order.domain.existing_placeholder')) ?>" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg">
+                <p class="text-[10px] text-zinc-400 mt-1.5"><?= htmlspecialchars(__('services.order.domain.help_existing')) ?></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ② 고객 정보 -->
+    <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 mb-4">
+        <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700">
+            <p class="text-sm font-bold text-zinc-900 dark:text-white">② <?= htmlspecialchars(__('services.admin_neworder.section_customer')) ?></p>
         </div>
         <div class="p-5 space-y-3">
             <div>
@@ -112,10 +174,10 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
         </div>
     </div>
 
-    <!-- ② 호스팅 플랜 + 도메인 + 계약기간 -->
+    <!-- ③ 호스팅 플랜 + 계약기간 -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 mb-4">
         <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700">
-            <p class="text-sm font-bold text-zinc-900 dark:text-white">② <?= htmlspecialchars(__('services.admin_neworder.section_service')) ?></p>
+            <p class="text-sm font-bold text-zinc-900 dark:text-white">③ <?= htmlspecialchars(__('services.admin_neworder.section_service')) ?></p>
         </div>
         <div class="p-5 space-y-3">
             <div>
@@ -130,46 +192,25 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                 </select>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_neworder.contract_months')) ?></label>
-                    <select id="contractMonths" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg" onchange="recalc()">
-                        <option value="1">1<?= htmlspecialchars(__('services.order.hosting.unit_month')) ?></option>
-                        <option value="3">3<?= htmlspecialchars(__('services.order.hosting.unit_month')) ?></option>
-                        <option value="6">6<?= htmlspecialchars(__('services.order.hosting.unit_month')) ?></option>
-                        <option value="12" selected>12<?= htmlspecialchars(__('services.order.hosting.unit_month')) ?></option>
-                        <option value="24">24<?= htmlspecialchars(__('services.order.hosting.unit_month')) ?></option>
-                        <option value="36">36<?= htmlspecialchars(__('services.order.hosting.unit_month')) ?></option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_neworder.domain_option')) ?></label>
-                    <select id="domainOption" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg" onchange="onDomainOptChange()">
-                        <option value="free"><?= htmlspecialchars(__('services.custom.dom_free')) ?></option>
-                        <option value="new"><?= htmlspecialchars(__('services.custom.dom_new')) ?></option>
-                        <option value="existing"><?= htmlspecialchars(__('services.custom.dom_existing')) ?></option>
-                    </select>
-                </div>
-            </div>
-
-            <div id="domainNameBox" class="hidden">
-                <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_neworder.domain_name')) ?></label>
-                <div class="flex items-center gap-2">
-                    <input type="text" id="domainName" class="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg" placeholder="example.com" oninput="onDomainInputChange()">
-                    <button type="button" id="domainSearchBtn" onclick="searchDomain()" class="hidden px-4 py-2 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg whitespace-nowrap">
-                        🔍 <?= htmlspecialchars(__('services.admin_neworder.btn_domain_search')) ?>
-                    </button>
-                </div>
-                <div id="domainSearchResult" class="mt-2"></div>
+            <div>
+                <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_neworder.contract_months')) ?></label>
+                <select id="contractMonths" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg" onchange="recalc()">
+                    <option value="1">1<?= htmlspecialchars(__('services.order.hosting.unit_month')) ?></option>
+                    <option value="3">3<?= htmlspecialchars(__('services.order.hosting.unit_month')) ?></option>
+                    <option value="6">6<?= htmlspecialchars(__('services.order.hosting.unit_month')) ?></option>
+                    <option value="12" selected>12<?= htmlspecialchars(__('services.order.hosting.unit_month')) ?></option>
+                    <option value="24">24<?= htmlspecialchars(__('services.order.hosting.unit_month')) ?></option>
+                    <option value="36">36<?= htmlspecialchars(__('services.order.hosting.unit_month')) ?></option>
+                </select>
             </div>
         </div>
     </div>
 
-    <!-- ③ 부가서비스 -->
+    <!-- ④ 부가서비스 -->
     <?php if (!empty($addons)): ?>
     <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 mb-4">
         <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700">
-            <p class="text-sm font-bold text-zinc-900 dark:text-white">③ <?= htmlspecialchars(__('services.admin_neworder.section_addons')) ?></p>
+            <p class="text-sm font-bold text-zinc-900 dark:text-white">④ <?= htmlspecialchars(__('services.admin_neworder.section_addons')) ?></p>
         </div>
         <div class="p-5 space-y-2">
             <?php foreach ($addons as $a):
@@ -198,10 +239,10 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
     </div>
     <?php endif; ?>
 
-    <!-- ④ 합계 -->
+    <!-- ⑤ 합계 -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 mb-4">
         <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700">
-            <p class="text-sm font-bold text-zinc-900 dark:text-white">④ <?= htmlspecialchars(__('services.admin_neworder.section_total')) ?></p>
+            <p class="text-sm font-bold text-zinc-900 dark:text-white">⑤ <?= htmlspecialchars(__('services.admin_neworder.section_total')) ?></p>
         </div>
         <div class="p-5 space-y-2 text-sm">
             <div class="flex justify-between">
@@ -224,10 +265,10 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
         </div>
     </div>
 
-    <!-- ⑤ 결제 방식 -->
+    <!-- ⑥ 결제 방식 -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 mb-4">
         <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700">
-            <p class="text-sm font-bold text-zinc-900 dark:text-white">⑤ <?= htmlspecialchars(__('services.admin_neworder.section_payment')) ?></p>
+            <p class="text-sm font-bold text-zinc-900 dark:text-white">⑥ <?= htmlspecialchars(__('services.admin_neworder.section_payment')) ?></p>
         </div>
         <div class="p-5 space-y-3">
             <div class="grid grid-cols-3 gap-2">
@@ -300,6 +341,7 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
 <script>
 var siteBaseUrl = <?= json_encode($baseUrl) ?>;
 var adminUrl = <?= json_encode($adminUrl) ?>;
+var svcBlockedSubs = <?= json_encode($_blockedSubs) ?>;
 var TAX_RATE = 10;
 
 function fmt(n) { return '¥' + Math.round(n).toLocaleString(); }
@@ -311,30 +353,74 @@ function onCustomerModeChange() {
 }
 
 function onDomainOptChange() {
-    var v = document.getElementById('domainOption').value;
-    document.getElementById('domainNameBox').classList.toggle('hidden', v === 'free');
-    // 검색 버튼은 신규 등록 시에만
-    document.getElementById('domainSearchBtn').classList.toggle('hidden', v !== 'new');
-    document.getElementById('domainSearchResult').innerHTML = '';
+    var v = document.querySelector('input[name="domain_option"]:checked').value;
+    document.getElementById('domainFree').classList.toggle('hidden', v !== 'free');
+    document.getElementById('domainSearch').classList.toggle('hidden', v !== 'new');
+    document.getElementById('domainExisting').classList.toggle('hidden', v !== 'existing');
 }
 
-function onDomainInputChange() {
-    // 입력 변경 시 결과 초기화
-    document.getElementById('domainSearchResult').innerHTML = '';
-}
-
-function searchDomain() {
-    var input = document.getElementById('domainName').value.trim().toLowerCase();
-    if (!input) return;
-    // TLD 분리 — 가장 단순: 첫 점 이후를 TLD로
-    var dotIdx = input.indexOf('.');
-    if (dotIdx < 0) {
-        document.getElementById('domainSearchResult').innerHTML =
-            '<p class="text-xs text-amber-600 dark:text-amber-400">⚠ <?= htmlspecialchars(__('services.admin_neworder.dom_search_invalid')) ?></p>';
+// ===== 무료 서브도메인 확인 =====
+function checkSubdomain() {
+    var input = document.getElementById('freeSubdomain');
+    var result = document.getElementById('subdomainResult');
+    var val = (input.value || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+    if (!val || val.length < 2) {
+        result.innerHTML = '<p class="text-xs text-red-500"><?= htmlspecialchars(__('services.admin_neworder.dom_subdomain_min')) ?></p>';
+        result.classList.remove('hidden');
         return;
     }
-    var name = input.substring(0, dotIdx);
-    var tld = input.substring(dotIdx); // ".com", ".co.kr" 등 (선두 점 포함)
+    input.value = val;
+
+    // 차단 패턴 검사
+    var isBlocked = (svcBlockedSubs || []).some(function(pattern) {
+        if (pattern.includes('[n]')) {
+            var prefix = pattern.replace('[n]', '');
+            return new RegExp('^' + prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\d+$').test(val);
+        }
+        if (pattern.endsWith('*')) return val.startsWith(pattern.slice(0, -1));
+        if (pattern.startsWith('*')) return val.endsWith(pattern.slice(1));
+        return val === pattern;
+    });
+    if (isBlocked) {
+        result.innerHTML = '<p class="text-xs text-red-500"><?= htmlspecialchars(__('services.admin_neworder.dom_subdomain_blocked')) ?>: <strong>' + val + '</strong></p>';
+        result.classList.remove('hidden');
+        return;
+    }
+
+    var zone = document.getElementById('freeDomainSelect').value;
+    var fqdn = val + '.' + zone;
+    result.innerHTML = '<p class="text-xs text-zinc-500"><?= htmlspecialchars(__('services.admin_neworder.dom_searching')) ?></p>';
+    result.classList.remove('hidden');
+
+    fetch(siteBaseUrl + '/plugins/vos-hosting/api/subdomain-check.php?subdomain=' + encodeURIComponent(val) + '&zone=' + encodeURIComponent(zone), {
+        credentials: 'same-origin'
+    }).then(function(r){ return r.json(); }).then(function(d) {
+        if (!d.success) {
+            result.innerHTML = '<p class="text-xs text-red-500">' + (d.message || 'error') + '</p>';
+            return;
+        }
+        if (d.available) {
+            result.innerHTML = '<p class="text-xs text-emerald-700 dark:text-emerald-300 p-2 border border-emerald-300 dark:border-emerald-700 rounded">✓ <strong>' + fqdn + '</strong> <?= htmlspecialchars(__('services.admin_neworder.dom_available')) ?></p>';
+        } else {
+            result.innerHTML = '<p class="text-xs text-red-700 dark:text-red-300 p-2 border border-red-300 dark:border-red-700 rounded">✗ <strong>' + fqdn + '</strong> <?= htmlspecialchars(__('services.admin_neworder.dom_taken')) ?></p>';
+        }
+    }).catch(function(e) {
+        result.innerHTML = '<p class="text-xs text-red-500">' + (e && e.message || 'error') + '</p>';
+    });
+}
+
+// ===== 신규 도메인 검색 (구입) — '선택' 버튼 없음, 사장님이 직접 입력값 사용 =====
+function searchDomain() {
+    var input = (document.getElementById('domainInput').value || '').trim().toLowerCase();
+    if (!input) return;
+    var dotIdx = input.indexOf('.');
+    var name, tld;
+    if (dotIdx < 0) {
+        name = input; tld = '';
+    } else {
+        name = input.substring(0, dotIdx);
+        tld = input.substring(dotIdx);
+    }
     if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(name)) {
         document.getElementById('domainSearchResult').innerHTML =
             '<p class="text-xs text-amber-600 dark:text-amber-400">⚠ <?= htmlspecialchars(__('services.admin_neworder.dom_search_invalid')) ?></p>';
@@ -351,18 +437,14 @@ function searchDomain() {
                 '<p class="text-xs text-red-600 p-2">' + (d.message || 'error') + '</p>';
             return;
         }
-        // 입력 TLD 와 일치하는 결과만 표시 (없으면 전체 표시)
-        var match = (d.results || []).find(function(r){ return r.tld === tld; });
         var html;
+        var match = tld ? (d.results || []).find(function(r){ return r.tld === tld; }) : null;
         if (match) {
             html = renderDomainResult(match);
         } else if ((d.results || []).length > 0) {
-            // TLD 매칭 안 되면 사용 가능한 다른 TLD 추천
-            html = '<p class="text-[11px] text-zinc-500 dark:text-zinc-400 p-2">' +
-                   '<?= htmlspecialchars(__('services.admin_neworder.dom_tld_unsupported')) ?>: <strong>' + tld + '</strong>. ' +
-                   '<?= htmlspecialchars(__('services.admin_neworder.dom_alt_tlds')) ?>:</p>' +
+            html = (tld ? '<p class="text-[11px] text-zinc-500 dark:text-zinc-400 p-2"><?= htmlspecialchars(__('services.admin_neworder.dom_tld_unsupported')) ?>: <strong>' + tld + '</strong>. <?= htmlspecialchars(__('services.admin_neworder.dom_alt_tlds')) ?>:</p>' : '') +
                    '<div class="space-y-1">' +
-                   d.results.slice(0, 5).map(renderDomainResult).join('') +
+                   d.results.slice(0, 8).map(renderDomainResult).join('') +
                    '</div>';
         } else {
             html = '<p class="text-xs text-amber-600 dark:text-amber-400 p-2"><?= htmlspecialchars(__('services.admin_neworder.dom_no_results')) ?></p>';
@@ -382,24 +464,14 @@ function renderDomainResult(r) {
         : 'border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300';
     var icon = available ? '✓' : '✗';
     var label = available ? '<?= htmlspecialchars(__('services.admin_neworder.dom_available')) ?>' : '<?= htmlspecialchars(__('services.admin_neworder.dom_taken')) ?>';
-    var pickBtn = available
-        ? ' <button type="button" onclick="pickDomain(\'' + r.fqdn + '\')" class="ml-2 text-[10px] text-blue-600 hover:underline"><?= htmlspecialchars(__('services.admin_neworder.dom_pick')) ?></button>'
-        : '';
     return '<div class="flex items-center justify-between gap-2 px-3 py-2 rounded-lg ' + cls + '">' +
            '<span class="flex items-center gap-2">' +
            '<span class="font-bold">' + icon + '</span>' +
            '<span class="font-mono text-sm">' + r.fqdn + '</span>' +
            '<span class="text-[10px]">' + label + '</span>' +
-           pickBtn +
            '</span>' +
            '<span class="text-xs tabular-nums whitespace-nowrap">' + price + '</span>' +
            '</div>';
-}
-
-function pickDomain(fqdn) {
-    document.getElementById('domainName').value = fqdn;
-    document.getElementById('domainSearchResult').innerHTML =
-        '<p class="text-xs text-emerald-700 dark:text-emerald-300 p-2 border border-emerald-300 dark:border-emerald-700 rounded">✓ ' + fqdn + ' <?= htmlspecialchars(__('services.admin_neworder.dom_selected')) ?></p>';
 }
 
 function searchCustomer() {
@@ -485,7 +557,32 @@ function ensureCardElements() {
     pjC.mount('#adm_pj_cvc');
 }
 
+// ===== 도메인 값 결정 =====
+function resolveDomain() {
+    var opt = document.querySelector('input[name="domain_option"]:checked').value;
+    if (opt === 'free') {
+        var sub = (document.getElementById('freeSubdomain').value || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+        var zone = document.getElementById('freeDomainSelect').value;
+        if (!sub || sub.length < 2) return { ok: false, msg: '<?= htmlspecialchars(__('services.admin_neworder.dom_subdomain_min')) ?>' };
+        return { ok: true, option: 'free', name: sub + '.' + zone };
+    }
+    if (opt === 'new') {
+        var dn = (document.getElementById('domainInput').value || '').trim().toLowerCase();
+        if (!dn) return { ok: false, msg: '<?= htmlspecialchars(__('services.admin_neworder.err_domain_name')) ?>' };
+        return { ok: true, option: 'new', name: dn };
+    }
+    // existing
+    var ex = (document.getElementById('existingDomain').value || '').trim().toLowerCase();
+    if (!ex) return { ok: false, msg: '<?= htmlspecialchars(__('services.admin_neworder.err_domain_name')) ?>' };
+    return { ok: true, option: 'existing', name: ex };
+}
+
 function submitOrder() {
+    // 1) 도메인 선결정 (서비스 키)
+    var dom = resolveDomain();
+    if (!dom.ok) { alert(dom.msg); return; }
+
+    // 2) 고객
     var mode = document.querySelector('input[name="cust_mode"]:checked').value;
     var customer = { mode: mode };
     if (mode === 'existing') {
@@ -501,21 +598,18 @@ function submitOrder() {
         customer.company = document.getElementById('custCompany').value.trim();
     }
 
+    // 3) 플랜
     var planSel = document.getElementById('hostingPlan');
     var planId = planSel.value;
     if (!planId) { alert('<?= htmlspecialchars(__('services.admin_neworder.err_plan')) ?>'); return; }
 
+    // 4) 부가서비스
     var addons = [];
     document.querySelectorAll('.addon-check:checked').forEach(function(cb) {
         addons.push({ id: cb.dataset.id, label: cb.dataset.label, price: parseInt(cb.dataset.price, 10) || 0, one_time: cb.dataset.onetime === '1' });
     });
 
-    var domainOption = document.getElementById('domainOption').value;
-    var domainName = document.getElementById('domainName').value.trim();
-    if ((domainOption === 'new' || domainOption === 'existing') && !domainName) {
-        alert('<?= htmlspecialchars(__('services.admin_neworder.err_domain_name')) ?>'); return;
-    }
-
+    // 5) 결제
     var payMethod = document.querySelector('input[name="payMethod"]:checked').value;
     var pay = { method: payMethod };
 
@@ -523,12 +617,12 @@ function submitOrder() {
         var cash = parseInt(document.getElementById('cashReceived').value, 10) || 0;
         if (cash <= 0) { alert('<?= htmlspecialchars(__('services.admin_neworder.err_cash_amount')) ?>'); return; }
         pay.received = cash;
-        finalSubmit(customer, planId, addons, domainOption, domainName, pay);
+        finalSubmit(customer, planId, addons, dom.option, dom.name, pay);
     } else if (payMethod === 'free') {
         var reason = document.getElementById('freeReason').value.trim();
         if (!reason) { alert('<?= htmlspecialchars(__('services.admin_neworder.err_free_reason')) ?>'); return; }
         pay.reason = reason;
-        finalSubmit(customer, planId, addons, domainOption, domainName, pay);
+        finalSubmit(customer, planId, addons, dom.option, dom.name, pay);
     } else if (payMethod === 'card') {
         if (!payjpInst || !pjN) { alert('PAY.JP not ready'); return; }
         document.getElementById('submitBtn').disabled = true;
@@ -540,7 +634,7 @@ function submitOrder() {
                 return;
             }
             pay.card_token = r.id;
-            finalSubmit(customer, planId, addons, domainOption, domainName, pay);
+            finalSubmit(customer, planId, addons, dom.option, dom.name, pay);
         });
     }
 }

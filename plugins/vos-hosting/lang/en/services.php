@@ -1472,6 +1472,8 @@ return array (
     'err_cash_amount' => 'Please enter received amount.',
     'err_free_reason' => 'Free reason required.',
     'btn_domain_search' => 'Search',
+    'dom_subdomain_min' => 'Enter at least 2 characters.',
+    'dom_subdomain_blocked' => 'Subdomain not allowed',
     'dom_searching' => 'Searching...',
     'dom_invalid' => 'Enter a valid domain (e.g. example.com).',
     'dom_search_invalid' => 'Enter a valid domain (e.g. example.com).',

@@ -1318,6 +1318,8 @@ return array (
     'err_cash_amount' => 'Please enter received amount.',
     'err_free_reason' => 'Free reason required.',
     'btn_domain_search' => 'Ara',
+    'dom_subdomain_min' => 'En az 2 karakter.',
+    'dom_subdomain_blocked' => 'İzin verilmeyen alt etki alanı',
     'dom_searching' => 'Aranıyor...',
     'dom_invalid' => 'Geçerli domain.',
     'dom_search_invalid' => 'Geçerli domain.',

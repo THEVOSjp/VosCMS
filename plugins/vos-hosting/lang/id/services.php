@@ -1307,6 +1307,8 @@ return array (
     'err_cash_amount' => 'Please enter received amount.',
     'err_free_reason' => 'Free reason required.',
     'btn_domain_search' => 'Cari',
+    'dom_subdomain_min' => 'Min 2 karakter.',
+    'dom_subdomain_blocked' => 'Subdomain tidak diizinkan',
     'dom_searching' => 'Mencari...',
     'dom_invalid' => 'Domain valid.',
     'dom_search_invalid' => 'Domain valid.',
