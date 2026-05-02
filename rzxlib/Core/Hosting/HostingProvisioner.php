@@ -249,8 +249,17 @@ class HostingProvisioner
             catch (\Throwable $e) { $errors[] = 'rm home: ' . $e->getMessage(); }
         }
 
+        // 6. Cloudflare DNS 레코드 + reserved_subdomains 캐시 정리
+        // (우리가 관리하는 zone 일 때만 — 고객 소유 도메인은 건드리지 않음)
+        $cfResult = $this->deleteCloudflareRecords($domain);
+        if (!empty($cfResult['errors'])) {
+            foreach ($cfResult['errors'] as $err) $errors[] = 'cf: ' . $err;
+        }
+
         $this->logProvision($orderNumber, 'hosting_deprovisioned', [
             'username' => $username,
+            'cf_deleted' => $cfResult['deleted'] ?? [],
+            'cf_skipped' => $cfResult['skipped'] ?? null,
             'errors' => $errors,
         ]);
 
@@ -803,6 +812,60 @@ ENV;
     private string $orderForCurrentInstall = '';
 
     private function isoNow(): string { return date('c'); }
+
+    /**
+     * Cloudflare DNS 레코드 + reserved_subdomains 자동 캐시 정리.
+     * 우리가 관리하는 zone 일 때만 동작 — 고객 소유 도메인(zone 없음)은 skip.
+     * 도메인이 zone 그 자체(예: example.com)이거나 서브도메인 분리 불가하면 skip.
+     */
+    private function deleteCloudflareRecords(string $domain): array
+    {
+        $deleted = [];
+        $errors = [];
+
+        $cfToken = $_ENV['CLOUDFLARE_API_TOKEN'] ?? '';
+        if (!$cfToken) return ['deleted' => [], 'errors' => [], 'skipped' => 'no_token'];
+
+        // FQDN → [subdomain, zone] 분리
+        $dotIdx = strpos($domain, '.');
+        if ($dotIdx === false) return ['deleted' => [], 'errors' => [], 'skipped' => 'invalid_fqdn'];
+        $sub = substr($domain, 0, $dotIdx);
+        $zone = substr($domain, $dotIdx + 1);
+
+        try {
+            $cf = new \RzxLib\Core\Dns\CloudflareDns($cfToken);
+            $zoneId = $cf->getZoneId($zone);
+            if (!$zoneId) {
+                return ['deleted' => [], 'errors' => [], 'skipped' => 'zone_not_owned'];
+            }
+            // FQDN 매칭 레코드 모두 삭제 (CNAME 터널 + MX + TXT 등)
+            $records = $cf->listRecords($zoneId);
+            foreach ($records as $r) {
+                if (strcasecmp($r['name'] ?? '', $domain) === 0) {
+                    try {
+                        $cf->deleteRecord($zoneId, $r['id']);
+                        $deleted[] = ($r['type'] ?? '?') . ':' . $r['id'];
+                    } catch (\Throwable $e) {
+                        $errors[] = "delete {$r['type']}({$r['id']}): " . $e->getMessage();
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            $errors[] = $e->getMessage();
+        }
+
+        // reserved_subdomains 자동 캐시만 삭제 (system 등록분은 보존)
+        try {
+            $this->pdo->prepare(
+                "DELETE FROM {$this->prefix}reserved_subdomains
+                 WHERE zone = ? AND subdomain = ? AND reason LIKE '%auto-detected%'"
+            )->execute([$zone, $sub]);
+        } catch (\Throwable $e) {
+            $errors[] = 'reserved_subdomains: ' . $e->getMessage();
+        }
+
+        return ['deleted' => $deleted, 'errors' => $errors];
+    }
 
     /** MySQL DB + user 삭제 */
     private function dropDatabase(string $orderNumber, string $username): bool
