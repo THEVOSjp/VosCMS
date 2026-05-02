@@ -254,9 +254,165 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             }
             exit;
 
+        // ── 호스팅 실시간 상태 (SSL/disk/db/nginx) ─────────────────────
+        case 'hosting_status': {
+            $oid = (int)($input['order_id'] ?? 0);
+            $oSt = $pdo->prepare("SELECT * FROM {$prefix}orders WHERE id = ?");
+            $oSt->execute([$oid]);
+            $ord = $oSt->fetch(PDO::FETCH_ASSOC);
+            if (!$ord) { echo json_encode(['success' => false, 'message' => 'order not found']); exit; }
+            $orderNumber = $ord['order_number'];
+            $domain = (string)$ord['domain'];
+            $username = 'vos_' . preg_replace('/[^A-Za-z0-9]/', '', $orderNumber);
+            $home = '/var/www/customers/' . $orderNumber;
+            $vhost = '/etc/nginx/sites-available/' . $domain . '.conf';
+            $vhostEnabled = '/etc/nginx/sites-enabled/' . $domain . '.conf';
+
+            $r = ['success' => true, 'order_number' => $orderNumber, 'domain' => $domain];
+            // SSL
+            $sslOut = @shell_exec('sudo /usr/bin/certbot certificates --cert-name ' . escapeshellarg($domain) . ' 2>&1');
+            $ssl = ['present' => false];
+            if ($sslOut && preg_match('/Expiry Date:\s*([\d\-:\sUTC+]+)\s*\(VALID:\s*(\d+)\s*days\)/', $sslOut, $m)) {
+                $ssl = ['present' => true, 'expiry' => trim($m[1]), 'days_left' => (int)$m[2]];
+            } elseif ($sslOut && preg_match('/INVALID|EXPIRED/i', $sslOut)) {
+                $ssl = ['present' => true, 'expired' => true];
+            }
+            $r['ssl'] = $ssl;
+            // disk
+            $diskBytes = null;
+            $du = @shell_exec('sudo /usr/bin/du -sb ' . escapeshellarg($home) . ' 2>/dev/null');
+            if ($du && preg_match('/^(\d+)/', $du, $m)) $diskBytes = (int)$m[1];
+            $r['disk'] = ['home' => $home, 'bytes' => $diskBytes, 'human' => $diskBytes !== null ? _vh_admin_human_bytes($diskBytes) : null];
+            // db
+            $dbName = $username;
+            $dbu = ['name' => $dbName, 'bytes' => null];
+            try {
+                $sst = $pdo->prepare("SELECT IFNULL(SUM(data_length+index_length),0) FROM information_schema.tables WHERE table_schema=?");
+                $sst->execute([$dbName]);
+                $b = (int)$sst->fetchColumn();
+                $tcSt = $pdo->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=?");
+                $tcSt->execute([$dbName]);
+                $dbu = ['name' => $dbName, 'bytes' => $b, 'human' => _vh_admin_human_bytes($b), 'table_count' => (int)$tcSt->fetchColumn()];
+            } catch (\Throwable $e) { $dbu['error'] = $e->getMessage(); }
+            $r['db'] = $dbu;
+            // nginx
+            $r['nginx'] = ['vhost_path' => $vhost, 'vhost_exists' => file_exists($vhost), 'enabled' => file_exists($vhostEnabled)];
+            echo json_encode($r, JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        // ── nginx vhost 활성/비활성 토글 ───────────────────────────
+        case 'toggle_vhost': {
+            $oid = (int)($input['order_id'] ?? 0);
+            $enable = !empty($input['enable']);
+            $oSt = $pdo->prepare("SELECT * FROM {$prefix}orders WHERE id = ?");
+            $oSt->execute([$oid]);
+            $ord = $oSt->fetch(PDO::FETCH_ASSOC);
+            if (!$ord) { echo json_encode(['success' => false, 'message' => 'order not found']); exit; }
+            $domain = (string)$ord['domain'];
+            $avail = '/etc/nginx/sites-available/' . $domain . '.conf';
+            $en = '/etc/nginx/sites-enabled/' . $domain . '.conf';
+            if (!file_exists($avail)) { echo json_encode(['success' => false, 'message' => 'vhost 파일 없음']); exit; }
+            if ($enable) {
+                shell_exec('sudo /usr/bin/ln -sf ' . escapeshellarg($avail) . ' ' . escapeshellarg($en) . ' 2>&1');
+            } else {
+                shell_exec('sudo /usr/bin/rm ' . escapeshellarg($en) . ' 2>&1');
+            }
+            shell_exec('sudo /usr/bin/systemctl reload nginx 2>&1');
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'vhost_toggle', ?, 'admin', ?)")
+                ->execute([$oid, json_encode(['enable' => $enable]), $_SESSION['user_id'] ?? '']);
+            echo json_encode(['success' => true, 'enabled' => file_exists($en)]);
+            exit;
+        }
+
+        // ── SSL 갱신 ──────────────────────────────────────────────
+        case 'renew_ssl': {
+            $oid = (int)($input['order_id'] ?? 0);
+            $oSt = $pdo->prepare("SELECT * FROM {$prefix}orders WHERE id = ?");
+            $oSt->execute([$oid]);
+            $ord = $oSt->fetch(PDO::FETCH_ASSOC);
+            if (!$ord) { echo json_encode(['success' => false, 'message' => 'order not found']); exit; }
+            $domain = (string)$ord['domain'];
+            $out = shell_exec('sudo /usr/bin/certbot renew --cert-name ' . escapeshellarg($domain) . ' --non-interactive 2>&1');
+            $success = $out && (stripos($out, 'success') !== false || stripos($out, 'not yet due') !== false || stripos($out, 'No renewals were attempted') !== false);
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'ssl_renew', ?, 'admin', ?)")
+                ->execute([$oid, json_encode(['output' => substr((string)$out, 0, 500)]), $_SESSION['user_id'] ?? '']);
+            echo json_encode(['success' => $success, 'output' => substr((string)$out, 0, 500)]);
+            exit;
+        }
+
+        // ── DB 비밀번호 재설정 ─────────────────────────────────────
+        case 'reset_db_password': {
+            $oid = (int)($input['order_id'] ?? 0);
+            $oSt = $pdo->prepare("SELECT * FROM {$prefix}orders WHERE id = ?");
+            $oSt->execute([$oid]);
+            $ord = $oSt->fetch(PDO::FETCH_ASSOC);
+            if (!$ord) { echo json_encode(['success' => false, 'message' => 'order not found']); exit; }
+            $orderNumber = $ord['order_number'];
+            $username = 'vos_' . preg_replace('/[^A-Za-z0-9]/', '', $orderNumber);
+            $newPw = bin2hex(random_bytes(16));
+
+            $dbAdmin = $_ENV['HOSTING_DB_ADMIN_USER'] ?? null;
+            $dbAdminPw = $_ENV['HOSTING_DB_ADMIN_PASS'] ?? null;
+            if (!$dbAdmin) { echo json_encode(['success' => false, 'message' => 'DB admin 미설정']); exit; }
+            try {
+                $admin = new PDO('mysql:host=127.0.0.1;charset=utf8mb4', $dbAdmin, $dbAdminPw, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+                $st = $admin->prepare("ALTER USER ?@'localhost' IDENTIFIED BY ?");
+                $st->execute([$username, $newPw]);
+                $admin->exec("FLUSH PRIVILEGES");
+
+                // hosting subscription metadata 갱신
+                $hSt = $pdo->prepare("SELECT id, metadata FROM {$prefix}subscriptions WHERE order_id = ? AND type = 'hosting' LIMIT 1");
+                $hSt->execute([$oid]);
+                if ($hSub = $hSt->fetch(PDO::FETCH_ASSOC)) {
+                    $hMeta = json_decode($hSub['metadata'] ?? '{}', true) ?: [];
+                    $hMeta['server']['db']['db_pass'] = $newPw;
+                    $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
+                        ->execute([json_encode($hMeta, JSON_UNESCAPED_UNICODE), $hSub['id']]);
+                }
+                $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'db_pw_reset', ?, 'admin', ?)")
+                    ->execute([$oid, json_encode(['user' => $username]), $_SESSION['user_id'] ?? '']);
+                echo json_encode(['success' => true, 'new_password' => $newPw]);
+            } catch (\Throwable $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+            exit;
+        }
+
+        // ── 재프로비저닝 (호스팅 손상 시 재구축) ──────────────────────
+        case 'reprovision': {
+            $oid = (int)($input['order_id'] ?? 0);
+            $oSt = $pdo->prepare("SELECT * FROM {$prefix}orders WHERE id = ?");
+            $oSt->execute([$oid]);
+            $ord = $oSt->fetch(PDO::FETCH_ASSOC);
+            if (!$ord) { echo json_encode(['success' => false, 'message' => 'order not found']); exit; }
+            $orderNumber = $ord['order_number'];
+            $_runScript = BASE_PATH . '/scripts/run-order-provision.php';
+            if (!is_file($_runScript)) { echo json_encode(['success' => false, 'message' => 'runner 스크립트 없음']); exit; }
+            $_logFile = '/tmp/voscms-provision-' . preg_replace('/[^A-Za-z0-9_-]/', '', $orderNumber) . '.log';
+            $_cmd = sprintf(
+                '/usr/bin/php8.3 %s --order=%s --force > %s 2>&1 &',
+                escapeshellarg($_runScript),
+                escapeshellarg($orderNumber),
+                escapeshellarg($_logFile)
+            );
+            @exec($_cmd);
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'reprovision_triggered', '{}', 'admin', ?)")
+                ->execute([$oid, $_SESSION['user_id'] ?? '']);
+            echo json_encode(['success' => true, 'message' => '백그라운드에서 재프로비저닝 중. 잠시 후 새로고침하세요.']);
+            exit;
+        }
     }
     echo json_encode(['success' => false, 'message' => __('services.admin_orders.alert_unknown_action')]);
     exit;
+}
+
+if (!function_exists('_vh_admin_human_bytes')) {
+    function _vh_admin_human_bytes(int $b): string {
+        $u = ['B','KB','MB','GB','TB']; $i = 0;
+        while ($b >= 1024 && $i < count($u) - 1) { $b /= 1024; $i++; }
+        return number_format($b, $i > 0 ? 2 : 0) . ' ' . $u[$i];
+    }
 }
 
 require_once BASE_PATH . '/rzxlib/Core/Helpers/Encryption.php';

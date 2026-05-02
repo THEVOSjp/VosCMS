@@ -2781,7 +2781,92 @@ switch ($action) {
         exit;
     }
 
+    // ============================================================
+    // admin_hosting_status — SSL/disk/db 사용량 + nginx 상태 일괄 조회
+    // input: order_number
+    // output: { success, ssl: {...}, disk: {...}, db: {...}, nginx: {...} }
+    // ============================================================
+    case 'admin_hosting_status': {
+        $rSt = $pdo->prepare("SELECT role FROM {$prefix}users WHERE id = ?");
+        $rSt->execute([$userId]);
+        if (!in_array($rSt->fetchColumn(), ['admin','supervisor'], true)) {
+            echo json_encode(['success' => false, 'message' => '권한 필요']); exit;
+        }
+        $orderNumber = strtoupper(trim((string)($input['order_number'] ?? '')));
+        if (!preg_match('/^[A-Z0-9-]{6,40}$/', $orderNumber)) {
+            echo json_encode(['success' => false, 'message' => 'invalid order_number']); exit;
+        }
+        $oSt = $pdo->prepare("SELECT * FROM {$prefix}orders WHERE order_number = ? LIMIT 1");
+        $oSt->execute([$orderNumber]);
+        $order = $oSt->fetch(PDO::FETCH_ASSOC);
+        if (!$order) { echo json_encode(['success' => false, 'message' => 'order not found']); exit; }
+
+        $domain = (string)$order['domain'];
+        $username = 'vos_' . preg_replace('/[^A-Za-z0-9]/', '', $orderNumber);
+        $home = '/var/www/customers/' . $orderNumber;
+        $vhost = '/etc/nginx/sites-available/' . $domain . '.conf';
+        $vhostEnabled = '/etc/nginx/sites-enabled/' . $domain . '.conf';
+
+        $result = ['success' => true, 'order_number' => $orderNumber, 'domain' => $domain];
+
+        // ── SSL 인증서 (certbot)
+        $sslOut = @shell_exec('sudo /usr/bin/certbot certificates --cert-name ' . escapeshellarg($domain) . ' 2>&1');
+        $ssl = ['present' => false];
+        if ($sslOut && preg_match('/Expiry Date:\s*([\d\-:\sUTC+]+)\s*\(VALID:\s*(\d+)\s*days\)/', $sslOut, $m)) {
+            $ssl = ['present' => true, 'expiry' => trim($m[1]), 'days_left' => (int)$m[2]];
+        } elseif ($sslOut && preg_match('/INVALID|EXPIRED/i', $sslOut)) {
+            $ssl = ['present' => true, 'expired' => true, 'raw' => substr(trim($sslOut), 0, 200)];
+        }
+        $result['ssl'] = $ssl;
+
+        // ── 디스크 사용량 (du -sb)
+        $diskBytes = null;
+        $du = @shell_exec('sudo /usr/bin/du -sb ' . escapeshellarg($home) . ' 2>/dev/null');
+        if ($du && preg_match('/^(\d+)/', $du, $m)) $diskBytes = (int)$m[1];
+        $result['disk'] = [
+            'home' => $home,
+            'bytes' => $diskBytes,
+            'human' => $diskBytes !== null ? _vh_human_bytes($diskBytes) : null,
+        ];
+
+        // ── DB 사용량 (information_schema)
+        $dbName = $username; // = vos_<order>
+        $dbUsage = ['name' => $dbName, 'bytes' => null];
+        try {
+            $sst = $pdo->prepare("SELECT IFNULL(SUM(data_length + index_length), 0) FROM information_schema.tables WHERE table_schema = ?");
+            $sst->execute([$dbName]);
+            $bytes = (int)$sst->fetchColumn();
+            $dbUsage['bytes'] = $bytes;
+            $dbUsage['human'] = _vh_human_bytes($bytes);
+            $tcSt = $pdo->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = ?");
+            $tcSt->execute([$dbName]);
+            $dbUsage['table_count'] = (int)$tcSt->fetchColumn();
+        } catch (\Throwable $e) {
+            $dbUsage['error'] = $e->getMessage();
+        }
+        $result['db'] = $dbUsage;
+
+        // ── nginx 상태
+        $result['nginx'] = [
+            'vhost_path' => $vhost,
+            'vhost_exists' => file_exists($vhost),
+            'enabled' => file_exists($vhostEnabled),
+        ];
+
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     default:
         echo json_encode(['success' => false, 'message' => '알 수 없는 액션입니다.']);
         break;
+}
+
+if (!function_exists('_vh_human_bytes')) {
+    function _vh_human_bytes(int $b): string {
+        $units = ['B','KB','MB','GB','TB'];
+        $i = 0;
+        while ($b >= 1024 && $i < count($units) - 1) { $b /= 1024; $i++; }
+        return number_format($b, $i > 0 ? 2 : 0) . ' ' . $units[$i];
+    }
 }
