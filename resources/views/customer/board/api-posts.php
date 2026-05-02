@@ -113,18 +113,18 @@ if ($action === 'create') {
     }
     if (!empty($evData)) $extraVarsJson = json_encode($evData, JSON_UNESCAPED_UNICODE);
 
+    // Phase 5 완료: rzx_board_posts.title/content 컬럼 DROP 됨 → INSERT 에서 제외
     $stmt = $pdo->prepare("INSERT INTO {$prefix}board_posts
-        (board_id, category_id, user_id, title, content, password, is_notice, is_secret, is_anonymous, nick_name, list_order, update_order, status, original_locale, source_locale, extra_vars, ip_address, created_at, updated_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        (board_id, category_id, user_id, password, is_notice, is_secret, is_anonymous, nick_name, list_order, update_order, status, original_locale, source_locale, extra_vars, ip_address, created_at, updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     $stmt->execute([
-        $boardId, $categoryId, $userId, $title, $content, $password,
+        $boardId, $categoryId, $userId, $password,
         $isNotice, $isSecret, $isAnonymous, $nickName,
         $listOrder, $listOrder, 'published', $currentLocale, $currentLocale, $extraVarsJson, $_SERVER['REMOTE_ADDR'] ?? '', $now, $now
     ]);
     $newId = $pdo->lastInsertId();
 
-    // 통합 정책: title/content 는 rzx_translations 에 항상 저장
-    // (rzx_board_posts.title/content 는 backward compat 미러, Phase 5 에서 폐기 예정)
+    // 통합 정책: title/content 는 rzx_translations 에 단일 저장
     board_post_text_save($pdo, $prefix, (int)$newId, 'title', $currentLocale, $title, $currentLocale);
     board_post_text_save($pdo, $prefix, (int)$newId, 'content', $currentLocale, $content, $currentLocale);
     if (!empty($extraVarsJson)) {
@@ -228,11 +228,11 @@ if ($action === 'update') {
         board_post_text_save($pdo, $prefix, $postId, 'extra_vars', $currentLocale, $extraVarsJson, $originalLocale);
     }
 
-    // 메타 필드 (is_notice, is_secret, category) 는 언어 무관 → base table 에 반영
-    // 원본 언어 수정 시 base.title/content/extra_vars 도 미러 (Phase 5 까지 backward compat)
+    // 메타 필드 (is_notice, is_secret, category, extra_vars) 는 언어 무관 → base table 에 반영
+    // (Phase 5 후 title/content 컬럼 없음)
     if ($currentLocale === $originalLocale) {
-        $pdo->prepare("UPDATE {$prefix}board_posts SET title=?, content=?, is_notice=?, is_secret=?, category_id=?, extra_vars=?, updated_at=NOW() WHERE id=?")
-            ->execute([$title, $content, $isNotice, $isSecret, $categoryId, $extraVarsJson, $postId]);
+        $pdo->prepare("UPDATE {$prefix}board_posts SET is_notice=?, is_secret=?, category_id=?, extra_vars=?, updated_at=NOW() WHERE id=?")
+            ->execute([$isNotice, $isSecret, $categoryId, $extraVarsJson, $postId]);
     } else {
         $pdo->prepare("UPDATE {$prefix}board_posts SET is_notice=?, is_secret=?, category_id=?, updated_at=NOW() WHERE id=?")
             ->execute([$isNotice, $isSecret, $categoryId, $postId]);
@@ -350,12 +350,12 @@ if ($action === 'like') {
         exit;
     }
 
-    // 투표 기록 + like_count 증가
+    // 투표 기록 + vote_up 증가 (board_posts 의 실제 컬럼명은 vote_up/vote_down)
     $pdo->prepare("INSERT INTO {$prefix}board_votes (post_id, user_id, ip_address, vote_type) VALUES (?, ?, ?, 'like')")
         ->execute([$postId, $userId, $ip]);
-    $pdo->prepare("UPDATE {$prefix}board_posts SET like_count = like_count + 1 WHERE id = ?")->execute([$postId]);
+    $pdo->prepare("UPDATE {$prefix}board_posts SET vote_up = vote_up + 1 WHERE id = ?")->execute([$postId]);
 
-    $cnt = $pdo->prepare("SELECT like_count FROM {$prefix}board_posts WHERE id = ?");
+    $cnt = $pdo->prepare("SELECT vote_up FROM {$prefix}board_posts WHERE id = ?");
     $cnt->execute([$postId]);
     echo json_encode(['success' => true, 'like_count' => (int)$cnt->fetchColumn()]);
     exit;
@@ -382,7 +382,7 @@ if ($action === 'dislike') {
         exit;
     }
 
-    $postStmt = $pdo->prepare("SELECT user_id, dislike_count FROM {$prefix}board_posts WHERE id = ?");
+    $postStmt = $pdo->prepare("SELECT user_id, vote_down FROM {$prefix}board_posts WHERE id = ?");
     $postStmt->execute([$postId]);
     $postData = $postStmt->fetch(PDO::FETCH_ASSOC);
     if ($userId && $postData && (int)$postData['user_id'] === $userId) {
@@ -392,9 +392,9 @@ if ($action === 'dislike') {
 
     $pdo->prepare("INSERT INTO {$prefix}board_votes (post_id, user_id, ip_address, vote_type) VALUES (?, ?, ?, 'dislike')")
         ->execute([$postId, $userId, $ip]);
-    $pdo->prepare("UPDATE {$prefix}board_posts SET dislike_count = dislike_count + 1 WHERE id = ?")->execute([$postId]);
+    $pdo->prepare("UPDATE {$prefix}board_posts SET vote_down = vote_down + 1 WHERE id = ?")->execute([$postId]);
 
-    $cnt = $pdo->prepare("SELECT dislike_count FROM {$prefix}board_posts WHERE id = ?");
+    $cnt = $pdo->prepare("SELECT vote_down FROM {$prefix}board_posts WHERE id = ?");
     $cnt->execute([$postId]);
     echo json_encode(['success' => true, 'dislike_count' => (int)$cnt->fetchColumn()]);
     exit;
