@@ -2614,14 +2614,39 @@ switch ($action) {
             $orderStatus = 'paid';  // 관리자 등록은 즉시 paid 처리
             if ($payMethod === 'free') $orderStatus = 'free';
 
+            $orderUuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+                mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000,
+                mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+            );
+            $orderItems = [
+                'hosting' => [
+                    'plan_id' => $planId,
+                    'label'   => $plan['label'] ?? '',
+                    'capacity'=> $plan['capacity'] ?? '',
+                    'price'   => $planPrice,
+                    'months'  => $months,
+                ],
+                'addons' => array_map(function($a){ return [
+                    'id' => $a['id'] ?? '',
+                    'label' => $a['label'] ?? '',
+                    'price' => (int)($a['price'] ?? 0),
+                    'one_time' => !empty($a['one_time']),
+                ]; }, $addonsInput),
+                'subtotal' => $subtotal,
+                'tax' => $taxAmt,
+                'total' => $totalAmt,
+            ];
             $pdo->prepare("INSERT INTO {$prefix}orders
-                (order_number, user_id, status, hosting_capacity, domain, domain_option, contract_months, total, currency, payment_method, started_at, expires_at, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'JPY', ?, ?, ?, NOW())")
+                (uuid, order_number, user_id, status, hosting_capacity, domain, domain_option, contract_months, items, total, currency, payment_method, started_at, expires_at, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'JPY', ?, ?, ?, NOW())")
                 ->execute([
-                    $orderNumber, $custUserId, $orderStatus,
+                    $orderUuid, $orderNumber, $custUserId, $orderStatus,
                     $plan['capacity'] ?? '',
                     $domainName ?: ($domainOption === 'free' ? '' : ''),
-                    $domainOption, $months, $totalAmt,
+                    $domainOption, $months,
+                    json_encode($orderItems, JSON_UNESCAPED_UNICODE),
+                    $totalAmt,
                     $methodLabel, $startedAt, $expiresAt,
                 ]);
             $orderId = (int)$pdo->lastInsertId();
