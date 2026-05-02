@@ -744,34 +744,26 @@ if (!function_exists('db_trans_batch')) {
         $titleTr = [];
         $contentTr = [];
 
-        // 게시글별 original_locale 매핑
-        $origLocaleMap = [];
-        foreach ($posts as $p) {
-            $origLocaleMap[(int)$p['id']] = $p['original_locale'] ?? '';
-        }
-
-        // 현재 로케일이 원본 언어인 게시글은 번역 불필요 (원본 title 유지)
-        $needTranslation = array_filter($postIds, fn($id) => ($origLocaleMap[(int)$id] ?? '') !== $locale);
-        if (empty($needTranslation)) return $posts; // 전부 원본 언어
-
-        // 폴백 체인: 현재 로케일 → 영어 → 기본언어
+        // 통합 정책: 모든 글이 rzx_translations 에 ko 행을 가진다고 전제 (Phase 1 백필 완료).
+        // 폴백 체인: 현재 로케일 → 영어 → 기본 언어 (ko)
         $defaultLocale = $_ENV['APP_LOCALE'] ?? $_ENV['DEFAULT_LOCALE'] ?? 'ko';
-        $chain = [$locale];
-        if ($locale !== 'en') $chain[] = 'en';
-        if ($locale !== $defaultLocale && $defaultLocale !== 'en') $chain[] = $defaultLocale;
+        $chain = array_values(array_unique([$locale, 'en', $defaultLocale]));
 
-        // 번역 필요한 게시글만 키 생성
-        $titleKeys = implode(',', array_map(fn($id) => "'" . addslashes("board_post.{$id}.title") . "'", $needTranslation));
-        $contentKeys = implode(',', array_map(fn($id) => "'" . addslashes("board_post.{$id}.content") . "'", $needTranslation));
-        $allKeys = $titleKeys . ',' . $contentKeys;
+        $titleKeys = array_map(fn($id) => "board_post.{$id}.title", $postIds);
+        $contentKeys = array_map(fn($id) => "board_post.{$id}.content", $postIds);
+        $allKeys = array_merge($titleKeys, $contentKeys);
+        $keysPh = implode(',', array_fill(0, count($allKeys), '?'));
 
         try {
+            $stmt = $pdo->prepare("SELECT lang_key, content FROM {$prefix}translations
+                WHERE lang_key IN ({$keysPh}) AND locale = ? AND content != ''");
             foreach ($chain as $tryLocale) {
-                $still = array_filter($needTranslation, fn($id) => !isset($titleTr[(int)$id]));
-                if (empty($still)) break;
+                $missingT = array_filter($postIds, fn($id) => !isset($titleTr[(int)$id]));
+                $missingC = array_filter($postIds, fn($id) => !isset($contentTr[(int)$id]));
+                if (empty($missingT) && empty($missingC)) break;
 
-                $rows = $pdo->query("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN ({$allKeys}) AND locale = '" . addslashes($tryLocale) . "'")->fetchAll(\PDO::FETCH_ASSOC);
-                foreach ($rows as $tr) {
+                $stmt->execute([...$allKeys, $tryLocale]);
+                while ($tr = $stmt->fetch(\PDO::FETCH_ASSOC)) {
                     if (preg_match('/board_post\.(\d+)\.title/', $tr['lang_key'], $m)) {
                         if (!isset($titleTr[(int)$m[1]])) $titleTr[(int)$m[1]] = $tr['content'];
                     } elseif (preg_match('/board_post\.(\d+)\.content/', $tr['lang_key'], $m)) {
@@ -783,7 +775,7 @@ if (!function_exists('db_trans_batch')) {
             error_log("db_trans_batch error: " . $e->getMessage());
         }
 
-        // 번역 적용 (원본 언어 게시글은 건드리지 않음)
+        // 번역 적용. translations 에 없으면 base.title/content 가 fallback (Phase 5 까지)
         foreach ($posts as &$p) {
             $pid = (int)$p['id'];
             if (isset($titleTr[$pid])) $p['title'] = $titleTr[$pid];
@@ -1176,5 +1168,122 @@ if (!function_exists('format_phone')) {
         };
 
         return "{$cc} {$formatted}";
+    }
+}
+
+// ============================================================================
+// 게시판 글 다국어 헬퍼 (rzx_translations 단일 사용)
+//   - lang_key 패턴: board_post.{id}.title / board_post.{id}.content / board_post.{id}.extra_vars
+//   - rzx_board_posts.title/content 컬럼은 폐기 예정 (마이그레이션 진행 중)
+// ============================================================================
+
+if (!function_exists('board_post_text')) {
+    /**
+     * 게시글 다국어 텍스트 조회.
+     * db_trans 위에 board_post 전용 키 빌더를 얹은 thin wrapper.
+     *
+     * @param int    $postId  게시글 ID
+     * @param string $field   'title' | 'content' | 'extra_vars' (extra_vars 는 JSON string)
+     * @param string|null $locale  null 이면 current_locale()
+     * @param string $fallback     모든 폴백 실패 시 반환값
+     */
+    function board_post_text(int $postId, string $field, ?string $locale = null, string $fallback = ''): string
+    {
+        return db_trans("board_post.{$postId}.{$field}", $locale, $fallback);
+    }
+}
+
+if (!function_exists('board_post_text_save')) {
+    /**
+     * 게시글 다국어 텍스트 1건 저장 (UPSERT).
+     * lang_key 와 (locale) 단위로 하나만 유지.
+     *
+     * @param \PDO   $pdo
+     * @param string $prefix         테이블 prefix (예: 'rzx_')
+     * @param int    $postId
+     * @param string $field          'title' | 'content' | 'extra_vars'
+     * @param string $locale
+     * @param string $content
+     * @param string $sourceLocale   글의 원본 언어 (기본 'ko')
+     */
+    function board_post_text_save(\PDO $pdo, string $prefix, int $postId, string $field, string $locale, string $content, string $sourceLocale = 'ko'): void
+    {
+        $key = "board_post.{$postId}.{$field}";
+        // 존재 여부 체크 → INSERT or UPDATE (UNIQUE 제약 가정 안 함)
+        $st = $pdo->prepare("SELECT id FROM {$prefix}translations WHERE lang_key = ? AND locale = ? LIMIT 1");
+        $st->execute([$key, $locale]);
+        $existId = $st->fetchColumn();
+        if ($existId) {
+            $pdo->prepare("UPDATE {$prefix}translations SET content = ?, source_locale = ?, updated_at = NOW() WHERE id = ?")
+                ->execute([$content, $sourceLocale, $existId]);
+        } else {
+            $pdo->prepare("INSERT INTO {$prefix}translations (lang_key, locale, source_locale, content) VALUES (?, ?, ?, ?)")
+                ->execute([$key, $locale, $sourceLocale, $content]);
+        }
+    }
+}
+
+if (!function_exists('board_post_text_delete_all')) {
+    /**
+     * 게시글의 모든 다국어 row 삭제 (글 삭제 시 호출).
+     */
+    function board_post_text_delete_all(\PDO $pdo, string $prefix, int $postId): void
+    {
+        $pdo->prepare("DELETE FROM {$prefix}translations WHERE lang_key LIKE ?")
+            ->execute(["board_post.{$postId}.%"]);
+    }
+}
+
+if (!function_exists('board_post_text_bulk_load')) {
+    /**
+     * 여러 게시글의 title/content 를 한 번에 로드 (목록 페이지 N+1 방지).
+     *
+     * @param \PDO   $pdo
+     * @param string $prefix
+     * @param int[]  $postIds
+     * @param string $locale  현재 로케일
+     * @param array  $fields  ['title', 'content']
+     * @return array  $result[$postId][$field] = string
+     */
+    function board_post_text_bulk_load(\PDO $pdo, string $prefix, array $postIds, string $locale, array $fields = ['title', 'content']): array
+    {
+        if (empty($postIds)) return [];
+        $defaultLocale = $_ENV['DEFAULT_LOCALE'] ?? 'ko';
+        $chain = array_values(array_unique([$locale, 'en', $defaultLocale]));
+        $result = [];
+
+        $keys = [];
+        foreach ($postIds as $id) {
+            foreach ($fields as $f) {
+                $keys[] = "board_post.{$id}.{$f}";
+            }
+        }
+        $keyPh = implode(',', array_fill(0, count($keys), '?'));
+        $localePh = implode(',', array_fill(0, count($chain), '?'));
+
+        $sql = "SELECT lang_key, locale, content FROM {$prefix}translations
+                WHERE lang_key IN ({$keyPh}) AND locale IN ({$localePh}) AND content != ''";
+        $st = $pdo->prepare($sql);
+        $st->execute(array_merge($keys, $chain));
+
+        // 폴백 체인 우선순위 적용: chain 의 앞쪽 locale 이 우선
+        $priority = array_flip($chain);
+        $tmp = []; // [postId][field][locale] = content
+        while ($r = $st->fetch(\PDO::FETCH_ASSOC)) {
+            if (preg_match('/^board_post\.(\d+)\.(\w+)$/', $r['lang_key'], $m)) {
+                $tmp[(int)$m[1]][$m[2]][$r['locale']] = $r['content'];
+            }
+        }
+        foreach ($tmp as $pid => $fmap) {
+            foreach ($fmap as $f => $lmap) {
+                foreach ($chain as $tryLocale) {
+                    if (!empty($lmap[$tryLocale])) {
+                        $result[$pid][$f] = $lmap[$tryLocale];
+                        break;
+                    }
+                }
+            }
+        }
+        return $result;
     }
 }

@@ -37,26 +37,24 @@ if ($editMode) {
     $fileStmt->execute([$postId]);
     $existingFiles = $fileStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 현재 로케일이 원본 언어가 아니면 번역 데이터 로드
+    // 통합 정책: 현재 로케일의 번역 데이터를 항상 rzx_translations 에서 로드
     $postOriginalLocale = $post['original_locale'] ?? 'ko';
-    if ($currentLocale !== $postOriginalLocale) {
-        $trStmt = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = ? AND locale = ?");
-        $trStmt->execute(["board_post.{$postId}.title", $currentLocale]);
-        $trTitle = $trStmt->fetchColumn();
-        $trStmt->execute(["board_post.{$postId}.content", $currentLocale]);
-        $trContent = $trStmt->fetchColumn();
-        if ($trTitle !== false) $post['title'] = $trTitle;
-        if ($trContent !== false) $post['content'] = $trContent;
+    $trStmt = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = ? AND locale = ?");
+    $trStmt->execute(["board_post.{$postId}.title", $currentLocale]);
+    $trTitle = $trStmt->fetchColumn();
+    $trStmt->execute(["board_post.{$postId}.content", $currentLocale]);
+    $trContent = $trStmt->fetchColumn();
+    if ($trTitle !== false) $post['title'] = $trTitle;
+    if ($trContent !== false) $post['content'] = $trContent;
 
-        // 확장 변수 번역 로드
-        $trStmt->execute(["board_post.{$postId}.extra_vars", $currentLocale]);
-        $trEv = $trStmt->fetchColumn();
-        if ($trEv !== false) {
-            $trEvData = json_decode($trEv, true);
-            if ($trEvData) {
-                $origEv = !empty($post['extra_vars']) ? (json_decode($post['extra_vars'], true) ?: []) : [];
-                $post['extra_vars'] = json_encode(array_merge($origEv, $trEvData), JSON_UNESCAPED_UNICODE);
-            }
+    // 확장 변수 번역 로드 (해당 locale 가 있을 때만)
+    $trStmt->execute(["board_post.{$postId}.extra_vars", $currentLocale]);
+    $trEv = $trStmt->fetchColumn();
+    if ($trEv !== false) {
+        $trEvData = json_decode($trEv, true);
+        if ($trEvData) {
+            $origEv = !empty($post['extra_vars']) ? (json_decode($post['extra_vars'], true) ?: []) : [];
+            $post['extra_vars'] = json_encode(array_merge($origEv, $trEvData), JSON_UNESCAPED_UNICODE);
         }
     }
 }

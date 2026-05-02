@@ -59,39 +59,14 @@ if (($board['consultation'] ?? 0) && $currentUser && $currentUser['id'] != $post
 $pdo->prepare("UPDATE {$prefix}board_posts SET view_count = view_count + 1 WHERE id = ?")->execute([$postId]);
 $post['view_count']++;
 
-// 다국어 폴백: 현재 로케일 → en → 원본(board_posts)
+// 통합 정책: 항상 rzx_translations 우선 (helper 가 폴백 체인 처리)
 $postOriginalLocale = $post['original_locale'] ?? 'ko';
-$postDisplayLocale = $postOriginalLocale; // 실제 표시되는 언어
-
-if ($currentLocale !== $postOriginalLocale) {
-    // 현재 로케일 번역 조회
-    $trStmt = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = ? AND locale = ?");
-
-    $trStmt->execute(["board_post.{$postId}.title", $currentLocale]);
-    $trTitle = $trStmt->fetchColumn();
-    $trStmt->execute(["board_post.{$postId}.content", $currentLocale]);
-    $trContent = $trStmt->fetchColumn();
-
-    if ($trTitle !== false && $trContent !== false) {
-        // 현재 로케일 번역 있음
-        $post['title'] = $trTitle;
-        $post['content'] = $trContent;
-        $postDisplayLocale = $currentLocale;
-    } elseif ($currentLocale !== 'en') {
-        // 영어 폴백 시도
-        $trStmt->execute(["board_post.{$postId}.title", 'en']);
-        $enTitle = $trStmt->fetchColumn();
-        $trStmt->execute(["board_post.{$postId}.content", 'en']);
-        $enContent = $trStmt->fetchColumn();
-
-        if ($enTitle !== false && $enContent !== false) {
-            $post['title'] = $enTitle;
-            $post['content'] = $enContent;
-            $postDisplayLocale = 'en';
-        }
-        // 영어도 없으면 → 원본(board_posts) 그대로 표시
-    }
-}
+$_trBulk = function_exists('board_post_text_bulk_load')
+    ? board_post_text_bulk_load($pdo, $prefix, [(int)$postId], $currentLocale)
+    : [];
+if (isset($_trBulk[(int)$postId]['title']))   $post['title']   = $_trBulk[(int)$postId]['title'];
+if (isset($_trBulk[(int)$postId]['content'])) $post['content'] = $_trBulk[(int)$postId]['content'];
+$postDisplayLocale = $currentLocale; // bulk_load 가 폴백 처리 — 정확한 표시 언어는 추적 안 함
 
 // 카테고리 정보
 $postCategory = $catMap[$post['category_id'] ?? 0] ?? null;
@@ -139,24 +114,13 @@ $nextStmt = $pdo->prepare("SELECT id, title, original_locale FROM {$prefix}board
 $nextStmt->execute([$boardId, $postId]);
 $nextPost = $nextStmt->fetch(PDO::FETCH_ASSOC);
 
-// 이전/다음 글 제목 다국어 폴백 (현재 로케일 → en → 원본)
-$_navTrStmt = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = ? AND locale = ?");
-foreach ([&$prevPost, &$nextPost] as &$_navPost) {
-    if (!$_navPost) continue;
-    $origLoc = $_navPost['original_locale'] ?? 'ko';
-    if ($currentLocale !== $origLoc) {
-        $_navTrStmt->execute(["board_post.{$_navPost['id']}.title", $currentLocale]);
-        $tr = $_navTrStmt->fetchColumn();
-        if ($tr !== false) {
-            $_navPost['title'] = $tr;
-        } elseif ($currentLocale !== 'en') {
-            $_navTrStmt->execute(["board_post.{$_navPost['id']}.title", 'en']);
-            $enTr = $_navTrStmt->fetchColumn();
-            if ($enTr !== false) $_navPost['title'] = $enTr;
-        }
-    }
+// 이전/다음 글 제목 다국어 (helper 사용)
+$_navIds = array_filter([(int)($prevPost['id'] ?? 0), (int)($nextPost['id'] ?? 0)]);
+if ($_navIds && function_exists('board_post_text_bulk_load')) {
+    $_navTr = board_post_text_bulk_load($pdo, $prefix, array_values($_navIds), $currentLocale, ['title']);
+    if ($prevPost && isset($_navTr[(int)$prevPost['id']]['title'])) $prevPost['title'] = $_navTr[(int)$prevPost['id']]['title'];
+    if ($nextPost && isset($_navTr[(int)$nextPost['id']]['title'])) $nextPost['title'] = $_navTr[(int)$nextPost['id']]['title'];
 }
-unset($_navPost);
 
 // 수정/삭제 권한
 $canEdit = $currentUser && ($currentUser['id'] == $post['user_id'] || $isAdmin);

@@ -273,64 +273,22 @@ $startNo = $totalCount - $offset;
                 </thead>
                 <tbody>
                     <?php
-                    // 목록 게시글 제목+본문 다국어 번역 일괄 로드 (로케일 → en → 원본)
-                    $allPostIds = array_merge(array_column($notices, 'id'), array_column($posts, 'id'));
-                    $postTitleTranslations = [];
-                    $postContentTranslations = [];
+                    // 목록 게시글 제목/본문 다국어 일괄 로드 (helper 사용 — 폴백 체인 내장)
                     $_cl = $currentLocale ?? 'ko';
-                    if (!empty($allPostIds)) {
-                        // 제목+본문 모두 조회
-                        $titleKeys = implode(',', array_map(fn($id) => "'board_post.{$id}.title'", $allPostIds));
-                        $contentKeys = implode(',', array_map(fn($id) => "'board_post.{$id}.content'", $allPostIds));
-                        $allKeys = $titleKeys . ',' . $contentKeys;
-
-                        // 1. 현재 로케일 번역 조회
-                        $trRows = $pdo->query("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN ({$allKeys}) AND locale = '{$_cl}'")->fetchAll(PDO::FETCH_ASSOC);
-                        foreach ($trRows as $tr) {
-                            if (preg_match('/board_post\.(\d+)\.title/', $tr['lang_key'], $m)) {
-                                $postTitleTranslations[(int)$m[1]] = $tr['content'];
-                            } elseif (preg_match('/board_post\.(\d+)\.content/', $tr['lang_key'], $m)) {
-                                $postContentTranslations[(int)$m[1]] = $tr['content'];
-                            }
-                        }
-
-                        // 2. 영어 폴백
-                        if ($_cl !== 'en') {
-                            $origLocaleMap = [];
-                            foreach (array_merge($notices, $posts) as $_p) {
-                                $origLocaleMap[(int)$_p['id']] = $_p['original_locale'] ?? 'ko';
-                            }
-                            $missingIds = [];
-                            foreach ($allPostIds as $_pid) {
-                                if (!isset($postTitleTranslations[(int)$_pid]) && ($origLocaleMap[(int)$_pid] ?? 'ko') !== $_cl) {
-                                    $missingIds[] = $_pid;
-                                }
-                            }
-                            if (!empty($missingIds)) {
-                                $titleKeys2 = implode(',', array_map(fn($id) => "'board_post.{$id}.title'", $missingIds));
-                                $contentKeys2 = implode(',', array_map(fn($id) => "'board_post.{$id}.content'", $missingIds));
-                                $enRows = $pdo->query("SELECT lang_key, content FROM {$prefix}translations WHERE lang_key IN ({$titleKeys2},{$contentKeys2}) AND locale = 'en'")->fetchAll(PDO::FETCH_ASSOC);
-                                foreach ($enRows as $tr) {
-                                    if (preg_match('/board_post\.(\d+)\.title/', $tr['lang_key'], $m)) {
-                                        if (!isset($postTitleTranslations[(int)$m[1]])) $postTitleTranslations[(int)$m[1]] = $tr['content'];
-                                    } elseif (preg_match('/board_post\.(\d+)\.content/', $tr['lang_key'], $m)) {
-                                        if (!isset($postContentTranslations[(int)$m[1]])) $postContentTranslations[(int)$m[1]] = $tr['content'];
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    $_trMap = function_exists('board_post_text_bulk_load')
+                        ? board_post_text_bulk_load($pdo, $prefix, array_merge(array_column($notices, 'id'), array_column($posts, 'id')), $_cl)
+                        : [];
 
                     // 공지사항 먼저
                     foreach ($notices as $post) {
                         $post['_is_notice_row'] = true;
-                        if (isset($postTitleTranslations[$post['id']])) $post['title'] = $postTitleTranslations[$post['id']];
+                        if (isset($_trMap[$post['id']]['title'])) $post['title'] = $_trMap[$post['id']]['title'];
                         include __DIR__ . '/_list-row.php';
                     }
                     // 일반 글
                     $rowNo = $startNo;
                     foreach ($posts as $post) {
-                        if (isset($postTitleTranslations[$post['id']])) $post['title'] = $postTitleTranslations[$post['id']];
+                        if (isset($_trMap[$post['id']]['title'])) $post['title'] = $_trMap[$post['id']]['title'];
                         $post['_row_no'] = $rowNo--;
                         include __DIR__ . '/_list-row.php';
                     }

@@ -123,6 +123,14 @@ if ($action === 'create') {
     ]);
     $newId = $pdo->lastInsertId();
 
+    // 통합 정책: title/content 는 rzx_translations 에 항상 저장
+    // (rzx_board_posts.title/content 는 backward compat 미러, Phase 5 에서 폐기 예정)
+    board_post_text_save($pdo, $prefix, (int)$newId, 'title', $currentLocale, $title, $currentLocale);
+    board_post_text_save($pdo, $prefix, (int)$newId, 'content', $currentLocale, $content, $currentLocale);
+    if (!empty($extraVarsJson)) {
+        board_post_text_save($pdo, $prefix, (int)$newId, 'extra_vars', $currentLocale, $extraVarsJson, $currentLocale);
+    }
+
     // 파일 업로드 처리
     if (!empty($_FILES['files']['name'][0])) {
         $uploadDir = BASE_PATH . '/storage/board/' . $boardId . '/';
@@ -213,31 +221,21 @@ if ($action === 'update') {
     $currentLocale = function_exists('current_locale') ? current_locale() : ($config['locale'] ?? 'ko');
     $originalLocale = $post['original_locale'] ?? 'ko';
 
+    // 통합 정책: title/content 는 항상 rzx_translations 에 저장 (locale 별)
+    board_post_text_save($pdo, $prefix, $postId, 'title', $currentLocale, $title, $originalLocale);
+    board_post_text_save($pdo, $prefix, $postId, 'content', $currentLocale, $content, $originalLocale);
+    if (!empty($evData)) {
+        board_post_text_save($pdo, $prefix, $postId, 'extra_vars', $currentLocale, $extraVarsJson, $originalLocale);
+    }
+
+    // 메타 필드 (is_notice, is_secret, category) 는 언어 무관 → base table 에 반영
+    // 원본 언어 수정 시 base.title/content/extra_vars 도 미러 (Phase 5 까지 backward compat)
     if ($currentLocale === $originalLocale) {
-        // 원본 언어로 수정 → board_posts 직접 수정
         $pdo->prepare("UPDATE {$prefix}board_posts SET title=?, content=?, is_notice=?, is_secret=?, category_id=?, extra_vars=?, updated_at=NOW() WHERE id=?")
             ->execute([$title, $content, $isNotice, $isSecret, $categoryId, $extraVarsJson, $postId]);
-
     } else {
-        // 다른 언어로 수정 → rzx_translations에 저장 (원본 유지)
-        $trStmt = $pdo->prepare("INSERT INTO {$prefix}translations (lang_key, locale, source_locale, content) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE content = VALUES(content), source_locale = VALUES(source_locale)");
-        $trStmt->execute(["board_post.{$postId}.title", $currentLocale, $originalLocale, $title]);
-        $trStmt->execute(["board_post.{$postId}.content", $currentLocale, $originalLocale, $content]);
-
-        // 확장 변수도 해당 언어로 저장
-        if (!empty($evData)) {
-            $trStmt->execute(["board_post.{$postId}.extra_vars", $currentLocale, $originalLocale, json_encode($evData, JSON_UNESCAPED_UNICODE)]);
-        }
-
-        // 원본에 확장변수가 없으면 원본에도 저장 (최초 입력)
-        if (!empty($evData) && empty($post['extra_vars'])) {
-            $pdo->prepare("UPDATE {$prefix}board_posts SET extra_vars=?, is_notice=?, is_secret=?, category_id=?, updated_at=NOW() WHERE id=?")
-                ->execute([$extraVarsJson, $isNotice, $isSecret, $categoryId, $postId]);
-        } else {
-            // is_notice, is_secret, category 등 메타 필드는 언어 무관하므로 원본에 반영
-            $pdo->prepare("UPDATE {$prefix}board_posts SET is_notice=?, is_secret=?, category_id=?, updated_at=NOW() WHERE id=?")
-                ->execute([$isNotice, $isSecret, $categoryId, $postId]);
-        }
+        $pdo->prepare("UPDATE {$prefix}board_posts SET is_notice=?, is_secret=?, category_id=?, updated_at=NOW() WHERE id=?")
+            ->execute([$isNotice, $isSecret, $categoryId, $postId]);
     }
 
     // 새 파일 업로드
@@ -312,6 +310,8 @@ if ($action === 'delete') {
     } else {
         $pdo->prepare("DELETE FROM {$prefix}board_comments WHERE post_id = ?")->execute([$postId]);
         $pdo->prepare("DELETE FROM {$prefix}board_files WHERE post_id = ?")->execute([$postId]);
+        // 다국어 번역 row 도 함께 정리
+        board_post_text_delete_all($pdo, $prefix, $postId);
         $pdo->prepare("DELETE FROM {$prefix}board_posts WHERE id = ?")->execute([$postId]);
     }
 

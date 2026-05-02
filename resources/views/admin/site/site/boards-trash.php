@@ -49,6 +49,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
         }
         $pdo->prepare("DELETE FROM {$prefix}board_files WHERE post_id IN ({$placeholders})")->execute($postIds);
         $pdo->prepare("DELETE FROM {$prefix}board_votes WHERE post_id IN ({$placeholders})")->execute($postIds);
+        // 다국어 번역 row 도 함께 정리
+        foreach ($postIds as $_pid) {
+            board_post_text_delete_all($pdo, $prefix, (int)$_pid);
+        }
         $pdo->prepare("DELETE FROM {$prefix}board_posts WHERE id IN ({$placeholders}) AND board_id = ? AND status = 'trash'")
             ->execute([...$postIds, $boardId]);
         echo json_encode(['success' => true, 'message' => __('site.boards.trash_deleted')]);
