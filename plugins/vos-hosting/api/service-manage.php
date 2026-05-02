@@ -2689,14 +2689,15 @@ switch ($action) {
                 $billing = $aOneTime ? $aPrice : ($aPrice * $months);
                 $aMetaArr = ['admin_created' => 1, 'addon_id' => $a['id'] ?? ''];
 
-                // install addon 자동 채움 — 관리자 대리 등록은 별도 입력 폼이 없으므로
-                // 고객 이메일 + 도메인 + 자동 임시 비밀번호로 install_info 구성
+                // install addon 의 install_info — 관리자가 폼에서 입력한 값 우선,
+                // 누락 필드는 안전한 기본값으로 채움 (고객 이메일 / 임시 비밀번호 / 도메인)
                 if (($a['id'] ?? '') === 'install') {
+                    $userInstall = is_array($input['install_info'] ?? null) ? $input['install_info'] : [];
                     $aMetaArr['install_info'] = [
-                        'admin_id' => $custEmailForInstall ?: 'admin',
-                        'admin_email' => $custEmailForInstall,
-                        'admin_pw' => bin2hex(random_bytes(6)), // 12 hex chars 임시
-                        'site_title' => $custNameForInstall ?: $domainName,
+                        'admin_id'    => trim((string)($userInstall['admin_id']    ?? '')) ?: ($custEmailForInstall ?: 'admin'),
+                        'admin_email' => trim((string)($userInstall['admin_email'] ?? '')) ?: $custEmailForInstall,
+                        'admin_pw'    => (string)($userInstall['admin_pw']    ?? '') !== '' ? (string)$userInstall['admin_pw'] : bin2hex(random_bytes(6)),
+                        'site_title'  => trim((string)($userInstall['site_title']  ?? '')) ?: ($custNameForInstall ?: $domainName),
                     ];
                 }
 

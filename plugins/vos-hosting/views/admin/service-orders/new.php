@@ -221,7 +221,7 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
             ?>
             <label class="flex items-center justify-between gap-3 px-3 py-2 border border-gray-200 dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-700/30 cursor-pointer">
                 <div class="flex items-center gap-2 flex-1 min-w-0">
-                    <input type="checkbox" class="addon-check" data-id="<?= htmlspecialchars($a['_id']) ?>" data-label="<?= htmlspecialchars($a['label']) ?>" data-price="<?= $aPrice ?>" data-onetime="<?= $aOneTime ? 1 : 0 ?>" onchange="recalc()">
+                    <input type="checkbox" class="addon-check" data-id="<?= htmlspecialchars($a['_id']) ?>" data-label="<?= htmlspecialchars($a['label']) ?>" data-price="<?= $aPrice ?>" data-onetime="<?= $aOneTime ? 1 : 0 ?>" onchange="recalc(); onAddonToggle()">
                     <div class="min-w-0">
                         <p class="text-sm text-zinc-900 dark:text-white"><?= htmlspecialchars($a['label']) ?></p>
                         <?php if (!empty($a['desc'])): ?>
@@ -235,6 +235,34 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                 </span>
             </label>
             <?php endforeach; ?>
+
+            <!-- 설치 지원 부가서비스 — 관리자 정보 입력 폼 -->
+            <div id="installAdminFormWrap" class="hidden mt-2 p-3 border border-blue-200 dark:border-blue-800 bg-blue-50/40 dark:bg-blue-900/10 rounded-lg space-y-2">
+                <p class="text-xs font-medium text-blue-700 dark:text-blue-300"><?= htmlspecialchars(__('services.order.addons.install_admin_label')) ?></p>
+                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mb-1"><?= htmlspecialchars(__('services.order.addons.install_admin_desc')) ?></p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] text-zinc-600 dark:text-zinc-400 mb-0.5"><?= htmlspecialchars(__('services.order.addons.install_admin_id')) ?> <span class="text-red-500">*</span></label>
+                        <input type="text" id="installAdminId" placeholder="admin" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-zinc-600 dark:text-zinc-400 mb-0.5"><?= htmlspecialchars(__('services.order.addons.install_admin_email')) ?> <span class="text-red-500">*</span></label>
+                        <input type="email" id="installAdminEmail" placeholder="admin@example.com" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-zinc-600 dark:text-zinc-400 mb-0.5"><?= htmlspecialchars(__('services.order.addons.install_admin_pw')) ?> <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <input type="password" id="installAdminPw" class="w-full px-3 py-2 pr-9 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg">
+                            <button type="button" onclick="(function(b){var i=b.previousElementSibling;i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'👁':'🙈';})(this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">👁</button>
+                        </div>
+                        <p class="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5"><?= htmlspecialchars(__('services.order.addons.install_admin_pw_hint')) ?></p>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-zinc-600 dark:text-zinc-400 mb-0.5"><?= htmlspecialchars(__('services.order.addons.install_site_title')) ?></label>
+                        <input type="text" id="installSiteTitle" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg">
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <?php endif; ?>
@@ -577,6 +605,14 @@ function resolveDomain() {
     return { ok: true, option: 'existing', name: ex };
 }
 
+// 부가서비스 체크 변경 시 install_info 폼 토글
+function onAddonToggle() {
+    var installCb = document.querySelector('.addon-check[data-id="install"]');
+    var wrap = document.getElementById('installAdminFormWrap');
+    if (!wrap) return;
+    wrap.classList.toggle('hidden', !(installCb && installCb.checked));
+}
+
 function submitOrder() {
     // 1) 도메인 선결정 (서비스 키)
     var dom = resolveDomain();
@@ -605,9 +641,23 @@ function submitOrder() {
 
     // 4) 부가서비스
     var addons = [];
+    var installInfo = null;
     document.querySelectorAll('.addon-check:checked').forEach(function(cb) {
         addons.push({ id: cb.dataset.id, label: cb.dataset.label, price: parseInt(cb.dataset.price, 10) || 0, one_time: cb.dataset.onetime === '1' });
     });
+    // install addon 체크 시 관리자 정보 수집·검증
+    var installCb = document.querySelector('.addon-check[data-id="install"]');
+    if (installCb && installCb.checked) {
+        var iId = (document.getElementById('installAdminId').value || '').trim();
+        var iEmail = (document.getElementById('installAdminEmail').value || '').trim();
+        var iPw = document.getElementById('installAdminPw').value || '';
+        var iSite = (document.getElementById('installSiteTitle').value || '').trim();
+        if (!iId || !iEmail || !iPw) {
+            alert('<?= htmlspecialchars(__('services.order.addons.install_admin_required') ?? '설치 관리자 정보 (ID·이메일·비밀번호)는 필수입니다.') ?>');
+            return;
+        }
+        installInfo = { admin_id: iId, admin_email: iEmail, admin_pw: iPw, site_title: iSite };
+    }
 
     // 5) 결제
     var payMethod = document.querySelector('input[name="payMethod"]:checked').value;
@@ -617,12 +667,12 @@ function submitOrder() {
         var cash = parseInt(document.getElementById('cashReceived').value, 10) || 0;
         if (cash <= 0) { alert('<?= htmlspecialchars(__('services.admin_neworder.err_cash_amount')) ?>'); return; }
         pay.received = cash;
-        finalSubmit(customer, planId, addons, dom.option, dom.name, pay);
+        finalSubmit(customer, planId, addons, dom.option, dom.name, pay, installInfo);
     } else if (payMethod === 'free') {
         var reason = document.getElementById('freeReason').value.trim();
         if (!reason) { alert('<?= htmlspecialchars(__('services.admin_neworder.err_free_reason')) ?>'); return; }
         pay.reason = reason;
-        finalSubmit(customer, planId, addons, dom.option, dom.name, pay);
+        finalSubmit(customer, planId, addons, dom.option, dom.name, pay, installInfo);
     } else if (payMethod === 'card') {
         if (!payjpInst || !pjN) { alert('PAY.JP not ready'); return; }
         document.getElementById('submitBtn').disabled = true;
@@ -634,12 +684,12 @@ function submitOrder() {
                 return;
             }
             pay.card_token = r.id;
-            finalSubmit(customer, planId, addons, dom.option, dom.name, pay);
+            finalSubmit(customer, planId, addons, dom.option, dom.name, pay, installInfo);
         });
     }
 }
 
-function finalSubmit(customer, planId, addons, domainOption, domainName, pay) {
+function finalSubmit(customer, planId, addons, domainOption, domainName, pay, installInfo) {
     document.getElementById('submitBtn').disabled = true;
     fetch(siteBaseUrl + '/plugins/vos-hosting/api/service-manage.php', {
         method: 'POST',
@@ -653,6 +703,7 @@ function finalSubmit(customer, planId, addons, domainOption, domainName, pay) {
             domain_option: domainOption,
             domain_name: domainName,
             addons: addons,
+            install_info: installInfo || null,
             amount_override: parseInt(document.getElementById('amountOverride').value, 10) || null,
             payment: pay,
         }),
