@@ -154,7 +154,13 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
 
             <div id="domainNameBox" class="hidden">
                 <label class="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.admin_neworder.domain_name')) ?></label>
-                <input type="text" id="domainName" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg" placeholder="example.com">
+                <div class="flex items-center gap-2">
+                    <input type="text" id="domainName" class="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg" placeholder="example.com" oninput="onDomainInputChange()">
+                    <button type="button" id="domainSearchBtn" onclick="searchDomain()" class="hidden px-4 py-2 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg whitespace-nowrap">
+                        🔍 <?= htmlspecialchars(__('services.admin_neworder.btn_domain_search')) ?>
+                    </button>
+                </div>
+                <div id="domainSearchResult" class="mt-2"></div>
             </div>
         </div>
     </div>
@@ -307,6 +313,93 @@ function onCustomerModeChange() {
 function onDomainOptChange() {
     var v = document.getElementById('domainOption').value;
     document.getElementById('domainNameBox').classList.toggle('hidden', v === 'free');
+    // 검색 버튼은 신규 등록 시에만
+    document.getElementById('domainSearchBtn').classList.toggle('hidden', v !== 'new');
+    document.getElementById('domainSearchResult').innerHTML = '';
+}
+
+function onDomainInputChange() {
+    // 입력 변경 시 결과 초기화
+    document.getElementById('domainSearchResult').innerHTML = '';
+}
+
+function searchDomain() {
+    var input = document.getElementById('domainName').value.trim().toLowerCase();
+    if (!input) return;
+    // TLD 분리 — 가장 단순: 첫 점 이후를 TLD로
+    var dotIdx = input.indexOf('.');
+    if (dotIdx < 0) {
+        document.getElementById('domainSearchResult').innerHTML =
+            '<p class="text-xs text-amber-600 dark:text-amber-400">⚠ <?= htmlspecialchars(__('services.admin_neworder.dom_search_invalid')) ?></p>';
+        return;
+    }
+    var name = input.substring(0, dotIdx);
+    var tld = input.substring(dotIdx); // ".com", ".co.kr" 등 (선두 점 포함)
+    if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(name)) {
+        document.getElementById('domainSearchResult').innerHTML =
+            '<p class="text-xs text-amber-600 dark:text-amber-400">⚠ <?= htmlspecialchars(__('services.admin_neworder.dom_search_invalid')) ?></p>';
+        return;
+    }
+    document.getElementById('domainSearchResult').innerHTML =
+        '<p class="text-xs text-zinc-500 dark:text-zinc-400 p-2"><?= htmlspecialchars(__('services.admin_neworder.dom_searching')) ?></p>';
+
+    fetch(siteBaseUrl + '/plugins/vos-hosting/api/domain-check.php?domain=' + encodeURIComponent(name), {
+        credentials: 'same-origin'
+    }).then(function(r){ return r.json(); }).then(function(d) {
+        if (!d.success) {
+            document.getElementById('domainSearchResult').innerHTML =
+                '<p class="text-xs text-red-600 p-2">' + (d.message || 'error') + '</p>';
+            return;
+        }
+        // 입력 TLD 와 일치하는 결과만 표시 (없으면 전체 표시)
+        var match = (d.results || []).find(function(r){ return r.tld === tld; });
+        var html;
+        if (match) {
+            html = renderDomainResult(match);
+        } else if ((d.results || []).length > 0) {
+            // TLD 매칭 안 되면 사용 가능한 다른 TLD 추천
+            html = '<p class="text-[11px] text-zinc-500 dark:text-zinc-400 p-2">' +
+                   '<?= htmlspecialchars(__('services.admin_neworder.dom_tld_unsupported')) ?>: <strong>' + tld + '</strong>. ' +
+                   '<?= htmlspecialchars(__('services.admin_neworder.dom_alt_tlds')) ?>:</p>' +
+                   '<div class="space-y-1">' +
+                   d.results.slice(0, 5).map(renderDomainResult).join('') +
+                   '</div>';
+        } else {
+            html = '<p class="text-xs text-amber-600 dark:text-amber-400 p-2"><?= htmlspecialchars(__('services.admin_neworder.dom_no_results')) ?></p>';
+        }
+        document.getElementById('domainSearchResult').innerHTML = html;
+    }).catch(function(e) {
+        document.getElementById('domainSearchResult').innerHTML =
+            '<p class="text-xs text-red-600 p-2">' + (e && e.message || 'error') + '</p>';
+    });
+}
+
+function renderDomainResult(r) {
+    var available = !!r.available;
+    var price = r.price ? '¥' + parseInt(r.price, 10).toLocaleString() : '-';
+    var cls = available
+        ? 'border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200'
+        : 'border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300';
+    var icon = available ? '✓' : '✗';
+    var label = available ? '<?= htmlspecialchars(__('services.admin_neworder.dom_available')) ?>' : '<?= htmlspecialchars(__('services.admin_neworder.dom_taken')) ?>';
+    var pickBtn = available
+        ? ' <button type="button" onclick="pickDomain(\'' + r.fqdn + '\')" class="ml-2 text-[10px] text-blue-600 hover:underline"><?= htmlspecialchars(__('services.admin_neworder.dom_pick')) ?></button>'
+        : '';
+    return '<div class="flex items-center justify-between gap-2 px-3 py-2 rounded-lg ' + cls + '">' +
+           '<span class="flex items-center gap-2">' +
+           '<span class="font-bold">' + icon + '</span>' +
+           '<span class="font-mono text-sm">' + r.fqdn + '</span>' +
+           '<span class="text-[10px]">' + label + '</span>' +
+           pickBtn +
+           '</span>' +
+           '<span class="text-xs tabular-nums whitespace-nowrap">' + price + '</span>' +
+           '</div>';
+}
+
+function pickDomain(fqdn) {
+    document.getElementById('domainName').value = fqdn;
+    document.getElementById('domainSearchResult').innerHTML =
+        '<p class="text-xs text-emerald-700 dark:text-emerald-300 p-2 border border-emerald-300 dark:border-emerald-700 rounded">✓ ' + fqdn + ' <?= htmlspecialchars(__('services.admin_neworder.dom_selected')) ?></p>';
 }
 
 function searchCustomer() {
