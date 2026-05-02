@@ -2541,10 +2541,13 @@ switch ($action) {
             }
         }
 
-        // 2. 가격 계산
-        $sSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'service_hosting_plans' LIMIT 1");
+        // 2. 가격 계산 + 통화
+        $sSt = $pdo->prepare("SELECT `key`,`value` FROM {$prefix}settings WHERE `key` IN ('service_hosting_plans','service_currency')");
         $sSt->execute();
-        $plans = json_decode($sSt->fetchColumn() ?: '[]', true) ?: [];
+        $svcMap = [];
+        while ($r = $sSt->fetch(PDO::FETCH_ASSOC)) $svcMap[$r['key']] = $r['value'];
+        $plans = json_decode($svcMap['service_hosting_plans'] ?? '[]', true) ?: [];
+        $currency = strtoupper(trim((string)($svcMap['service_currency'] ?? 'JPY'))) ?: 'JPY';
         $plan = null;
         foreach ($plans as $p) { if (($p['_id'] ?? '') === $planId) { $plan = $p; break; } }
         if (!$plan) { echo json_encode(['success' => false, 'message' => '플랜을 찾을 수 없습니다.']); exit; }
@@ -2582,7 +2585,7 @@ switch ($action) {
                     echo json_encode(['success' => false, 'message' => '카드 등록 실패: ' . ($cr['message'] ?? '')]); exit;
                 }
                 $payCustomerId = $cr['customer_id'];
-                $payResult = $gateway->chargeCustomer($payCustomerId, $totalAmt, 'jpy', "VosCMS Hosting (admin) — plan {$planId}");
+                $payResult = $gateway->chargeCustomer($payCustomerId, $totalAmt, strtolower($currency), "VosCMS Hosting (admin) — plan {$planId}");
                 if (!$payResult->isSuccessful()) {
                     try { $gateway->deleteCustomer($payCustomerId); } catch (\Throwable $e) {}
                     echo json_encode(['success' => false, 'message' => '결제 실패: ' . ($payResult->failureCode ?? '')]); exit;
@@ -2639,14 +2642,14 @@ switch ($action) {
             ];
             $pdo->prepare("INSERT INTO {$prefix}orders
                 (uuid, order_number, user_id, status, hosting_capacity, domain, domain_option, contract_months, items, total, currency, payment_method, started_at, expires_at, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'JPY', ?, ?, ?, NOW())")
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())")
                 ->execute([
                     $orderUuid, $orderNumber, $custUserId, $orderStatus,
                     $plan['capacity'] ?? '',
                     $domainName ?: ($domainOption === 'free' ? '' : ''),
                     $domainOption, $months,
                     json_encode($orderItems, JSON_UNESCAPED_UNICODE),
-                    $totalAmt,
+                    $totalAmt, $currency,
                     $methodLabel, $startedAt, $expiresAt,
                 ]);
             $orderId = (int)$pdo->lastInsertId();
@@ -2656,11 +2659,12 @@ switch ($action) {
             $pdo->prepare("INSERT INTO {$prefix}subscriptions
                 (order_id, user_id, type, service_class, label, unit_price, quantity, billing_amount, billing_cycle, billing_months,
                  currency, started_at, billing_start, expires_at, status, payment_customer_id, payment_gateway, metadata)
-                VALUES (?, ?, 'hosting', 'recurring', ?, ?, 1, ?, 'monthly', ?, 'JPY', ?, ?, ?, 'active', ?, ?, ?)")
+                VALUES (?, ?, 'hosting', 'recurring', ?, ?, 1, ?, 'monthly', ?, ?, ?, ?, ?, 'active', ?, ?, ?)")
                 ->execute([
                     $orderId, $custUserId,
                     ($plan['label'] ?? '') . ' ' . ($plan['capacity'] ?? ''),
                     $planPrice, $planPrice * $months, $months,
+                    $currency,
                     $startedAt, $startedAt, $expiresAt,
                     $payCustomerId, $gwName,
                     json_encode($subMeta, JSON_UNESCAPED_UNICODE),
@@ -2674,13 +2678,14 @@ switch ($action) {
                 $pdo->prepare("INSERT INTO {$prefix}subscriptions
                     (order_id, user_id, type, service_class, label, unit_price, quantity, billing_amount, billing_cycle, billing_months,
                      currency, started_at, expires_at, status, metadata)
-                    VALUES (?, ?, 'addon', ?, ?, ?, 1, ?, ?, ?, 'JPY', ?, ?, 'active', ?)")
+                    VALUES (?, ?, 'addon', ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, 'active', ?)")
                     ->execute([
                         $orderId, $custUserId,
                         $aOneTime ? 'one_time' : 'recurring',
                         (string)($a['label'] ?? ''),
                         $aPrice, $billing,
                         $aOneTime ? 'one_time' : 'monthly', $aOneTime ? null : $months,
+                        $currency,
                         $startedAt, $expiresAt,
                         json_encode(['admin_created' => 1, 'addon_id' => $a['id'] ?? ''], JSON_UNESCAPED_UNICODE),
                     ]);
