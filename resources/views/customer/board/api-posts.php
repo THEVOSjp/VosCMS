@@ -194,8 +194,9 @@ if ($action === 'update') {
         exit;
     }
 
-    $title = trim($_POST['title'] ?? $post['title']);
-    $content = $_POST['content'] ?? $post['content'];
+    // Phase 5 후 base.title/content 없음 — translations 에서 기존 값 fallback
+    $title = trim($_POST['title'] ?? board_post_text($postId, 'title', null, ''));
+    $content = $_POST['content'] ?? board_post_text($postId, 'content', null, '');
     $isNotice = !empty($_SESSION['admin_id']) ? (int)($_POST['is_notice'] ?? 0) : $post['is_notice'];
     $isSecret = (int)($_POST['is_secret'] ?? 0);
     $categoryId = (int)($_POST['category_id'] ?? 0) ?: null;
