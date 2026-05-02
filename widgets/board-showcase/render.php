@@ -29,7 +29,7 @@ if ($boardSlug) {
 
         if ($boardInfo) {
             $pStmt = $pdo->prepare(
-                "SELECT id, title, content, nick_name, created_at, view_count
+                "SELECT id, nick_name, created_at, view_count
                  FROM {$prefix}board_posts
                  WHERE board_id = ? AND status = 'published'
                  ORDER BY is_notice DESC, created_at DESC
@@ -37,6 +37,16 @@ if ($boardSlug) {
             );
             $pStmt->execute([$boardInfo['id']]);
             $posts = $pStmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            // title/content 는 rzx_translations 에서 일괄 로드 (통합 정책)
+            if (!empty($posts) && function_exists('board_post_text_bulk_load')) {
+                $_trMap = board_post_text_bulk_load($pdo, $prefix, array_column($posts, 'id'), $_locale);
+                foreach ($posts as &$_p) {
+                    $_p['title']   = $_trMap[(int)$_p['id']]['title']   ?? '';
+                    $_p['content'] = $_trMap[(int)$_p['id']]['content'] ?? '';
+                }
+                unset($_p);
+            }
 
             // 첨부 이미지 로드
             $fileMap = [];
@@ -55,11 +65,6 @@ if ($boardSlug) {
                         if (!isset($fileMap[$f['post_id']])) $fileMap[$f['post_id']] = $f['file_path'];
                     }
                 } catch (\PDOException $e) {}
-
-                // 다국어 번역
-                if (function_exists('db_trans_batch')) {
-                    $posts = db_trans_batch($pdo, $posts, $_locale, $prefix);
-                }
 
                 // 이미지 추출 + 설명 생성
                 foreach ($posts as &$p) {

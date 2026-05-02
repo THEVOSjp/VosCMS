@@ -31,23 +31,12 @@ $titleBgHeight  = (int)($skinConfig['title_bg_height']  ?? 280);
 $titleBgOverlay = (int)($skinConfig['title_bg_overlay'] ?? 40);
 $hasBg = ($titleBgType === 'image' && $titleBgImage) || ($titleBgType === 'video' && $titleBgVideo);
 
-// 다국어 폴백 헬퍼
+// 통합 정책: 항상 rzx_translations 에서 가져옴. helper 사용.
 $_faqTr = function(int $postId, string $field, string $original) use ($pdo, $prefix, $currentLocale) {
-    if (empty($currentLocale)) return $original;
-    $postLocale = 'ko'; // board_posts 원본
-    if ($currentLocale === $postLocale) return $original;
-    try {
-        $s = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = ? AND locale = ?");
-        $s->execute(["board_post.{$postId}.{$field}", $currentLocale]);
-        $tr = $s->fetchColumn();
-        if ($tr !== false) return $tr;
-        // en 폴백
-        if ($currentLocale !== 'en') {
-            $s->execute(["board_post.{$postId}.{$field}", 'en']);
-            $en = $s->fetchColumn();
-            if ($en !== false) return $en;
-        }
-    } catch (\PDOException $e) {}
+    if (function_exists('board_post_text')) {
+        $v = board_post_text($postId, $field, $currentLocale ?? 'ko', $original);
+        return $v !== '' ? $v : $original;
+    }
     return $original;
 };
 

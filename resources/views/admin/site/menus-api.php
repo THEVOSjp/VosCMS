@@ -495,9 +495,20 @@ function deleteMenuItemRecursive(PDO $pdo, int $id): void {
                 $boardStmt->execute([$slug]);
                 $boardId = $boardStmt->fetchColumn();
                 if ($boardId) {
+                    // 글 ID 먼저 수집 (다국어 cascade 용)
+                    $_postIds = $pdo->prepare("SELECT id FROM {$prefix}board_posts WHERE board_id = ?");
+                    $_postIds->execute([$boardId]);
+                    $_pids = $_postIds->fetchAll(\PDO::FETCH_COLUMN);
+
                     $pdo->prepare("DELETE FROM {$prefix}board_votes WHERE target_type = 'post' AND target_id IN (SELECT id FROM {$prefix}board_posts WHERE board_id = ?)")->execute([$boardId]);
                     $pdo->prepare("DELETE FROM {$prefix}board_files WHERE board_id = ?")->execute([$boardId]);
                     $pdo->prepare("DELETE FROM {$prefix}board_comments WHERE board_id = ?")->execute([$boardId]);
+                    // 다국어 row cascade (글마다 board_post.{id}.* 키 삭제)
+                    if (!empty($_pids)) {
+                        foreach ($_pids as $_pid) {
+                            board_post_text_delete_all($pdo, $prefix, (int)$_pid);
+                        }
+                    }
                     $pdo->prepare("DELETE FROM {$prefix}board_posts WHERE board_id = ?")->execute([$boardId]);
                     $pdo->prepare("DELETE FROM {$prefix}board_categories WHERE board_id = ?")->execute([$boardId]);
                     $pdo->prepare("DELETE FROM {$prefix}board_extra_vars WHERE board_id = ?")->execute([$boardId]);

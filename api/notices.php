@@ -57,7 +57,7 @@ if (!$boardId) {
 // 공지글 가져오기 (is_notice=1 우선, 최신순)
 $limit = (int)$limit;
 $stmt = $pdo->prepare(
-    "SELECT p.id, p.title, p.content, p.nick_name, p.created_at, p.is_notice, p.original_locale,
+    "SELECT p.id, p.nick_name, p.created_at, p.is_notice, p.original_locale,
             c.slug as category_slug
      FROM {$prefix}board_posts p
      LEFT JOIN {$prefix}board_categories c ON c.id = p.category_id
@@ -68,44 +68,17 @@ $stmt = $pdo->prepare(
 $stmt->execute([$boardId]);
 $posts = $stmt->fetchAll();
 
-// 번역 적용
+// 통합 정책: title/content 는 항상 rzx_translations 에서 일괄 조회
+$_postIds = array_column($posts, 'id');
+$_trMap = (!empty($_postIds) && function_exists('board_post_text_bulk_load'))
+    ? board_post_text_bulk_load($pdo, $prefix, $_postIds, $locale)
+    : [];
+
 $notices = [];
 foreach ($posts as $post) {
     $postId = (int)$post['id'];
-    $title = $post['title'];
-    $content = $post['content'];
-
-    // 원본 언어와 다르면 번역 조회
-    if ($locale !== ($post['original_locale'] ?? 'ko')) {
-        $trStmt = $pdo->prepare(
-            "SELECT lang_key, content FROM {$prefix}translations
-             WHERE lang_key IN (?, ?) AND locale = ?"
-        );
-        $trStmt->execute([
-            "board_post.{$postId}.title",
-            "board_post.{$postId}.content",
-            $locale,
-        ]);
-        $translations = $trStmt->fetchAll();
-        foreach ($translations as $tr) {
-            if (str_ends_with($tr['lang_key'], '.title')) $title = $tr['content'];
-            if (str_ends_with($tr['lang_key'], '.content')) $content = $tr['content'];
-        }
-
-        // 영어 폴백
-        if ($title === $post['title'] && $locale !== 'en') {
-            $trStmt->execute([
-                "board_post.{$postId}.title",
-                "board_post.{$postId}.content",
-                'en',
-            ]);
-            $enTr = $trStmt->fetchAll();
-            foreach ($enTr as $tr) {
-                if (str_ends_with($tr['lang_key'], '.title')) $title = $tr['content'];
-                if (str_ends_with($tr['lang_key'], '.content')) $content = $tr['content'];
-            }
-        }
-    }
+    $title = $_trMap[$postId]['title'] ?? '';
+    $content = $_trMap[$postId]['content'] ?? '';
 
     // type 판별 — 카테고리 slug 기반
     $catSlug = $post['category_slug'] ?? '';

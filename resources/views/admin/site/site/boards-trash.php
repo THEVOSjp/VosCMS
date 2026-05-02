@@ -77,6 +77,16 @@ $listStmt = $pdo->prepare("SELECT * FROM {$prefix}board_posts WHERE board_id = ?
 $listStmt->execute([$boardId]);
 $posts = $listStmt->fetchAll(PDO::FETCH_ASSOC);
 
+// 다국어 title 적용 (rzx_translations 단일 저장소)
+if (!empty($posts) && function_exists('board_post_text_bulk_load')) {
+    $_locale = function_exists('current_locale') ? current_locale() : 'ko';
+    $_trMap = board_post_text_bulk_load($pdo, $prefix, array_column($posts, 'id'), $_locale, ['title']);
+    foreach ($posts as &$_p) {
+        if (isset($_trMap[(int)$_p['id']]['title'])) $_p['title'] = $_trMap[(int)$_p['id']]['title'];
+    }
+    unset($_p);
+}
+
 $pageTitle = __('site.boards.trash') . ' - ' . htmlspecialchars($board['title']);
 
 

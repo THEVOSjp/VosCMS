@@ -82,12 +82,17 @@ function renderGridCell($cell, $pdo, $prefix, $baseUrl, $locale, $loc) {
             $bStmt->execute([$boardSlug]);
             $boardId = $bStmt->fetchColumn();
             if ($boardId) {
-                $pStmt = $pdo->prepare("SELECT id, title, content, nick_name, created_at, is_notice, original_locale FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' ORDER BY is_notice DESC, created_at DESC LIMIT " . (int)$count);
+                $pStmt = $pdo->prepare("SELECT id, nick_name, created_at, is_notice, original_locale FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' ORDER BY is_notice DESC, created_at DESC LIMIT " . (int)$count);
                 $pStmt->execute([$boardId]);
                 $posts = $pStmt->fetchAll(\PDO::FETCH_ASSOC);
-                // 다국어 번역 (공통컴포넌트 db_trans_batch)
-                if (function_exists('db_trans_batch')) {
-                    $posts = db_trans_batch($pdo, $posts, $locale, $prefix);
+                // title/content 는 rzx_translations 에서 일괄 로드 (통합 정책)
+                if (!empty($posts) && function_exists('board_post_text_bulk_load')) {
+                    $_trMap = board_post_text_bulk_load($pdo, $prefix, array_column($posts, 'id'), $locale);
+                    foreach ($posts as &$_p) {
+                        $_p['title']   = $_trMap[(int)$_p['id']]['title']   ?? '';
+                        $_p['content'] = $_trMap[(int)$_p['id']]['content'] ?? '';
+                    }
+                    unset($_p);
                 }
 
                 // 이미지 추출

@@ -32,9 +32,20 @@ if ($boardSlug) {
         $boardInfo = $bStmt->fetch(\PDO::FETCH_ASSOC);
 
         if ($boardInfo) {
-            $pStmt = $pdo->prepare("SELECT id, title, content, nick_name, created_at, view_count, is_notice, original_locale FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' ORDER BY is_notice DESC, created_at DESC LIMIT " . (int)$count);
+            $pStmt = $pdo->prepare("SELECT id, nick_name, created_at, view_count, is_notice, original_locale FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' ORDER BY is_notice DESC, created_at DESC LIMIT " . (int)$count);
             $pStmt->execute([$boardInfo['id']]);
             $posts = $pStmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            // title/content 는 rzx_translations 에서 일괄 로드 (통합 정책)
+            if (!empty($posts) && function_exists('board_post_text_bulk_load')) {
+                $_cl = $locale ?? (function_exists('current_locale') ? current_locale() : 'ko');
+                $_trMap = board_post_text_bulk_load($pdo, $prefix, array_column($posts, 'id'), $_cl);
+                foreach ($posts as &$_p) {
+                    $_p['title']   = $_trMap[(int)$_p['id']]['title']   ?? '';
+                    $_p['content'] = $_trMap[(int)$_p['id']]['content'] ?? '';
+                }
+                unset($_p);
+            }
 
             // 첨부 이미지 로드
             if ($showImage && !empty($posts)) {
@@ -46,12 +57,6 @@ if ($boardSlug) {
                 while ($f = $fStmt->fetch(\PDO::FETCH_ASSOC)) {
                     if (!isset($fileMap[$f['post_id']])) $fileMap[$f['post_id']] = $f['file_path'];
                 }
-                // 다국어 번역 (공통컴포넌트 db_trans_batch)
-                $_cl = $locale ?? (function_exists('current_locale') ? current_locale() : 'ko');
-                if (function_exists('db_trans_batch')) {
-                    $posts = db_trans_batch($pdo, $posts, $_cl, $prefix);
-                }
-
                 // 이미지 추출
                 foreach ($posts as &$p) {
                     $p['_image'] = $fileMap[$p['id']] ?? '';

@@ -70,21 +70,12 @@ if ($posts) {
     }
 }
 
-// 다국어 폴백 헬퍼 (게시글 번역)
+// 다국어 폴백 헬퍼 (통합 정책: 항상 rzx_translations 에서)
 $_qnaTr = function (int $postId, string $field, string $original) use ($pdo, $prefix, $currentLocale) {
-    if (empty($currentLocale)) return $original;
-    if (($currentLocale ?? 'ko') === 'ko') return $original;
-    try {
-        $s = $pdo->prepare("SELECT content FROM {$prefix}translations WHERE lang_key = ? AND locale = ?");
-        $s->execute(["board_post.{$postId}.{$field}", $currentLocale]);
-        $tr = $s->fetchColumn();
-        if ($tr !== false) return $tr;
-        if ($currentLocale !== 'en') {
-            $s->execute(["board_post.{$postId}.{$field}", 'en']);
-            $en = $s->fetchColumn();
-            if ($en !== false) return $en;
-        }
-    } catch (\PDOException $e) {}
+    if (function_exists('board_post_text')) {
+        $v = board_post_text($postId, $field, $currentLocale ?? 'ko', $original);
+        return $v !== '' ? $v : $original;
+    }
     return $original;
 };
 

@@ -106,11 +106,11 @@ $fileStmt->execute([$postId]);
 $files = $fileStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 이전/다음 글
-$prevStmt = $pdo->prepare("SELECT id, title, original_locale FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' AND id < ? ORDER BY id DESC LIMIT 1");
+$prevStmt = $pdo->prepare("SELECT id, original_locale FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' AND id < ? ORDER BY id DESC LIMIT 1");
 $prevStmt->execute([$boardId, $postId]);
 $prevPost = $prevStmt->fetch(PDO::FETCH_ASSOC);
 
-$nextStmt = $pdo->prepare("SELECT id, title, original_locale FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' AND id > ? ORDER BY id ASC LIMIT 1");
+$nextStmt = $pdo->prepare("SELECT id, original_locale FROM {$prefix}board_posts WHERE board_id = ? AND status = 'published' AND id > ? ORDER BY id ASC LIMIT 1");
 $nextStmt->execute([$boardId, $postId]);
 $nextPost = $nextStmt->fetch(PDO::FETCH_ASSOC);
 
