@@ -103,14 +103,16 @@ class HostingProvisioner
             $this->run('/usr/bin/chmod 750 ' . escapeshellarg($logs));
             $this->run('/usr/bin/chmod 1770 ' . escapeshellarg($tmp));
 
-            // 7. 디스크 쿼터 설정
+            // 7. 디스크 쿼터 설정 (무제한 플랜은 [0,0] → setquota skip)
             [$softKb, $hardKb] = $this->capacityToKb($capacity);
-            $this->run(sprintf(
-                '/usr/sbin/setquota -u %s %d %d 0 0 /var/www',
-                escapeshellarg($username),
-                $softKb,
-                $hardKb
-            ));
+            if ($softKb > 0 || $hardKb > 0) {
+                $this->run(sprintf(
+                    '/usr/sbin/setquota -u %s %d %d 0 0 /var/www',
+                    escapeshellarg($username),
+                    $softKb,
+                    $hardKb
+                ));
+            }
             // 쿼터는 useradd rollback 시 자동 해제됨 (사용자 삭제로)
 
             // 8. welcome.html 배포
@@ -280,7 +282,9 @@ class HostingProvisioner
         if (!preg_match('/^[a-z0-9]([a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/', $domain)) {
             throw new \InvalidArgumentException("잘못된 도메인: {$domain}");
         }
-        if (!preg_match('/^[\d.]+\s*(GB|TB|MB)$/i', $capacity)) {
+        // 무제한/unlimited 은 쿼터 없이 통과 (시스템·내부 플랜용)
+        if (!preg_match('/^[\d.]+\s*(GB|TB|MB)$/i', $capacity)
+            && !preg_match('/^(무제한|unlimited|0)$/i', trim($capacity))) {
             throw new \InvalidArgumentException("잘못된 용량: {$capacity}");
         }
         // nginx vhost 충돌 검사 — 같은 도메인 server_name 이 이미 있으면 거부
@@ -326,9 +330,12 @@ class HostingProvisioner
         return posix_getpwnam($username) !== false;
     }
 
-    /** "1GB" / "5GB" / "1TB" / "500MB" → [softKb, hardKb] (hard = soft + 10%) */
+    /** "1GB" / "5GB" / "1TB" / "500MB" → [softKb, hardKb] (hard = soft + 10%); "무제한" → [0,0] (쿼터 없음) */
     private function capacityToKb(string $capacity): array
     {
+        if (preg_match('/^(무제한|unlimited|0)$/i', trim($capacity))) {
+            return [0, 0];
+        }
         if (!preg_match('/^([\d.]+)\s*(GB|TB|MB)$/i', $capacity, $m)) {
             throw new \InvalidArgumentException("용량 파싱 실패: {$capacity}");
         }

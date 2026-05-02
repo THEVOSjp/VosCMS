@@ -2614,8 +2614,8 @@ switch ($action) {
             $expiresAt = date('Y-m-d H:i:s', strtotime("+{$months} months"));
 
             $methodLabel = $payMethod === 'card' ? 'card' : ($payMethod === 'cash' ? 'cash' : 'free');
-            $orderStatus = 'paid';  // 관리자 등록은 즉시 paid 처리
-            if ($payMethod === 'free') $orderStatus = 'free';
+            // 관리자 등록은 즉시 paid 처리 — 무료도 status='paid', payment_method='free' 로 구분
+            $orderStatus = 'paid';
 
             $orderUuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
                 mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff),
