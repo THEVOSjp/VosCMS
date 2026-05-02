@@ -234,10 +234,10 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                     <?php if ($aOneTime): ?> · <?= htmlspecialchars(__('services.detail.b_one_time')) ?><?php endif; ?>
                 </span>
             </label>
-            <?php endforeach; ?>
 
-            <!-- 설치 지원 부가서비스 — 관리자 정보 입력 폼 -->
-            <div id="installAdminFormWrap" class="hidden mt-2 p-3 border border-blue-200 dark:border-blue-800 bg-blue-50/40 dark:bg-blue-900/10 rounded-lg space-y-2">
+            <?php if (($a['_id'] ?? '') === 'install'): ?>
+            <!-- 설치 지원 — 관리자 정보 입력 폼 (체크박스 바로 아래) -->
+            <div id="installAdminFormWrap" class="hidden p-3 border border-blue-200 dark:border-blue-800 bg-blue-50/40 dark:bg-blue-900/10 rounded-lg space-y-2 ml-6">
                 <p class="text-xs font-medium text-blue-700 dark:text-blue-300"><?= htmlspecialchars(__('services.order.addons.install_admin_label')) ?></p>
                 <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mb-1"><?= htmlspecialchars(__('services.order.addons.install_admin_desc')) ?></p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -263,6 +263,8 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
+            <?php endforeach; ?>
         </div>
     </div>
     <?php endif; ?>
