@@ -262,6 +262,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             $st = $pdo->prepare("SELECT * FROM {$prefix}order_logs WHERE order_id = ? AND id < ? ORDER BY id DESC LIMIT {$limit}");
             $st->execute([$oid, $beforeId]);
             $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+            // 라벨 매핑 (메인 렌더와 동일)
+            $_lblMap = [
+                'created' => ['주문 생성','blue'], 'paid' => ['결제 완료','green'],
+                'failed' => ['실패','red'], 'status_change' => ['상태 변경','purple'],
+                'mail_provisioned' => ['메일 셋업 완료','green'],
+                'mail_provision_failed' => ['메일 셋업 실패','red'],
+                'hosting_provisioned' => ['호스팅 셋업 완료','green'],
+                'hosting_provision_failed' => ['호스팅 셋업 실패','red'],
+                'hosting_provision_skipped' => ['호스팅 셋업 스킵','zinc'],
+                'hosting_deprovisioned' => ['호스팅 해지','red'],
+                'admin_created' => ['관리자 대리 등록','blue'],
+                'voscms_installed' => ['VosCMS 자동 설치 완료','green'],
+                'vhost_toggle' => ['nginx vhost 토글','amber'],
+                'ssl_renew' => ['SSL 강제 갱신','emerald'],
+                'db_pw_reset' => ['DB 비밀번호 재설정','amber'],
+                'reprovision_triggered' => ['재프로비저닝 실행','violet'],
+                'server_info_updated' => ['서버 정보 수정','zinc'],
+                'setup_email_sent' => ['셋업 이메일 발송','blue'],
+                'admin_add_storage_addon' => ['관리자 용량 추가','violet'],
+            ];
+            foreach ($rows as &$r) {
+                $r['label'] = $_lblMap[$r['action']][0] ?? $r['action'];
+                $r['color'] = $_lblMap[$r['action']][1] ?? 'zinc';
+            }
+            unset($r);
             $tcSt = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}order_logs WHERE order_id = ?");
             $tcSt->execute([$oid]);
             echo json_encode(['success' => true, 'logs' => $rows, 'total' => (int)$tcSt->fetchColumn()], JSON_UNESCAPED_UNICODE);
@@ -747,6 +772,14 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                         'addon_admin_cancelled' => [__('services.admin_orders.act_addon_admin_cancelled'), 'red'],
                         'addon_paid_added' => [__('services.admin_orders.act_addon_paid_added'), 'green'],
                         'addon_request_pending' => [__('services.admin_orders.act_addon_request_pending'), 'amber'],
+                        // 신규 액션 (관리자 대리 등록 + 호스팅 운영)
+                        'admin_created' => ['관리자 대리 등록', 'blue'],
+                        'admin_delete_addon' => ['관리자 부가서비스 삭제', 'red'],
+                        'voscms_installed' => ['VosCMS 자동 설치 완료', 'green'],
+                        'vhost_toggle' => ['nginx vhost 토글', 'amber'],
+                        'ssl_renew' => ['SSL 강제 갱신', 'emerald'],
+                        'db_pw_reset' => ['DB 비밀번호 재설정', 'amber'],
+                        'reprovision_triggered' => ['재프로비저닝 실행', 'violet'],
                     ];
                     $al = $actionLabels[$log['action']] ?? [$log['action'], 'zinc'];
                     $detail = json_decode($log['detail'] ?? '{}', true) ?: [];
@@ -805,11 +838,13 @@ function loadMoreLogs() {
         var list = document.getElementById('activityLogList');
         d.logs.forEach(function(log) {
             var div = document.createElement('div');
-            div.className = 'flex gap-3 pb-3 border-b border-gray-100 dark:border-zinc-700/50 last:border-0';
+            div.className = 'flex gap-3';
+            var color = log.color || 'zinc';
+            var label = log.label || log.action;
             div.innerHTML =
-                '<div class="w-2 h-2 rounded-full bg-zinc-400 mt-1.5 flex-shrink-0"></div>' +
+                '<div class="w-2 h-2 rounded-full bg-' + color + '-400 mt-1.5 shrink-0"></div>' +
                 '<div class="flex-1 min-w-0">' +
-                '<p class="text-xs font-medium text-zinc-700 dark:text-zinc-200">' + escapeHtml(log.action) + '</p>' +
+                '<p class="text-xs font-medium text-zinc-700 dark:text-zinc-300">' + escapeHtml(label) + '</p>' +
                 '<p class="text-[10px] text-zinc-300 dark:text-zinc-600">' +
                 formatLogDate(log.created_at) + ' · ' + escapeHtml(log.actor_type || '') +
                 '</p></div>';
