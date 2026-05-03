@@ -25,7 +25,7 @@ $_siteUrl = $_primaryDomain ? ('https://' . $_primaryDomain) : '';
 $_storageOptions = [];
 $_addonsAll = [];
 try {
-    $_stSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` IN ('service_hosting_storage','service_addons')");
+    $_stSt = $pdo->prepare("SELECT `key`, `value` FROM {$prefix}settings WHERE `key` IN ('service_hosting_storage','service_addons')");
     $_stSt->execute();
     while ($_r = $_stSt->fetch(PDO::FETCH_ASSOC)) {
         if ($_r['key'] === 'service_hosting_storage') $_storageOptions = json_decode($_r['value'] ?: '[]', true) ?: [];
