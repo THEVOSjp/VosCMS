@@ -2664,6 +2664,35 @@ switch ($action) {
                     json_encode($subMeta, JSON_UNESCAPED_UNICODE),
                 ]);
 
+            // 도메인 subscription — 고객 폼과 동일하게 free/new/existing 모두 생성
+            // (도메인 탭 표시 + 갱신 트래킹용)
+            if ($domainName !== '') {
+                $_dMeta = ['domains' => [$domainName], 'admin_created' => 1];
+                if ($domainOption === 'free')      $_dMeta['free_subdomain'] = true;
+                if ($domainOption === 'existing')  $_dMeta['existing'] = true;
+                if ($domainOption === 'new')       $_dMeta['registrar_pending'] = true;
+
+                $_dLabel       = ($domainOption === 'free') ? '도메인 (무료)'
+                              : (($domainOption === 'existing') ? '도메인 (보유)' : '도메인');
+                $_dClass       = ($domainOption === 'new') ? 'recurring' : 'free';
+                $_dCycle       = ($domainOption === 'new') ? 'yearly' : (($domainOption === 'free') ? 'monthly' : 'custom');
+                $_dCycleMonths = ($domainOption === 'new') ? 12 : (($domainOption === 'free') ? 1 : $months);
+                $_dExpires     = ($domainOption === 'new') ? date('Y-m-d H:i:s', strtotime('+1 year'))
+                              : (($domainOption === 'free') ? date('Y-m-d H:i:s', strtotime('+1 month')) : $expiresAt);
+
+                $pdo->prepare("INSERT INTO {$prefix}subscriptions
+                    (order_id, user_id, type, service_class, label, unit_price, quantity, billing_amount, billing_cycle, billing_months,
+                     currency, started_at, expires_at, status, metadata)
+                    VALUES (?, ?, 'domain', ?, ?, 0, 1, 0, ?, ?, ?, ?, ?, 'active', ?)")
+                    ->execute([
+                        $orderId, $custUserId,
+                        $_dClass, $_dLabel,
+                        $_dCycle, $_dCycleMonths,
+                        $currency, $startedAt, $_dExpires,
+                        json_encode($_dMeta, JSON_UNESCAPED_UNICODE),
+                    ]);
+            }
+
             // 부가서비스 subscription
             // install addon 자동 채움용: 고객 이메일 + 임시 비밀번호 생성
             $custEmailForInstall = '';
