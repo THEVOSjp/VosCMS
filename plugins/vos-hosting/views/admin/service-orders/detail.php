@@ -263,14 +263,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             if (!$sid || !preg_match('/^[a-z0-9._-]{2,32}$/', $local) || strlen($password) < 8) {
                 echo json_encode(['success' => false, 'message' => '입력값 확인 (local 2~32자, 비번 8자 이상)']); exit;
             }
-            $domain = strtolower((string)($order['domain'] ?? ''));
-            if (!$domain) { echo json_encode(['success' => false, 'message' => '주문 도메인 없음']); exit; }
-            $address = $local . '@' . $domain;
-
-            $sst = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE id = ? AND type = 'mail'");
+            // subscription → order 조회 (POST 핸들러에선 $order 글로벌 미정의)
+            $sst = $pdo->prepare("SELECT s.*, o.domain AS _order_domain, o.id AS _order_id FROM {$prefix}subscriptions s JOIN {$prefix}orders o ON o.id = s.order_id WHERE s.id = ? AND s.type = 'mail'");
             $sst->execute([$sid]);
             $sub = $sst->fetch(PDO::FETCH_ASSOC);
             if (!$sub) { echo json_encode(['success' => false, 'message' => 'mail 구독 없음']); exit; }
+            $domain = strtolower((string)($sub['_order_domain'] ?? ''));
+            if (!$domain) { echo json_encode(['success' => false, 'message' => '주문 도메인 없음']); exit; }
+            $address = $local . '@' . $domain;
+
             $sm = json_decode($sub['metadata'] ?? '{}', true) ?: [];
             $accounts = $sm['mail_accounts'] ?? [];
             foreach ($accounts as $a) {
@@ -278,7 +279,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                     echo json_encode(['success' => false, 'message' => '이미 존재하는 메일']); exit;
                 }
             }
-            // 실제 메일서버 계정 생성 (MailAccountManager 가 있으면 사용, 실패해도 metadata 는 갱신)
             $mailServerOk = null;
             try {
                 if (class_exists('\RzxLib\Core\Mail\MailAccountManager')) {
@@ -287,14 +287,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                     $mailServerOk = !empty($r['success']);
                 }
             } catch (\Throwable $e) { error_log('[admin add mail] '.$e->getMessage()); $mailServerOk = false; }
-            // metadata 갱신
             $accounts[] = ['address' => $address, 'password' => 1, 'created_at' => date('c'), 'admin_added' => 1];
             $sm['mail_accounts'] = $accounts;
             $sm['accounts'] = count($accounts);
             $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ?, quantity = ?, updated_at = NOW() WHERE id = ?")
                 ->execute([json_encode($sm, JSON_UNESCAPED_UNICODE), count($accounts), $sid]);
             $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'mail_account_added', ?, 'admin', ?)")
-                ->execute([$order['id'], json_encode(['address' => $address, 'mail_server_ok' => $mailServerOk]), $_SESSION['user_id'] ?? '']);
+                ->execute([$sub['_order_id'], json_encode(['address' => $address, 'mail_server_ok' => $mailServerOk]), $_SESSION['user_id'] ?? '']);
             echo json_encode(['success' => true, 'address' => $address, 'mail_server_ok' => $mailServerOk]);
             exit;
         }
@@ -314,7 +313,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             foreach ($accounts as $a) {
                 if (strcasecmp($a['address'] ?? '', $address) !== 0) $kept[] = $a;
             }
-            // 실제 메일서버 계정 삭제 시도
             try {
                 if (class_exists('\RzxLib\Core\Mail\MailAccountManager')) {
                     $mam = new \RzxLib\Core\Mail\MailAccountManager($pdo);
@@ -326,7 +324,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ?, quantity = ?, updated_at = NOW() WHERE id = ?")
                 ->execute([json_encode($sm, JSON_UNESCAPED_UNICODE), count($kept), $sid]);
             $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'mail_account_deleted', ?, 'admin', ?)")
-                ->execute([$order['id'], json_encode(['address' => $address]), $_SESSION['user_id'] ?? '']);
+                ->execute([$sub['order_id'], json_encode(['address' => $address]), $_SESSION['user_id'] ?? '']);
             echo json_encode(['success' => true, 'message' => '삭제 완료']);
             exit;
         }
@@ -337,6 +335,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             $address = strtolower(trim((string)($input['address'] ?? '')));
             $password = (string)($input['password'] ?? '');
             if (!$sid || !$address || strlen($password) < 8) { echo json_encode(['success' => false, 'message' => 'invalid input']); exit; }
+            $sst = $pdo->prepare("SELECT order_id FROM {$prefix}subscriptions WHERE id = ?");
+            $sst->execute([$sid]);
+            $oid = (int)$sst->fetchColumn();
             try {
                 if (class_exists('\RzxLib\Core\Mail\MailAccountManager')) {
                     $mam = new \RzxLib\Core\Mail\MailAccountManager($pdo);
@@ -345,7 +346,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                 }
             } catch (\Throwable $e) { echo json_encode(['success' => false, 'message' => $e->getMessage()]); exit; }
             $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'mail_password_changed', ?, 'admin', ?)")
-                ->execute([$order['id'], json_encode(['address' => $address]), $_SESSION['user_id'] ?? '']);
+                ->execute([$oid, json_encode(['address' => $address]), $_SESSION['user_id'] ?? '']);
             echo json_encode(['success' => true, 'message' => '비밀번호 변경 완료']);
             exit;
         }
