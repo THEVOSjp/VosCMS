@@ -2601,14 +2601,8 @@ switch ($action) {
         try {
             $pdo->beginTransaction();
 
-            // order_number 생성
-            $year = date('Y');
-            $oNumSt = $pdo->prepare("SELECT order_number FROM {$prefix}orders WHERE order_number LIKE ? ORDER BY id DESC LIMIT 1");
-            $oNumSt->execute(['ORD-' . $year . '-%']);
-            $lastNum = (string)$oNumSt->fetchColumn();
-            $nextN = 1;
-            if ($lastNum && preg_match('/^ORD-\d{4}-(\d+)$/', $lastNum, $m)) $nextN = (int)$m[1] + 1;
-            $orderNumber = sprintf('ORD-%s-%04d', $year, $nextN);
+            // order_number 생성 — 고객 폼(service-order.php)과 동일 형식 (SVC + YYMMDD + 6자 hex)
+            $orderNumber = 'SVC' . date('ymd') . strtoupper(substr(md5(uniqid()), 0, 6));
 
             $startedAt = date('Y-m-d H:i:s');
             $expiresAt = date('Y-m-d H:i:s', strtotime("+{$months} months"));
