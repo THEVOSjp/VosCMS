@@ -2664,6 +2664,18 @@ switch ($action) {
                     json_encode($subMeta, JSON_UNESCAPED_UNICODE),
                 ]);
 
+            // 메일 subscription — 호스팅 1건당 기본 메일 1건 항상 생성 (mail_accounts 빈 배열로 시작)
+            // 어드민이 상세 페이지에서 메일 계정 추가하면 metadata.mail_accounts 에 채워짐
+            $_mailMeta = ['accounts' => 0, 'mail_accounts' => [], 'admin_created' => 1];
+            $pdo->prepare("INSERT INTO {$prefix}subscriptions
+                (order_id, user_id, type, service_class, label, unit_price, quantity, billing_amount, billing_cycle, billing_months,
+                 currency, started_at, expires_at, status, metadata)
+                VALUES (?, ?, 'mail', 'free', '기본 메일', 0, 0, 0, 'custom', ?, ?, ?, ?, 'active', ?)")
+                ->execute([
+                    $orderId, $custUserId, $months, $currency, $startedAt, $expiresAt,
+                    json_encode($_mailMeta, JSON_UNESCAPED_UNICODE),
+                ]);
+
             // 도메인 subscription — 고객 폼과 동일하게 free/new/existing 모두 생성
             // (도메인 탭 표시 + 갱신 트래킹용)
             if ($domainName !== '') {

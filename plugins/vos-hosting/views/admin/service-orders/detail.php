@@ -255,6 +255,128 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             }
             exit;
 
+        // ── 메일 계정 추가 (어드민) ──────────────────────────────
+        case 'add_mail_account': {
+            $sid = (int)($input['subscription_id'] ?? 0);
+            $local = strtolower(trim((string)($input['local'] ?? '')));
+            $password = (string)($input['password'] ?? '');
+            if (!$sid || !preg_match('/^[a-z0-9._-]{2,32}$/', $local) || strlen($password) < 8) {
+                echo json_encode(['success' => false, 'message' => '입력값 확인 (local 2~32자, 비번 8자 이상)']); exit;
+            }
+            $domain = strtolower((string)($order['domain'] ?? ''));
+            if (!$domain) { echo json_encode(['success' => false, 'message' => '주문 도메인 없음']); exit; }
+            $address = $local . '@' . $domain;
+
+            $sst = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE id = ? AND type = 'mail'");
+            $sst->execute([$sid]);
+            $sub = $sst->fetch(PDO::FETCH_ASSOC);
+            if (!$sub) { echo json_encode(['success' => false, 'message' => 'mail 구독 없음']); exit; }
+            $sm = json_decode($sub['metadata'] ?? '{}', true) ?: [];
+            $accounts = $sm['mail_accounts'] ?? [];
+            foreach ($accounts as $a) {
+                if (strcasecmp($a['address'] ?? '', $address) === 0) {
+                    echo json_encode(['success' => false, 'message' => '이미 존재하는 메일']); exit;
+                }
+            }
+            // 실제 메일서버 계정 생성 (MailAccountManager 가 있으면 사용, 실패해도 metadata 는 갱신)
+            $mailServerOk = null;
+            try {
+                if (class_exists('\RzxLib\Core\Mail\MailAccountManager')) {
+                    $mam = new \RzxLib\Core\Mail\MailAccountManager($pdo);
+                    $r = $mam->addAccount($address, $password);
+                    $mailServerOk = !empty($r['success']);
+                }
+            } catch (\Throwable $e) { error_log('[admin add mail] '.$e->getMessage()); $mailServerOk = false; }
+            // metadata 갱신
+            $accounts[] = ['address' => $address, 'password' => 1, 'created_at' => date('c'), 'admin_added' => 1];
+            $sm['mail_accounts'] = $accounts;
+            $sm['accounts'] = count($accounts);
+            $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ?, quantity = ?, updated_at = NOW() WHERE id = ?")
+                ->execute([json_encode($sm, JSON_UNESCAPED_UNICODE), count($accounts), $sid]);
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'mail_account_added', ?, 'admin', ?)")
+                ->execute([$order['id'], json_encode(['address' => $address, 'mail_server_ok' => $mailServerOk]), $_SESSION['user_id'] ?? '']);
+            echo json_encode(['success' => true, 'address' => $address, 'mail_server_ok' => $mailServerOk]);
+            exit;
+        }
+
+        // ── 메일 계정 삭제 (어드민) ──────────────────────────────
+        case 'delete_mail_account': {
+            $sid = (int)($input['subscription_id'] ?? 0);
+            $address = strtolower(trim((string)($input['address'] ?? '')));
+            if (!$sid || !$address) { echo json_encode(['success' => false, 'message' => 'invalid input']); exit; }
+            $sst = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE id = ?");
+            $sst->execute([$sid]);
+            $sub = $sst->fetch(PDO::FETCH_ASSOC);
+            if (!$sub) { echo json_encode(['success' => false, 'message' => 'sub not found']); exit; }
+            $sm = json_decode($sub['metadata'] ?? '{}', true) ?: [];
+            $accounts = $sm['mail_accounts'] ?? [];
+            $kept = [];
+            foreach ($accounts as $a) {
+                if (strcasecmp($a['address'] ?? '', $address) !== 0) $kept[] = $a;
+            }
+            // 실제 메일서버 계정 삭제 시도
+            try {
+                if (class_exists('\RzxLib\Core\Mail\MailAccountManager')) {
+                    $mam = new \RzxLib\Core\Mail\MailAccountManager($pdo);
+                    @$mam->deleteAccount($address);
+                }
+            } catch (\Throwable $e) { error_log('[admin delete mail] '.$e->getMessage()); }
+            $sm['mail_accounts'] = $kept;
+            $sm['accounts'] = count($kept);
+            $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ?, quantity = ?, updated_at = NOW() WHERE id = ?")
+                ->execute([json_encode($sm, JSON_UNESCAPED_UNICODE), count($kept), $sid]);
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'mail_account_deleted', ?, 'admin', ?)")
+                ->execute([$order['id'], json_encode(['address' => $address]), $_SESSION['user_id'] ?? '']);
+            echo json_encode(['success' => true, 'message' => '삭제 완료']);
+            exit;
+        }
+
+        // ── 메일 비밀번호 변경 (어드민) ───────────────────────────
+        case 'change_mail_password': {
+            $sid = (int)($input['subscription_id'] ?? 0);
+            $address = strtolower(trim((string)($input['address'] ?? '')));
+            $password = (string)($input['password'] ?? '');
+            if (!$sid || !$address || strlen($password) < 8) { echo json_encode(['success' => false, 'message' => 'invalid input']); exit; }
+            try {
+                if (class_exists('\RzxLib\Core\Mail\MailAccountManager')) {
+                    $mam = new \RzxLib\Core\Mail\MailAccountManager($pdo);
+                    $r = $mam->changePassword($address, $password);
+                    if (empty($r['success'])) { echo json_encode(['success' => false, 'message' => $r['message'] ?? '실패']); exit; }
+                }
+            } catch (\Throwable $e) { echo json_encode(['success' => false, 'message' => $e->getMessage()]); exit; }
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'mail_password_changed', ?, 'admin', ?)")
+                ->execute([$order['id'], json_encode(['address' => $address]), $_SESSION['user_id'] ?? '']);
+            echo json_encode(['success' => true, 'message' => '비밀번호 변경 완료']);
+            exit;
+        }
+
+        // ── 비즈니스 메일 구독 추가 (어드민) ───────────────────────
+        case 'admin_add_bizmail_sub': {
+            $oid = (int)($input['order_id'] ?? 0);
+            // 이미 비즈니스 메일 구독 있는지
+            $exSt = $pdo->prepare("SELECT id FROM {$prefix}subscriptions WHERE order_id = ? AND type = 'mail' AND label LIKE '%비즈니스%'");
+            $exSt->execute([$oid]);
+            if ($exSt->fetchColumn()) { echo json_encode(['success' => false, 'message' => '이미 비즈니스 메일 구독 있음']); exit; }
+            // 호스팅 sub 의 만료일/통화 따라감
+            $hSt = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE order_id = ? AND type = 'hosting' LIMIT 1");
+            $hSt->execute([$oid]);
+            $hs = $hSt->fetch(PDO::FETCH_ASSOC);
+            if (!$hs) { echo json_encode(['success' => false, 'message' => '호스팅 구독 없음']); exit; }
+            $oSt2 = $pdo->prepare("SELECT user_id FROM {$prefix}orders WHERE id = ?");
+            $oSt2->execute([$oid]);
+            $uid = $oSt2->fetchColumn();
+            $meta = ['accounts' => 0, 'mail_accounts' => [], 'admin_created' => 1];
+            $pdo->prepare("INSERT INTO {$prefix}subscriptions
+                (order_id, user_id, type, service_class, label, unit_price, quantity, billing_amount, billing_cycle, billing_months,
+                 currency, started_at, expires_at, status, metadata)
+                VALUES (?, ?, 'mail', 'free', '비즈니스 메일', 0, 0, 0, 'custom', ?, ?, ?, ?, 'active', ?)")
+                ->execute([$oid, $uid, (int)$hs['billing_months'], $hs['currency'] ?: 'JPY', $hs['started_at'], $hs['expires_at'], json_encode($meta, JSON_UNESCAPED_UNICODE)]);
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'bizmail_sub_added', '{}', 'admin', ?)")
+                ->execute([$oid, $_SESSION['user_id'] ?? '']);
+            echo json_encode(['success' => true, 'message' => '비즈니스 메일 구독 추가 완료']);
+            exit;
+        }
+
         // ── 주문 활동 로그 추가 로드 (이전 로그) ──────────────────────
         case 'load_more_logs': {
             $oid = (int)($input['order_id'] ?? 0);
