@@ -246,11 +246,17 @@ $mailDomain = $order['domain'] ?? '';
             </div>
             <div>
                 <label class="text-xs text-zinc-500 dark:text-zinc-400 block mb-1">비밀번호</label>
-                <input type="password" id="mailAddPw" class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg" placeholder="최소 8자">
+                <div class="relative">
+                    <input type="password" id="mailAddPw" class="w-full px-3 py-2 pr-9 text-sm border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg" placeholder="최소 8자">
+                    <button type="button" onclick="togglePwInput(this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200" tabindex="-1">👁</button>
+                </div>
             </div>
             <div>
                 <label class="text-xs text-zinc-500 dark:text-zinc-400 block mb-1">비밀번호 확인</label>
-                <input type="password" id="mailAddPwConfirm" class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg" placeholder="다시 입력">
+                <div class="relative">
+                    <input type="password" id="mailAddPwConfirm" class="w-full px-3 py-2 pr-9 text-sm border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg" placeholder="다시 입력">
+                    <button type="button" onclick="togglePwInput(this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200" tabindex="-1">👁</button>
+                </div>
             </div>
         </div>
         <div class="flex items-center justify-end gap-2 mt-5">
@@ -318,6 +324,14 @@ var _bizSubId = <?= $bizSub ? (int)$bizSub['id'] : 'null' ?>;
 function openWebmail(address) {
     var sep = _webmailUrl.indexOf('?') >= 0 ? '&' : '?';
     window.open(_webmailUrl + sep + '_user=' + encodeURIComponent(address), '_blank', 'noopener,noreferrer');
+}
+
+// 비밀번호 입력 표시/숨김 토글
+function togglePwInput(btn) {
+    var input = btn.previousElementSibling;
+    if (!input) return;
+    if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+    else { input.type = 'password'; btn.textContent = '👁'; }
 }
 
 function togglePwForm(btn) {
