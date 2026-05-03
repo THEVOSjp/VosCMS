@@ -351,6 +351,137 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             exit;
         }
 
+        // ── 부가서비스 가격 견적 (결제 모달용) ────────────────────
+        case 'admin_addon_quote': {
+            $oid = (int)($input['order_id'] ?? 0);
+            $addonId = strtolower(trim((string)($input['addon_id'] ?? '')));
+            $hSt = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE order_id = ? AND type = 'hosting' LIMIT 1");
+            $hSt->execute([$oid]);
+            $hs = $hSt->fetch(PDO::FETCH_ASSOC);
+            if (!$hs) { echo json_encode(['success' => false, 'message' => '호스팅 구독 없음']); exit; }
+            $sSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'service_addons' LIMIT 1");
+            $sSt->execute();
+            $addons = json_decode($sSt->fetchColumn() ?: '[]', true) ?: [];
+            $found = null;
+            foreach ($addons as $a) { if (strtolower($a['_id'] ?? '') === $addonId) { $found = $a; break; } }
+            if (!$found) { echo json_encode(['success' => false, 'message' => 'addon not found']); exit; }
+            $unit = (int)($found['price'] ?? 0);
+            $oneTime = !empty($found['one_time']);
+            $months = max(1, (int)ceil((strtotime($hs['expires_at']) - time()) / (86400 * 30)));
+            $subtotal = $oneTime ? $unit : ($unit * $months);
+            $tax = (int)round($subtotal * 0.10);
+            $total = $subtotal + $tax;
+            echo json_encode([
+                'success' => true,
+                'unit_price' => $unit,
+                'unit' => (string)($found['unit'] ?? ''),
+                'one_time' => $oneTime,
+                'months' => $oneTime ? 1 : $months,
+                'subtotal' => $subtotal,
+                'tax' => $tax,
+                'total' => $total,
+                'currency' => $hs['currency'] ?: 'JPY',
+            ]);
+            exit;
+        }
+
+        // ── 부가서비스 추가 + 결제 처리 ─────────────────────────
+        case 'admin_add_addon': {
+            $oid = (int)($input['order_id'] ?? 0);
+            $addonId = strtolower(trim((string)($input['addon_id'] ?? '')));
+            $payMethod = (string)($input['payment_method'] ?? '');
+            $cashReceived = (int)($input['cash_received'] ?? 0);
+            $freeReason = trim((string)($input['free_reason'] ?? ''));
+            if (!in_array($payMethod, ['cash','free'], true)) { echo json_encode(['success' => false, 'message' => '결제 방식: cash 또는 free']); exit; }
+
+            $hSt = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE order_id = ? AND type = 'hosting' LIMIT 1");
+            $hSt->execute([$oid]);
+            $hs = $hSt->fetch(PDO::FETCH_ASSOC);
+            if (!$hs) { echo json_encode(['success' => false, 'message' => '호스팅 구독 없음']); exit; }
+            $oSt2 = $pdo->prepare("SELECT user_id, order_number FROM {$prefix}orders WHERE id = ?");
+            $oSt2->execute([$oid]);
+            $oRow = $oSt2->fetch(PDO::FETCH_ASSOC);
+
+            $sSt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'service_addons' LIMIT 1");
+            $sSt->execute();
+            $addons = json_decode($sSt->fetchColumn() ?: '[]', true) ?: [];
+            $found = null;
+            foreach ($addons as $a) { if (strtolower($a['_id'] ?? '') === $addonId) { $found = $a; break; } }
+            if (!$found) { echo json_encode(['success' => false, 'message' => 'addon not found']); exit; }
+
+            // 중복 신청 방지 (같은 라벨)
+            $exSt = $pdo->prepare("SELECT id FROM {$prefix}subscriptions WHERE order_id = ? AND type = 'addon' AND label = ?");
+            $exSt->execute([$oid, $found['label'] ?? '']);
+            if ($exSt->fetchColumn()) { echo json_encode(['success' => false, 'message' => '이미 신청된 부가서비스']); exit; }
+
+            $unit = (int)($found['price'] ?? 0);
+            $oneTime = !empty($found['one_time']);
+            $months = max(1, (int)ceil((strtotime($hs['expires_at']) - time()) / (86400 * 30)));
+            $subtotal = $oneTime ? $unit : ($unit * $months);
+            $tax = (int)round($subtotal * 0.10);
+            $total = $subtotal + $tax;
+
+            if ($payMethod === 'cash' && $cashReceived <= 0) { echo json_encode(['success' => false, 'message' => '받은 금액 입력 필요']); exit; }
+            if ($payMethod === 'free' && $freeReason === '') { echo json_encode(['success' => false, 'message' => '무료 사유 필요']); exit; }
+            if ($payMethod === 'free') { $subtotal = 0; $tax = 0; $total = 0; }
+
+            $pdo->beginTransaction();
+            try {
+                $meta = [
+                    'admin_created' => 1, 'addon_id' => $addonId,
+                    'unit_price' => $unit, 'months' => $months,
+                    'paid_method' => $payMethod, 'paid_at' => date('c'),
+                ];
+                $serviceClass = $oneTime ? 'one_time' : 'recurring';
+                $billingCycle = $oneTime ? 'once' : 'monthly';
+                $billingMonths = $oneTime ? null : $months;
+                $expiresAt = $oneTime ? $hs['expires_at'] : $hs['expires_at'];
+                $pdo->prepare("INSERT INTO {$prefix}subscriptions
+                    (order_id, user_id, type, service_class, label, unit_price, quantity, billing_amount, billing_cycle, billing_months,
+                     currency, started_at, expires_at, status, metadata)
+                    VALUES (?, ?, 'addon', ?, ?, ?, 1, ?, ?, ?, ?, NOW(), ?, 'active', ?)")
+                    ->execute([
+                        $oid, $oRow['user_id'], $serviceClass,
+                        (string)($found['label'] ?? ''),
+                        $unit, $total, $billingCycle, $billingMonths,
+                        $hs['currency'] ?: 'JPY', $expiresAt,
+                        json_encode($meta, JSON_UNESCAPED_UNICODE),
+                    ]);
+
+                if ($payMethod !== 'free' && $total > 0) {
+                    $payUuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                        mt_rand(0,0xffff),mt_rand(0,0xffff),mt_rand(0,0xffff),
+                        mt_rand(0,0x0fff)|0x4000,mt_rand(0,0x3fff)|0x8000,
+                        mt_rand(0,0xffff),mt_rand(0,0xffff),mt_rand(0,0xffff));
+                    $pdo->prepare("INSERT INTO {$prefix}payments
+                        (uuid, user_id, order_id, payment_key, gateway, method, amount, status, paid_at, metadata, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, 'manual', ?, ?, 'paid', NOW(), ?, NOW(), NOW())")
+                        ->execute([
+                            $payUuid, $oRow['user_id'], $oRow['order_number'],
+                            'manual_addon_' . $payUuid, $payMethod, $total,
+                            json_encode([
+                                'source' => 'admin_add_addon', 'addon_id' => $addonId,
+                                'unit' => $unit, 'months' => $months,
+                                'cash_received' => $payMethod === 'cash' ? $cashReceived : null,
+                                'admin_id' => $_SESSION['user_id'] ?? '',
+                            ], JSON_UNESCAPED_UNICODE),
+                        ]);
+                }
+                $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'addon_paid_added', ?, 'admin', ?)")
+                    ->execute([
+                        $oid,
+                        json_encode(['addon_id' => $addonId, 'method' => $payMethod, 'total' => $total], JSON_UNESCAPED_UNICODE),
+                        $_SESSION['user_id'] ?? '',
+                    ]);
+                $pdo->commit();
+                echo json_encode(['success' => true, 'message' => '부가서비스 추가 + 결제 완료', 'total' => $total]);
+            } catch (\Throwable $e) {
+                $pdo->rollBack();
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+            exit;
+        }
+
         // ── 비즈니스 메일 가격 견적 (결제 모달 표시 전 호출) ──────────
         case 'admin_bizmail_quote': {
             $oid = (int)($input['order_id'] ?? 0);
