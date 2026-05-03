@@ -262,25 +262,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             $st = $pdo->prepare("SELECT * FROM {$prefix}order_logs WHERE order_id = ? AND id < ? ORDER BY id DESC LIMIT {$limit}");
             $st->execute([$oid, $beforeId]);
             $rows = $st->fetchAll(PDO::FETCH_ASSOC);
-            // 라벨 매핑 (메인 렌더와 동일)
+            // 라벨 매핑 (메인 렌더와 동일, i18n 적용)
             $_lblMap = [
-                'created' => ['주문 생성','blue'], 'paid' => ['결제 완료','green'],
-                'failed' => ['실패','red'], 'status_change' => ['상태 변경','purple'],
-                'mail_provisioned' => ['메일 셋업 완료','green'],
-                'mail_provision_failed' => ['메일 셋업 실패','red'],
-                'hosting_provisioned' => ['호스팅 셋업 완료','green'],
-                'hosting_provision_failed' => ['호스팅 셋업 실패','red'],
-                'hosting_provision_skipped' => ['호스팅 셋업 스킵','zinc'],
-                'hosting_deprovisioned' => ['호스팅 해지','red'],
-                'admin_created' => ['관리자 대리 등록','blue'],
-                'voscms_installed' => ['VosCMS 자동 설치 완료','green'],
-                'vhost_toggle' => ['nginx vhost 토글','amber'],
-                'ssl_renew' => ['SSL 강제 갱신','emerald'],
-                'db_pw_reset' => ['DB 비밀번호 재설정','amber'],
-                'reprovision_triggered' => ['재프로비저닝 실행','violet'],
-                'server_info_updated' => ['서버 정보 수정','zinc'],
-                'setup_email_sent' => ['셋업 이메일 발송','blue'],
-                'admin_add_storage_addon' => ['관리자 용량 추가','violet'],
+                'created' => [__('services.admin_orders.act_created'),'blue'],
+                'paid' => [__('services.admin_orders.act_paid'),'green'],
+                'failed' => [__('services.admin_orders.act_failed'),'red'],
+                'status_change' => [__('services.admin_orders.act_status_change'),'purple'],
+                'mail_provisioned' => [__('services.admin_orders.act_mail_provisioned'),'green'],
+                'mail_provision_failed' => [__('services.admin_orders.act_mail_provision_failed'),'red'],
+                'hosting_provisioned' => [__('services.admin_orders.act_hosting_provisioned'),'green'],
+                'hosting_provision_failed' => [__('services.admin_orders.act_hosting_provision_failed'),'red'],
+                'hosting_provision_skipped' => [__('services.admin_orders.act_hosting_provision_skipped'),'zinc'],
+                'hosting_deprovisioned' => [__('services.admin_orders.act_hosting_deprovisioned'),'red'],
+                'admin_created' => [__('services.admin_orders.act_admin_created'),'blue'],
+                'admin_delete_addon' => [__('services.admin_orders.act_admin_delete_addon'),'red'],
+                'voscms_installed' => [__('services.admin_orders.act_voscms_installed'),'green'],
+                'vhost_toggle' => [__('services.admin_orders.act_vhost_toggle'),'amber'],
+                'ssl_renew' => [__('services.admin_orders.act_ssl_renew'),'emerald'],
+                'db_pw_reset' => [__('services.admin_orders.act_db_pw_reset'),'amber'],
+                'reprovision_triggered' => [__('services.admin_orders.act_reprovision_triggered'),'violet'],
+                'server_info_updated' => [__('services.admin_orders.act_server_info_updated'),'zinc'],
+                'setup_email_sent' => [__('services.admin_orders.act_setup_email_sent'),'blue'],
+                'admin_add_storage_addon' => [__('services.admin_orders.act_admin_add_storage_addon'),'violet'],
             ];
             foreach ($rows as &$r) {
                 $r['label'] = $_lblMap[$r['action']][0] ?? $r['action'];
@@ -773,13 +776,13 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                         'addon_paid_added' => [__('services.admin_orders.act_addon_paid_added'), 'green'],
                         'addon_request_pending' => [__('services.admin_orders.act_addon_request_pending'), 'amber'],
                         // 신규 액션 (관리자 대리 등록 + 호스팅 운영)
-                        'admin_created' => ['관리자 대리 등록', 'blue'],
-                        'admin_delete_addon' => ['관리자 부가서비스 삭제', 'red'],
-                        'voscms_installed' => ['VosCMS 자동 설치 완료', 'green'],
-                        'vhost_toggle' => ['nginx vhost 토글', 'amber'],
-                        'ssl_renew' => ['SSL 강제 갱신', 'emerald'],
-                        'db_pw_reset' => ['DB 비밀번호 재설정', 'amber'],
-                        'reprovision_triggered' => ['재프로비저닝 실행', 'violet'],
+                        'admin_created' => [__('services.admin_orders.act_admin_created'), 'blue'],
+                        'admin_delete_addon' => [__('services.admin_orders.act_admin_delete_addon'), 'red'],
+                        'voscms_installed' => [__('services.admin_orders.act_voscms_installed'), 'green'],
+                        'vhost_toggle' => [__('services.admin_orders.act_vhost_toggle'), 'amber'],
+                        'ssl_renew' => [__('services.admin_orders.act_ssl_renew'), 'emerald'],
+                        'db_pw_reset' => [__('services.admin_orders.act_db_pw_reset'), 'amber'],
+                        'reprovision_triggered' => [__('services.admin_orders.act_reprovision_triggered'), 'violet'],
                     ];
                     $al = $actionLabels[$log['action']] ?? [$log['action'], 'zinc'];
                     $detail = json_decode($log['detail'] ?? '{}', true) ?: [];
