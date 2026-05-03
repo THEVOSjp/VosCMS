@@ -25,7 +25,9 @@ foreach ($servicesByType['hosting'] ?? [] as $_hSub) {
     }
 }
 
-if (empty($subs) && empty($_addedDomains)) {
+// 도메인 type subscription / added_domains 둘 다 없으면 — 무료 서브도메인 또는 단일 호스팅 도메인
+// order.domain 자체를 fallback 으로 표시. 빈 도메인일 때만 empty 처리.
+if (empty($subs) && empty($_addedDomains) && empty($order['domain'])) {
     echo '<div class="px-5 py-12 text-center text-sm text-zinc-400">' . htmlspecialchars(__('services.admin_orders.empty_domain')) . '</div>';
     return;
 }
@@ -63,6 +65,25 @@ foreach ($subs as $sub) {
     }
 }
 $allDomains = array_merge($allDomains, $_addedDomains);
+
+// fallback — domain subscription 도 added_domains 도 없으면 order.domain 자체를 표시
+// (무료 서브도메인 / 단일 호스팅 도메인 케이스: 별도 도메인 등록 없이 호스팅만)
+if (empty($allDomains) && !empty($order['domain'])) {
+    $_opt = $order['domain_option'] ?? 'free';
+    $_hSub = $servicesByType['hosting'][0] ?? null;
+    $allDomains[] = [
+        'name' => $order['domain'],
+        'sub_id' => $_hSub['id'] ?? null,
+        'is_free' => ($_opt === 'free'),
+        'is_existing' => ($_opt === 'existing'),
+        'is_primary' => true,
+        'expires_at' => $_hSub['expires_at'] ?? '',
+        'is_added' => false,
+        'registrar_pending' => ($_opt === 'new'),
+        'manual_attach_pending' => false,
+    ];
+}
+
 if (!empty($allDomains) && !array_filter($allDomains, fn($d) => $d['is_primary'])) {
     $allDomains[0]['is_primary'] = true;
 }
