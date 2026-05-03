@@ -22,9 +22,9 @@ $db = $server['db'] ?? [];
 $env = $server['env'] ?? [];
 $usage = $server['usage'] ?? [];
 
-// 추가 경로 — provision 시 자동 채워짐. 누락 케이스 위해 fallback 계산
+// 시스템 경로 — provision 시 metadata.server.{home,docroot,vhost,fpm_pool,username} 자동 채워짐
 $_orderNum = $order['order_number'] ?? '';
-$_username = $ftp['user'] ?? ('vos_' . preg_replace('/[^A-Za-z0-9]/', '', $_orderNum));
+$_username = $server['username']  ?? ('vos_' . preg_replace('/[^A-Za-z0-9]/', '', $_orderNum));
 $_homeDir  = $server['home']      ?? ('/var/www/customers/' . $_orderNum);
 $_docroot  = $server['docroot']   ?? ($_homeDir . '/public_html');
 $_vhostFile = $server['vhost']    ?? ('/etc/nginx/sites-available/' . ($order['domain'] ?? '') . '.conf');
@@ -154,37 +154,18 @@ $_dbUser  = $db['db_user']    ?? ($db['user'] ?? null);
 $_dbName  = $db['db_name']    ?? ($db['name'] ?? null);
 ?>
 
-<!-- FTP/SFTP 접속정보 + DB 정보 -->
+<!-- DB 정보 (FTP/SFTP 는 고객 지원 안 함, 표시 제외) -->
 <div class="px-5 py-4 border-b border-gray-100 dark:border-zinc-700">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- FTP/SFTP -->
-        <div>
-            <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2">FTP / SFTP</p>
-            <table class="w-full text-xs">
-                <tbody class="divide-y divide-gray-100 dark:divide-zinc-700/50">
-                    <tr><td class="py-1.5 text-zinc-400 w-24"><?= htmlspecialchars(__('services.admin_orders.f_ftp_host')) ?></td><td class="py-1.5 font-mono text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($ftp['host'] ?? $order['domain'] ?? '-') ?></td></tr>
-                    <tr><td class="py-1.5 text-zinc-400"><?= htmlspecialchars(__('services.admin_orders.f_ftp_ip')) ?></td><td class="py-1.5 font-mono text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($ftp['ip'] ?? '-') ?></td></tr>
-                    <tr><td class="py-1.5 text-zinc-400"><?= htmlspecialchars(__('services.admin_orders.f_ftp_id')) ?></td><td class="py-1.5 font-mono text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($_username) ?></td></tr>
-                    <tr><td class="py-1.5 text-zinc-400">FTP <?= htmlspecialchars(__('services.admin_orders.f_port_num')) ?></td><td class="py-1.5 font-mono text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars((string)($ftp['port'] ?? '21')) ?></td></tr>
-                    <tr><td class="py-1.5 text-zinc-400">SFTP host</td><td class="py-1.5 font-mono text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($ftp['sftp_host'] ?? '-') ?> : <?= htmlspecialchars((string)($ftp['sftp_port'] ?? '-')) ?></td></tr>
-                    <tr><td class="py-1.5 text-zinc-400">SSH/SFTP <?= htmlspecialchars(__('services.detail.f_password') ?: '비밀번호') ?></td><td class="py-1.5 text-xs"><?= $_pwBox('ftp_pw_'.$sub['id'], $ftp['password'] ?? null) ?></td></tr>
-                </tbody>
-            </table>
-        </div>
-        <!-- DB -->
-        <div>
-            <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2"><?= htmlspecialchars(__('services.admin_orders.db_section_title')) ?></p>
-            <table class="w-full text-xs">
-                <tbody class="divide-y divide-gray-100 dark:divide-zinc-700/50">
-                    <tr><td class="py-1.5 text-zinc-400 w-24"><?= htmlspecialchars(__('services.admin_orders.f_db_host')) ?></td><td class="py-1.5 font-mono text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($db['db_host'] ?? $db['host'] ?? 'localhost') ?></td></tr>
-                    <tr><td class="py-1.5 text-zinc-400"><?= htmlspecialchars(__('services.detail.f_db_name')) ?></td><td class="py-1.5 font-mono text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($_dbName ?? '-') ?></td></tr>
-                    <tr><td class="py-1.5 text-zinc-400"><?= htmlspecialchars(__('services.admin_orders.f_db_id')) ?></td><td class="py-1.5 font-mono text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($_dbUser ?? '-') ?></td></tr>
-                    <tr><td class="py-1.5 text-zinc-400">DB <?= htmlspecialchars(__('services.detail.f_password') ?: '비밀번호') ?></td><td class="py-1.5 text-xs"><?= $_pwBox('db_pw_'.$sub['id'], $_dbPass) ?></td></tr>
-                    <tr><td class="py-1.5 text-zinc-400"><?= htmlspecialchars(__('services.admin_orders.f_db_size')) ?></td><td class="py-1.5 font-mono text-zinc-800 dark:text-zinc-200" id="dbSizeCell_<?= $sub['id'] ?>"><?= htmlspecialchars($db['size'] ?? __('services.detail.db_unlimited')) ?></td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2"><?= htmlspecialchars(__('services.admin_orders.db_section_title')) ?></p>
+    <table class="w-full md:w-1/2 text-xs">
+        <tbody class="divide-y divide-gray-100 dark:divide-zinc-700/50">
+            <tr><td class="py-1.5 text-zinc-400 w-24"><?= htmlspecialchars(__('services.admin_orders.f_db_host')) ?></td><td class="py-1.5 font-mono text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($db['db_host'] ?? $db['host'] ?? 'localhost') ?></td></tr>
+            <tr><td class="py-1.5 text-zinc-400"><?= htmlspecialchars(__('services.detail.f_db_name')) ?></td><td class="py-1.5 font-mono text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($_dbName ?? '-') ?></td></tr>
+            <tr><td class="py-1.5 text-zinc-400"><?= htmlspecialchars(__('services.admin_orders.f_db_id')) ?></td><td class="py-1.5 font-mono text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($_dbUser ?? '-') ?></td></tr>
+            <tr><td class="py-1.5 text-zinc-400">DB <?= htmlspecialchars(__('services.detail.f_password') ?: '비밀번호') ?></td><td class="py-1.5 text-xs"><?= $_pwBox('db_pw_'.$sub['id'], $_dbPass) ?></td></tr>
+            <tr><td class="py-1.5 text-zinc-400"><?= htmlspecialchars(__('services.admin_orders.f_db_size')) ?></td><td class="py-1.5 font-mono text-zinc-800 dark:text-zinc-200" id="dbSizeCell_<?= $sub['id'] ?>"><?= htmlspecialchars($db['size'] ?? __('services.detail.db_unlimited')) ?></td></tr>
+        </tbody>
+    </table>
 </div>
 
 <!-- 시스템 경로 + 빠른 명령 -->
@@ -214,11 +195,9 @@ $_dbName  = $db['db_name']    ?? ($db['name'] ?? null);
     </div>
     <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
         <?php
-        $_sshCmd   = "sudo -u {$_username} -i";
         $_mysqlCmd = "mysql -u " . ($_dbUser ?? '') . " -p " . ($_dbName ?? '');
         $_logCmd   = "sudo tail -f /var/log/nginx/access.log | grep " . ($order['domain'] ?? '');
         $_quickCmds = [
-            'SSH 사용자 전환'    => $_sshCmd,
             'MySQL 접속'         => $_mysqlCmd,
             'nginx 접근 로그 tail' => $_logCmd,
         ];
@@ -280,12 +259,6 @@ $_dbName  = $db['db_name']    ?? ($db['name'] ?? null);
     </div>
     <div id="serverEditForm" class="hidden space-y-4">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-            <div><label class="text-[10px] text-zinc-400 block mb-1"><?= htmlspecialchars(__('services.admin_orders.f_ftp_host')) ?></label><input id="sf_ftp_host" value="<?= htmlspecialchars($ftp['host'] ?? '') ?>" class="w-full px-2 py-1.5 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded font-mono text-xs" placeholder="<?= htmlspecialchars($order['domain'] ?? '') ?>"></div>
-            <div><label class="text-[10px] text-zinc-400 block mb-1"><?= htmlspecialchars(__('services.admin_orders.f_ftp_ip')) ?></label><input id="sf_ftp_ip" value="<?= htmlspecialchars($ftp['ip'] ?? '') ?>" class="w-full px-2 py-1.5 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded font-mono text-xs" placeholder="0.0.0.0"></div>
-            <div><label class="text-[10px] text-zinc-400 block mb-1"><?= htmlspecialchars(__('services.admin_orders.f_ftp_id')) ?></label><input id="sf_ftp_user" value="<?= htmlspecialchars($ftp['user'] ?? '') ?>" class="w-full px-2 py-1.5 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded font-mono text-xs"></div>
-            <div><label class="text-[10px] text-zinc-400 block mb-1"><?= htmlspecialchars(__('services.detail.f_port')) ?></label><input id="sf_ftp_port" value="<?= htmlspecialchars($ftp['port'] ?? '21') ?>" class="w-full px-2 py-1.5 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded font-mono text-xs"></div>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
             <div><label class="text-[10px] text-zinc-400 block mb-1"><?= htmlspecialchars(__('services.admin_orders.f_db_host')) ?></label><input id="sf_db_host" value="<?= htmlspecialchars($db['host'] ?? 'localhost') ?>" class="w-full px-2 py-1.5 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded font-mono text-xs"></div>
             <div><label class="text-[10px] text-zinc-400 block mb-1"><?= htmlspecialchars(__('services.detail.f_db_name')) ?></label><input id="sf_db_name" value="<?= htmlspecialchars($db['name'] ?? '') ?>" class="w-full px-2 py-1.5 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded font-mono text-xs"></div>
             <div><label class="text-[10px] text-zinc-400 block mb-1"><?= htmlspecialchars(__('services.admin_orders.f_db_id')) ?></label><input id="sf_db_user" value="<?= htmlspecialchars($db['user'] ?? '') ?>" class="w-full px-2 py-1.5 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded font-mono text-xs"></div>
@@ -325,7 +298,6 @@ function saveServerInfo(subId) {
         action: 'update_server_info',
         subscription_id: subId,
         server: {
-            ftp: { host: document.getElementById('sf_ftp_host').value, ip: document.getElementById('sf_ftp_ip').value, user: document.getElementById('sf_ftp_user').value, port: document.getElementById('sf_ftp_port').value },
             db: { host: document.getElementById('sf_db_host').value, name: document.getElementById('sf_db_name').value, user: document.getElementById('sf_db_user').value, size: document.getElementById('sf_db_size').value },
             env: { php: document.getElementById('sf_env_php').value, mysql: document.getElementById('sf_env_mysql').value },
             usage: { hdd_total: document.getElementById('sf_hdd_total').value, traffic_total: document.getElementById('sf_traf_total').value }

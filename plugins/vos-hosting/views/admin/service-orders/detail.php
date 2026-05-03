@@ -71,7 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             $sub = $stmt->fetch(PDO::FETCH_ASSOC);
             if (!$sub) { echo json_encode(['success' => false, 'message' => __('services.admin_orders.alert_sub_not_found')]); exit; }
             $meta = json_decode($sub['metadata'] ?? '{}', true) ?: [];
-            $meta['server'] = $serverData;
+            // 입력으로 받은 키만 부분 갱신 (home/docroot/vhost/fpm_pool/username 등 자동 채움 항목 보존)
+            $meta['server'] = array_merge($meta['server'] ?? [], $serverData);
             $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
                 ->execute([json_encode($meta, JSON_UNESCAPED_UNICODE), $subId]);
             $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'server_info_updated', ?, 'admin', ?)")

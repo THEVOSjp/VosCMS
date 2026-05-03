@@ -158,11 +158,15 @@ try {
             $hMeta['hosting_provisioned'] = true;
             $hMeta['hosting_provisioned_at'] = date('c');
             $hMeta['server'] = array_merge($hMeta['server'] ?? [], [
-                'ftp' => ['host' => $domain, 'user' => $result['username'], 'port' => 21,
-                          'sftp_host' => 'ftp.voscms.com', 'sftp_port' => 2222],
                 'db' => $result['db'],
                 'env' => ['php' => '8.3', 'mysql' => '10.11'],
                 'host' => ['name' => 'host.voscms.com', 'ip' => '27.81.39.11'],
+                // 시스템 경로 (provision 결과 보존 — 운영자 SSH·디버깅용)
+                'username' => $result['username'] ?? null,
+                'home' => $result['home'] ?? null,
+                'docroot' => $result['docroot'] ?? null,
+                'vhost' => $result['vhost'] ?? null,
+                'fpm_pool' => $result['fpm_pool'] ?? null,
             ]);
             $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
                 ->execute([json_encode($hMeta, JSON_UNESCAPED_UNICODE), $hSub['id']]);
