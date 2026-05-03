@@ -254,6 +254,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             }
             exit;
 
+        // ── 주문 활동 로그 추가 로드 (이전 로그) ──────────────────────
+        case 'load_more_logs': {
+            $oid = (int)($input['order_id'] ?? 0);
+            $beforeId = (int)($input['before_id'] ?? PHP_INT_MAX);
+            $limit = max(10, min(100, (int)($input['limit'] ?? 50)));
+            $st = $pdo->prepare("SELECT * FROM {$prefix}order_logs WHERE order_id = ? AND id < ? ORDER BY id DESC LIMIT {$limit}");
+            $st->execute([$oid, $beforeId]);
+            $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+            $tcSt = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}order_logs WHERE order_id = ?");
+            $tcSt->execute([$oid]);
+            echo json_encode(['success' => true, 'logs' => $rows, 'total' => (int)$tcSt->fetchColumn()], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
         // ── 호스팅 실시간 상태 (SSL/disk/db/nginx) ─────────────────────
         case 'hosting_status': {
             $oid = (int)($input['order_id'] ?? 0);
@@ -484,10 +498,14 @@ $subsStmt = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE order_id =
 $subsStmt->execute([$order['id']]);
 $subscriptions = $subsStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// 주문 로그
-$logsStmt = $pdo->prepare("SELECT * FROM {$prefix}order_logs WHERE order_id = ? ORDER BY created_at DESC LIMIT 30");
+// 주문 로그 — 초기 50건. 추가는 'load_more_logs' 액션으로 점진 로드
+$_logPageSize = 50;
+$logsStmt = $pdo->prepare("SELECT * FROM {$prefix}order_logs WHERE order_id = ? ORDER BY id DESC LIMIT {$_logPageSize}");
 $logsStmt->execute([$order['id']]);
 $orderLogs = $logsStmt->fetchAll(PDO::FETCH_ASSOC);
+$_logTotalStmt = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}order_logs WHERE order_id = ?");
+$_logTotalStmt->execute([$order['id']]);
+$_logTotal = (int)$_logTotalStmt->fetchColumn();
 
 // 타입별 그룹
 $servicesByType = [];
@@ -679,10 +697,13 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
 
         <!-- 활동 로그 -->
         <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-100 dark:border-zinc-700">
+            <div class="px-5 py-4 border-b border-gray-100 dark:border-zinc-700 flex items-center justify-between">
                 <h2 class="text-sm font-bold text-zinc-900 dark:text-white"><?= htmlspecialchars(__('services.admin_orders.activity_log')) ?></h2>
+                <span class="text-[11px] text-zinc-400" id="logCounter">
+                    <?= count($orderLogs) ?> / <?= $_logTotal ?>
+                </span>
             </div>
-            <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto">
+            <div id="activityLogList" class="p-4 space-y-3 max-h-[900px] overflow-y-auto">
                 <?php if (empty($orderLogs)): ?>
                 <p class="text-xs text-zinc-400 text-center py-4"><?= htmlspecialchars(__('services.admin_orders.empty_logs')) ?></p>
                 <?php endif; ?>
@@ -745,6 +766,13 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
                 </div>
                 <?php endforeach; ?>
             </div>
+            <?php if ($_logTotal > count($orderLogs)): ?>
+            <div class="px-4 py-3 border-t border-gray-100 dark:border-zinc-700 text-center">
+                <button type="button" id="btnLoadMoreLogs" onclick="loadMoreLogs()" class="text-xs text-blue-600 hover:underline">
+                    이전 로그 더 보기 (<?= $_logTotal - count($orderLogs) ?>건 남음)
+                </button>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -752,6 +780,9 @@ include BASE_PATH . '/resources/views/admin/reservations/_head.php';
 <script>
 var adminUrl = '<?= $adminUrl ?>';
 var orderId = <?= (int)$order['id'] ?>;
+var _logLastId = <?= !empty($orderLogs) ? (int)end($orderLogs)['id'] : 0 ?>;
+var _logTotal  = <?= (int)$_logTotal ?>;
+var _logLoaded = <?= (int)count($orderLogs) ?>;
 
 function ajaxPost(data) {
     return fetch(window.location.href, {
@@ -759,6 +790,56 @@ function ajaxPost(data) {
         headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
         body: JSON.stringify(data)
     }).then(function(r) { return r.json(); });
+}
+
+// 활동 로그 — 이전 로그 더 보기 (페이지네이션)
+function loadMoreLogs() {
+    var btn = document.getElementById('btnLoadMoreLogs');
+    if (!btn) return;
+    btn.disabled = true; btn.textContent = '불러오는 중…';
+    ajaxPost({ action: 'load_more_logs', order_id: orderId, before_id: _logLastId, limit: 50 }).then(function(d) {
+        if (!d.success || !d.logs || !d.logs.length) {
+            btn.parentElement.remove();
+            return;
+        }
+        var list = document.getElementById('activityLogList');
+        d.logs.forEach(function(log) {
+            var div = document.createElement('div');
+            div.className = 'flex gap-3 pb-3 border-b border-gray-100 dark:border-zinc-700/50 last:border-0';
+            div.innerHTML =
+                '<div class="w-2 h-2 rounded-full bg-zinc-400 mt-1.5 flex-shrink-0"></div>' +
+                '<div class="flex-1 min-w-0">' +
+                '<p class="text-xs font-medium text-zinc-700 dark:text-zinc-200">' + escapeHtml(log.action) + '</p>' +
+                '<p class="text-[10px] text-zinc-300 dark:text-zinc-600">' +
+                formatLogDate(log.created_at) + ' · ' + escapeHtml(log.actor_type || '') +
+                '</p></div>';
+            list.appendChild(div);
+            _logLastId = log.id;
+            _logLoaded++;
+        });
+        // 카운터 갱신
+        var counter = document.getElementById('logCounter');
+        if (counter) counter.textContent = _logLoaded + ' / ' + (d.total || _logTotal);
+        // 더 남았으면 버튼 라벨 갱신, 아니면 제거
+        var remaining = (d.total || _logTotal) - _logLoaded;
+        if (remaining > 0) {
+            btn.disabled = false;
+            btn.textContent = '이전 로그 더 보기 (' + remaining + '건 남음)';
+        } else {
+            btn.parentElement.remove();
+        }
+    }).catch(function() {
+        btn.disabled = false;
+        btn.textContent = '재시도';
+    });
+}
+function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function formatLogDate(s) {
+    if (!s) return '';
+    var d = new Date(String(s).replace(' ', 'T'));
+    if (isNaN(d.getTime())) return s;
+    var pad = function(n){return n<10?'0'+n:n;};
+    return pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
 }
 
 function showTab(type) {
