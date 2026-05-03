@@ -19,6 +19,15 @@ $adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
 $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
 $pdo = \RzxLib\Core\Database\Connection::getInstance()->getPdo();
 
+// POST 핸들러에서 사용하는 헬퍼 — POST 진입 전에 정의 필수 (조건부 정의는 파일 끝 도달 전엔 미등록)
+if (!function_exists('_vh_admin_human_bytes')) {
+    function _vh_admin_human_bytes(int $b): string {
+        $u = ['B','KB','MB','GB','TB']; $i = 0;
+        while ($b >= 1024 && $i < count($u) - 1) { $b /= 1024; $i++; }
+        return number_format($b, $i > 0 ? 2 : 0) . ' ' . $u[$i];
+    }
+}
+
 // AJAX 처리
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
     header('Content-Type: application/json; charset=utf-8');
@@ -811,14 +820,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
     }
     echo json_encode(['success' => false, 'message' => __('services.admin_orders.alert_unknown_action')]);
     exit;
-}
-
-if (!function_exists('_vh_admin_human_bytes')) {
-    function _vh_admin_human_bytes(int $b): string {
-        $u = ['B','KB','MB','GB','TB']; $i = 0;
-        while ($b >= 1024 && $i < count($u) - 1) { $b /= 1024; $i++; }
-        return number_format($b, $i > 0 ? 2 : 0) . ' ' . $u[$i];
-    }
 }
 
 require_once BASE_PATH . '/rzxlib/Core/Helpers/Encryption.php';
