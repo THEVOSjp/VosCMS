@@ -179,16 +179,6 @@ foreach ($subs as $_s) $_activeAddonLabels[] = trim((string)($_s['label'] ?? '')
         </div>
         <?php endif; ?>
 
-        <!-- 어드민 메모 (인라인) -->
-        <div class="mx-5 mb-4">
-            <details class="text-xs">
-                <summary class="cursor-pointer text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">관리자 메모 <?= $adminMemo ? '<span class="text-blue-500">●</span>' : '' ?></summary>
-                <div class="mt-2 flex gap-2">
-                    <textarea id="memo_<?= $sub['id'] ?>" rows="2" class="flex-1 px-2 py-1.5 text-xs border border-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded resize-none" placeholder="내부 메모"><?= htmlspecialchars($adminMemo) ?></textarea>
-                    <button type="button" onclick="adminSaveAddonMemo(<?= $sub['id'] ?>)" class="px-3 py-1 text-xs text-white bg-zinc-700 hover:bg-zinc-800 rounded">저장</button>
-                </div>
-            </details>
-        </div>
     </div>
     <?php endforeach; endif; ?>
 
@@ -197,7 +187,7 @@ foreach ($subs as $_s) $_activeAddonLabels[] = trim((string)($_s['label'] ?? '')
     <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 overflow-hidden">
         <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700">
             <p class="text-xs font-bold text-zinc-700 dark:text-zinc-200">추가 신청 가능 부가서비스</p>
-            <p class="text-[10px] text-zinc-400 mt-0.5">관리자가 즉시 추가 + 결제 처리 (현금 / 무료)</p>
+            <p class="text-[10px] text-zinc-400 mt-0.5">관리자가 즉시 결제(현금/무료) 후 추가합니다.</p>
         </div>
         <div class="divide-y divide-gray-100 dark:divide-zinc-700/50">
             <?php foreach ($_addonsAvail as $_a):
@@ -218,7 +208,7 @@ foreach ($subs as $_s) $_activeAddonLabels[] = trim((string)($_s['label'] ?? '')
                         <span class="text-[10px] px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded">1회 결제</span>
                         <?php endif; ?>
                         <?php if ($_aAlreadyActive): ?>
-                        <span class="text-[10px] px-1.5 py-0.5 bg-zinc-100 text-zinc-500 rounded">이미 신청됨</span>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-zinc-100 text-zinc-500 rounded">신청됨</span>
                         <?php endif; ?>
                     </div>
                     <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
@@ -232,11 +222,11 @@ foreach ($subs as $_s) $_activeAddonLabels[] = trim((string)($_s['label'] ?? '')
                     </p>
                 </div>
                 <?php if ($_aAlreadyActive): ?>
-                <button type="button" disabled class="px-4 py-1.5 text-xs font-medium text-zinc-400 bg-zinc-100 rounded-lg cursor-not-allowed">신청됨</button>
+                <button type="button" disabled class="px-4 py-1.5 text-xs font-medium text-zinc-400 bg-zinc-100 dark:bg-zinc-700 dark:text-zinc-500 rounded-lg cursor-not-allowed whitespace-nowrap">신청 완료</button>
                 <?php elseif ($_aIsQuote): ?>
-                <span class="text-[11px] text-amber-600">견적은 제작 프로젝트로 처리</span>
+                <a href="<?= $baseUrl ?>/admin/custom-projects?title=<?= rawurlencode($_aLabel) ?>&from=addon&host_sub=<?= (int)$_hostSubId ?>" class="inline-flex items-center gap-1 px-4 py-1.5 text-xs font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg whitespace-nowrap">견적 요청 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg></a>
                 <?php else: ?>
-                <button type="button" onclick="openAdminAddonAddModal('<?= htmlspecialchars($_aId, ENT_QUOTES) ?>', '<?= htmlspecialchars(addslashes($_aLabel)) ?>', <?= $_aPrice ?>, '<?= htmlspecialchars(addslashes($_aUnit)) ?>', <?= $_aOneTime ? 'true' : 'false' ?>)" class="px-4 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">+ 추가</button>
+                <button type="button" onclick="openAdminAddonAddModal('<?= htmlspecialchars($_aId, ENT_QUOTES) ?>', '<?= htmlspecialchars(addslashes($_aLabel)) ?>', <?= $_aPrice ?>, '<?= htmlspecialchars(addslashes($_aUnit)) ?>', <?= $_aOneTime ? 'true' : 'false' ?>)" class="px-4 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg whitespace-nowrap">신청</button>
                 <?php endif; ?>
             </div>
             <?php endforeach; ?>
@@ -426,10 +416,5 @@ function adminCancelAddon(subId, label) {
                 alert(msg); location.reload();
             } else alert(d.message || '실패');
         });
-}
-function adminSaveAddonMemo(subId) {
-    var memo = document.getElementById('memo_' + subId).value;
-    ajaxPost({ action: 'update_addon_memo', subscription_id: subId, memo: memo })
-        .then(function(d){ alert(d.success ? '메모 저장됨' : (d.message || '실패')); });
 }
 </script>
