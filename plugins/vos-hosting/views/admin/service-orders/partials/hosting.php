@@ -88,7 +88,7 @@ foreach (($subscriptions ?? []) as $_s) {
     </div>
     <div id="hostingStatusBox" class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
         <div class="p-2.5 border border-gray-200 dark:border-zinc-700 rounded-lg">
-            <p class="text-[10px] text-zinc-400 mb-0.5">SSL 인증서</p>
+            <p class="text-[10px] text-zinc-400 mb-0.5">SSL 인증서 <span class="text-emerald-500" title="Let's Encrypt 자동 갱신 활성 (만료 30일 이내 자동, 매일 2회 점검)">⚙ 자동</span></p>
             <p class="font-medium text-zinc-700 dark:text-zinc-200" id="status_ssl">로딩…</p>
         </div>
         <div class="p-2.5 border border-gray-200 dark:border-zinc-700 rounded-lg">
@@ -308,7 +308,7 @@ $_dbName  = $db['db_name']    ?? ($db['name'] ?? null);
 <div class="px-5 py-4 flex flex-wrap gap-2">
     <button onclick="sendSetupEmail(<?= (int)$order['id'] ?>)" class="px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition"><?= htmlspecialchars(__('services.admin_orders.btn_setup_email')) ?></button>
     <button id="btnToggleVhost" data-next="0" onclick="toggleVhost()" class="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition">강제 차단</button>
-    <button onclick="renewSsl()" class="px-3 py-1.5 text-xs font-medium text-emerald-600 border border-emerald-200 rounded-lg hover:bg-emerald-50 transition">SSL 갱신</button>
+    <button onclick="renewSsl()" class="px-3 py-1.5 text-xs font-medium text-emerald-600 border border-emerald-200 rounded-lg hover:bg-emerald-50 transition" title="평소 자동 갱신됨. 강제로 즉시 갱신 시도할 때만 사용.">SSL 강제 갱신</button>
     <button onclick="resetDbPassword()" class="px-3 py-1.5 text-xs font-medium text-amber-600 border border-amber-200 rounded-lg hover:bg-amber-50 transition">DB 비번 재설정</button>
     <button onclick="reprovision()" class="px-3 py-1.5 text-xs font-medium text-zinc-700 border border-zinc-300 rounded-lg hover:bg-zinc-50 transition">재프로비저닝</button>
 </div>
@@ -395,9 +395,9 @@ function toggleVhost() {
 }
 
 function renewSsl() {
-    if (!confirm('SSL 인증서를 갱신합니까?')) return;
+    if (!confirm('SSL 인증서는 평소 매일 2회 자동 갱신됩니다 (만료 30일 이내 자동).\n\n그럼에도 즉시 강제 갱신하시겠습니까?\n(보통 비상시·자동 갱신 실패 케이스에만 사용)')) return;
     ajaxPost({ action: 'renew_ssl', order_id: orderId }).then(function(d) {
-        alert(d.success ? 'SSL 갱신 시도 완료\n' + (d.output || '') : 'SSL 갱신 실패\n' + (d.output || d.message || ''));
+        alert(d.success ? 'SSL 강제 갱신 시도 완료\n' + (d.output || '') : 'SSL 갱신 실패\n' + (d.output || d.message || ''));
         loadHostingStatus();
     });
 }
