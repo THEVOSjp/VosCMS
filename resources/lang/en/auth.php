@@ -165,6 +165,23 @@ return [
         'view_all' => 'View All',
         'quick_actions' => 'Quick Actions',
         'make_reservation' => 'Make a Reservation',
+        'messages' => [
+            'title' => 'Messages',
+            'mark_all_read' => 'Mark all as read',
+            'empty' => 'No messages.',
+            'tab_notifications' => 'Notifications',
+            'tab_conversations' => 'Conversations',
+            'conversations' => 'Conversations',
+            'no_conversations' => 'No conversations yet',
+            'new' => 'New',
+            'new_message' => 'New Message',
+            'recipient' => 'Recipient',
+            'recipient_placeholder' => 'Search by nickname or email',
+            'body' => 'Body',
+            'placeholder_message' => 'Type your message...',
+            'send' => 'Send',
+            'select_conversation' => 'Select a conversation',
+        ],
     ],
 
     // Profile

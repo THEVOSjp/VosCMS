@@ -167,6 +167,23 @@ return [
         'view_all' => 'すべて見る',
         'quick_actions' => 'クイックメニュー',
         'make_reservation' => '新規予約',
+        'messages' => [
+            'title' => 'メッセージ',
+            'mark_all_read' => 'すべて既読',
+            'empty' => 'メッセージがありません。',
+            'tab_notifications' => '通知',
+            'tab_conversations' => '会話',
+            'conversations' => '会話一覧',
+            'no_conversations' => '会話がありません',
+            'new' => '新規',
+            'new_message' => '新規メッセージ',
+            'recipient' => '宛先',
+            'recipient_placeholder' => 'ニックネームまたはメールで検索',
+            'body' => '本文',
+            'placeholder_message' => 'メッセージを入力...',
+            'send' => '送信',
+            'select_conversation' => '会話を選択してください',
+        ],
     ],
 
     // プロフィール
