@@ -138,6 +138,7 @@ return [
         'view' => 'Просмотр',
         'download' => 'Скачать',
         'print' => 'Печать',
+        'view_all' => 'Показать все',
     ],
 
     // Reservation System

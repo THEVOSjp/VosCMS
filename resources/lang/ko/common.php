@@ -139,6 +139,7 @@ return [
         'view' => '보기',
         'download' => '다운로드',
         'print' => '인쇄',
+        'view_all' => '모두 보기',
     ],
 
     // 예약 시스템

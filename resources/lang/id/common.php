@@ -139,6 +139,7 @@ return [
         'view' => 'Lihat',
         'download' => 'Unduh',
         'print' => 'Cetak',
+        'view_all' => 'Lihat Semua',
     ],
 
     // Reservation System

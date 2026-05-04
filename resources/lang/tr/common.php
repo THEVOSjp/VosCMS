@@ -139,6 +139,7 @@ return [
         'view' => 'Görüntüle',
         'download' => 'İndir',
         'print' => 'Yazdır',
+        'view_all' => 'Tümünü Gör',
     ],
 
     // Reservation System

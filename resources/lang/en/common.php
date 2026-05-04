@@ -139,6 +139,7 @@ return [
         'view' => 'View',
         'download' => 'Download',
         'print' => 'Print',
+        'view_all' => 'View All',
     ],
 
     // Reservation System

@@ -138,6 +138,7 @@ return [
         'view' => 'Харах',
         'download' => 'Татах',
         'print' => 'Хэвлэх',
+        'view_all' => 'Бүгдийг харах',
     ],
 
     // Reservation System

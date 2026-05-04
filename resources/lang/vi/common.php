@@ -139,6 +139,7 @@ return [
         'view' => 'Xem',
         'download' => 'Tải xuống',
         'print' => 'In',
+        'view_all' => 'Xem tất cả',
     ],
 
     // Reservation System

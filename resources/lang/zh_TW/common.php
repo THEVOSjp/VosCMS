@@ -90,6 +90,7 @@ return [
         'view' => '檢視',
         'download' => '下載',
         'print' => '列印',
+        'view_all' => '查看全部',
     ],
 
     // Reservation System

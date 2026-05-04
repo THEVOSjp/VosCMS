@@ -173,6 +173,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
                     </button>
                     <?php include BASE_PATH . '/resources/views/components/language-selector.php'; ?>
                     <?php if ($isLoggedIn): ?>
+                    <?php include BASE_PATH . '/resources/views/components/notif-bell.php'; ?>
                     <div class="relative">
                         <button id="userMenuBtn" class="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700">
                             <?php $_avatarUrl = $currentUser['profile_image'] ?? $currentUser['avatar'] ?? ''; if ($_avatarUrl && !str_starts_with($_avatarUrl, 'http')) $_avatarUrl = $baseUrl . $_avatarUrl; ?>
