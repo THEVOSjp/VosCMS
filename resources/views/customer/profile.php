@@ -29,7 +29,8 @@ if (!$profile) {
 }
 
 $isMine = $myId === $profileUserId;
-$displayName = $profile['nick_name'] ?: ($profile['name'] ?: explode('@', $profile['email'])[0]);
+$_nameDec = function_exists('decrypt') ? decrypt($profile['name'] ?? '') : ($profile['name'] ?? '');
+$displayName = $profile['nick_name'] ?: ($_nameDec ?: explode('@', $profile['email'])[0]);
 $avatarUrl = $profile['profile_image'] ?: $profile['avatar'] ?: '';
 if ($avatarUrl && !str_starts_with($avatarUrl, 'http')) $avatarUrl = $baseUrl . $avatarUrl;
 

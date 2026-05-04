@@ -12,6 +12,7 @@
 if (!defined('BASE_PATH')) define('BASE_PATH', dirname(__DIR__));
 require_once BASE_PATH . '/api/_session-bootstrap.php'; // 메인 페이지와 동일 세션
 require_once BASE_PATH . '/vendor/autoload.php';
+require_once BASE_PATH . '/rzxlib/Core/Helpers/functions.php'; // decrypt()
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -76,7 +77,8 @@ try {
             $st->execute(['uid' => $userId]);
             $rows = $st->fetchAll();
             foreach ($rows as &$r) {
-                $r['display_name'] = $r['nick_name'] ?: ($r['name'] ?: explode('@', $r['email'] ?? '')[0]);
+                $nameDec = decrypt($r['name'] ?? '');
+                $r['display_name'] = $r['nick_name'] ?: ($nameDec ?: explode('@', $r['email'] ?? '')[0]);
                 $r['avatar_url'] = $r['profile_image'] ?: $r['avatar'] ?: '';
                 unset($r['email'], $r['name'], $r['nick_name'], $r['profile_image'], $r['avatar']);
             }
@@ -124,8 +126,10 @@ try {
             $os->execute([$otherId]);
             $other = $os->fetch();
             if ($other) {
-                $other['display_name'] = $other['nick_name'] ?: ($other['name'] ?: explode('@', $other['email'] ?? '')[0]);
+                $nameDec = decrypt($other['name'] ?? '');
+                $other['display_name'] = $other['nick_name'] ?: ($nameDec ?: explode('@', $other['email'] ?? '')[0]);
                 $other['avatar_url'] = $other['profile_image'] ?: $other['avatar'] ?: '';
+                $other['name'] = $nameDec;
             }
             echo json_encode(['success' => true, 'messages' => $messages, 'other' => $other, 'my_id' => $userId]);
             break;
@@ -137,7 +141,6 @@ try {
             if ($body === '') { echo json_encode(['success'=>false,'message'=>'본문 필수']); exit; }
             if (mb_strlen($body) > 5000) { echo json_encode(['success'=>false,'message'=>'본문 5000자 초과']); exit; }
 
-            // 수신자 확인 — recipient_id / recipient_email / recipient_nickname / conversation_id 중 하나
             $recipientId = trim($_POST['recipient_id'] ?? '');
             $convId = (int)($_POST['conversation_id'] ?? 0);
 
@@ -219,7 +222,7 @@ try {
                     ->execute([$msgId, $preview, $userId, $userId, $cidInsert]);
 
                 // 수신자 알림 적재
-                $senderDisplay = $user['nick_name'] ?? $user['name'] ?? explode('@', $user['email'] ?? '')[0];
+                $senderDisplay = $user['nick_name'] ?: (decrypt($user['name'] ?? '') ?: explode('@', $user['email'] ?? '')[0]);
                 $pdo->prepare("INSERT INTO {$prefix}notifications
                     (user_id, type, category, title, body, link, icon, expires_at, meta)
                     VALUES (?, 'message', 'new_message', ?, ?, ?, 'message', DATE_ADD(NOW(), INTERVAL 90 DAY), ?)")
@@ -277,9 +280,9 @@ try {
             $st->execute(['me' => $userId, 'q' => $like, 'prefix' => $q . '%']);
             $rows = $st->fetchAll();
             foreach ($rows as &$r) {
-                $r['display_name'] = $r['nick_name'] ?: ($r['name'] ?: explode('@', $r['email'])[0]);
+                $nameDec = decrypt($r['name'] ?? '');
+                $r['display_name'] = $r['nick_name'] ?: ($nameDec ?: explode('@', $r['email'])[0]);
                 $r['avatar_url'] = $r['profile_image'] ?: $r['avatar'] ?: '';
-                // email 은 선두 일부만 노출 (프라이버시)
                 $em = $r['email'] ?? '';
                 $r['email_masked'] = $em ? substr($em, 0, 2) . '***' . substr(strrchr($em, '@'), 0) : '';
                 unset($r['email'], $r['name'], $r['profile_image'], $r['avatar']);

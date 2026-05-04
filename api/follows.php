@@ -13,6 +13,7 @@
 if (!defined('BASE_PATH')) define('BASE_PATH', dirname(__DIR__));
 require_once BASE_PATH . '/api/_session-bootstrap.php';
 require_once BASE_PATH . '/vendor/autoload.php';
+require_once BASE_PATH . '/rzxlib/Core/Helpers/functions.php'; // decrypt()
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -58,7 +59,7 @@ try {
                 ->execute([$userId, $target]);
 
             // 알림 적재 (대상에게)
-            $senderDisplay = $user['nick_name'] ?? $user['name'] ?? explode('@', $user['email'] ?? '')[0];
+            $senderDisplay = $user['nick_name'] ?: (decrypt($user['name'] ?? '') ?: explode('@', $user['email'] ?? '')[0]);
             $pdo->prepare("INSERT INTO {$prefix}notifications
                 (user_id, type, category, title, body, link, icon, expires_at, meta)
                 VALUES (?, 'follow', 'new_follower', ?, ?, ?, 'bell', DATE_ADD(NOW(), INTERVAL 90 DAY), ?)")
@@ -134,9 +135,10 @@ try {
             $st->execute([$target]);
             $rows = $st->fetchAll();
             foreach ($rows as &$r) {
-                $r['display_name'] = $r['nick_name'] ?: ($r['name'] ?: explode('@', $r['email'])[0]);
+                $nameDec = decrypt($r['name'] ?? '');
+                $r['display_name'] = $r['nick_name'] ?: ($nameDec ?: explode('@', $r['email'])[0]);
                 $r['avatar_url'] = $r['profile_image'] ?: $r['avatar'] ?: '';
-                unset($r['email'], $r['profile_image'], $r['avatar']);
+                unset($r['email'], $r['name'], $r['profile_image'], $r['avatar']);
             }
             echo json_encode(['success' => true, 'users' => $rows]);
             break;
