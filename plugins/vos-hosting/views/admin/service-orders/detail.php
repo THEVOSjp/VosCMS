@@ -650,6 +650,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                 'admin_created' => [__('services.admin_orders.act_admin_created'),'blue'],
                 'admin_delete_addon' => [__('services.admin_orders.act_admin_delete_addon'),'red'],
                 'voscms_installed' => [__('services.admin_orders.act_voscms_installed'),'green'],
+                'voscms_reinstalled' => [__('services.admin_orders.act_voscms_reinstalled'),'violet'],
                 'vhost_toggle' => [__('services.admin_orders.act_vhost_toggle'),'amber'],
                 'ssl_renew' => [__('services.admin_orders.act_ssl_renew'),'emerald'],
                 'db_pw_reset' => [__('services.admin_orders.act_db_pw_reset'),'amber'],
@@ -788,6 +789,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                 $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'db_pw_reset', ?, 'admin', ?)")
                     ->execute([$oid, json_encode(['user' => $username]), $_SESSION['user_id'] ?? '']);
                 echo json_encode(['success' => true, 'new_password' => $newPw]);
+            } catch (\Throwable $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+            exit;
+        }
+
+        // ── VosCMS 초기화 + 재설치 (DB 초기화 + 파일 재배치 + install 재실행) ─────
+        case 'reinstall_voscms': {
+            $oid = (int)($input['order_id'] ?? 0);
+            $oSt = $pdo->prepare("SELECT * FROM {$prefix}orders WHERE id = ?");
+            $oSt->execute([$oid]);
+            $ord = $oSt->fetch(PDO::FETCH_ASSOC);
+            if (!$ord) { echo json_encode(['success' => false, 'message' => 'order not found']); exit; }
+
+            // install addon 의 install_info 가져오기
+            $aSt = $pdo->prepare("SELECT id, metadata FROM {$prefix}subscriptions WHERE order_id = ? AND type = 'addon'");
+            $aSt->execute([$oid]);
+            $installInfo = null; $installSubId = null;
+            while ($r = $aSt->fetch(PDO::FETCH_ASSOC)) {
+                $m = json_decode($r['metadata'] ?? '{}', true) ?: [];
+                if (($m['addon_id'] ?? '') === 'install' && !empty($m['install_info'])) {
+                    $installInfo = $m['install_info']; $installSubId = $r['id']; break;
+                }
+            }
+            if (!$installInfo) { echo json_encode(['success' => false, 'message' => 'install addon 의 install_info 없음']); exit; }
+
+            // hosting sub 의 db 정보
+            $hSt = $pdo->prepare("SELECT id, metadata FROM {$prefix}subscriptions WHERE order_id = ? AND type = 'hosting' LIMIT 1");
+            $hSt->execute([$oid]);
+            $hSub = $hSt->fetch(PDO::FETCH_ASSOC);
+            $hMeta = json_decode($hSub['metadata'] ?? '{}', true) ?: [];
+            $dbInfo = $hMeta['server']['db'] ?? [];
+            if (empty($dbInfo['db_name']) || empty($dbInfo['db_user']) || empty($dbInfo['db_pass'])) {
+                echo json_encode(['success' => false, 'message' => 'DB 정보 누락 (server.db)']); exit;
+            }
+
+            // 1. DB 초기화 (DROP + CREATE + GRANT)
+            $dbAdminUser = $_ENV['HOSTING_DB_ADMIN_USER'] ?? null;
+            $dbAdminPass = $_ENV['HOSTING_DB_ADMIN_PASS'] ?? null;
+            if (!$dbAdminUser) { echo json_encode(['success' => false, 'message' => 'HOSTING_DB_ADMIN 미설정']); exit; }
+            try {
+                $admin = new PDO('mysql:host=127.0.0.1;charset=utf8mb4', $dbAdminUser, $dbAdminPass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+                $dbNameQuoted = '`' . str_replace('`', '``', $dbInfo['db_name']) . '`';
+                $admin->exec("DROP DATABASE IF EXISTS {$dbNameQuoted}");
+                $admin->exec("CREATE DATABASE {$dbNameQuoted} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+                $admin->exec("GRANT ALL PRIVILEGES ON {$dbNameQuoted}.* TO " . $admin->quote($dbInfo['db_user']) . "@'localhost'");
+                $admin->exec("FLUSH PRIVILEGES");
+            } catch (\Throwable $e) {
+                echo json_encode(['success' => false, 'message' => 'DB 초기화 실패: ' . $e->getMessage()]); exit;
+            }
+
+            // 2. docroot 내용 삭제 후 재생성
+            $orderNumber = $ord['order_number'];
+            $home = '/var/www/customers/' . $orderNumber;
+            $docroot = $home . '/public_html';
+            $username = 'vos_' . preg_replace('/[^A-Za-z0-9]/', '', $orderNumber);
+            @shell_exec('sudo /usr/bin/rm -rf ' . escapeshellarg($docroot) . ' 2>&1');
+            @shell_exec('sudo /usr/bin/mkdir -p ' . escapeshellarg($docroot) . ' 2>&1');
+            @shell_exec('sudo /usr/bin/chown -R ' . escapeshellarg($username) . ':www-data ' . escapeshellarg($docroot) . ' 2>&1');
+            @shell_exec('sudo /usr/bin/chmod 2775 ' . escapeshellarg($docroot) . ' 2>&1');
+
+            // 3. installVoscms 재호출
+            try {
+                $prov = new \RzxLib\Core\Hosting\HostingProvisioner($pdo);
+                $r = $prov->installVoscms($orderNumber, (string)$ord['domain'], $dbInfo, $installInfo);
+                if (!empty($r['success'])) {
+                    // install addon metadata 갱신
+                    $aMeta = json_decode($pdo->query("SELECT metadata FROM {$prefix}subscriptions WHERE id = " . (int)$installSubId)->fetchColumn() ?: '{}', true) ?: [];
+                    $aMeta['install_completed_at'] = $r['installed_at'] ?? date('c');
+                    $aMeta['install_admin_url']    = $r['admin_url'] ?? null;
+                    $aMeta['reinstalled_at']       = date('c');
+                    $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
+                        ->execute([json_encode($aMeta, JSON_UNESCAPED_UNICODE), $installSubId]);
+                    $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'voscms_reinstalled', ?, 'admin', ?)")
+                        ->execute([$oid, json_encode($r, JSON_UNESCAPED_UNICODE), $_SESSION['user_id'] ?? '']);
+                    echo json_encode(['success' => true, 'message' => 'VosCMS 재설치 완료', 'admin_url' => $r['admin_url'] ?? null, 'version' => $r['version'] ?? null]);
+                } else {
+                    echo json_encode(['success' => false, 'message' => '재설치 실패: ' . ($r['error'] ?? json_encode($r, JSON_UNESCAPED_UNICODE))]);
+                }
             } catch (\Throwable $e) {
                 echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             }

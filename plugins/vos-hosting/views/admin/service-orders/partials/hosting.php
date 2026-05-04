@@ -258,6 +258,7 @@ $_dbName  = $db['db_name']    ?? ($db['name'] ?? null);
     <button onclick="renewSsl()" class="px-3 py-1.5 text-xs font-medium text-emerald-600 border border-emerald-200 rounded-lg hover:bg-emerald-50 transition" title="평소 자동 갱신됨. 강제로 즉시 갱신 시도할 때만 사용.">SSL 강제 갱신</button>
     <button onclick="resetDbPassword()" class="px-3 py-1.5 text-xs font-medium text-amber-600 border border-amber-200 rounded-lg hover:bg-amber-50 transition">DB 비번 재설정</button>
     <button onclick="reprovision()" class="px-3 py-1.5 text-xs font-medium text-zinc-700 border border-zinc-300 rounded-lg hover:bg-zinc-50 transition">재프로비저닝</button>
+    <button onclick="reinstallVoscms()" class="px-3 py-1.5 text-xs font-medium text-violet-700 border border-violet-300 rounded-lg hover:bg-violet-50 transition" title="DB 데이터 + VosCMS 파일 모두 초기화 후 재설치 (위험)">VosCMS 재설치</button>
 </div>
 
 <script>
@@ -342,6 +343,27 @@ function reprovision() {
     if (!confirm('호스팅을 재프로비저닝합니까? 손상된 nginx/php-fpm/SSL 등을 재구축합니다. 약 1~2분 소요.')) return;
     ajaxPost({ action: 'reprovision', order_id: orderId }).then(function(d) {
         alert(d.message || (d.success ? '재프로비저닝 시작' : '실패'));
+    });
+}
+
+function reinstallVoscms() {
+    if (!confirm('⚠ VosCMS 를 초기화하고 재설치합니다.\n\n다음이 모두 삭제됩니다:\n- DB 데이터 전체 (게시글·회원·설정 등 모든 데이터)\n- public_html 의 VosCMS 파일 전체\n\n복구 불가. 계속하시겠습니까?')) return;
+    var phrase = prompt('확인을 위해 다음 문구를 정확히 입력하세요:\n\n재설치\n\n(다른 문자 입력 시 취소됩니다)');
+    if (phrase !== '재설치') { alert('재설치 취소됨'); return; }
+    var btn = event.target;
+    btn.disabled = true;
+    btn.textContent = '재설치 중… (1~2분)';
+    ajaxPost({ action: 'reinstall_voscms', order_id: orderId }).then(function(d) {
+        btn.disabled = false; btn.textContent = 'VosCMS 재설치';
+        if (d.success) {
+            alert('VosCMS 재설치 완료\n버전: ' + (d.version || '?') + '\n관리자 URL: ' + (d.admin_url || ''));
+            location.reload();
+        } else {
+            alert('재설치 실패: ' + (d.message || ''));
+        }
+    }).catch(function() {
+        btn.disabled = false; btn.textContent = 'VosCMS 재설치';
+        alert('네트워크 오류');
     });
 }
 

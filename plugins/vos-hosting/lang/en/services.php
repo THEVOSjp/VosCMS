@@ -900,6 +900,7 @@ return array (
     'act_admin_created' => 'Admin proxy registration',
     'act_admin_delete_addon' => 'Admin removed addon',
     'act_voscms_installed' => 'VosCMS auto-install completed',
+    'act_voscms_reinstalled' => 'VosCMS reinstalled',
     'act_vhost_toggle' => 'nginx vhost toggled',
     'act_ssl_renew' => 'SSL force renewed',
     'act_db_pw_reset' => 'DB password reset',

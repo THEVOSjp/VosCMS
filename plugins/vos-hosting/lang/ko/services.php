@@ -896,6 +896,7 @@ return array (
     'act_admin_created' => '관리자 대리 등록',
     'act_admin_delete_addon' => '관리자 부가서비스 삭제',
     'act_voscms_installed' => 'VosCMS 자동 설치 완료',
+    'act_voscms_reinstalled' => 'VosCMS 재설치 완료',
     'act_vhost_toggle' => 'nginx vhost 토글',
     'act_ssl_renew' => 'SSL 강제 갱신',
     'act_db_pw_reset' => 'DB 비밀번호 재설정',

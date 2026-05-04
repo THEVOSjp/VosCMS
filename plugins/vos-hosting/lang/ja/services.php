@@ -897,6 +897,7 @@ return array (
     'act_admin_created' => '管理者代理登録',
     'act_admin_delete_addon' => '管理者によるアドオン削除',
     'act_voscms_installed' => 'VosCMS自動インストール完了',
+    'act_voscms_reinstalled' => 'VosCMS再インストール完了',
     'act_vhost_toggle' => 'nginx vhost トグル',
     'act_ssl_renew' => 'SSL 強制更新',
     'act_db_pw_reset' => 'DBパスワード再設定',
