@@ -251,32 +251,6 @@ $_dbName  = $db['db_name']    ?? ($db['name'] ?? null);
 </div>
 <?php endif; ?>
 
-<!-- 서버 접속정보 편집 -->
-<div class="px-5 py-4 border-b border-gray-100 dark:border-zinc-700">
-    <div class="flex items-center justify-between mb-3">
-        <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider"><?= htmlspecialchars(__('services.admin_orders.server_setup_section')) ?></p>
-        <button onclick="toggleServerEdit()" id="btnServerEdit" class="text-xs text-blue-600 hover:underline"><?= htmlspecialchars(__('services.admin_orders.btn_edit')) ?></button>
-    </div>
-    <div id="serverEditForm" class="hidden space-y-4">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-            <div><label class="text-[10px] text-zinc-400 block mb-1"><?= htmlspecialchars(__('services.admin_orders.f_db_host')) ?></label><input id="sf_db_host" value="<?= htmlspecialchars($db['host'] ?? 'localhost') ?>" class="w-full px-2 py-1.5 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded font-mono text-xs"></div>
-            <div><label class="text-[10px] text-zinc-400 block mb-1"><?= htmlspecialchars(__('services.detail.f_db_name')) ?></label><input id="sf_db_name" value="<?= htmlspecialchars($db['name'] ?? '') ?>" class="w-full px-2 py-1.5 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded font-mono text-xs"></div>
-            <div><label class="text-[10px] text-zinc-400 block mb-1"><?= htmlspecialchars(__('services.admin_orders.f_db_id')) ?></label><input id="sf_db_user" value="<?= htmlspecialchars($db['user'] ?? '') ?>" class="w-full px-2 py-1.5 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded font-mono text-xs"></div>
-            <div><label class="text-[10px] text-zinc-400 block mb-1"><?= htmlspecialchars(__('services.admin_orders.f_db_size')) ?></label><input id="sf_db_size" value="<?= htmlspecialchars($db['size'] ?? __('services.detail.db_unlimited')) ?>" class="w-full px-2 py-1.5 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded font-mono text-xs"></div>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-            <div><label class="text-[10px] text-zinc-400 block mb-1"><?= htmlspecialchars(__('services.admin_orders.f_php_ver')) ?></label><input id="sf_env_php" value="<?= htmlspecialchars($env['php'] ?? 'PHP 8.3') ?>" class="w-full px-2 py-1.5 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded text-xs"></div>
-            <div><label class="text-[10px] text-zinc-400 block mb-1"><?= htmlspecialchars(__('services.admin_orders.f_mysql_ver')) ?></label><input id="sf_env_mysql" value="<?= htmlspecialchars($env['mysql'] ?? 'MySQL 8.0') ?>" class="w-full px-2 py-1.5 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded text-xs"></div>
-            <div><label class="text-[10px] text-zinc-400 block mb-1"><?= htmlspecialchars(__('services.admin_orders.f_hdd_total')) ?></label><input id="sf_hdd_total" value="<?= htmlspecialchars($usage['hdd_total'] ?? '') ?>" class="w-full px-2 py-1.5 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded text-xs" placeholder="1GB"></div>
-            <div><label class="text-[10px] text-zinc-400 block mb-1"><?= htmlspecialchars(__('services.admin_orders.f_traffic_total')) ?></label><input id="sf_traf_total" value="<?= htmlspecialchars($usage['traffic_total'] ?? '') ?>" class="w-full px-2 py-1.5 border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded text-xs" placeholder="10GB"></div>
-        </div>
-        <div class="flex justify-end gap-2">
-            <button onclick="toggleServerEdit()" class="px-3 py-1.5 text-xs text-zinc-500 hover:text-zinc-700"><?= htmlspecialchars(__('services.admin_orders.btn_cancel') ?: __('services.detail.btn_cancel')) ?></button>
-            <button onclick="saveServerInfo(<?= $sub['id'] ?>)" class="px-4 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"><?= htmlspecialchars(__('services.admin_orders.btn_save')) ?></button>
-        </div>
-    </div>
-</div>
-
 <!-- 관리 버튼 -->
 <div class="px-5 py-4 flex flex-wrap gap-2">
     <button onclick="sendSetupEmail(<?= (int)$order['id'] ?>)" class="px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition"><?= htmlspecialchars(__('services.admin_orders.btn_setup_email')) ?></button>
@@ -287,28 +261,6 @@ $_dbName  = $db['db_name']    ?? ($db['name'] ?? null);
 </div>
 
 <script>
-function toggleServerEdit() {
-    var form = document.getElementById('serverEditForm');
-    form.classList.toggle('hidden');
-    document.getElementById('btnServerEdit').textContent = form.classList.contains('hidden') ? <?= json_encode(__('services.admin_orders.btn_edit'), JSON_UNESCAPED_UNICODE) ?> : <?= json_encode(__('services.admin_orders.btn_collapse'), JSON_UNESCAPED_UNICODE) ?>;
-}
-
-function saveServerInfo(subId) {
-    var data = {
-        action: 'update_server_info',
-        subscription_id: subId,
-        server: {
-            db: { host: document.getElementById('sf_db_host').value, name: document.getElementById('sf_db_name').value, user: document.getElementById('sf_db_user').value, size: document.getElementById('sf_db_size').value },
-            env: { php: document.getElementById('sf_env_php').value, mysql: document.getElementById('sf_env_mysql').value },
-            usage: { hdd_total: document.getElementById('sf_hdd_total').value, traffic_total: document.getElementById('sf_traf_total').value }
-        }
-    };
-    ajaxPost(data).then(function(d) {
-        if (d.success) location.reload();
-        else alert(d.message || <?= json_encode(__('services.admin_orders.alert_save_failed'), JSON_UNESCAPED_UNICODE) ?>);
-    });
-}
-
 function sendSetupEmail(orderId) {
     if (!confirm(<?= json_encode(__('services.admin_orders.confirm_send_setup_email'), JSON_UNESCAPED_UNICODE) ?>)) return;
     ajaxPost({ action: 'send_setup_email', order_id: orderId }).then(function(d) {
