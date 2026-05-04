@@ -14,8 +14,10 @@ if (!Auth::check() || !in_array(Auth::user()['role'] ?? '', ['admin','supervisor
 }
 $adminUser = Auth::user();
 $baseUrl = $config['app_url'] ?? '';
-$adminPath = $config['admin_path'] ?? 'theadmin';
+$adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
+$basePath = parse_url($baseUrl, PHP_URL_PATH) ?: '';
 $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+$pageTitle = '신고 검토 - ' . ($config['app_name'] ?? 'VosCMS') . ' Admin';
 
 // 통계
 $statsSt = $pdo->query("SELECT
@@ -27,6 +29,32 @@ $statsSt = $pdo->query("SELECT
     FROM {$prefix}message_reports");
 $stats = $statsSt->fetch(PDO::FETCH_ASSOC) ?: [];
 ?>
+<!DOCTYPE html>
+<html lang="<?= htmlspecialchars($config['locale'] ?? 'ko') ?>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= htmlspecialchars($pageTitle) ?></title>
+    <?php include BASE_PATH . '/resources/views/admin/partials/pwa-head.php'; ?>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
+    <script>
+        if (localStorage.getItem('darkMode') === 'true' ||
+            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</head>
+<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
+<div class="flex">
+    <?php include BASE_PATH . '/resources/views/admin/partials/admin-sidebar.php'; ?>
+    <main class="flex-1 ml-64">
+        <?php
+        $pageHeaderTitle = '신고 검토';
+        include BASE_PATH . '/resources/views/admin/partials/admin-topbar.php';
+        ?>
 <div class="p-6">
     <div class="mb-6 flex items-center justify-between">
         <div>
@@ -281,3 +309,8 @@ $stats = $statsSt->fetch(PDO::FETCH_ASSOC) ?: [];
     loadReports();
 })();
 </script>
+    </main>
+</div>
+<?php include BASE_PATH . '/resources/views/admin/partials/pwa-scripts.php'; ?>
+</body>
+</html>

@@ -10,7 +10,10 @@ if (!Auth::check() || !in_array(Auth::user()['role'] ?? '', ['admin','supervisor
     http_response_code(403); echo '권한 없음'; return;
 }
 $baseUrl = $config['app_url'] ?? '';
+$adminUrl = $baseUrl . '/' . ($config['admin_path'] ?? 'admin');
+$basePath = parse_url($baseUrl, PHP_URL_PATH) ?: '';
 $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
+$pageTitle = '공지 발송 - ' . ($config['app_name'] ?? 'VosCMS') . ' Admin';
 
 // 대상별 카운트 미리보기
 $counts = [];
@@ -21,6 +24,32 @@ try {
     $counts['role_member'] = $counts['all'] - $counts['role_admin'];
 } catch (\Throwable $e) { /* silent */ }
 ?>
+<!DOCTYPE html>
+<html lang="<?= htmlspecialchars($config['locale'] ?? 'ko') ?>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= htmlspecialchars($pageTitle) ?></title>
+    <?php include BASE_PATH . '/resources/views/admin/partials/pwa-head.php'; ?>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <style>body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
+    <script>
+        if (localStorage.getItem('darkMode') === 'true' ||
+            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</head>
+<body class="bg-zinc-100 dark:bg-zinc-900 min-h-screen transition-colors">
+<div class="flex">
+    <?php include BASE_PATH . '/resources/views/admin/partials/admin-sidebar.php'; ?>
+    <main class="flex-1 ml-64">
+        <?php
+        $pageHeaderTitle = '공지 발송';
+        include BASE_PATH . '/resources/views/admin/partials/admin-topbar.php';
+        ?>
 <div class="p-6 max-w-3xl mx-auto">
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">공지 발송</h1>
@@ -136,3 +165,8 @@ try {
     };
 })();
 </script>
+    </main>
+</div>
+<?php include BASE_PATH . '/resources/views/admin/partials/pwa-scripts.php'; ?>
+</body>
+</html>
