@@ -19,9 +19,10 @@ $isLoggedIn = true;
 $currentUser = $user;
 $prefix = $_ENV['DB_PREFIX'] ?? 'rzx_';
 
-// 초기 데이터 — 안 읽은 알림 + 안 읽은 대화 카운트
+// 초기 데이터 — 안 읽은 알림 + 안 읽은 대화 카운트 + 알림 첫 페이지
 $unreadNotif = 0;
 $unreadConv = 0;
+$initialNotifs = [];
 try {
     $s1 = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}notifications WHERE user_id = ? AND is_read = 0");
     $s1->execute([$user['id']]);
@@ -33,6 +34,13 @@ try {
         WHERE (user1_id = :uid AND user1_deleted = 0) OR (user2_id = :uid AND user2_deleted = 0)");
     $s2->execute(['uid' => $user['id']]);
     $unreadConv = (int)($s2->fetchColumn() ?: 0);
+
+    // 알림 첫 20개 (서버 사이드 렌더링 — JS fetch 실패해도 보이도록)
+    $s3 = $pdo->prepare("SELECT id, type, category, title, body, link, icon, is_read, created_at
+        FROM {$prefix}notifications WHERE user_id = ?
+        ORDER BY is_read ASC, created_at DESC LIMIT 20");
+    $s3->execute([$user['id']]);
+    $initialNotifs = $s3->fetchAll();
 } catch (\Throwable $e) { /* silent */ }
 
 // 초기 탭: ?c=N 있으면 conversations, 그 외 notifications
@@ -83,8 +91,39 @@ $initialTab = $initialConvId > 0 ? 'conversations' : 'notifications';
                         <span class="text-xs text-zinc-500" id="notifSummary">-</span>
                         <button type="button" onclick="markAllNotifRead()" class="text-xs text-blue-600 hover:underline" id="btnMarkAllRead"><?= htmlspecialchars(__('auth.mypage.messages.mark_all_read')) ?></button>
                     </div>
-                    <div id="notifList" class="divide-y divide-gray-200 dark:divide-zinc-700"></div>
-                    <div id="notifEmpty" class="hidden p-12 text-center text-sm text-zinc-400"><?= htmlspecialchars(__('auth.mypage.messages.empty')) ?></div>
+                    <div id="notifList" class="divide-y divide-gray-200 dark:divide-zinc-700">
+<?php
+// 서버 사이드 첫 렌더링 (JS fetch 실패해도 보이도록)
+if (empty($initialNotifs)) {
+    echo '<!-- empty placeholder, see notifEmpty -->';
+} else {
+    foreach ($initialNotifs as $n) {
+        $bg = $n['is_read'] ? '' : 'bg-blue-50/50 dark:bg-blue-900/10';
+        $iconColor = $n['is_read'] ? 'bg-gray-100 dark:bg-zinc-700 text-gray-500' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600';
+        $isWarn = in_array($n['icon'] ?? '', ['warning','error']);
+        $iconSvg = $isWarn
+            ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/>'
+            : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>';
+        $unreadDot = $n['is_read'] ? '' : '<span class="w-2 h-2 bg-blue-500 rounded-full inline-block mr-1.5 align-middle"></span>';
+        $link = htmlspecialchars($n['link'] ?: '#');
+        $title = htmlspecialchars($n['title']);
+        $bodyTxt = $n['body'] ? htmlspecialchars($n['body']) : '';
+        $created = htmlspecialchars($n['created_at']);
+        echo "<a href=\"{$link}\" data-nid=\"{$n['id']}\" class=\"block px-6 py-3 hover:bg-gray-50 dark:hover:bg-zinc-700/30 {$bg}\">"
+            . '<div class="flex gap-3">'
+            . "<div class=\"flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center {$iconColor}\">"
+            . "<svg class=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">{$iconSvg}</svg>"
+            . '</div>'
+            . '<div class="flex-1 min-w-0">'
+            . "<p class=\"text-sm font-semibold text-gray-900 dark:text-white truncate\">{$unreadDot}{$title}</p>"
+            . ($bodyTxt ? "<p class=\"text-xs text-gray-500 dark:text-zinc-400 line-clamp-2 mt-0.5\">{$bodyTxt}</p>" : '')
+            . "<p class=\"text-[10px] text-gray-400 mt-1\">{$created}</p>"
+            . '</div></div></a>';
+    }
+}
+?>
+                    </div>
+                    <div id="notifEmpty" class="<?= empty($initialNotifs) ? '' : 'hidden' ?> p-12 text-center text-sm text-zinc-400"><?= htmlspecialchars(__('auth.mypage.messages.empty')) ?></div>
                 </div>
 
                 <!-- 탭 콘텐츠: 대화 -->
@@ -472,8 +511,14 @@ $initialTab = $initialConvId > 0 ? 'conversations' : 'notifications';
         }
     });
 
-    // 초기 로드
-    if (currentTab === 'notifications') loadNotifs();
-    else loadConvs();
+    // 초기 로드 — 알림 탭은 PHP 측에서 이미 렌더링했으므로 첫 fetch 생략
+    // (대화 탭은 서버 렌더링 안 했으므로 fetch 필요)
+    if (currentTab === 'conversations') loadConvs();
+    // 첫 노출 시 summary 만 갱신 (카운트)
+    if (currentTab === 'notifications') {
+        var summary = document.getElementById('notifSummary');
+        var count = document.querySelectorAll('#notifList a[data-nid]').length;
+        if (summary && count > 0) summary.textContent = count + '건';
+    }
 })();
 </script>
