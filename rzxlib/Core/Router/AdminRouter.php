@@ -149,6 +149,8 @@ $adminRoute = trim($adminRoute, '/') ?: 'dashboard';
         include BASE_PATH . '/resources/views/admin/community/reports.php';
     } elseif ($adminRoute === 'community/broadcast') {
         include BASE_PATH . '/resources/views/admin/community/broadcast.php';
+    } elseif ($adminRoute === 'community/messages') {
+        include BASE_PATH . '/resources/views/admin/community/messages.php';
     // 업소 관리 (vos-shop 플러그인 — 존재 시만)
     } elseif (file_exists(BASE_PATH . '/plugins/vos-shop/plugin.json') && $adminRoute === 'shops/consultations') {
         include BASE_PATH . '/plugins/vos-shop/views/admin/consultations.php';

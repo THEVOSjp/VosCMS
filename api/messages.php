@@ -313,6 +313,102 @@ try {
             echo json_encode(['success' => true, 'users' => $rows]);
             break;
 
+        // ─── 어드민: 모든 대화 목록 ───
+        case 'admin_list_conversations':
+            if (!in_array($user['role'] ?? '', ['admin','supervisor','owner'], true)) {
+                http_response_code(403); echo json_encode(['success'=>false,'message'=>'forbidden']); exit;
+            }
+            $q = trim($_GET['q'] ?? '');
+            $offset = max(0, (int)($_GET['offset'] ?? 0));
+            $limit = 30;
+            $where = '1=1';
+            $params = [];
+            if ($q !== '') {
+                $like = '%' . str_replace(['%','_'], ['\%','\_'], $q) . '%';
+                $where .= " AND (u1.email LIKE :q OR u1.nick_name LIKE :q OR u2.email LIKE :q OR u2.nick_name LIKE :q OR c.last_preview LIKE :q)";
+                $params['q'] = $like;
+            }
+            $sql = "SELECT c.id, c.user1_id, c.user2_id, c.last_message_at, c.last_preview,
+                    c.user1_unread, c.user2_unread,
+                    (SELECT COUNT(*) FROM {$prefix}messages WHERE conversation_id = c.id) AS message_count,
+                    u1.email AS u1_email, u1.name AS u1_name, u1.nick_name AS u1_nick,
+                    u2.email AS u2_email, u2.name AS u2_name, u2.nick_name AS u2_nick,
+                    (SELECT COUNT(*) FROM {$prefix}message_reports WHERE
+                        (reporter_id = c.user1_id AND target_user_id = c.user2_id)
+                        OR (reporter_id = c.user2_id AND target_user_id = c.user1_id)) AS report_count
+                    FROM {$prefix}conversations c
+                    LEFT JOIN {$prefix}users u1 ON u1.id = c.user1_id
+                    LEFT JOIN {$prefix}users u2 ON u2.id = c.user2_id
+                    WHERE {$where}
+                    ORDER BY c.last_message_at DESC LIMIT {$limit} OFFSET {$offset}";
+            $st = $pdo->prepare($sql);
+            $st->execute($params);
+            $rows = $st->fetchAll();
+            foreach ($rows as &$r) {
+                $r['u1_display'] = $r['u1_nick'] ?: (decrypt($r['u1_name'] ?? '') ?: explode('@', $r['u1_email'] ?? '')[0]);
+                $r['u2_display'] = $r['u2_nick'] ?: (decrypt($r['u2_name'] ?? '') ?: explode('@', $r['u2_email'] ?? '')[0]);
+                unset($r['u1_name'], $r['u2_name']);
+            }
+            // 총 카운트
+            $totalSt = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}conversations c
+                LEFT JOIN {$prefix}users u1 ON u1.id = c.user1_id
+                LEFT JOIN {$prefix}users u2 ON u2.id = c.user2_id
+                WHERE {$where}");
+            $totalSt->execute($params);
+            echo json_encode(['success' => true, 'conversations' => $rows, 'total' => (int)$totalSt->fetchColumn(), 'offset' => $offset, 'limit' => $limit]);
+            break;
+
+        // ─── 어드민: 대화 1개 조회 (audit 로그) ───
+        case 'admin_view_conversation':
+            if (!in_array($user['role'] ?? '', ['admin','supervisor','owner'], true)) {
+                http_response_code(403); echo json_encode(['success'=>false,'message'=>'forbidden']); exit;
+            }
+            $convId = (int)($_GET['conversation_id'] ?? 0);
+            if (!$convId) { echo json_encode(['success'=>false,'message'=>'conv id required']); exit; }
+            $cs = $pdo->prepare("SELECT user1_id, user2_id FROM {$prefix}conversations WHERE id = ?");
+            $cs->execute([$convId]);
+            $c = $cs->fetch();
+            if (!$c) { echo json_encode(['success'=>false,'message'=>'not found']); exit; }
+
+            // audit 로그
+            try {
+                $pdo->prepare("INSERT INTO {$prefix}message_audit_logs (admin_user_id, action, conversation_id, ip_address, user_agent) VALUES (?, 'view_conversation', ?, ?, ?)")
+                    ->execute([$userId, $convId, $_SERVER['REMOTE_ADDR'] ?? '', substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500)]);
+            } catch (\Throwable $e) { /* silent */ }
+
+            // 메시지 (모두, 소프트 삭제도 표시 — admin 권한)
+            $ms = $pdo->prepare("SELECT id, sender_id, body, is_read, read_at, sender_deleted, recipient_deleted, sent_at
+                FROM {$prefix}messages WHERE conversation_id = ? ORDER BY sent_at ASC LIMIT 500");
+            $ms->execute([$convId]);
+            $messages = $ms->fetchAll();
+
+            // 양쪽 사용자 정보
+            $us = $pdo->prepare("SELECT id, email, name, nick_name, profile_image, avatar, role, is_active, messages_paused_until FROM {$prefix}users WHERE id IN (?, ?)");
+            $us->execute([$c['user1_id'], $c['user2_id']]);
+            $users = [];
+            foreach ($us->fetchAll() as $u) {
+                $u['display_name'] = $u['nick_name'] ?: (decrypt($u['name'] ?? '') ?: explode('@', $u['email'] ?? '')[0]);
+                $u['avatar_url'] = $u['profile_image'] ?: $u['avatar'] ?: '';
+                unset($u['name'], $u['profile_image'], $u['avatar']);
+                $users[$u['id']] = $u;
+            }
+            echo json_encode(['success' => true, 'messages' => $messages, 'users' => $users, 'conversation_id' => $convId]);
+            break;
+
+        // ─── 어드민: 메시지 통계 ───
+        case 'admin_message_stats':
+            if (!in_array($user['role'] ?? '', ['admin','supervisor','owner'], true)) {
+                http_response_code(403); echo json_encode(['success'=>false]); exit;
+            }
+            $st = $pdo->query("SELECT
+                (SELECT COUNT(*) FROM {$prefix}messages) AS total_messages,
+                (SELECT COUNT(*) FROM {$prefix}messages WHERE sent_at > CURDATE()) AS today_messages,
+                (SELECT COUNT(*) FROM {$prefix}messages WHERE sent_at > DATE_SUB(NOW(), INTERVAL 7 DAY)) AS week_messages,
+                (SELECT COUNT(DISTINCT sender_id) FROM {$prefix}messages WHERE sent_at > DATE_SUB(NOW(), INTERVAL 7 DAY)) AS active_senders_7d,
+                (SELECT COUNT(*) FROM {$prefix}conversations) AS total_conversations");
+            echo json_encode(['success' => true, 'stats' => $st->fetch()]);
+            break;
+
         default:
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'unknown action']);

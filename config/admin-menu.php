@@ -150,6 +150,17 @@ return [
                 'route' => 'community/broadcast',
                 'icon' => 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z',
             ],
+            [
+                'title' => [
+                    'ko'=>'메시지 센터','en'=>'Message Center','ja'=>'メッセージセンター',
+                    'de'=>'Nachrichtenzentrum','es'=>'Centro de mensajes','fr'=>'Centre de messages',
+                    'id'=>'Pusat Pesan','mn'=>'Зурвасын төв','ru'=>'Центр сообщений',
+                    'tr'=>'Mesaj Merkezi','vi'=>'Trung tâm tin nhắn',
+                    'zh_CN'=>'消息中心','zh_TW'=>'訊息中心',
+                ],
+                'route' => 'community/messages',
+                'icon' => 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
+            ],
         ],
     ],
 
