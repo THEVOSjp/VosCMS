@@ -11,20 +11,12 @@
  */
 
 if (!defined('BASE_PATH')) define('BASE_PATH', dirname(__DIR__));
+require_once BASE_PATH . '/api/_session-bootstrap.php';
 require_once BASE_PATH . '/vendor/autoload.php';
-
-if (empty($_ENV['DB_HOST'])) {
-    foreach (file(BASE_PATH . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
-        if (!str_contains($line, '=') || str_starts_with(trim($line), '#')) continue;
-        [$k, $v] = explode('=', $line, 2);
-        $_ENV[trim($k)] = trim($v, " \t\"'");
-    }
-}
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
-session_start();
 require_once BASE_PATH . '/rzxlib/Core/Auth/Auth.php';
 $isLoggedIn = \RzxLib\Core\Auth\Auth::check();
 $user = $isLoggedIn ? \RzxLib\Core\Auth\Auth::user() : null;

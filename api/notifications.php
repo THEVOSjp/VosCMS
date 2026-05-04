@@ -9,22 +9,12 @@
  */
 
 if (!defined('BASE_PATH')) define('BASE_PATH', dirname(__DIR__));
-
+require_once BASE_PATH . '/api/_session-bootstrap.php';
 require_once BASE_PATH . '/vendor/autoload.php';
-
-// .env 로드 (이미 index 통해 들어왔을 수도 있지만 직접 호출 대비)
-if (empty($_ENV['DB_HOST'])) {
-    foreach (file(BASE_PATH . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
-        if (!str_contains($line, '=') || str_starts_with(trim($line), '#')) continue;
-        [$k, $v] = explode('=', $line, 2);
-        $_ENV[trim($k)] = trim($v, " \t\"'");
-    }
-}
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
-session_start();
 require_once BASE_PATH . '/rzxlib/Core/Auth/Auth.php';
 if (!\RzxLib\Core\Auth\Auth::check()) {
     http_response_code(401);
