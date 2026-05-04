@@ -144,6 +144,11 @@ $adminRoute = trim($adminRoute, '/') ?: 'dashboard';
     // 관리자 권한 관리 (코어)
     } elseif ($adminRoute === 'staff/admins') {
         include BASE_PATH . '/resources/views/admin/staff/admins.php';
+    // 커뮤니티 관리 (메시지/팔로우/신고/공지)
+    } elseif ($adminRoute === 'community/reports') {
+        include BASE_PATH . '/resources/views/admin/community/reports.php';
+    } elseif ($adminRoute === 'community/broadcast') {
+        include BASE_PATH . '/resources/views/admin/community/broadcast.php';
     // 업소 관리 (vos-shop 플러그인 — 존재 시만)
     } elseif (file_exists(BASE_PATH . '/plugins/vos-shop/plugin.json') && $adminRoute === 'shops/consultations') {
         include BASE_PATH . '/plugins/vos-shop/views/admin/consultations.php';

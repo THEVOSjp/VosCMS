@@ -1,4 +1,6 @@
 .env
+.env_backup
+.env_backup_*
 /node_modules/
 /storage/uploads/*
 /storage/board/*
