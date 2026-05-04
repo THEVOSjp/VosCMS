@@ -165,15 +165,7 @@ $seoContext = [
                     <?= htmlspecialchars($post['title']) ?>
                 </h1>
                 <div class="flex items-center gap-4 mt-3 text-sm text-zinc-500 dark:text-zinc-400">
-                    <?php
-                    $_postAuthorId = $post['user_id'] ?? '';
-                    $_postIsAnon = !empty($post['is_anonymous']) || !$_postAuthorId;
-                    ?>
-                    <?php if ($_postIsAnon || !$_postAuthorId): ?>
-                    <span><?= htmlspecialchars($post['nick_name']) ?></span>
-                    <?php else: ?>
-                    <span data-user-mention data-user-id="<?= htmlspecialchars($_postAuthorId) ?>" data-user-name="<?= htmlspecialchars($post['nick_name']) ?>"><?= htmlspecialchars($post['nick_name']) ?></span>
-                    <?php endif; ?>
+                    <?= boardAuthorMention($post) ?>
                     <span><?= date('Y.m.d H:i', strtotime($post['created_at'])) ?></span>
                     <span><?= __('board.col_views') ?>: <?= number_format($post['view_count']) ?></span>
                     <?php if (($post['like_count'] ?? 0) > 0): ?>
@@ -315,15 +307,7 @@ $seoContext = [
                     <p class="text-sm text-zinc-400 italic"><?= htmlspecialchars($board['comment_delete_message'] ?? __('board.comment_deleted')) ?></p>
                     <?php else: ?>
                     <div class="flex items-center gap-2 text-sm mb-2">
-                        <?php
-                        $_cmtAuthorId = $comment['user_id'] ?? '';
-                        $_cmtIsAnon = !empty($comment['is_anonymous']) || !$_cmtAuthorId;
-                        ?>
-                        <?php if ($_cmtIsAnon || !$_cmtAuthorId): ?>
-                        <span class="font-medium text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars($comment['nick_name']) ?></span>
-                        <?php else: ?>
-                        <span class="font-medium text-zinc-700 dark:text-zinc-300" data-user-mention data-user-id="<?= htmlspecialchars($_cmtAuthorId) ?>" data-user-name="<?= htmlspecialchars($comment['nick_name']) ?>"><?= htmlspecialchars($comment['nick_name']) ?></span>
-                        <?php endif; ?>
+                        <?= boardAuthorMention($comment, 'font-medium text-zinc-700 dark:text-zinc-300') ?>
                         <span class="text-zinc-400 dark:text-zinc-500"><?= date('Y.m.d H:i', strtotime($comment['created_at'])) ?></span>
                     </div>
                     <div class="text-sm text-zinc-700 dark:text-zinc-300"><?= nl2br(htmlspecialchars($comment['content'])) ?></div>

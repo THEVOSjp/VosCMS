@@ -68,7 +68,7 @@ $_linkTarget = (!empty($_skinUseLinkBoard) && $postUrl !== $boardUrl . '/' . $po
     </td>
 
     <?php elseif ($col === 'nick_name'): ?>
-    <td class="py-3 px-4 text-center text-sm text-zinc-600 dark:text-zinc-400"><?= htmlspecialchars($post['nick_name'] ?? '') ?></td>
+    <td class="py-3 px-4 text-center text-sm text-zinc-600 dark:text-zinc-400"><?= boardAuthorMention($post) ?></td>
 
     <?php elseif ($col === 'user_id'): ?>
     <td class="py-3 px-4 text-center text-sm text-zinc-500 dark:text-zinc-400"><?= $post['user_id'] ?? '-' ?></td>

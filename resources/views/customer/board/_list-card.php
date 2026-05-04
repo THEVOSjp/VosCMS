@@ -42,7 +42,7 @@
             <h3 class="font-semibold text-zinc-800 dark:text-zinc-100 truncate mb-1"><?= htmlspecialchars($_cpTitle) ?></h3>
             <p class="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-2"><?= htmlspecialchars($_cpExcerpt) ?></p>
             <div class="flex items-center gap-3 text-xs text-zinc-400">
-                <span><?= htmlspecialchars($_cp['nick_name'] ?? '') ?></span>
+                <?= boardAuthorMention($_cp) ?>
                 <span><?= date('Y.m.d', strtotime($_cp['created_at'])) ?></span>
             </div>
         </div>

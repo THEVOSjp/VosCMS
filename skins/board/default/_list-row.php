@@ -19,7 +19,7 @@ if ($post['created_at'] ?? '') {
     $ts = strtotime($post['created_at']);
     $_postDate = date('Y-m-d') === date('Y-m-d', $ts) ? date('H:i', $ts) : date('Y.m.d', $ts);
 }
-$_postAuthor = htmlspecialchars($post['nick_name'] ?? '');
+$_postAuthor = boardAuthorMention($post);
 $_postViews = number_format($post['view_count'] ?? 0);
 $_postComments = $post['comment_count'] ?? 0;
 $_postCategory = '';

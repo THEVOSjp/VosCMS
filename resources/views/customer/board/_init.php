@@ -143,6 +143,25 @@ function boardSkinFile(string $filename): ?string {
     return null;
 }
 
+/**
+ * 게시글/댓글 작성자 멘션 (컨텍스트 메뉴 부착) HTML 반환.
+ * 익명 또는 비회원 작성은 일반 텍스트로 출력.
+ *
+ * @param array  $post     post/comment row (nick_name, user_id, is_anonymous 사용)
+ * @param string $cssClass 출력 span 에 추가 클래스
+ * @return string
+ */
+if (!function_exists('boardAuthorMention')) {
+    function boardAuthorMention(array $post, string $cssClass = ''): string {
+        $name = htmlspecialchars($post['nick_name'] ?? '');
+        $userId = $post['user_id'] ?? '';
+        $isAnon = !empty($post['is_anonymous']) || !$userId;
+        $cls = $cssClass ? ' class="' . htmlspecialchars($cssClass) . '"' : '';
+        if ($isAnon || !$userId) return '<span' . $cls . '>' . $name . '</span>';
+        return '<span' . $cls . ' data-user-mention data-user-id="' . htmlspecialchars($userId) . '" data-user-name="' . $name . '">' . $name . '</span>';
+    }
+}
+
 // 추천/비추천 사용 여부
 $useVote = ($board['use_vote'] ?? 'use') !== 'none';
 $useDownvote = ($board['use_downvote'] ?? 'use') !== 'none';

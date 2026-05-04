@@ -224,7 +224,7 @@ $_qnaCmtTr = function ($cmt) use ($_cmtTrans) {
                     <div class="flex-1 min-w-0">
                         <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100 leading-snug"><?= htmlspecialchars($title) ?></h3>
                         <div class="flex items-center gap-2 mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                            <span><?= htmlspecialchars($post['nick_name'] ?? '') ?></span>
+                            <?= boardAuthorMention($post) ?>
                             <span>·</span>
                             <span><?= !empty($post['created_at']) ? date('Y-m-d', strtotime($post['created_at'])) : '' ?></span>
                             <?php if (count($answers) > 0): ?>
@@ -274,7 +274,7 @@ $_qnaCmtTr = function ($cmt) use ($_cmtTrans) {
                             </span>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                    <span class="font-medium text-zinc-700 dark:text-zinc-300"><?= htmlspecialchars($a['nick_name'] ?? '') ?></span>
+                                    <?= boardAuthorMention($a, 'font-medium text-zinc-700 dark:text-zinc-300') ?>
                                     <span>·</span>
                                     <span><?= !empty($a['created_at']) ? date('Y-m-d H:i', strtotime($a['created_at'])) : '' ?></span>
                                     <span class="ml-auto inline-flex items-center gap-1">
