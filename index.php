@@ -446,6 +446,10 @@ if ($path === 'sitemap.xml') {
         $__pageFile = BASE_PATH . '/resources/views/customer/mypage/withdraw.php';
     } elseif ($path === 'mypage/messages') {
         $__pageFile = BASE_PATH . '/resources/views/customer/mypage/messages.php';
+    // 공개 프로필 페이지
+    } elseif (preg_match('#^profile/([a-f0-9-]{36})$#', $path, $m)) {
+        $profileUserId = $m[1];
+        $__pageFile = BASE_PATH . '/resources/views/customer/profile.php';
     // 업소 라우트 (vos-shop 플러그인 — 존재 시만)
     } elseif (file_exists(BASE_PATH . '/plugins/vos-shop/plugin.json') && $path === 'shop/my') {
         // 내 사업장으로 리다이렉트
