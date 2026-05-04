@@ -392,23 +392,38 @@ if (empty($initialNotifs)) {
 
         var html = '';
         var lastDate = '';
+        var prevSender = null;
+        var otherName = (other && other.display_name) || '';
+        var myName = '나';
         (d.messages || []).forEach(function(m){
             var mine = m.sender_id === MY_ID;
             var dt = (m.sent_at || '').slice(0, 10);
             if (dt && dt !== lastDate) {
                 html += '<div class="flex justify-center my-2"><span class="text-[10px] text-zinc-400 px-2 py-0.5 bg-white dark:bg-zinc-800 rounded-full">' + dt + '</span></div>';
                 lastDate = dt;
+                prevSender = null; // 날짜 바뀌면 sender 라벨 다시
             }
             var bubble = mine
-                ? 'bg-blue-600 text-white ml-auto'
+                ? 'bg-blue-600 text-white'
                 : 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100';
             var time = (m.sent_at || '').slice(11, 16);
             var readMark = (mine && m.is_read) ? '<span class="text-[10px] text-blue-200 ml-1">✓✓</span>' : (mine ? '<span class="text-[10px] text-blue-300 ml-1">✓</span>' : '');
-            html += '<div class="flex ' + (mine ? 'justify-end' : 'justify-start') + '">'
-                + '<div class="max-w-[70%] px-3 py-2 rounded-2xl ' + bubble + ' shadow-sm">'
-                +   '<p class="text-sm whitespace-pre-wrap break-words">' + escHtml(m.body) + '</p>'
-                +   '<p class="text-[10px] mt-1 ' + (mine ? 'text-blue-100' : 'text-zinc-400') + '">' + time + readMark + '</p>'
+            // 동일 작성자 연속 메시지면 이름 생략
+            var showName = m.sender_id !== prevSender;
+            var senderName = mine ? myName : otherName;
+            var nameLabel = showName
+                ? '<p class="text-[11px] font-medium ' + (mine ? 'text-right text-blue-600 dark:text-blue-400 mr-1' : 'text-left text-zinc-600 dark:text-zinc-300 ml-1') + ' mb-0.5">' + escHtml(senderName) + '</p>'
+                : '';
+            var spacingTop = showName ? 'mt-3' : 'mt-1';
+            html += '<div class="flex ' + (mine ? 'justify-end' : 'justify-start') + ' ' + spacingTop + '">'
+                + '<div class="max-w-[70%]">'
+                +   nameLabel
+                +   '<div class="px-3 py-2 rounded-2xl ' + bubble + ' shadow-sm">'
+                +     '<p class="text-sm whitespace-pre-wrap break-words">' + escHtml(m.body) + '</p>'
+                +     '<p class="text-[10px] mt-1 ' + (mine ? 'text-blue-100' : 'text-zinc-400') + '">' + time + readMark + '</p>'
+                +   '</div>'
                 + '</div></div>';
+            prevSender = m.sender_id;
         });
         msgs.innerHTML = html || '<div class="flex items-center justify-center h-full text-xs text-zinc-400">메시지가 없습니다</div>';
         msgs.scrollTop = msgs.scrollHeight;
