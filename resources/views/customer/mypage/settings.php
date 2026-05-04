@@ -99,25 +99,49 @@ if (in_array('blog', $registerFields)) {
 
 // POST 처리
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $newSettings = [];
-    foreach (array_keys($privacyFields) as $key) {
-        $newSettings[$key] = isset($_POST[$key]) ? true : false;
-    }
+    $form = $_POST['form'] ?? 'privacy';
 
-    $result = Auth::updateProfile($user['id'], [
-        'privacy_settings' => json_encode($newSettings, JSON_UNESCAPED_UNICODE),
-    ]);
-
-    if ($result['success']) {
-        $success = __('auth.settings.success');
-        $privacySettings = $newSettings;
-        // 캐시 갱신
-        $user = Auth::user();
-        $currentUser = $user;
+    if ($form === 'messaging') {
+        // 메시지 수신 정책 + 프로필 공개 토글
+        $allowOptions = ['all','followers','none'];
+        $allow = in_array($_POST['allow_messages_from'] ?? '', $allowOptions, true)
+            ? $_POST['allow_messages_from'] : 'all';
+        $isPublic = isset($_POST['is_profile_public']) ? 1 : 0;
+        try {
+            $upd = $pdo->prepare("UPDATE {$prefix}users SET allow_messages_from = ?, is_profile_public = ?, updated_at = NOW() WHERE id = ?");
+            $upd->execute([$allow, $isPublic, $user['id']]);
+            $success = '메시지 수신 설정이 저장되었습니다.';
+            // 갱신
+            $u2 = $pdo->prepare("SELECT allow_messages_from, is_profile_public FROM {$prefix}users WHERE id = ?");
+            $u2->execute([$user['id']]);
+            $umsg = $u2->fetch(PDO::FETCH_ASSOC);
+            $user['allow_messages_from'] = $umsg['allow_messages_from'] ?? 'all';
+            $user['is_profile_public'] = (int)($umsg['is_profile_public'] ?? 1);
+        } catch (\Throwable $e) {
+            $error = '저장 실패: ' . $e->getMessage();
+        }
     } else {
-        $error = __('auth.settings.error');
+        $newSettings = [];
+        foreach (array_keys($privacyFields) as $key) {
+            $newSettings[$key] = isset($_POST[$key]) ? true : false;
+        }
+        $result = Auth::updateProfile($user['id'], [
+            'privacy_settings' => json_encode($newSettings, JSON_UNESCAPED_UNICODE),
+        ]);
+        if ($result['success']) {
+            $success = __('auth.settings.success');
+            $privacySettings = $newSettings;
+            $user = Auth::user();
+            $currentUser = $user;
+        } else {
+            $error = __('auth.settings.error');
+        }
     }
 }
+
+// 메시지 설정 현재값 로드 (POST 후에도 최신 상태)
+$msgAllow = $user['allow_messages_from'] ?? 'all';
+$msgPublic = (int)($user['is_profile_public'] ?? 1);
 
 // 프로필 이미지 URL
 $profileImgUrl = '';
@@ -200,6 +224,114 @@ if (!empty($user['profile_image'])) {
                         <?php endif; ?>
                     </form>
                 </div>
+
+                <!-- 메시지 수신 + 프로필 공개 -->
+                <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6 mt-6">
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">메시지 · 프로필</h2>
+                    <form method="POST" class="space-y-5">
+                        <input type="hidden" name="form" value="messaging">
+
+                        <div>
+                            <label class="block text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-2">메시지 수신 허용</label>
+                            <div class="space-y-2">
+                                <label class="flex items-start gap-3 p-3 border border-zinc-200 dark:border-zinc-700 rounded-lg cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20">
+                                    <input type="radio" name="allow_messages_from" value="all" <?= $msgAllow === 'all' ? 'checked' : '' ?> class="mt-0.5">
+                                    <div>
+                                        <p class="text-sm font-medium text-zinc-900 dark:text-white">누구나</p>
+                                        <p class="text-xs text-zinc-500 mt-0.5">모든 회원이 메시지를 보낼 수 있습니다.</p>
+                                    </div>
+                                </label>
+                                <label class="flex items-start gap-3 p-3 border border-zinc-200 dark:border-zinc-700 rounded-lg cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20">
+                                    <input type="radio" name="allow_messages_from" value="followers" <?= $msgAllow === 'followers' ? 'checked' : '' ?> class="mt-0.5">
+                                    <div>
+                                        <p class="text-sm font-medium text-zinc-900 dark:text-white">내가 팔로우하는 사람만</p>
+                                        <p class="text-xs text-zinc-500 mt-0.5">본인이 팔로우하는 사용자만 메시지를 보낼 수 있습니다.</p>
+                                    </div>
+                                </label>
+                                <label class="flex items-start gap-3 p-3 border border-zinc-200 dark:border-zinc-700 rounded-lg cursor-pointer has-[:checked]:border-red-500 has-[:checked]:bg-red-50 dark:has-[:checked]:bg-red-900/20">
+                                    <input type="radio" name="allow_messages_from" value="none" <?= $msgAllow === 'none' ? 'checked' : '' ?> class="mt-0.5">
+                                    <div>
+                                        <p class="text-sm font-medium text-zinc-900 dark:text-white">받지 않음</p>
+                                        <p class="text-xs text-zinc-500 mt-0.5">아무도 메시지를 보낼 수 없습니다.</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-700/30 rounded-lg">
+                            <div>
+                                <p class="text-sm font-medium text-zinc-900 dark:text-white">프로필 공개</p>
+                                <p class="text-xs text-zinc-500">비공개 시 본인 외에는 프로필 상세를 볼 수 없습니다 (카운트만 표시).</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="is_profile_public" value="1" class="sr-only peer" <?= $msgPublic ? 'checked' : '' ?>>
+                                <div class="w-11 h-6 bg-zinc-300 dark:bg-zinc-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg">
+                            저장
+                        </button>
+                    </form>
+                </div>
+
+                <!-- 차단 목록 -->
+                <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6 mt-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-gray-900 dark:text-white">차단 목록</h2>
+                        <span id="blockListCount" class="text-xs text-zinc-400">-</span>
+                    </div>
+                    <div id="blockList" class="divide-y divide-zinc-100 dark:divide-zinc-700"></div>
+                    <div id="blockListEmpty" class="hidden p-8 text-center text-sm text-zinc-400">차단한 사용자가 없습니다.</div>
+                </div>
+
+                <script>
+                (function(){
+                    var BASE = <?= json_encode($baseUrl) ?>;
+                    function escHtml(s) { return (s || '').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+                    function loadBlocks() {
+                        fetch(BASE + '/api/blocks.php?action=list', {credentials:'same-origin'})
+                            .then(function(r){ return r.json(); })
+                            .then(function(d){
+                                if (!d || !d.success) return;
+                                var list = document.getElementById('blockList');
+                                var empty = document.getElementById('blockListEmpty');
+                                document.getElementById('blockListCount').textContent = d.blocks.length + '명';
+                                if (!d.blocks.length) {
+                                    list.innerHTML = '';
+                                    empty.classList.remove('hidden');
+                                    return;
+                                }
+                                empty.classList.add('hidden');
+                                list.innerHTML = d.blocks.map(function(b){
+                                    var av = b.avatar_url
+                                        ? '<img src="' + escHtml(b.avatar_url) + '" class="w-8 h-8 rounded-full object-cover">'
+                                        : '<div class="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-xs font-bold">' + escHtml((b.display_name||'?').charAt(0).toUpperCase()) + '</div>';
+                                    var when = (b.created_at || '').slice(0, 10);
+                                    return '<div class="flex items-center gap-3 py-3">'
+                                        + av
+                                        + '<div class="flex-1 min-w-0">'
+                                        +   '<p class="text-sm font-semibold text-zinc-900 dark:text-white truncate">' + escHtml(b.display_name) + '</p>'
+                                        +   '<p class="text-[11px] text-zinc-400">차단일: ' + when + (b.reason ? ' · 사유: ' + escHtml(b.reason) : '') + '</p>'
+                                        + '</div>'
+                                        + '<button type="button" onclick="unblockUser(\'' + escHtml(b.blocked_id) + '\')" class="px-3 py-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-600 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700">차단 해제</button>'
+                                        + '</div>';
+                                }).join('');
+                            });
+                    }
+                    window.unblockUser = function(uid) {
+                        if (!confirm('차단을 해제하시겠습니까?')) return;
+                        var fd = new FormData(); fd.append('action', 'unblock'); fd.append('target_id', uid);
+                        fetch(BASE + '/api/blocks.php', {method:'POST', body: fd, credentials:'same-origin'})
+                            .then(function(r){ return r.json(); })
+                            .then(function(d){
+                                if (!d.success) { alert(d.message || '실패'); return; }
+                                loadBlocks();
+                            });
+                    };
+                    loadBlocks();
+                })();
+                </script>
             </div>
         </div>
     </div>

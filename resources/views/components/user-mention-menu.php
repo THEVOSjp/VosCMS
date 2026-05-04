@@ -34,6 +34,41 @@ $_umMyId = $_umIsLoggedIn ? (\RzxLib\Core\Auth\Auth::user()['id'] ?? '') : '';
         <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
         메시지 보내기
     </button>
+    <div class="border-t border-zinc-100 dark:border-zinc-700"></div>
+    <button type="button" data-um-action="block" class="w-full px-3 py-2 text-left text-sm hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+        <span id="umBlockLabel">차단</span>
+    </button>
+    <button type="button" data-um-action="report" class="w-full px-3 py-2 text-left text-sm hover:bg-amber-50 dark:hover:bg-amber-900/20 text-amber-600 dark:text-amber-400 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
+        신고
+    </button>
+</div>
+
+<!-- 신고 모달 -->
+<div id="umReportModal" class="hidden fixed inset-0 z-[10001] flex items-center justify-center bg-black/50 p-4">
+    <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl w-full max-w-md p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-bold text-zinc-900 dark:text-white">사용자 신고</h3>
+            <button type="button" data-um-action="close-report" class="text-zinc-400 hover:text-zinc-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <p class="text-xs text-zinc-500 mb-3"><span id="umReportTo" class="font-semibold text-zinc-900 dark:text-white"></span> 님을 신고합니다. 신고 내용은 관리자가 확인 후 조치됩니다.</p>
+        <label class="block text-xs text-zinc-500 mb-1">사유</label>
+        <select id="umReportReason" class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 dark:text-white mb-3">
+            <option value="spam">스팸/도배</option>
+            <option value="harassment">괴롭힘/혐오 발언</option>
+            <option value="inappropriate">부적절한 콘텐츠</option>
+            <option value="other">기타</option>
+        </select>
+        <label class="block text-xs text-zinc-500 mb-1">상세 내용 (선택)</label>
+        <textarea id="umReportDetail" rows="4" maxlength="2000" placeholder="신고 사유에 대한 추가 설명을 적어주세요..." class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 dark:text-white resize-none mb-3"></textarea>
+        <div class="flex justify-end gap-2">
+            <button type="button" data-um-action="close-report" class="px-4 py-2 text-xs text-zinc-500 hover:text-zinc-700">취소</button>
+            <button type="button" data-um-action="send-report" id="umReportBtn" class="px-4 py-2 text-xs font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700">신고하기</button>
+        </div>
+    </div>
 </div>
 
 <!-- 메시지 작성 모달 (글로벌 재사용) -->
@@ -66,7 +101,7 @@ $_umMyId = $_umIsLoggedIn ? (\RzxLib\Core\Auth\Auth::user()['id'] ?? '') : '';
     var headerAvatar = document.getElementById('umAvatar');
     var followLabel = document.getElementById('umFollowLabel');
 
-    var ctx = { userId: '', userName: '', avatar: '', isFollowing: false };
+    var ctx = { userId: '', userName: '', avatar: '', isFollowing: false, isBlocked: false };
     var longPressTimer = null;
 
     function escHtml(s) { return (s || '').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
@@ -96,8 +131,10 @@ $_umMyId = $_umIsLoggedIn ? (\RzxLib\Core\Auth\Auth::user()['id'] ?? '') : '';
         menu.style.top = y + 'px';
         menu.classList.remove('hidden');
 
-        // 팔로우 상태 비동기 로드
+        // 팔로우 + 차단 상태 비동기 로드
         followLabel.textContent = '...';
+        var blockLabel = document.getElementById('umBlockLabel');
+        if (blockLabel) blockLabel.textContent = '차단';
         if (IS_LOGGED_IN) {
             fetch(BASE + '/api/follows.php?action=status&target_id=' + encodeURIComponent(ctx.userId), {credentials:'same-origin'})
                 .then(function(r){ return r.json(); })
@@ -107,6 +144,13 @@ $_umMyId = $_umIsLoggedIn ? (\RzxLib\Core\Auth\Auth::user()['id'] ?? '') : '';
                     followLabel.textContent = ctx.isFollowing ? '✓ 팔로잉' : '+ 팔로우';
                 })
                 .catch(function(){ followLabel.textContent = '+ 팔로우'; });
+            fetch(BASE + '/api/blocks.php?action=status&target_id=' + encodeURIComponent(ctx.userId), {credentials:'same-origin'})
+                .then(function(r){ return r.json(); })
+                .then(function(d){
+                    if (!d.success) return;
+                    ctx.isBlocked = !!d.is_blocked;
+                    if (blockLabel) blockLabel.textContent = ctx.isBlocked ? '차단 해제' : '차단';
+                }).catch(function(){});
         } else {
             followLabel.textContent = '+ 팔로우';
         }
@@ -177,6 +221,12 @@ $_umMyId = $_umIsLoggedIn ? (\RzxLib\Core\Auth\Auth::user()['id'] ?? '') : '';
         } else if (act === 'message') {
             if (!IS_LOGGED_IN) { location.href = BASE + '/login'; return; }
             openMsgModal();
+        } else if (act === 'block') {
+            if (!IS_LOGGED_IN) { location.href = BASE + '/login'; return; }
+            doBlock();
+        } else if (act === 'report') {
+            if (!IS_LOGGED_IN) { location.href = BASE + '/login'; return; }
+            openReportModal();
         }
     });
 
@@ -215,6 +265,65 @@ $_umMyId = $_umIsLoggedIn ? (\RzxLib\Core\Auth\Auth::user()['id'] ?? '') : '';
         if (act === 'close-msg') closeMsgModal();
         else if (act === 'send-msg') sendMsg();
     });
+
+    function doBlock() {
+        var msg = ctx.isBlocked
+            ? ctx.userName + ' 님의 차단을 해제하시겠습니까?'
+            : ctx.userName + ' 님을 차단하시겠습니까?\n\n차단 시:\n- 메시지를 받지 않습니다\n- 서로 팔로우 관계가 해제됩니다';
+        if (!confirm(msg)) return;
+        var fd = new FormData();
+        fd.append('action', ctx.isBlocked ? 'unblock' : 'block');
+        fd.append('target_id', ctx.userId);
+        fetch(BASE + '/api/blocks.php', {method:'POST', body: fd, credentials:'same-origin'})
+            .then(function(r){ return r.json(); })
+            .then(function(d){
+                if (!d.success) { alert(d.message || '실패'); return; }
+                ctx.isBlocked = !!d.is_blocked;
+                alert(ctx.isBlocked ? '차단했습니다' : '차단을 해제했습니다');
+                hideMenu();
+            }).catch(function(){ alert('네트워크 오류'); });
+    }
+
+    var reportModal = document.getElementById('umReportModal');
+    function openReportModal() {
+        document.getElementById('umReportTo').textContent = ctx.userName;
+        document.getElementById('umReportReason').value = 'spam';
+        document.getElementById('umReportDetail').value = '';
+        reportModal.classList.remove('hidden');
+        hideMenu();
+    }
+    function closeReportModal() {
+        reportModal.classList.add('hidden');
+    }
+    reportModal.addEventListener('click', function(e){
+        var btn = e.target.closest('[data-um-action]');
+        if (!btn) {
+            if (e.target === reportModal) closeReportModal();
+            return;
+        }
+        var act = btn.dataset.umAction;
+        if (act === 'close-report') closeReportModal();
+        else if (act === 'send-report') sendReport();
+    });
+    function sendReport() {
+        var reason = document.getElementById('umReportReason').value;
+        var detail = document.getElementById('umReportDetail').value.trim();
+        var btn = document.getElementById('umReportBtn');
+        btn.disabled = true;
+        var fd = new FormData();
+        fd.append('action', 'report');
+        fd.append('target_user_id', ctx.userId);
+        fd.append('reason', reason);
+        if (detail) fd.append('detail', detail);
+        fetch(BASE + '/api/blocks.php', {method:'POST', body: fd, credentials:'same-origin'})
+            .then(function(r){ return r.json(); })
+            .then(function(d){
+                btn.disabled = false;
+                if (!d.success) { alert(d.message || '신고 실패'); return; }
+                alert('신고가 접수되었습니다. 관리자가 검토 후 조치합니다.');
+                closeReportModal();
+            }).catch(function(){ btn.disabled = false; alert('네트워크 오류'); });
+    }
 
     function sendMsg() {
         var body = document.getElementById('umMsgBody').value.trim();
