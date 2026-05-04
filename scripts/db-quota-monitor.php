@@ -171,17 +171,23 @@ foreach ($rows as $r) {
         }
     }
 
-    // 5. 메일 발송 (24h throttle)
+    // 5. 메일 발송 + 메시지함 적재 (24h throttle)
     if ($notifKey && $email) {
         $lastNotify = $hMeta['last_quota_notif'] ?? [];
         $lastTs = isset($lastNotify[$notifKey]) ? strtotime($lastNotify[$notifKey]) : 0;
         if ((time() - $lastTs) >= $THROTTLE_HOURS * 3600) {
             $sent = sendQuotaMail($pdo, $email, $userName, $domain, $usedBytes, $quotaBytes, $pct, $notifKey);
+            // 메시지함(rzx_notifications)에도 적재 — 메일 발송 성공 여부와 무관
+            createDbQuotaNotification($pdo, $prefix, $r['user_id'], $domain, $usedBytes, $quotaBytes, $pct, $notifKey);
             if ($sent) {
                 $lastNotify[$notifKey] = date('c');
                 $hMeta['last_quota_notif'] = $lastNotify;
                 if ($notifKey === 'warning') $sentWarn++;
                 elseif ($notifKey === 'critical') $sentCrit++;
+            } else {
+                // 메일 실패해도 throttle 적용 (메시지함 알림은 들어갔으니 중복 방지)
+                $lastNotify[$notifKey] = date('c');
+                $hMeta['last_quota_notif'] = $lastNotify;
             }
         }
     }
@@ -212,6 +218,45 @@ $elapsed = round((microtime(true) - $start) * 1000);
 $log("완료 — checked={$totalChecked}, warn={$sentWarn}, crit={$sentCrit}, blocked={$blocked}, released={$released}, errors={$errors}, {$elapsed}ms");
 
 // ─────────────────────────────────────────────
+function createDbQuotaNotification(\PDO $pdo, string $prefix, string $userId, string $domain, int $usedBytes, int $quotaBytes, float $pct, string $level): void
+{
+    $fmt = function($b) {
+        if ($b >= 1073741824) return number_format($b / 1073741824, 2) . 'GB';
+        if ($b >= 1048576) return number_format($b / 1048576, 2) . 'MB';
+        if ($b >= 1024) return number_format($b / 1024, 2) . 'KB';
+        return $b . 'B';
+    };
+    $titles = [
+        'warning'  => "DB 용량 경고 — {$domain} ({$pct}%)",
+        'critical' => "DB 용량 한도 도달 — {$domain} ({$pct}%)",
+        'blocked'  => "DB 쓰기 차단 — {$domain} ({$pct}%)",
+    ];
+    $bodies = [
+        'warning'  => "{$domain} 의 DB 사용량이 " . $fmt($usedBytes) . " / " . $fmt($quotaBytes) . " 입니다. 곧 한도에 도달합니다.",
+        'critical' => "{$domain} 의 DB 사용량이 " . $fmt($usedBytes) . " / " . $fmt($quotaBytes) . " 로 한도에 도달했습니다. 110% 초과 시 쓰기가 차단됩니다.",
+        'blocked'  => "{$domain} 의 DB 쓰기가 차단되었습니다 (" . $fmt($usedBytes) . " / " . $fmt($quotaBytes) . "). 데이터 정리 또는 DB 용량 추가로 해제됩니다.",
+    ];
+    $icons = ['warning' => 'warning', 'critical' => 'warning', 'blocked' => 'error'];
+    try {
+        $stmt = $pdo->prepare("INSERT INTO {$prefix}notifications
+            (user_id, type, category, title, body, link, icon, expires_at, meta)
+            VALUES (?, 'system', 'db_quota', ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 90 DAY), ?)");
+        $stmt->execute([
+            $userId,
+            $titles[$level] ?? '',
+            $bodies[$level] ?? '',
+            '/mypage/services',
+            $icons[$level] ?? 'bell',
+            json_encode([
+                'domain' => $domain, 'used_bytes' => $usedBytes,
+                'quota_bytes' => $quotaBytes, 'pct' => $pct, 'level' => $level,
+            ], JSON_UNESCAPED_UNICODE),
+        ]);
+    } catch (\Throwable $e) {
+        error_log('[db-quota-monitor] notification insert: ' . $e->getMessage());
+    }
+}
+
 function sendQuotaMail(\PDO $pdo, string $to, string $name, string $domain, int $usedBytes, int $quotaBytes, float $pct, string $level): bool
 {
     $fmt = function($b) {

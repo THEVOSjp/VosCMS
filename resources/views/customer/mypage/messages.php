@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $messageId = intval($_POST['message_id']);
         try {
             global $pdo;
-            $stmt = $pdo->prepare("UPDATE rzx_user_notifications SET is_read = 1, read_at = NOW() WHERE id = ? AND user_id = ?");
+            $stmt = $pdo->prepare("UPDATE rzx_notifications SET is_read = 1, read_at = NOW() WHERE id = ? AND user_id = ?");
             $stmt->execute([$messageId, $user['id']]);
         } catch (PDOException $e) {
             // Ignore errors
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'mark_all_read') {
         try {
             global $pdo;
-            $stmt = $pdo->prepare("UPDATE rzx_user_notifications SET is_read = 1, read_at = NOW() WHERE user_id = ? AND is_read = 0");
+            $stmt = $pdo->prepare("UPDATE rzx_notifications SET is_read = 1, read_at = NOW() WHERE user_id = ? AND is_read = 0");
             $stmt->execute([$user['id']]);
         } catch (PDOException $e) {
             // Ignore errors
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $messageId = intval($_POST['message_id']);
         try {
             global $pdo;
-            $stmt = $pdo->prepare("DELETE FROM rzx_user_notifications WHERE id = ? AND user_id = ?");
+            $stmt = $pdo->prepare("DELETE FROM rzx_notifications WHERE id = ? AND user_id = ?");
             $stmt->execute([$messageId, $user['id']]);
         } catch (PDOException $e) {
             // Ignore errors
@@ -71,22 +71,22 @@ try {
     global $pdo;
 
     // Check if table exists
-    $tableCheck = $pdo->query("SHOW TABLES LIKE 'rzx_user_notifications'");
+    $tableCheck = $pdo->query("SHOW TABLES LIKE 'rzx_notifications'");
     $tableExists = $tableCheck->rowCount() > 0;
 
     if ($tableExists) {
         // Get total count
-        $countStmt = $pdo->prepare("SELECT COUNT(*) FROM rzx_user_notifications WHERE user_id = ?");
+        $countStmt = $pdo->prepare("SELECT COUNT(*) FROM rzx_notifications WHERE user_id = ?");
         $countStmt->execute([$user['id']]);
         $totalMessages = $countStmt->fetchColumn();
 
         // Get unread count
-        $unreadStmt = $pdo->prepare("SELECT COUNT(*) FROM rzx_user_notifications WHERE user_id = ? AND is_read = 0");
+        $unreadStmt = $pdo->prepare("SELECT COUNT(*) FROM rzx_notifications WHERE user_id = ? AND is_read = 0");
         $unreadStmt->execute([$user['id']]);
         $unreadCount = $unreadStmt->fetchColumn();
 
         // Get messages
-        $stmt = $pdo->prepare("SELECT * FROM rzx_user_notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?");
+        $stmt = $pdo->prepare("SELECT * FROM rzx_notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?");
         $stmt->execute([$user['id'], $perPage, $offset]);
         $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -188,8 +188,8 @@ $totalPages = ceil($totalMessages / $perPage);
                                         <span class="text-xs text-gray-400 dark:text-zinc-500">
                                             <?php echo date('Y.m.d H:i', strtotime($msg['created_at'])); ?>
                                         </span>
-                                        <?php if (!empty($msg['url'])): ?>
-                                        <a href="<?php echo htmlspecialchars($msg['url']); ?>" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                                        <?php if (!empty($msg['link'])): ?>
+                                        <a href="<?php echo htmlspecialchars($msg['link']); ?>" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
                                             <?php echo __('auth.mypage.messages.view_detail'); ?> &rarr;
                                         </a>
                                         <?php endif; ?>
