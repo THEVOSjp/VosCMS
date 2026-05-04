@@ -252,6 +252,26 @@ function createDbQuotaNotification(\PDO $pdo, string $prefix, string $userId, st
                 'quota_bytes' => $quotaBytes, 'pct' => $pct, 'level' => $level,
             ], JSON_UNESCAPED_UNICODE),
         ]);
+        $notifId = (int)$pdo->lastInsertId();
+
+        // 푸시 발송 — DB 쿼터 critical/blocked 만 (warning 은 메일·인박스만으로 충분)
+        if (in_array($level, ['critical', 'blocked'], true)) {
+            try {
+                require_once BASE_PATH . '/rzxlib/Core/Notification/PushSender.php';
+                $sender = new \RzxLib\Core\Notification\PushSender($pdo, $prefix);
+                $pr = $sender->sendToUser($userId, [
+                    'title' => $titles[$level] ?? '',
+                    'body'  => $bodies[$level] ?? '',
+                    'link'  => '/mypage/services',
+                    'tag'   => 'db-quota-' . $level,
+                    'notification_id' => $notifId,
+                ]);
+                if (($pr['sent'] ?? 0) > 0) {
+                    $pdo->prepare("UPDATE {$prefix}notifications SET is_pushed = 1, pushed_at = NOW() WHERE id = ?")
+                        ->execute([$notifId]);
+                }
+            } catch (\Throwable $pe) { error_log('[db-quota-monitor] push: ' . $pe->getMessage()); }
+        }
     } catch (\Throwable $e) {
         error_log('[db-quota-monitor] notification insert: ' . $e->getMessage());
     }

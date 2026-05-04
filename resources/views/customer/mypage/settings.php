@@ -275,6 +275,24 @@ if (!empty($user['profile_image'])) {
                     </form>
                 </div>
 
+                <!-- 브라우저 푸시 알림 -->
+                <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6 mt-6">
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">브라우저 푸시 알림</h2>
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <p class="text-sm text-zinc-700 dark:text-zinc-300">중요한 알림을 브라우저 푸시로 즉시 받습니다.</p>
+                            <p class="text-xs text-zinc-500 mt-1">새 메시지 / 차단된 DB 쿼터 / 호스팅 만료 등.</p>
+                            <p id="pushStatus" class="text-xs mt-2 text-zinc-400">상태 확인 중...</p>
+                        </div>
+                        <button type="button" id="btnPushToggle" onclick="togglePush()" class="px-4 py-2 text-sm font-medium border rounded-lg whitespace-nowrap" disabled>
+                            <span id="btnPushLabel">로딩...</span>
+                        </button>
+                    </div>
+                    <div class="mt-3 flex gap-2">
+                        <button type="button" id="btnPushTest" onclick="testPush()" class="px-3 py-1.5 text-xs text-blue-600 hover:underline" style="display:none">테스트 푸시 보내기</button>
+                    </div>
+                </div>
+
                 <!-- 차단 목록 -->
                 <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6 mt-6">
                     <div class="flex items-center justify-between mb-4">
@@ -319,6 +337,124 @@ if (!empty($user['profile_image'])) {
                                 }).join('');
                             });
                     }
+                    // ─── Web Push ───
+                    var publicKey = null;
+                    var currentSub = null;
+                    function urlBase64ToUint8Array(b64) {
+                        var pad = '='.repeat((4 - b64.length % 4) % 4);
+                        var b = (b64 + pad).replace(/-/g, '+').replace(/_/g, '/');
+                        var raw = atob(b);
+                        var arr = new Uint8Array(raw.length);
+                        for (var i = 0; i < raw.length; ++i) arr[i] = raw.charCodeAt(i);
+                        return arr;
+                    }
+                    function setPushUI(state) {
+                        var status = document.getElementById('pushStatus');
+                        var btn = document.getElementById('btnPushToggle');
+                        var lbl = document.getElementById('btnPushLabel');
+                        var test = document.getElementById('btnPushTest');
+                        btn.disabled = false;
+                        if (state === 'unsupported') {
+                            status.textContent = '이 브라우저는 푸시 알림을 지원하지 않습니다.';
+                            btn.disabled = true;
+                            lbl.textContent = '미지원';
+                            return;
+                        }
+                        if (state === 'denied') {
+                            status.textContent = '푸시 권한이 거부되었습니다. 브라우저 설정에서 허용 후 다시 시도하세요.';
+                            btn.disabled = true;
+                            lbl.textContent = '거부됨';
+                            return;
+                        }
+                        if (state === 'subscribed') {
+                            status.textContent = '✓ 푸시 알림이 활성화되어 있습니다.';
+                            btn.className = 'px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700 rounded-lg';
+                            lbl.textContent = '비활성화';
+                            test.style.display = '';
+                        } else {
+                            status.textContent = '비활성 상태입니다. 활성화하면 새 메시지·중요 알림을 즉시 받습니다.';
+                            btn.className = 'px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg';
+                            lbl.textContent = '+ 활성화';
+                            test.style.display = 'none';
+                        }
+                    }
+                    async function initPush() {
+                        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                            setPushUI('unsupported'); return;
+                        }
+                        if (Notification.permission === 'denied') { setPushUI('denied'); return; }
+                        try {
+                            var pubResp = await fetch(BASE + '/api/push.php?action=public_key', {credentials:'same-origin'});
+                            var pubData = await pubResp.json();
+                            if (!pubData.success || !pubData.public_key) {
+                                setPushUI('unsupported'); return;
+                            }
+                            publicKey = pubData.public_key;
+                            var reg = await navigator.serviceWorker.register(BASE + '/sw.js', {scope: BASE + '/'});
+                            await navigator.serviceWorker.ready;
+                            currentSub = await reg.pushManager.getSubscription();
+                            setPushUI(currentSub ? 'subscribed' : 'unsubscribed');
+                        } catch (e) {
+                            console.error('initPush:', e);
+                            setPushUI('unsupported');
+                        }
+                    }
+                    window.togglePush = async function() {
+                        var btn = document.getElementById('btnPushToggle');
+                        btn.disabled = true;
+                        try {
+                            var reg = await navigator.serviceWorker.ready;
+                            if (currentSub) {
+                                // 구독 해제
+                                var fd = new FormData();
+                                fd.append('action', 'unsubscribe');
+                                fd.append('endpoint', currentSub.endpoint);
+                                await fetch(BASE + '/api/push.php', {method:'POST', body: fd, credentials:'same-origin'});
+                                await currentSub.unsubscribe();
+                                currentSub = null;
+                                setPushUI('unsubscribed');
+                            } else {
+                                // 권한 요청 + 구독
+                                var perm = await Notification.requestPermission();
+                                if (perm !== 'granted') { setPushUI(perm === 'denied' ? 'denied' : 'unsubscribed'); return; }
+                                var sub = await reg.pushManager.subscribe({
+                                    userVisibleOnly: true,
+                                    applicationServerKey: urlBase64ToUint8Array(publicKey),
+                                });
+                                var json = sub.toJSON();
+                                var fd = new FormData();
+                                fd.append('action', 'subscribe');
+                                fd.append('endpoint', json.endpoint);
+                                fd.append('p256dh', json.keys.p256dh);
+                                fd.append('auth', json.keys.auth);
+                                fd.append('user_agent', navigator.userAgent);
+                                var r = await fetch(BASE + '/api/push.php', {method:'POST', body: fd, credentials:'same-origin'});
+                                var d = await r.json();
+                                if (!d.success) { alert(d.message || '구독 실패'); btn.disabled = false; return; }
+                                currentSub = sub;
+                                setPushUI('subscribed');
+                            }
+                        } catch (e) {
+                            console.error('togglePush:', e);
+                            alert('처리 실패: ' + e.message);
+                        } finally {
+                            btn.disabled = false;
+                        }
+                    };
+                    window.testPush = function() {
+                        var fd = new FormData(); fd.append('action', 'test');
+                        fetch(BASE + '/api/push.php', {method:'POST', body: fd, credentials:'same-origin'})
+                            .then(function(r){ return r.json(); })
+                            .then(function(d){
+                                if (d.success && d.sent > 0) {
+                                    alert('테스트 푸시를 발송했습니다 (' + d.sent + '개 디바이스). 알림을 확인하세요.');
+                                } else {
+                                    alert('발송 실패 또는 활성 구독이 없습니다.');
+                                }
+                            });
+                    };
+                    initPush();
+
                     window.unblockUser = function(uid) {
                         if (!confirm('차단을 해제하시겠습니까?')) return;
                         var fd = new FormData(); fd.append('action', 'unblock'); fd.append('target_id', uid);

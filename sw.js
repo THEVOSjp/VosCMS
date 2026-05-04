@@ -156,12 +156,16 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  const targetUrl = data.link || data.url || BASE_PATH + '/';
   const options = {
     body: data.body,
     icon: data.icon || BASE_PATH + '/storage/pwa/pwa_front_icon.png',
+    badge: data.badge || BASE_PATH + '/storage/pwa/pwa_front_icon.png',
+    tag: data.tag || undefined,
     vibrate: [100, 50, 100],
     data: {
-      url: data.url || BASE_PATH + '/'
+      url: targetUrl,
+      notification_id: data.notification_id || null,
     },
     actions: data.actions || []
   };

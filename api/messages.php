@@ -226,20 +226,38 @@ try {
                     WHERE id = ?")
                     ->execute([$msgId, $preview, $userId, $userId, $cidInsert]);
 
-                // 수신자 알림 적재
+                // 수신자 알림 적재 (notification + 푸시)
                 $senderDisplay = $user['nick_name'] ?: (decrypt($user['name'] ?? '') ?: explode('@', $user['email'] ?? '')[0]);
+                $title = "{$senderDisplay} 님의 새 메시지";
+                $link = '/mypage/messages?c=' . $cidInsert;
+                $meta = ['conversation_id' => $cidInsert, 'message_id' => $msgId, 'sender_id' => $userId];
+
                 $pdo->prepare("INSERT INTO {$prefix}notifications
                     (user_id, type, category, title, body, link, icon, expires_at, meta)
                     VALUES (?, 'message', 'new_message', ?, ?, ?, 'message', DATE_ADD(NOW(), INTERVAL 90 DAY), ?)")
-                    ->execute([
-                        $recipientId,
-                        "{$senderDisplay} 님의 새 메시지",
-                        $preview,
-                        '/mypage/messages?c=' . $cidInsert,
-                        json_encode(['conversation_id' => $cidInsert, 'message_id' => $msgId, 'sender_id' => $userId], JSON_UNESCAPED_UNICODE),
-                    ]);
+                    ->execute([$recipientId, $title, $preview, $link, json_encode($meta, JSON_UNESCAPED_UNICODE)]);
+                $notifId = (int)$pdo->lastInsertId();
 
                 $pdo->commit();
+
+                // 푸시 발송 (트랜잭션 외부 — 푸시 실패가 메시지 저장 영향 안 주도록)
+                try {
+                    require_once BASE_PATH . '/rzxlib/Core/Notification/PushSender.php';
+                    $sender = new \RzxLib\Core\Notification\PushSender($pdo, $prefix);
+                    $pr = $sender->sendToUser($recipientId, [
+                        'title' => $title,
+                        'body'  => $preview,
+                        'link'  => $link,
+                        'tag'   => 'msg-' . $cidInsert,
+                        'notification_id' => $notifId,
+                    ]);
+                    if (($pr['sent'] ?? 0) > 0) {
+                        $pdo->prepare("UPDATE {$prefix}notifications SET is_pushed = 1, pushed_at = NOW() WHERE id = ?")
+                            ->execute([$notifId]);
+                    }
+                } catch (\Throwable $pe) {
+                    error_log('[messages.send] push: ' . $pe->getMessage());
+                }
                 echo json_encode([
                     'success' => true,
                     'message_id' => $msgId,

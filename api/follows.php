@@ -60,16 +60,30 @@ try {
 
             // 알림 적재 (대상에게)
             $senderDisplay = $user['nick_name'] ?: (decrypt($user['name'] ?? '') ?: explode('@', $user['email'] ?? '')[0]);
+            $followTitle = "{$senderDisplay} 님이 회원님을 팔로우합니다";
+            $followLink = '/profile/' . $userId;
             $pdo->prepare("INSERT INTO {$prefix}notifications
                 (user_id, type, category, title, body, link, icon, expires_at, meta)
                 VALUES (?, 'follow', 'new_follower', ?, ?, ?, 'bell', DATE_ADD(NOW(), INTERVAL 90 DAY), ?)")
-                ->execute([
-                    $target,
-                    "{$senderDisplay} 님이 회원님을 팔로우합니다",
-                    "프로필을 확인해 보세요.",
-                    '/profile/' . $userId,
-                    json_encode(['follower_id' => $userId], JSON_UNESCAPED_UNICODE),
+                ->execute([$target, $followTitle, "프로필을 확인해 보세요.", $followLink,
+                    json_encode(['follower_id' => $userId], JSON_UNESCAPED_UNICODE)]);
+            $notifId = (int)$pdo->lastInsertId();
+            // 푸시 발송
+            try {
+                require_once BASE_PATH . '/rzxlib/Core/Notification/PushSender.php';
+                $sender = new \RzxLib\Core\Notification\PushSender($pdo, $prefix);
+                $pr = $sender->sendToUser($target, [
+                    'title' => $followTitle,
+                    'body'  => '프로필을 확인해 보세요.',
+                    'link'  => $followLink,
+                    'tag'   => 'follow-' . $userId,
+                    'notification_id' => $notifId,
                 ]);
+                if (($pr['sent'] ?? 0) > 0) {
+                    $pdo->prepare("UPDATE {$prefix}notifications SET is_pushed = 1, pushed_at = NOW() WHERE id = ?")
+                        ->execute([$notifId]);
+                }
+            } catch (\Throwable $pe) { error_log('[follows.follow] push: ' . $pe->getMessage()); }
 
             // 카운트 반환
             $cnt = $pdo->prepare("SELECT
