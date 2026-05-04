@@ -587,6 +587,7 @@ return array (
     'f_traffic' => 'Traffic',
     'f_hdd_capacity' => 'HDD',
     'f_disk_usage' => 'Disk Usage',
+    'f_db_usage' => 'DB Usage',
     'f_server_info' => 'Server Info',
     'f_hostname' => 'Hostname',
     'f_ip_address' => 'IP Address',

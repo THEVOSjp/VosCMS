@@ -19,6 +19,10 @@ $_defStorage = [
     ['capacity'=>'1GB','price'=>2000],['capacity'=>'3GB','price'=>5000],['capacity'=>'5GB','price'=>8000],
     ['capacity'=>'10GB','price'=>14000],['capacity'=>'20GB','price'=>25000],['capacity'=>'50GB','price'=>50000],
 ];
+$_defDbStorage = [
+    ['capacity'=>'100MB','price'=>100],['capacity'=>'500MB','price'=>450],['capacity'=>'1GB','price'=>800],
+];
+$_defDbQuotaMb = 100; // 기본 플랜 DB 용량 (MB) — 모든 플랜 공통
 // 공통 서비스: 다국어 입력 위해 객체 배열로 변경 (기존 string 도 호환)
 $_defFeatures = [
     ['_id'=>'ssl',     'text'=>'SSL 인증서 무료'],
@@ -30,6 +34,9 @@ $_defFeatures = [
 $_plans    = json_decode($serviceSettings['service_hosting_plans']    ?? '', true) ?: $_defPlans;
 $_periods  = json_decode($serviceSettings['service_hosting_periods']  ?? '', true) ?: $_defPeriods;
 $_storage  = json_decode($serviceSettings['service_hosting_storage']  ?? '', true) ?: $_defStorage;
+$_dbStorage = json_decode($serviceSettings['service_db_storage']      ?? '', true) ?: $_defDbStorage;
+$_dbQuotaMb = (int)($serviceSettings['service_db_quota_mb'] ?? $_defDbQuotaMb);
+if ($_dbQuotaMb <= 0) $_dbQuotaMb = $_defDbQuotaMb;
 $_features = json_decode($serviceSettings['service_hosting_features'] ?? '', true) ?: $_defFeatures;
 
 // 다국어 매핑 안정화: _id 자동 부여 (deterministic crc32 해시)
@@ -128,6 +135,46 @@ foreach ($_features as $i => $f) {
                 </table>
             </div>
             <button type="button" onclick="addStorageRow()" class="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline"><?= __('services.admin.hosting.add_storage') ?></button>
+        </div>
+
+        <!-- DB 옵션 -->
+        <div>
+            <h4 class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3"><?= __('services.admin.hosting.db_section') ?></h4>
+
+            <!-- 기본 DB 용량 -->
+            <div class="mb-4 flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <label class="text-xs text-zinc-600 dark:text-zinc-300 font-medium whitespace-nowrap">
+                    <?= __('services.admin.hosting.db_default_quota_label') ?>:
+                </label>
+                <input type="number" id="dbQuotaMb" value="<?= (int)$_dbQuotaMb ?>" min="10" step="10" class="<?= $_inp ?> text-xs w-24" />
+                <span class="text-xs text-zinc-500">MB</span>
+                <span class="text-[11px] text-zinc-500 dark:text-zinc-400 ml-2">
+                    <?= __('services.admin.hosting.db_default_quota_hint') ?>
+                </span>
+            </div>
+
+            <!-- DB 용량 추가 옵션 -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm" id="tblDbStorage">
+                    <thead>
+                        <tr class="text-left text-xs text-zinc-400 dark:text-zinc-500 border-b border-zinc-100 dark:border-zinc-700">
+                            <th class="pb-2 pr-2 w-24"><?= __('services.admin.hosting.col_capacity') ?></th>
+                            <th class="pb-2 pr-2"><?= __('services.admin.hosting.col_monthly_price') ?> (<?= $_dispCur ?>)</th>
+                            <th class="pb-2 w-10"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="dbStorageRows">
+                        <?php foreach ($_dbStorage as $st): ?>
+                        <tr class="border-b border-zinc-50 dark:border-zinc-700/50 db-storage-row">
+                            <td class="py-2 pr-2"><input type="text" value="<?= htmlspecialchars($st['capacity']) ?>" class="dbstor-cap <?= $_inp ?> text-xs"></td>
+                            <td class="py-2 pr-2"><input type="number" value="<?= (int)$st['price'] ?>" class="dbstor-price <?= $_inp ?> text-xs" min="0"></td>
+                            <td class="py-2 text-center"><button type="button" onclick="this.closest('tr').remove()" class="text-red-400 hover:text-red-600 p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <button type="button" onclick="addDbStorageRow()" class="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline"><?= __('services.admin.hosting.add_db_storage') ?></button>
         </div>
 
         <!-- 공통 서비스 -->

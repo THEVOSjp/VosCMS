@@ -587,6 +587,7 @@ return array (
     'f_traffic' => '트래픽',
     'f_hdd_capacity' => 'HDD 용량',
     'f_disk_usage' => '디스크 사용량',
+    'f_db_usage' => 'DB 사용량',
     'f_server_info' => '서버 정보',
     'f_hostname' => '호스트 이름',
     'f_ip_address' => 'IP 주소',

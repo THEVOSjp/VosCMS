@@ -1615,6 +1615,76 @@ switch ($action) {
         ]);
         exit;
 
+    // ===== DB 사용량 + 쿼터 조회 (information_schema 실시간) =====
+    case 'get_db_usage':
+        $sub = getOwnedSubscription($pdo, $prefix, $subId, $userId);
+        if (!$sub || $sub['type'] !== 'hosting') {
+            echo json_encode(['success' => false, 'message' => 'subscription not found']);
+            exit;
+        }
+        $oSt = $pdo->prepare("SELECT order_number FROM {$prefix}orders WHERE id = ?");
+        $oSt->execute([$sub['order_id']]);
+        $orderNumber = $oSt->fetchColumn();
+        if (!$orderNumber) {
+            echo json_encode(['success' => false, 'message' => 'order not found']);
+            exit;
+        }
+        $dbName = 'vos_' . preg_replace('/[^A-Za-z0-9_-]/', '', $orderNumber);
+        $usedBytes = 0;
+        // information_schema 는 SELECT 권한 있는 schema 만 노출 → 어드민 DB 계정으로 별도 연결
+        $adminUser = $_ENV['HOSTING_DB_ADMIN_USER'] ?? '';
+        $adminPass = $_ENV['HOSTING_DB_ADMIN_PASS'] ?? '';
+        try {
+            if ($adminUser && $adminPass) {
+                $adminPdo = new \PDO('mysql:host=127.0.0.1;charset=utf8mb4', $adminUser, $adminPass, [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]);
+                $sst = $adminPdo->prepare("SELECT IFNULL(SUM(data_length + index_length), 0) FROM information_schema.tables WHERE table_schema = ?");
+            } else {
+                $sst = $pdo->prepare("SELECT IFNULL(SUM(data_length + index_length), 0) FROM information_schema.tables WHERE table_schema = ?");
+            }
+            $sst->execute([$dbName]);
+            $usedBytes = (int)$sst->fetchColumn();
+        } catch (\Throwable $e) {
+            echo json_encode(['success' => false, 'message' => 'DB 측정 실패: ' . $e->getMessage()]);
+            exit;
+        }
+        // 기본 쿼터 (rzx_settings.service_db_quota_mb) + 추가 구매 (extra_db_storage) 합산
+        $baseMbStmt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'service_db_quota_mb' LIMIT 1");
+        $baseMbStmt->execute();
+        $baseMb = (int)($baseMbStmt->fetchColumn() ?: 100);
+        if ($baseMb <= 0) $baseMb = 100;
+        $hMeta = json_decode($sub['metadata'] ?? '{}', true) ?: [];
+        $extraMb = 0;
+        foreach (($hMeta['extra_db_storage'] ?? []) as $ex) {
+            $cap = $ex['capacity'] ?? '';
+            if (preg_match('/^(\d+(?:\.\d+)?)\s*(MB|GB|TB)?/i', $cap, $m)) {
+                $n = (float)$m[1];
+                $u = strtoupper($m[2] ?? 'MB');
+                $mb = $u === 'GB' ? $n * 1024 : ($u === 'TB' ? $n * 1024 * 1024 : $n);
+                $extraMb += $mb;
+            }
+        }
+        $quotaBytes = (int)(($baseMb + $extraMb) * 1024 * 1024);
+        $pct = $quotaBytes > 0 ? min(100, round($usedBytes / $quotaBytes * 1000) / 10) : 0;
+        $blocked = !empty($hMeta['db_quota_blocked']);
+        $formatBytes = function($b) {
+            if ($b >= 1024 * 1024 * 1024) return number_format($b / 1024 / 1024 / 1024, 2) . 'GB';
+            if ($b >= 1024 * 1024) return number_format($b / 1024 / 1024, 2) . 'MB';
+            if ($b >= 1024) return number_format($b / 1024, 2) . 'KB';
+            return $b . 'B';
+        };
+        echo json_encode([
+            'success' => true,
+            'used_bytes' => $usedBytes,
+            'used_label' => $formatBytes($usedBytes),
+            'quota_bytes' => $quotaBytes,
+            'quota_label' => $formatBytes($quotaBytes),
+            'base_mb' => $baseMb,
+            'extra_mb' => $extraMb,
+            'pct' => $pct,
+            'blocked' => $blocked,
+        ]);
+        exit;
+
     // ===== 사이트 백업 (web 파일 + .env + DB 덤프 zip) =====
     case 'request_backup':
         $sub = getOwnedSubscription($pdo, $prefix, $subId, $userId);

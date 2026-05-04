@@ -57,6 +57,8 @@ function saveHostingSettings() {
     fd.append('service_hosting_periods', JSON.stringify(hosting.periods));
     fd.append('service_hosting_storage', JSON.stringify(hosting.storage));
     fd.append('service_hosting_features', JSON.stringify(hosting.features));
+    fd.append('service_db_storage', JSON.stringify(hosting.dbStorage));
+    fd.append('service_db_quota_mb', String(hosting.dbQuotaMb));
     _saveServiceTabSubmit(fd, <?= json_encode(__('services.admin.hosting.save_success'), JSON_UNESCAPED_UNICODE) ?>);
 }
 
@@ -103,6 +105,15 @@ function addStorageRow() {
         + '<td class="py-2 pr-2"><input type="number" class="stor-price ' + _inp + '" min="0" value="0"></td>'
         + '<td class="py-2 text-center"><button type="button" onclick="this.closest(\'tr\').remove()" class="text-red-400 hover:text-red-600 p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></td>';
     document.getElementById('storageRows').appendChild(tr);
+}
+
+function addDbStorageRow() {
+    var tr = document.createElement('tr');
+    tr.className = 'border-b border-zinc-50 dark:border-zinc-700/50 db-storage-row';
+    tr.innerHTML = '<td class="py-2 pr-2"><input type="text" class="dbstor-cap ' + _inp + '" placeholder="100MB"></td>'
+        + '<td class="py-2 pr-2"><input type="number" class="dbstor-price ' + _inp + '" min="0" value="0"></td>'
+        + '<td class="py-2 text-center"><button type="button" onclick="this.closest(\'tr\').remove()" class="text-red-400 hover:text-red-600 p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></td>';
+    document.getElementById('dbStorageRows').appendChild(tr);
 }
 
 var _domainExRate = <?= $_dispRate ?? 1 ?>;
@@ -501,6 +512,16 @@ function collectHostingData() {
             price: parseInt(tr.querySelector('.stor-price').value) || 0
         });
     });
+    // DB 추가 용량 옵션
+    var dbStorage = [];
+    document.querySelectorAll('.db-storage-row').forEach(function(tr) {
+        dbStorage.push({
+            capacity: tr.querySelector('.dbstor-cap').value,
+            price: parseInt(tr.querySelector('.dbstor-price').value) || 0
+        });
+    });
+    var dbQuotaEl = document.getElementById('dbQuotaMb');
+    var dbQuotaMb = dbQuotaEl ? (parseInt(dbQuotaEl.value) || 100) : 100;
     // features: 객체 배열 ({_id, text}) 로 저장 (다국어 매핑용)
     document.querySelectorAll('.feat-item').forEach(function(el) {
         var inp = el.querySelector('.feat-text');
@@ -508,7 +529,7 @@ function collectHostingData() {
         if (!text) return;
         features.push({ _id: el.dataset.stableId || '', text: text });
     });
-    return { plans: plans, periods: periods, storage: storage, features: features };
+    return { plans: plans, periods: periods, storage: storage, dbStorage: dbStorage, dbQuotaMb: dbQuotaMb, features: features };
 }
 
 // 기존 saveServiceSettings() 는 saveGeneralSettings/saveDomainSettings/saveHostingSettings/saveAddonsSettings 4종으로 분리됨 (탭별 저장)

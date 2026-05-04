@@ -584,6 +584,7 @@ return array (
     'f_traffic' => 'トラフィック',
     'f_hdd_capacity' => 'HDD容量',
     'f_disk_usage' => 'ディスク使用量',
+    'f_db_usage' => 'DB使用量',
     'f_server_info' => 'サーバ情報',
     'f_hostname' => 'ホスト名',
     'f_ip_address' => 'IPアドレス',

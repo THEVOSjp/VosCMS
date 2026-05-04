@@ -125,21 +125,21 @@ $_totalGB = $_baseGB + $_extraGB;
                 </div>
             </div>
         </div>
-        <!-- 서버 정보 -->
+        <!-- DB 사용량 -->
         <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 p-5">
-            <p class="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3"><?= htmlspecialchars(__('services.detail.f_server_info')) ?></p>
-            <div class="space-y-2 text-xs">
-                <div class="flex items-center justify-between gap-2">
-                    <span class="text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars(__('services.detail.f_hostname')) ?></span>
-                    <span class="font-mono text-zinc-800 dark:text-zinc-200 truncate" title="<?= htmlspecialchars($_hostName) ?>"><?= htmlspecialchars($_hostName) ?></span>
-                </div>
-                <div class="flex items-center justify-between gap-2">
-                    <span class="text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars(__('services.detail.f_ip_address')) ?></span>
-                    <span class="font-mono text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($_hostIp ?: '-') ?></span>
-                </div>
-                <div class="pt-2 mt-2 border-t border-gray-100 dark:border-zinc-700 flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-[11px]">
-                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                    <?= htmlspecialchars(__('services.detail.f_latest_env_notice')) ?>
+            <p class="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3"><?= htmlspecialchars(__('services.detail.f_db_usage')) ?></p>
+            <div class="flex flex-col items-center">
+                <div class="relative w-32 h-32">
+                    <svg class="w-32 h-32 -rotate-90" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="15.915" fill="none" stroke="#e5e7eb" stroke-width="3" class="dark:stroke-zinc-700"/>
+                        <circle id="dbDonutFg-<?= (int)$sub['id'] ?>" cx="18" cy="18" r="15.915" fill="none" stroke="#10b981" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" class="transition-all duration-500"/>
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <p id="dbUsedLabel-<?= (int)$sub['id'] ?>" class="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                            <span class="inline-block w-12 h-5 bg-zinc-100 dark:bg-zinc-700 rounded animate-pulse"></span>
+                        </p>
+                        <p id="dbQuotaLabel-<?= (int)$sub['id'] ?>" class="text-[10px] text-zinc-400 mt-0.5">-</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -165,8 +165,8 @@ $_totalGB = $_baseGB + $_extraGB;
 
     <script>
     (function(subId, totalKb) {
-        function run() {
-            if (typeof serviceAction !== 'function') { setTimeout(run, 50); return; }
+        function runDisk() {
+            if (typeof serviceAction !== 'function') { setTimeout(runDisk, 50); return; }
             serviceAction('get_disk_usage', { subscription_id: subId })
                 .then(function(d) {
                     if (!d || !d.success) return;
@@ -182,6 +182,28 @@ $_totalGB = $_baseGB + $_extraGB;
                     if (lbl) lbl.textContent = d.used_label || '0';
                 }).catch(function() {});
         }
+        function runDb() {
+            if (typeof serviceAction !== 'function') { setTimeout(runDb, 50); return; }
+            serviceAction('get_db_usage', { subscription_id: subId })
+                .then(function(d) {
+                    if (!d || !d.success) return;
+                    var fg = document.getElementById('dbDonutFg-' + subId);
+                    var lbl = document.getElementById('dbUsedLabel-' + subId);
+                    var qtl = document.getElementById('dbQuotaLabel-' + subId);
+                    var pct = parseFloat(d.pct) || 0;
+                    if (fg) {
+                        fg.setAttribute('stroke-dasharray', pct + ', 100');
+                        var color = d.blocked ? '#dc2626' : (pct > 90 ? '#ef4444' : (pct > 70 ? '#f59e0b' : '#10b981'));
+                        fg.setAttribute('stroke', color);
+                    }
+                    if (lbl) {
+                        lbl.textContent = d.used_label || '0';
+                        if (d.blocked) lbl.classList.add('text-red-600', 'dark:text-red-400');
+                    }
+                    if (qtl) qtl.textContent = '/ ' + (d.quota_label || '-');
+                }).catch(function() {});
+        }
+        function run() { runDisk(); runDb(); }
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', run);
         } else {
