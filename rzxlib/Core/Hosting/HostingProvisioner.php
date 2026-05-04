@@ -898,6 +898,56 @@ ENV;
         }
     }
 
+    /**
+     * DB 쿼터 차단 — INSERT/UPDATE/CREATE/ALTER REVOKE.
+     * SELECT/DELETE/DROP 은 유지 (사용자가 데이터 정리하여 복구 가능).
+     */
+    public function setDbQuotaBlock(string $orderNumber): array
+    {
+        if (!$this->dbAdminUser || !$this->dbAdminPass) {
+            return ['success' => false, 'error' => 'admin creds missing'];
+        }
+        $username = $this->makeUsername($orderNumber);
+        $dbName = $username;
+        $dbUser = $username;
+        try {
+            $admin = new \PDO('mysql:host=127.0.0.1;charset=utf8mb4', $this->dbAdminUser, $this->dbAdminPass,
+                [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]);
+            $dbNameQuoted = '`' . str_replace('`', '``', $dbName) . '`';
+            $admin->exec("REVOKE INSERT, UPDATE, CREATE, ALTER, INDEX, REFERENCES ON {$dbNameQuoted}.* FROM " . $admin->quote($dbUser) . "@'localhost'");
+            $admin->exec("FLUSH PRIVILEGES");
+            return ['success' => true];
+        } catch (\Throwable $e) {
+            error_log('[HostingProvisioner] setDbQuotaBlock: ' . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * DB 쿼터 차단 해제 — 결제 또는 사용자 데이터 정리 후 호출.
+     * GRANT ALL PRIVILEGES 로 복구 (= 최초 createDatabase 와 동일 권한).
+     */
+    public function releaseDbQuotaBlock(string $orderNumber): array
+    {
+        if (!$this->dbAdminUser || !$this->dbAdminPass) {
+            return ['success' => false, 'error' => 'admin creds missing'];
+        }
+        $username = $this->makeUsername($orderNumber);
+        $dbName = $username;
+        $dbUser = $username;
+        try {
+            $admin = new \PDO('mysql:host=127.0.0.1;charset=utf8mb4', $this->dbAdminUser, $this->dbAdminPass,
+                [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]);
+            $dbNameQuoted = '`' . str_replace('`', '``', $dbName) . '`';
+            $admin->exec("GRANT ALL PRIVILEGES ON {$dbNameQuoted}.* TO " . $admin->quote($dbUser) . "@'localhost'");
+            $admin->exec("FLUSH PRIVILEGES");
+            return ['success' => true];
+        } catch (\Throwable $e) {
+            error_log('[HostingProvisioner] releaseDbQuotaBlock: ' . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
     /** root 권한 파일 쓰기 (tee) */
     private function writeRootFile(string $path, string $content): void
     {

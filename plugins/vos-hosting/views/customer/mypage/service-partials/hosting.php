@@ -38,6 +38,58 @@ $_totalGB = $_baseGB + $_extraGB;
 ?>
 
 <div class="space-y-4">
+    <?php
+    // DB 쿼터 차단/경고 배너 — cron 이 metadata 갱신
+    $_dbBlocked = !empty($meta['db_quota_blocked']);
+    $_dbPct = (float)($meta['db_usage_pct'] ?? 0);
+    $_dbUsedB = (int)($meta['db_usage_bytes'] ?? 0);
+    $_dbQuotaB = (int)($meta['db_quota_bytes'] ?? 0);
+    $_dbBytesFmt = function($b) {
+        if ($b >= 1073741824) return number_format($b / 1073741824, 2) . 'GB';
+        if ($b >= 1048576) return number_format($b / 1048576, 2) . 'MB';
+        if ($b >= 1024) return number_format($b / 1024, 2) . 'KB';
+        return $b . 'B';
+    };
+    ?>
+    <?php if ($_dbBlocked): ?>
+    <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-600 rounded-lg px-5 py-4">
+        <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+            <div class="flex-1">
+                <p class="text-sm font-bold text-red-700 dark:text-red-400 mb-1"><?= htmlspecialchars(__('services.detail.db_quota_blocked_title')) ?></p>
+                <p class="text-xs text-red-600 dark:text-red-300 mb-2 leading-relaxed">
+                    <?= htmlspecialchars(__('services.detail.db_quota_blocked_desc', [
+                        'used' => $_dbBytesFmt($_dbUsedB),
+                        'quota' => $_dbBytesFmt($_dbQuotaB),
+                        'pct' => $_dbPct,
+                    ])) ?>
+                </p>
+                <button type="button" onclick="document.querySelector('[onclick*=\'showServiceTab(\\\'addon\\\']') ? showServiceTab('addon') : 0; setTimeout(function(){ if(typeof openDbStorageAddonModal==='function') openDbStorageAddonModal(); }, 100)"
+                        class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                    <?= htmlspecialchars(__('services.mypage.btn_add_db_storage')) ?>
+                </button>
+            </div>
+        </div>
+    </div>
+    <?php elseif ($_dbPct >= 90 && $_dbQuotaB > 0): ?>
+    <div class="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-lg px-5 py-3">
+        <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+            <div class="flex-1">
+                <p class="text-sm font-bold text-amber-700 dark:text-amber-400 mb-0.5"><?= htmlspecialchars(__('services.detail.db_quota_warning_title')) ?></p>
+                <p class="text-xs text-amber-600 dark:text-amber-300">
+                    <?= htmlspecialchars(__('services.detail.db_quota_warning_desc', [
+                        'used' => $_dbBytesFmt($_dbUsedB),
+                        'quota' => $_dbBytesFmt($_dbQuotaB),
+                        'pct' => $_dbPct,
+                    ])) ?>
+                </p>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- 호스팅 요약 -->
     <div class="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 overflow-hidden">
         <div class="px-5 py-3 border-b border-gray-100 dark:border-zinc-700 flex items-center justify-between gap-3 flex-wrap">

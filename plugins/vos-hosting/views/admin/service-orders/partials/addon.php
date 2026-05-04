@@ -23,12 +23,14 @@ $_siteUrl = $_primaryDomain ? ('https://' . $_primaryDomain) : '';
 
 // 추가 용량 옵션
 $_storageOptions = [];
+$_dbStorageOptions = [];
 $_addonsAll = [];
 try {
-    $_stSt = $pdo->prepare("SELECT `key`, `value` FROM {$prefix}settings WHERE `key` IN ('service_hosting_storage','service_addons')");
+    $_stSt = $pdo->prepare("SELECT `key`, `value` FROM {$prefix}settings WHERE `key` IN ('service_hosting_storage','service_db_storage','service_addons')");
     $_stSt->execute();
     while ($_r = $_stSt->fetch(PDO::FETCH_ASSOC)) {
         if ($_r['key'] === 'service_hosting_storage') $_storageOptions = json_decode($_r['value'] ?: '[]', true) ?: [];
+        if ($_r['key'] === 'service_db_storage')      $_dbStorageOptions = json_decode($_r['value'] ?: '[]', true) ?: [];
         if ($_r['key'] === 'service_addons')          $_addonsAll = json_decode($_r['value'] ?: '[]', true) ?: [];
     }
 } catch (\Throwable $e) { /* silent */ }
@@ -63,6 +65,24 @@ foreach ($subs as $_s) $_activeAddonLabels[] = trim((string)($_s['label'] ?? '')
         </div>
         <button type="button" onclick="openAdminStorageModal()" class="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition flex-shrink-0">
             + 용량 추가
+        </button>
+    </div>
+    <?php endif; ?>
+
+    <!-- DB 용량 추가 카드 -->
+    <?php if ($_hostSubId && !empty($_dbStorageOptions)): ?>
+    <div class="flex items-center justify-between bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 px-5 py-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-zinc-900 dark:text-white">DB 용량 추가</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400">호스팅 만료일까지 동기화. 관리자 즉시 결제로 부여.</p>
+            </div>
+        </div>
+        <button type="button" onclick="openAdminDbStorageModal()" class="px-4 py-2 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition flex-shrink-0">
+            + DB 용량 추가
         </button>
     </div>
     <?php endif; ?>
@@ -269,6 +289,39 @@ foreach ($subs as $_s) $_activeAddonLabels[] = trim((string)($_s['label'] ?? '')
 </div>
 <?php endif; ?>
 
+<!-- DB 용량 추가 모달 -->
+<?php if ($_hostSubId && !empty($_dbStorageOptions)): ?>
+<div id="adminDbStorageModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-bold text-zinc-900 dark:text-white">DB 용량 추가</h3>
+            <button type="button" onclick="closeAdminDbStorageModal()" class="text-zinc-400 hover:text-zinc-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-3">관리자 즉시 부여 (참고 단가 — 결제 별도). 차단 상태였다면 자동 해제됩니다.</p>
+        <div class="space-y-2 mb-4">
+            <?php foreach ($_dbStorageOptions as $_so):
+                $_cap = $_so['capacity'] ?? '?';
+                $_unitPrice = (int)($_so['price'] ?? 0);
+            ?>
+            <button type="button" onclick="adminAddDbStorageAddon('<?= htmlspecialchars($_cap, ENT_QUOTES) ?>', <?= $_unitPrice ?>)" class="w-full flex items-center justify-between px-4 py-3 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition text-left">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center"><svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg></span>
+                    <div>
+                        <p class="text-base font-bold text-zinc-900 dark:text-white"><?= htmlspecialchars($_cap) ?></p>
+                        <p class="text-[10px] text-zinc-400">참고 단가: <?= $fmtPrice($_unitPrice, $_curr) ?> / 월</p>
+                    </div>
+                </div>
+                <span class="text-[10px] font-medium text-violet-500">관리자 부여</span>
+            </button>
+            <?php endforeach; ?>
+        </div>
+        <p class="text-[11px] text-amber-600 italic">관리자가 직접 부여하므로 결제 처리는 별도로 진행하세요.</p>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- 부가서비스 추가 + 결제 모달 (어드민 전용) -->
 <div id="adminAddonAddModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl max-w-lg w-full p-6">
@@ -332,6 +385,28 @@ function adminAddStorageAddon(capacity, unitPrice) {
     ajaxPost({ action: 'admin_add_storage_addon', subscription_id: <?= (int)$_hostSubId ?>, capacity: capacity, unit_price: unitPrice })
         .then(function(d) {
             if (d.success) { alert(d.message || '용량 추가 완료'); location.reload(); }
+            else alert(d.message || '실패');
+        });
+}
+
+// === DB 용량 추가 모달 ===
+function openAdminDbStorageModal() {
+    var m = document.getElementById('adminDbStorageModal');
+    if (!m) return;
+    m.classList.remove('hidden'); m.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+function closeAdminDbStorageModal() {
+    var m = document.getElementById('adminDbStorageModal');
+    if (!m) return;
+    m.classList.add('hidden'); m.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+function adminAddDbStorageAddon(capacity, unitPrice) {
+    if (!confirm('DB ' + capacity + ' 용량을 즉시 부여합니까? (결제 별도)')) return;
+    ajaxPost({ action: 'admin_add_db_storage_addon', subscription_id: <?= (int)$_hostSubId ?>, capacity: capacity, unit_price: unitPrice })
+        .then(function(d) {
+            if (d.success) { alert(d.message || 'DB 용량 추가 완료'); location.reload(); }
             else alert(d.message || '실패');
         });
 }

@@ -26,8 +26,17 @@ $_blockedSubs = json_decode($_dmSettings['service_blocked_subdomains'] ?? '[]', 
 $_currency = $_dmSettings['service_currency'] ?? 'JPY';
 $_curSym = ['JPY' => '¥', 'KRW' => '원', 'USD' => '$', 'CNY' => '¥', 'EUR' => '€'][$_currency] ?? '';
 
-// PAY.JP 공개키
-$_payjpPubKey = $_ENV['PAYJP_PUBLIC_KEY'] ?? '';
+// PAY.JP 공개키 — payment_config 에서 우선 조회 (다른 결제 모달과 동일 패턴), .env 는 fallback
+$_payjpPubKey = '';
+try {
+    $_pcStmt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'payment_config' LIMIT 1");
+    $_pcStmt->execute();
+    $_payConf = json_decode($_pcStmt->fetchColumn() ?: '{}', true) ?: [];
+    if (!empty($_payConf['enabled']) && ($_payConf['gateway'] ?? '') === 'payjp') {
+        $_payjpPubKey = $_payConf['gateways']['payjp']['public_key'] ?? '';
+    }
+} catch (\Throwable $e) { /* silent */ }
+if ($_payjpPubKey === '') $_payjpPubKey = $_ENV['PAYJP_PUBLIC_KEY'] ?? '';
 ?>
 
 <!-- 도메인 추가 모달 -->

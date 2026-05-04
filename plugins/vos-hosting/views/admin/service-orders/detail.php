@@ -181,6 +181,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             echo json_encode(['success' => true, 'subscription_id' => $newSubId, 'message' => __('services.admin_orders.alert_addon_added')]);
             exit;
 
+        // ===== DB 용량 추가 (어드민 즉시 부여) =====
+        case 'admin_add_db_storage_addon':
+            $hostSubId = (int)($input['subscription_id'] ?? 0);
+            $capacity = trim($input['capacity'] ?? '');
+            $unitPrice = (int)($input['unit_price'] ?? 0);
+            if (!$hostSubId || $capacity === '') {
+                echo json_encode(['success' => false, 'message' => __('services.admin_orders.alert_invalid_input')]); exit;
+            }
+            $hSt = $pdo->prepare("SELECT * FROM {$prefix}subscriptions WHERE id = ? AND type = 'hosting'");
+            $hSt->execute([$hostSubId]);
+            $hSub = $hSt->fetch(PDO::FETCH_ASSOC);
+            if (!$hSub) { echo json_encode(['success' => false, 'message' => __('services.admin_orders.alert_sub_not_found')]); exit; }
+
+            $now = date('Y-m-d H:i:s');
+            $label = "DB 추가 용량 +" . $capacity;
+            $addonMeta = [
+                'addon_type' => 'db_storage',
+                'capacity' => $capacity,
+                'unit_price' => $unitPrice,
+                'parent_hosting_sub_id' => $hostSubId,
+                'admin_granted' => true,
+                'granted_by' => $_SESSION['user_id'] ?? '',
+                'granted_at' => $now,
+            ];
+            $hMeta = json_decode($hSub['metadata'] ?? '{}', true) ?: [];
+            $wasBlocked = !empty($hMeta['db_quota_blocked']);
+            try {
+                $pdo->beginTransaction();
+                $insSt = $pdo->prepare("INSERT INTO {$prefix}subscriptions
+                    (order_id, user_id, type, service_class, label, unit_price, quantity, billing_amount,
+                     billing_cycle, billing_months, currency, started_at, expires_at,
+                     auto_renew, status, metadata)
+                    VALUES (?, ?, 'addon', 'recurring', ?, ?, 1, 0, 'monthly', 1, ?, ?, ?, 1, 'active', ?)");
+                $insSt->execute([
+                    $hSub['order_id'], $hSub['user_id'], $label, $unitPrice,
+                    $hSub['currency'] ?? 'JPY', $now, $hSub['expires_at'],
+                    json_encode($addonMeta, JSON_UNESCAPED_UNICODE),
+                ]);
+                $newSubId = (int)$pdo->lastInsertId();
+
+                $hMeta['extra_db_storage'] = $hMeta['extra_db_storage'] ?? [];
+                $hMeta['extra_db_storage'][] = [
+                    'capacity' => $capacity,
+                    'addon_sub_id' => $newSubId,
+                    'added_at' => $now,
+                    'admin_granted' => true,
+                ];
+                if ($wasBlocked) unset($hMeta['db_quota_blocked'], $hMeta['db_quota_blocked_at']);
+                $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
+                    ->execute([json_encode($hMeta, JSON_UNESCAPED_UNICODE), $hostSubId]);
+
+                $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'admin_add_db_storage_addon', ?, 'admin', ?)")
+                    ->execute([$hSub['order_id'], json_encode([
+                        'capacity' => $capacity, 'addon_sub_id' => $newSubId, 'was_blocked' => $wasBlocked,
+                    ], JSON_UNESCAPED_UNICODE), $_SESSION['user_id'] ?? '']);
+                $pdo->commit();
+            } catch (\Throwable $e) {
+                $pdo->rollBack();
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]); exit;
+            }
+            // 차단 상태였다면 GRANT 복구
+            if ($wasBlocked) {
+                try {
+                    require_once BASE_PATH . '/rzxlib/Core/Hosting/HostingProvisioner.php';
+                    $oNumStmt = $pdo->prepare("SELECT order_number FROM {$prefix}orders WHERE id = ?");
+                    $oNumStmt->execute([$hSub['order_id']]);
+                    $orderNumber = $oNumStmt->fetchColumn();
+                    if ($orderNumber) {
+                        $prov = new \RzxLib\Core\Hosting\HostingProvisioner($pdo);
+                        $prov->releaseDbQuotaBlock($orderNumber);
+                    }
+                } catch (\Throwable $e) { error_log('[admin_add_db_storage] release: ' . $e->getMessage()); }
+            }
+            echo json_encode(['success' => true, 'subscription_id' => $newSubId, 'message' => 'DB +' . $capacity . ' 용량이 추가되었습니다.']);
+            exit;
+
         // 부가서비스 삭제 (소프트 — status=cancelled, hosting metadata.extra_storage 에서 제거)
         case 'admin_run_voscms_install':
             // install_info 를 가진 addon 에 대해 HostingProvisioner.installVoscms() 직접 호출
@@ -651,6 +727,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                 'admin_delete_addon' => [__('services.admin_orders.act_admin_delete_addon'),'red'],
                 'voscms_installed' => [__('services.admin_orders.act_voscms_installed'),'green'],
                 'voscms_reinstalled' => [__('services.admin_orders.act_voscms_reinstalled'),'violet'],
+                'db_quota_blocked' => [__('services.admin_orders.act_db_quota_blocked'),'red'],
+                'db_quota_released' => [__('services.admin_orders.act_db_quota_released'),'green'],
+                'db_storage_addon_paid' => [__('services.admin_orders.act_db_storage_addon_paid'),'emerald'],
                 'vhost_toggle' => [__('services.admin_orders.act_vhost_toggle'),'amber'],
                 'ssl_renew' => [__('services.admin_orders.act_ssl_renew'),'emerald'],
                 'db_pw_reset' => [__('services.admin_orders.act_db_pw_reset'),'amber'],
@@ -658,6 +737,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                 'server_info_updated' => [__('services.admin_orders.act_server_info_updated'),'zinc'],
                 'setup_email_sent' => [__('services.admin_orders.act_setup_email_sent'),'blue'],
                 'admin_add_storage_addon' => [__('services.admin_orders.act_admin_add_storage_addon'),'violet'],
+                'admin_add_db_storage_addon' => [__('services.admin_orders.act_admin_add_db_storage_addon'),'emerald'],
             ];
             foreach ($rows as &$r) {
                 $r['label'] = $_lblMap[$r['action']][0] ?? $r['action'];

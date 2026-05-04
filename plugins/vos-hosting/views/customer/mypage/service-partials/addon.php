@@ -8,15 +8,19 @@ $_hostSub = $servicesByType['hosting'][0] ?? null;
 
 // 추가 용량 옵션 (rzx_settings 의 service_hosting_storage) — 모든 호스팅에 표시
 $_storageOptions = [];
+$_dbStorageOptions = [];
 $_payPubKey = '';
 $_payGateway = '';
 $_payEnabled = false;
 if ($_hostSub) {
     try {
         $_pfx = $_ENV['DB_PREFIX'] ?? 'rzx_';
-        $_stSt = $pdo->prepare("SELECT `value` FROM {$_pfx}settings WHERE `key` = 'service_hosting_storage' LIMIT 1");
+        $_stSt = $pdo->prepare("SELECT `key`, `value` FROM {$_pfx}settings WHERE `key` IN ('service_hosting_storage','service_db_storage')");
         $_stSt->execute();
-        $_storageOptions = json_decode($_stSt->fetchColumn() ?: '[]', true) ?: [];
+        foreach ($_stSt->fetchAll(\PDO::FETCH_ASSOC) as $_r) {
+            if ($_r['key'] === 'service_hosting_storage') $_storageOptions = json_decode($_r['value'] ?: '[]', true) ?: [];
+            elseif ($_r['key'] === 'service_db_storage') $_dbStorageOptions = json_decode($_r['value'] ?: '[]', true) ?: [];
+        }
 
         // 결제 설정 (카드 미등록 고객용 — 인라인 카드 폼)
         $_payCfgSt = $pdo->prepare("SELECT `value` FROM {$_pfx}settings WHERE `key` = 'payment_config' LIMIT 1");
@@ -185,10 +189,137 @@ $_needCard = !$_paymentCustomerId && $_payEnabled && $_payGateway === 'payjp';
             </button>
         </div>
     </div>
+    <?php endif; ?>
 
-    <?php if ($_payEnabled && $_payGateway === 'payjp'): ?>
+    <!-- DB 용량 추가 -->
+    <?php if (!empty($_dbStorageOptions) && $_hostSub): ?>
+    <div class="flex items-center justify-between bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 px-5 py-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-zinc-900 dark:text-white"><?= htmlspecialchars(__('services.mypage.addon_db_storage_title')) ?></p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400"><?= htmlspecialchars(__('services.mypage.addon_db_storage_desc')) ?></p>
+            </div>
+        </div>
+        <button type="button" onclick="openDbStorageAddonModal()"
+                class="px-4 py-2 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition flex-shrink-0">
+            <?= htmlspecialchars(__('services.mypage.btn_add_db_storage')) ?>
+        </button>
+    </div>
+
+    <!-- DB 용량 추가 모달 -->
+    <div id="dbStorageAddonModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50 p-4" style="top:0;left:0;right:0;bottom:0;">
+        <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl max-w-md w-full p-6 max-h-[95vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-bold text-zinc-900 dark:text-white"><?= htmlspecialchars(__('services.mypage.addon_db_storage_title')) ?></h3>
+                <button type="button" onclick="closeDbStorageAddonModal()" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-3 leading-relaxed">
+                <?= htmlspecialchars(__('services.mypage.addon_db_storage_modal_desc')) ?>
+            </p>
+            <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 rounded-lg px-3 py-2 mb-4 text-xs">
+                <span class="text-emerald-700 dark:text-emerald-400"><?= htmlspecialchars(__('services.mypage.addon_remaining_months', ['months' => $_remainMonths])) ?></span>
+                <?php if ($_hostSub && !empty($_hostSub['expires_at'])): ?>
+                <span class="text-emerald-600 dark:text-emerald-500 ml-1">(~<?= date('Y-m-d', strtotime($_hostSub['expires_at'])) ?>)</span>
+                <?php endif; ?>
+            </div>
+
+            <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2"><?= htmlspecialchars(__('services.mypage.addon_step_select_capacity')) ?></p>
+            <div class="space-y-2 mb-4">
+                <?php foreach ($_dbStorageOptions as $_so):
+                    $_cap = $_so['capacity'] ?? '?';
+                    $_unitPrice = (int)($_so['price'] ?? 0);
+                    $_firstAmt = (int)round($_unitPrice * $_firstMonthDays / 30);
+                    $_normalAmt = $_unitPrice * $_normalMonths;
+                    $_totalPrice = $_firstAmt + $_normalAmt;
+                ?>
+                <label class="db-addon-cap-option block cursor-pointer">
+                    <input type="radio" name="dbAddonCapacity" value="<?= htmlspecialchars($_cap, ENT_QUOTES) ?>"
+                           data-unit="<?= $_unitPrice ?>" data-total="<?= $_totalPrice ?>" class="sr-only peer">
+                    <div class="flex items-center justify-between px-4 py-3 border border-zinc-200 dark:border-zinc-700 rounded-lg peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 hover:border-emerald-400 transition">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                            </span>
+                            <div>
+                                <p class="text-base font-bold text-zinc-900 dark:text-white"><?= htmlspecialchars($_cap) ?></p>
+                                <p class="text-[10px] text-zinc-400">
+                                    <?= htmlspecialchars(__('services.mypage.addon_prorated_breakdown', [
+                                        'first' => $_curSym . number_format($_firstAmt),
+                                        'days' => $_firstMonthDays,
+                                        'normal' => $_curSym . number_format($_normalAmt),
+                                        'months' => $_normalMonths,
+                                    ])) ?>
+                                </p>
+                            </div>
+                        </div>
+                        <span class="text-base font-bold text-emerald-600 dark:text-emerald-400"><?= $_curSym . number_format($_totalPrice) ?></span>
+                    </div>
+                </label>
+                <?php endforeach; ?>
+            </div>
+
+            <?php if (!$_payEnabled || $_payGateway !== 'payjp'): ?>
+            <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg px-3 py-2 mb-4 text-xs">
+                <span class="text-amber-700 dark:text-amber-400"><?= htmlspecialchars(__('services.order.payment.not_configured')) ?></span>
+            </div>
+            <?php else: ?>
+                <?php if ($_paymentCustomerId): ?>
+                <div id="dbAddonCardOnFile" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded-lg px-3 py-2 mb-3 text-xs flex items-center justify-between">
+                    <span class="text-green-700 dark:text-green-400">✓ <?= htmlspecialchars(__('services.mypage.addon_pay_with_card_on_file')) ?></span>
+                    <button type="button" onclick="toggleDbAddonNewCard(true)" class="text-blue-600 hover:underline whitespace-nowrap ml-2"><?= htmlspecialchars(__('services.mypage.addon_use_new_card')) ?></button>
+                </div>
+                <?php endif; ?>
+
+                <div id="dbAddonCardForm" class="<?= $_paymentCustomerId ? 'hidden' : '' ?>">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider"><?= htmlspecialchars(__('services.mypage.addon_step_card_info')) ?></p>
+                        <?php if ($_paymentCustomerId): ?>
+                        <button type="button" onclick="toggleDbAddonNewCard(false)" class="text-[10px] text-zinc-500 hover:text-zinc-700 underline"><?= htmlspecialchars(__('services.mypage.addon_use_saved_card')) ?></button>
+                        <?php endif; ?>
+                    </div>
+                    <div id="dbAddonCardErrorBanner" class="hidden mb-2 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded text-xs text-red-700 dark:text-red-400"></div>
+                    <div class="space-y-3 mb-4 p-3 border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-900/40">
+                        <div>
+                            <label class="block text-[11px] font-medium text-zinc-600 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.order.payment.card_number')) ?></label>
+                            <div id="db-addon-payjp-number" class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 min-h-[38px]"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-medium text-zinc-600 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.order.payment.card_expiry')) ?></label>
+                                <div id="db-addon-payjp-expiry" class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 min-h-[38px]"></div>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-medium text-zinc-600 dark:text-zinc-300 mb-1">CVC</label>
+                                <div id="db-addon-payjp-cvc" class="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 min-h-[38px]"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-zinc-600 dark:text-zinc-300 mb-1"><?= htmlspecialchars(__('services.order.payment.card_holder')) ?></label>
+                            <input type="text" id="db-addon-card-holder" placeholder="TARO YAMADA" autocomplete="cc-name"
+                                   class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-700 dark:text-white text-sm uppercase">
+                        </div>
+                        <div id="db-addon-card-errors" class="text-xs text-red-600 hidden"></div>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <button type="button" id="dbAddonPayBtn" onclick="submitDbStorageAddon()" disabled
+                    class="w-full px-4 py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                <span id="dbAddonPayBtnLabel"><?= htmlspecialchars(__('services.mypage.btn_pay_now')) ?></span>
+            </button>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <?php if (($_payEnabled && $_payGateway === 'payjp') && (!empty($_storageOptions) || !empty($_dbStorageOptions))): ?>
     <script src="https://js.pay.jp/v2/pay.js"></script>
     <?php endif; ?>
+    <?php if (!empty($_storageOptions)): ?>
     <script>
     (function(){
         var hostingSubId = <?= (int)($_hostSub['id'] ?? 0) ?>;
@@ -370,6 +501,176 @@ $_needCard = !$_paymentCustomerId && $_payEnabled && $_payGateway === 'payjp';
                 });
             } else {
                 // 등록 카드 사용
+                sendCharge(basePayload);
+            }
+        };
+    })();
+    </script>
+    <?php endif; ?>
+
+    <?php if (!empty($_dbStorageOptions)): ?>
+    <script>
+    (function(){
+        var hostingSubId = <?= (int)($_hostSub['id'] ?? 0) ?>;
+        var months = <?= (int)$_remainMonths ?>;
+        var curSym = <?= json_encode($_curSym, JSON_UNESCAPED_UNICODE) ?>;
+        var hasCardOnFile = <?= $_paymentCustomerId ? 'true' : 'false' ?>;
+        var payjpEnabled = <?= ($_payEnabled && $_payGateway === 'payjp') ? 'true' : 'false' ?>;
+        var pubKey = <?= json_encode($_payPubKey, JSON_UNESCAPED_UNICODE) ?>;
+        var useNewCard = !hasCardOnFile;
+        var payjpInstance = null, dbElNumber = null, dbElExpiry = null, dbElCvc = null;
+        var cardElementsReady = false;
+        var cardReady = { number: false, expiry: false, cvc: false };
+
+        function getSelected() {
+            var r = document.querySelector('input[name="dbAddonCapacity"]:checked');
+            if (!r) return null;
+            return { capacity: r.value, unit: parseInt(r.dataset.unit, 10), total: parseInt(r.dataset.total, 10) };
+        }
+        function updateBtn() {
+            var s = getSelected();
+            var btn = document.getElementById('dbAddonPayBtn');
+            var lbl = document.getElementById('dbAddonPayBtnLabel');
+            if (!s) {
+                btn.disabled = true;
+                lbl.textContent = <?= json_encode(__('services.mypage.btn_pay_now'), JSON_UNESCAPED_UNICODE) ?>;
+                return;
+            }
+            lbl.textContent = <?= json_encode(__('services.mypage.btn_pay_amount'), JSON_UNESCAPED_UNICODE) ?>.replace(':amount', curSym + s.total.toLocaleString());
+            if (!payjpEnabled) { btn.disabled = true; return; }
+            if (useNewCard) btn.disabled = !(cardReady.number && cardReady.expiry && cardReady.cvc);
+            else btn.disabled = false;
+        }
+        document.querySelectorAll('input[name="dbAddonCapacity"]').forEach(function(r) {
+            r.addEventListener('change', updateBtn);
+        });
+
+        function initPayjpElements() {
+            if (cardElementsReady || !payjpEnabled || typeof Payjp === 'undefined') return;
+            payjpInstance = Payjp(pubKey);
+            var elements = payjpInstance.elements();
+            var style = { base: { fontSize: '14px' } };
+            dbElNumber = elements.create('cardNumber', { style: style });
+            dbElExpiry = elements.create('cardExpiry', { style: style });
+            dbElCvc = elements.create('cardCvc', { style: style });
+            dbElNumber.mount('#db-addon-payjp-number');
+            dbElExpiry.mount('#db-addon-payjp-expiry');
+            dbElCvc.mount('#db-addon-payjp-cvc');
+            dbElNumber.on('change', function(e){
+                cardReady.number = !!e.complete;
+                var err = document.getElementById('db-addon-card-errors');
+                if (e.error) { err.textContent = e.error.message; err.classList.remove('hidden'); }
+                else { err.classList.add('hidden'); }
+                updateBtn();
+            });
+            dbElExpiry.on('change', function(e){ cardReady.expiry = !!e.complete; updateBtn(); });
+            dbElCvc.on('change', function(e){ cardReady.cvc = !!e.complete; updateBtn(); });
+            cardElementsReady = true;
+        }
+
+        window.toggleDbAddonNewCard = function(useNew) {
+            useNewCard = useNew;
+            var formEl = document.getElementById('dbAddonCardForm');
+            var onFileEl = document.getElementById('dbAddonCardOnFile');
+            if (useNew) {
+                formEl.classList.remove('hidden');
+                if (onFileEl) onFileEl.classList.add('hidden');
+                initPayjpElements();
+            } else {
+                formEl.classList.add('hidden');
+                if (onFileEl) onFileEl.classList.remove('hidden');
+            }
+            updateBtn();
+        };
+
+        window.openDbStorageAddonModal = function() {
+            var m = document.getElementById('dbStorageAddonModal');
+            if (m.parentElement !== document.body) document.body.appendChild(m);
+            m.classList.remove('hidden'); m.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+            if (useNewCard) initPayjpElements();
+            updateBtn();
+        };
+        window.closeDbStorageAddonModal = function() {
+            var m = document.getElementById('dbStorageAddonModal');
+            m.classList.add('hidden'); m.classList.remove('flex');
+            document.body.style.overflow = '';
+        };
+
+        function showCardErrorBanner(msg) {
+            var b = document.getElementById('dbAddonCardErrorBanner');
+            if (b) { b.textContent = msg; b.classList.remove('hidden'); }
+        }
+
+        function sendCharge(payload) {
+            var btn = document.getElementById('dbAddonPayBtn');
+            var origLbl = document.getElementById('dbAddonPayBtnLabel').textContent;
+            btn.disabled = true;
+            document.getElementById('dbAddonPayBtnLabel').textContent = <?= json_encode(__('services.mypage.btn_processing'), JSON_UNESCAPED_UNICODE) ?>;
+            return serviceAction('pay_db_storage_addon', payload).then(function(d) {
+                if (d.success) {
+                    alert(<?= json_encode(__('services.mypage.alert_addon_paid_active'), JSON_UNESCAPED_UNICODE) ?>);
+                    closeDbStorageAddonModal();
+                    location.reload();
+                    return;
+                }
+                btn.disabled = false;
+                document.getElementById('dbAddonPayBtnLabel').textContent = origLbl;
+                if (d.card_error) {
+                    var msg = (d.message || '') + ' — ' + <?= json_encode(__('services.mypage.addon_card_error_retry'), JSON_UNESCAPED_UNICODE) ?>;
+                    if (hasCardOnFile && !useNewCard) toggleDbAddonNewCard(true);
+                    showCardErrorBanner(msg);
+                } else {
+                    alert(d.message || <?= json_encode(__('services.detail.alert_failed'), JSON_UNESCAPED_UNICODE) ?>);
+                }
+            }).catch(function(e) {
+                alert(e && e.message ? e.message : <?= json_encode(__('services.detail.alert_failed'), JSON_UNESCAPED_UNICODE) ?>);
+                btn.disabled = false;
+                document.getElementById('dbAddonPayBtnLabel').textContent = origLbl;
+            });
+        }
+
+        window.submitDbStorageAddon = function() {
+            var s = getSelected();
+            if (!s) return;
+            var msg = <?= json_encode(__('services.mypage.confirm_pay_db_storage_addon'), JSON_UNESCAPED_UNICODE) ?>
+                .replace(':capacity', s.capacity).replace(':months', months).replace(':total', curSym + s.total.toLocaleString());
+            if (!confirm(msg)) return;
+
+            var basePayload = {
+                subscription_id: hostingSubId,
+                capacity: s.capacity,
+                unit_price: s.unit,
+                total_price: s.total,
+                months: months
+            };
+
+            if (useNewCard) {
+                var btn = document.getElementById('dbAddonPayBtn');
+                btn.disabled = true;
+                if (!payjpInstance) {
+                    alert(<?= json_encode(__('services.order.payment.not_configured'), JSON_UNESCAPED_UNICODE) ?>);
+                    btn.disabled = false; return;
+                }
+                var holderEl = document.getElementById('db-addon-card-holder');
+                var holder = holderEl ? holderEl.value.trim().toUpperCase() : '';
+                if (!holder) {
+                    alert(<?= json_encode(__('services.order.payment.card_holder_required'), JSON_UNESCAPED_UNICODE) ?>);
+                    btn.disabled = false;
+                    if (holderEl) holderEl.focus();
+                    return;
+                }
+                payjpInstance.createToken(dbElNumber).then(function(r) {
+                    if (r.error) throw new Error(r.error.message);
+                    if (!r.id) throw new Error(<?= json_encode(__('services.order.payment.token_failed'), JSON_UNESCAPED_UNICODE) ?>);
+                    basePayload.card_token = r.id;
+                    basePayload.card_holder = holder;
+                    return sendCharge(basePayload);
+                }).catch(function(e) {
+                    alert(e && e.message ? e.message : <?= json_encode(__('services.detail.alert_failed'), JSON_UNESCAPED_UNICODE) ?>);
+                    btn.disabled = false;
+                });
+            } else {
                 sendCharge(basePayload);
             }
         };

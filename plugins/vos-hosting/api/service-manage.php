@@ -2512,6 +2512,201 @@ switch ($action) {
         ]);
         break;
 
+    // ===== 부가서비스 — DB 용량 추가 (즉시 결제 + 활성화) =====
+    case 'pay_db_storage_addon':
+        $hostSubId = (int)($input['subscription_id'] ?? 0);
+        $capacity = trim($input['capacity'] ?? '');
+        $unitPrice = (int)($input['unit_price'] ?? 0);
+        if (!$hostSubId || $capacity === '' || $unitPrice <= 0) {
+            echo json_encode(['success' => false, 'message' => '구독 + 용량 + 단가 필요']);
+            exit;
+        }
+
+        $sub = getOwnedSubscription($pdo, $prefix, $hostSubId, $userId);
+        if (!$sub || $sub['type'] !== 'hosting' || $sub['status'] !== 'active') {
+            echo json_encode(['success' => false, 'message' => '활성 호스팅 구독을 찾을 수 없습니다.']);
+            exit;
+        }
+
+        // 단가 검증 (rzx_settings 의 service_db_storage)
+        $stOptStmt = $pdo->prepare("SELECT `value` FROM {$prefix}settings WHERE `key` = 'service_db_storage' LIMIT 1");
+        $stOptStmt->execute();
+        $stOpts = json_decode($stOptStmt->fetchColumn() ?: '[]', true) ?: [];
+        $validUnit = 0;
+        foreach ($stOpts as $opt) {
+            if (($opt['capacity'] ?? '') === $capacity) { $validUnit = (int)($opt['price'] ?? 0); break; }
+        }
+        if ($validUnit <= 0 || $validUnit !== $unitPrice) {
+            echo json_encode(['success' => false, 'message' => '잘못된 용량/단가입니다.']);
+            exit;
+        }
+
+        // 일할 계산 (storage 와 동일)
+        $nowTs = time();
+        $daysInMonth = (int)date('t', $nowTs);
+        $dayOfMonth = (int)date('j', $nowTs);
+        $firstMonthDays = max(1, $daysInMonth - $dayOfMonth + 1);
+        $firstMonthAmount = (int)round($validUnit * $firstMonthDays / 30);
+        $billingStartTs = strtotime('first day of next month', $nowTs);
+        $expiresTs = strtotime($sub['expires_at']);
+        $normalMonths = max(0,
+            ((int)date('Y', $expiresTs) - (int)date('Y', $billingStartTs)) * 12
+            + ((int)date('n', $expiresTs) - (int)date('n', $billingStartTs))
+            + 1
+        );
+        $normalAmount = $validUnit * $normalMonths;
+        $totalAmount = $firstMonthAmount + $normalAmount;
+        $months = $normalMonths + ($firstMonthDays > 0 ? 1 : 0);
+        $currency = $sub['currency'] ?? 'JPY';
+
+        $customerId = $sub['payment_customer_id'] ?? '';
+        $cardToken = trim($input['card_token'] ?? '');
+        if (!$customerId && !$cardToken) {
+            echo json_encode(['success' => false, 'message' => '카드 정보가 필요합니다.']);
+            exit;
+        }
+
+        require_once BASE_PATH . '/rzxlib/Modules/Payment/PaymentManager.php';
+        try {
+            $payMgr = new \RzxLib\Modules\Payment\PaymentManager($pdo, $prefix);
+            $gateway = $payMgr->gateway();
+            $gwName = $payMgr->getGatewayName();
+            if (!method_exists($gateway, 'chargeCustomer')) {
+                echo json_encode(['success' => false, 'message' => '현재 게이트웨이는 저장 카드 결제를 지원하지 않습니다.']);
+                exit;
+            }
+            $newCustomerCreated = false;
+            $oldCustomerId = $customerId;
+            if ($cardToken) {
+                if (!method_exists($gateway, 'createCustomer')) {
+                    echo json_encode(['success' => false, 'message' => '현재 게이트웨이는 카드 등록을 지원하지 않습니다.']);
+                    exit;
+                }
+                $emailStmt = $pdo->prepare("SELECT email FROM {$prefix}users WHERE id = ?");
+                $emailStmt->execute([$userId]);
+                $userEmail = $emailStmt->fetchColumn() ?: '';
+                $cardHolder = trim($input['card_holder'] ?? '');
+                $custMeta = ['order_id' => $sub['order_id'], 'addon' => 'db_storage', 'replaced_from' => $oldCustomerId ?: 'none'];
+                if ($cardHolder !== '') $custMeta['card_holder'] = $cardHolder;
+                $custResult = $gateway->createCustomer($cardToken, $userEmail, $custMeta);
+                if (!($custResult['success'] ?? false)) {
+                    echo json_encode(['success' => false, 'message' => '카드 등록 실패: ' . ($custResult['message'] ?? ''), 'card_error' => true]);
+                    exit;
+                }
+                $customerId = $custResult['customer_id'];
+                $newCustomerCreated = true;
+            }
+            $description = "VosCMS DB Storage Addon +{$capacity} ({$months}m) order#{$sub['order_id']}";
+            $payResult = $gateway->chargeCustomer($customerId, $totalAmount, strtolower($currency), $description);
+        } catch (\Throwable $e) {
+            error_log("[pay_db_storage_addon] gateway error: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => '결제 처리 중 오류가 발생했습니다.']);
+            exit;
+        }
+
+        if (!$payResult->isSuccessful()) {
+            $msg = $payResult->failureMessage ?? '결제에 실패했습니다.';
+            $cardErrorCodes = ['card_declined','expired_card','incorrect_card_data','invalid_card_data','invalid_expiry_month','invalid_expiry_year','invalid_cvc','invalid_number','processing_error','unacceptable_brand','invalid_card','card_flagged'];
+            $code = (string)($payResult->failureCode ?? '');
+            $isCardError = in_array($code, $cardErrorCodes, true);
+            if ($newCustomerCreated && $customerId) {
+                try { $gateway->deleteCustomer($customerId); } catch (\Throwable $de) {}
+            }
+            echo json_encode(['success' => false, 'message' => $msg, 'card_error' => $isCardError, 'failure_code' => $code]);
+            exit;
+        }
+
+        $pdo->beginTransaction();
+        try {
+            $payUuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                mt_rand(0,0xffff), mt_rand(0,0xffff), mt_rand(0,0xffff),
+                mt_rand(0,0x0fff)|0x4000, mt_rand(0,0x3fff)|0x8000,
+                mt_rand(0,0xffff), mt_rand(0,0xffff), mt_rand(0,0xffff));
+            $pdo->prepare("INSERT INTO {$prefix}payments
+                (uuid, user_id, order_id, payment_key, gateway, method, method_detail, amount, status, paid_at, raw_response)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'paid', NOW(), ?)")
+                ->execute([$payUuid, $userId, $sub['order_id'], $payResult->paymentKey, $gwName, $payResult->method,
+                    json_encode($payResult->methodDetail ?? []), $totalAmount, json_encode($payResult->raw ?? [])]);
+
+            $now = date('Y-m-d H:i:s');
+            $label = "DB 추가 용량 +" . $capacity;
+            $billingStart = date('Y-m-01 00:00:00', $billingStartTs);
+            $addonMeta = [
+                'addon_type' => 'db_storage',
+                'capacity' => $capacity,
+                'unit_price' => $validUnit,
+                'first_month_days' => $firstMonthDays,
+                'first_month_amount' => $firstMonthAmount,
+                'normal_months' => $normalMonths,
+                'normal_amount' => $normalAmount,
+                'parent_hosting_sub_id' => $hostSubId,
+                'payment_key' => $payResult->paymentKey,
+                'paid_at' => $now,
+            ];
+            $insertStmt = $pdo->prepare("INSERT INTO {$prefix}subscriptions
+                (order_id, user_id, type, service_class, label, unit_price, quantity, billing_amount,
+                 billing_cycle, billing_months, currency, started_at, billing_start, expires_at,
+                 payment_customer_id, payment_gateway, auto_renew, status, metadata)
+                VALUES (?, ?, 'addon', 'recurring', ?, ?, 1, ?, 'monthly', 1, ?, ?, ?, ?, ?, ?, 1, 'active', ?)");
+            $insertStmt->execute([$sub['order_id'], $userId, $label, $validUnit, $validUnit,
+                $currency, $now, $billingStart, $sub['expires_at'], $customerId, $gwName,
+                json_encode($addonMeta, JSON_UNESCAPED_UNICODE)]);
+            $newSubId = (int)$pdo->lastInsertId();
+
+            // hosting metadata.extra_db_storage 누적 + (신규 카드인 경우) customer_id 저장
+            $hMeta = json_decode($sub['metadata'] ?? '{}', true) ?: [];
+            $hMeta['extra_db_storage'] = $hMeta['extra_db_storage'] ?? [];
+            $hMeta['extra_db_storage'][] = ['capacity' => $capacity, 'addon_sub_id' => $newSubId, 'added_at' => $now];
+            // 차단 상태였다면 자동 해제 + REVOKE 복구 (cron 도 다음 라운드에 처리하지만 즉시 해제)
+            $wasBlocked = !empty($hMeta['db_quota_blocked']);
+            if ($wasBlocked) unset($hMeta['db_quota_blocked'], $hMeta['db_quota_blocked_at']);
+            if ($newCustomerCreated) {
+                $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ?, payment_customer_id = ?, payment_gateway = ? WHERE id = ?")
+                    ->execute([json_encode($hMeta, JSON_UNESCAPED_UNICODE), $customerId, $gwName, $hostSubId]);
+            } else {
+                $pdo->prepare("UPDATE {$prefix}subscriptions SET metadata = ? WHERE id = ?")
+                    ->execute([json_encode($hMeta, JSON_UNESCAPED_UNICODE), $hostSubId]);
+            }
+
+            $pdo->prepare("INSERT INTO {$prefix}order_logs (order_id, action, detail, actor_type, actor_id) VALUES (?, 'db_storage_addon_paid', ?, 'user', ?)")
+                ->execute([$sub['order_id'], json_encode([
+                    'capacity' => $capacity, 'unit_price' => $validUnit, 'months' => $months,
+                    'total' => $totalAmount, 'addon_sub_id' => $newSubId,
+                    'payment_key' => $payResult->paymentKey, 'was_blocked' => $wasBlocked,
+                ], JSON_UNESCAPED_UNICODE), $userId]);
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            error_log("[pay_db_storage_addon] DB error: " . $e->getMessage());
+            try { $gateway->refund($payResult->paymentKey, $totalAmount, 'DB rollback'); } catch (\Throwable $re) {}
+            echo json_encode(['success' => false, 'message' => '서비스 등록 중 오류가 발생하여 결제를 환불 처리했습니다.']);
+            exit;
+        }
+
+        // 차단 해제 — 결제로 쿼터 늘어났으니 GRANT 복구 시도
+        if (!empty($wasBlocked)) {
+            try {
+                require_once BASE_PATH . '/rzxlib/Core/Hosting/HostingProvisioner.php';
+                $oNumStmt = $pdo->prepare("SELECT order_number FROM {$prefix}orders WHERE id = ?");
+                $oNumStmt->execute([$sub['order_id']]);
+                $orderNumber = $oNumStmt->fetchColumn();
+                if ($orderNumber) {
+                    $prov = new \RzxLib\Core\Hosting\HostingProvisioner($pdo);
+                    if (method_exists($prov, 'releaseDbQuotaBlock')) $prov->releaseDbQuotaBlock($orderNumber);
+                }
+            } catch (\Throwable $e) { error_log('[pay_db_storage_addon] release block: ' . $e->getMessage()); }
+        }
+
+        echo json_encode([
+            'success' => true,
+            'subscription_id' => $newSubId,
+            'amount_charged' => $totalAmount,
+            'months' => $months,
+            'message' => "DB +{$capacity} 용량이 추가되었습니다.",
+        ]);
+        break;
+
     // ===== 미구현 스텁 =====
     case 'add_domain':
     case 'upgrade_plan':
