@@ -119,6 +119,11 @@ try {
             $unreadCol = $c['user1_id'] === $userId ? 'user1_unread' : 'user2_unread';
             $pdo->prepare("UPDATE {$prefix}conversations SET {$unreadCol} = 0 WHERE id = ?")
                 ->execute([$convId]);
+            // 관련 notifications 도 읽음 처리 (벨 카운트 갱신용)
+            $pdo->prepare("UPDATE {$prefix}notifications SET is_read = 1, read_at = NOW()
+                WHERE user_id = ? AND type = 'message' AND is_read = 0
+                  AND JSON_EXTRACT(meta, '$.conversation_id') = ?")
+                ->execute([$userId, $convId]);
 
             // 상대방 정보
             $otherId = $c['user1_id'] === $userId ? $c['user2_id'] : $c['user1_id'];

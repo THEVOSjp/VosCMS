@@ -105,5 +105,11 @@ if (!isset($isLoggedIn) || !$isLoggedIn) return;
     });
     fetchNotifs();
     setInterval(fetchNotifs, POLL_MS);
+
+    // 외부에서 강제 갱신 가능 (메시지 읽음 처리 후 등)
+    window.refreshNotifBell = function() {
+        lastFetch = 0; // cooldown 무시
+        fetchNotifs();
+    };
 })();
 </script>

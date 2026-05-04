@@ -347,6 +347,24 @@ if (empty($initialNotifs)) {
                     var badge = item.querySelector('.bg-red-500');
                     if (badge) badge.remove();
                 }
+                // 헤더 종 알림 카운트 즉시 갱신 (관련 notification 도 읽음 처리됐으므로)
+                if (typeof window.refreshNotifBell === 'function') window.refreshNotifBell();
+                // 대화 탭 카운트 갱신
+                refreshTabBadges();
+            }).catch(function(){});
+    }
+    function refreshTabBadges() {
+        // 알림 탭 + 대화 탭 헤더의 빨간 배지 재계산
+        fetch(BASE + '/api/notifications.php?action=unread_summary', {credentials:'same-origin'})
+            .then(function(r){ return r.json(); })
+            .then(function(d){
+                if (!d || !d.success) return;
+                var notifBadge = document.querySelector('#tabNotif .bg-red-500');
+                if (d.unread > 0) {
+                    if (notifBadge) notifBadge.textContent = d.unread > 99 ? '99+' : d.unread;
+                } else if (notifBadge) {
+                    notifBadge.remove();
+                }
             }).catch(function(){});
     }
 
@@ -519,6 +537,19 @@ if (empty($initialNotifs)) {
         var summary = document.getElementById('notifSummary');
         var count = document.querySelectorAll('#notifList a[data-nid]').length;
         if (summary && count > 0) summary.textContent = count + '건';
+        // 알림 페이지 진입 = 봤다는 의미 → 자동 모두 읽음 (1초 후)
+        setTimeout(function(){
+            var unreadEls = document.querySelectorAll('#notifList a[data-nid] .bg-blue-500');
+            if (unreadEls.length === 0) return;
+            var fd = new FormData(); fd.append('action', 'mark_all_read');
+            fetch(BASE + '/api/notifications.php', {method:'POST', body: fd, credentials:'same-origin'})
+                .then(function(r){ return r.json(); })
+                .then(function(d){
+                    if (!d || !d.success) return;
+                    if (typeof window.refreshNotifBell === 'function') window.refreshNotifBell();
+                    refreshTabBadges();
+                });
+        }, 1000);
     }
 })();
 </script>
