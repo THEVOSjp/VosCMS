@@ -232,5 +232,6 @@
     </style>
     <?php if (isset($footerExtra)) echo $footerExtra; ?>
     <?php if ($_footerHtml): echo $_footerHtml; endif; ?>
+<?php if ((isset($isLoggedIn) && $isLoggedIn) || \RzxLib\Core\Auth\Auth::check()) include BASE_PATH . '/resources/views/components/user-mention-menu.php'; ?>
 </body>
 </html>
