@@ -4,6 +4,7 @@
  * /{ADMIN_PATH}/community/broadcast
  */
 if (!defined('BASE_PATH')) define('BASE_PATH', dirname(__DIR__, 4));
+require_once BASE_PATH . '/plugins/vos-community/_init.php';
 require_once BASE_PATH . '/rzxlib/Core/Auth/Auth.php';
 use RzxLib\Core\Auth\Auth;
 if (!Auth::check() || !in_array(Auth::user()['role'] ?? '', ['admin','supervisor','owner'], true)) {
@@ -140,14 +141,13 @@ try {
         btn.disabled = true; btn.textContent = I18N.btn_sending;
 
         var fd = new FormData();
-        fd.append('action', 'admin_broadcast');
         fd.append('title', title);
         fd.append('body', body);
         if (link) fd.append('link', link);
         fd.append('audience', audience);
         if (sendPush) fd.append('send_push', '1');
 
-        fetch(BASE + '/api/push.php', {method:'POST', body: fd, credentials:'same-origin'})
+        fetch(BASE + '/api/community-broadcast.php', {method:'POST', body: fd, credentials:'same-origin'})
             .then(function(r){ return r.json(); })
             .then(function(d){
                 btn.disabled = false; btn.textContent = I18N.btn_send;

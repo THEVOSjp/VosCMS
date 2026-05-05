@@ -6,6 +6,7 @@
  * 모든 사용자 간 1:1 메시지 열람. 조회 시 audit log 기록.
  */
 if (!defined('BASE_PATH')) define('BASE_PATH', dirname(__DIR__, 4));
+require_once BASE_PATH . '/plugins/vos-community/_init.php';
 require_once BASE_PATH . '/rzxlib/Core/Auth/Auth.php';
 use RzxLib\Core\Auth\Auth;
 if (!Auth::check() || !in_array(Auth::user()['role'] ?? '', ['admin','supervisor','owner'], true)) {

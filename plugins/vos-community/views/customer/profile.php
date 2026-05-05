@@ -6,6 +6,7 @@
  * 입력 변수: $profileUserId (UUID), $pdo, $config, $baseUrl
  */
 
+require_once BASE_PATH . '/plugins/vos-community/_init.php';
 require_once BASE_PATH . '/rzxlib/Core/Auth/Auth.php';
 use RzxLib\Core\Auth\Auth;
 

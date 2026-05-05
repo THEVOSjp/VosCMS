@@ -4,6 +4,7 @@
  * /mypage/messages[?c={conversation_id}]
  */
 
+require_once BASE_PATH . '/plugins/vos-community/_init.php';
 require_once BASE_PATH . '/rzxlib/Core/Auth/Auth.php';
 use RzxLib\Core\Auth\Auth;
 

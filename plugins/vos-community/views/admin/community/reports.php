@@ -7,6 +7,7 @@
  */
 
 if (!defined('BASE_PATH')) define('BASE_PATH', dirname(__DIR__, 4));
+require_once BASE_PATH . '/plugins/vos-community/_init.php';
 require_once BASE_PATH . '/rzxlib/Core/Auth/Auth.php';
 use RzxLib\Core\Auth\Auth;
 if (!Auth::check() || !in_array(Auth::user()['role'] ?? '', ['admin','supervisor','owner'], true)) {

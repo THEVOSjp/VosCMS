@@ -109,60 +109,7 @@ return [
     ],
 
     // 서비스 주문 메뉴 → vos-hosting 플러그인 plugin.json 의 menus.admin 로 이전됨
-
-    // ── 커뮤니티 (메시지/팔로우/신고/공지) ──
-    [
-        'id' => 'community',
-        'title' => [
-            'ko'=>'커뮤니티','en'=>'Community','ja'=>'コミュニティ',
-            'de'=>'Community','es'=>'Comunidad','fr'=>'Communauté',
-            'id'=>'Komunitas','mn'=>'Нийгэмлэг','ru'=>'Сообщество',
-            'tr'=>'Topluluk','vi'=>'Cộng đồng',
-            'zh_CN'=>'社区','zh_TW'=>'社群',
-        ],
-        'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
-        'permission' => 'members',
-        'position' => 25,
-        'items' => [
-            [
-                'title' => [
-                    'ko'=>'신고 검토','en'=>'Reports','ja'=>'通報レビュー',
-                    'de'=>'Meldungen','es'=>'Informes','fr'=>'Signalements',
-                    'id'=>'Laporan','mn'=>'Гомдол','ru'=>'Жалобы',
-                    'tr'=>'Şikayetler','vi'=>'Báo cáo',
-                    'zh_CN'=>'举报审核','zh_TW'=>'檢舉審核',
-                ],
-                'route' => 'community/reports',
-                'icon' => 'M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9',
-                'badge' => [
-                    'query' => "SELECT COUNT(*) FROM rzx_message_reports WHERE status = 'pending'",
-                    'color' => 'red',
-                ],
-            ],
-            [
-                'title' => [
-                    'ko'=>'공지 발송','en'=>'Broadcast','ja'=>'お知らせ送信',
-                    'de'=>'Senden','es'=>'Difusión','fr'=>'Diffusion',
-                    'id'=>'Siaran','mn'=>'Мэдэгдэл илгээх','ru'=>'Рассылка',
-                    'tr'=>'Yayın','vi'=>'Phát hành',
-                    'zh_CN'=>'公告发送','zh_TW'=>'公告發送',
-                ],
-                'route' => 'community/broadcast',
-                'icon' => 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z',
-            ],
-            [
-                'title' => [
-                    'ko'=>'메시지 센터','en'=>'Message Center','ja'=>'メッセージセンター',
-                    'de'=>'Nachrichtenzentrum','es'=>'Centro de mensajes','fr'=>'Centre de messages',
-                    'id'=>'Pusat Pesan','mn'=>'Зурвасын төв','ru'=>'Центр сообщений',
-                    'tr'=>'Mesaj Merkezi','vi'=>'Trung tâm tin nhắn',
-                    'zh_CN'=>'消息中心','zh_TW'=>'訊息中心',
-                ],
-                'route' => 'community/messages',
-                'icon' => 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
-            ],
-        ],
-    ],
+    // 커뮤니티 메뉴 → vos-community 플러그인 plugin.json 의 menus.admin 로 이전됨 (2026-05-05)
 
     // ── 사이트 관리 ──
     [

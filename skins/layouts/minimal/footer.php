@@ -217,6 +217,10 @@
     #mobileMenuPanel.open { transform: translateY(0); }
     </style>
     <?php if (isset($footerExtra)) echo $footerExtra; ?>
-<?php if ((isset($isLoggedIn) && $isLoggedIn) || \RzxLib\Core\Auth\Auth::check()) include BASE_PATH . '/resources/views/components/user-mention-menu.php'; ?>
+<?php
+// vos-community 플러그인 활성 + 로그인 시에만 사용자 멘션 메뉴 부착
+$_umPlugin = BASE_PATH . '/plugins/vos-community/views/components/user-mention-menu.php';
+if (((isset($isLoggedIn) && $isLoggedIn) || \RzxLib\Core\Auth\Auth::check()) && file_exists($_umPlugin)) include $_umPlugin;
+?>
 </body>
 </html>
