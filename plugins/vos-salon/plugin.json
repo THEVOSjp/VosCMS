@@ -18,14 +18,35 @@
     "description": {
         "ko": "헤어샵·네일샵·미용실 등 살롱 비즈니스 특화 — 사업장 등록·예약·B&A 스타일 갤러리·1:1 상담",
         "en": "Salon-specific (hair, nail, beauty): shop registration, bookings, before/after gallery, 1:1 consultations",
-        "ja": "ヘアサロン・ネイル・美容室向け — 店舗登録、予約、ビフォーアフター、1:1相談"
+        "ja": "ヘアサロン・ネイル・美容室向け — 店舗登録、予約、ビフォーアフター、1:1相談",
+        "de": "Spezialisiert auf Salon-Geschäfte (Haar, Nagel, Beauty): Geschäftsregistrierung, Buchungen, Vorher-Nachher-Galerie, 1:1-Beratungen",
+        "es": "Específico para salones (peluquería, uñas, belleza): registro de tienda, reservas, galería antes/después, consultas 1:1",
+        "fr": "Spécifique aux salons (coiffure, ongles, beauté) : inscription, réservations, galerie avant/après, consultations 1:1",
+        "id": "Khusus salon (rambut, kuku, kecantikan): pendaftaran toko, reservasi, galeri sebelum/sesudah, konsultasi 1:1",
+        "mn": "Гоо сайхны салоны өргөтгөл (үс, хумс, гоо сайхан): бүртгэл, цаг товлох, өмнө/дараа галерей, 1:1 зөвлөгөө",
+        "ru": "Специализация для салонов (волосы, ногти, красота): регистрация, бронирование, галерея до/после, консультации 1:1",
+        "tr": "Salon odaklı (saç, tırnak, güzellik): mağaza kaydı, rezervasyonlar, öncesi/sonrası galeri, 1:1 danışmanlık",
+        "vi": "Chuyên cho salon (tóc, móng, làm đẹp): đăng ký cửa hàng, đặt lịch, thư viện trước/sau, tư vấn 1:1",
+        "zh_CN": "面向沙龙业务(美发·美甲·美容)— 店铺注册·预约·前后效果图·1:1 咨询",
+        "zh_TW": "面向沙龍業務(美髮·美甲·美容)— 店鋪註冊·預約·前後效果圖·1:1 諮詢"
     },
     "version": "1.0.0",
-    "author": { "name": "VosCMS", "url": "https://voscms.com" },
+    "author": {
+        "name": "VosCMS",
+        "url": "https://voscms.com"
+    },
     "license": "proprietary",
     "category": "business",
-    "tags": ["salon", "booking", "beauty", "hair", "nail"],
-    "requires": { "php": ">=8.1" },
+    "tags": [
+        "salon",
+        "booking",
+        "beauty",
+        "hair",
+        "nail"
+    ],
+    "requires": {
+        "php": ">=8.1"
+    },
     "icon": "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
     "menus": {
         "admin": [
@@ -50,19 +71,41 @@
                 "permission": "salon",
                 "position": 60,
                 "items": [
-                    {"title": {"ko": "사업장 목록", "en": "Shops", "ja": "店舗一覧"}, "route": "shops"},
-                    {"title": {"ko": "1:1 상담", "en": "Consultations", "ja": "相談"}, "route": "shops/consultations"}
+                    {
+                        "title": {
+                            "ko": "사업장 목록",
+                            "en": "Shops",
+                            "ja": "店舗一覧"
+                        },
+                        "route": "shops"
+                    },
+                    {
+                        "title": {
+                            "ko": "1:1 상담",
+                            "en": "Consultations",
+                            "ja": "相談"
+                        },
+                        "route": "shops/consultations"
+                    }
                 ]
             }
         ],
         "user_dropdown": [
             {
                 "label": {
-                    "ko": "내 사업장","en": "My Shop","ja": "マイショップ",
-                    "de": "Mein Geschäft","es": "Mi Tienda","fr": "Ma Boutique",
-                    "id": "Toko Saya","mn": "Миний дэлгүүр","ru": "Мой магазин",
-                    "tr": "Mağazam","vi": "Cửa hàng của tôi",
-                    "zh_CN": "我的店铺","zh_TW": "我的店鋪"
+                    "ko": "내 사업장",
+                    "en": "My Shop",
+                    "ja": "マイショップ",
+                    "de": "Mein Geschäft",
+                    "es": "Mi Tienda",
+                    "fr": "Ma Boutique",
+                    "id": "Toko Saya",
+                    "mn": "Миний дэлгүүр",
+                    "ru": "Мой магазин",
+                    "tr": "Mağazam",
+                    "vi": "Cửa hàng của tôi",
+                    "zh_CN": "我的店铺",
+                    "zh_TW": "我的店鋪"
                 },
                 "url": "/shop/my",
                 "icon": "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
@@ -72,13 +115,33 @@
     },
     "routes": {
         "front": [
-            {"path": "shop/register", "view": "customer/shop/register.php", "method": "GET"},
-            {"path": "shops",          "view": "customer/shop/list.php",     "method": "GET"},
-            {"path": "shops/show",     "view": "customer/shop/detail.php",   "method": "GET"}
+            {
+                "path": "shop/register",
+                "view": "customer/shop/register.php",
+                "method": "GET"
+            },
+            {
+                "path": "shops",
+                "view": "customer/shop/list.php",
+                "method": "GET"
+            },
+            {
+                "path": "shops/show",
+                "view": "customer/shop/detail.php",
+                "method": "GET"
+            }
         ],
         "admin": [
-            {"path": "shops",                "view": "admin/shops.php",         "method": "GET"},
-            {"path": "shops/consultations",  "view": "admin/consultations.php", "method": "GET"}
+            {
+                "path": "shops",
+                "view": "admin/shops.php",
+                "method": "GET"
+            },
+            {
+                "path": "shops/consultations",
+                "view": "admin/consultations.php",
+                "method": "GET"
+            }
         ],
         "api": []
     },

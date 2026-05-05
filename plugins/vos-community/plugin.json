@@ -18,15 +18,39 @@
     "description": {
         "ko": "회원 간 1:1 메시지 + 팔로우 + 프로필 + 차단·신고 + 어드민 메시지 센터/공지 발송",
         "en": "1:1 messaging + follows + profiles + block/report + admin message center & broadcast",
-        "ja": "会員間1:1メッセージ + フォロー + プロフィール + ブロック・通報 + 管理者メッセージセンター/お知らせ送信"
+        "ja": "会員間1:1メッセージ + フォロー + プロフィール + ブロック・通報 + 管理者メッセージセンター/お知らせ送信",
+        "de": "1:1-Nachrichten + Folgen + Profile + Blockieren/Melden + Admin-Nachrichtenzentrum & Rundsendung",
+        "es": "Mensajes 1:1 + seguidores + perfiles + bloquear/reportar + centro de mensajes admin y difusión",
+        "fr": "Messages 1:1 + suivis + profils + bloquer/signaler + centre de messages admin et diffusion",
+        "id": "Pesan 1:1 + follow + profil + blokir/laporkan + pusat pesan admin & siaran",
+        "mn": "1:1 зурвас + дагах + профайл + хориглох/гомдол + админ зурвасын төв ба нийтлэл",
+        "ru": "Сообщения 1:1 + подписки + профили + блок/жалоба + центр сообщений админа и рассылка",
+        "tr": "1:1 mesajlaşma + takip + profiller + engel/şikayet + admin mesaj merkezi ve yayın",
+        "vi": "Tin nhắn 1:1 + theo dõi + hồ sơ + chặn/báo cáo + trung tâm tin nhắn admin và phát hành",
+        "zh_CN": "会员 1:1 消息 + 关注 + 资料 + 屏蔽/举报 + 管理员消息中心/公告发送",
+        "zh_TW": "會員 1:1 訊息 + 關注 + 個人檔案 + 封鎖/檢舉 + 管理員訊息中心/公告發送"
     },
     "version": "1.0.0",
     "status": "active",
-    "author": { "name": "VosCMS", "url": "https://voscms.com" },
+    "author": {
+        "name": "VosCMS",
+        "url": "https://voscms.com"
+    },
     "license": "proprietary",
     "category": "community",
-    "tags": ["messaging", "follow", "profile", "social", "moderation", "broadcast", "push"],
-    "requires": { "php": ">=8.1", "voscms": ">=2.4" },
+    "tags": [
+        "messaging",
+        "follow",
+        "profile",
+        "social",
+        "moderation",
+        "broadcast",
+        "push"
+    ],
+    "requires": {
+        "php": ">=8.1",
+        "voscms": ">=2.4"
+    },
     "icon": "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
     "menus": {
         "admin": [
@@ -118,12 +142,28 @@
     },
     "routes": {
         "admin": [
-            { "path": "community/reports",   "view": "admin/community/reports.php",   "method": "GET" },
-            { "path": "community/broadcast", "view": "admin/community/broadcast.php", "method": "GET" },
-            { "path": "community/messages",  "view": "admin/community/messages.php",  "method": "GET" }
+            {
+                "path": "community/reports",
+                "view": "admin/community/reports.php",
+                "method": "GET"
+            },
+            {
+                "path": "community/broadcast",
+                "view": "admin/community/broadcast.php",
+                "method": "GET"
+            },
+            {
+                "path": "community/messages",
+                "view": "admin/community/messages.php",
+                "method": "GET"
+            }
         ],
         "front": [
-            { "path": "mypage/messages", "view": "customer/mypage/messages.php", "method": "GET" }
+            {
+                "path": "mypage/messages",
+                "view": "customer/mypage/messages.php",
+                "method": "GET"
+            }
         ],
         "api": []
     },

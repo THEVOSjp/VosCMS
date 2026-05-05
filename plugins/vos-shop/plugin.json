@@ -18,17 +18,43 @@
     "description": {
         "ko": "VosCMS 쇼핑몰 플러그인 — 상품·주문·결제·배송",
         "en": "VosCMS shop plugin — products, orders, payments, shipping",
-        "ja": "VosCMSショッププラグイン — 商品・注文・決済・配送"
+        "ja": "VosCMSショッププラグイン — 商品・注文・決済・配送",
+        "de": "VosCMS-Shop-Plugin — Produkte, Bestellungen, Zahlungen, Versand",
+        "es": "Plugin de tienda VosCMS — productos, pedidos, pagos, envíos",
+        "fr": "Plugin de boutique VosCMS — produits, commandes, paiements, livraison",
+        "id": "Plugin toko VosCMS — produk, pesanan, pembayaran, pengiriman",
+        "mn": "VosCMS дэлгүүр өргөтгөл — бараа, захиалга, төлбөр, хүргэлт",
+        "ru": "Плагин магазина VosCMS — товары, заказы, платежи, доставка",
+        "tr": "VosCMS mağaza eklentisi — ürünler, siparişler, ödemeler, kargo",
+        "vi": "Plugin cửa hàng VosCMS — sản phẩm, đơn hàng, thanh toán, vận chuyển",
+        "zh_CN": "VosCMS 商城插件 — 商品·订单·支付·配送",
+        "zh_TW": "VosCMS 商城外掛 — 商品·訂單·付款·配送"
     },
     "version": "0.1.0",
     "status": "draft",
-    "author": { "name": "VosCMS", "url": "https://voscms.com" },
+    "author": {
+        "name": "VosCMS",
+        "url": "https://voscms.com"
+    },
     "license": "proprietary",
     "category": "business",
-    "tags": ["shop", "ecommerce", "store"],
-    "requires": { "php": ">=8.1" },
+    "tags": [
+        "shop",
+        "ecommerce",
+        "store"
+    ],
+    "requires": {
+        "php": ">=8.1"
+    },
     "icon": "M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z",
-    "menus": { "admin": [], "user_dropdown": [] },
-    "routes": { "admin": [], "front": [], "api": [] },
+    "menus": {
+        "admin": [],
+        "user_dropdown": []
+    },
+    "routes": {
+        "admin": [],
+        "front": [],
+        "api": []
+    },
     "migrations": []
 }

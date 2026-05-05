@@ -18,7 +18,17 @@
     "description": {
         "ko": "market.21ces.com에서 플러그인·위젯·스킨을 원클릭으로 설치하고 라이선스를 관리합니다",
         "en": "One-click install plugins, widgets and skins from market.21ces.com and manage licenses",
-        "ja": "market.21ces.comからプラグイン・ウィジェット・スキンをワンクリックでインストールし、ライセンスを管理します"
+        "ja": "market.21ces.comからプラグイン・ウィジェット・スキンをワンクリックでインストールし、ライセンスを管理します",
+        "de": "Plugins, Widgets und Skins von market.21ces.com mit einem Klick installieren und Lizenzen verwalten",
+        "es": "Instala plugins, widgets y skins desde market.21ces.com con un clic y gestiona licencias",
+        "fr": "Installation en un clic de plugins, widgets et skins depuis market.21ces.com et gestion des licences",
+        "id": "Pasang sekali klik plugin, widget, dan skin dari market.21ces.com serta kelola lisensi",
+        "mn": "market.21ces.com-оос нэмэлт өргөтгөл, виджет, skin-ийг нэг товчоор суулгах ба лиценз удирдах",
+        "ru": "Установка плагинов, виджетов и скинов из market.21ces.com одним кликом и управление лицензиями",
+        "tr": "market.21ces.com'dan eklenti, widget ve skin'leri tek tıkla yükle ve lisansları yönet",
+        "vi": "Cài plugin, widget và skin từ market.21ces.com một chạm và quản lý giấy phép",
+        "zh_CN": "从 market.21ces.com 一键安装插件·小工具·皮肤并管理许可证",
+        "zh_TW": "從 market.21ces.com 一鍵安裝外掛·小工具·面板並管理授權"
     },
     "version": "2.0.0",
     "author": {
@@ -27,7 +37,13 @@
     },
     "license": "proprietary",
     "category": "system",
-    "tags": ["marketplace", "autoinstall", "plugins", "widgets", "skins"],
+    "tags": [
+        "marketplace",
+        "autoinstall",
+        "plugins",
+        "widgets",
+        "skins"
+    ],
     "requires": {
         "php": ">=8.0"
     },
@@ -38,12 +54,36 @@
     ],
     "routes": {
         "admin": [
-            { "path": "autoinstall",           "view": "admin/browse.php",          "method": "GET"  },
-            { "path": "autoinstall/item",       "view": "admin/item-detail.php",     "method": "GET"  },
-            { "path": "autoinstall/purchases",  "view": "admin/purchases.php",       "method": "GET"  },
-            { "path": "autoinstall/orders",     "view": "admin/orders.php",          "method": "GET"  },
-            { "path": "autoinstall/api",        "view": "admin/api.php",             "method": "POST" },
-            { "path": "autoinstall/install",    "view": "admin/install-handler.php", "method": "POST" }
+            {
+                "path": "autoinstall",
+                "view": "admin/browse.php",
+                "method": "GET"
+            },
+            {
+                "path": "autoinstall/item",
+                "view": "admin/item-detail.php",
+                "method": "GET"
+            },
+            {
+                "path": "autoinstall/purchases",
+                "view": "admin/purchases.php",
+                "method": "GET"
+            },
+            {
+                "path": "autoinstall/orders",
+                "view": "admin/orders.php",
+                "method": "GET"
+            },
+            {
+                "path": "autoinstall/api",
+                "view": "admin/api.php",
+                "method": "POST"
+            },
+            {
+                "path": "autoinstall/install",
+                "view": "admin/install-handler.php",
+                "method": "POST"
+            }
         ],
         "front": [],
         "api": []

@@ -57,6 +57,11 @@ $locale = current_locale();
             <?php foreach ($installed as $p):
                 $_manifest = $pm->getManifest($p['plugin_id']);
                 $_icon = $_manifest['menus']['admin'][0]['items'][0]['icon'] ?? 'M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z';
+                // manifest 의 다국어 name/description 으로 표시 (DB 저장값은 install 시점 locale)
+                $_pTitle = $_manifest['name'] ?? null;
+                $_pTitle = is_array($_pTitle) ? ($_pTitle[$locale] ?? $_pTitle['en'] ?? $p['title']) : ($p['title']);
+                $_pDesc = $_manifest['description'] ?? null;
+                $_pDesc = is_array($_pDesc) ? ($_pDesc[$locale] ?? $_pDesc['en'] ?? '') : ($p['description'] ?? '');
             ?>
             <div class="px-6 py-4 flex items-center justify-between">
                 <div class="flex items-center gap-4">
@@ -66,8 +71,8 @@ $locale = current_locale();
                         </svg>
                     </div>
                     <div>
-                        <h4 class="font-semibold text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($p['title']) ?></h4>
-                        <p class="text-sm text-zinc-500"><?= htmlspecialchars($p['description'] ?? '') ?></p>
+                        <h4 class="font-semibold text-zinc-800 dark:text-zinc-200"><?= htmlspecialchars($_pTitle) ?></h4>
+                        <p class="text-sm text-zinc-500"><?= htmlspecialchars($_pDesc) ?></p>
                         <div class="flex items-center gap-3 mt-1 text-xs text-zinc-400">
                             <span>v<?= htmlspecialchars($p['version']) ?></span>
                             <?php if (!empty($_pluginUpdates[$p['plugin_id']])): ?>

@@ -18,15 +18,38 @@
     "description": {
         "ko": "VosCMS 호스팅 사업자용 — 서비스 주문·구독·도메인·메일·문의 관리. voscms.com 본 사이트 전용",
         "en": "For VosCMS hosting providers — service orders, subscriptions, domains, mail accounts, inquiries. Exclusive to voscms.com",
-        "ja": "VosCMSホスティング事業者向け — サービス注文・サブスクリプション・ドメイン・メール・問い合わせ管理。voscms.com本サイト専用"
+        "ja": "VosCMSホスティング事業者向け — サービス注文・サブスクリプション・ドメイン・メール・問い合わせ管理。voscms.com本サイト専用",
+        "de": "Für VosCMS-Hosting-Anbieter — Bestellungen, Abos, Domains, Mail-Konten, Anfragen. Exklusiv für voscms.com",
+        "es": "Para proveedores de hosting VosCMS — pedidos, suscripciones, dominios, correos, consultas. Exclusivo de voscms.com",
+        "fr": "Pour les fournisseurs d'hébergement VosCMS — commandes, abonnements, domaines, e-mails, demandes. Exclusif à voscms.com",
+        "id": "Untuk penyedia hosting VosCMS — pesanan, langganan, domain, email, pertanyaan. Khusus voscms.com",
+        "mn": "VosCMS хостинг үйлчилгээ эрхлэгчдэд — захиалга, бүртгэл, домэйн, мэйл, лавлагаа удирдлага. voscms.com-д зориулсан",
+        "ru": "Для провайдеров хостинга VosCMS — заказы, подписки, домены, почта, запросы. Эксклюзивно для voscms.com",
+        "tr": "VosCMS hosting sağlayıcıları için — siparişler, abonelikler, alan adları, e-posta, talepler. voscms.com özel",
+        "vi": "Dành cho nhà cung cấp hosting VosCMS — đơn hàng, gói, domain, email, yêu cầu. Độc quyền voscms.com",
+        "zh_CN": "面向 VosCMS 托管服务商 — 服务订单·订阅·域名·邮箱·咨询管理。voscms.com 本站专用",
+        "zh_TW": "面向 VosCMS 主機服務商 — 服務訂單·訂閱·網域·信箱·諮詢管理。voscms.com 本站專用"
     },
     "version": "0.1.0",
     "status": "migrating",
-    "author": { "name": "VosCMS", "url": "https://voscms.com" },
+    "author": {
+        "name": "VosCMS",
+        "url": "https://voscms.com"
+    },
     "license": "proprietary",
     "category": "system",
-    "tags": ["hosting", "service-order", "domain", "mail", "subscription", "payjp", "whois"],
-    "requires": { "php": ">=8.1" },
+    "tags": [
+        "hosting",
+        "service-order",
+        "domain",
+        "mail",
+        "subscription",
+        "payjp",
+        "whois"
+    ],
+    "requires": {
+        "php": ">=8.1"
+    },
     "icon": "M5 12H3l9-9 9 9h-2M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7M9 21V12h6v9",
     "menus": {
         "admin": [
@@ -189,18 +212,58 @@
     },
     "routes": {
         "admin": [
-            { "path": "hosting-dashboard",      "view": "admin/hosting-dashboard/index.php",  "method": "GET"  },
-            { "path": "service-orders",         "view": "admin/service-orders/index.php",     "method": "GET"  },
-            { "path": "domain-management",      "view": "admin/domain-management/index.php",  "method": "GET"  },
-            { "path": "accounting",             "view": "admin/accounting/index.php",         "method": "GET"  },
-            { "path": "support-tickets",        "view": "admin/support-tickets/index.php",    "method": "GET"  },
-            { "path": "custom-projects",        "view": "admin/custom-projects/index.php",    "method": "GET"  },
-            { "path": "contact-messages",       "view": "admin/contact-messages.php",         "method": "GET"  }
+            {
+                "path": "hosting-dashboard",
+                "view": "admin/hosting-dashboard/index.php",
+                "method": "GET"
+            },
+            {
+                "path": "service-orders",
+                "view": "admin/service-orders/index.php",
+                "method": "GET"
+            },
+            {
+                "path": "domain-management",
+                "view": "admin/domain-management/index.php",
+                "method": "GET"
+            },
+            {
+                "path": "accounting",
+                "view": "admin/accounting/index.php",
+                "method": "GET"
+            },
+            {
+                "path": "support-tickets",
+                "view": "admin/support-tickets/index.php",
+                "method": "GET"
+            },
+            {
+                "path": "custom-projects",
+                "view": "admin/custom-projects/index.php",
+                "method": "GET"
+            },
+            {
+                "path": "contact-messages",
+                "view": "admin/contact-messages.php",
+                "method": "GET"
+            }
         ],
         "front": [
-            { "path": "service/complete",       "view": "system/service/complete.php",        "method": "GET"  },
-            { "path": "mypage/services",        "view": "customer/mypage/services.php",       "method": "GET"  },
-            { "path": "mypage/custom-projects", "view": "customer/mypage/custom-projects.php","method": "GET"  }
+            {
+                "path": "service/complete",
+                "view": "system/service/complete.php",
+                "method": "GET"
+            },
+            {
+                "path": "mypage/services",
+                "view": "customer/mypage/services.php",
+                "method": "GET"
+            },
+            {
+                "path": "mypage/custom-projects",
+                "view": "customer/mypage/custom-projects.php",
+                "method": "GET"
+            }
         ],
         "api": []
     },
